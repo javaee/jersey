@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Source;
 import javax.xml.validation.Schema;
 
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -70,7 +70,7 @@ import org.xml.sax.InputSource;
  */
 public class JettisonJaxbUnmarshaller extends BaseJsonUnmarshaller implements Unmarshaller {
 
-    public JettisonJaxbUnmarshaller(JAXBContext jaxbContext, JettisonConfiguration jsonConfig) throws JAXBException {
+    public JettisonJaxbUnmarshaller(JAXBContext jaxbContext, JettisonConfig jsonConfig) throws JAXBException {
         super(jaxbContext, jsonConfig);
     }
 

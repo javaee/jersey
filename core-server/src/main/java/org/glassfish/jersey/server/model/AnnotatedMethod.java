@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -129,6 +129,15 @@ public final class AnnotatedMethod implements AnnotatedElement {
      */
     public Method getMethod() {
         return am;
+    }
+
+    /**
+     * Get the underlying declared Java method. This method overrides or is the same as the one retrieved by {@code getMethod}.
+     *
+     * @return the underlying declared Java method.
+     */
+    Method getDeclaredMethod() {
+        return m;
     }
 
     /**

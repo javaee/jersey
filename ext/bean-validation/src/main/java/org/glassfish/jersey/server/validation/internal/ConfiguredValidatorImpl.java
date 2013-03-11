@@ -40,14 +40,38 @@
 
 package org.glassfish.jersey.server.validation.internal;
 
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 
+import javax.ws.rs.core.Response;
+
+import javax.validation.Configuration;
 import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
+import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ExecutableValidator;
+import javax.validation.executable.ValidateExecutable;
 import javax.validation.metadata.BeanDescriptor;
+import javax.validation.metadata.MethodDescriptor;
 
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
+import org.glassfish.jersey.server.model.Invocable;
+
+import com.google.common.base.Supplier;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 
 /**
  * {@link ConfiguredValidator} implementation - delegates calls to the underlying {@link Validator}.
@@ -57,9 +81,19 @@ import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 public class ConfiguredValidatorImpl implements ConfiguredValidator {
 
     private final Validator delegate;
+    private final Configuration configuration;
 
-    public ConfiguredValidatorImpl(final Validator delegate) {
+    private final ConcurrentMap<Method, Boolean> validateMethodCache = Maps.newConcurrentMap();
+
+    /**
+     * Create a configured validator instance.
+     *
+     * @param delegate validator to delegate calls to.
+     * @param configuration configuration to obtain {@link ExecutableType executable types} configured in descriptor from.
+     */
+    ConfiguredValidatorImpl(final Validator delegate, final Configuration configuration) {
         this.delegate = delegate;
+        this.configuration = configuration;
     }
 
     @Override
@@ -73,10 +107,8 @@ public class ConfiguredValidatorImpl implements ConfiguredValidator {
     }
 
     @Override
-    public <T> Set<ConstraintViolation<T>> validateValue(final Class<T> beanType,
-                                                         final String propertyName,
-                                                         final Object value,
-                                                         final Class<?>... groups) {
+    public <T> Set<ConstraintViolation<T>> validateValue(final Class<T> beanType, final String propertyName,
+                                                         final Object value, final Class<?>... groups) {
         return delegate.validateValue(beanType, propertyName, value, groups);
     }
 
@@ -93,5 +125,199 @@ public class ConfiguredValidatorImpl implements ConfiguredValidator {
     @Override
     public ExecutableValidator forExecutables() {
         return delegate.forExecutables();
+    }
+
+    @Override
+    public void validateResourceAndInputParams(final Object resource, final Invocable resourceMethod, final Object[] args) {
+        final Set<ConstraintViolation<Object>> constraintViolations = Sets.newHashSet();
+        final BeanDescriptor beanDescriptor = getConstraintsForClass(resource.getClass());
+
+        // Resource validation.
+        if (beanDescriptor.isBeanConstrained()) {
+            constraintViolations.addAll(validate(resource));
+        }
+
+        if (beanDescriptor.hasConstrainedExecutables()) {
+            final Method validationMethod = resourceMethod.getValidateMethod();
+
+            // Resource method validation - input parameters.
+            final Method handlingMethod = resourceMethod.getHandlingMethod();
+            final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
+                    validationMethod.getParameterTypes());
+
+            if (methodDescriptor != null
+                    && methodDescriptor.areParametersConstrained()
+                    && validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
+                constraintViolations.addAll(forExecutables().validateParameters(resource, validationMethod, args));
+            }
+        }
+
+        if (!constraintViolations.isEmpty()) {
+            throw new ConstraintViolationException(constraintViolations);
+        }
+    }
+
+    @Override
+    public void validateResult(final Object resource, final Invocable resourceMethod, final Object result) {
+        final Set<ConstraintViolation<Object>> constraintViolations = Sets.newHashSet();
+        final Method validationMethod = resourceMethod.getValidateMethod();
+
+        final BeanDescriptor beanDescriptor = getConstraintsForClass(resource.getClass());
+
+        if (beanDescriptor.hasConstrainedExecutables()) {
+            final Method handlingMethod = resourceMethod.getHandlingMethod();
+            final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
+                    validationMethod.getParameterTypes());
+
+            if (methodDescriptor != null
+                    && methodDescriptor.isReturnValueConstrained()
+                    && validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
+                constraintViolations.addAll(forExecutables().validateReturnValue(resource, validationMethod, result));
+
+                if (result instanceof Response) {
+                    constraintViolations.addAll(forExecutables().validateReturnValue(resource, validationMethod,
+                            ((Response) result).getEntity()));
+                }
+            }
+
+            if (!constraintViolations.isEmpty()) {
+                throw new ConstraintViolationException(constraintViolations);
+            }
+        }
+    }
+
+    /**
+     * Determine whether the given {@link Method method} to-be-executed on the given {@link Class clazz} should be validated.
+     *
+     * @param clazz class on which the method will be invoked.
+     * @param method method to be examined.
+     * @param validationMethod method used for cache.
+     * @return {@code true} if the method should be validated, {@code false otherwise}.
+     */
+    private boolean validateMethod(final Class<?> clazz, final Method method, final Method validationMethod) {
+        if (!validateMethodCache.containsKey(validationMethod)) {
+            // Overridden methods.
+            for (final Class<?> overriddenClass : getValidationClassHierarchy(clazz)) {
+                final Method overriddenMethod = ReflectionHelper.findMethodOnClass(overriddenClass, method);
+
+                if (overriddenMethod != null) {
+                    // Method.
+                    ExecutableType[] executableTypes = getExecutableTypes(overriddenMethod);
+                    if (executableTypes != null) {
+                        validateMethodCache.putIfAbsent(validationMethod, validateMethod(overriddenMethod, executableTypes));
+                        break;
+                    }
+                    // Class.
+                    executableTypes = getExecutableTypes(overriddenClass);
+                    if (executableTypes != null) {
+                        validateMethodCache.putIfAbsent(validationMethod, validateMethod(overriddenMethod, executableTypes));
+                        break;
+                    }
+                }
+            }
+
+            // Return value from validation.xml.
+            validateMethodCache.putIfAbsent(validationMethod, validateMethod(method, configuration.getBootstrapConfiguration()
+                    .getValidatedExecutableTypes()));
+        }
+        return validateMethodCache.get(validationMethod);
+    }
+
+    /**
+     * Determine whether the given {@link Method method} should be validated depending on the given {@code executableTypes}.
+     *
+     * @param method method to be examined.
+     * @param executableTypes executable types assigned to the method.
+     * @return {@code true} if the method should be validated, {@code false otherwise}.
+     */
+    private boolean validateMethod(final Method method, final ExecutableType... executableTypes) {
+        return validateMethod(method, Sets.newHashSet(executableTypes));
+    }
+
+    /**
+     * Determine whether the given {@link Method method} should be validated depending on the given {@code executableTypes}.
+     *
+     * @param method method to be examined.
+     * @param executableTypes executable types assigned to the method.
+     * @return {@code true} if the method should be validated, {@code false otherwise}.
+     */
+    private boolean validateMethod(final Method method, final Set<ExecutableType> executableTypes) {
+        if (executableTypes.contains(ExecutableType.ALL)) {
+            return true;
+        }
+        return ReflectionHelper.isGetter(method) ? executableTypes.contains(ExecutableType.GETTER_METHODS)
+                : executableTypes.contains(ExecutableType.NON_GETTER_METHODS);
+    }
+
+    /**
+     * Return an array of executable types contained in {@link ValidateExecutable} annotation belonging to the {@code element}.
+     *
+     * @param element element to be examined for {@link ValidateExecutable}.
+     * @return an array of executable types or {@code null} if the element is not annotated with {@link ValidateExecutable}.
+     */
+    private ExecutableType[] getExecutableTypes(final AnnotatedElement element) {
+        final ValidateExecutable validateExecutable = element.getAnnotation(ValidateExecutable.class);
+        return validateExecutable != null ? validateExecutable.value() : null;
+    }
+
+    /**
+     * Get a class hierarchy for the given {@code clazz} suitable to be looked for {@link ValidateExecutable} annotation
+     * in order according to the priority defined by Bean Validation spec (superclasses, interfaces).
+     *
+     * @param clazz class to obtain hierarchy for.
+     * @return class hierarchy.
+     */
+    private List<Class<?>> getValidationClassHierarchy(final Class<?> clazz) {
+        final List<Class<?>> hierarchy = Lists.newArrayList();
+
+        // Get all superclasses.
+        for (Class<?> currentClass = clazz; currentClass != Object.class; currentClass = currentClass.getSuperclass()) {
+            hierarchy.add(clazz);
+        }
+
+        hierarchy.addAll(getAllValidationInterfaces(clazz));
+        Collections.reverse(hierarchy);
+
+        return hierarchy;
+    }
+
+    private List<Class<?>> getAllValidationInterfaces(final Class<?> clazz) {
+        final Multimap<Integer, Class<?>> map = Multimaps.newListMultimap(Maps.<Integer, Collection<Class<?>>>newTreeMap(),
+                new Supplier<List<Class<?>>>() {
+            @Override
+            public List<Class<?>> get() {
+                return Lists.newArrayList();
+            }
+        });
+
+        retrieveAllValidationInterfaces(clazz, map);
+
+        final List<Class<?>> interfaces = Lists.newArrayList(map.values());
+        Collections.reverse(interfaces);
+
+        return interfaces;
+    }
+
+    private int retrieveAllValidationInterfaces(Class<?> clazz, final Multimap<Integer, Class<?>> map) {
+        if (clazz == null) {
+            return 0;
+        }
+
+        int minDepth = 0;
+
+        while (clazz != null) {
+            for (final Class<?> iface : clazz.getInterfaces()) {
+                int depth = retrieveAllValidationInterfaces(iface, map);
+
+                if (!map.containsValue(iface)) {
+                    map.put(depth, iface);
+                }
+                minDepth = minDepth > depth ? depth : minDepth;
+            }
+
+            clazz = clazz.getSuperclass();
+        }
+
+        return minDepth + 1;
     }
 }

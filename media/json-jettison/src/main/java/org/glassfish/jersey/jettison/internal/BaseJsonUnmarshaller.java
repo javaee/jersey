@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,7 +53,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonConfigured;
 import org.glassfish.jersey.jettison.JettisonUnmarshaller;
 
@@ -67,19 +67,19 @@ public class BaseJsonUnmarshaller implements JettisonUnmarshaller, JettisonConfi
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     protected final Unmarshaller jaxbUnmarshaller;
-    protected final JettisonConfiguration jsonConfig;
+    protected final JettisonConfig jsonConfig;
 
-    public BaseJsonUnmarshaller(JAXBContext jaxbContext, JettisonConfiguration jsonConfig) throws JAXBException {
+    public BaseJsonUnmarshaller(JAXBContext jaxbContext, JettisonConfig jsonConfig) throws JAXBException {
         this(jaxbContext.createUnmarshaller(), jsonConfig);
     }
 
-    public BaseJsonUnmarshaller(Unmarshaller jaxbUnmarshaller, JettisonConfiguration jsonConfig) {
+    public BaseJsonUnmarshaller(Unmarshaller jaxbUnmarshaller, JettisonConfig jsonConfig) {
         this.jaxbUnmarshaller = jaxbUnmarshaller;
         this.jsonConfig = jsonConfig;
     }
 
     // JsonConfigured
-    public JettisonConfiguration getJSONConfiguration() {
+    public JettisonConfig getJSONConfiguration() {
         return jsonConfig;
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonConfigured;
 import org.glassfish.jersey.jettison.JettisonMarshaller;
 
@@ -66,20 +66,20 @@ public class BaseJsonMarshaller implements JettisonMarshaller, JettisonConfigure
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     protected final Marshaller jaxbMarshaller;
-    protected JettisonConfiguration jsonConfig;
+    protected JettisonConfig jsonConfig;
 
-    public BaseJsonMarshaller(JAXBContext jaxbContext, JettisonConfiguration jsonConfig) throws JAXBException {
+    public BaseJsonMarshaller(JAXBContext jaxbContext, JettisonConfig jsonConfig) throws JAXBException {
         this(jaxbContext.createMarshaller(), jsonConfig);
     }
 
-    public BaseJsonMarshaller(Marshaller jaxbMarshaller, JettisonConfiguration jsonConfig) {
+    public BaseJsonMarshaller(Marshaller jaxbMarshaller, JettisonConfig jsonConfig) {
         this.jsonConfig = jsonConfig;
         this.jaxbMarshaller = jaxbMarshaller;
     }
 
     // JSONConfigurated
 
-    public JettisonConfiguration getJSONConfiguration() {
+    public JettisonConfig getJSONConfiguration() {
         return jsonConfig;
     }
 

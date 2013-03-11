@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -193,7 +193,7 @@ public class EmptyRequestWithJaxbTest {
         public static class MappedJettisonCR extends CR {
 
             protected JAXBContext configure(Class[] classes) throws JAXBException {
-                return new JettisonJaxbContext(JettisonConfiguration.mappedJettison().build(), classes);
+                return new JettisonJaxbContext(JettisonConfig.mappedJettison().build(), classes);
             }
         }
 
@@ -218,7 +218,7 @@ public class EmptyRequestWithJaxbTest {
         public static class BadgerFishCR extends CR {
 
             protected JAXBContext configure(Class[] classes) throws JAXBException {
-                return new JettisonJaxbContext(JettisonConfiguration.badgerFish().build(), classes);
+                return new JettisonJaxbContext(JettisonConfig.badgerFish().build(), classes);
             }
         }
 

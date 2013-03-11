@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -151,6 +151,7 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
         private Class<?> handlerClass;
         private Object handlerInstance;
         private Method handlingMethod;
+        private Method validateMethod;
         private boolean encodedParams;
         // NameBound
         private final Collection<Class<? extends Annotation>> nameBindings;
@@ -399,6 +400,18 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
         }
 
         /**
+         * Define a method that should be used during resource bean validation phase.
+         *
+         * @param validateMethod method used for validation purposes.
+         * @return updated builder object.
+         */
+        public Builder validateUsing(final Method validateMethod) {
+            this.validateMethod = validateMethod;
+
+            return this;
+        }
+
+        /**
          * Build the resource method model and register it with the parent
          * {@link Resource.Builder Resource.Builder}.
          *
@@ -433,7 +446,11 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
                 handler = MethodHandler.create(handlerInstance);
             }
 
-            return Invocable.create(handler, handlingMethod, encodedParams);
+            if (validateMethod == null) {
+                return Invocable.create(handler, handlingMethod, encodedParams);
+            } else {
+                return Invocable.create(handler, handlingMethod, validateMethod, encodedParams);
+            }
         }
     }
 

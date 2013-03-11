@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -91,7 +91,7 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
      * @param inflector inflector processing the request method.
      */
     public static <T> Invocable create(Inflector<Request, T> inflector) {
-        return new Invocable(MethodHandler.create(inflector), APPLY_INFLECTOR_METHOD, false);
+        return create(MethodHandler.create(inflector), APPLY_INFLECTOR_METHOD, false);
     }
 
     /**
@@ -100,7 +100,7 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
      * @param inflectorClass inflector syb-type processing the request method.
      */
     public static Invocable create(Class<? extends Inflector> inflectorClass) {
-        return new Invocable(MethodHandler.create(inflectorClass), APPLY_INFLECTOR_METHOD, false);
+        return create(MethodHandler.create(inflectorClass), APPLY_INFLECTOR_METHOD, false);
     }
 
     /**
@@ -111,7 +111,7 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
      * @param handlingMethod handling Java method.
      */
     public static Invocable create(MethodHandler handler, Method handlingMethod) {
-        return new Invocable(handler, handlingMethod, false);
+        return create(handler, handlingMethod, false);
     }
 
     /**
@@ -123,19 +123,37 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
      *                          should be disabled, false otherwise.
      */
     public static Invocable create(MethodHandler handler, Method handlingMethod, boolean encodedParameters) {
-        return new Invocable(handler, handlingMethod, encodedParameters);
+        final Method validateMethod = ReflectionHelper
+                .findOverridingMethodOnClass(handler.getHandlerClass(), handlingMethod);
+        return create(handler, handlingMethod, validateMethod, encodedParameters);
+    }
+
+    /**
+     * Create a new resource method invocable model.
+     *
+     * @param handler           resource method handler.
+     * @param handlingMethod    handling Java method.
+     * @param validateMethod    method used during resource bean validation phase.
+     * @param encodedParameters {@code true} if the automatic parameter decoding
+     *                          should be disabled, false otherwise.
+     */
+    public static Invocable create(MethodHandler handler, Method handlingMethod, Method validateMethod,
+                                   boolean encodedParameters) {
+        return new Invocable(handler, handlingMethod, validateMethod, encodedParameters);
     }
 
     private final MethodHandler handler;
     private final Method handlingMethod;
+    private final Method validateMethod;
     private final List<Parameter> parameters;
 
     private final Class<?> rawResponseType;
     private final Type responseType;
 
-    private Invocable(MethodHandler handler, Method handlingMethod, boolean encodedParameters) {
+    private Invocable(MethodHandler handler, Method handlingMethod, Method validateMethod, boolean encodedParameters) {
         this.handler = handler;
         this.handlingMethod = handlingMethod;
+        this.validateMethod = validateMethod;
 
         final Class<?> handlerClass = handler.getHandlerClass();
         final ClassTypePair ctPair = ReflectionHelper.resolveGenericType(
@@ -167,6 +185,15 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
      */
     public Method getHandlingMethod() {
         return handlingMethod;
+    }
+
+    /**
+     * Getter for the Java method used during resource bean validation phase.
+     *
+     * @return corresponding Java method used during resource bean validation phase.
+     */
+    public Method getValidateMethod() {
+        return validateMethod;
     }
 
     /**

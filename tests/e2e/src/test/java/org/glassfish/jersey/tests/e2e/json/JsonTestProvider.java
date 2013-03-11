@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,9 +50,9 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonFeature;
-import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
 /**
@@ -75,14 +75,14 @@ public abstract class JsonTestProvider {
     }};
 
     private Feature feature;
-    private JettisonConfiguration configuration;
+    private JettisonConfig configuration;
     private Set<Object> providers = new LinkedHashSet<Object>();
 
     public static class JettisonMappedJsonTestProvider extends JsonTestProvider {
 
         public JettisonMappedJsonTestProvider() {
-            final JettisonConfiguration jsonConfiguration =
-                    JettisonConfiguration.mappedJettison().xml2JsonNs(new HashMap<String,
+            final JettisonConfig jsonConfiguration =
+                    JettisonConfig.mappedJettison().xml2JsonNs(new HashMap<String,
                             String>() {{
                         put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
                         put("http://example.com", "example");
@@ -100,7 +100,7 @@ public abstract class JsonTestProvider {
         public JettisonBadgerfishJsonTestProvider() {
             setFeature(new JettisonFeature());
 
-            setConfiguration(JettisonConfiguration.badgerFish().build());
+            setConfiguration(JettisonConfig.badgerFish().build());
         }
 
     }
@@ -115,11 +115,11 @@ public abstract class JsonTestProvider {
     }
 
     @Provider
-    protected final static class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfiguration> {
+    protected final static class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfig> {
 
         @Override
-        public MoxyJsonConfiguration getContext(Class<?> objectType) {
-            final MoxyJsonConfiguration configuration = new MoxyJsonConfiguration();
+        public MoxyJsonConfig getContext(Class<?> objectType) {
+            final MoxyJsonConfig configuration = new MoxyJsonConfig();
 
             Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
             namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
@@ -141,11 +141,11 @@ public abstract class JsonTestProvider {
 
     }
 
-    public JettisonConfiguration getConfiguration() {
+    public JettisonConfig getConfiguration() {
         return configuration;
     }
 
-    protected void setConfiguration(final JettisonConfiguration configuration) {
+    protected void setConfiguration(final JettisonConfig configuration) {
         this.configuration = configuration;
     }
 

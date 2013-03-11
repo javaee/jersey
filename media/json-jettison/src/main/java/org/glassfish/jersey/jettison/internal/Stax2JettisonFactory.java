@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 
 import org.codehaus.jettison.badgerfish.BadgerFishXMLStreamReader;
@@ -72,7 +72,7 @@ public class Stax2JettisonFactory {
     }
 
     public static XMLStreamWriter createWriter(final Writer writer,
-                                               final JettisonConfiguration config) throws IOException {
+                                               final JettisonConfig config) throws IOException {
         switch (config.getNotation()) {
             case BADGERFISH:
                 return new BadgerFishXMLStreamWriter(writer);
@@ -90,7 +90,7 @@ public class Stax2JettisonFactory {
     }
 
     public static XMLStreamReader createReader(final Reader reader,
-                                               final JettisonConfiguration config) throws XMLStreamException {
+                                               final JettisonConfig config) throws XMLStreamException {
         Reader nonEmptyReader = ensureNonEmptyReader(reader);
 
         switch (config.getNotation()) {

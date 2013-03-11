@@ -50,7 +50,7 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -87,11 +87,11 @@ public class App {
     }
 
     @Provider
-    final static class JsonMoxyConfigurationContextResolver implements ContextResolver<MoxyJsonConfiguration> {
+    final static class JsonMoxyConfigurationContextResolver implements ContextResolver<MoxyJsonConfig> {
 
         @Override
-        public MoxyJsonConfiguration getContext(Class<?> objectType) {
-            final MoxyJsonConfiguration configuration = new MoxyJsonConfiguration();
+        public MoxyJsonConfig getContext(Class<?> objectType) {
+            final MoxyJsonConfig configuration = new MoxyJsonConfig();
 
             Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
             namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");

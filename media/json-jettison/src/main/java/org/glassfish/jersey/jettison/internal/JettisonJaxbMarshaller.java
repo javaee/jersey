@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,7 @@ import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.Result;
 import javax.xml.validation.Schema;
 
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 
 import org.w3c.dom.Node;
 import org.xml.sax.ContentHandler;
@@ -67,7 +67,7 @@ import org.xml.sax.ContentHandler;
  */
 public final class JettisonJaxbMarshaller extends BaseJsonMarshaller implements Marshaller {
 
-    public JettisonJaxbMarshaller(JAXBContext jaxbContext, JettisonConfiguration jsonConfig) throws JAXBException {
+    public JettisonJaxbMarshaller(JAXBContext jaxbContext, JettisonConfig jsonConfig) throws JAXBException {
         super(jaxbContext, jsonConfig);
     }
 
@@ -129,7 +129,7 @@ public final class JettisonJaxbMarshaller extends BaseJsonMarshaller implements 
                         + "boolean, not " + value.getClass().getName());
             }
 
-            jsonConfig = JettisonConfiguration.createJSONConfiguration(jsonConfig);
+            jsonConfig = JettisonConfig.createJSONConfiguration(jsonConfig);
         } else {
             jaxbMarshaller.setProperty(name, value);
         }

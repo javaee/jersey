@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,7 +64,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonConfigured;
 import org.glassfish.jersey.jettison.internal.Stax2JettisonFactory;
 import org.glassfish.jersey.message.internal.AbstractCollectionJaxbProvider;
@@ -123,12 +123,12 @@ public class JettisonListElementProvider extends AbstractCollectionJaxbProvider 
                                 OutputStream entityStream) throws JAXBException, IOException {
         final OutputStreamWriter osw = new OutputStreamWriter(entityStream, c);
 
-        JettisonConfiguration origJsonConfig = JettisonConfiguration.DEFAULT;
+        JettisonConfig origJsonConfig = JettisonConfig.DEFAULT;
         if (m instanceof JettisonConfigured) {
             origJsonConfig = ((JettisonConfigured) m).getJSONConfiguration();
         }
 
-        final JettisonConfiguration unwrappingJsonConfig = JettisonConfiguration.createJSONConfiguration(origJsonConfig);
+        final JettisonConfig unwrappingJsonConfig = JettisonConfig.createJSONConfiguration(origJsonConfig);
 
         final XMLStreamWriter jxsw = Stax2JettisonFactory.createWriter(osw, unwrappingJsonConfig);
         final String invisibleRootName = getRootElementName(elementType);
@@ -151,7 +151,7 @@ public class JettisonListElementProvider extends AbstractCollectionJaxbProvider 
     @Override
     protected final XMLStreamReader getXMLStreamReader(Class<?> elementType, MediaType mediaType, Unmarshaller u,
                                                        InputStream entityStream) throws XMLStreamException {
-        JettisonConfiguration c = JettisonConfiguration.DEFAULT;
+        JettisonConfig c = JettisonConfig.DEFAULT;
         final Charset charset = getCharset(mediaType);
         if (u instanceof JettisonConfigured) {
             c = ((JettisonConfigured) u).getJSONConfiguration();

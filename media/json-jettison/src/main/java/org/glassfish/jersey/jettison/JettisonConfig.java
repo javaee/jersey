@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,7 @@ import java.util.Map;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class JettisonConfiguration {
+public class JettisonConfig {
 
     /**
      * Enumeration of supported JSON notations.
@@ -75,7 +75,7 @@ public class JettisonConfiguration {
     private final Map<String, String> jsonXml2JsonNs;
 
     /**
-     * Builder class for constructing {@link JettisonConfiguration} options
+     * Builder class for constructing {@link JettisonConfig} options
      */
     public static class Builder {
 
@@ -87,22 +87,22 @@ public class JettisonConfiguration {
         }
 
         /**
-         * Constructs a new immutable {@link JettisonConfiguration} object based on options set on this Builder
+         * Constructs a new immutable {@link JettisonConfig} object based on options set on this Builder
          *
-         * @return a non-null {@link JettisonConfiguration} instance
+         * @return a non-null {@link JettisonConfig} instance
          */
-        public JettisonConfiguration build() {
-            return new JettisonConfiguration(this);
+        public JettisonConfig build() {
+            return new JettisonConfig(this);
         }
 
-        private void copyAttributes(JettisonConfiguration jc) {
+        private void copyAttributes(JettisonConfig jc) {
             jsonXml2JsonNs.putAll(jc.getXml2JsonNs());
         }
     }
 
     /**
-     * Builder class for constructing {@link JettisonConfiguration} options
-     * for the {@link JettisonConfiguration.Notation#MAPPED_JETTISON} convention.
+     * Builder class for constructing {@link JettisonConfig} options
+     * for the {@link JettisonConfig.Notation#MAPPED_JETTISON} convention.
      */
     public static class MappedJettisonBuilder extends Builder {
 
@@ -112,7 +112,7 @@ public class JettisonConfiguration {
 
         /**
          * Setter for XML to JSON namespace mapping.
-         * This property is valid for the {@link JettisonConfiguration.Notation#MAPPED_JETTISON}
+         * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
          * notation only.
          * <p>
          * The value is a map with zero or more
@@ -130,20 +130,20 @@ public class JettisonConfiguration {
         }
     }
 
-    private JettisonConfiguration(Builder b) {
+    private JettisonConfig(Builder b) {
         notation = b.notation;
         jsonXml2JsonNs = b.jsonXml2JsonNs;
     }
 
     /**
-     * A static method for obtaining {@link JettisonConfiguration} instance with humanReadableFormatting
+     * A static method for obtaining {@link JettisonConfig} instance with humanReadableFormatting
      * set according to formatted parameter.
      *
-     * @param c original instance of {@link JettisonConfiguration}, can't be null
-     * @return copy of provided {@link JettisonConfiguration} with humanReadableFormatting set to formatted.
+     * @param c original instance of {@link JettisonConfig}, can't be null
+     * @return copy of provided {@link JettisonConfig} with humanReadableFormatting set to formatted.
      * @throws IllegalArgumentException when provided JsonConfiguration is null.
      */
-    public static JettisonConfiguration createJSONConfiguration(JettisonConfiguration c) throws IllegalArgumentException {
+    public static JettisonConfig createJSONConfiguration(JettisonConfig c) throws IllegalArgumentException {
         if (c == null) {
             throw new IllegalArgumentException("JSONConfiguration can't be null");
         }
@@ -154,15 +154,15 @@ public class JettisonConfiguration {
     }
 
     /**
-     * The default JsonConfiguration uses {@link JettisonConfiguration.Notation#MAPPED_JETTISON}
+     * The default JsonConfiguration uses {@link JettisonConfig.Notation#MAPPED_JETTISON}
      * notation with root unwrapping option set to true.
      */
-    public static final JettisonConfiguration DEFAULT = mappedJettison().build();
+    public static final JettisonConfig DEFAULT = mappedJettison().build();
 
     /**
-     * A static method for obtaining a builder of {@link JettisonConfiguration} instance, which will use {@link JettisonConfiguration.Notation#MAPPED_JETTISON} JSON notation.
+     * A static method for obtaining a builder of {@link JettisonConfig} instance, which will use {@link JettisonConfig.Notation#MAPPED_JETTISON} JSON notation.
      * After getting the builder, you can set configuration options on it and finally get an immutable  JsonConfiguration
-     * instance using the {@link JettisonConfiguration.Builder#build() } method.
+     * instance using the {@link JettisonConfig.Builder#build() } method.
      *
      * @return a builder for JsonConfiguration instance
      */
@@ -171,9 +171,9 @@ public class JettisonConfiguration {
     }
 
     /**
-     * A static method for obtaining a builder of {@link JettisonConfiguration} instance, which will use {@link JettisonConfiguration.Notation#BADGERFISH} JSON notation.
+     * A static method for obtaining a builder of {@link JettisonConfig} instance, which will use {@link JettisonConfig.Notation#BADGERFISH} JSON notation.
      * After getting the builder, you can set configuration options on it and finally get an immutable  JsonConfiguration
-     * instance using the {@link JettisonConfiguration.Builder#build() } method.
+     * instance using the {@link JettisonConfig.Builder#build() } method.
      *
      * @return a builder for JsonConfiguration instance
      */
@@ -181,7 +181,7 @@ public class JettisonConfiguration {
         return new Builder(Notation.BADGERFISH);
     }
 
-    public static Builder copyBuilder(final JettisonConfiguration jc) {
+    public static Builder copyBuilder(final JettisonConfig jc) {
 
         Builder result = new Builder(jc.getNotation());
 
@@ -209,10 +209,10 @@ public class JettisonConfiguration {
 
     /**
      * Returns a map for XML to JSON namespace mapping
-     * This property is valid for the {@link JettisonConfiguration.Notation#MAPPED_JETTISON}
+     * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
      * notation only.
      * @return a map for XML to JSON namespace mapping.
-     * @see JettisonConfiguration.MappedJettisonBuilder#xml2JsonNs(java.util.Map)
+     * @see JettisonConfig.MappedJettisonBuilder#xml2JsonNs(java.util.Map)
      */
     public Map<String, String> getXml2JsonNs() {
         return (jsonXml2JsonNs != null) ? Collections.unmodifiableMap(jsonXml2JsonNs) : null;

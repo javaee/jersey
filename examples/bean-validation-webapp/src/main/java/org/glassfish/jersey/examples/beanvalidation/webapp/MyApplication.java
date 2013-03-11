@@ -52,10 +52,10 @@ import javax.validation.ParameterNameProvider;
 import javax.validation.Validation;
 
 import org.glassfish.jersey.examples.beanvalidation.webapp.resource.ContactCardResource;
-import org.glassfish.jersey.moxy.json.MoxyJsonConfiguration;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.validation.ValidationConfiguration;
+import org.glassfish.jersey.server.validation.ValidationConfig;
 import org.glassfish.jersey.server.validation.internal.InjectingConstraintValidatorFactory;
 
 /**
@@ -85,14 +85,14 @@ public class MyApplication extends ResourceConfig {
      *     instead of the default ones ({@code arg0, arg1, ..})</li>
      * </ul>
      */
-    public static class ValidationConfigurationContextResolver implements ContextResolver<ValidationConfiguration> {
+    public static class ValidationConfigurationContextResolver implements ContextResolver<ValidationConfig> {
 
         @Context
         private ResourceContext resourceContext;
 
         @Override
-        public ValidationConfiguration getContext(final Class<?> type) {
-            final ValidationConfiguration config = new ValidationConfiguration();
+        public ValidationConfig getContext(final Class<?> type) {
+            final ValidationConfig config = new ValidationConfig();
             config.setConstraintValidatorFactory(resourceContext.getResource(InjectingConstraintValidatorFactory.class));
             config.setParameterNameProvider(new CustomParameterNameProvider());
             return config;
@@ -128,11 +128,11 @@ public class MyApplication extends ResourceConfig {
     /**
      * Configuration for {@link org.eclipse.persistence.jaxb.rs.MOXyJsonProvider} - outputs formatted JSON.
      */
-    public static class JsonConfiguration implements ContextResolver<MoxyJsonConfiguration> {
+    public static class JsonConfiguration implements ContextResolver<MoxyJsonConfig> {
 
         @Override
-        public MoxyJsonConfiguration getContext(final Class<?> type) {
-            final MoxyJsonConfiguration config = new MoxyJsonConfiguration();
+        public MoxyJsonConfig getContext(final Class<?> type) {
+            final MoxyJsonConfig config = new MoxyJsonConfig();
             config.setFormattedOutput(true);
             return config;
         }

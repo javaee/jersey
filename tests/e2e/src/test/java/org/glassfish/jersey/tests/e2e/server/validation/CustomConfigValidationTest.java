@@ -63,7 +63,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.validation.ValidationConfiguration;
+import org.glassfish.jersey.server.validation.ValidationConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -148,12 +148,12 @@ public class CustomConfigValidationTest extends JerseyTest {
         assertEquals(null, response.readEntity(CustomBean.class).getPath());
     }
 
-    public static class ValidationConfigurationContextResolver implements ContextResolver<ValidationConfiguration> {
+    public static class ValidationConfigurationContextResolver implements ContextResolver<ValidationConfig> {
 
-        private final ValidationConfiguration config;
+        private final ValidationConfig config;
 
         public ValidationConfigurationContextResolver() {
-            config = new ValidationConfiguration();
+            config = new ValidationConfig();
 
             // ConstraintValidatorFactory is set by default.
             config.setMessageInterpolator(new CustomMessageInterpolator());
@@ -162,8 +162,8 @@ public class CustomConfigValidationTest extends JerseyTest {
         }
 
         @Override
-        public ValidationConfiguration getContext(final Class<?> type) {
-            return ValidationConfiguration.class.isAssignableFrom(type) ? config : null;
+        public ValidationConfig getContext(final Class<?> type) {
+            return ValidationConfig.class.isAssignableFrom(type) ? config : null;
         }
     }
 

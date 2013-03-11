@@ -244,7 +244,7 @@ public final class ServerProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    public static final String FEATURE_DISABLE_BEAN_VALIDATION = "jersey.config.server.disableBeanValidation";
+    public static final String FEATURE_DISABLE_BEAN_VALIDATION = "jersey.config.disableBeanValidation.server";
 
     /**
      * If {@code true} then enable sending of validation error entity in {@code Response} (validation has to be enabled by registering

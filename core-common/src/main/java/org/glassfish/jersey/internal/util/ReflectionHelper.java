@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -679,6 +679,25 @@ public class ReflectionHelper {
     }
 
     /**
+     * Determines whether a given method is {@code getter}.
+     *
+     * @param method method to be examined.
+     * @return {@code true} if the method is {@code getter}, {@code false} otherwise.
+     */
+    public static boolean isGetter(final Method method) {
+        if (method.getParameterTypes().length == 0) {
+            final String methodName = method.getName();
+
+            if (methodName.startsWith("get")) {
+                return !void.class.equals(method.getReturnType());
+            } else if (methodName.startsWith("is")) {
+                return boolean.class.equals(method.getReturnType()) || Boolean.class.equals(method.getReturnType());
+            }
+        }
+        return false;
+    }
+
+    /**
      * A tuple consisting of a concrete class and a declaring class that declares a
      * generic interface type.
      */
@@ -1037,10 +1056,76 @@ public class ReflectionHelper {
         return null;
     }
 
+    /**
+     * Find a {@link Method method} that overrides the given {@code method} on the given {@link Class class}.
+     *
+     * @param clazz class to find overriding method on.
+     * @param method an abstract method to find implementing method for.
+     * @return method that overrides the given method or the given method itself if a better alternative cannot be found.
+     */
+    public static Method findOverridingMethodOnClass(final Class<?> clazz, final Method method) {
+        for (final Method _method : clazz.getMethods()) {
+            if (!_method.isBridge()
+                    && !Modifier.isAbstract(_method.getModifiers())
+                    && _method.getName().equals(method.getName())
+                    && _method.getParameterTypes().length == method.getParameterTypes().length) {
+
+                if (compareParameterTypes(_method.getGenericParameterTypes(), method.getGenericParameterTypes())) {
+                    return _method;
+                }
+            }
+        }
+
+        if (method.isBridge() || Modifier.isAbstract(method.getModifiers())) {
+            LOGGER.log(Level.INFO, LocalizationMessages.OVERRIDING_METHOD_CANNOT_BE_FOUND(method, clazz));
+        }
+
+        return method;
+    }
+
+    /**
+     * Compare generic parameter types of two methods.
+     *
+     * @param ts generic parameter types of the first method.
+     * @param _ts generic parameter types of the second method.
+     * @return {@code true} if the given types are understood to be equal, {@code false} otherwise.
+     * @see #compareParameterTypes(java.lang.reflect.Type, java.lang.reflect.Type)
+     */
     private static boolean compareParameterTypes(Type[] ts, Type[] _ts) {
         for (int i = 0; i < ts.length; i++) {
             if (!ts[i].equals(_ts[i])) {
-                if (!(_ts[i] instanceof TypeVariable)) {
+                if (!compareParameterTypes(ts[i], _ts[i])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Compare respective generic parameter types of two methods.
+     *
+     * @param ts generic parameter type of the first method.
+     * @param _ts generic parameter type of the second method.
+     * @return {@code true} if the given types are understood to be equal, {@code false} otherwise.
+     */
+    private static boolean compareParameterTypes(final Type ts, final Type _ts) {
+        if (ts instanceof Class) {
+            final Class<?> clazz = (Class<?>) ts;
+
+            if (_ts instanceof Class) {
+                return ((Class) _ts).isAssignableFrom(clazz);
+            } else if (_ts instanceof TypeVariable) {
+                return checkTypeBounds(clazz, ((TypeVariable) _ts).getBounds());
+            }
+        }
+        return _ts instanceof TypeVariable;
+    }
+
+    private static boolean checkTypeBounds(final Class type, final Type[] bounds) {
+        for (final Type bound : bounds) {
+            if (bound instanceof Class) {
+                if (!((Class) bound).isAssignableFrom(type)) {
                     return false;
                 }
             }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,18 +40,43 @@
 
 package org.glassfish.jersey.server.internal.inject;
 
+import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 
+import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.spi.Contract;
 
 /**
- * Configured {@link Validator} for Jersey validation purposes.
- * <p/>
- * Note: This interface exists to distinguish between injection of default (un-configured) instances of
- * {@link Validator}/{@link javax.validation.ValidatorFactory} and an implementation of this interface.
+ * Configured validator for Jersey validation purposes.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @Contract
 public interface ConfiguredValidator extends Validator {
+
+    /**
+     * Validates resource class instance and input parameters of the {@code method}. {@link ConstraintViolationException} raised
+     * from this method should be mapped to HTTP 400 status.
+     *
+     * @param resource resource class instance.
+     * @param resourceMethod invocable containing handling and validation methods.
+     * @param args input method parameters.
+     * @throws ConstraintViolationException if {@link javax.validation.ConstraintViolation} occurs (should be mapped to HTTP
+     * 400 status).
+     */
+    public void validateResourceAndInputParams(final Object resource, final Invocable resourceMethod, final Object[] args)
+            throws ConstraintViolationException;
+
+    /**
+     * Validates response instance / response entity of the {@code method}. {@link ConstraintViolationException} raised
+     * from this method should be mapped to HTTP 500 status.
+     *
+     * @param resource resource class instance.
+     * @param resourceMethod invocable containing handling and validation methods.
+     * @param result response entity.
+     * @throws ConstraintViolationException if {@link javax.validation.ConstraintViolation} occurs (should be mapped to HTTP
+     * 500 status).
+     */
+    public void validateResult(final Object resource, final Invocable resourceMethod, final Object result)
+            throws ConstraintViolationException;
 }

@@ -42,15 +42,7 @@ package org.glassfish.jersey.server.validation.internal;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.validation.Validation;
-import javax.validation.ValidationProviderResolver;
-import javax.validation.Validator;
-import javax.validation.ValidatorContext;
-import javax.validation.ValidatorFactory;
-import javax.validation.spi.ValidationProvider;
+import java.util.WeakHashMap;
 
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
@@ -58,10 +50,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.Configuration;
+import javax.validation.Validation;
+import javax.validation.ValidationProviderResolver;
+import javax.validation.Validator;
+import javax.validation.ValidatorContext;
+import javax.validation.ValidatorFactory;
+import javax.validation.spi.ValidationProvider;
+
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
-import org.glassfish.jersey.server.validation.ValidationConfiguration;
+import org.glassfish.jersey.server.validation.ValidationConfig;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.PerLookup;
@@ -76,27 +78,29 @@ public class ValidationBinder extends AbstractBinder {
 
     @Override
     protected void configure() {
-        bindFactory(DefaultValidatorFactoryProvider.class, Singleton.class).to(ValidatorFactory.class).in(PerLookup.class);
-        bindFactory(DefaultValidatorProvider.class, Singleton.class).to(Validator.class).in(PerLookup.class);
+        bindFactory(DefaultConfigurationProvider.class, Singleton.class).to(Configuration.class).in(Singleton.class);
+
+        bindFactory(DefaultValidatorFactoryProvider.class, Singleton.class).to(ValidatorFactory.class).in(Singleton.class);
+        bindFactory(DefaultValidatorProvider.class, Singleton.class).to(Validator.class).in(Singleton.class);
 
         bindFactory(ConfiguredValidatorProvider.class, Singleton.class).to(ConfiguredValidator.class).in(PerLookup.class);
     }
 
     /**
-     * Factory providing default (un-configured) {@link ValidatorFactory} instance.
+     * Factory providing default {@link javax.validation.Configuration} instance.
      */
-    private static class DefaultValidatorFactoryProvider implements Factory<ValidatorFactory> {
+    private static class DefaultConfigurationProvider implements Factory<Configuration> {
 
         private final boolean inOsgi;
 
-        public DefaultValidatorFactoryProvider() {
+        public DefaultConfigurationProvider() {
             this.inOsgi = ReflectionHelper.getOsgiRegistryInstance() != null;
         }
 
         @Override
-        public ValidatorFactory provide() {
+        public Configuration provide() {
             if (!inOsgi) {
-                return Validation.buildDefaultValidatorFactory();
+                return Validation.byDefaultProvider().configure();
             } else {
                 return Validation.
                         byDefaultProvider().
@@ -112,9 +116,27 @@ public class ValidationBinder extends AbstractBinder {
                                 return validationProviders;
                             }
                         }).
-                        configure().
-                        buildValidatorFactory();
+                        configure();
             }
+        }
+
+        @Override
+        public void dispose(final Configuration instance) {
+            // NOOP
+        }
+    }
+
+    /**
+     * Factory providing default (un-configured) {@link ValidatorFactory} instance.
+     */
+    private static class DefaultValidatorFactoryProvider implements Factory<ValidatorFactory> {
+
+        @Inject
+        private Configuration config;
+
+        @Override
+        public ValidatorFactory provide() {
+            return config.buildValidatorFactory();
         }
 
         @Override
@@ -148,59 +170,91 @@ public class ValidationBinder extends AbstractBinder {
     private static class ConfiguredValidatorProvider implements Factory<ConfiguredValidator> {
 
         @Inject
+        private Configuration configuration;
+        @Inject
         private ValidatorFactory factory;
+
         @Context
         private Providers providers;
         @Context
         private ResourceContext resourceContext;
 
+        private ConfiguredValidator defaultValidator;
+
+        private final WeakHashMap<ContextResolver<ValidationConfig>, ConfiguredValidator> validatorCache =
+                new WeakHashMap<ContextResolver<ValidationConfig>, ConfiguredValidator>();
+
         @Override
         public ConfiguredValidator provide() {
-            return getConfiguredValidator(factory);
+            // Custom Configuration.
+            final ContextResolver<ValidationConfig> contextResolver =
+                    providers.getContextResolver(ValidationConfig.class, MediaType.WILDCARD_TYPE);
+
+            if (contextResolver == null) {
+                return getDefaultValidator();
+            } else {
+                if (!validatorCache.containsKey(contextResolver)) {
+                    final ValidatorContext context = getDefaultValidatorContext();
+                    final ValidationConfig config = contextResolver.getContext(ValidationConfig.class);
+
+                    if (config != null) {
+                        // MessageInterpolator
+                        if (config.getMessageInterpolator() != null) {
+                            context.messageInterpolator(config.getMessageInterpolator());
+                        }
+
+                        // TraversableResolver
+                        if (config.getTraversableResolver() != null) {
+                            context.traversableResolver(config.getTraversableResolver());
+                        }
+
+                        // ConstraintValidatorFactory
+                        if (config.getConstraintValidatorFactory() != null) {
+                            context.constraintValidatorFactory(config.getConstraintValidatorFactory());
+                        }
+
+                        // ParameterNameProvider
+                        if (config.getParameterNameProvider() != null) {
+                            context.parameterNameProvider(config.getParameterNameProvider());
+                        }
+                    }
+
+                    validatorCache.put(contextResolver, new ConfiguredValidatorImpl(context.getValidator(), configuration));
+                }
+
+                return validatorCache.get(contextResolver);
+            }
         }
 
-        @Override
-        public void dispose(final ConfiguredValidator instance) {
-            // NOOP
+        /**
+         * Return default validator.
+         *
+         * @return default validator.
+         */
+        private ConfiguredValidator getDefaultValidator() {
+            if (defaultValidator == null) {
+                defaultValidator = new ConfiguredValidatorImpl(getDefaultValidatorContext().getValidator(), configuration);
+            }
+            return defaultValidator;
         }
 
-        private ConfiguredValidator getConfiguredValidator(final ValidatorFactory factory) {
+        /**
+         * Return default {@link ValidatorContext validator context} able to inject JAX-RS resources/providers.
+         *
+         * @return default validator context.
+         */
+        private ValidatorContext getDefaultValidatorContext() {
             final ValidatorContext context = factory.usingContext();
 
             // Default Configuration.
             context.constraintValidatorFactory(resourceContext.getResource(InjectingConstraintValidatorFactory.class));
 
-            // Custom Configuration.
-            final ContextResolver<ValidationConfiguration> contextResolver =
-                    providers.getContextResolver(ValidationConfiguration.class, MediaType.WILDCARD_TYPE);
+            return context;
+        }
 
-            if (contextResolver != null) {
-                final ValidationConfiguration config = contextResolver.getContext(ValidationConfiguration.class);
-
-                if (config != null) {
-                    // MessageInterpolator
-                    if (config.getMessageInterpolator() != null) {
-                        context.messageInterpolator(config.getMessageInterpolator());
-                    }
-
-                    // TraversableResolver
-                    if (config.getTraversableResolver() != null) {
-                        context.traversableResolver(config.getTraversableResolver());
-                    }
-
-                    // ConstraintValidatorFactory
-                    if (config.getConstraintValidatorFactory() != null) {
-                        context.constraintValidatorFactory(config.getConstraintValidatorFactory());
-                    }
-
-                    // ParameterNameProvider
-                    if (config.getParameterNameProvider() != null) {
-                        context.parameterNameProvider(config.getParameterNameProvider());
-                    }
-                }
-            }
-
-            return new ConfiguredValidatorImpl(context.getValidator());
+        @Override
+        public void dispose(final ConfiguredValidator instance) {
+            // NOOP
         }
     }
 }

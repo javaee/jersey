@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ import javax.ws.rs.ext.Provider;
 
 import javax.xml.bind.JAXBContext;
 
-import org.glassfish.jersey.jettison.JettisonConfiguration;
+import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
 
 /**
@@ -64,7 +64,7 @@ public final class JaxbContextResolver implements ContextResolver<JAXBContext> {
 
     public JaxbContextResolver() throws Exception {
         this.types = new HashSet<Class<?>>(Arrays.asList(cTypes));
-        this.context = new JettisonJaxbContext(JettisonConfiguration.DEFAULT, cTypes);
+        this.context = new JettisonJaxbContext(JettisonConfig.DEFAULT, cTypes);
     }
 
     @Override

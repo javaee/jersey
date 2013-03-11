@@ -54,7 +54,7 @@ import org.glassfish.jersey.server.validation.internal.ValidationErrorMessageBod
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ValidationFeature implements Feature {
+public final class ValidationFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {

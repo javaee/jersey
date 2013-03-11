@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -88,11 +88,11 @@ class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     }
 
     private void initializeProperties() {
-        final ContextResolver<MoxyJsonConfiguration> contextResolver =
-                providers.getContextResolver(MoxyJsonConfiguration.class, MediaType.APPLICATION_JSON_TYPE);
+        final ContextResolver<MoxyJsonConfig> contextResolver =
+                providers.getContextResolver(MoxyJsonConfig.class, MediaType.APPLICATION_JSON_TYPE);
 
         if (contextResolver != null) {
-            final MoxyJsonConfiguration jsonConfiguration = contextResolver.getContext(MoxyJsonConfiguration.class);
+            final MoxyJsonConfig jsonConfiguration = contextResolver.getContext(MoxyJsonConfig.class);
 
             if (jsonConfiguration.getAttributePrefix() != null) {
                 setAttributePrefix(jsonConfiguration.getAttributePrefix());
