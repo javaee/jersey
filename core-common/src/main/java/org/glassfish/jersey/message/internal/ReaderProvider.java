@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 package org.glassfish.jersey.message.internal;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -81,7 +82,7 @@ public final class ReaderProvider extends AbstractMessageReaderWriterProvider<Re
 
         final EntityInputStream entityStream = EntityInputStream.create(inputStream);
         if (entityStream.isEmpty()) {
-            return null;
+            return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(new byte[0])));
         }
 
         return new BufferedReader(new InputStreamReader(entityStream, getCharset(mediaType)));
