@@ -67,6 +67,7 @@ import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class Injections {
+
     private final static ServiceLocatorGenerator generator = new ServiceLocatorGeneratorImpl();
     private final static ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
 
@@ -95,15 +96,7 @@ public class Injections {
      * @return a service locator with all the bindings.
      */
     public static ServiceLocator createLocator(String name, ServiceLocator parent, Binder... binders) {
-        ServiceLocator locator = factory.create(name, parent, generator);
-
-        ServiceLocatorUtilities.enablePerThreadScope(locator);
-
-        for (Binder binder : binders) {
-            bind(locator, binder);
-        }
-
-        return locator;
+        return _createLocator(name, parent, binders);
     }
 
     /**
@@ -117,16 +110,7 @@ public class Injections {
      * @return a service locator with all the bindings.
      */
     public static ServiceLocator createLocator(String name, Binder... binders) {
-
-        ServiceLocator locator = factory.create(name, null, generator);
-
-        ServiceLocatorUtilities.enablePerThreadScope(locator);
-
-        for (Binder binder : binders) {
-            bind(locator, binder);
-        }
-
-        return locator;
+        return _createLocator(name, null, binders);
     }
 
     /**
@@ -140,16 +124,7 @@ public class Injections {
      * @return a service locator with all the bindings.
      */
     public static ServiceLocator createLocator(ServiceLocator parent, Binder... binders) {
-
-        ServiceLocator locator = factory.create(null, parent, generator);
-
-        ServiceLocatorUtilities.enablePerThreadScope(locator);
-
-        for (Binder binder : binders) {
-            bind(locator, binder);
-        }
-
-        return locator;
+        return _createLocator(null, parent, binders);
     }
 
     /**
@@ -159,15 +134,19 @@ public class Injections {
      * @return a service locator with all the bindings.
      */
     public static ServiceLocator createLocator(Binder... binders) {
-        ServiceLocator locator = factory.create(null, null, generator);
+        return _createLocator(null, null, binders);
+    }
 
-        ServiceLocatorUtilities.enablePerThreadScope(locator);
+    private static ServiceLocator _createLocator(String name, ServiceLocator parent, Binder... binders) {
+
+        final ServiceLocator result = factory.create(name, parent, generator);
+
+        ServiceLocatorUtilities.enablePerThreadScope(result);
 
         for (Binder binder : binders) {
-            bind(locator, binder);
+            bind(result, binder);
         }
-
-        return locator;
+        return result;
     }
 
     private static void bind(ServiceLocator locator, Binder binder) {

@@ -138,6 +138,11 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.containers.glassfish</groupId>
+                <artifactId>jersey-gf-cdi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+             <dependency>
+                <groupId>org.glassfish.jersey.containers.glassfish</groupId>
                 <artifactId>jersey-gf-ejb</artifactId>
                 <version>${project.version}</version>
             </dependency>

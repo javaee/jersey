@@ -792,6 +792,12 @@
             </dependency>
 
             <dependency>
+                <groupId>javax.enterprise</groupId>
+                <artifactId>cdi-api</artifactId>
+                <version>${cdi.api.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>14.0</version>
@@ -1073,6 +1079,8 @@
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
         <ejb.version>3.2-b01</ejb.version>
+        <weld.version>2.0.0.Beta3</weld.version>
+        <cdi.api.version>1.1-20130121</cdi.api.version>
         <javax.interceptor.version>1.2-b02</javax.interceptor.version>
         <jaxb.api.version>2.1</jaxb.api.version>
         <jaxb.ri.version>2.2.3-1</jaxb.ri.version>

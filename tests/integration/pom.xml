@@ -56,6 +56,7 @@
     <name>jersey-tests-integration</name>
 
     <modules>
+        <module>cdi-test-webapp</module>
         <module>jersey-780</module>
         <module>jersey-1107</module>
         <module>portability-jersey-1</module>
