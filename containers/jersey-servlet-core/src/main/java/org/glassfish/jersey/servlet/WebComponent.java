@@ -369,13 +369,14 @@ public class WebComponent {
 
     private static ResourceConfig createResourceConfig(WebConfig config) throws ServletException {
         final Map<String, Object> initParams = getInitParams(config);
+        final Map<String, Object> contextParams = getContextParams(config.getServletContext());
 
         // check if the JAX-RS application config class property is present
         String jaxrsApplicationClassName = config.getInitParameter(ServletProperties.JAXRS_APPLICATION_CLASS);
 
         if (jaxrsApplicationClassName == null) {
             // If no resource config class property is present, create default config
-            final ResourceConfig rc = new ResourceConfig().addProperties(initParams);
+            final ResourceConfig rc = new ResourceConfig().addProperties(initParams).addProperties(contextParams);
 
             final String webApp = config.getInitParameter(ServletProperties.PROVIDER_WEB_APP);
             if (webApp != null && !"false".equals(webApp)) {
@@ -389,7 +390,7 @@ public class WebComponent {
                     (jaxrsApplicationClassName);
             if (javax.ws.rs.core.Application.class.isAssignableFrom(jaxrsApplicationClass)) {
                 return ResourceConfig.forApplicationClass(jaxrsApplicationClass)
-                        .addProperties(initParams);
+                        .addProperties(initParams).addProperties(contextParams);
             } else {
                 throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_PARENT_CLASS_INVALID(
                         jaxrsApplicationClassName, javax.ws.rs.core.Application.class));
@@ -415,6 +416,22 @@ public class WebComponent {
         while (names.hasMoreElements()) {
             String name = (String) names.nextElement();
             props.put(name, webConfig.getInitParameter(name));
+        }
+        return props;
+    }
+
+    /**
+     * Extract context param from {@link ServletContext}.
+     *
+     * @param servletContext actual servlet context.
+     * @return map representing current context parameters.
+     */
+    public static Map<String, Object> getContextParams(ServletContext servletContext) {
+        Map<String, Object> props = new HashMap<String, Object>();
+        Enumeration names = servletContext.getAttributeNames();
+        while (names.hasMoreElements()) {
+            String name = (String) names.nextElement();
+            props.put(name, servletContext.getAttribute(name));
         }
         return props;
     }

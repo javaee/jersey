@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,6 +62,7 @@ import javax.servlet.annotation.HandlesTypes;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
+import org.glassfish.jersey.servlet.WebComponent;
 import org.glassfish.jersey.servlet.init.internal.LocalizationMessages;
 
 import com.google.common.collect.Lists;
@@ -181,6 +182,7 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
             final Set<Class<?>> appClasses = getRootResourceAndProviderClasses(classes);
             final ServletContainer s = new ServletContainer(
                     ResourceConfig.forApplicationClass(ResourceConfig.class, appClasses).addProperties(getInitParams(appReg))
+                    .addProperties(WebComponent.getContextParams(sc))
             );
             appReg = sc.addServlet(appReg.getName(), s);
 
@@ -219,7 +221,8 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
             final Class<? extends Application> a, final Set<Class<?>> classes) throws ServletException {
         if (sr.getClassName() == null) {
             // create a new servlet container for a given app.
-            final ResourceConfig rc = ResourceConfig.forApplicationClass(a, classes).addProperties(getInitParams(sr));
+            final ResourceConfig rc = ResourceConfig.forApplicationClass(a, classes).addProperties(getInitParams(sr))
+                    .addProperties(WebComponent.getContextParams(sc));
             final ServletContainer s = new ServletContainer(rc);
 
             ServletRegistration.Dynamic dsr = sc.addServlet(a.getName(), s);
