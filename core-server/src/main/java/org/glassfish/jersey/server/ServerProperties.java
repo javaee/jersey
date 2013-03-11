@@ -295,6 +295,26 @@ public final class ServerProperties {
      */
     public static final String FEATURE_DISABLE_JSON_PROCESSING = CommonProperties.FEATURE_DISABLE_JSON_PROCESSING + ".server";
 
+
+    /**
+     * If {@code true} then validation of sub resource locator model is disabled.
+     * <p/>
+     * This options is used for performance purpose and can cause problems during runtime.
+     * <p/>
+     * The validation is run on the model which is created either from returned class or instance or on directly
+     * returned {@link org.glassfish.jersey.server.model.Resource resource}. Disabling a validation (by {@code false})
+     * could cause invalid behaviour and errors during the processing of sub resource locator model in the case the model
+     * contains problems which cannot be handled by disabled validation.
+     * <p/>
+     * Default value is {@code false}.
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     */
+    public static final String RESOURCE_LOCATOR_VALIDATION_DISABLE = "jersey.config.server.resource.locator.validation.disable";
+
+
     private ServerProperties() {
         // prevents instantiation
     }
