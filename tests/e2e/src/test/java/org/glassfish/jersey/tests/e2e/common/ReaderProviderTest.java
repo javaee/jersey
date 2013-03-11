@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,19 +40,29 @@
 
 package org.glassfish.jersey.tests.e2e.common;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 
-import javax.ws.rs.*;
-import javax.ws.rs.client.*;
-import javax.ws.rs.core.*;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.*;
-import org.glassfish.jersey.test.*;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.*;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Testing {@link Reader} on client and server.
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class ReaderProviderTest extends JerseyTest {
@@ -68,33 +78,42 @@ public class ReaderProviderTest extends JerseyTest {
     public void testReader() {
         Response response = target().path("test/postReaderGetReader").request().post(Entity.entity(GET_POST_RESPONSE,
                 MediaType.TEXT_PLAIN));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(GET_POST_RESPONSE, response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(GET_POST_RESPONSE, response.readEntity(String.class));
     }
 
     @Test
     public void testGetReader() {
         Response response = target().path("test/getReader").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(GET_READER_RESPONSE, response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(GET_READER_RESPONSE, response.readEntity(String.class));
+    }
+
+    @Test
+    public void testEmptyReader() throws IOException {
+        Response response = target().path("test/getEmpty").request().get();
+        assertEquals(204, response.getStatus());
+        final Reader reader = response.readEntity(Reader.class);
+        assertNotNull(reader);
+        assertEquals(-1, reader.read());
     }
 
     @Test
     public void testReaderOnClientAsResponseEntity() throws IOException {
         Response response = target().path("test/getReader").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final Reader reader = response.readEntity(Reader.class);
-        Assert.assertNotNull(reader);
+        assertNotNull(reader);
         BufferedReader br = new BufferedReader(reader);
-        Assert.assertEquals(GET_READER_RESPONSE, br.readLine());
+        assertEquals(GET_READER_RESPONSE, br.readLine());
     }
 
     @Test
     public void testReaderOnClientAsRequestEntity() throws IOException {
         Response response = target().path("test/postReaderGetReader").request().post(Entity.entity(new StringReader
                 (GET_POST_RESPONSE), MediaType.TEXT_PLAIN));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(GET_POST_RESPONSE, response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(GET_POST_RESPONSE, response.readEntity(String.class));
     }
 
 
@@ -113,5 +132,10 @@ public class ReaderProviderTest extends JerseyTest {
             return new StringReader(GET_READER_RESPONSE);
         }
 
+        @GET
+        @Path("getEmpty")
+        public String getemptyResponse() throws IOException {
+            return null;
+        }
     }
 }
