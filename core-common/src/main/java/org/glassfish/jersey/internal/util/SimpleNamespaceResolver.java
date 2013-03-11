@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,28 +37,55 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.internal.util;
 
-package org.glassfish.jersey.server.wadl.processor.internal;
+import java.util.Iterator;
 
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.FeatureContext;
-
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.server.wadl.processor.WadlModelProcessorFeature;
+import javax.xml.XMLConstants;
+import javax.xml.namespace.NamespaceContext;
 
 /**
- * {@link AutoDiscoverable} registering {@link WadlModelProcessorFeature} if this feature is not already registered.
+ * Simple namespace resolver which resolves one predefined namespace.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Gerard Davison
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@ConstrainedTo(RuntimeType.SERVER)
-public final class WadlModelProcessorAutoDiscoverable implements AutoDiscoverable {
+public class SimpleNamespaceResolver implements NamespaceContext {
+    private final String prefix;
+    private final String nsURI;
+
+    /**
+     * Create a new instance of the namespace resolver initialized with the
+     * fixed {@code prefix} and {@code URI} that the resolver will be capable to resolve.
+     *
+     * @param prefix Namespace prefix.
+     * @param nsURI Namespace URI.
+     */
+    public SimpleNamespaceResolver(String prefix, String nsURI) {
+        this.prefix = prefix;
+        this.nsURI = nsURI;
+    }
 
     @Override
-    public void configure(FeatureContext context) {
-        if (!context.getConfiguration().isRegistered(WadlModelProcessorFeature.class)) {
-            context.register(WadlModelProcessorFeature.class);
+    public String getNamespaceURI(String prefix) {
+        if (prefix.equals(this.prefix)) {
+            return this.nsURI;
+        } else {
+            return XMLConstants.NULL_NS_URI;
         }
+    }
+
+    @Override
+    public String getPrefix(String namespaceURI) {
+        if (namespaceURI.equals(this.nsURI)) {
+            return this.prefix;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Iterator getPrefixes(String namespaceURI) {
+        return null;
     }
 }

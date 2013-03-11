@@ -49,6 +49,8 @@ import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 /**
  * Provides a configured {@link org.glassfish.jersey.server.wadl.WadlGenerator} with all decorations (the default
  * wadl generator decorated by other generators).
@@ -151,17 +153,6 @@ public abstract class WadlGeneratorConfig {
     public WadlGeneratorConfig() {
     }
 
-//    /**
-//     * Creates a new WadlGeneratorConfig from the provided wadlGenerator (must already be initialized).
-//     * @param wadlGenerator the wadl generator to provide, must not be null.
-//     */
-//    public WadlGeneratorConfig( WadlGenerator wadlGenerator ) {
-//        if ( wadlGenerator == null ) {
-//            throw new IllegalArgumentException( "The wadl generator must not be null." );
-//        }
-//        _wadlGenerator = wadlGenerator;
-//    }
-
     public abstract List configure();
 
     /**
@@ -170,7 +161,7 @@ public abstract class WadlGeneratorConfig {
      *
      * @return the initialized {@link org.glassfish.jersey.server.wadl.WadlGenerator}
      */
-    public WadlGenerator createWadlGenerator() {
+    public WadlGenerator createWadlGenerator(ServiceLocator locator) {
         WadlGenerator wadlGenerator;
         List<WadlGeneratorDescription> wadlGeneratorDescriptions;
         try {
@@ -182,7 +173,7 @@ public abstract class WadlGeneratorConfig {
             desc.setConfiguratorClass(this.getClass());
         }
         try {
-            wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(wadlGeneratorDescriptions);
+            wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(locator, wadlGeneratorDescriptions);
         } catch (Exception e) {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_LOAD(), e);
 
@@ -206,16 +197,6 @@ public abstract class WadlGeneratorConfig {
     public static WadlGeneratorConfigDescriptionBuilder generator(Class<? extends WadlGenerator> generatorClass) {
         return new WadlGeneratorConfigDescriptionBuilder().generator(generatorClass);
     }
-
-//    /**
-//     * Start to build an instance of {@link WadlGeneratorConfig}:
-//     * <pre><code>generator(&lt;generator&gt;).generator(&lt;generator&gt;).build()</code></pre>
-//     * @param generator the configured wadl generator
-//     * @return an instance of {@link WadlGeneratorConfigBuilder}.
-//     */
-//    public static WadlGeneratorConfigBuilder generator( WadlGenerator generator ) {
-//        return new WadlGeneratorConfigBuilder().generator( generator );
-//    }
 
     public static class WadlGeneratorConfigDescriptionBuilder {
 

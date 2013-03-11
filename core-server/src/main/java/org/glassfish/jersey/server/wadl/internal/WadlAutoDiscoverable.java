@@ -38,47 +38,28 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.wadl.processor;
+package org.glassfish.jersey.server.wadl.internal;
 
-import javax.inject.Singleton;
-
-import javax.ws.rs.core.Feature;
+import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.model.ModelProcessor;
-import org.glassfish.jersey.server.wadl.WadlApplicationContext;
-import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.server.wadl.WadlFeature;
 
 /**
- * Feature enabling WADL {@link ModelProcessor model processor}. The feature registers model processor
- * which enhance the resource model with WADL resource extensions.
+ * {@link AutoDiscoverable} registering {@link org.glassfish.jersey.server.wadl.WadlFeature} if this feature
+ * is not already registered.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class WadlModelProcessorFeature implements Feature {
+@ConstrainedTo(RuntimeType.SERVER)
+public final class WadlAutoDiscoverable implements AutoDiscoverable {
 
     @Override
-    public boolean configure(FeatureContext context) {
-        final boolean disabled = PropertiesHelper.isProperty(context.getConfiguration().getProperty(ServerProperties
-                .FEATURE_DISABLE_WADL));
-        if (disabled) {
-            return false;
+    public void configure(FeatureContext context) {
+        if (!context.getConfiguration().isRegistered(WadlFeature.class)) {
+            context.register(WadlFeature.class);
         }
-
-        context.register(WadlModelProcessor.class);
-        context.register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(WadlApplicationContextImpl.class).to(WadlApplicationContext.class).in(Singleton.class);
-            }
-        });
-        return true;
     }
-
-
 }

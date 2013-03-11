@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,17 +40,20 @@
 package org.glassfish.jersey.server.wadl.internal.generators;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
+import javax.inject.Provider;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 
 import com.sun.research.ws.wadl.Application;
 import com.sun.research.ws.wadl.Method;
@@ -85,14 +88,9 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
     private File _applicationDocsFile;
     private InputStream _applicationDocsStream;
     private ApplicationDocs _applicationDocs;
+    @Context
+    private Provider<SAXParserFactory> saxFactoryProvider;
 
-    public WadlGeneratorApplicationDoc() {
-    }
-
-    public WadlGeneratorApplicationDoc(WadlGenerator wadlGenerator, ApplicationDocs applicationDocs) {
-        _delegate = wadlGenerator;
-        _applicationDocs = applicationDocs;
-    }
 
     public void setWadlGeneratorDelegate(WadlGenerator delegate) {
         _delegate = delegate;
@@ -118,21 +116,21 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
         _applicationDocsStream = applicationDocsStream;
     }
 
+
     public void init() throws Exception {
         if (_applicationDocsFile == null && _applicationDocsStream == null) {
             throw new IllegalStateException("Neither the applicationDocsFile nor the applicationDocsStream" +
                     " is set, one of both is required.");
         }
         _delegate.init();
-        String name = ApplicationDocs.class.getName();
-        final int i = name.lastIndexOf('.');
-        name = (i != -1) ? name.substring(0, i) : "";
-        final JAXBContext c = JAXBContext.newInstance(name,
-                Thread.currentThread().getContextClassLoader());
-        final Unmarshaller m = c.createUnmarshaller();
-        final Object obj = _applicationDocsFile != null
-                ? m.unmarshal(_applicationDocsFile) : m.unmarshal(_applicationDocsStream);
-        _applicationDocs = ApplicationDocs.class.cast(obj);
+
+        InputStream inputStream;
+        if (_applicationDocsFile != null) {
+            inputStream = new FileInputStream(_applicationDocsFile);
+        } else {
+            inputStream = _applicationDocsStream;
+        }
+        _applicationDocs = WadlUtils.unmarshall(inputStream, saxFactoryProvider.get(), ApplicationDocs.class);
     }
 
     /**
@@ -164,8 +162,8 @@ public class WadlGeneratorApplicationDoc implements WadlGenerator {
      * @param m
      * @param mediaType
      * @return representation type
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model
-     * .Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model.Resource,
+     *      org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
     public Representation createRequestRepresentation(org.glassfish.jersey.server.model.Resource r,
                                                       org.glassfish.jersey.server.model.ResourceMethod m,

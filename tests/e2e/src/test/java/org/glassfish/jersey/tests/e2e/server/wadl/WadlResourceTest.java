@@ -86,6 +86,7 @@ import javax.xml.xpath.XPathFactory;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.util.SaxHelper;
+import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -302,7 +303,9 @@ public class WadlResourceTest {
          */
         @Test
         public void testGetWadl() throws Exception {
+//            File tmpFile = target("application.wadl").request().get(File.class);
             File tmpFile = target("application.wadl").request().get(File.class);
+            final String str = target("application.wadl").request().get(String.class);
 
             DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
             bf.setNamespaceAware(true);
@@ -314,7 +317,7 @@ public class WadlResourceTest {
             Document d = b.parse(tmpFile);
             printSource(new DOMSource(d));
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
             // check base URI
             String val = (String) xp.evaluate("/wadl:application/wadl:resources/@base", d, XPathConstants.STRING);
             assertEquals(val, getBaseUri().toString());
@@ -396,7 +399,7 @@ public class WadlResourceTest {
             Document d = b.parse(tmpFile);
             printSource(new DOMSource(d));
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
             // check base URI
             String val = (String) xp.evaluate("/wadl:application/wadl:resources/@base", d, XPathConstants.STRING);
@@ -469,7 +472,7 @@ public class WadlResourceTest {
             Document d = b.parse(tmpFile);
             printSource(new DOMSource(d));
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
             // check base URI
             String val = (String) xp.evaluate("/wadl:application/wadl:resources/@base", d, XPathConstants.STRING);
             assertEquals(val, getBaseUri().toString());
@@ -499,7 +502,7 @@ public class WadlResourceTest {
             Document d = b.parse(tmpFile);
             printSource(new DOMSource(d));
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
             String val = (String) xp.evaluate("/wadl:application/wadl:resources/@base", d, XPathConstants.STRING);
             assertEquals(val, getBaseUri().toString());
             // check total number of resources is 1
@@ -874,7 +877,7 @@ public class WadlResourceTest {
             Document d = b.parse((InputStream) containerResponse.getEntity());
             printSource(new DOMSource(d));
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
             // check base URI
             String val = (String) xp.evaluate("/wadl:application/wadl:resources/@base", d, XPathConstants.STRING);
             assertEquals(val, MyWadlGeneratorConfig.MyWadlGenerator.CUSTOM_RESOURCES_BASE_URI);
@@ -946,7 +949,7 @@ public class WadlResourceTest {
             Document d = b.parse((InputStream) containerResponse.getEntity());
             printSource(new DOMSource(d));
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
             final NodeList responseElements = (NodeList) xp.evaluate(
                     "/wadl:application/wadl:resources[@path!='application.wadl']//wadl:method/wadl:response", d,
@@ -1027,7 +1030,7 @@ public class WadlResourceTest {
             Document d = extractWadlAsDocument(target(path).request(MediaTypes.WADL).options());
 
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
             String val = (String) xp.evaluate("/wadl:application/wadl:resources/@base", d, XPathConstants.STRING);
             assertEquals(val, getBaseUri().toString());
 
@@ -1068,7 +1071,7 @@ public class WadlResourceTest {
             Document d = extractWadlAsDocument(target("/application.wadl").request().get());
 
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
             String val = (String) xp.evaluate("/wadl:application/wadl:resources/@base", d, XPathConstants.STRING);
             assertEquals(val, getBaseUri().toString());
             // check only one resource with for 'root/loc'
@@ -1105,7 +1108,7 @@ public class WadlResourceTest {
         public void testFormParam() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
             Document d = extractWadlAsDocument(target("/application.wadl").request().get());
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
             final String requestPath = "//wadl:resource[@path='form']/wadl:method[@name='POST']/wadl:request";
             final String representationPath = requestPath + "/wadl:representation";
@@ -1169,7 +1172,7 @@ public class WadlResourceTest {
 
             Document d = extractWadlAsDocument(response);
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
             final String resourcePath = String.format("//wadl:resource[@path='%s/{pp}']", path);
             final String methodPath = resourcePath + "/wadl:method[@name='GET']";
@@ -1316,7 +1319,7 @@ public class WadlResourceTest {
             final Response response = target().path("foo").request(MediaTypes.WADL).options();
             Document d = extractWadlAsDocument(response);
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
             String result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='GET']/@id", d, XPathConstants.STRING);
             Assert.assertEquals("getA", result);
@@ -1335,7 +1338,7 @@ public class WadlResourceTest {
 
             Document d = extractWadlAsDocument(response);
             XPath xp = XPathFactory.newInstance().newXPath();
-            xp.setNamespaceContext(new NsResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+            xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
             String result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='GET']/@id", d, XPathConstants.STRING);
             Assert.assertEquals("getTemplateA", result);

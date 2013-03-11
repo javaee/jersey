@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.wadl.internal;
 
 import java.net.URI;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
@@ -58,6 +59,8 @@ import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfigLoader;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.sun.research.ws.wadl.Application;
 import com.sun.research.ws.wadl.Doc;
@@ -78,25 +81,36 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
     @Context
     private ExtendedResourceContext resourceContext;
 
+    private final ServiceLocator serviceLocator;
+
 
     private boolean wadlGenerationEnabled = true;
 
-
     private final WadlGeneratorConfig wadlGeneratorConfig;
-    private JAXBContext jaxbContext;
 
-    public WadlApplicationContextImpl(@Context Configuration configuration) {
+    private final JAXBContext jaxbContext;
+
+    public WadlApplicationContextImpl(@Context Configuration configuration, @Context ServiceLocator serviceLocator) {
+        this.serviceLocator = serviceLocator;
         this.wadlGeneratorConfig = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(configuration.getProperties());
 
+        // TODO perhaps this should be done another way for the moment
+        // create a temporary generator just to do this one task
+        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
+        JAXBContext jaxb;
         try {
-            // TODO perhaps this should be done another way for the moment
-            // create a temporary generator just to do this one task
-
-            this.jaxbContext = JAXBContext.newInstance(
-                    this.wadlGeneratorConfig.createWadlGenerator().getRequiredJaxbContextPath());
+            jaxb = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath(),
+                        wadlGenerator.getClass().getClassLoader());
         } catch (JAXBException ex) {
-            throw new ProcessingException(LocalizationMessages.ERROR_WADL_JAXB_CONTEXT(), ex);
+            try {
+                // fallback for glassfish
+                LOG.log(Level.FINE, LocalizationMessages.WADL_JAXB_CONTEXT_FALLBACK(), ex);
+                jaxb = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath());
+            } catch (JAXBException innerEx) {
+                throw new ProcessingException(LocalizationMessages.ERROR_WADL_JAXB_CONTEXT(), ex);
+            }
         }
+        jaxbContext = jaxb;
     }
 
     @Override
@@ -122,7 +136,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
 
         ApplicationDescription description = getApplication(info);
 
-        WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator();
+        WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
         Application application = new WadlBuilder(wadlGenerator).generate(description, resource);
 
         for (Resources resources : application.getResources()) {
@@ -152,7 +166,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
     }
 
     private WadlBuilder getWadlBuilder() {
-        return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator()) : null);
+        return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator(serviceLocator)) : null);
     }
 
     @Override

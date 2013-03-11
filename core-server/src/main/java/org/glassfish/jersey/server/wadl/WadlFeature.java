@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,48 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.server.wadl;
 
-import java.util.Iterator;
+package org.glassfish.jersey.server.wadl;
 
-import javax.xml.XMLConstants;
-import javax.xml.namespace.NamespaceContext;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
+
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.model.ModelProcessor;
+import org.glassfish.jersey.server.wadl.internal.WadlApplicationContextImpl;
+import org.glassfish.jersey.server.wadl.processor.WadlModelProcessor;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
 
 /**
- * TODO this most likely should be in a more common location.
- * @author Gerard Davison
+ * Feature enabling WADL processing. The feature registers providers and binders needed to enable wadl in the
+ * jersey application. One of the providers is {@link ModelProcessor wadl model processor} which enhances
+ * current resources by additional wadl resources like {@code /application.wadl} and wadl options method.
+ *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class NsResolver implements NamespaceContext {
-    private String prefix;
-    private String nsURI;
-
-    public NsResolver(String prefix, String nsURI) {
-        this.prefix = prefix;
-        this.nsURI = nsURI;
-    }
+public class WadlFeature implements Feature {
 
     @Override
-    public String getNamespaceURI(String prefix) {
-        if (prefix.equals(this.prefix)) {
-            return this.nsURI;
-        } else {
-            return XMLConstants.NULL_NS_URI;
+    public boolean configure(FeatureContext context) {
+        final boolean disabled = PropertiesHelper.isProperty(context.getConfiguration().getProperty(ServerProperties
+                .FEATURE_DISABLE_WADL));
+        if (disabled) {
+            return false;
         }
-    }
 
-    @Override
-    public String getPrefix(String namespaceURI) {
-        if (namespaceURI.equals(this.nsURI)) {
-            return this.prefix;
-        } else {
-            return null;
-        }
-    }
+        context.register(WadlModelProcessor.class);
+        context.register(new AbstractBinder() {
+            @Override
+            protected void configure() {
+                bind(WadlApplicationContextImpl.class).to(WadlApplicationContext.class).in(Singleton.class);
+            }
+        });
 
-    @Override
-    public Iterator getPrefixes(String namespaceURI) {
-        return null;
+        return true;
     }
 }

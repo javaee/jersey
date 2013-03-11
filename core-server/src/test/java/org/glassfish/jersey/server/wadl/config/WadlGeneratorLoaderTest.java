@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,10 +55,14 @@ import java.util.Properties;
 
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.server.ServerBinder;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -83,12 +87,12 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromClasspathRelative() throws Exception {
-
+        final ServiceLocator serviceLocator = getServiceLocator();
         final Properties props = new Properties();
         props.put("testFile", "classpath:testfile.xml");
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
 
-        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(description);
+        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(serviceLocator, description);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
 
         final URL resource = getClass().getResource("testfile.xml");
@@ -99,13 +103,13 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromClasspathAbsolute() throws Exception {
-
+        final ServiceLocator serviceLocator = getServiceLocator();
         final Properties props = new Properties();
         final String path = "classpath:/" + getClass().getPackage().getName().replaceAll("\\.", "/") + "/testfile.xml";
         props.put("testFile", path);
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
 
-        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(description);
+        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(serviceLocator, description);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
 
         final URL resource = getClass().getResource("testfile.xml");
@@ -116,7 +120,7 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromAbsolutePath() throws Exception {
-
+        final ServiceLocator serviceLocator = getServiceLocator();
         final URL resource = getClass().getResource("testfile.xml");
 
         final Properties props = new Properties();
@@ -124,7 +128,7 @@ public class WadlGeneratorLoaderTest {
         props.put("testFile", path);
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
 
-        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(description);
+        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(serviceLocator, description);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
 
         Assert.assertEquals(new File(resource.toURI()).getAbsolutePath(), ((MyWadlGenerator2) wadlGenerator).getTestFile()
@@ -133,13 +137,13 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadStream() throws Exception {
-
+        final ServiceLocator serviceLocator = getServiceLocator();
         final Properties props = new Properties();
         final String path = getClass().getPackage().getName().replaceAll("\\.", "/") + "/testfile.xml";
         props.put("testStream", path);
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
 
-        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(description);
+        final WadlGenerator wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(serviceLocator, description);
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
 
         final URL resource = getClass().getResource("testfile.xml");
@@ -272,5 +276,10 @@ public class WadlGeneratorLoaderTest {
             _delegate.attachTypes(egd);
         }
     }
+
+    private ServiceLocator getServiceLocator() {
+        return Injections.createLocator(new ServerBinder());
+    }
+
 
 }
