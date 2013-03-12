@@ -1110,8 +1110,8 @@
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
         <javax.el.version>2.2.4</javax.el.version>
 
-        <jsonp.api.version>1.0-b04</jsonp.api.version>
-        <jsonp.ri.version>1.0-b04</jsonp.ri.version>
+        <jsonp.api.version>1.0-b05</jsonp.api.version>
+        <jsonp.ri.version>1.0-b05</jsonp.ri.version>
 
         <jaxrs.api.last.final.version>1.1</jaxrs.api.last.final.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>

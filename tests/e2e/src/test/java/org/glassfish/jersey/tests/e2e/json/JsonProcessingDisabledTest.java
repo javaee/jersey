@@ -42,8 +42,10 @@ package org.glassfish.jersey.tests.e2e.json;
 
 import java.io.StringReader;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -57,7 +59,6 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -70,6 +71,8 @@ public class JsonProcessingDisabledTest extends JerseyTest {
     private final static JsonObject JSON_OBJECT = Json.createReader(new StringReader(JSON_OBJECT_STR)).readObject();
 
     @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
     public static class Resource {
 
         @POST
@@ -88,11 +91,9 @@ public class JsonProcessingDisabledTest extends JerseyTest {
     }
 
     @Test
-    @Ignore("un-ignore once JERSEY-1748 is resolved")
-    // TODO: un-ignore once JERSEY-1748 is resolved
     public void testJsonObject() throws Exception {
         final Response response = target("jsonObject").request(MediaType.APPLICATION_JSON).post(Entity.json(JSON_OBJECT));
 
-        assertEquals(500, response.getStatus());
+        assertEquals(415, response.getStatus());
     }
 }
