@@ -97,9 +97,16 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
                     MediaType.TEXT_HTML_TYPE,
                     MediaType.APPLICATION_XML_TYPE,
                     MediaType.APPLICATION_JSON_TYPE).build();
-            final MediaType mediaType = request.get().selectVariant(variants).getMediaType();
+            final Variant variant = request.get().selectVariant(variants);
+            if (variant != null) {
+                response.type(variant.getMediaType());
+            } else {
 
-            response.type(mediaType);
+                // default media type which will be used only when none media type from {@value variants} is in accept
+                // header of original request.
+                // could be settable by configuration property.
+                response.type(MediaType.TEXT_PLAIN_TYPE);
+            }
             response.entity(
                     new GenericEntity<List<ValidationError>>(
                             getEntity(exception.getConstraintViolations()),

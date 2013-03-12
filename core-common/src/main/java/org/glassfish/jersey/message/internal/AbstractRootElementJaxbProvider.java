@@ -61,6 +61,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.transform.stream.StreamSource;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
+
 /**
  * An abstract provider for JAXB types that are annotated with
  * {@link XmlRootElement} or {@link XmlType}.
@@ -114,7 +116,7 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
         try {
             final EntityInputStream entityStream = EntityInputStream.create(inputStream);
             if (entityStream.isEmpty()) {
-                return null;
+                throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
             }
             return readFrom(type, mediaType, getUnmarshaller(type, mediaType), entityStream);
         } catch (UnmarshalException ex) {
@@ -135,7 +137,6 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
      * @param entityStream the input stream to unmarshal from.
      * @return an instance of the JAXB type.
      * @throws javax.xml.bind.JAXBException
-     * @throws java.io.IOException
      */
     protected Object readFrom(Class<Object> type, MediaType mediaType,
             Unmarshaller u, InputStream entityStream)
@@ -180,7 +181,6 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
      * @param m the marshaller to marshaller the instance of the JAXB type.
      * @param entityStream the output stream to marshal to.
      * @throws javax.xml.bind.JAXBException
-     * @throws java.io.IOException
      */
     protected void writeTo(Object t, MediaType mediaType, Charset c,
             Marshaller m, OutputStream entityStream)

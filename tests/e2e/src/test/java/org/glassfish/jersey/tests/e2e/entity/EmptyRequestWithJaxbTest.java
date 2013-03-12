@@ -135,22 +135,22 @@ public class EmptyRequestWithJaxbTest {
             WebTarget r = target();
 
             Response cr = r.request().post(Entity.entity(null, "application/xml"));
-            assertEquals(204, cr.getStatus());
+            assertEquals(400, cr.getStatus());
 
             cr = r.path("type").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(204, cr.getStatus());
+            assertEquals(400, cr.getStatus());
 
             cr = r.path("list-bean").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(204, cr.getStatus());
+            assertEquals(400, cr.getStatus());
 
             cr = r.path("list-type").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(204, cr.getStatus());
+            assertEquals(400, cr.getStatus());
 
             cr = r.path("array-bean").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(204, cr.getStatus());
+            assertEquals(400, cr.getStatus());
 
             cr = r.path("array-type").request().post(Entity.entity(null, "application/xml"));
-            assertEquals(204, cr.getStatus());
+            assertEquals(400, cr.getStatus());
         }
     }
 
@@ -230,21 +230,21 @@ public class EmptyRequestWithJaxbTest {
 
     public static void _test(WebTarget target) {
         Response cr = target.request().post(Entity.entity(null, "application/json"));
-        assertEquals(204, cr.getStatus());
+        assertEquals(400, cr.getStatus());
 
         cr = target.path("type").request().post(Entity.entity(null, "application/json"));
-        assertEquals(204, cr.getStatus());
+        assertEquals(400, cr.getStatus());
 
         cr = target.path("list-bean").request().post(Entity.entity(null, "application/json"));
-        assertEquals(204, cr.getStatus());
+        assertEquals(400, cr.getStatus());
 
         cr = target.path("list-type").request().post(Entity.entity(null, "application/json"));
-        assertEquals(204, cr.getStatus());
+        assertEquals(400, cr.getStatus());
 
         cr = target.path("array-bean").request().post(Entity.entity(null, "application/json"));
-        assertEquals(204, cr.getStatus());
+        assertEquals(400, cr.getStatus());
 
         cr = target.path("array-type").request().post(Entity.entity(null, "application/json"));
-        assertEquals(204, cr.getStatus());
+        assertEquals(400, cr.getStatus());
     }
 }

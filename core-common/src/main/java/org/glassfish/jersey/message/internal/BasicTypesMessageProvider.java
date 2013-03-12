@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -61,7 +62,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 /**
  * The basic types message body provider for {@link MediaType#TEXT_PLAIN} media type.
- *
+ * <p/>
  * The provider processes primitive types and also other {@link Number} implementations like {@link java.math.BigDecimal},
  * {@link java.math.BigInteger}, {@link AtomicInteger},  {@link AtomicLong} and all other implementations which has one String
  * argument constructor.
@@ -167,7 +168,7 @@ final class BasicTypesMessageProvider extends AbstractMessageReaderWriterProvide
             InputStream entityStream) throws IOException, WebApplicationException {
         final String entityString = readFromAsString(entityStream, mediaType);
         if (entityString.isEmpty()) {
-            return null;
+            throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
         }
         final PrimitiveTypes primitiveType = PrimitiveTypes.forType(type);
         if (primitiveType != null) {
@@ -213,7 +214,7 @@ final class BasicTypesMessageProvider extends AbstractMessageReaderWriterProvide
                 return true;
             }
         }
-        ;
+
         return false;
     }
 

@@ -47,6 +47,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -57,7 +62,10 @@ import javax.validation.MessageInterpolator;
 import javax.validation.ParameterNameProvider;
 import javax.validation.Path;
 import javax.validation.TraversableResolver;
+import javax.validation.Valid;
 import javax.validation.Validation;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
@@ -76,6 +84,30 @@ import static org.junit.Assert.assertTrue;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class CustomConfigValidationTest extends JerseyTest {
+
+    /**
+     * @author Michal Gajdos (michal.gajdos at oracle.com)
+     */
+    @javax.ws.rs.Path("customconfigvalidation/{path: .*}")
+    public static class CustomConfigResource {
+
+        @POST
+        @Consumes("application/xml")
+        @Produces("application/xml")
+        @NotNull
+        @Valid
+        public CustomBean post(@PathParam("path") final String path, final CustomBean beanParameter,
+                               @Size(min = 5) @HeaderParam("myHeader") String header) {
+            if ("".equals(path)) {
+                beanParameter.setPath(null);
+                beanParameter.setValidate(false);
+            } else {
+                beanParameter.setPath(path);
+                beanParameter.setValidate(true);
+            }
+            return beanParameter;
+        }
+    }
 
     @Override
     protected Application configure() {
@@ -103,6 +135,7 @@ public class CustomConfigValidationTest extends JerseyTest {
         final Response response = target("customconfigvalidation").
                 path("ok").
                 request().
+                header("myHeader", "12345").
                 post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
 
         assertEquals(200, response.getStatus());
@@ -110,30 +143,20 @@ public class CustomConfigValidationTest extends JerseyTest {
     }
 
     @Test
-    public void testParameterName() throws Exception {
+    public void testParameterNameWithInterpolator() throws Exception {
         final Response response = target("customconfigvalidation").
                 path("ok").
                 request().
-                post(Entity.entity(null, MediaType.APPLICATION_XML_TYPE));
+                header("myHeader", "1234").
+                post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
 
         assertEquals(400, response.getStatus());
 
         final String message = response.readEntity(String.class);
-        assertFalse(message.contains("arg1"));
-        assertTrue(message.contains("beanParameter"));
-    }
 
-    @Test
-    public void testMessageInterpolator() throws Exception {
-        final Response response = target("customconfigvalidation").
-                path("ok").
-                request().
-                post(Entity.entity(null, MediaType.APPLICATION_XML_TYPE));
-
-        assertEquals(400, response.getStatus());
-
-        final String message = response.readEntity(String.class);
-        assertFalse(message.contains("may not be null"));
+        assertFalse(message.contains("arg2"));
+        assertTrue(message.contains("header"));
+        assertFalse(message.contains("size must be between"));
         assertTrue(message.contains("message"));
     }
 
@@ -141,6 +164,7 @@ public class CustomConfigValidationTest extends JerseyTest {
     public void testTraversableResolver() throws Exception {
         final Response response = target("customconfigvalidation/").
                 request().
+                header("myHeader", "12345").
                 post(Entity.entity(new CustomBean(), MediaType.APPLICATION_XML_TYPE));
 
         assertEquals(200, response.getStatus());
@@ -196,10 +220,10 @@ public class CustomConfigValidationTest extends JerseyTest {
         @Override
         public List<String> getParameterNames(final Method method) {
             try {
-                final Method post = CustomConfigResource.class.getMethod("post", String.class, CustomBean.class);
+                final Method post = CustomConfigResource.class.getMethod("post", String.class, CustomBean.class, String.class);
 
                 if (method.equals(post)) {
-                    return Arrays.asList("path", "beanParameter");
+                    return Arrays.asList("path", "beanParameter", "header");
                 }
             } catch (NoSuchMethodException e) {
                 // Do nothing.

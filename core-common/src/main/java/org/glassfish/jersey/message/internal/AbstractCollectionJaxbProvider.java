@@ -76,6 +76,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
+
 /**
  * Base class for implementing JAXB collection readers and writers.
  *
@@ -305,7 +307,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
 
         final EntityInputStream entityStream = EntityInputStream.create(inputStream);
         if (entityStream.isEmpty()) {
-            return null;
+            throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
         }
 
         try {

@@ -40,9 +40,10 @@
 
 package org.glassfish.jersey.tests.e2e.server.validation;
 
+import java.io.Serializable;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
@@ -52,9 +53,8 @@ import com.google.common.base.Objects;
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@XmlRootElement
 @OneContact
-public class ContactBean {
+public class ContactBean implements Serializable {
 
     @Email(regexp = "[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}")
     private String email;

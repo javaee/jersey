@@ -40,21 +40,35 @@
 
 package org.glassfish.jersey.tests.e2e.server.validation;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
@@ -80,6 +94,7 @@ public class BasicValidationTest extends JerseyTest {
 
         final ResourceConfig resourceConfig = new ResourceConfig(BasicResource.class);
 
+        resourceConfig.register(ContactBeanProvider.class);
         resourceConfig.register(MoxyXmlFeature.class);
 
         resourceConfig.property(ServerProperties.FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY, true);
@@ -90,7 +105,48 @@ public class BasicValidationTest extends JerseyTest {
     @Override
     protected void configureClient(final ClientConfig clientConfig) {
         super.configureClient(clientConfig);
+        clientConfig.register(ContactBeanProvider.class);
         clientConfig.register(MoxyXmlFeature.class);
+    }
+
+    @Consumes("application/contactBean")
+    @Produces("application/contactBean")
+    @Provider
+    public static class ContactBeanProvider implements MessageBodyReader<ContactBean>, MessageBodyWriter<ContactBean> {
+        @Override
+        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return type.equals(ContactBean.class);
+        }
+
+        @Override
+        public ContactBean readFrom(Class<ContactBean> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
+            try {
+                final ObjectInputStream objectInputStream = new ObjectInputStream(entityStream);
+                return (ContactBean)objectInputStream.readObject();
+            } catch (Exception e) {
+                // do nothing.
+            }
+            return null;
+        }
+
+        @Override
+        public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return type.equals(ContactBean.class);
+        }
+
+        @Override
+        public long getSize(ContactBean contactBean, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return -1;
+        }
+
+        @Override
+        public void writeTo(ContactBean contactBean, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+            try {
+                new ObjectOutputStream(entityStream).writeObject(contactBean);
+            } catch (Exception e) {
+                // do nothing.
+            }
+        }
     }
 
     private static final class ParamBean {
@@ -359,7 +415,7 @@ public class BasicValidationTest extends JerseyTest {
     private Response testBean(final String path, final ContactBean contactBean) {
         return target("beanvalidation").
                 path(path).
-                request(MediaType.APPLICATION_XML_TYPE).post(Entity.entity(contactBean, MediaType.APPLICATION_XML_TYPE));
+                request("application/contactBean").post(Entity.entity(contactBean, "application/contactBean"));
     }
 
     @Test
