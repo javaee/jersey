@@ -61,7 +61,6 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -76,8 +75,6 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @RunWith(JUnit4TestRunner.class)
-@Ignore("un-ignore once JERSEY-1748 is resolved")
-// TODO: un-ignore once JERSEY-1748 is resolved
 public class JsonProcessingTest {
 
     private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
