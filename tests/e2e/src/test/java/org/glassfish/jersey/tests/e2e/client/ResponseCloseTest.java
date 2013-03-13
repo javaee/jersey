@@ -154,4 +154,16 @@ public class ResponseCloseTest extends JerseyTest {
             // expected
         }
     }
+
+    @Test
+    public void testHasEntityAfterClose() {
+        final Response response = target().path("simple").request().get(Response.class);
+        response.close();
+        try {
+            response.hasEntity();
+            fail("IllegalStateException expected when reading a buffered entity after response has been closed.");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
+    }
 }

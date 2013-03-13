@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -282,8 +282,7 @@ public class ResponseTest {
 
     private String verifyResponse(Response resp, String content, int status,
                                   List<String> encoding, List<String> language, List<String> type,
-                                  List<String> var, List<String> ccl, List<String> cookies)
-    {
+                                  List<String> var, List<String> ccl, List<String> cookies) {
         boolean pass = true;
         StringBuilder sb = new StringBuilder();
 
@@ -463,7 +462,7 @@ public class ResponseTest {
 
         responseBuilder = responseBuilder.allow("GET");
         assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW).contains("GET"));
-        responseBuilder = responseBuilder.allow((String)null);
+        responseBuilder = responseBuilder.allow((String) null);
         assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW) == null);
     }
 
@@ -473,7 +472,7 @@ public class ResponseTest {
 
         responseBuilder = responseBuilder.allow(new HashSet<String>(Arrays.asList("GET")));
         assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW).contains("GET"));
-        responseBuilder = responseBuilder.allow((Set<String>)null);
+        responseBuilder = responseBuilder.allow((Set<String>) null);
         assertEquals(null, responseBuilder.build().getHeaderString(HttpHeaders.ALLOW));
     }
 
@@ -483,22 +482,44 @@ public class ResponseTest {
 
         responseBuilder = responseBuilder.allow(new HashSet<String>(Arrays.asList("GET")));
         assertTrue(responseBuilder.build().getHeaderString(HttpHeaders.ALLOW).contains("GET"));
-        responseBuilder = responseBuilder.allow((String[])null);
+        responseBuilder = responseBuilder.allow((String[]) null);
         assertEquals(null, responseBuilder.build().getHeaderString(HttpHeaders.ALLOW));
     }
 
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void bufferEntityTest() {
         Response response = Response.ok().build();
         response.close();
-        response.bufferEntity();
+        try {
+            response.bufferEntity();
+            fail("IllegalStateException expected when reading entity after response has been closed.");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void getEntityTest() {
         Response response = Response.ok().build();
         response.close();
-        response.getEntity();
+        try {
+            response.getEntity();
+            fail("IllegalStateException expected when reading entity after response has been closed.");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
+    }
+
+    @Test
+    public void hasEntityTest() {
+        Response response = Response.ok().build();
+        response.close();
+        try {
+            response.hasEntity();
+            fail("IllegalStateException expected when reading entity after response has been closed.");
+        } catch (IllegalStateException ex) {
+            // expected
+        }
     }
 }
