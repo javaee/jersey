@@ -60,18 +60,20 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
+
 /**
  * An abstract provider for {@link JAXBElement}.
- * <p>
+ * <p/>
  * Implementing classes may extend this class to provide specific marshalling
  * and unmarshalling behaviour.
- * <p>
+ * <p/>
  * When unmarshalling a {@link UnmarshalException} will result in a
  * {@link WebApplicationException} being thrown with a status of 400
  * (Client error), and a {@link JAXBException} will result in a
  * {@link WebApplicationException} being thrown with a status of 500
  * (Internal Server error).
- * <p>
+ * <p/>
  * When marshalling a {@link JAXBException} will result in a
  * {@link WebApplicationException} being thrown with a status of 500
  * (Internal Server error).
@@ -110,7 +112,7 @@ public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<J
 
         final EntityInputStream entityStream = EntityInputStream.create(inputStream);
         if (entityStream.isEmpty()) {
-            return null;
+            throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
         }
 
         final ParameterizedType pt = (ParameterizedType) genericType;

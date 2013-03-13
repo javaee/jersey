@@ -95,7 +95,7 @@ public class BasicSubResource {
 
     @POST
     @Consumes("application/x-www-form-urlencoded")
-    @Produces("application/xml")
+    @Produces("application/contactBean")
     public ContactBean getContactValidationBean() {
         final ContactBean contactBean = new ContactBean();
         contactBean.setName(firstName + " " + lastName);

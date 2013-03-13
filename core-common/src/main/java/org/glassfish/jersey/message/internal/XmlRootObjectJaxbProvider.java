@@ -160,7 +160,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
 
         final EntityInputStream entityStream = EntityInputStream.create(inputStream);
         if (entityStream.isEmpty()) {
-            return null;
+            throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
         }
 
         try {

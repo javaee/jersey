@@ -158,32 +158,32 @@ public class BasicResource {
 
     @POST
     @Path("emptyBeanParam")
-    @Consumes("application/xml")
-    @Produces("application/xml")
+    @Consumes("application/contactBean")
+    @Produces("application/contactBean")
     public ContactBean validateEmptyBeanParamConstraint(@NotNull final ContactBean bean) {
         return bean;
     }
 
     @POST
     @Path("validBeanParam")
-    @Consumes("application/xml")
-    @Produces("application/xml")
+    @Consumes("application/contactBean")
+    @Produces("application/contactBean")
     public ContactBean validateValidBeanParamConstraint(@NotNull @Valid final ContactBean bean) {
         return bean;
     }
 
     @POST
     @Path("customBeanParam")
-    @Consumes("application/xml")
-    @Produces("application/xml")
+    @Consumes("application/contactBean")
+    @Produces("application/contactBean")
     public ContactBean validateCustomBeanParamConstraint(@OneContact final ContactBean bean) {
         return bean;
     }
 
     @POST
     @Path("emptyBeanResponse")
-    @Consumes("application/xml")
-    @Produces("application/xml")
+    @Consumes("application/contactBean")
+    @Produces("application/contactBean")
     @NotNull
     public ContactBean validateEmptyBeanResponseConstraint(final ContactBean bean) {
         return bean;
@@ -191,8 +191,8 @@ public class BasicResource {
 
     @POST
     @Path("validBeanResponse")
-    @Consumes("application/xml")
-    @Produces("application/xml")
+    @Consumes("application/contactBean")
+    @Produces("application/contactBean")
     @NotNull @Valid
     public ContactBean validateValidBeanResponseConstraint(final ContactBean bean) {
         return bean;
@@ -200,17 +200,17 @@ public class BasicResource {
 
     @POST
     @Path("validBeanWrappedInResponse")
-    @Consumes("application/xml")
-    @Produces("application/xml")
+    @Consumes("application/contactBean")
+    @Produces("application/contactBean")
     @NotNull @Valid
     public Response validateValidBeanWrappedInResponseConstraint(final ContactBean bean) {
-        return Response.ok(bean).build();
+        return Response.ok(bean).type("application/contactBean").build();
     }
 
     @POST
     @Path("customBeanResponse")
-    @Consumes("application/xml")
-    @Produces("application/xml")
+    @Consumes("application/contactBean")
+    @Produces("application/contactBean")
     @OneContact
     public ContactBean validateCustomBeanResponseConstraint(final ContactBean bean) {
         return bean;
