@@ -39,27 +39,35 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.junit.Test;
-
-import javax.ws.rs.*;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
-import static org.junit.Assert.*;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -200,8 +208,6 @@ public class HttpMethodTest extends JerseyTest {
     public void testPostVoid() {
         WebTarget r = getWebTarget(createPoolingClient());
 
-        // This test will lock up if ClientResponse is not closed by WebResource.
-        // TODO need a better way to detect this.
         for (int i = 0; i < 100; i++) {
             r.request().post(Entity.text("POST"));
         }
@@ -294,11 +300,10 @@ public class HttpMethodTest extends JerseyTest {
     public void testPostError() {
         WebTarget r = createClient().target(getBaseUri()).path("error");
 
-        // This test will lock up if ClientResponse is not closed by WebResource.
-        // TODO need a better way to detect this.
         for (int i = 0; i < 100; i++) {
             try {
-                r.request().post(Entity.text("POST"));
+                final Response post = r.request().post(Entity.text("POST"));
+                post.close();
             } catch (ClientErrorException ex) {
             }
         }
@@ -308,8 +313,6 @@ public class HttpMethodTest extends JerseyTest {
     public void testPostErrorWithEntity() {
         WebTarget r = createPoolingClient().target(getBaseUri()).path("error/entity");
 
-        // This test will lock up if ClientResponse is not closed by WebResource.
-        // TODO need a better way to detect this.
         for (int i = 0; i < 100; i++) {
             try {
                 r.request().post(Entity.text("POST"));

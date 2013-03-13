@@ -178,9 +178,11 @@ public class HelloWorldTest extends JerseyTest {
 
         response = target().path(ROOT_PATH + "arbitrary").request().get();
         assertEquals(404, response.getStatus());
+        response.close();
 
         response = target().path(ROOT_PATH).path("arbitrary").request().get();
         assertEquals(404, response.getStatus());
+        response.close();
     }
 
     @Test

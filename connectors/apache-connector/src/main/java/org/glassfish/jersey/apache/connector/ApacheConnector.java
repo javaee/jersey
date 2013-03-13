@@ -149,7 +149,6 @@ import com.google.common.util.concurrent.MoreExecutors;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Arul Dhesiaseelan (aruld at acm.org)
- *
  * @see ApacheClientProperties#CONNECTION_MANAGER
  */
 public class ApacheConnector implements Connector {
@@ -276,7 +275,7 @@ public class ApacheConnector implements Connector {
      * Get the {@link CookieStore}.
      *
      * @return the {@link CookieStore} instance or {@code null} when {@value ApacheClientProperties#DISABLE_COOKIES} set to
-     * {@code true}.
+     *         {@code true}.
      */
     public CookieStore getCookieStore() {
         return cookieStore;
@@ -325,16 +324,10 @@ public class ApacheConnector implements Connector {
                 responseContext.getHeaders().addAll(header.getName(), list);
             }
 
-
             try {
                 responseContext.setEntityStream(new HttpClientResponseInputStream(response));
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, null, e);
-            }
-
-            if (!responseContext.hasEntity()) {
-                responseContext.bufferEntity();
-                responseContext.close();
             }
 
             return responseContext;

@@ -160,6 +160,9 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     @Override
     public boolean hasEntity() {
+        if (closed) {
+            throw new IllegalStateException(LocalizationMessages.RESPONSE_CLOSED());
+        }
         return context.hasEntity();
     }
 
