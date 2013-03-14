@@ -41,7 +41,6 @@ package org.glassfish.jersey.examples.multipart.webapp;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Iterator;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -50,8 +49,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import javax.xml.XMLConstants;
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -64,6 +61,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -115,7 +113,7 @@ public class MultiPartWebAppTest extends JerseyTest {
         final Document d = b.parse(tmpFile);
 
         final XPath xp = XPathFactory.newInstance().newXPath();
-        xp.setNamespaceContext(new NSResolver("wadl", "http://wadl.dev.java.net/2009/02"));
+        xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
         String val = (String) xp.evaluate(
                 "//wadl:resource[@path='part']/wadl:method[@name='POST']/wadl:request/wadl:representation/@mediaType",
                 d, XPathConstants.STRING);
@@ -177,40 +175,4 @@ public class MultiPartWebAppTest extends JerseyTest {
         final String s = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), String.class);
         assertEquals("STRING:string,BEAN:bean", s);
     }
-
-    class NSResolver implements NamespaceContext {
-
-        private String prefix;
-        private String nsURI;
-
-        public NSResolver(String prefix, String nsURI) {
-            this.prefix = prefix;
-            this.nsURI = nsURI;
-        }
-
-        @Override
-        public String getNamespaceURI(String prefix) {
-            if (prefix.equals(this.prefix)) {
-                return this.nsURI;
-            } else {
-                return XMLConstants.NULL_NS_URI;
-            }
-        }
-
-        @Override
-        public String getPrefix(String namespaceURI) {
-            if (namespaceURI.equals(this.nsURI)) {
-                return this.prefix;
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public Iterator getPrefixes(String namespaceURI) {
-            return null;
-        }
-
-    }
-
 }

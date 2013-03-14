@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.wadl.processor;
 
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -53,7 +54,9 @@ import javax.ws.rs.core.Response;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
+import javax.xml.bind.Marshaller;
 
+import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.Inflector;
@@ -74,8 +77,8 @@ import com.sun.research.ws.wadl.Application;
 /**
  * WADL {@link ModelProcessor model processor} which enhance resource model by WADL related resources (like "/application.wadl").
  * The provider should be registered using
- * {@link org.glassfish.jersey.server.wadl.processor.internal.WadlModelProcessorAutoDiscoverable} or by
- * {@link WadlModelProcessorFeature} if auto-discovery is disabled.
+ * {@link org.glassfish.jersey.server.wadl.internal.WadlAutoDiscoverable} or by
+ * {@link org.glassfish.jersey.server.wadl.WadlFeature} if auto-discovery is disabled.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
@@ -128,11 +131,25 @@ public class WadlModelProcessor implements ModelProcessor {
             final Application wadlApplication = wadlApplicationContext.getApplication(
                     containerRequestContext.getUriInfo(),
                     resource.getResources().get(0));
+
+
+            byte[] bytes;
+            try {
+                final Marshaller marshaller = wadlApplicationContext.getJAXBContext().createMarshaller();
+                marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+                final ByteArrayOutputStream os = new ByteArrayOutputStream();
+                marshaller.marshal(wadlApplication, os);
+                bytes = os.toByteArray();
+                os.close();
+            } catch (Exception e) {
+                throw new ProcessingException("Could not marshal the wadl Application.", e);
+            }
+
             Response response = Response.ok()
                     .type(MediaTypes.WADL)
                     .allow(ModelProcessorUtil.getAllowedMethods(resource))
                     .header("Last-modified", lastModified)
-                    .entity(wadlApplication)
+                    .entity(bytes)
                     .build();
 
             return response;

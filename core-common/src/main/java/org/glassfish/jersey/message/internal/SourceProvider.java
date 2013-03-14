@@ -55,6 +55,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -117,9 +118,9 @@ public final class SourceProvider {
     public static final class SaxSourceReader implements MessageBodyReader<SAXSource> {
         // Delay construction of factory
 
-        private final Factory<SAXParserFactory> spf;
+        private final Provider<SAXParserFactory> spf;
 
-        public SaxSourceReader(@Context Factory<SAXParserFactory> spf) {
+        public SaxSourceReader(@Context Provider<SAXParserFactory> spf) {
             this.spf = spf;
         }
 
@@ -137,7 +138,7 @@ public final class SourceProvider {
                 MultivaluedMap<String, String> httpHeaders,
                 InputStream entityStream) throws IOException {
             try {
-                return new SAXSource(spf.provide().newSAXParser().getXMLReader(),
+                return new SAXSource(spf.get().newSAXParser().getXMLReader(),
                         new InputSource(entityStream));
             } catch (SAXParseException ex) {
                 throw new BadRequestException(ex);

@@ -39,18 +39,27 @@
  */
 package org.glassfish.jersey.examples.extendedwadl;
 
+import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.nio.charset.Charset;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
 import org.glassfish.jersey.examples.extendedwadl.resources.ItemResource;
 import org.glassfish.jersey.examples.extendedwadl.resources.ItemsResource;
 import org.glassfish.jersey.examples.extendedwadl.resources.MyApplication;
 import org.glassfish.jersey.examples.extendedwadl.util.Examples;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -64,6 +73,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
+import org.w3c.dom.Document;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.felix;
@@ -76,6 +86,7 @@ import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.rawPaxRunnerOpti
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 import aQute.lib.osgi.Constants;
+import static junit.framework.Assert.assertEquals;
 
 /**
  *
@@ -214,8 +225,6 @@ public class ExtendedWadlWebappOsgiTest {
     }
 
     @Test
-    @Ignore("Jersey 1775: extended wadl serialization fails in MBW on the client side. JAXBContext miss" +
-            " classes added by WadlGeneratorResourceDocSupport.")
     public void testWadlOptionsMethod() throws Exception {
 
         final ResourceConfig resourceConfig = createResourceConfig();
@@ -228,7 +237,41 @@ public class ExtendedWadlWebappOsgiTest {
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));
-
+        checkWadl(wadl, baseUri);
         server.stop();
+    }
+
+
+    private void checkWadl(String wadl, URI baseUri) throws Exception {
+        DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
+        bf.setNamespaceAware(true);
+        bf.setValidating(false);
+//        if (!SaxHelper.isXdkDocumentBuilderFactory(bf)) {
+//            bf.setXIncludeAware(false);
+//        }
+        DocumentBuilder b = bf.newDocumentBuilder();
+        Document document = b.parse(new ByteArrayInputStream(wadl.getBytes(Charset.forName("UTF-8"))));
+        XPath xp = XPathFactory.newInstance().newXPath();
+        xp.setNamespaceContext(new SimpleNamespaceResolver("ns2", "http://wadl.dev.java.net/2009/02"));
+        String val = (String) xp.evaluate("/ns2:application/ns2:resources/@base", document, XPathConstants.STRING);
+        assertEquals(baseUri.toString(), val.endsWith("/") ? val.substring(0, val.length() - 1) : val);
+        val = (String) xp.evaluate("count(//ns2:resource)", document, XPathConstants.STRING);
+        assertEquals(val, "3");
+        val = (String) xp.evaluate("count(//ns2:resource[@path='items'])", document, XPathConstants.STRING);
+        assertEquals("1", val);
+        val = (String) xp.evaluate("count(//ns2:resource[@path='{id}'])", document, XPathConstants.STRING);
+        assertEquals("1", val);
+        val = (String) xp.evaluate("count(//ns2:resource[@path='value/{value}'])", document, XPathConstants.STRING);
+        assertEquals("1", val);
+
+        val = (String) xp.evaluate("count(//ns2:resource[@path='{id}']/ns2:method)", document, XPathConstants.STRING);
+        assertEquals("2", val);
+        val = (String) xp.evaluate("count(//ns2:resource[@path='items']/ns2:method)", document, XPathConstants.STRING);
+        assertEquals("4", val);
+        val = (String) xp.evaluate("count(//ns2:resource[@path='value/{value}']/ns2:method)", document, XPathConstants.STRING);
+        assertEquals("1", val);
+
+        val = (String) xp.evaluate("count(//ns2:application/ns2:doc)", document, XPathConstants.STRING);
+        assertEquals("3", val);
     }
 }

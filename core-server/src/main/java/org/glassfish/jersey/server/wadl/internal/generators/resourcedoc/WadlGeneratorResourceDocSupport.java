@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,19 +40,22 @@
 package org.glassfish.jersey.server.wadl.internal.generators.resourcedoc;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
+import javax.inject.Provider;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.ClassDocType;
 import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.MethodDocType;
 import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.ParamDocType;
@@ -96,6 +99,9 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     private File _resourceDocFile;
     private InputStream _resourceDocStream;
     private ResourceDocAccessor _resourceDoc;
+    @Context
+    private Provider<SAXParserFactory> saxFactoryProvider;
+
 
     public WadlGeneratorResourceDocSupport() {
     }
@@ -144,12 +150,10 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
                     " is set, one of both is required.");
         }
         _delegate.init();
-        final JAXBContext c = JAXBContext.newInstance(ResourceDocType.class);
-        final Unmarshaller m = c.createUnmarshaller();
-        final Object resourceDocObj = _resourceDocFile != null
-                ? m.unmarshal(_resourceDocFile) : m.unmarshal(_resourceDocStream);
-        final ResourceDocType resourceDoc = ResourceDocType.class.cast(resourceDocObj);
-        _resourceDoc = new ResourceDocAccessor(resourceDoc);
+
+        final ResourceDocType resourceDocType = WadlUtils.unmarshall(_resourceDocFile != null
+                ? new FileInputStream(_resourceDocFile) : _resourceDocStream, saxFactoryProvider.get(), ResourceDocType.class);
+        _resourceDoc = new ResourceDocAccessor(resourceDocType);
     }
 
     public String getRequiredJaxbContextPath() {

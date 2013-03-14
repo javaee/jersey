@@ -45,12 +45,16 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerBinder;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -73,14 +77,16 @@ import com.sun.research.ws.wadl.Response;
  */
 public class WadlGeneratorConfigurationLoaderTest {
 
+
     @Test
     public void testLoadConfigClass() throws URISyntaxException {
         final ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.property(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
                 MyWadlGeneratorConfig.class.getName());
 
+        final ServiceLocator locator = Injections.createLocator(new ServerBinder());
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
-                .createWadlGenerator();
+                .createWadlGenerator(locator);
         Assert.assertEquals(MyWadlGenerator.class, wadlGenerator.getClass());
 
     }
@@ -91,9 +97,10 @@ public class WadlGeneratorConfigurationLoaderTest {
 
         final ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.property(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG, config);
+        final ServiceLocator locator = Injections.createLocator(new ServerBinder());
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
-                .createWadlGenerator();
-        Assert.assertTrue(config.createWadlGenerator() instanceof MyWadlGenerator);
+                .createWadlGenerator(locator);
+        Assert.assertTrue(wadlGenerator instanceof MyWadlGenerator);
     }
 
     public static class MyWadlGenerator implements WadlGenerator {

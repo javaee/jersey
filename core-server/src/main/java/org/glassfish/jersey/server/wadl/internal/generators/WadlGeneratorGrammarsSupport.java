@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,18 +40,21 @@
 package org.glassfish.jersey.server.wadl.internal.generators;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
+import javax.inject.Provider;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.internal.ApplicationDescription;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 
 import com.sun.research.ws.wadl.Application;
 import com.sun.research.ws.wadl.Grammars;
@@ -88,6 +91,10 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
     private InputStream _grammarsStream;
     private Grammars _grammars;
     private Boolean overrideGrammars = false;
+
+    @Context
+    private Provider<SAXParserFactory> saxFactoryProvider;
+
 
     public WadlGeneratorGrammarsSupport() {
     }
@@ -132,10 +139,8 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
                     " is set, one of both is required.");
         }
         _delegate.init();
-        final JAXBContext c = JAXBContext.newInstance(Grammars.class);
-        final Unmarshaller m = c.createUnmarshaller();
-        final Object obj = _grammarsFile != null ? m.unmarshal(_grammarsFile) : m.unmarshal(_grammarsStream);
-        _grammars = Grammars.class.cast(obj);
+        _grammars = WadlUtils.unmarshall(_grammarsFile != null ? new FileInputStream(_grammarsFile) : _grammarsStream,
+                saxFactoryProvider.get(), Grammars.class);
     }
 
     /**
@@ -204,8 +209,8 @@ public class WadlGeneratorGrammarsSupport implements WadlGenerator {
      * @param arm abstract resource method
      * @param mt  media type
      * @return respresentation type
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model
-     * .Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model.Resource,
+     * org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
     public Representation createRequestRepresentation(
             org.glassfish.jersey.server.model.Resource ar, org.glassfish.jersey.server.model.ResourceMethod arm, MediaType mt) {
