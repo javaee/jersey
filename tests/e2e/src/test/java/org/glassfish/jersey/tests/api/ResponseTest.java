@@ -60,6 +60,7 @@ import org.glassfish.jersey.message.internal.HeadersFactory;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -521,5 +522,19 @@ public class ResponseTest {
         } catch (IllegalStateException ex) {
             // expected
         }
+    }
+
+    @Test
+    public void testVariants() {
+        List<String> encoding = Arrays.asList("gzip", "compress");
+        List<Variant> list = Variant.VariantListBuilder
+                .newInstance()
+                .mediaTypes(MediaType.TEXT_PLAIN_TYPE)
+                .languages(new Locale("en", "US"), new Locale("en", "GB"))
+                .encodings(encoding.toArray(new String[0])).add().build();
+        final Response response = Response.ok().variants(list).build();
+
+        assertNotNull(response);
+        assertNotNull(response.getHeaderString(HttpHeaders.VARY));
     }
 }
