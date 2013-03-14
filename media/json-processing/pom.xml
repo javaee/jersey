@@ -80,7 +80,7 @@
                         <!-- TODO: change to ${range;[==,+);${jsonp.api.version}} once the version is final-->
                         <Import-Package>
                             javax.json.*;version="[0,2)",
-                            org.glassfish.json.*;resolution:=optional;version="[0,2)",
+                            org.glassfish.json.*;version="[0,2)",
                             *
                         </Import-Package>
                     </instructions>
