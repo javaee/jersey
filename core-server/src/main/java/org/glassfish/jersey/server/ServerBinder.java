@@ -63,7 +63,6 @@ import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.RequestInjectee;
 import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
 import org.glassfish.jersey.internal.inject.UriInfoInjectee;
-
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -77,7 +76,6 @@ import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
-import org.glassfish.jersey.server.mvc.internal.MvcBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 
 import org.glassfish.hk2.api.TypeLiteral;
@@ -122,7 +120,6 @@ public class ServerBinder extends AbstractBinder {
                 new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
                 new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
-                new MvcBinder(),
                 new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class));
 
         // Request/Response injection interfaces

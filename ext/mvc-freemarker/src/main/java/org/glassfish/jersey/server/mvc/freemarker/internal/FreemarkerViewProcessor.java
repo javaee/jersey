@@ -78,7 +78,7 @@ public final class FreemarkerViewProcessor extends DefaultTemplateProcessor<Stri
         configuration = new Configuration();
         configuration.setObjectWrapper(new DefaultObjectWrapper());
 
-        setBasePathFromProperty(FreemarkerProperties.FREEMARKER_TEMPLATES_BASE_PATH);
+        setBasePathFromProperty(FreemarkerProperties.TEMPLATES_BASE_PATH);
     }
 
     @Override

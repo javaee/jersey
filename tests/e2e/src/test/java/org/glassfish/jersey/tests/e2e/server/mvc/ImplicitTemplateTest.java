@@ -52,6 +52,7 @@ import javax.ws.rs.core.Application;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -74,6 +75,7 @@ public class ImplicitTemplateTest extends JerseyTest {
                 ImplicitResource.class, AnotherImplicitResource.class,
                 ImplicitSingletonResource.class, ImplicitRootResource.class,
                 ImplicitGetResource.class, AnotherImplicitGetResource.class, AnotherAnotherImplicitGetResource.class)
+                .register(MvcFeature.class)
                 .register(TestViewProcessor.class);
     }
 

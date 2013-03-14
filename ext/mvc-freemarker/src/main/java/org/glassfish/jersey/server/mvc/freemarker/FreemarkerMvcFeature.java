@@ -40,18 +40,28 @@
 
 package org.glassfish.jersey.server.mvc.freemarker;
 
+import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.internal.FreemarkerViewProcessor;
 
 /**
+ * {@code FreemarkerMvcFeature} used to add MVC ({@link MvcFeature}) and Freemarker template support to the server.
+ *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@ConstrainedTo(RuntimeType.SERVER)
 public class FreemarkerMvcFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
+        if (!context.getConfiguration().isRegistered(MvcFeature.class)) {
+            context.register(MvcFeature.class);
+        }
+
         context.register(FreemarkerViewProcessor.class);
         return true;
     }

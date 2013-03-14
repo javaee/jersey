@@ -49,6 +49,7 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.tests.e2e.server.mvc.provider.TestViewProcessor;
@@ -97,6 +98,7 @@ public class ImplicitTemplateProgrammaticTest extends JerseyTest {
 
         return new ResourceConfig()
                 .registerResources(resourceBuilder.build())
+                .register(MvcFeature.class)
                 .register(TestViewProcessor.class);
     }
 

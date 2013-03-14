@@ -63,11 +63,13 @@
     </description>
 
     <modules>
-        <module>servlet-portability</module>
-        <module>proxy-client</module>
-        <module>wadl-doclet</module>
         <module>bean-validation</module>
+        <module>mvc</module>
         <module>mvc-freemarker</module>
+        <module>mvc-jsp</module>
+        <module>proxy-client</module>
+        <module>servlet-portability</module>
+        <module>wadl-doclet</module>
     </modules>
 
     <dependencies>

@@ -55,6 +55,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -75,6 +76,7 @@ public class ExceptionViewProcessorTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
 
         return new ResourceConfig(ExplicitTemplate.class)
+                .register(MvcFeature.class)
                 .register(TestViewProcessor.class)
                 .register(WebAppResolvingClassExceptionMapper.class);
     }

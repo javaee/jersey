@@ -53,7 +53,7 @@
     <name>jersey-ext-mvc-freemarker</name>
 
     <description>
-        Jersey extension module providing support for Freemarker MVC.
+        Jersey extension module providing support for Freemarker templates.
     </description>
 
     <build>
@@ -65,9 +65,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
-                        <Export-Package>org.glassfish.jersey.server.validation.*;version=${project.version}</Export-Package>
-                        <Import-Package>javax.validation.*;resolution:=optional;version="${range;[==,+);${validation.api.version}}", *</Import-Package>
+                        <Export-Package>org.glassfish.jersey.server.mvc.freemarker.*;version=${project.version}</Export-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
@@ -77,13 +75,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-server</artifactId>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-mvc</artifactId>
             <version>${project.version}</version>
         </dependency>
 

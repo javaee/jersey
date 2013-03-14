@@ -50,7 +50,7 @@
             <param-value>org.glassfish.jersey.tests.integration.servlet_25_mvc_3.MyApplication</param-value>
         </init-param>
         <init-param>
-            <param-name>jersey.config.servlet.JspTemplatesBasePath</param-name>
+            <param-name>jersey.config.server.mvc.templateBasePath.jsp</param-name>
             <param-value>/jsp/</param-value>
         </init-param>
         <!-- pass to next filter if Jersey/App returns 404 -->

@@ -68,10 +68,10 @@
             <artifactId>jersey-container-servlet-core</artifactId>
             <version>${project.version}</version>
             <exclusions>
-              <exclusion>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-              </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
     </dependencies>
@@ -97,7 +97,6 @@
                     <instructions>
                         <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
                         <Import-Package>
-                            javax.servlet.jsp.*;resolution:=optional;version="${range;[==,+);${jsp.version}}",
                             javax.servlet.*;version="[3.0,4.0)",
                             javax.annotation.*;version=!,
                             *

@@ -48,6 +48,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.test.JerseyTest;
@@ -69,6 +70,7 @@ public class CustomViewableContextTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
 
         return new ResourceConfig(ExplicitTemplate.class, ImplicitTemplate.class)
+                .register(MvcFeature.class)
                 .register(TestViewProcessor.class)
                 .register(CustomViewableContext.class);
     }

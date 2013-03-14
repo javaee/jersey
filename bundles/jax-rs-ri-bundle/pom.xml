@@ -69,12 +69,6 @@
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
-            <version>${jsp.version}</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>javax.xml.bind</groupId>
@@ -223,14 +217,12 @@
                         <Export-Package>
                             javax.ws.rs.*;version=${jaxrs.api.version},
                             org.glassfish.jersey.*;version=${project.version},
-                            com.sun.research.ws.wadl.*;version=${project.version},
-                            deprecated.javax.ws.rs;version=${project.version}
+                            com.sun.research.ws.wadl.*;version=${project.version}
                         </Export-Package>
                         <!-- TODO specify correct javax.annotation.* version once the final version gets clarified -->
                         <Import-Package>
                             javax.servlet.annotation.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
                             javax.servlet.descriptor.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
-                            javax.servlet.jsp.*;resolution:=optional;version="${range;[==,+);${jsp.version}}",
                             javax.servlet.*;version="${range;[==,+);${servlet2.version}}",
                             javax.annotation.*;version="[1.1,1.2]",
                             javax.persistence.*;resolution:=optional,

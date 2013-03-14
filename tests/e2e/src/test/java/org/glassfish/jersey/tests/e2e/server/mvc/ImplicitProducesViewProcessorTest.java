@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -76,6 +77,7 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
                 ImplicitTemplate.class,
                 ImplicitWithGetTemplate.class,
                 ImplicitWithSubResourceGetTemplate.class)
+                .register(MvcFeature.class)
                 .register(TestViewProcessor.class);
     }
     

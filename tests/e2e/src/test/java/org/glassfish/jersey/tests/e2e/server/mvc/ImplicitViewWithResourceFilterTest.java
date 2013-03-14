@@ -57,6 +57,7 @@ import javax.ws.rs.core.Response;
 import javax.annotation.Priority;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -78,6 +79,7 @@ public class ImplicitViewWithResourceFilterTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
 
         return new ResourceConfig(ImplicitTemplate.class)
+                .register(MvcFeature.class)
                 .register(FilterOne.class)
                 .register(FilterTwo.class)
                 .register(TestViewProcessor.class);

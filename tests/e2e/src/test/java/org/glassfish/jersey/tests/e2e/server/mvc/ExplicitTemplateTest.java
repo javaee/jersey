@@ -49,6 +49,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -68,6 +69,7 @@ public class ExplicitTemplateTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
 
         return new ResourceConfig(ExplicitTemplate.class)
+                .register(MvcFeature.class)
                 .register(TestViewProcessor.class);
     }
 

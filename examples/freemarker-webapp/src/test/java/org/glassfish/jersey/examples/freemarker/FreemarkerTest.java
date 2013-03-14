@@ -41,10 +41,7 @@ package org.glassfish.jersey.examples.freemarker;
 
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerProperties;
-import org.glassfish.jersey.server.mvc.freemarker.internal.FreemarkerViewProcessor;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -61,7 +58,7 @@ public class FreemarkerTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
         enable(TestProperties.DUMP_ENTITY);
 
-        return new MyApplication().property(FreemarkerProperties.FREEMARKER_TEMPLATES_BASE_PATH, "freemarker");
+        return new MyApplication().property(FreemarkerProperties.TEMPLATES_BASE_PATH, "freemarker");
     }
 
     @Test

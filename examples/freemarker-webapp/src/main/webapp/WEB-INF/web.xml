@@ -53,7 +53,7 @@
             <param-value>org.glassfish.jersey.examples.freemarker.MyApplication</param-value>
         </init-param>
         <init-param>
-            <param-name>jersey.config.freemarker.TemplateBasePath</param-name>
+            <param-name>jersey.config.server.mvc.templateBasePath.freemarker</param-name>
             <param-value>freemarker</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>

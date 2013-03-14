@@ -55,6 +55,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.test.JerseyTest;
@@ -75,8 +76,9 @@ public class FlatViewProcessorTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ResourceConfig(ExplicitTemplate.class, ImplicitTemplate.class, ImplicitExplicitTemplate.class, ImplicitWithGetTemplate.class,
-                ImplicitWithSubResourceGetTemplate.class)
+        return new ResourceConfig(ExplicitTemplate.class, ImplicitTemplate.class, ImplicitExplicitTemplate.class,
+                ImplicitWithGetTemplate.class, ImplicitWithSubResourceGetTemplate.class)
+                .register(MvcFeature.class)
                 .register(TestViewProcessor.class);
     }
 

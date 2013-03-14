@@ -66,12 +66,6 @@
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>javax.servlet.jsp</groupId>
-            <artifactId>jsp-api</artifactId>
-            <version>${jsp.version}</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
@@ -102,7 +96,6 @@
                         <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri/bundle/pom.xml. -->
                         <Import-Package>
                             javax.persistence.*;resolution:=optional,
-                            javax.servlet.jsp.*;resolution:=optional;version="${range;[==,+);${jsp.version}}",
                             javax.servlet.*;version="[2.4,4.0)",
                             javax.annotation.*;version=!,
                             *

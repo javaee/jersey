@@ -43,6 +43,7 @@ package org.glassfish.jersey.examples.bookstore.webapp;
 import org.glassfish.jersey.examples.bookstore.webapp.resource.Bookstore;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.jsp.JspMvcFeature;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -52,6 +53,9 @@ public class MyApplication extends ResourceConfig {
     public MyApplication() {
         // Resources.
         packages(Bookstore.class.getPackage().getName());
+
+        // MVC.
+        register(JspMvcFeature.class);
 
         // Logging.
         register(LoggingFilter.class);
