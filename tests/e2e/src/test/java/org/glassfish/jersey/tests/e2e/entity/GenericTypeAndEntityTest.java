@@ -88,8 +88,8 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
         }
 
         public void writeTo(List<Integer> l, Class<?> c, Type t, Annotation[] as,
-                MediaType mt, MultivaluedMap<String, Object> hs,
-                OutputStream out) throws IOException, WebApplicationException {
+                            MediaType mt, MultivaluedMap<String, Object> hs,
+                            OutputStream out) throws IOException, WebApplicationException {
             StringBuffer sb = new StringBuffer();
             for (Integer i : l) {
                 if (sb.length() > 0) sb.append(", ");
@@ -125,6 +125,15 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
         public Response response() {
             return Response.ok(new GenericEntity<List<Integer>>(Arrays.asList(1, 2, 3, 4)) {}).build();
         }
+
+        @GET
+        @Path("wrongGenericEntity")
+        public GenericEntity<List<Integer>> wrongGenericEntity() {
+            // wrongly constructed generic entity: generic type of the generic entity
+            // is not generic but just a List interface type. In this case
+            // the return generic type will be used
+            return new GenericEntity<List<Integer>>(Arrays.asList(1, 2, 3, 4), List.class);
+        }
     }
 
     @Path("ListResourceWithMediaType")
@@ -156,6 +165,16 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
         public Response response() {
             return Response.ok(new GenericEntity<List<Integer>>(Arrays.asList(1, 2, 3, 4)) {}).build();
         }
+
+        @GET
+        @Path("wrongGenericEntity")
+        @Produces("text/plain")
+        public GenericEntity<List<Integer>> wrongGenericEntity() {
+            // wrongly constructed generic entity: generic type of the generic entity
+            // is not generic but just a List interface type. In this case
+            // the return generic type will be used
+            return new GenericEntity<List<Integer>>(Arrays.asList(1, 2, 3, 4), List.class);
+        }
     }
 
     @Test
@@ -175,6 +194,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
         _testPath(target, "genericEntity");
         _testPath(target, "object");
         _testPath(target, "response");
+        _testPath(target, "wrongGenericEntity");
     }
 
     private void _testPath(WebTarget target, String path) {
