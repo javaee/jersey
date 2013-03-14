@@ -39,12 +39,26 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.tests.api.MessageBodyReaderTest;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -74,7 +88,7 @@ public class ExceptionLoggingTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(ExceptionResource.class);
+        return new ResourceConfig(ExceptionResource.class, Writer.class, Resource.class);
     }
 
     @Test
@@ -90,4 +104,43 @@ public class ExceptionLoggingTest extends JerseyTest {
         Assert.assertEquals(500, response.getStatus());
         // TODO: check the error log
     }
+
+
+    @Provider
+    @Produces(MediaType.WILDCARD)
+    public static class Writer implements MessageBodyWriter<MessageBodyReaderTest.EntityForReader> {
+        @Override
+        public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return type == MessageBodyReaderTest.EntityForReader.class;
+        }
+
+        @Override
+        public long getSize(MessageBodyReaderTest.EntityForReader entityForReader, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return 0;
+        }
+
+        @Override
+        public void writeTo(MessageBodyReaderTest.EntityForReader entityForReader, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+            throw new RuntimeException("test");
+        }
+    }
+
+    @Path("resource")
+    public static class Resource {
+
+        @Path("entity")
+        @GET
+        public MessageBodyReaderTest.EntityForReader entity() {
+            return new MessageBodyReaderTest.EntityForReader("entity");
+        }
+    }
+
+    @Test
+    public void testReaderFails() throws Exception {
+        final Response response = target().path("resource/entity").request().get();
+        Assert.assertEquals(500, response.getStatus());
+        // TODO: check the error log
+    }
+
+
 }
