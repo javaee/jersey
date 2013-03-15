@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.server;
 
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -77,6 +78,7 @@ import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.uri.UriComponent;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -120,6 +122,8 @@ public class ContainerRequest extends InboundMessageContext
     private RequestScopedInitializer requestScopedInitializer;
     // Request-scoped response writer of the invoking container
     private ContainerResponseWriter responseWriter;
+    // True if the request is used in the response processing phase (for example in ContainerResponseFilter)
+    private boolean inResponseProcessingPhase;
 
 
     /**
@@ -431,7 +435,14 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void setSecurityContext(SecurityContext context) {
+        Preconditions.checkState(!inResponseProcessingPhase, LocalizationMessages.ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE());
         this.securityContext = context;
+    }
+
+    @Override
+    public void setEntityStream(InputStream input) {
+        Preconditions.checkState(!inResponseProcessingPhase, LocalizationMessages.ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE());
+        super.setEntityStream(input);
     }
 
     @Override
@@ -441,7 +452,23 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void abortWith(Response response) {
+        Preconditions.checkState(!inResponseProcessingPhase, LocalizationMessages.ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE());
         this.abortResponse = response;
+    }
+
+    /**
+     * Notify this request that the response created from this request is already being
+     * processed. This means that the request processing phase has finished and this
+     * request can be used only in the request processing phase (for example in
+     * ContainerResponseFilter).
+     * <p/>
+     * The request can be used for processing of more than one response (in async cases).
+     * Then this method should be called when the first response is created from this
+     * request. Multiple calls to this method has the same effect as calling the method
+     * only once.
+     */
+    public void inResponseProcessing() {
+        this.inResponseProcessingPhase = true;
     }
 
     /**

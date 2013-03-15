@@ -96,6 +96,7 @@ public class ContainerResponse implements ContainerResponseContext {
      */
     ContainerResponse(ContainerRequest requestContext, OutboundJaxrsResponse response) {
         this.requestContext = requestContext;
+        this.requestContext.inResponseProcessing();
         this.status = response.getStatusInfo();
         this.messageContext = response.getContext();
 

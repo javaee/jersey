@@ -40,8 +40,10 @@
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.security.Principal;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.NameBinding;
@@ -57,6 +59,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.annotation.Priority;
@@ -68,6 +71,7 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -76,6 +80,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Miroslav.Fuksa (miroslav.fuksa@oracle.com)
  * @see GloballyNameBoundResourceFilterTest
  */
 public class ResourceFilterTest extends JerseyTest {
@@ -93,8 +98,11 @@ public class ResourceFilterTest extends JerseyTest {
                 ExceptionPostMatchRequestFilter.class,
                 ExceptionTestBoundResponseFilter.class,
                 ExceptionTestGlobalResponseFilter.class,
-                TestExceptionMapper.class
-
+                TestExceptionMapper.class,
+                AbortResponseResource.class,
+                AbortResponseFitler.class,
+                AbortRequestFilter.class,
+                ExceptionRequestFilter.class
         );
     }
 
@@ -168,9 +176,10 @@ public class ResourceFilterTest extends JerseyTest {
     @Retention(RetentionPolicy.RUNTIME)
     private static @interface NameBoundRequest {}
 
+
     @NameBinding
     @Retention(RetentionPolicy.RUNTIME)
-    private static @interface NameBoundResponse {}
+    private static @interface NameBoundAbortResponse {}
 
     @NameBoundRequest
     @Priority(1)
@@ -285,9 +294,11 @@ public class ResourceFilterTest extends JerseyTest {
 
     public static class TestExceptionMapper implements ExceptionMapper<TestException> {
 
+        public static final String POSTFIX = "-mappedTestException";
+
         @Override
         public Response toResponse(TestException exception) {
-            return Response.ok(exception.getMessage() + "-mappedTestException").build();
+            return Response.ok(exception.getMessage() + POSTFIX).build();
         }
     }
 
@@ -305,5 +316,156 @@ public class ResourceFilterTest extends JerseyTest {
         assertEquals(200, r.getStatus());
         assertTrue(r.hasEntity());
         assertEquals("nameBoundRequest-mappedTestException-nameBoundResponse-globalResponse", r.readEntity(String.class));
+    }
+
+    @NameBoundAbortResponse
+    private static class AbortResponseFitler implements ContainerResponseFilter {
+
+        public static final String ABORT_FILTER_TEST_PASSED = "abort-filter-test-passed";
+
+        @Override
+        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+            boolean passed = true;
+
+            try {
+                // checks that IllegalStateException is thrown when setting entity stream
+                requestContext.setEntityStream(new InputStream() {
+                    @Override
+                    public int read() throws IOException {
+                        return -1;
+                    }
+                });
+                passed = false;
+            } catch (IllegalStateException iae) {
+                System.out.println(iae.getMessage());
+            }
+
+            try {
+                // checks that IllegalStateException is thrown when setting security context
+                requestContext.setSecurityContext(new SecurityContext() {
+                    @Override
+                    public Principal getUserPrincipal() {
+                        return null;
+                    }
+
+                    @Override
+                    public boolean isUserInRole(String role) {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean isSecure() {
+                        return false;
+                    }
+
+                    @Override
+                    public String getAuthenticationScheme() {
+                        return null;
+                    }
+                });
+                passed = false;
+            } catch (IllegalStateException iae) {
+                System.out.println(iae.getMessage());
+            }
+
+
+            try {
+                // checks that IllegalStateException is thrown when aborting request
+                requestContext.abortWith(Response.serverError().build());
+                passed = false;
+            } catch (IllegalStateException iae) {
+                System.out.println(iae.getMessage());
+            }
+            responseContext.getHeaders().add(ABORT_FILTER_TEST_PASSED, passed);
+        }
+    }
+
+
+    @NameBoundAbortRequest
+    private static class AbortRequestFilter implements ContainerRequestFilter {
+
+        public static final String FILTER_ABORT_ENTITY = "filter-abort-entity";
+
+        @Override
+        public void filter(ContainerRequestContext requestContext) throws IOException {
+            requestContext.abortWith(Response.ok(FILTER_ABORT_ENTITY).build());
+        }
+    }
+
+    @NameBoundExceptionInRequest
+    private static class ExceptionRequestFilter implements ContainerRequestFilter {
+
+        public static final String EXCEPTION_IN_REQUEST_FILTER = "exception-in-request-filter";
+
+        @Override
+        public void filter(ContainerRequestContext requestContext) throws IOException {
+            throw new TestException(EXCEPTION_IN_REQUEST_FILTER);
+        }
+    }
+
+    @NameBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    private static @interface NameBoundResponse {}
+
+    @NameBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    private static @interface NameBoundAbortRequest {}
+
+    @NameBinding
+    @Retention(RetentionPolicy.RUNTIME)
+    private static @interface NameBoundExceptionInRequest {}
+
+
+    @Path("abort")
+    public static class AbortResponseResource {
+        @Path("response")
+        @GET
+        @NameBoundAbortResponse
+        public String get() {
+            return "get";
+        }
+
+        @Path("abort-in-filter")
+        @GET
+        @NameBoundAbortResponse
+        @NameBoundAbortRequest
+        public String neverCalled() {
+            return "This method will never be called. Request will be aborted in a request filter.";
+        }
+
+        @Path("exception")
+        @GET
+        @NameBoundAbortResponse
+        @NameBoundExceptionInRequest
+        public String exception() {
+            return "This method will never be called. Exception will be thrown in a request filter.";
+        }
+    }
+
+    @Test
+    public void testAbortResponseInResponseFilter() {
+        Response r = target("abort").path("response").request().get();
+        assertEquals(200, r.getStatus());
+        assertEquals("get", r.readEntity(String.class));
+        assertNotNull(r.getHeaderString(AbortResponseFitler.ABORT_FILTER_TEST_PASSED));
+        assertEquals("true", r.getHeaderString(AbortResponseFitler.ABORT_FILTER_TEST_PASSED));
+    }
+
+    @Test
+    public void testAbortAbortedResponseInResponseFilter() {
+        Response r = target("abort").path("abort-in-filter").request().get();
+        assertEquals(200, r.getStatus());
+        assertEquals(AbortRequestFilter.FILTER_ABORT_ENTITY, r.readEntity(String.class));
+        assertNotNull(r.getHeaderString(AbortResponseFitler.ABORT_FILTER_TEST_PASSED));
+        assertEquals("true", r.getHeaderString(AbortResponseFitler.ABORT_FILTER_TEST_PASSED));
+    }
+
+    @Test
+    public void testAbortedResponseFromExceptionResponse() {
+        Response r = target("abort").path("exception").request().get();
+        assertEquals(200, r.getStatus());
+        assertEquals(ExceptionRequestFilter.EXCEPTION_IN_REQUEST_FILTER + TestExceptionMapper.POSTFIX, r.readEntity(String.class));
+        assertNotNull(r.getHeaderString(AbortResponseFitler.ABORT_FILTER_TEST_PASSED));
+        assertEquals("true", r.getHeaderString(AbortResponseFitler.ABORT_FILTER_TEST_PASSED));
     }
 }

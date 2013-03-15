@@ -184,6 +184,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
         @Override
         @SuppressWarnings("unchecked")
         public Continuation<ContainerResponse> apply(ContainerResponse responseContext) {
+
             try {
                 RoutingContext rc = locator.getService(RoutingContext.class);
 
