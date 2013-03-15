@@ -42,6 +42,7 @@ package org.glassfish.jersey.server;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Date;
@@ -52,6 +53,7 @@ import java.util.Set;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
@@ -320,8 +322,16 @@ public class ContainerResponse implements ContainerResponseContext {
      *
      * @param type overriding message entity type.
      */
-    public void setEntityType(Type type) {
-        messageContext.setEntityType(type);
+    public void setEntityType(final Type type) {
+        Type t = type;
+        if (type instanceof ParameterizedType) {
+            final ParameterizedType parameterizedType = (ParameterizedType) type;
+            if (parameterizedType.getRawType().equals(GenericEntity.class)) {
+                t = parameterizedType.getActualTypeArguments()[0];
+            }
+        }
+
+        messageContext.setEntityType(t);
     }
 
     @Override
