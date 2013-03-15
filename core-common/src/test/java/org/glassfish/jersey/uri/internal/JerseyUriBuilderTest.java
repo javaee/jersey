@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -209,11 +209,11 @@ public class JerseyUriBuilderTest {
     // regression test for JERSEY-1457
     @Test
     public void testChangeSspViaStringUriTemplate() throws Exception {
-        String[] origUris = new String[] {"news:comp.lang.java", "tel:+1-816-555-1212"};
-        URI[] replaceUris = new URI[] {new URI(null, "news.lang.java", null), new URI(null, "+1-866-555-1212", null)};
-        String[] results = new String[] {"news:news.lang.java", "tel:+1-866-555-1212"};
+        String[] origUris = new String[]{"news:comp.lang.java", "tel:+1-816-555-1212"};
+        URI[] replaceUris = new URI[]{new URI(null, "news.lang.java", null), new URI(null, "+1-866-555-1212", null)};
+        String[] results = new String[]{"news:news.lang.java", "tel:+1-866-555-1212"};
         int i = 0;
-        while (i < origUris.length){
+        while (i < origUris.length) {
             assertEquals(results[i],
                     UriBuilder.fromUri(new URI(origUris[i])).uri(replaceUris[i].toASCIIString()).build().toString());
             i++;
@@ -1213,6 +1213,11 @@ public class JerseyUriBuilderTest {
     }
 
     @Test
+    public void testBuildFromEncodedSlashInParamValue() {
+        assertEquals("/A/B", UriBuilder.fromUri("/{param}").buildFromEncoded("A/B").toString());
+    }
+
+    @Test
     public void testResolveTemplateFromEncodedQueryTemplates() {
         URI uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
                 queryParam("a", "{b}").resolveTemplateFromEncoded("b", "=+&%xx%20").build();
@@ -1224,7 +1229,6 @@ public class JerseyUriBuilderTest {
                 queryParam("a", "{b}").resolveTemplatesFromEncoded(m).build();
         Assert.assertEquals(URI.create("http://localhost:8080/a/b/c?a=%3D%2B%26%25xx%20"), uri);
     }
-
 
     @Test
     public void testBuildFragmentTemplates() {
@@ -1595,5 +1599,26 @@ public class JerseyUriBuilderTest {
 
         URI uri = UriBuilder.fromUri(new URI(uriOrig)).uri(uriReplace.toASCIIString()).build();
         Assert.assertEquals("ftp://ftp.is.co.za/test/rfc1808.txt#myFragment", uri.toString());
+    }
+
+    @Test
+    public void replaceOpaqueUriWithNonOpaqueFromStringTest() throws URISyntaxException {
+        String first = "news:comp.lang.java";
+        String second = "http://comp.lang.java";
+        UriBuilder.fromUri(new URI(first)).uri(second);
+    }
+
+    @Test
+    public void replaceOpaqueUriWithNonOpaqueFromStringTest2() throws URISyntaxException {
+        String first = "news:comp.lang.java";
+        String second = "http://comp.lang.java";
+        UriBuilder.fromUri(new URI(first)).scheme("http").uri(second);
+    }
+
+    @Test
+    public void replaceOpaqueUriWithNonOpaqueFromUriTest() throws URISyntaxException {
+        String first = "news:comp.lang.java";
+        String second = "http://comp.lang.java";
+        UriBuilder.fromUri(new URI(first)).uri(new URI(second));
     }
 }
