@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -128,8 +128,9 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
                 }
 
                 try {
-                    return CollectionExtractor.getInstance(
-                            rawType, converter, parameterName, defaultValue);
+                    return CollectionExtractor.getInstance(rawType, converter, parameterName, defaultValue);
+                } catch (ExtractorException e) {
+                    throw e;
                 } catch (Exception e) {
                     throw new ProcessingException("Could not process parameter type " + rawType, e);
                 }
@@ -140,6 +141,8 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
         if (converter != null) {
             try {
                 return new SingleValueExtractor(converter, parameterName, defaultValue);
+            } catch (ExtractorException e) {
+                throw e;
             } catch (Exception e) {
                 throw new ProcessingException("Could not process parameter type " + rawType, e);
             }
@@ -161,8 +164,7 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
             if (valueOf != null) {
                 try {
                     Object defaultDefaultValue = PrimitiveMapper.primitiveToDefaultValueMap.get(rawType);
-                    return new PrimitiveValueOfExtractor(valueOf, parameterName,
-                            defaultValue, defaultDefaultValue);
+                    return new PrimitiveValueOfExtractor(valueOf, parameterName, defaultValue, defaultDefaultValue);
                 } catch (Exception e) {
                     throw new ProcessingException(LocalizationMessages.DEFAULT_COULD_NOT_PROCESS_METHOD(defaultValue, valueOf));
                 }

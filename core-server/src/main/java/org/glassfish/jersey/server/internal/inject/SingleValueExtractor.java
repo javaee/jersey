@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,14 +56,14 @@ import org.glassfish.jersey.internal.ProcessingException;
 final class SingleValueExtractor<T> extends AbstractParamValueExtractor<T> implements MultivaluedParameterExtractor<T> {
 
     /**
-     * Create new string value extractor.
+     * Create new single value extractor.
      *
-     * @param converter                 string value reader.
-     * @param parameter          string parameter value.
+     * @param converter          string value reader.
+     * @param parameterName      string parameter name.
      * @param defaultStringValue default string value.
      */
-    public SingleValueExtractor(ParamConverter<T> converter, String parameter, String defaultStringValue) {
-        super(converter, parameter, defaultStringValue);
+    public SingleValueExtractor(ParamConverter<T> converter, String parameterName, String defaultStringValue) {
+        super(converter, parameterName, defaultStringValue);
     }
 
     /**

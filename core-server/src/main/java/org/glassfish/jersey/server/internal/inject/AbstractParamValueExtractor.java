@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,9 +39,10 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.ext.ParamConverter;
 
-import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.internal.util.collection.Values;
 
 /**
@@ -56,7 +57,7 @@ abstract class AbstractParamValueExtractor<T> {
     private final ParamConverter<T> paramConverter;
     private final String parameterName;
     private final String defaultValueString;
-    private final Value<T> convertedDefaultValue;
+    private final UnsafeValue<T, RuntimeException> convertedDefaultValue;
 
     /**
      * Constructor that initializes common string reader-based parameter extractor
@@ -66,8 +67,8 @@ abstract class AbstractParamValueExtractor<T> {
      * based on the presence and value of the {@link ParamConverter.Lazy}
      * annotation on the supplied string value reader class.
      *
-     * @param converter parameter converter.
-     * @param parameterName name of the parameter.
+     * @param converter          parameter converter.
+     * @param parameterName      name of the parameter.
      * @param defaultValueString default parameter value string.
      */
     protected AbstractParamValueExtractor(ParamConverter<T> converter, String parameterName, final String defaultValueString) {
@@ -77,10 +78,10 @@ abstract class AbstractParamValueExtractor<T> {
 
 
         if (defaultValueString != null) {
-            this.convertedDefaultValue = Values.lazy(new Value<T>() {
+            this.convertedDefaultValue = Values.lazy(new UnsafeValue<T, RuntimeException>() {
                 @Override
-                public T get() {
-                    return paramConverter.fromString(defaultValueString);
+                public T get() throws RuntimeException {
+                    return convert(defaultValueString);
                 }
             });
 
@@ -93,26 +94,71 @@ abstract class AbstractParamValueExtractor<T> {
         }
     }
 
+    /**
+     * Get the name of the parameter this extractor belongs to.
+     *
+     * @return parameter name.
+     */
     public String getName() {
         return parameterName;
     }
 
+    /**
+     * Get the default string value of the parameter.
+     *
+     * @return default parameter string value.
+     */
     public String getDefaultValueString() {
         return defaultValueString;
     }
 
+    /**
+     * Extract parameter value from string using the configured {@link ParamConverter parameter converter}.
+     *
+     * A {@link WebApplicationException} thrown from the converter is propagated
+     * unchanged. Any other exception throws by the converter is wrapped in a new
+     * {@link ExtractorException} before rethrowing.
+     *
+     * @param value parameter string value to be converted/extracted.
+     * @return extracted value of a given Java type.
+     * @throws WebApplicationException in case the underlying parameter converter throws a {@code WebApplicationException}.
+     *                                 The exception is rethrown without a change.
+     * @throws ExtractorException      wrapping any other exception thrown by the parameter converter.
+     */
     protected final T fromString(String value) {
-        T result = paramConverter.fromString(value);
+        T result = convert(value);
         if (result == null) {
             return defaultValue();
         }
         return result;
     }
 
+    private T convert(String value) {
+        try {
+            return paramConverter.fromString(value);
+        } catch (WebApplicationException wae) {
+            throw wae;
+        } catch (Exception ex) {
+            throw new ExtractorException(ex);
+        }
+    }
+
+    /**
+     * Check if there is a default string value registered for the parameter.
+     *
+     * @return {@code true} if there is a default parameter string value registered, {@code false} otherwise.
+     */
     protected final boolean isDefaultValueRegistered() {
         return defaultValueString != null;
     }
 
+    /**
+     * Get converted default value.
+     *
+     * The conversion happens lazily during first call of the method.
+     *
+     * @return converted default value.
+     */
     protected final T defaultValue() {
         if (!isDefaultValueRegistered()) {
             return null;

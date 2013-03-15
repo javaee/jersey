@@ -96,7 +96,7 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider {
                 value = requestContext.readEntity(rawType, parameter.getType(), parameter.getAnnotations());
                 if (rawType.isPrimitive() && value == null) {
                     throw new BadRequestException(Response.status(Response.Status.BAD_REQUEST)
-                                    .entity(LocalizationMessages.ERROR_PRIMITIVE_TYPE_NULL()).build());
+                            .entity(LocalizationMessages.ERROR_PRIMITIVE_TYPE_NULL()).build());
                 }
             }
             return value;

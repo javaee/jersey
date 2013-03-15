@@ -63,7 +63,6 @@ public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
 
     @Override
     public T provide() {
-
         return get(new HttpContext() {
 
             @Override

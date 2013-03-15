@@ -67,6 +67,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.inject.AbstractHttpContextValueFactory;
 import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
+import org.glassfish.jersey.server.internal.inject.ExtractorException;
 import org.glassfish.jersey.server.internal.inject.HttpContext;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
@@ -240,8 +241,8 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                 }
             } else if (extractor != null) {
                 MultivaluedMap<String, String> map = new MultivaluedStringMap();
-                if (formDataBodyPart != null) {
-                    try {
+                try {
+                    if (formDataBodyPart != null) {
                         for (FormDataBodyPart p : formDataBodyParts) {
                             mediaType = p.getMediaType();
 
@@ -261,14 +262,15 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
                             map.add(parameter.getSourceName(), value);
                         }
-                    } catch (IOException e) {
-                        throw new FormDataParamException(e, extractor.getName(), extractor.getDefaultValueString());
                     }
+                    return extractor.extract(map);
+                } catch (IOException ex) {
+                    throw new FormDataParamException(ex, extractor.getName(), extractor.getDefaultValueString());
+                } catch (ExtractorException ex) {
+                    throw new FormDataParamException(ex, extractor.getName(), extractor.getDefaultValueString());
                 }
-                return extractor.extract(map);
-            } else {
-                return null;
             }
+            return null;
         }
 
     }
@@ -337,8 +339,6 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                 return null;
             }
 
-            final MultivaluedParameterExtractor<?> extractor = get(parameter);
-
             if (Collection.class == parameterRawType || List.class == parameterRawType) {
                 Class c = ReflectionHelper.getGenericTypeArgumentClasses(parameter.getType()).get(0);
                 if (FormDataBodyPart.class == c) {
@@ -351,7 +351,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             } else if (FormDataContentDisposition.class == parameterRawType) {
                 return new FormDataContentDispositionMultiPartInjectable(parameter.getSourceName());
             } else {
-                return new FormDataParamValueFactory(parameter, extractor);
+                return new FormDataParamValueFactory(parameter, get(parameter));
             }
         }
 

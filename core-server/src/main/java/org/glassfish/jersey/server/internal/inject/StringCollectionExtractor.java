@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,11 +59,17 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 abstract class StringCollectionExtractor implements MultivaluedParameterExtractor<Collection<String>> {
 
-    final String parameter;
-    final String defaultValue;
+    private final String parameter;
+    private final String defaultValue;
 
-    protected StringCollectionExtractor(String parameter, String defaultValue) {
-        this.parameter = parameter;
+    /**
+     * Create new string collection parameter extractor.
+     *
+     * @param parameterName parameter name.
+     * @param defaultValue  default parameter value.
+     */
+    protected StringCollectionExtractor(String parameterName, String defaultValue) {
+        this.parameter = parameterName;
         this.defaultValue = defaultValue;
     }
 
@@ -81,7 +87,7 @@ abstract class StringCollectionExtractor implements MultivaluedParameterExtracto
     public Collection<String> extract(MultivaluedMap<String, String> parameters) {
         List<String> stringList = parameters.get(parameter);
 
-        final Collection<String> collection = getInstance();
+        final Collection<String> collection = newCollection();
         if (stringList != null) {
             collection.addAll(stringList);
         } else if (defaultValue != null) {
@@ -91,7 +97,15 @@ abstract class StringCollectionExtractor implements MultivaluedParameterExtracto
         return collection;
     }
 
-    protected abstract Collection<String> getInstance();
+    /**
+     * Get a new string collection instance that will be used to store the extracted parameters.
+     *
+     * The method is overridden by concrete implementations to return an instance
+     * of a proper collection sub-type.
+     *
+     * @return instance of a proper collection sub-type
+     */
+    protected abstract Collection<String> newCollection();
 
     private static final class ListString extends StringCollectionExtractor {
 
@@ -100,7 +114,7 @@ abstract class StringCollectionExtractor implements MultivaluedParameterExtracto
         }
 
         @Override
-        protected List<String> getInstance() {
+        protected List<String> newCollection() {
             return new ArrayList<String>();
         }
     }
@@ -112,7 +126,7 @@ abstract class StringCollectionExtractor implements MultivaluedParameterExtracto
         }
 
         @Override
-        protected Set<String> getInstance() {
+        protected Set<String> newCollection() {
             return new HashSet<String>();
         }
     }
@@ -124,7 +138,7 @@ abstract class StringCollectionExtractor implements MultivaluedParameterExtracto
         }
 
         @Override
-        protected SortedSet<String> getInstance() {
+        protected SortedSet<String> newCollection() {
             return new TreeSet<String>();
         }
     }
@@ -134,10 +148,10 @@ abstract class StringCollectionExtractor implements MultivaluedParameterExtracto
      * class type for the parameter specified.
      *
      * @param collectionType collection type to be supported by the extractor.
-     * @param parameterName extracted parameter name.
-     * @param defaultValue default parameter value.
+     * @param parameterName  extracted parameter name.
+     * @param defaultValue   default parameter value.
      * @return string collection extractor instance supporting the given collection
-     *     class type.
+     *         class type.
      */
     public static StringCollectionExtractor getInstance(Class<?> collectionType, String parameterName, String defaultValue) {
         if (List.class == collectionType) {

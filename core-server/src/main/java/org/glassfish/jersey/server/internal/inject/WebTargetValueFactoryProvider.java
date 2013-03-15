@@ -301,7 +301,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
             public ManagedClient get() {
                 final Client client;
                 if (serverConfig == null) {
-                    client =  ClientBuilder.newClient();
+                    client = ClientBuilder.newClient();
                 } else {
                     ClientConfig clientConfig = new ClientConfig();
                     copyProviders(serverConfig, clientConfig);
@@ -348,7 +348,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
                                 final String prefix = binding.getAnnotation().annotationType().getName() + ".";
                                 final String baseUriProperty = prefix + "baseUri";
                                 final Object bu = serverConfig.getProperty(baseUriProperty);
-                                final String customBaseUri= (bu != null) ? bu.toString() : binding.baseUri();
+                                final String customBaseUri = (bu != null) ? bu.toString() : binding.baseUri();
 
                                 final String configClassProperty = prefix + "configClass";
                                 final ClientConfig cfg = resolveConfig(configClassProperty, binding);

@@ -127,9 +127,16 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> Constructor<T> getConstructor(Class<T> clazz)
-            throws MultiException, NoSuchMethodException {
-        Constructor<T> retVal = null;
+    public <T> Constructor<T> getConstructor(Class<T> clazz) throws MultiException, NoSuchMethodException {
+        if (clazz.isLocalClass()) {
+            throw new NoSuchMethodException(LocalizationMessages.INJECTION_ERROR_LOCAL_CLASS_NOT_SUPPORTED(clazz.getName()));
+        }
+        if (clazz.isMemberClass() && !Modifier.isStatic(clazz.getModifiers())) {
+            throw new NoSuchMethodException(
+                    LocalizationMessages.INJECTION_ERROR_NONSTATIC_MEMBER_CLASS_NOT_SUPPORTED(clazz.getName()));
+        }
+
+        Constructor<T> retVal;
         try {
             retVal = defaultAnalyzer.getConstructor(clazz);
 
@@ -172,7 +179,7 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
         }
 
         if (selectedSize == 0) {
-            throw new NoSuchMethodException("Could not find a suitable constructor on " + clazz.getName());
+            throw new NoSuchMethodException(LocalizationMessages.INJECTION_ERROR_SUITABLE_CONSTRUCTOR_NOT_FOUND(clazz.getName()));
         }
 
         if (selectedSize > 1) {
@@ -200,7 +207,7 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
         if (!Modifier.isPublic(constructor.getModifiers())) {
             // return true for a default constructor, return false otherwise.
             return paramSize == 0 &&
-                    (constructor.getDeclaringClass().getModifiers() &  (Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE))
+                    (constructor.getDeclaringClass().getModifiers() & (Modifier.PUBLIC | Modifier.PROTECTED | Modifier.PRIVATE))
                             == constructor.getModifiers();
         }
 

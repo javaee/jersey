@@ -65,15 +65,13 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Tests {@link ParamConverter param converters}.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class ParamConverterInternalTest extends AbstractTest {
     @Path("/")
@@ -203,30 +201,21 @@ public class ParamConverterInternalTest extends AbstractTest {
         assertEquals(Collections.singletonList(Arrays.asList("1", "2", "3")).toString(), s);
     }
 
-    @Test
+    @Test()
     public void testEagerConverter() throws Exception {
-
-        ApplicationHandler application = null;
         try {
-            application = new ApplicationHandler(new ResourceConfig(MyEagerParamProvider.class, Resource.class));
-            Assert.fail("should throw an exception");
-        } catch (Exception e) {
-            // ok - should fail
+            new ApplicationHandler(new ResourceConfig(MyEagerParamProvider.class, Resource.class));
+            fail("ExtractorException expected.");
+        } catch (ExtractorException expected) {
+            // ok
         }
     }
 
     @Test
     public void testLazyConverter() throws Exception {
-
-        ApplicationHandler application = null;
-        application = new ApplicationHandler(new ResourceConfig(MyLazyParamProvider.class, Resource.class));
-        try {
-            application.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
-
-            Assert.fail("should throw an exception");
-        } catch (Exception e) {
-            // ok - should fail
-        }
+        ApplicationHandler application = new ApplicationHandler(new ResourceConfig(MyLazyParamProvider.class, Resource.class));
+        ContainerResponse response = application.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
+        assertEquals(400, response.getStatus());
     }
 
     @Path("resource")

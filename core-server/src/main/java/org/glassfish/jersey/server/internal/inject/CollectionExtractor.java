@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,19 +50,27 @@ import java.util.TreeSet;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverter;
 
+import org.glassfish.jersey.internal.ProcessingException;
+
 /**
  * Extract parameter value as a typed collection.
  *
  * @param <T> parameter value type.
- *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> implements
         MultivaluedParameterExtractor<Collection<T>> {
 
-    protected CollectionExtractor(ParamConverter<T> converter, String parameter, String defaultStringValue) {
-        super(converter, parameter, defaultStringValue);
+    /**
+     * Create new collection parameter extractor.
+     *
+     * @param converter          parameter converter to be used to convert parameter from a String.
+     * @param parameterName      parameter name.
+     * @param defaultStringValue default parameter String value.
+     */
+    protected CollectionExtractor(ParamConverter<T> converter, String parameterName, String defaultStringValue) {
+        super(converter, parameterName, defaultStringValue);
     }
 
     @Override
@@ -70,7 +78,7 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
     public Collection<T> extract(MultivaluedMap<String, String> parameters) {
         final List<String> stringList = parameters.get(getName());
 
-        final Collection<T> valueList = getInstance();
+        final Collection<T> valueList = newCollection();
         if (stringList != null) {
             for (String v : stringList) {
                 valueList.add(fromString(v));
@@ -82,7 +90,15 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
         return valueList;
     }
 
-    protected abstract Collection<T> getInstance();
+    /**
+     * Get a new collection instance that will be used to store the extracted parameters.
+     *
+     * The method is overridden by concrete implementations to return an instance
+     * of a proper collection sub-type.
+     *
+     * @return instance of a proper collection sub-type
+     */
+    protected abstract Collection<T> newCollection();
 
     private static final class ListValueOf<T> extends CollectionExtractor<T> {
 
@@ -91,7 +107,7 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
         }
 
         @Override
-        protected List<T> getInstance() {
+        protected List<T> newCollection() {
             return new ArrayList<T>();
         }
     }
@@ -103,7 +119,7 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
         }
 
         @Override
-        protected Set<T> getInstance() {
+        protected Set<T> newCollection() {
             return new HashSet<T>();
         }
     }
@@ -115,22 +131,34 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
         }
 
         @Override
-        protected SortedSet<T> getInstance() {
+        protected SortedSet<T> newCollection() {
             return new TreeSet<T>();
         }
     }
 
-    public static <T> MultivaluedParameterExtractor getInstance(Class<?> c,
-                                                                ParamConverter<T> converter, String parameter,
-                                                                String defaultValueString) {
-        if (List.class == c) {
-            return new ListValueOf<T>(converter, parameter, defaultValueString);
-        } else if (Set.class == c) {
-            return new SetValueOf<T>(converter, parameter, defaultValueString);
-        } else if (SortedSet.class == c) {
-            return new SortedSetValueOf<T>(converter, parameter, defaultValueString);
+    /**
+     * Get a new {@code CollectionExtractor} instance.
+     *
+     * @param collectionType     raw collection type.
+     * @param converter          parameter converter to be used to convert parameter string values into
+     *                           values of the requested Java type.
+     * @param parameterName      parameter name.
+     * @param defaultValueString default parameter string value.
+     * @param <T>                converted parameter Java type.
+     * @return new collection parameter extractor instance.
+     */
+    public static <T> CollectionExtractor getInstance(Class<?> collectionType,
+                                                      ParamConverter<T> converter,
+                                                      String parameterName,
+                                                      String defaultValueString) {
+        if (List.class == collectionType) {
+            return new ListValueOf<T>(converter, parameterName, defaultValueString);
+        } else if (Set.class == collectionType) {
+            return new SetValueOf<T>(converter, parameterName, defaultValueString);
+        } else if (SortedSet.class == collectionType) {
+            return new SortedSetValueOf<T>(converter, parameterName, defaultValueString);
         } else {
-            throw new RuntimeException();
+            throw new ProcessingException("Unsupported collection type.");
         }
     }
 }

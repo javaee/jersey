@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,21 +52,23 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 final class SingleStringValueExtractor implements MultivaluedParameterExtractor<String> {
 
-    final String parameter;
-    final String defaultValue;
+    private final String paramName;
+    private final String defaultValue;
 
-    public SingleStringValueExtractor(String parameter) {
-        this(parameter, null);
-    }
-
-    public SingleStringValueExtractor(String parameter, String defaultValue) {
-        this.parameter = parameter;
+    /**
+     * Create new single string value extractor.
+     *
+     * @param parameterName string parameter name.
+     * @param defaultValue  default value.
+     */
+    public SingleStringValueExtractor(String parameterName, String defaultValue) {
+        this.paramName = parameterName;
         this.defaultValue = defaultValue;
     }
 
     @Override
     public String getName() {
-        return parameter;
+        return paramName;
     }
 
     @Override
@@ -86,7 +88,7 @@ final class SingleStringValueExtractor implements MultivaluedParameterExtractor<
      */
     @Override
     public String extract(MultivaluedMap<String, String> parameters) {
-        String value = parameters.getFirst(parameter);
+        String value = parameters.getFirst(paramName);
         return (value != null) ? value : defaultValue;
     }
 }

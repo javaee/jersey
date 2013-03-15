@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -431,7 +431,8 @@ public class Providers {
             if (!foundComponentCompatible) {
                 warnings.append(LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_WRONG_PACKAGE(
                         component.getName(),
-                        componentConstraint.name()));
+                        componentConstraint.name()))
+                        .append(" ");
                 logProviderSkipped(warnings, component, isResource);
                 return false;
             }
@@ -444,15 +445,18 @@ public class Providers {
                 warnings.append(LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_WRONG_RUNTIME(
                         component.getName(),
                         componentConstraint.name(),
-                        runtimeConstraint.name()));
+                        runtimeConstraint.name()))
+                        .append(" ");
 
                 logProviderSkipped(warnings, component, isResource);
             }
 
             // runtimeConstraint vs contractConstraint
             if (!foundRuntimeCompatibleContract && !scanned) {
-                warnings.append(LocalizationMessages.ERROR_PROVIDER_REGISTERED_WRONG_RUNTIME(component.getName(),
-                        runtimeConstraint.name(), runtimeConstraint == RuntimeType.SERVER ? "client" : "server"));
+                warnings.append(LocalizationMessages.ERROR_PROVIDER_REGISTERED_WRONG_RUNTIME(
+                        component.getName(),
+                        runtimeConstraint.name()))
+                        .append(" ");
                 logProviderSkipped(warnings, component, isResource);
                 return false;
             }
@@ -466,8 +470,10 @@ public class Providers {
     }
 
     private static void logProviderSkipped(StringBuilder sb, Class<?> provider, boolean alsoResourceClass) {
-        sb.append(alsoResourceClass ? LocalizationMessages.ERROR_PROVIDER_AND_RESOURCE_CONSTRAINED_TO_IGNORED
-                (provider.getName()) : LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_IGNORED(provider.getName()));
+        sb.append(alsoResourceClass ?
+                LocalizationMessages.ERROR_PROVIDER_AND_RESOURCE_CONSTRAINED_TO_IGNORED(provider.getName()) :
+                LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_IGNORED(provider.getName()))
+                .append(" ");
     }
 
     /**
