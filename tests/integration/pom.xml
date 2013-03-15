@@ -78,6 +78,7 @@
         <module>servlet-3-async</module>
         <module>servlet-3-init-1</module>
         <module>servlet-3-init-2</module>
+        <module>servlet-3-init-3</module>
         <module>servlet-3-params</module>
         <module>servlet-3-sse-1</module>
         <module>servlet-tests</module>
@@ -102,7 +103,7 @@
                 <plugin>
                     <groupId>org.mortbay.jetty</groupId>
                     <artifactId>jetty-maven-plugin</artifactId>
-                    <version>8.1.0.RC5</version>
+                    <version>8.1.8.v20121106</version>
                     <configuration>
                         <scanIntervalSeconds>10</scanIntervalSeconds>
                         <stopPort>9999</stopPort>
