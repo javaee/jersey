@@ -52,6 +52,7 @@ import javax.ws.rs.core.Feature;
 import javax.annotation.Priority;
 import javax.inject.Scope;
 
+import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -68,7 +69,7 @@ import com.google.common.collect.Sets;
 
 /**
  * An internal Jersey container for custom component classes and instances.
- *
+ * <p/>
  * The component bag can automatically compute a {@link ContractProvider contract provider} model
  * for the registered component type and stores it with the component registration.
  * <p>
@@ -398,7 +399,8 @@ public class ComponentBag {
             @Override
             public Boolean call() {
                 if (models.containsKey(componentClass)) {
-                    Errors.error(LocalizationMessages.COMPONENT_TYPE_ALREADY_REGISTERED(componentClass), false);
+                    Errors.error(LocalizationMessages.COMPONENT_TYPE_ALREADY_REGISTERED(componentClass),
+                            Severity.WARNING);
                     return false;
                 }
 
@@ -457,11 +459,13 @@ public class ComponentBag {
 
                 boolean failed = false;
                 if (!Providers.isSupportedContract(contract)) {
-                    Errors.error(LocalizationMessages.CONTRACT_NOT_SUPPORTED(contract, componentClass), false);
+                    Errors.error(LocalizationMessages.CONTRACT_NOT_SUPPORTED(contract, componentClass),
+                            Severity.WARNING);
                     failed = true;
                 }
                 if (!contract.isAssignableFrom(componentClass)) {
-                    Errors.error(LocalizationMessages.CONTRACT_NOT_ASSIGNABLE(contract, componentClass), false);
+                    Errors.error(LocalizationMessages.CONTRACT_NOT_ASSIGNABLE(contract, componentClass),
+                            Severity.WARNING);
                     failed = true;
                 }
                 if (failed) {

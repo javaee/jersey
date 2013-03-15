@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,13 +39,15 @@
  */
 package org.glassfish.jersey.server.model;
 
+import org.glassfish.jersey.Severity;
+
 /**
  * Resource model validity issue.
- *
+ * <p/>
  * Covers various model issues, such as duplicate URI templates, duplicate
  * HTTP method annotations, etc.
- * <p />
- * The model issues can be either fatal or non-fatal (see {@link #isFatal()}).
+ * <p/>
+ * The model issues can be either fatal warnings or hings (see {@link #getSeverity()}).
  * While the non-fatal issues are merely reported as warnings in the log, the
  * fatal issues prevent the successful application deployment.
  *
@@ -56,30 +58,29 @@ public final class ResourceModelIssue {
 
     private final Object source;
     private final String message;
-    private final boolean fatal;
+    private final Severity severity;
 
     /**
-     * Create a new {@link #isFatal() non-fatal} resource model issue.
+     * Create a new resource model warning.
      *
-     * @param source issue source.
+     * @param source  issue source.
      * @param message human-readable issue description.
      */
     public ResourceModelIssue(Object source, String message) {
-        this(source, message, false);
+        this(source, message, Severity.WARNING);
     }
 
     /**
      * Create a new resource model issue.
      *
-     * @param source issue source.
-     * @param message human-readable issue description.
-     * @param isFatal {@code true} if the issue is {@link #isFatal() fatal},
-     *     {@code false} otherwise.
+     * @param source   issue source.
+     * @param message  human-readable issue description.
+     * @param severity indicates severity of added error.
      */
-    public ResourceModelIssue(Object source, String message, boolean isFatal) {
+    public ResourceModelIssue(Object source, String message, Severity severity) {
         this.source = source;
         this.message = message;
-        this.fatal = isFatal;
+        this.severity = severity;
     }
 
     /**
@@ -92,19 +93,17 @@ public final class ResourceModelIssue {
     }
 
     /**
-     * Check if the issue is fatal.
+     * Get {@link org.glassfish.jersey.Severity}.
      *
-     * Fatal issues typically prevent the deployment of the application to succeed.
-     *
-     * @return {@code true} if the issue is fatal, {@code false} otherwise.
+     * @return severity of current {@link ResourceModelIssue}.
      */
-    public boolean isFatal() {
-        return fatal;
+    public Severity getSeverity() {
+        return severity;
     }
 
     /**
      * The issue source.
-     *
+     * <p/>
      * Identifies the object where the issue was found.
      *
      * @return source of the issue.
@@ -115,35 +114,43 @@ public final class ResourceModelIssue {
 
     @Override
     public String toString() {
-        return (fatal) ? "[FATAL] " : "[NON-FATAL] " +
-                message +
-                "; source=" + source + '}';
+        final StringBuilder sb = new StringBuilder();
+        sb.append("[").append(severity).append("] ");
+        ;
+        sb.append(message);
+        sb.append("; source='").append(source).append('\'');
+        return sb.toString();
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+
+        ResourceModelIssue that = (ResourceModelIssue) o;
+
+        if (message != null ? !message.equals(that.message) : that.message != null) {
             return false;
         }
-        final ResourceModelIssue other = (ResourceModelIssue) obj;
-        if (this.source != other.source && (this.source == null || !this.source.equals(other.source))) {
+        if (severity != that.severity) {
             return false;
         }
-        if ((this.message == null) ? (other.message != null) : !this.message.equals(other.message)) {
+        if (source != null ? !source.equals(that.source) : that.source != null) {
             return false;
         }
-        return this.fatal == other.fatal;
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 79 * hash + (this.source != null ? this.source.hashCode() : 0);
-        hash = 79 * hash + (this.message != null ? this.message.hashCode() : 0);
-        hash = 79 * hash + (this.fatal ? 1 : 0);
-        return hash;
+        int result = source != null ? source.hashCode() : 0;
+        result = 31 * result + (message != null ? message.hashCode() : 0);
+        result = 31 * result + (severity != null ? severity.hashCode() : 0);
+        return result;
     }
 }

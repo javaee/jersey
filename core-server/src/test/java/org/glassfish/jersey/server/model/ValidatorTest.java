@@ -65,6 +65,7 @@ import javax.ws.rs.container.Suspended;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Producer;
@@ -77,6 +78,8 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
@@ -377,8 +380,8 @@ public class ValidatorTest {
     public void testGetRMReturningVoid() throws Exception {
         LOGGER.info("An issue should be reported if a non-async get method returns void:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetRMReturningVoid.class);
-        assertTrue(!issues.isEmpty());
-        assertTrue(!issues.get(0).isFatal());
+        assertFalse(issues.isEmpty());
+        assertNotEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     public static class TestAsyncGetRMReturningVoid {
@@ -410,8 +413,8 @@ public class ValidatorTest {
     public void testGetRMConsumingEntity() throws Exception {
         LOGGER.info("An issue should be reported if a get method consumes an entity:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetRMConsumingEntity.class);
-        assertTrue(!issues.isEmpty());
-        assertTrue(!issues.get(0).isFatal());
+        assertFalse(issues.isEmpty());
+        assertNotEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Path("test")
@@ -428,7 +431,7 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if a get method consumes a form param:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetRMConsumingFormParam.class);
         assertTrue(issues.size() == 1);
-        assertTrue(issues.get(0).isFatal());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Path("test")
@@ -462,8 +465,8 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if a get sub-resource method returns void:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetSRMReturningVoid.class);
 
-        assertTrue(!issues.isEmpty());
-        assertTrue(!issues.get(0).isFatal());
+        assertFalse(issues.isEmpty());
+        assertNotEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Path("test")
@@ -481,8 +484,8 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if a get method consumes an entity:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetSRMConsumingEntity.class);
 
-        assertTrue(!issues.isEmpty());
-        assertTrue(!issues.get(0).isFatal());
+        assertFalse(issues.isEmpty());
+        assertNotEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Path("root")
@@ -500,8 +503,8 @@ public class ValidatorTest {
         LOGGER.info("An issue should be reported if a get method consumes a form param:");
         List<ResourceModelIssue> issues = testResourceValidation(TestGetSRMConsumingFormParam.class);
 
-        assertTrue(!issues.isEmpty());
-        assertTrue(issues.get(0).isFatal());
+        assertFalse(issues.isEmpty());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Path("rootMultipleHttpMethodDesignatorsRM")
@@ -814,7 +817,7 @@ public class ValidatorTest {
     public void testPercentEncoded() throws Exception {
         List<ResourceModelIssue> issues = testResourceValidation(PercentEncodedTest.class);
         assertEquals(1, issues.size());
-        assertTrue(issues.get(0).isFatal());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
 
@@ -837,7 +840,7 @@ public class ValidatorTest {
     public void testPercentEncodedCaseSensitive() throws Exception {
         List<ResourceModelIssue> issues = testResourceValidation(PercentEncodedCaseSensitiveTest.class);
         assertEquals(1, issues.size());
-        assertTrue(issues.get(0).isFatal());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Path("ambiguous-parameter")
@@ -856,7 +859,7 @@ public class ValidatorTest {
 
         final List<ResourceModelIssue> errorMessages = validator.getIssueList();
         assertEquals(1, errorMessages.size());
-        assertTrue(errorMessages.get(0).isFatal());
+        assertEquals(Severity.FATAL, errorMessages.get(0).getSeverity());
     }
 
 
@@ -894,7 +897,7 @@ public class ValidatorTest {
                 "resource locators on the same path.");
         List<ResourceModelIssue> issues = testResourceValidation(MethodAndLocatorResource.class);
         assertEquals(1, issues.size());
-        assertTrue(!issues.get(0).isFatal());
+        assertNotEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     /**
@@ -923,7 +926,7 @@ public class ValidatorTest {
                 "resource locators on the same path.");
         List<ResourceModelIssue> issues = testResourceValidation(MethodAndLocatorResource2.class);
         assertEquals(1, issues.size());
-        assertTrue(!issues.get(0).isFatal());
+        assertNotEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     /**
@@ -947,7 +950,7 @@ public class ValidatorTest {
         LOGGER.info("Should report error during validation as Resource cannot have ambiguous sub resource locators.");
         List<ResourceModelIssue> issues = testResourceValidation(TwoLocatorsResource.class);
         assertEquals(1, issues.size());
-        assertTrue(issues.get(0).isFatal());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Path("root")
@@ -982,7 +985,7 @@ public class ValidatorTest {
     public void testTwoOverlappingSubResourceValidation() throws Exception {
         List<ResourceModelIssue> issues = testResourceValidation(ResourceRoot.class, ResourceSubPathRoot.class);
         assertEquals(1, issues.size());
-        assertTrue(issues.get(0).isFatal());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Test
@@ -990,7 +993,7 @@ public class ValidatorTest {
     public void testTwoOverlappingResourceValidation() throws Exception {
         List<ResourceModelIssue> issues = testResourceValidation(ResourceRoot.class, ResourceRootNotUnique.class);
         assertEquals(1, issues.size());
-        assertTrue(issues.get(0).isFatal());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
     @Path("root")
@@ -1006,7 +1009,7 @@ public class ValidatorTest {
                 "resource locators on the same path.");
         List<ResourceModelIssue> issues = testResourceValidation(EmptyResource.class);
         assertEquals(1, issues.size());
-        assertTrue(!issues.get(0).isFatal());
+        assertFalse(issues.get(0).getSeverity() == Severity.FATAL);
     }
 
 
@@ -1043,7 +1046,7 @@ public class ValidatorTest {
         List<ResourceModelIssue> issues = testResourceValidation(AmbiguousResource1.class, AmbiguousResource2.class,
                 UniqueResource.class);
         assertEquals(1, issues.size());
-        assertTrue(issues.get(0).isFatal());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
     }
 
 
@@ -1063,7 +1066,6 @@ public class ValidatorTest {
         }
     }
 
-
     @Test
     public void testAmbiguousResourceLocators() throws Exception {
         LOGGER.info("Should report warning during validation error as resource path patterns are ambiguous ({abc} and {def} " +
@@ -1071,6 +1073,23 @@ public class ValidatorTest {
         List<ResourceModelIssue> issues = testResourceValidation(AmbiguousLocatorResource1.class,
                 AmbiguousLocatorResource2.class);
         assertEquals(1, issues.size());
-        assertTrue(issues.get(0).isFatal());
+        assertEquals(Severity.FATAL, issues.get(0).getSeverity());
+    }
+
+    @Path("resource")
+    public static class ResourceMethodWithVoidReturnType {
+        @GET
+        @Path("error")
+        public void error() {
+        }
+    }
+
+    @Test
+    public void testVoidReturnType() throws Exception {
+        LOGGER.info("Should report hint during validation as @GET resource method returns void.");
+        List<ResourceModelIssue> issues = testResourceValidation(ResourceMethodWithVoidReturnType.class);
+
+        assertEquals(1, issues.size());
+        assertEquals(Severity.HINT, issues.get(0).getSeverity());
     }
 }

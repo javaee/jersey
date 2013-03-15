@@ -45,17 +45,17 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
+import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.util.Producer;
 
 /**
- * Errors utility used to file processing errors (e.g. validation, provider, resource building errors).
+ * Errors utility used to file processing messages (e.g. validation, provider, resource building errors, hint).
  * <p/>
  * Error filing methods ({@code #warning}, {@code #error}, {@code #fatal}) can be invoked only in the "error scope" which is
  * created by {@link #process(Producer)} or
  * {@link #processWithException(Producer)} methods. Filed error messages are present also in this
  * scope.
  * <p/>
- *
  * TODO do not use static thread local?
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -67,44 +67,54 @@ public class Errors {
     private static final ThreadLocal<Errors> errors = new ThreadLocal<Errors>();
 
     /**
-     * Add an error message to the list of errors.
+     * Add an error to the list of messages.
      *
-     * @param message message of the error.
-     * @param isFatal indicates whether this error should be treated as fatal error.
+     * @param message  message of the error.
+     * @param severity indicates severity of added error.
      */
-    public static void error(final String message, final boolean isFatal) {
-        error(null, message, isFatal);
+    public static void error(final String message, Severity severity) {
+        error(null, message, severity);
     }
 
     /**
-     * Add an error message to the list of errors.
+     * Add an error to the list of messages.
      *
-     * @param source  source of the error.
-     * @param message message of the error.
-     * @param isFatal indicates whether this error should be treated as fatal error.
+     * @param source   source of the error.
+     * @param message  message of the error.
+     * @param severity indicates severity of added error.
      */
-    public static void error(final Object source, final String message, final boolean isFatal) {
-        getInstance().issues.add(new ErrorMessage(source, message, isFatal));
+    public static void error(final Object source, final String message, final Severity severity) {
+        getInstance().issues.add(new ErrorMessage(source, message, severity));
     }
 
     /**
-     * Add a fatal error message to the list of errors.
+     * Add a fatal error to the list of messages.
      *
      * @param source  source of the error.
      * @param message message of the error.
      */
     public static void fatal(final Object source, final String message) {
-        error(source, message, true);
+        error(source, message, Severity.FATAL);
     }
 
     /**
-     * Add a warning message to the list of errors.
+     * Add a warning to the list of messages.
      *
      * @param source  source of the error.
      * @param message message of the error.
      */
     public static void warning(final Object source, final String message) {
-        error(source, message, false);
+        error(source, message, Severity.WARNING);
+    }
+
+    /**
+     * Add a hint to the list of messages.
+     *
+     * @param source  source of the error.
+     * @param message message of the error.
+     */
+    public static void hint(final Object source, final String message) {
+        getInstance().issues.add(new ErrorMessage(source, message, Severity.HINT));
     }
 
     private static List<ErrorMessage> processErrors(final boolean throwException) {
@@ -114,23 +124,37 @@ public class Errors {
         if (!messages.isEmpty()) {
             StringBuilder errors = new StringBuilder("\n");
             StringBuilder warnings = new StringBuilder();
+            StringBuilder hints = new StringBuilder();
 
             for (final ErrorMessage issue : messages) {
-                if (issue.isFatal()) {
-                    isFatal = true;
-                    errors.append(LocalizationMessages.ERROR_MSG(issue.getMessage())).append('\n');
-                } else {
-                    warnings.append(LocalizationMessages.WARNING_MSG(issue.getMessage())).append('\n');
+                switch (issue.getSeverity()) {
+                    case FATAL:
+                        isFatal = true;
+                        errors.append(LocalizationMessages.ERROR_MSG(issue.getMessage())).append('\n');
+                        break;
+                    case WARNING:
+                        warnings.append(LocalizationMessages.WARNING_MSG(issue.getMessage())).append('\n');
+                        break;
+                    case HINT:
+                        warnings.append(LocalizationMessages.HINT_MSG(issue.getMessage())).append('\n');
+                        break;
                 }
             }
 
             if (isFatal) {
-                LOGGER.severe(LocalizationMessages.ERRORS_AND_WARNINGS_DETECTED(errors.append(warnings).toString()));
+                LOGGER.severe(LocalizationMessages.ERRORS_AND_WARNINGS_DETECTED(errors.append(warnings)
+                        .append(hints).toString()));
                 if (throwException) {
                     throw new ErrorMessagesException(messages);
                 }
             } else {
-                LOGGER.warning(LocalizationMessages.WARNINGS_DETECTED(warnings.toString()));
+                if (warnings.length() > 0) {
+                    LOGGER.warning(LocalizationMessages.WARNINGS_DETECTED(warnings.toString()));
+                }
+
+                if (hints.length() > 0) {
+                    LOGGER.config(LocalizationMessages.HINTS_DETECTED(hints.toString()));
+                }
             }
         }
 
@@ -138,13 +162,13 @@ public class Errors {
     }
 
     /**
-     * Check whether a fatal error message is present in the list of all errors.
+     * Check whether a fatal error is present in the list of all messages.
      *
      * @return {@code true} if there are any fatal issues in this error context, {@code false} otherwise.
      */
     public static boolean fatalIssuesFound() {
         for (final ErrorMessage message : getInstance().issues) {
-            if (message.isFatal()) {
+            if (message.getSeverity() == Severity.FATAL) {
                 return true;
             }
         }
@@ -153,7 +177,7 @@ public class Errors {
 
     /**
      * Invoke given producer task and gather errors.
-     *
+     * <p/>
      * After the task is complete all gathered errors are logged. No exception is thrown
      * even if there is a fatal error present in the list of errors.
      *
@@ -165,8 +189,8 @@ public class Errors {
     }
 
     /**
-     * Invoke given callable task and gather errors.
-     *
+     * Invoke given callable task and gather messages.
+     * <p/>
      * After the task is complete all gathered errors are logged. Any exception thrown
      * by the throwable is re-thrown.
      *
@@ -179,8 +203,8 @@ public class Errors {
     }
 
     /**
-     * Invoke given producer task and gather errors.
-     *
+     * Invoke given producer task and gather messages.
+     * <p/>
      * After the task is complete all gathered errors are logged. If there is a fatal error
      * present in the list of errors an {@link ErrorMessagesException exception} is thrown.
      *
@@ -192,8 +216,8 @@ public class Errors {
     }
 
     /**
-     * Invoke given task and gather errors.
-     *
+     * Invoke given task and gather messages.
+     * <p/>
      * After the task is complete all gathered errors are logged. No exception is thrown
      * even if there is a fatal error present in the list of errors.
      *
@@ -211,8 +235,8 @@ public class Errors {
     }
 
     /**
-     * Invoke given task and gather errors.
-     *
+     * Invoke given task and gather messages.
+     * <p/>
      * After the task is complete all gathered errors are logged. If there is a fatal error
      * present in the list of errors an {@link ErrorMessagesException exception} is thrown.
      *
@@ -286,7 +310,7 @@ public class Errors {
 
     /**
      * Get the list of error messages.
-     *
+     * <p/>
      * The {@code afterMark} flag indicates whether only those issues should be returned that were
      * added after a {@link #mark() mark has been set}.
      *
@@ -314,7 +338,7 @@ public class Errors {
 
     /**
      * Removes all issues that have been added since the last marked position.
-     *
+     * <p/>
      * If no mark has been set in the errors list, the method call is ignored.
      */
     public static void reset() {
@@ -398,23 +422,21 @@ public class Errors {
 
         private final Object source;
         private final String message;
-        private final boolean isFatal;
+        private final Severity severity;
 
-        private ErrorMessage(final Object source, final String message, final boolean isFatal) {
+        private ErrorMessage(final Object source, final String message, Severity severity) {
             this.source = source;
             this.message = message;
-            this.isFatal = isFatal;
+            this.severity = severity;
         }
 
         /**
-         * Check if the issue is fatal.
+         * Get {@link Severity}.
          *
-         * Fatal issues typically prevent the deployment of the application to succeed.
-         *
-         * @return {@code true} if the issue is fatal, {@code false} otherwise.
+         * @return severity of current {@link ErrorMessage}.
          */
-        public boolean isFatal() {
-            return isFatal;
+        public Severity getSeverity() {
+            return severity;
         }
 
         /**
@@ -428,7 +450,7 @@ public class Errors {
 
         /**
          * The issue source.
-         *
+         * <p/>
          * Identifies the object where the issue was found.
          *
          * @return source of the issue.
@@ -438,20 +460,25 @@ public class Errors {
         }
 
         @Override
-        public boolean equals(final Object o) {
-            if (this == o)
+        public boolean equals(Object o) {
+            if (this == o) {
                 return true;
-            if (o == null || getClass() != o.getClass())
+            }
+            if (o == null || getClass() != o.getClass()) {
                 return false;
+            }
 
-            final ErrorMessage that = (ErrorMessage) o;
+            ErrorMessage that = (ErrorMessage) o;
 
-            if (isFatal != that.isFatal)
+            if (message != null ? !message.equals(that.message) : that.message != null) {
                 return false;
-            if (message != null ? !message.equals(that.message) : that.message != null)
+            }
+            if (severity != that.severity) {
                 return false;
-            if (source != null ? !source.equals(that.source) : that.source != null)
+            }
+            if (source != null ? !source.equals(that.source) : that.source != null) {
                 return false;
+            }
 
             return true;
         }
@@ -460,9 +487,8 @@ public class Errors {
         public int hashCode() {
             int result = source != null ? source.hashCode() : 0;
             result = 31 * result + (message != null ? message.hashCode() : 0);
-            result = 31 * result + (isFatal ? 1 : 0);
+            result = 31 * result + (severity != null ? severity.hashCode() : 0);
             return result;
         }
     }
-
 }

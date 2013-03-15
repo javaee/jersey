@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,44 +37,22 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model.internal;
-
-import java.util.List;
-
-import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.server.model.ResourceModelIssue;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+package org.glassfish.jersey;
 
 /**
- * Utility to transform {@link Errors.ErrorMessage error messages} to {@link ResourceModelIssue}s.
- *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * Common severity.
  */
-public class ModelErrors {
-
+public enum Severity {
     /**
-     * Get all filed error messages as {@link ResourceModelIssue}s.
-     *
-     * @return non-null list of resource model issues.
+     * Fatal.
      */
-    public static List<ResourceModelIssue> getErrorsAsResourceModelIssues() {
-        return getErrorsAsResourceModelIssues(false);
-    }
-
+    FATAL,
     /**
-     * Get error messages filed after {@link Errors#mark()} flag was set as {@link ResourceModelIssue}s.
-     *
-     * @return non-null list of resource model issues.
+     * Warning.
      */
-    public static List<ResourceModelIssue> getErrorsAsResourceModelIssues(final boolean afterMark) {
-        return Lists.transform(Errors.getErrorMessages(afterMark), new Function<Errors.ErrorMessage, ResourceModelIssue>() {
-            @Override
-            public ResourceModelIssue apply(final Errors.ErrorMessage input) {
-                return new ResourceModelIssue(input.getSource(), input.getMessage(), input.getSeverity());
-            }
-        });
-    }
-
+    WARNING,
+    /**
+     * Hint.
+     */
+    HINT
 }

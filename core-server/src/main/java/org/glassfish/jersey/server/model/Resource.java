@@ -47,6 +47,7 @@ import java.util.Set;
 
 import javax.ws.rs.Path;
 
+import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.internal.ModelHelper;
@@ -184,7 +185,7 @@ public final class Resource implements Routed, ResourceModelComponent {
 
         /**
          * Define a new name of the built resource.
-         *
+         * <p/>
          * The resource model name is typically used for reporting
          * purposes (e.g. validation etc.).
          *
@@ -290,7 +291,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                     @Override
                     public void run() {
                         Errors.error(this, LocalizationMessages.RESOURCE_MERGE_CONFLICT_LOCATORS(Resource.Builder.this,
-                                resource, path), true);
+                                resource, path), Severity.FATAL);
                     }
                 });
             } else if (resource.subResourceLocator != null) {
@@ -365,7 +366,8 @@ public final class Resource implements Routed, ResourceModelComponent {
                         Errors.processWithException(new Runnable() {
                             @Override
                             public void run() {
-                                Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS(this, path), true);
+                                Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS(this, path),
+                                        Severity.FATAL);
                             }
                         });
 

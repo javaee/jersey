@@ -52,6 +52,7 @@ package org.glassfish.jersey.server.model;
 
 import java.util.List;
 
+import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
@@ -122,7 +123,7 @@ public final class ComponentModelValidator {
      */
     public boolean fatalIssuesFound() {
         for (ResourceModelIssue issue : getIssueList()) {
-            if (issue.isFatal()) {
+            if (issue.getSeverity() == Severity.FATAL) {
                 return true;
             }
         }

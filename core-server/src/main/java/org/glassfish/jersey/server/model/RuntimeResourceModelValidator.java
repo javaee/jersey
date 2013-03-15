@@ -46,6 +46,7 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
@@ -83,7 +84,8 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
             for (ResourceMethod m1 : resourceMethods.subList(0, resourceMethods.size() - 1)) {
                 for (ResourceMethod m2 : resourceMethods.subList(resourceMethods.indexOf(m1) + 1, resourceMethods.size())) {
                     if (m1.getHttpMethod() == null && m2.getHttpMethod() == null) {
-                        Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS_PATH_PATTERN(resource.getFullPathRegex()), true);
+                        Errors.error(this, LocalizationMessages.AMBIGUOUS_SRLS_PATH_PATTERN(resource.getFullPathRegex()),
+                                Severity.FATAL);
                     } else if (m1.getHttpMethod() != null && m2.getHttpMethod() != null && sameHttpMethod(m1, m2)) {
                         checkIntersectingMediaTypes(resource, m1.getHttpMethod(), m1, m2);
                     }
@@ -133,11 +135,11 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
                 (consumesOnlyIntersects && producesOnlyIntersects)) {
             // warning
             if (m1.getInvocable().requiresEntity()) {
-                Errors.warning(runtimeResource, LocalizationMessages.AMBIGUOUS_RMS_IN(
+                Errors.hint(runtimeResource, LocalizationMessages.AMBIGUOUS_RMS_IN(
                         httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod(),
                         runtimeResource.getRegex()));
             } else {
-                Errors.warning(runtimeResource, LocalizationMessages.AMBIGUOUS_RMS_OUT(
+                Errors.hint(runtimeResource, LocalizationMessages.AMBIGUOUS_RMS_OUT(
                         httpMethod, m1.getInvocable().getHandlingMethod(), m2.getInvocable().getHandlingMethod(),
                         runtimeResource.getRegex()));
             }

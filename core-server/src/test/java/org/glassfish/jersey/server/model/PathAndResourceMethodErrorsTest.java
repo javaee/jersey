@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -302,7 +303,7 @@ public class PathAndResourceMethodErrorsTest {
         int warningCount = 0;
 
         for (ResourceModelIssue issue : issues) {
-            if (issue.isFatal()) {
+            if (issue.getSeverity() == Severity.FATAL) {
                 fatalCount++;
             } else {
                 warningCount++;

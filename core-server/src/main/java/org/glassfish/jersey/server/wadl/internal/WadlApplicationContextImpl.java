@@ -76,7 +76,7 @@ import com.sun.research.ws.wadl.Resources;
  */
 public class WadlApplicationContextImpl implements WadlApplicationContext {
 
-    private static final Logger LOG = Logger.getLogger(WadlApplicationContextImpl.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(WadlApplicationContextImpl.class.getName());
 
     @Context
     private ExtendedResourceContext resourceContext;
@@ -100,11 +100,11 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         JAXBContext jaxb;
         try {
             jaxb = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath(),
-                        wadlGenerator.getClass().getClassLoader());
+                    wadlGenerator.getClass().getClassLoader());
         } catch (JAXBException ex) {
             try {
                 // fallback for glassfish
-                LOG.log(Level.FINE, LocalizationMessages.WADL_JAXB_CONTEXT_FALLBACK(), ex);
+                LOGGER.log(Level.FINE, LocalizationMessages.WADL_JAXB_CONTEXT_FALLBACK(), ex);
                 jaxb = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath());
             } catch (JAXBException innerEx) {
                 throw new ProcessingException(LocalizationMessages.ERROR_WADL_JAXB_CONTEXT(), ex);
@@ -214,7 +214,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
 
             Grammars grammars;
             if (application.getGrammars() != null) {
-                LOG.info(LocalizationMessages.ERROR_WADL_GRAMMAR_ALREADY_CONTAINS());
+                LOGGER.info(LocalizationMessages.ERROR_WADL_GRAMMAR_ALREADY_CONTAINS());
                 grammars = application.getGrammars();
             } else {
                 grammars = new Grammars();

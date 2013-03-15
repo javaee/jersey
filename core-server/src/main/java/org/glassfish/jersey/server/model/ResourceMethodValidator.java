@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -111,7 +111,7 @@ class ResourceMethodValidator extends AbstractResourceModelVisitor {
         if ("GET".equals(method.getHttpMethod())) {
             // ensure GET returns non-void value if not suspendable
             if (void.class == invocable.getHandlingMethod().getReturnType() && !method.isSuspendDeclared()) {
-                Errors.warning(method, LocalizationMessages.GET_RETURNS_VOID(invocable.getHandlingMethod()));
+                Errors.hint(method, LocalizationMessages.GET_RETURNS_VOID(invocable.getHandlingMethod()));
             }
 
             // ensure GET does not consume an entity parameter, if not inflector-based
