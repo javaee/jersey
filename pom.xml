@@ -895,6 +895,13 @@
             </dependency>
 
             <dependency>
+               <groupId>javax.ejb</groupId>
+               <artifactId>javax.ejb-api</artifactId>
+               <version>${ejb.version}</version>
+               <scope>provided</scope>
+            </dependency>
+
+            <dependency>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
                 <version>${jackson.version}</version>

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,63 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.ejb;
+package org.glassfish.jersey.tests.ejb.resources;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.ejb.EJBException;
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.spi.ExceptionMappers;
-import org.glassfish.jersey.spi.ExtendedExceptionMapper;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
 
 /**
- * Helper class to handle exceptions wrapped by the EJB container with EJBException.
- * If this mapper was not registered, no {@link WebApplicationException}
- * would end up mapped to the corresponding response.
+ * JAX-RS application to configure resources.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class EjbExceptionMapper implements ExtendedExceptionMapper<EJBException> {
-
-    private final Provider<ExceptionMappers> mappers;
-
-    /**
-     * Create new EJB exception mapper.
-     *
-     * @param mappers utility to find mapper delegate.
-     */
-    @Inject
-    public EjbExceptionMapper(Provider<ExceptionMappers> mappers) {
-        this.mappers = mappers;
-    }
-
+@ApplicationPath("/rest")
+public class MyApplication extends Application {
     @Override
-    public Response toResponse(EJBException exception) {
-        return causeToResponse(exception);
-    }
-
-    @Override
-    public boolean isMappable(EJBException exception) {
-        try {
-            return (causeToResponse(exception) != null);
-        } catch (Throwable ignored) {
-            return false;
-        }
-    }
-
-    private Response causeToResponse(EJBException exception) {
-        final Exception cause = exception.getCausedByException();
-        if (cause != null) {
-            final ExceptionMapper mapper = mappers.get().findMapping(cause);
-            if (mapper != null && mapper != this) {
-                return mapper.toResponse(cause);
-            }
-        }
-        return null;
+    public Set<Class<?>> getClasses() {
+        final Set<Class<?>> classes = new HashSet<Class<?>>();
+        classes.add(ExceptionEjbResource.class);
+        return classes;
     }
 }

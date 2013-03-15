@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,63 +37,49 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.ejb;
+package org.glassfish.jersey.tests.ejb.resources;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 
 import javax.ejb.EJBException;
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.spi.ExceptionMappers;
-import org.glassfish.jersey.spi.ExtendedExceptionMapper;
+import javax.ejb.Singleton;
 
 /**
- * Helper class to handle exceptions wrapped by the EJB container with EJBException.
- * If this mapper was not registered, no {@link WebApplicationException}
- * would end up mapped to the corresponding response.
+ * EJB backed JAX-RS resource to test if a custom exception info makes it to the client.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class EjbExceptionMapper implements ExtendedExceptionMapper<EJBException> {
+@Singleton
+@Path("exception")
+public class ExceptionEjbResource {
 
-    private final Provider<ExceptionMappers> mappers;
+    public static class MyCheckedException extends Exception {
 
-    /**
-     * Create new EJB exception mapper.
-     *
-     * @param mappers utility to find mapper delegate.
-     */
-    @Inject
-    public EjbExceptionMapper(Provider<ExceptionMappers> mappers) {
-        this.mappers = mappers;
-    }
-
-    @Override
-    public Response toResponse(EJBException exception) {
-        return causeToResponse(exception);
-    }
-
-    @Override
-    public boolean isMappable(EJBException exception) {
-        try {
-            return (causeToResponse(exception) != null);
-        } catch (Throwable ignored) {
-            return false;
+        public MyCheckedException(String message) {
+            super(message);
         }
     }
 
-    private Response causeToResponse(EJBException exception) {
-        final Exception cause = exception.getCausedByException();
-        if (cause != null) {
-            final ExceptionMapper mapper = mappers.get().findMapping(cause);
-            if (mapper != null && mapper != this) {
-                return mapper.toResponse(cause);
-            }
+    public static class MyRuntimeException extends RuntimeException {
+
+        public MyRuntimeException(String message) {
+            super(message);
         }
-        return null;
+    }
+
+    public static final String EjbExceptionMESSAGE = "ejb exception thrown directly";
+    public static final String CheckedExceptionMESSAGE = "checked exception thrown directly";
+
+    @GET
+    @Path("ejb")
+    public String throwEjbException() {
+        throw new EJBException(EjbExceptionMESSAGE);
+    }
+
+    @GET
+    @Path("checked")
+    public String throwCheckedException() throws MyCheckedException {
+        throw new MyCheckedException(CheckedExceptionMESSAGE);
     }
 }
