@@ -47,11 +47,11 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.FormParam;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MediaType;
 
 import javax.xml.namespace.QName;
 
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;

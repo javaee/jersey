@@ -47,9 +47,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.ws.rs.NotSupportedException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.server.internal.process.MappableException;

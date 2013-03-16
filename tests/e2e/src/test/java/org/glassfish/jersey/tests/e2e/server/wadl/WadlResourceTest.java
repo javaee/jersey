@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -1258,13 +1259,15 @@ public class WadlResourceTest {
                 };
 
                 for (final String path : paths) {
-                    final String document = target("wadl6test").
+                    final Response response = target("wadl6test").
                             path(path).
                             request("application/vnd.sun.wadl+xml").
-                            options(String.class);
+                            options();
+                    assertEquals(200, response.getStatus());
+                    final String document = response.readEntity(String.class);
 
                     // check that the resulting document contains a method element with id="fooX"
-                    assertTrue(document.matches(".*<method[^>]+id=\"foo" + i + "\"[^>]*>.*"));
+                    assertTrue(document.replaceAll("\n", " ").matches(".*<method[^>]+id=\"foo" + i + "\"[^>]*>.*"));
                 }
             }
         }

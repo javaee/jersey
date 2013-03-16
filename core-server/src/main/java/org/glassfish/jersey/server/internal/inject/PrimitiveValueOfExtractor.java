@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,10 +42,9 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
-
-import org.glassfish.jersey.internal.ProcessingException;
 
 /**
  * Extract primitive parameter value from the {@link MultivaluedMap multivalued parameter map}
@@ -101,8 +100,6 @@ final class PrimitiveValueOfExtractor implements MultivaluedParameterExtractor<O
             } else {
                 throw new ExtractorException(target);
             }
-        } catch (RuntimeException ex) {
-            throw new ProcessingException(ex);
         } catch (Exception ex) {
             throw new ProcessingException(ex);
         }

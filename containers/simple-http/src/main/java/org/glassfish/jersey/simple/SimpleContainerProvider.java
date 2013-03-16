@@ -39,9 +39,11 @@
  */
 package org.glassfish.jersey.simple;
 
-import org.glassfish.jersey.internal.ProcessingException;
+import javax.ws.rs.ProcessingException;
+
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ContainerProvider;
+
 import org.simpleframework.http.core.Container;
 
 /**

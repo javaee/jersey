@@ -863,7 +863,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, intercept);
+
+
         executor.proceed();
+
         return executor.getOutputStream();
     }
 }

@@ -49,6 +49,7 @@ import java.util.Set;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ResourceInfo;
@@ -62,7 +63,6 @@ import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ExtendedUriInfo;

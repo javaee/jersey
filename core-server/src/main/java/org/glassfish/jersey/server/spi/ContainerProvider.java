@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,9 +40,9 @@
 package org.glassfish.jersey.server.spi;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.RuntimeType;
 
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.spi.Contract;
 

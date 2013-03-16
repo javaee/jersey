@@ -39,24 +39,25 @@
  */
 package org.glassfish.jersey.simple;
 
-import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ContainerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.ConfigHelper;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.simpleframework.http.core.Container;
-import org.simpleframework.http.core.ContainerServer;
-import org.simpleframework.transport.Server;
-import org.simpleframework.transport.connect.Connection;
-import org.simpleframework.transport.connect.SocketConnection;
-
-import javax.net.ssl.SSLContext;
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
+
+import javax.ws.rs.ProcessingException;
+
+import javax.net.ssl.SSLContext;
+
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.simpleframework.http.core.Container;
+import org.simpleframework.http.core.ContainerServer;
+import org.simpleframework.transport.Server;
+import org.simpleframework.transport.connect.Connection;
+import org.simpleframework.transport.connect.SocketConnection;
 
 /**
  * Factory for creating and starting Simple server containers. This returns

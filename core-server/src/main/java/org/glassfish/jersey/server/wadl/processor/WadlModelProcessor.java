@@ -46,6 +46,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
@@ -56,7 +57,6 @@ import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.xml.bind.Marshaller;
 
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.Inflector;

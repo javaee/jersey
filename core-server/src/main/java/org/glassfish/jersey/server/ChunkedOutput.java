@@ -51,6 +51,7 @@ import javax.inject.Provider;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
+import org.glassfish.jersey.server.internal.process.MappableException;
 
 /**
  * Used for sending messages in "typed" chunks. Useful for long running processes,
@@ -147,9 +148,11 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                             // TODO: (MM) should intercept only for the very first chunk!
                             // TODO: from then on the stream is already wrapped by interceptor streams
                             true));
-                } catch (IOException ioe) {
-                    connectionCallbackRunner.onDisconnect(asyncContext.get());
-                    throw ioe;
+                } catch (MappableException mpe) {
+                    if (mpe.getCause() instanceof IOException) {
+                        connectionCallbackRunner.onDisconnect(asyncContext.get());
+                    }
+                    throw mpe;
                 }
                 t = queue.poll();
                 if (t == null) {

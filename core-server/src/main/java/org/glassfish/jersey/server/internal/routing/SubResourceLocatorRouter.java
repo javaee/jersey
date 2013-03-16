@@ -45,10 +45,11 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.util.List;
 
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Configuration;
 
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -208,8 +209,8 @@ class SubResourceLocatorRouter implements Router {
             throw new ProcessingException("Resource Java method invocation error.", ex);
         } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
-            if (cause instanceof ProcessingException) {
-                throw (ProcessingException) cause;
+            if (cause instanceof WebApplicationException) {
+                throw (WebApplicationException) cause;
             }
             // exception cause potentially mappable
             throw new MappableException(cause);

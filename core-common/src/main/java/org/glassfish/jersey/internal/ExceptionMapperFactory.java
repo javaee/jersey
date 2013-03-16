@@ -43,22 +43,26 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ext.ExceptionMapper;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import javax.ws.rs.ext.ExceptionMapper;
 
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.spi.ExceptionMappers;
+import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import com.google.common.collect.Maps;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -96,6 +100,52 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
     private Set<ExceptionMapperType> exceptionMapperTypes = new LinkedHashSet<ExceptionMapperType>();
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends Throwable> ExceptionMapper<T> findMapping(T exceptionInstance) {
+        return find((Class<T>)exceptionInstance.getClass(), exceptionInstance);
+    }
+
+    @Override
+    public <T extends Throwable> ExceptionMapper<T> find(Class<T> type) {
+        return find(type, null);
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private <T extends Throwable> ExceptionMapper<T> find(Class<T> type, T exceptionInstance) {
+
+        Map<Integer, ExceptionMapper<T>> orderedMappers = Maps.newTreeMap();
+
+        for (ExceptionMapperType mapperType : exceptionMapperTypes) {
+            int d = distance(type, mapperType.exceptionType);
+            if (d >= 0) {
+                orderedMappers.put(d, mapperType.mapper);
+            }
+        }
+
+        if (orderedMappers.size() == 0) {
+            return null;
+        }
+
+        if (exceptionInstance != null) {
+            for (ExceptionMapper<T> mapper : orderedMappers.values()) {
+                if (mapper instanceof ExtendedExceptionMapper) {
+                    final boolean mappable = ((ExtendedExceptionMapper<T>) mapper).isMappable(exceptionInstance);
+                    if (mappable) {
+                        return mapper;
+                    }
+                } else {
+                    return mapper;
+                }
+            }
+            return null;
+        } else {
+            return orderedMappers.values().iterator().next();
+        }
+    }
+
+
     /**
      * Create new exception mapper factory initialized with {@link ServiceLocator
      * HK2 service locator} instance that will be used to look up all providers implementing
@@ -113,29 +163,10 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         }
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T extends Throwable> ExceptionMapper<T> find(Class<T> type) {
-        int distance = Integer.MAX_VALUE;
-        ExceptionMapper selectedEm = null;
-        for (ExceptionMapperType mapperType : exceptionMapperTypes) {
-            int d = distance(type, mapperType.exceptionType);
-            if (d < distance) {
-                distance = d;
-                selectedEm = mapperType.mapper;
-                if (distance == 0) {
-                    break;
-                }
-            }
-        }
-
-        return selectedEm;
-    }
-
     private int distance(Class<?> c, Class<?> emtc) {
         int distance = 0;
         if (!emtc.isAssignableFrom(c)) {
-            return Integer.MAX_VALUE;
+            return -1;
         }
 
         while (c != emtc) {
@@ -167,7 +198,8 @@ public class ExceptionMapperFactory implements ExceptionMappers {
             for (Type t : ts) {
                 if (t instanceof ParameterizedType) {
                     ParameterizedType pt = (ParameterizedType) t;
-                    if (pt.getRawType() == ExceptionMapper.class) {
+                    if (pt.getRawType() == ExceptionMapper.class
+                            || pt.getRawType() == ExtendedExceptionMapper.class) {
                         return getResolvedType(pt.getActualTypeArguments()[0], c, _c);
                     }
                 }

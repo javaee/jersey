@@ -71,6 +71,7 @@ import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
+import org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
@@ -120,7 +121,8 @@ public class ServerBinder extends AbstractBinder {
                 new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
                 new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class));
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class),
+                new MappableExceptionWrapperInterceptor.Binder());
 
         // Request/Response injection interfaces
         bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
@@ -148,5 +150,6 @@ public class ServerBinder extends AbstractBinder {
         bind(HttpHeadersInjectee.class).to(HttpHeadersInjectee.class).to(HttpHeaders.class).proxy(true).in(RequestScoped.class);
         bind(RequestInjectee.class).to(RequestInjectee.class).to(Request.class).proxy(true).in(RequestScoped.class);
         bind(SecurityContextInjectee.class).to(SecurityContextInjectee.class).to(SecurityContext.class).proxy(true).in(RequestScoped.class);
+
     }
 }

@@ -104,7 +104,8 @@ public class SubResourceValidationTest {
         try {
             final ContainerResponse response = applicationHandler.apply(
                     RequestContextBuilder.from("/root/sub", "GET").build()).get();
-            Assert.fail("should throw validation error");
+            // should throw an exception or return 500
+            Assert.assertEquals(500, response.getStatus());
         } catch (Exception e) {
             // ok
         }

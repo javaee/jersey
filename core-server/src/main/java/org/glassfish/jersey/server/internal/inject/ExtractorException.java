@@ -39,9 +39,8 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
-
-import org.glassfish.jersey.internal.ProcessingException;
 
 /**
  * A runtime exception that contains a cause, a checked or runtime exception,

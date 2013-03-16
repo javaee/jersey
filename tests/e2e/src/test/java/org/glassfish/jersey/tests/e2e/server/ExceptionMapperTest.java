@@ -101,7 +101,10 @@ public class ExceptionMapperTest extends JerseyTest {
                 // JERSEY-1525
                 ExceptionTestResource.class,
                 ExceptionThrowingFilter.class,
-                ThrowableMapper.class
+                ThrowableMapper.class,
+                IOExceptionMapper.class,
+                IOExceptionMessageReader.class,
+                IOExceptionResource.class
         );
     }
 
@@ -414,6 +417,7 @@ public class ExceptionMapperTest extends JerseyTest {
 
         @Override
         public Response toResponse(Throwable throwable) {
+            throwable.printStackTrace();
             return Response.status(Response.Status.OK).entity("mapped-" + throwable.getMessage()).build();
         }
 
@@ -425,7 +429,75 @@ public class ExceptionMapperTest extends JerseyTest {
         assertEquals(200, res.getStatus());
         assertEquals("mapped-response-filter-exception", res.readEntity(String.class));
     }
+
     /**
      * END: JERSEY-1525 reproducer code
      */
+
+
+    @Provider
+    public static class IOExceptionMessageReader implements MessageBodyReader<IOBean>, MessageBodyWriter<IOBean> {
+        @Override
+        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return type == IOBean.class;
+        }
+
+        @Override
+        public IOBean readFrom(Class<IOBean> type,
+                               Type genericType, Annotation[] annotations, MediaType mediaType,
+                               MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
+                throws IOException, WebApplicationException {
+            throw new IOException("io-exception");
+        }
+
+        @Override
+        public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return type == IOBean.class;
+        }
+
+        @Override
+        public long getSize(IOBean ioBean, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return 0;
+        }
+
+        @Override
+        public void writeTo(IOBean ioBean, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException,
+                WebApplicationException {
+            entityStream.write(ioBean.value.getBytes());
+
+        }
+    }
+
+    public static class IOBean {
+        private final String value;
+
+        public IOBean(String value) {
+            this.value = value;
+        }
+    }
+
+    public static class IOExceptionMapper implements ExceptionMapper<IOException> {
+
+        @Override
+        public Response toResponse(IOException exception) {
+            return Response.ok("passed").build();
+        }
+    }
+
+    @Path("io")
+    public static class IOExceptionResource {
+        @POST
+        public String post(IOBean iobean) {
+            return iobean.value;
+        }
+    }
+
+    @Test
+    public void testIOException() {
+        final Response response = target().register(IOExceptionMessageReader.class).
+                path("io").request().post(Entity.entity(new IOBean("io-bean"), MediaType.TEXT_PLAIN));
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("passed", response.readEntity(String.class));
+    }
 }

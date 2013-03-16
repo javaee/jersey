@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -59,7 +60,6 @@ import javax.inject.Inject;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Producer;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
