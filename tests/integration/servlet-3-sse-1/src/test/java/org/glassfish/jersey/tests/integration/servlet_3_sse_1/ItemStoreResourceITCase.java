@@ -160,7 +160,8 @@ public class ItemStoreResourceITCase extends JerseyTest {
         } finally {
             for (EventSource source : sources) {
                 if (source.isOpen()) {
-                    assertTrue("Waiting to close a source has timed out.", source.close(1, TimeUnit.SECONDS));
+                    // assertTrue("Waiting to close a source has timed out.", source.close(1, TimeUnit.SECONDS));
+                    source.close(1, TimeUnit.SECONDS);
                     LOGGER.info("Source closed.");
                 }
             }

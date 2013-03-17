@@ -98,16 +98,19 @@ public class WadlModelProcessor implements ModelProcessor {
 
     @Override
     public ResourceModel processResourceModel(final ResourceModel resourceModel, final Configuration configuration) {
-        final boolean disabled = PropertiesHelper.isProperty(configuration.getProperty
-                (ServerProperties.FEATURE_DISABLE_WADL));
+        final boolean disabled = PropertiesHelper.isProperty(configuration.getProperty(ServerProperties.FEATURE_DISABLE_WADL));
         if (disabled) {
             return resourceModel;
         }
 
-        final Resource wadlResource = Resource.builder(WadlResource.class).build();
-
         final ResourceModel.Builder builder = ModelProcessorUtil.enhanceResourceModel(resourceModel, false, methodList);
-        builder.addResource(wadlResource);
+
+        // Do not add WadlResource if already present in the classes (i.e. added during scanning).
+        if (!configuration.getClasses().contains(WadlResource.class)) {
+            final Resource wadlResource = Resource.builder(WadlResource.class).build();
+            builder.addResource(wadlResource);
+        }
+
         return builder.build();
 
     }
@@ -145,14 +148,12 @@ public class WadlModelProcessor implements ModelProcessor {
                 throw new ProcessingException("Could not marshal the wadl Application.", e);
             }
 
-            Response response = Response.ok()
+            return Response.ok()
                     .type(MediaTypes.WADL)
                     .allow(ModelProcessorUtil.getAllowedMethods(resource))
                     .header("Last-modified", lastModified)
                     .entity(bytes)
                     .build();
-
-            return response;
         }
     }
 
