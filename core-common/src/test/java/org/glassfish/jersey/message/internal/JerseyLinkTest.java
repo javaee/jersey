@@ -110,4 +110,12 @@ public class JerseyLinkTest {
         assertEquals("text/plain", link.getType());
         assertEquals(2, link.getParams().size());
     }
+
+    /**
+     * Regression test for JERSEY-1378 fix.
+     */
+    @Test
+    public void buildRelativeLinkTest() {
+        assertEquals(URI.create("aa%20bb"), Link.fromUri("aa bb").build().getUri());
+    }
 }

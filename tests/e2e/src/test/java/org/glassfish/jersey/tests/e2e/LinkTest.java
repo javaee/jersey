@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.server;
+package org.glassfish.jersey.tests.e2e;
 
 import java.net.URI;
 import java.util.Map;
@@ -46,17 +46,22 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.uri.UriTemplate;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
 import junit.framework.Assert;
 
@@ -111,27 +116,33 @@ public class LinkTest extends JerseyTest {
     public static class LinkTestResource {
 
         @GET
-        public Response get() throws Exception {
+        public Response get(@Context UriInfo uriInfo) throws Exception {
+            URI test1 = URI.create(uriInfo.getAbsolutePath().toString() + "test1");
+            URI test2 = URI.create(uriInfo.getAbsolutePath().toString() + "test2");
+
             return Response.ok().
                     link("http://oracle.com", "parent").
                     link(new URI("http://jersey.java.net"), "framework").
                     links(
-                            Link.fromUri("test1").rel("test1").build(),
-                            Link.fromUri("test2").rel("test2").build(),
-                            Link.fromUri("test3").rel("test3").build()
+                            Link.fromUri(uriInfo.relativize(test1)).rel("test1").build(),
+                            Link.fromUri(test2).rel("test2").build(),
+                            Link.fromUri(uriInfo.relativize(URI.create("linktest/test3"))).rel("test3").build()
                     ).build();
         }
     }
 
     @Test
     public void simpleLinkTest() {
-        final Response response = target("linktest").request().get();
+        final WebTarget target = target("/linktest/");
+        final Response response = target.request().get();
+        assertThat(response.getStatus(), equalTo(200));
 
-        assertEquals(response.getLink("parent").getUri().toString(), "http://oracle.com");
-        assertEquals(response.getLink("framework").getUri().toString(), "http://jersey.java.net");
+        final URI targetUri = target.getUri();
+        assertThat(response.getLink("parent").getUri(), equalTo(URI.create("http://oracle.com")));
+        assertThat(response.getLink("framework").getUri(), equalTo(URI.create("http://jersey.java.net")));
 
-        assertTrue(response.getLinks().contains(Link.fromUri("test1").rel("test1").build()));
-        assertTrue(response.getLinks().contains(Link.fromUri("test2").rel("test2").build()));
-        assertTrue(response.getLinks().contains(Link.fromUri("test3").rel("test3").build()));
+        assertThat(response.getLink("test1").getUri(), equalTo(UriTemplate.resolve(targetUri, "test1")));
+        assertThat(response.getLink("test2").getUri(), equalTo(UriTemplate.resolve(targetUri, "test2")));
+        assertThat(response.getLink("test3").getUri(), equalTo(UriTemplate.resolve(targetUri, "test3")));
     }
 }

@@ -209,7 +209,6 @@ public class JerseyUriBuilder extends UriBuilder {
      * Set scheme specific part from the URI parser.
      *
      * @param parser initialized URI parser.
-     * @return {@code true} if the parser data has been fully consumed, {@code false} otherwise.
      */
     private void schemeSpecificPart(UriParser parser) {
         if (parser.isOpaque()) {
@@ -345,6 +344,7 @@ public class JerseyUriBuilder extends UriBuilder {
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public UriBuilder path(Class resource) throws IllegalArgumentException {
         checkSsp();
@@ -352,7 +352,7 @@ public class JerseyUriBuilder extends UriBuilder {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("resource"));
         }
 
-        Path p = (Path) resource.getAnnotation(Path.class);
+        Path p = Path.class.cast(resource.getAnnotation(Path.class));
         if (p == null) {
             throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_CLASS_PATH_ANNOTATION_MISSING(resource));
         }
@@ -630,6 +630,7 @@ public class JerseyUriBuilder extends UriBuilder {
         return this;
     }
 
+    @Override
     public JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues, boolean encodeSlashInPath) throws
             IllegalArgumentException {
         resolveTemplates(templateValues, true, encodeSlashInPath);
@@ -777,7 +778,7 @@ public class JerseyUriBuilder extends UriBuilder {
         return _buildFromMap(true, true, values);
     }
 
-    //@Override
+    @Override
     public URI buildFromMap(Map<String, ?> values, boolean encodeSlashInPath) {
         return _buildFromMap(true, encodeSlashInPath, values);
     }
@@ -807,7 +808,7 @@ public class JerseyUriBuilder extends UriBuilder {
         return _build(true, true, values);
     }
 
-    // @Override
+    @Override
     public URI build(Object[] values, boolean encodeSlashInPath) {
         return _build(true, encodeSlashInPath, values);
     }
@@ -817,7 +818,7 @@ public class JerseyUriBuilder extends UriBuilder {
         return _build(false, false, values);
     }
 
-    // @Override
+    @Override
     public String toTemplate() {
         encodeMatrix();
         encodeQuery();

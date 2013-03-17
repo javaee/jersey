@@ -478,11 +478,15 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI resolve(URI uri) {
-        return null;  // TODO: implement method.
+        return UriTemplate.resolve(getBaseUri(), uri);
     }
 
     @Override
     public URI relativize(URI uri) {
-        return null;  // TODO: implement method.
+        if (!uri.isAbsolute()) {
+            uri = resolve(uri);
+        }
+
+        return UriTemplate.relativize(getRequestUri(), uri);
     }
 }

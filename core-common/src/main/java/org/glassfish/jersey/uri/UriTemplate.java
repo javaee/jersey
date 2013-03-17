@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.uri;
 
+import java.net.URI;
+import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +53,8 @@ import java.util.regex.PatternSyntaxException;
 
 import org.glassfish.jersey.uri.internal.UriTemplateParser;
 
+import com.google.common.base.Preconditions;
+
 /**
  * A URI template.
  *
@@ -57,7 +62,6 @@ import org.glassfish.jersey.uri.internal.UriTemplateParser;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class UriTemplate {
-
     private static String[] EMPTY_VALUES = new String[0];
 
     /**
@@ -243,6 +247,142 @@ public class UriTemplate {
      */
     private static PatternWithGroups initUriPattern(UriTemplateParser templateParser) {
         return new PatternWithGroups(templateParser.getPattern(), templateParser.getGroupIndexes());
+    }
+
+    /**
+     * Resolve a relative URI reference against a base URI as defined in
+     * <a href="http://tools.ietf.org/html/rfc3986#section-5.4">RFC 3986</a>.
+     *
+     * @param baseUri base URI to be used for resolution.
+     * @param refUri  reference URI string to be resolved against the base URI.
+     * @return resolved URI.
+     * @throws IllegalArgumentException If the given string violates the URI specification RFC.
+     */
+    public static URI resolve(final URI baseUri, String refUri) {
+        return resolve(baseUri, URI.create(refUri));
+    }
+
+    /**
+     * Resolve a relative URI reference against a base URI as defined in
+     * <a href="http://tools.ietf.org/html/rfc3986#section-5.4">RFC 3986</a>.
+     *
+     * @param baseUri base URI to be used for resolution.
+     * @param refUri  reference URI to be resolved against the base URI.
+     * @return resolved URI.
+     */
+    public static URI resolve(final URI baseUri, URI refUri) {
+        Preconditions.checkNotNull(baseUri, "Input base URI parameter must not be null.");
+        Preconditions.checkNotNull(refUri, "Input reference URI parameter must not be null.");
+
+        final String refString = refUri.toString();
+        if (refString.isEmpty()) {
+            // we need something to resolve against
+            refUri = URI.create("#");
+        } else if (refString.startsWith("?")) {
+            String baseString = baseUri.toString();
+            final int qIndex = baseString.indexOf('?');
+            baseString = qIndex > -1 ? baseString.substring(0, qIndex) : baseString;
+            return URI.create(baseString + refString);
+        }
+
+        URI result = baseUri.resolve(refUri);
+        if (refString.isEmpty()) {
+            final String resolvedString = result.toString();
+            result = URI.create(resolvedString.substring(0, resolvedString.indexOf('#')));
+        }
+
+        return normalize(result);
+    }
+
+    /**
+     * Normalize the URI by resolve the dot & dot-dot path segments as described in
+     * <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4">RFC 3986</a>.
+     *
+     * This method provides a workaround for issues with {@link java.net.URI#normalize()} which
+     * is not able to properly normalize absolute paths that start with a {@code ".."} segment,
+     * e.g. {@code "/../a/b"} as required by RFC 3986 (according to RFC 3986 the path {@code "/../a/b"}
+     * should resolve to {@code "/a/b"}, while {@code URI.normalize()} keeps the {@code ".."} segment
+     * in the URI path.
+     *
+     * @param uri the original URI string.
+     * @return the URI with dot and dot-dot segments resolved.
+     * @throws IllegalArgumentException If the given string violates the URI specification RFC.
+     * @see java.net.URI#normalize()
+     */
+    public static URI normalize(final String uri) {
+        return normalize(URI.create(uri));
+    }
+
+    /**
+     * Normalize the URI by resolve the dot & dot-dot path segments as described in
+     * <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4">RFC 3986</a>.
+     *
+     * This method provides a workaround for issues with {@link java.net.URI#normalize()} which
+     * is not able to properly normalize absolute paths that start with a {@code ".."} segment,
+     * e.g. {@code "/../a/b"} as required by RFC 3986 (according to RFC 3986 the path {@code "/../a/b"}
+     * should resolve to {@code "/a/b"}, while {@code URI.normalize()} keeps the {@code ".."} segment
+     * in the URI path.
+     *
+     * @param uri the original URI.
+     * @return the URI with dot and dot-dot segments resolved.
+     * @see java.net.URI#normalize()
+     */
+    public static URI normalize(final URI uri) {
+        Preconditions.checkNotNull(uri, "Input reference URI parameter must not be null.");
+
+        final String path = uri.getPath();
+
+        if (path == null || path.isEmpty() || !path.contains("/.")) {
+            return uri;
+        }
+
+        final String[] segments = path.split("/");
+        final Deque<String> resolvedSegments = new ArrayDeque<String>(segments.length);
+
+        for (final String segment : segments) {
+            if ((segment.length() == 0) || (".".equals(segment))) {
+                // skip
+            } else if ("..".equals(segment)) {
+                resolvedSegments.pollLast();
+            } else {
+                resolvedSegments.offer(segment);
+            }
+        }
+
+        final StringBuilder pathBuilder = new StringBuilder();
+        for (final String segment : resolvedSegments) {
+            pathBuilder.append('/').append(segment);
+        }
+
+        String resultString = createURIWithStringValues(uri.getScheme(),
+                uri.getAuthority(),
+                null,
+                null,
+                null,
+                pathBuilder.toString(),
+                uri.getQuery(),
+                uri.getFragment(),
+                EMPTY_VALUES,
+                false,
+                false);
+
+        return URI.create(resultString);
+    }
+
+    /**
+     * Relativize URI with respect to a base URI.
+     *
+     * After the relativization is done, dots in paths of both URIs are {@link #normalize(java.net.URI) resolved}.
+     *
+     * @param baseUri base URI to be used for relativization.
+     * @param refUri  URI to be relativized.
+     * @return relativized URI.
+     */
+    public static URI relativize(URI baseUri, URI refUri) {
+        Preconditions.checkNotNull(baseUri, "Input base URI parameter must not be null.");
+        Preconditions.checkNotNull(refUri, "Input reference URI parameter must not be null.");
+
+        return normalize(baseUri.relativize(refUri));
     }
 
     /**
@@ -776,9 +916,9 @@ public class UriTemplate {
      * Resolves template variables in the given {@code template} from {@code _mapValues}. Resolves only these variables which are
      * defined in the {@code _mapValues} leaving other variables unchanged.
      *
-     * @param type Type of the {@code template} (port, path, query, ...).
-     * @param template Input uri component to resolve.
-     * @param encode True if template values from {@code _mapValues} should be percent encoded.
+     * @param type       Type of the {@code template} (port, path, query, ...).
+     * @param template   Input uri component to resolve.
+     * @param encode     True if template values from {@code _mapValues} should be percent encoded.
      * @param _mapValues Map with template variables as keys and template values as values. None of them should be null.
      * @return String with resolved template variables.
      * @throws IllegalArgumentException when {@code _mapValues} value is null.

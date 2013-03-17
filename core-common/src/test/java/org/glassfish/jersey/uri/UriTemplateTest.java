@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.uri;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,19 +48,113 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.uri.UriTemplateTest
  *
  * @author Paul.Sandoz at Sun.Com
  */
-public class UriTemplateTest extends TestCase {
+public class UriTemplateTest {
 
-    public UriTemplateTest(String testName) {
-        super(testName);
+    /**
+     * Test the URI resolution as defined in RFC 3986,
+     * <a href="http://tools.ietf.org/html/rfc3986#section-5.4.1">sect. 5.4.1</a> and
+     * and <a href="http://tools.ietf.org/html/rfc3986#section-5.4.2">sect. 5.4.2</a>.
+     */
+    @Test
+    public void testResolveUri() {
+        final URI baseUri = URI.create("http://a/b/c/d;p?q");
+
+        // Normal examples (RFC 3986, sect. 5.4.1)
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g:h")), equalTo(URI.create("g:h")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g:h")), equalTo(URI.create("g:h")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g")), equalTo(URI.create("http://a/b/c/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("./g")), equalTo(URI.create("http://a/b/c/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g/")), equalTo(URI.create("http://a/b/c/g/")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("/g")), equalTo(URI.create("http://a/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("//g")), equalTo(URI.create("http://g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("?y")), equalTo(URI.create("http://a/b/c/d;p?y")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g?y")), equalTo(URI.create("http://a/b/c/g?y")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("#s")), equalTo(URI.create("http://a/b/c/d;p?q#s")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g#s")), equalTo(URI.create("http://a/b/c/g#s")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g?y#s")), equalTo(URI.create("http://a/b/c/g?y#s")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create(";x")), equalTo(URI.create("http://a/b/c/;x")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g;x")), equalTo(URI.create("http://a/b/c/g;x")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g;x?y#s")), equalTo(URI.create("http://a/b/c/g;x?y#s")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("")), equalTo(URI.create("http://a/b/c/d;p?q")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create(".")), equalTo(URI.create("http://a/b/c/")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("./")), equalTo(URI.create("http://a/b/c/")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("..")), equalTo(URI.create("http://a/b/")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("../")), equalTo(URI.create("http://a/b/")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("../g")), equalTo(URI.create("http://a/b/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("../..")), equalTo(URI.create("http://a/")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("../../")), equalTo(URI.create("http://a/")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("../../g")), equalTo(URI.create("http://a/g")));
+
+        // Abnormal examples (RFC 3986, sect. 5.4.2)
+        assertThat(UriTemplate.resolve(baseUri, URI.create("../../../g")), equalTo(URI.create("http://a/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("../../../../g")), equalTo(URI.create("http://a/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("/./g")), equalTo(URI.create("http://a/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("/../g")), equalTo(URI.create("http://a/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g.")), equalTo(URI.create("http://a/b/c/g.")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create(".g")), equalTo(URI.create("http://a/b/c/.g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g..")), equalTo(URI.create("http://a/b/c/g..")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("..g")), equalTo(URI.create("http://a/b/c/..g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("./../g")), equalTo(URI.create("http://a/b/g")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("./g/.")), equalTo(URI.create("http://a/b/c/g/")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g/./h")), equalTo(URI.create("http://a/b/c/g/h")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g/../h")), equalTo(URI.create("http://a/b/c/h")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g;x=1/./y")), equalTo(URI.create("http://a/b/c/g;x=1/y")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g;x=1/../y")), equalTo(URI.create("http://a/b/c/y")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g?y/./x")), equalTo(URI.create("http://a/b/c/g?y/./x")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g?y/../x")), equalTo(URI.create("http://a/b/c/g?y/../x")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g#s/./x")), equalTo(URI.create("http://a/b/c/g#s/./x")));
+        assertThat(UriTemplate.resolve(baseUri, URI.create("g#s/../x")), equalTo(URI.create("http://a/b/c/g#s/../x")));
+        // Per RFC 3986, test bellow should resolve to "http:g" for strict parsers and "http://a/b/c/g" for backward compatibility
+        assertThat(UriTemplate.resolve(baseUri, URI.create("http:g")), equalTo(URI.create("http:g")));
+
+        // JDK bug http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4708535
+        assertThat(UriTemplate.resolve(baseUri, URI.create("")), equalTo(baseUri));
     }
 
+    @Test
+    public void testRelativizeUri() {
+        URI baseUri;
+
+        baseUri = URI.create("http://a/b/c/d");
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/e")), equalTo(URI.create("e")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/./e")), equalTo(URI.create("e")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/e/../f")), equalTo(URI.create("f")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/e/.././f")), equalTo(URI.create("f")));
+
+        baseUri = URI.create("http://a/b/c/d?q=v");
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/e")), equalTo(URI.create("e")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/./e")), equalTo(URI.create("e")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/e/../f")), equalTo(URI.create("f")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/e/.././f")), equalTo(URI.create("f")));
+
+        // NOTE: At the moment, in sync with the JDK implementation of relativize() method,
+        // we do not support relativization of URIs that do not fully prefix the base URI.
+        // Once (if) we decide to improve this support beyond what JDK supports, we may need
+        // to update the assertions below.
+        baseUri = URI.create("http://a/b/c/d");
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/e")), equalTo(URI.create("http://a/b/c/e")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/./e")), equalTo(URI.create("http://a/b/c/e")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/.././e")), equalTo(URI.create("http://a/b/c/e")));
+
+        baseUri = URI.create("http://a/b/c/d?q=v");
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/e")), equalTo(URI.create("http://a/b/c/e")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/./e")), equalTo(URI.create("http://a/b/c/e")));
+        assertThat(UriTemplate.relativize(baseUri, URI.create("http://a/b/c/d/.././e")), equalTo(URI.create("http://a/b/c/e")));
+    }
+
+    @Test
     public void testTemplateNames() {
         _testTemplateNames("{a}", "a");
         _testTemplateNames("{  a}", "a");
@@ -68,18 +163,12 @@ public class UriTemplateTest extends TestCase {
         _testTemplateNames("{a :}", "a");
         _testTemplateNames("{a : }", "a");
 
-        _testTemplateNames("http://example.org/{a}/{b}/",
-                "a", "b");
-        _testTemplateNames("http://example.org/page1#{a}",
-                "a");
-        _testTemplateNames("{scheme}://{20}.example.org?date={wilma}&option={a}",
-                "scheme", "20", "wilma", "a");
-        _testTemplateNames("http://example.org/{a-b}",
-                "a-b");
-        _testTemplateNames("http://example.org?{p}",
-                "p");
-        _testTemplateNames("http://example.com/order/{c}/{c}/{c}/",
-                "c", "c", "c");
+        _testTemplateNames("http://example.org/{a}/{b}/", "a", "b");
+        _testTemplateNames("http://example.org/page1#{a}", "a");
+        _testTemplateNames("{scheme}://{20}.example.org?date={wilma}&option={a}", "scheme", "20", "wilma", "a");
+        _testTemplateNames("http://example.org/{a-b}", "a-b");
+        _testTemplateNames("http://example.org?{p}", "p");
+        _testTemplateNames("http://example.com/order/{c}/{c}/{c}/", "c", "c", "c");
     }
 
     void _testTemplateNames(String template, String... names) {
@@ -96,6 +185,7 @@ public class UriTemplateTest extends TestCase {
         }
     }
 
+    @Test
     public void testMatching() {
         _testMatching("http://example.org/{a}/{b}/",
                 "http://example.org/fred/barney/",
@@ -123,6 +213,7 @@ public class UriTemplateTest extends TestCase {
                 "xxx");
     }
 
+    @Test
     public void testTemplateRegexes() {
         _testTemplateRegex("{a:}", "([^/]+?)");
         _testTemplateRegex("{a:.*}", "(.*)");
@@ -136,6 +227,7 @@ public class UriTemplateTest extends TestCase {
         assertEquals(regex, t.getPattern().toString());
     }
 
+    @Test
     public void testRegexMatching() {
         _testMatching("{b: .+}",
                 "1",
@@ -162,6 +254,7 @@ public class UriTemplateTest extends TestCase {
                 "1", "2/3", "4", "/");
     }
 
+    @Test
     public void testRegexMatchingWithNestedGroups() {
         _testMatching("{b: (\\d+)}",
                 "1234567890",
@@ -224,6 +317,7 @@ public class UriTemplateTest extends TestCase {
         }
     }
 
+    @Test
     public void testNullMatching() {
         Map<String, String> m = new HashMap<String, String>();
 
@@ -237,6 +331,7 @@ public class UriTemplateTest extends TestCase {
         assertEquals(true, t.match("/one", m));
     }
 
+    @Test
     public void testOrder() {
         List<UriTemplate> l = new ArrayList<UriTemplate>();
 
@@ -257,6 +352,7 @@ public class UriTemplateTest extends TestCase {
                 l.get(3).getTemplate());
     }
 
+    @Test
     public void testOrderDuplicitParams() {
         List<UriTemplate> l = new ArrayList<UriTemplate>();
 
@@ -271,6 +367,7 @@ public class UriTemplateTest extends TestCase {
                 l.get(1).getTemplate());
     }
 
+    @Test
     public void testSubstitutionArray() {
         _testSubstitutionArray("http://example.org/{a}/{b}/",
                 "http://example.org/fred/barney/",
@@ -307,6 +404,7 @@ public class UriTemplateTest extends TestCase {
         assertEquals(uri, t.createURI(values));
     }
 
+    @Test
     public void testSubstitutionMap() {
         _testSubstitutionMap("http://example.org/{a}/{b}/",
                 "http://example.org/fred/barney/",

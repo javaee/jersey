@@ -45,14 +45,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.Statuses;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Sets;
 
 /**
  * Jersey client response context.
@@ -67,7 +73,7 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
      * Create new Jersey client response context initialized from a JAX-RS {@link Response response}.
      *
      * @param requestContext associated request context.
-     * @param response JAX-RS response to be used to initialize the response context.
+     * @param response       JAX-RS response to be used to initialize the response context.
      */
     public ClientResponse(final ClientRequest requestContext, final Response response) {
         this(response.getStatusInfo(), requestContext);
@@ -111,7 +117,7 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
     /**
      * Create a new Jersey client response context.
      *
-     * @param status response status.
+     * @param status         response status.
      * @param requestContext associated client request context.
      */
     public ClientResponse(Response.StatusType status, ClientRequest requestContext) {
@@ -155,5 +161,19 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
     @Override
     public Map<String, NewCookie> getCookies() {
         return super.getResponseCookies();
+    }
+
+    @Override
+    public Set<Link> getLinks() {
+        return Sets.newHashSet(Collections2.transform(super.getLinks(), new Function<Link, Link>() {
+            @Override
+            public Link apply(Link link) {
+                if (link.getUri().isAbsolute()) {
+                    return link;
+                }
+
+                return Link.fromLink(link).baseUri(requestContext.getUri()).build();
+            }
+        }));
     }
 }

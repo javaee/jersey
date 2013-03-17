@@ -49,6 +49,7 @@ import java.util.Map;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.uri.UriTemplate;
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 /**
@@ -157,16 +158,22 @@ public final class JerseyLink extends javax.ws.rs.core.Link {
 
         @Override
         public JerseyLink build(Object... values) {
-            final URI linkUri = uriBuilder.build(values);
-            if (baseUri != null) {
-                // TODO add resolving support of relative URIs.
-            }
+            final URI linkUri = resolveLinkUri(values);
             return new JerseyLink(linkUri, Collections.unmodifiableMap(new HashMap<String, String>(params)));
         }
 
         @Override
         public Link buildRelativized(URI uri, Object... values) {
-            return null;  // TODO: implement method.
+            final URI linkUri = UriTemplate.relativize(uri, resolveLinkUri(values));
+            return new JerseyLink(linkUri, Collections.unmodifiableMap(new HashMap<String, String>(params)));
+        }
+
+        private URI resolveLinkUri(Object[] values) {
+            final URI linkUri = uriBuilder.build(values);
+            if (baseUri == null || linkUri.isAbsolute()) {
+                return UriTemplate.normalize(linkUri);
+            }
+            return UriTemplate.resolve(baseUri, linkUri);
         }
     }
 
