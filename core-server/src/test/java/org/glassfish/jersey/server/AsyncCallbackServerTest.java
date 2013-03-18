@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,8 +61,10 @@ import javax.inject.Singleton;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests {@link CompletionCallback}.
@@ -91,8 +93,8 @@ public class AsyncCallbackServerTest {
                 "/completion/onCompletion", "GET").build();
 
         final ContainerResponse response = app.apply(req).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertTrue("onComplete() was not called.", onCompletionCalled);
+        assertEquals(200, response.getStatus());
+        assertTrue("onComplete() was not called.", onCompletionCalled);
     }
 
     @Test
@@ -103,11 +105,29 @@ public class AsyncCallbackServerTest {
         try {
             final ContainerResponse response = app.apply(RequestContextBuilder.from(
                     "/completion/onError", "GET").build()).get();
-            Assert.fail("should fail");
+            fail("should fail");
         } catch (Exception e) {
             // ok - should throw an exception
         }
-        Assert.assertTrue("onError().", onCompletionCalledWithError);
+        assertTrue("onError().", onCompletionCalledWithError);
+    }
+
+    @Test
+    public void testRegisterNullClass() throws ExecutionException, InterruptedException {
+        final ApplicationHandler app = new ApplicationHandler(new ResourceConfig(NullCallbackResource.class));
+        final ContainerRequest req = RequestContextBuilder.from("/null-callback/class", "GET").build();
+
+        final ContainerResponse response = app.apply(req).get();
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testRegisterNullObject() throws ExecutionException, InterruptedException {
+        final ApplicationHandler app = new ApplicationHandler(new ResourceConfig(NullCallbackResource.class));
+        final ContainerRequest req = RequestContextBuilder.from("/null-callback/object", "GET").build();
+
+        final ContainerResponse response = app.apply(req).get();
+        assertEquals(200, response.getStatus());
     }
 
     @CompletionBinding
@@ -115,7 +135,7 @@ public class AsyncCallbackServerTest {
 
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            Assert.assertFalse("onComplete() callback has already been called.",
+            assertFalse("onComplete() callback has already been called.",
                     onCompletionCalled);
         }
     }
@@ -124,8 +144,8 @@ public class AsyncCallbackServerTest {
     public static class MyCompletionCallback implements CompletionCallback {
         @Override
         public void onComplete(Throwable throwable) {
-            Assert.assertFalse("onComplete() has already been called.", onCompletionCalled);
-            Assert.assertFalse("onComplete() has already been called with error.", onCompletionCalledWithError);
+            assertFalse("onComplete() has already been called.", onCompletionCalled);
+            assertFalse("onComplete() has already been called with error.", onCompletionCalledWithError);
             if (throwable == null) {
                 onCompletionCalled = true;
             } else {
@@ -141,20 +161,95 @@ public class AsyncCallbackServerTest {
         @Path("onCompletion")
         @CompletionBinding
         public void onComplete(@Suspended AsyncResponse asyncResponse) {
-            Assert.assertFalse(onCompletionCalled);
+            assertFalse(onCompletionCalled);
             asyncResponse.register(MyCompletionCallback.class);
             asyncResponse.resume("ok");
-            Assert.assertTrue(onCompletionCalled);
+            assertTrue(onCompletionCalled);
         }
 
         @GET
         @Path("onError")
         @CompletionBinding
         public void onError(@Suspended AsyncResponse asyncResponse) {
-            Assert.assertFalse(onCompletionCalledWithError);
+            assertFalse(onCompletionCalledWithError);
             asyncResponse.register(MyCompletionCallback.class);
             asyncResponse.resume(new RuntimeException("test-exception"));
-            Assert.assertTrue(onCompletionCalledWithError);
+            assertTrue(onCompletionCalledWithError);
+        }
+    }
+
+    @Path("null-callback")
+    @Singleton
+    public static class NullCallbackResource {
+
+        @GET
+        @Path("class")
+        @CompletionBinding
+        public void registerClass(@Suspended AsyncResponse asyncResponse) {
+            try {
+                asyncResponse.register(null);
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // Expected.
+            }
+
+            try {
+                asyncResponse.register(null, MyCompletionCallback.class);
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // Expected.
+            }
+
+            try {
+                asyncResponse.register(MyCompletionCallback.class, null);
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // Expected.
+            }
+
+            try {
+                asyncResponse.register(MyCompletionCallback.class, MyCompletionCallback.class, null);
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // Expected.
+            }
+
+            asyncResponse.resume("ok");
+        }
+
+        @GET
+        @Path("object")
+        @CompletionBinding
+        public void registerObject(@Suspended AsyncResponse asyncResponse) {
+            try {
+                asyncResponse.register((Object) null);
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // Expected.
+            }
+
+            try {
+                asyncResponse.register(null, new MyCompletionCallback());
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // Expected.
+            }
+
+            try {
+                asyncResponse.register(new MyCompletionCallback(), null);
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // Expected.
+            }
+
+            try {
+                asyncResponse.register(new MyCompletionCallback(), new MyCompletionCallback(), null);
+                fail("NullPointerException expected.");
+            } catch (NullPointerException npe) {
+                // Expected.
+            }
+
+            asyncResponse.resume("ok");
         }
     }
 

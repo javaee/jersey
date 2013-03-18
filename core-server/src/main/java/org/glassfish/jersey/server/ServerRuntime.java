@@ -93,12 +93,15 @@ import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
+
+import org.glassfish.hk2.api.ServiceLocator;
+
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import com.google.common.base.Preconditions;
 
 /**
  * Server-side request processing runtime.
@@ -484,7 +487,7 @@ class ServerRuntime {
                 // Commit the container response writer if not in chunked mode
                 // responseContext may be null in case the request processing was cancelled.
                 if (responseContext != null && !responseContext.isChunked()) {
-//                    responseContext.commitStream();
+                    // responseContext.commitStream();
                     responseContext.close();
                 }
 
@@ -750,19 +753,25 @@ class ServerRuntime {
 
         @Override
         public Collection<Class<?>> register(final Class<?> callback) {
+            Preconditions.checkNotNull(callback, LocalizationMessages.PARAM_NULL("callback"));
+
             return register(Injections.getOrCreate(locator, callback));
         }
 
         @Override
         public Map<Class<?>, Collection<Class<?>>> register(Class<?> callback, Class<?>... callbacks) {
+            Preconditions.checkNotNull(callback, LocalizationMessages.PARAM_NULL("callback"));
+            Preconditions.checkNotNull(callbacks, LocalizationMessages.CALLBACK_ARRAY_NULL());
+            for (final Class<?> additionalCallback : callbacks) {
+                Preconditions.checkNotNull(additionalCallback, LocalizationMessages.CALLBACK_ARRAY_ELEMENT_NULL());
+            }
+
             final Map<Class<?>, Collection<Class<?>>> results = new HashMap<Class<?>, Collection<Class<?>>>();
 
             results.put(callback, register(callback));
 
-            if (callbacks != null) {
-                for (Class<?> c : callbacks) {
-                    results.put(c, register(c));
-                }
+            for (Class<?> c : callbacks) {
+                results.put(c, register(c));
             }
 
             return results;
@@ -770,6 +779,8 @@ class ServerRuntime {
 
         @Override
         public Collection<Class<?>> register(Object callback) {
+            Preconditions.checkNotNull(callback, LocalizationMessages.PARAM_NULL("callback"));
+
             Collection<Class<?>> result = new LinkedList<Class<?>>();
             for (AbstractCallbackRunner<?> runner : callbackRunners) {
                 if (runner.supports(callback.getClass())) {
@@ -784,14 +795,18 @@ class ServerRuntime {
 
         @Override
         public Map<Class<?>, Collection<Class<?>>> register(Object callback, Object... callbacks) {
+            Preconditions.checkNotNull(callback, LocalizationMessages.PARAM_NULL("callback"));
+            Preconditions.checkNotNull(callbacks, LocalizationMessages.CALLBACK_ARRAY_NULL());
+            for (final Object additionalCallback : callbacks) {
+                Preconditions.checkNotNull(additionalCallback, LocalizationMessages.CALLBACK_ARRAY_ELEMENT_NULL());
+            }
+
             final Map<Class<?>, Collection<Class<?>>> results = new HashMap<Class<?>, Collection<Class<?>>>();
 
             results.put(callback.getClass(), register(callback));
 
-            if (callbacks != null) {
-                for (Object c : callbacks) {
-                    results.put(c.getClass(), register(c));
-                }
+            for (Object c : callbacks) {
+                results.put(c.getClass(), register(c));
             }
 
             return results;
