@@ -55,6 +55,8 @@ import javax.annotation.Resource;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 /**
  * Application scoped JAX-RS resource.
@@ -76,6 +78,9 @@ public class JCDIBeanSingletonResource {
 
     private UriInfo uiMethodInject;
 
+    @Inject
+    Provider<JCDIBeanExceptionMapper> mapperProvider;
+
     @Context
     public void set(UriInfo ui) {
         this.uiMethodInject = ui;
@@ -91,8 +96,8 @@ public class JCDIBeanSingletonResource {
     @Produces("text/plain")
     public String getMessage(@PathParam("p") String p) {
         LOGGER.info(String.format(
-                "In getMessage in %s; uiFieldInject: %s; uiMethodInject: %s"
-                ,this, uiFieldinject, uiMethodInject));
+                "In getMessage in %s; uiFieldInject: %s; uiMethodInject: %s; provider: %s; provider.get(): %s"
+                ,this, uiFieldinject, uiMethodInject, mapperProvider, mapperProvider.get()));
         ensureInjected();
 
         return String.format("%s: p=%s, queryParam=%s",
@@ -122,7 +127,8 @@ public class JCDIBeanSingletonResource {
     }
 
     private void ensureInjected() throws IllegalStateException {
-        if (uiFieldinject == null || uiMethodInject == null || resourceContext == null) {
+        if (uiFieldinject == null || uiMethodInject == null
+                || resourceContext == null || mapperProvider.get() == null) {
             throw new IllegalStateException();
         }
     }

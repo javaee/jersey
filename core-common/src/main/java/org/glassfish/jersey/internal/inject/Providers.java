@@ -87,6 +87,33 @@ public class Providers {
     private static final Logger LOGGER = Logger.getLogger(Providers.class.getName());
 
     /**
+     * Map of all standard JAX-RS providers and their run-time affinity.
+     */
+    private static final Map<Class<?>, ProviderRuntime> JAX_RS_PROVIDER_INTERFACE_WHITELIST =
+            getJaxRsProviderInterfaces();
+
+    private static Map<Class<?>, ProviderRuntime> getJaxRsProviderInterfaces() {
+        Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
+
+        interfaces.put(javax.ws.rs.ext.ContextResolver.class, ProviderRuntime.BOTH);
+        interfaces.put(javax.ws.rs.ext.ExceptionMapper.class, ProviderRuntime.BOTH);
+        interfaces.put(javax.ws.rs.ext.MessageBodyReader.class, ProviderRuntime.BOTH);
+        interfaces.put(javax.ws.rs.ext.MessageBodyWriter.class, ProviderRuntime.BOTH);
+        interfaces.put(javax.ws.rs.ext.ReaderInterceptor.class, ProviderRuntime.BOTH);
+        interfaces.put(javax.ws.rs.ext.WriterInterceptor.class, ProviderRuntime.BOTH);
+        interfaces.put(javax.ws.rs.ext.ParamConverterProvider.class, ProviderRuntime.BOTH);
+
+        interfaces.put(javax.ws.rs.container.ContainerRequestFilter.class, ProviderRuntime.SERVER);
+        interfaces.put(javax.ws.rs.container.ContainerResponseFilter.class, ProviderRuntime.SERVER);
+        interfaces.put(javax.ws.rs.container.DynamicFeature.class, ProviderRuntime.SERVER);
+
+        interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, ProviderRuntime.CLIENT);
+        interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, ProviderRuntime.CLIENT);
+
+        return interfaces;
+    }
+
+    /**
      * Map of all supported external (i.e. non-Jersey) contracts and their run-time affinity.
      */
     private static final Map<Class<?>, ProviderRuntime> EXTERNAL_PROVIDER_INTERFACE_WHITELIST =
@@ -95,36 +122,20 @@ public class Providers {
     private static Map<Class<?>, ProviderRuntime> getExternalProviderInterfaces() {
         Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
 
-        final ProviderRuntime BOTH = new ProviderRuntime(null);
-        final ProviderRuntime SERVER = new ProviderRuntime(RuntimeType.SERVER);
-        final ProviderRuntime CLIENT = new ProviderRuntime(RuntimeType.CLIENT);
-
         // JAX-RS
-
-        interfaces.put(javax.ws.rs.ext.ContextResolver.class, BOTH);
-        interfaces.put(javax.ws.rs.ext.ExceptionMapper.class, BOTH);
-        interfaces.put(javax.ws.rs.ext.MessageBodyReader.class, BOTH);
-        interfaces.put(javax.ws.rs.ext.MessageBodyWriter.class, BOTH);
-        interfaces.put(javax.ws.rs.ext.ReaderInterceptor.class, BOTH);
-        interfaces.put(javax.ws.rs.ext.WriterInterceptor.class, BOTH);
-        interfaces.put(javax.ws.rs.ext.ParamConverterProvider.class, BOTH);
-        interfaces.put(javax.ws.rs.core.Feature.class, BOTH);
-
-        interfaces.put(javax.ws.rs.container.ContainerRequestFilter.class, SERVER);
-        interfaces.put(javax.ws.rs.container.ContainerResponseFilter.class, SERVER);
-        interfaces.put(javax.ws.rs.container.DynamicFeature.class, SERVER);
-
-        interfaces.put(javax.ws.rs.client.ClientResponseFilter.class, CLIENT);
-        interfaces.put(javax.ws.rs.client.ClientRequestFilter.class, CLIENT);
+        interfaces.putAll(JAX_RS_PROVIDER_INTERFACE_WHITELIST);
+        interfaces.put(javax.ws.rs.core.Feature.class, ProviderRuntime.BOTH);
 
         // HK2
-
-        interfaces.put(org.glassfish.hk2.utilities.Binder.class, BOTH);
+        interfaces.put(org.glassfish.hk2.utilities.Binder.class, ProviderRuntime.BOTH);
 
         return interfaces;
     }
 
-    private static final class ProviderRuntime {
+    private enum ProviderRuntime {
+
+        BOTH(null), SERVER(RuntimeType.SERVER), CLIENT(RuntimeType.CLIENT);
+
         private final RuntimeType runtime;
 
         private ProviderRuntime(RuntimeType runtime) {
@@ -524,6 +535,21 @@ public class Providers {
      */
     public static boolean isProvider(Class<?> clazz) {
         return findFirstProviderContract(clazz);
+    }
+
+    /**
+     * Returns {@code true} if given component class is a JAX-RS provider.
+     *
+     * @param clazz class to check.
+     * @return {@code true} if the class is a JAX-RS provider, {@code false} otherwise.
+     */
+    public static boolean isJaxRsProvider(Class<?> clazz) {
+        for (Class<?> providerType : JAX_RS_PROVIDER_INTERFACE_WHITELIST.keySet()) {
+            if (providerType.isAssignableFrom(clazz)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean findFirstProviderContract(Class<?> clazz) {

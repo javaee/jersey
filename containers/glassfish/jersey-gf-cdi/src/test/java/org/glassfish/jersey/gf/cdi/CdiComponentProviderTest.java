@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import org.glassfish.jersey.gf.cdi.JaxRsTypeCheckerTest.MyPojo;
+import org.glassfish.jersey.gf.cdi.CdiComponentProviderTest.MyPojo;
 
 import org.junit.Test;
 
@@ -64,11 +64,11 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
 /**
- * Test for {@link JaxRsTypeChecker}.
+ * Test for {@link CdiConponentProvider}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class JaxRsTypeCheckerTest {
+public class CdiComponentProviderTest {
 
     public static class MyMessageBodyReader implements MessageBodyReader {
 
@@ -133,9 +133,9 @@ public class JaxRsTypeCheckerTest {
      */
     @Test
     public void testProviders() {
-        assertFalse(JaxRsTypeChecker.isJaxRsComponentType(MyPojo.class));
-        assertTrue(JaxRsTypeChecker.isJaxRsComponentType(MyMessageBodyReader.class));
-        assertTrue(JaxRsTypeChecker.isJaxRsComponentType(MyOtherMessageBodyReader.class));
+        assertFalse(CdiComponentProvider.isJaxRsComponentType(MyPojo.class));
+        assertTrue(CdiComponentProvider.isJaxRsComponentType(MyMessageBodyReader.class));
+        assertTrue(CdiComponentProvider.isJaxRsComponentType(MyOtherMessageBodyReader.class));
     }
 
     /**
@@ -143,9 +143,9 @@ public class JaxRsTypeCheckerTest {
      */
     @Test
     public void testResources() {
-        assertTrue(JaxRsTypeChecker.isJaxRsComponentType(LocatorSubResource.class));
-        assertTrue(JaxRsTypeChecker.isJaxRsComponentType(ResourceMethodResource.class));
-        assertTrue(JaxRsTypeChecker.isJaxRsComponentType(ResourceMethodSubResource.class));
-        assertTrue(JaxRsTypeChecker.isJaxRsComponentType(CustomResourceMethodSubResource.class));
+        assertTrue(CdiComponentProvider.isJaxRsComponentType(LocatorSubResource.class));
+        assertTrue(CdiComponentProvider.isJaxRsComponentType(ResourceMethodResource.class));
+        assertTrue(CdiComponentProvider.isJaxRsComponentType(ResourceMethodSubResource.class));
+        assertTrue(CdiComponentProvider.isJaxRsComponentType(CustomResourceMethodSubResource.class));
     }
 }

@@ -50,14 +50,19 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+import javax.inject.Singleton;
 
 import javax.naming.InitialContext;
+import javax.ws.rs.core.Application;
+import org.glassfish.hk2.api.ClassAnalyzer;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 
 /**
@@ -165,6 +170,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     @Override
     public void done() {
+        bindProviderSkippingAnalyzer();
     }
 
     private boolean isCdiComponent(Class<?> component) {
@@ -178,14 +184,14 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @SuppressWarnings("unused")
     private void processInjectionTarget(@Observes ProcessInjectionTarget event) {
         final InjectionTarget it = event.getInjectionTarget();
-       if (JaxRsTypeChecker.isJaxRsComponentType(event.getAnnotatedType().getJavaClass())) {
+       if (isJaxRsComponentType(event.getAnnotatedType().getJavaClass())) {
            event.setInjectionTarget(new InjectionTarget() {
 
                 @Override
                 public void inject(Object t, CreationalContext cc) {
                    it.inject(t, cc);
                     if (locator != null) {
-                        locator.inject(t);
+                        locator.inject(t, ProviderSkippingClassAnalyzer.NAME);
                     }
                 }
 
@@ -217,6 +223,18 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
     }
 
+    /**
+     * Introspect given type to determine if it represents a JAX-RS component.
+     *
+     * @param clazz type to be introspected.
+     * @return true if the type represents a JAX-RS component type.
+     */
+    /* package */static boolean isJaxRsComponentType(Class<?> clazz) {
+        return Application.class.isAssignableFrom(clazz) ||
+                Providers.isJaxRsProvider(clazz) ||
+                  Resource.from(clazz) != null;
+    }
+
     private static BeanManager beanManagerFromJndi() {
         try {
             return (BeanManager)new InitialContext().lookup("java:comp/BeanManager");
@@ -224,5 +242,21 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());
             return null;
         }
+    }
+
+    private void bindProviderSkippingAnalyzer() {
+        DynamicConfiguration dc = Injections.getConfiguration(locator);
+
+        final ServiceBindingBuilder bindingBuilder =
+                Injections.newBinder(ProviderSkippingClassAnalyzer.class);
+
+        bindingBuilder.analyzeWith(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME)
+                .to(ClassAnalyzer.class)
+                .named(ProviderSkippingClassAnalyzer.NAME)
+                .in(Singleton.class);
+
+        Injections.addBinding(bindingBuilder, dc);
+
+        dc.commit();
     }
 }
