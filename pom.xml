@@ -1103,8 +1103,8 @@
         <!-- Change validation.api.version also in:
                  examples/osgi-helloworld-webapp/functional-test/pom.xml
                  examples/osgi-http-service/functional-test/pom.xml -->
-        <validation.api.version>1.1.0.CR1</validation.api.version>
-        <validation.ri.version>5.0.0.CR1</validation.ri.version>
+        <validation.api.version>1.1.0.CR2</validation.api.version>
+        <validation.ri.version>5.0.0.CR3</validation.ri.version>
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
         <javax.el.version>2.2.4</javax.el.version>

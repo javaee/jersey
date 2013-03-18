@@ -61,7 +61,7 @@
         <pax-exam-version>1.2.3</pax-exam-version>
         <jetty-version>0.7.1</jetty-version>
         <slf4j-log4j-binding-impl-version>1.6.4</slf4j-log4j-binding-impl-version>
-        <validation.api.version>1.1.0.CR1</validation.api.version>
+        <validation.api.version>1.1.0.CR2</validation.api.version>
         <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
         <osgi.version>4.2.0</osgi.version>
         <!-- end of the workaround -->

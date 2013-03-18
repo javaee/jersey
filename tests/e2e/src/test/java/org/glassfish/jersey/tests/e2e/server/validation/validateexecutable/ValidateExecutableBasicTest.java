@@ -47,7 +47,7 @@ import javax.ws.rs.core.Application;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.executable.ExecutableType;
-import javax.validation.executable.ValidateExecutable;
+import javax.validation.executable.ValidateOnExecution;
 
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -65,7 +65,7 @@ public class ValidateExecutableBasicTest extends ValidateExecutableAbstractTest 
 
         @POST
         @Path("validateExecutableDefault")
-        @ValidateExecutable
+        @ValidateOnExecution
         @Min(0)
         public Integer validateExecutableDefault(@Max(10) final Integer value) {
             return value;
@@ -73,7 +73,7 @@ public class ValidateExecutableBasicTest extends ValidateExecutableAbstractTest 
 
         @POST
         @Path("validateExecutableMatch")
-        @ValidateExecutable(ExecutableType.NON_GETTER_METHODS)
+        @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
         @Min(0)
         public Integer validateExecutableMatch(@Max(10) final Integer value) {
             return value;
@@ -81,7 +81,7 @@ public class ValidateExecutableBasicTest extends ValidateExecutableAbstractTest 
 
         @POST
         @Path("validateExecutableMiss")
-        @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+        @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
         @Min(0)
         public Integer validateExecutableMiss(@Max(10) final Integer value) {
             return value;
@@ -89,7 +89,7 @@ public class ValidateExecutableBasicTest extends ValidateExecutableAbstractTest 
 
         @POST
         @Path("validateExecutableNone")
-        @ValidateExecutable(ExecutableType.NONE)
+        @ValidateOnExecution(type = ExecutableType.NONE)
         @Min(0)
         public Integer validateExecutableNone(@Max(10) final Integer value) {
             return value;
@@ -110,22 +110,22 @@ public class ValidateExecutableBasicTest extends ValidateExecutableAbstractTest 
     }
 
     @Path("on-type-default")
-    @ValidateExecutable
+    @ValidateOnExecution
     public static class ValidateExecutableOnTypeDefault extends ValidateExecutableOnType {
     }
 
     @Path("on-type-match")
-    @ValidateExecutable(ExecutableType.NON_GETTER_METHODS)
+    @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
     public static class ValidateExecutableOnTypeMatch extends ValidateExecutableOnType {
     }
 
     @Path("on-type-miss")
-    @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+    @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
     public static class ValidateExecutableOnTypeMiss extends ValidateExecutableOnType {
     }
 
     @Path("on-type-none")
-    @ValidateExecutable(ExecutableType.NONE)
+    @ValidateOnExecution(type = ExecutableType.NONE)
     public static class ValidateExecutableOnTypeNone extends ValidateExecutableOnType {
     }
 
@@ -134,24 +134,24 @@ public class ValidateExecutableBasicTest extends ValidateExecutableAbstractTest 
      */
 
     @Path("mixed-default")
-    @ValidateExecutable(ExecutableType.NONE)
+    @ValidateOnExecution(type = ExecutableType.NONE)
     public static class ValidateExecutableMixedDefault {
 
         @POST
         @Min(0)
-        @ValidateExecutable
+        @ValidateOnExecution
         public Integer validateExecutable(@Max(10) final Integer value) {
             return value;
         }
     }
 
     @Path("mixed-none")
-    @ValidateExecutable
+    @ValidateOnExecution
     public static class ValidateExecutableMixedNone {
 
         @POST
         @Min(0)
-        @ValidateExecutable(ExecutableType.NONE)
+        @ValidateOnExecution(type = ExecutableType.NONE)
         public Integer validateExecutable(@Max(10) final Integer value) {
             return value;
         }
