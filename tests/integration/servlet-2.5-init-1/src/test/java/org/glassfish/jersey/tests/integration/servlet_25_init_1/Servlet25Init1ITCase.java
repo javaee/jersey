@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_25_init_1;
 
+import java.net.URI;
+
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -46,16 +49,21 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.glassfish.jersey.uri.UriTemplate;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * Servlet 2.5 initialization test #01.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class HelloWorldResourceITCase extends JerseyTest {
+public class Servlet25Init1ITCase extends JerseyTest {
 
     @Override
     protected Application configure() {
@@ -96,4 +104,21 @@ public class HelloWorldResourceITCase extends JerseyTest {
         String s = target().path("servlet_path/helloworld/injection").request().get(String.class);
         assertEquals("GETtruetestServlet1testServlet1/", s);
     }
+
+    // Reproducer for JERSEY-1801
+    @Test
+    public void multipleLinksTest() {
+        final WebTarget target = target("/servlet_path/links/");
+        final Response response = target.request().get();
+        assertThat(response.getStatus(), equalTo(200));
+
+        final URI targetUri = target.getUri();
+        assertThat(response.getLink("parent").getUri(), equalTo(URI.create("http://oracle.com")));
+        assertThat(response.getLink("framework").getUri(), equalTo(URI.create("http://jersey.java.net")));
+
+        assertThat(response.getLink("test1").getUri(), equalTo(UriTemplate.resolve(targetUri, "test1")));
+        assertThat(response.getLink("test2").getUri(), equalTo(UriTemplate.resolve(targetUri, "test2")));
+        assertThat(response.getLink("test3").getUri(), equalTo(UriTemplate.resolve(targetUri, "test3")));
+    }
+
 }

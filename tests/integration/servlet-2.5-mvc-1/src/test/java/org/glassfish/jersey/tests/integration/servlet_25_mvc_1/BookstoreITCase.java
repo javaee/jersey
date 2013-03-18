@@ -37,14 +37,17 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.integration.servlet_25_mvc_1;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.tests.integration.servlet_25_mvc_1.resource.Bookstore;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class BookstoreITCase extends TestSupport {
 
@@ -59,6 +62,22 @@ public class BookstoreITCase extends TestSupport {
 
         assertNotNull("Should have returned a bookstore!", response);
         assertEquals("bookstore name", "Czech Bookstore", response.getName());
+    }
+
+    @Test
+    public void testSingleContentTypeAndContentLengthValueInXmlResponse() throws Exception {
+        assertStatusContentTypeAndLength(target().request("application/xml").get());
+        assertStatusContentTypeAndLength(target()
+                .request("text/html", "application/xhtml+xml", "application/xml;q=0.9", "*/*;q=0.8").get());
+    }
+
+    private void assertStatusContentTypeAndLength(Response response) {
+        assertEquals("Should have returned a 200 response!", 200, response.getStatus());
+        assertTrue("Should contain a Content-Type header!", response.getHeaders().containsKey(HttpHeaders.CONTENT_TYPE));
+        assertEquals("Should have a single Content-Type header!", 1, response.getHeaders().get(HttpHeaders.CONTENT_TYPE).size());
+        assertTrue("Should contain a Content-Length header!", response.getHeaders().containsKey(HttpHeaders.CONTENT_LENGTH));
+        assertEquals("Should have a single Content-Length header!",
+                1, response.getHeaders().get(HttpHeaders.CONTENT_LENGTH).size());
     }
 
     @Test

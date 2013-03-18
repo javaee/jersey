@@ -42,6 +42,7 @@ package org.glassfish.jersey.servlet.internal;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -121,12 +122,18 @@ public class ResponseWriter implements ContainerResponseWriter {
         // after the invocation of sendError.
         MultivaluedMap<String, String> headers = getResponseContext().getStringHeaders();
         for (Map.Entry<String, List<String>> e : headers.entrySet()) {
-            for (String v : e.getValue()) {
-                final String header = e.getKey();
+            final Iterator<String> it = e.getValue().iterator();
+            if (!it.hasNext()) {
+                continue;
+            }
+            final String header = e.getKey();
+            if (response.containsHeader(header)) {
+                // replace any headers previously set with values from Jersey container response.
+                response.setHeader(header, it.next());
+            }
 
-                if (!response.containsHeader(header)) {
-                    response.addHeader(header, v);
-                }
+            while (it.hasNext()) {
+                response.addHeader(header, it.next());
             }
         }
         response.setStatus(responseContext.getStatus());
