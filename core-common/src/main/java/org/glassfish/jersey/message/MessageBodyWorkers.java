@@ -56,7 +56,6 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 
 /**
  * An injectable interface providing lookup of {@link MessageBodyReader} and
@@ -222,20 +221,6 @@ public interface MessageBodyWorkers {
                                                 List<MediaType> acceptableMediaTypes);
 
     /**
-     * Returns global reader interceptors.
-     *
-     * @return Reader interceptors.
-     */
-    public List<ReaderInterceptor> getReaderInterceptors();
-
-    /**
-     * Returns global writer interceptors.
-     *
-     * @return Writer interceptors.
-     */
-    public List<WriterInterceptor> getWriterInterceptors();
-
-    /**
      * Reads a type from the {@link InputStream entityStream} using interceptors. If the
      * parameter {@code intercept} is true then {@link ReaderInterceptor reader
      * interceptors} are excecuted before calling the {@link MessageBodyReader message
@@ -255,17 +240,18 @@ public interface MessageBodyWorkers {
      * @param propertiesDelegate request-scoped properties delegate.
      * @param entityStream the {@link InputStream} of the HTTP entity. The stream is not
      *            closed after reading the entity.
-     * @param intercept true if the user interceptors should be executed. Otherwise only
-     *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
-     *            be executed in the client.
+     * @param readerInterceptors Reader interceptor that are to be used to intercept the reading of an entity. The interceptors
+     *                           will be executed in the same order as given in this parameter.
+     *
      * @return the entity that was read from the {@code entityStream}.
      * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
      *             reader} fails.
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                               MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate, InputStream entityStream,
-                               boolean intercept) throws WebApplicationException, IOException;
+                               MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate,
+                               InputStream entityStream, Iterable<ReaderInterceptor> readerInterceptors)
+            throws WebApplicationException, IOException;
 
     /**
      * Writers a type to the {@link OutputStream entityStream} using interceptors. If the
@@ -284,16 +270,18 @@ public interface MessageBodyWorkers {
      * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
      * @param propertiesDelegate request-scoped properties delegate.
      * @param entityStream the {@link OutputStream} for the HTTP entity.
-     * @param intercept true if the user interceptors should be executed. Otherwise only
-     *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
-     *            be executed in the client.
+     * @param writerInterceptors Writer interceptor that are to be used to intercept the writing of an entity. The interceptors
+     *                           will be executed in the same order as given in this parameter.
+     *
      * @return Outer output stream that should be closed by the caller.
      * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
      *             reader} fails.
      * @throws IOException Thrown when reading from the {@code entityStream} fails.
      */
     public <T> OutputStream writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                                    MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-                                    boolean intercept) throws java.io.IOException,
-            javax.ws.rs.WebApplicationException;
+                                    MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate,
+                                    OutputStream entityStream,
+                                    Iterable<WriterInterceptor> writerInterceptors)
+            throws java.io.IOException, javax.ws.rs.WebApplicationException;
+
 }

@@ -61,6 +61,7 @@ import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
@@ -79,6 +80,7 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.NullOutputStream;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -358,6 +360,12 @@ public final class ApplicationHandler {
         }
 
         final ProcessingProviders processingProviders = getProcessingProviders(componentBag);
+
+        // initialize processing provider reference
+        final GenericType<Ref<ProcessingProviders>> refGenericType = new GenericType<Ref<ProcessingProviders>>() {};
+        final Ref<ProcessingProviders> refProcessingProvider = locator.getService(refGenericType.getType());
+        refProcessingProvider.set(processingProviders);
+
 
         ResourceModel resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -83,12 +83,12 @@ public class UriRoutingContextTest {
 
     private UriRoutingContext createContext(String requestUri, String method) {
         return new UriRoutingContext(
-                Refs.<ContainerRequest>of(RequestContextBuilder.from(requestUri, method).build()));
+                Refs.<ContainerRequest>of(RequestContextBuilder.from(requestUri, method).build()), null);
     }
 
     private UriRoutingContext createContext(String appBaseUri, String requestUri, String method) {
         return new UriRoutingContext(
-                Refs.<ContainerRequest>of(RequestContextBuilder.from(appBaseUri, requestUri, method).build()));
+                Refs.<ContainerRequest>of(RequestContextBuilder.from(appBaseUri, requestUri, method).build()), null);
     }
 
     @Test

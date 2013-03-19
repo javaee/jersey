@@ -47,6 +47,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,6 +55,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
@@ -303,6 +305,11 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
             } else {
                 ByteArrayInputStream chunkStream = new ByteArrayInputStream(chunk);
                 //noinspection unchecked
+                // TODO: add interceptors: interceptors are used in ChunkedOutput, so the stream should
+                // be intercepted in the ChunkedInput too. Interceptors cannot be easily added to the readFrom
+                // method as they should wrap the stream before it is processed by ChunkParser. Also please check todo
+                // in ChunkedInput (this should be fixed together with this todo)
+                // issue: JERSEY-1809
                 return (T) messageBodyWorkers.readFrom(
                         getRawType(),
                         getType(),
@@ -311,7 +318,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                         headers,
                         propertiesDelegate,
                         chunkStream,
-                        false);
+                        Collections.<ReaderInterceptor>emptyList());
             }
         } catch (IOException e) {
             Logger.getLogger(this.getClass().getName()).log(Level.FINE, e.getMessage(), e);

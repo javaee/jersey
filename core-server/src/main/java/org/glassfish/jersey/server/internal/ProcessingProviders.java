@@ -50,13 +50,25 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
 /**
- * Encapsulating class containing processing providers like filters, interceptors, name bound providers, dynamic features.
+ * Injectable encapsulating class containing processing providers like filters, interceptors,
+ * name bound providers, dynamic features.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class ProcessingProviders {
     private final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters;
@@ -68,16 +80,21 @@ public class ProcessingProviders {
     private final MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> nameBoundReaderInterceptorsInverse;
     private final MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> nameBoundWriterInterceptorsInverse;
     private final Iterable<RankedProvider<ContainerRequestFilter>> globalRequestFilters;
+    private final Iterable<ContainerRequestFilter> sortedGlobalRequestFilters;
     private List<RankedProvider<ContainerRequestFilter>> preMatchFilters;
     private final Iterable<RankedProvider<ContainerResponseFilter>> globalResponseFilters;
+    private final Iterable<ContainerResponseFilter> sortedGlobalResponseFilters;
 
     private final Iterable<RankedProvider<ReaderInterceptor>> globalReaderInterceptors;
+    private final Iterable<ReaderInterceptor> sortedGlobalReaderInterceptors;
     private final Iterable<RankedProvider<WriterInterceptor>> globalWriterInterceptors;
+    private final Iterable<WriterInterceptor> sortedGlobalWriterInterceptors;
     private final Iterable<DynamicFeature> dynamicFeatures;
 
 
     /**
      * Creates new instance of the processing providers.
+     *
      * @param nameBoundRequestFilters Name bound {@link ContainerRequestFilter request filters}.
      * @param nameBoundRequestFiltersInverse Inverse map with name bound  {@link ContainerRequestFilter request filters}.
      * @param nameBoundResponseFilters Name bound {@link ContainerResponseFilter response filters}.
@@ -124,6 +141,15 @@ public class ProcessingProviders {
         this.globalReaderInterceptors = globalReaderInterceptors;
         this.globalWriterInterceptors = globalWriterInterceptors;
         this.dynamicFeatures = dynamicFeatures;
+        this.sortedGlobalReaderInterceptors = Providers.sortRankedProviders(new RankedComparator<ReaderInterceptor>(),
+                globalReaderInterceptors);
+        this.sortedGlobalWriterInterceptors = Providers.sortRankedProviders(new RankedComparator<WriterInterceptor>(),
+                globalWriterInterceptors);
+
+        this.sortedGlobalRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(),
+                globalRequestFilters);
+        this.sortedGlobalResponseFilters = Providers.sortRankedProviders(new RankedComparator<ContainerResponseFilter>(),
+                globalResponseFilters);
     }
 
     /**
@@ -225,6 +251,24 @@ public class ProcessingProviders {
     }
 
     /**
+     * Get global request filters sorted by priority.
+     *
+     * @return Sorted global request filters.
+     */
+    public Iterable<ContainerRequestFilter> getSortedGlobalRequestFilters() {
+        return sortedGlobalRequestFilters;
+    }
+
+    /**
+     * Get global response filters sorted by priority.
+     *
+     * @return Sorted global response filters.
+     */
+    public Iterable<ContainerResponseFilter> getSortedGlobalResponseFilters() {
+        return sortedGlobalResponseFilters;
+    }
+
+    /**
      * Get global reader interceptors.
      *
      * @return Global reader interceptors ranked providers.
@@ -243,7 +287,26 @@ public class ProcessingProviders {
     }
 
     /**
+     * Get global reader interceptors sorted by priority.
+     *
+     * @return Global reader interceptors.
+     */
+    public Iterable<ReaderInterceptor> getSortedGlobalReaderInterceptors() {
+        return sortedGlobalReaderInterceptors;
+    }
+
+    /**
+     * Get global writer interceptors sorted by priority.
+     *
+     * @return Global writer interceptors.
+     */
+    public Iterable<WriterInterceptor> getSortedGlobalWriterInterceptors() {
+        return sortedGlobalWriterInterceptors;
+    }
+
+    /**
      * Get dynamic features.
+     *
      * @return Dynamic features.
      */
     public Iterable<DynamicFeature> getDynamicFeatures() {
@@ -257,4 +320,28 @@ public class ProcessingProviders {
     public List<RankedProvider<ContainerRequestFilter>> getPreMatchFilters() {
         return preMatchFilters;
     }
+
+    /**
+     * Processing provider binder.
+     */
+    public static class Binder extends AbstractBinder {
+        @Override
+        protected void configure() {
+
+            bindFactory(ProcessingProvidersReferencingFactory.class).to(ProcessingProviders.class).in(PerLookup.class);
+            bindFactory(ReferencingFactory.<ProcessingProviders>referenceFactory())
+                    .to(new TypeLiteral<Ref<ProcessingProviders>>() {
+                    }).in(Singleton.class);
+        }
+
+        private static class ProcessingProvidersReferencingFactory extends ReferencingFactory<ProcessingProviders> {
+            @Inject
+            public ProcessingProvidersReferencingFactory(Provider<Ref<ProcessingProviders>> referenceFactory) {
+                super(referenceFactory);
+            }
+        }
+
+    }
+
+
 }

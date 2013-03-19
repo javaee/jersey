@@ -58,6 +58,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
@@ -89,6 +91,10 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     private boolean asynchronous;
     // true if writeEntity() was already called
     private boolean entityWritten;
+    // writer interceptors used to write the request
+    private Iterable<WriterInterceptor> writerInterceptors;
+    // reader interceptors used to write the request
+    private Iterable<ReaderInterceptor> readerInterceptors;
 
     private static final Logger LOGGER = Logger.getLogger(ClientRequest.class.getName());
 
@@ -120,7 +126,8 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         this.workers = original.workers;
         this.clientConfig = original.clientConfig.snapshot();
         this.asynchronous = original.isAsynchronous();
-
+        this.readerInterceptors = original.readerInterceptors;
+        this.writerInterceptors = original.writerInterceptors;
         this.propertiesDelegate = new MapPropertiesDelegate(original.propertiesDelegate);
     }
 
@@ -429,7 +436,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                     getHeaders(),
                     getPropertiesDelegate(),
                     getEntityStream(),
-                    true);
+                    writerInterceptors);
             setEntityStream(entityStream);
         } finally {
             if (entityStream != null) {
@@ -469,5 +476,37 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
             }
             return mediaType;
         }
+    }
+
+    /**
+     * Set writer interceptors for this request.
+     * @param writerInterceptors Writer interceptors in the interceptor execution order.
+     */
+    void setWriterInterceptors(Iterable<WriterInterceptor> writerInterceptors) {
+        this.writerInterceptors = writerInterceptors;
+    }
+
+    /**
+     * Get writer interceptors of this request.
+     * @return Writer interceptors in the interceptor execution order.
+     */
+    public Iterable<WriterInterceptor> getWriterInterceptors() {
+        return writerInterceptors;
+    }
+
+    /**
+     * Get reader interceptors of this request.
+     * @return Reader interceptors in the interceptor execution order.
+     */
+    public Iterable<ReaderInterceptor> getReaderInterceptors() {
+        return readerInterceptors;
+    }
+
+    /**
+     * Set reader interceptors for this request.
+     * @param readerInterceptors Reader interceptors in the interceptor execution order.
+     */
+    void setReaderInterceptors(Iterable<ReaderInterceptor> readerInterceptors) {
+        this.readerInterceptors = readerInterceptors;
     }
 }

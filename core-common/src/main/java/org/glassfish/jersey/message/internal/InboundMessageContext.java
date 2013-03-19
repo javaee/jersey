@@ -68,12 +68,14 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import com.google.common.base.Function;
@@ -96,6 +98,7 @@ public class InboundMessageContext {
     private final MultivaluedMap<String, String> headers;
     private final EntityContent entityContent;
     private MessageBodyWorkers workers;
+    private Value<Iterable<ReaderInterceptor>> readerInterceptors;
 
     /**
      * Input stream and its state. State is represented by the {@link Type Type enum} and
@@ -822,7 +825,7 @@ public class InboundMessageContext {
                     headers,
                     propertiesDelegate,
                     entityContent.getWrappedStream(),
-                    entityContent.isInterceptable());
+                    entityContent.isInterceptable() ? readerInterceptors.get() : Collections.<ReaderInterceptor>emptyList());
 
             if (!entityContent.isBuffered() && !(t instanceof Closeable) && !(t instanceof Source)) {
                 entityContent.close();
@@ -868,5 +871,14 @@ public class InboundMessageContext {
      */
     public void close() {
         entityContent.close();
+    }
+
+    /**
+     * Set reader interceptors for reading entity from this context.
+     *
+     * @param readerInterceptors A value that returns reader interceptors in the interceptor execution order.
+     */
+    public void setReaderInterceptors(Value<Iterable<ReaderInterceptor>> readerInterceptors) {
+        this.readerInterceptors = readerInterceptors;
     }
 }

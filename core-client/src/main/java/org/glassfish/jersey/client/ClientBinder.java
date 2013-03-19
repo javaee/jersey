@@ -56,7 +56,6 @@ import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.message.internal.ExceptionWrapperInterceptor;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -111,7 +110,6 @@ class ClientBinder extends AbstractBinder {
                 new MessageBodyFactory.Binder(),
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
-                new ExceptionWrapperInterceptor.Binder(),
                 new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class));
 
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {

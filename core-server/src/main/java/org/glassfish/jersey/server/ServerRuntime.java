@@ -85,20 +85,19 @@ import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.inject.ExtractorException;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
+import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Preconditions;
 
@@ -197,7 +196,9 @@ class ServerRuntime {
                         locator.<RespondingContext>getService(RespondingContext.class),
                         exceptionMappers,
                         closeableServiceProvider,
-                        asyncContextProvider, configuration);
+                        asyncContextProvider,
+                        locator.getService(UriRoutingContext.class),
+                        configuration);
 
                 final AsyncResponderHolder asyncResponderHolder = new AsyncResponderHolder(
                         responder, locator, requestScope, requestScope.referenceCurrent(), asyncExecutorsFactory);
@@ -276,6 +277,7 @@ class ServerRuntime {
         private final ExceptionMappers exceptionMappers;
         private final Provider<CloseableService> closeableService;
         private final Provider<AsyncContext> asyncContext;
+        private final UriRoutingContext uriRoutingContext;
         private final Configuration configuration;
 
 
@@ -287,13 +289,16 @@ class ServerRuntime {
                          final RespondingContext respondingCtx,
                          final ExceptionMappers exceptionMappers,
                          final Provider<CloseableService> closeableService,
-                         final Provider<AsyncContext> asyncContext, Configuration configuration) {
+                         final Provider<AsyncContext> asyncContext,
+                         final UriRoutingContext uriRoutingContext,
+                         Configuration configuration) {
 
             this.request = request;
             this.respondingCtx = respondingCtx;
             this.exceptionMappers = exceptionMappers;
             this.closeableService = closeableService;
             this.asyncContext = asyncContext;
+            this.uriRoutingContext = uriRoutingContext;
             this.configuration = configuration;
         }
 
@@ -360,7 +365,7 @@ class ServerRuntime {
             do {
                 if (throwable instanceof MappableException) {
                     inMappable = true;
-                } else if (inMappable || throwable instanceof WebApplicationException){
+                } else if (inMappable || throwable instanceof WebApplicationException) {
                     Response waeResponse = null;
                     if (throwable instanceof WebApplicationException) {
                         waeResponse = ((WebApplicationException) throwable).getResponse();
@@ -456,7 +461,7 @@ class ServerRuntime {
                             response.getHeaders(),
                             request.getPropertiesDelegate(),
                             response.getEntityStream(),
-                            true));
+                            uriRoutingContext.getBoundWriterInterceptors()));
                 } catch (MappableException mpe) {
                     if (mpe.getCause() instanceof IOException) {
                         connectionCallbackRunner.onDisconnect(asyncContext.get());
@@ -490,7 +495,8 @@ class ServerRuntime {
                         }
 
                         try {
-                            ((ChunkedOutput) entity).setContext(request, response, connectionCallbackRunner, asyncContext);
+                            ((ChunkedOutput) entity).setContext(request, response, connectionCallbackRunner, asyncContext,
+                                    uriRoutingContext);
                         } catch (IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                         }

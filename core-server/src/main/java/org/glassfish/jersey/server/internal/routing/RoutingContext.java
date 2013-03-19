@@ -155,7 +155,6 @@ public interface RoutingContext extends ResourceInfo {
 
     /**
      * Get all bound request filters applicable to this request.
-     * This is populated once the right resource method is matched.
      *
      * @return All bound (dynamically or by name) request filters applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
@@ -178,16 +177,15 @@ public interface RoutingContext extends ResourceInfo {
      * @return All reader interceptors applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    public Iterable<RankedProvider<ReaderInterceptor>> getBoundReaderInterceptors();
+    public Iterable<ReaderInterceptor> getBoundReaderInterceptors();
 
     /**
      * Get all writer interceptors applicable to this request.
-     * This is populated once the right resource method is matched.
      *
      * @return All writer interceptors applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    public Iterable<RankedProvider<WriterInterceptor>> getBoundWriterInterceptors();
+    public Iterable<WriterInterceptor> getBoundWriterInterceptors();
 
     /**
      * Set the matched {@link ResourceMethod resource method}. This method needs to be called only if the method was

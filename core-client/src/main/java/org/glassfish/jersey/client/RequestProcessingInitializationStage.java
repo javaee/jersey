@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,13 +39,23 @@
  */
 package org.glassfish.jersey.client;
 
+import java.util.Collections;
+
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.model.internal.RankedComparator;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize
@@ -57,6 +67,8 @@ import com.google.common.base.Function;
 public class RequestProcessingInitializationStage implements Function<ClientRequest, ClientRequest> {
     private final Provider<Ref<ClientRequest>> requestRefProvider;
     private final Provider<MessageBodyWorkers> workersProvider;
+    private final Iterable<WriterInterceptor> writerInterceptors;
+    private final Iterable<ReaderInterceptor> readerInterceptors;
 
     /**
      * Create new {@link org.glassfish.jersey.message.MessageBodyWorkers} initialization function
@@ -64,20 +76,27 @@ public class RequestProcessingInitializationStage implements Function<ClientRequ
      *
      * @param requestRefProvider client request context reference injection provider.
      * @param workersProvider message body workers injection provider.
+     * @param locator service locator.
      */
     @Inject
     public RequestProcessingInitializationStage(
             Provider<Ref<ClientRequest>> requestRefProvider,
-            Provider<MessageBodyWorkers> workersProvider) {
+            Provider<MessageBodyWorkers> workersProvider,
+            ServiceLocator locator) {
         this.requestRefProvider = requestRefProvider;
         this.workersProvider = workersProvider;
+        writerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(locator,
+                WriterInterceptor.class, new RankedComparator<WriterInterceptor>())));
+        readerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.getAllProviders(locator,
+                ReaderInterceptor.class, new RankedComparator<ReaderInterceptor>())));
     }
-
 
     @Override
     public ClientRequest apply(ClientRequest requestContext) {
         requestRefProvider.get().set(requestContext);
         requestContext.setWorkers(workersProvider.get());
+        requestContext.setWriterInterceptors(writerInterceptors);
+        requestContext.setReaderInterceptors(readerInterceptors);
 
         return requestContext;
     }

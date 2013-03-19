@@ -52,6 +52,7 @@ import javax.inject.Provider;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.MappableException;
+import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 
 /**
  * Used for sending messages in "typed" chunks. Useful for long running processes,
@@ -71,6 +72,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     private volatile ContainerResponse responseContext;
     private volatile ServerRuntime.ConnectionCallbackRunner connectionCallbackRunner;
     private volatile Provider<AsyncContext> asyncContext;
+    private volatile UriRoutingContext uriRoutingContext;
 
     /**
      * Create new chunked response.
@@ -147,7 +149,8 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                             responseContext.getEntityStream(),
                             // TODO: (MM) should intercept only for the very first chunk!
                             // TODO: from then on the stream is already wrapped by interceptor streams
-                            true));
+                            // JERSEY-1809
+                            uriRoutingContext.getBoundWriterInterceptors()));
                 } catch (MappableException mpe) {
                     if (mpe.getCause() instanceof IOException) {
                         connectionCallbackRunner.onDisconnect(asyncContext.get());
@@ -254,11 +257,13 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     void setContext(final ContainerRequest requestContext,
                     final ContainerResponse responseContext,
                     final ServerRuntime.ConnectionCallbackRunner connectionCallbackRunner,
-                    final Provider<AsyncContext> asyncContext) throws IOException {
+                    final Provider<AsyncContext> asyncContext,
+                    final UriRoutingContext uriRoutingContext) throws IOException {
         this.requestContext = requestContext;
         this.responseContext = responseContext;
         this.connectionCallbackRunner = connectionCallbackRunner;
         this.asyncContext = asyncContext;
+        this.uriRoutingContext = uriRoutingContext;
         flushQueue();
     }
 }
