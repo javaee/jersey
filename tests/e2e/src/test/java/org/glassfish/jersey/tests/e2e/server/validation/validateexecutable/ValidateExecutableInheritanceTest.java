@@ -47,7 +47,7 @@ import javax.ws.rs.core.Application;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.executable.ExecutableType;
-import javax.validation.executable.ValidateExecutable;
+import javax.validation.executable.ValidateOnExecution;
 
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -63,64 +63,64 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
      */
 
     /**
-     * {@link ValidateExecutable} annotations from this interface should be considered during validating phase.
+     * {@link ValidateOnExecution} annotations from this interface should be considered during validating phase.
      */
     @SuppressWarnings({"UnusedDeclaration", "JavaDoc"})
     public static interface ValidateExecutableOnMethodsValidation {
 
         @Min(0)
-        @ValidateExecutable
+        @ValidateOnExecution
         public Integer validateExecutableDefault(@Max(10) final Integer value);
 
         @Min(0)
-        @ValidateExecutable(ExecutableType.NON_GETTER_METHODS)
+        @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
         public Integer validateExecutableMatch(@Max(10) final Integer value);
 
         @Min(0)
-        @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+        @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
         public Integer validateExecutableMiss(@Max(10) final Integer value);
 
         @Min(0)
-        @ValidateExecutable(ExecutableType.NONE)
+        @ValidateOnExecution(type = ExecutableType.NONE)
         public Integer validateExecutableNone(@Max(10) final Integer value);
     }
 
-    @ValidateExecutable(ExecutableType.ALL)
+    @ValidateOnExecution(type = ExecutableType.ALL)
     public static interface ValidateExecutableOnMethodsJaxRs extends ValidateExecutableOnMethodsValidation {
 
         @POST
         @Path("validateExecutableDefault")
-        @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+        @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
         Integer validateExecutableDefault(final Integer value);
 
         @POST
         @Path("validateExecutableMatch")
-        @ValidateExecutable(ExecutableType.GETTER_METHODS)
+        @ValidateOnExecution(type = ExecutableType.GETTER_METHODS)
         Integer validateExecutableMatch(final Integer value);
 
         @POST
         @Path("validateExecutableMiss")
-        @ValidateExecutable(ExecutableType.NON_GETTER_METHODS)
+        @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
         Integer validateExecutableMiss(final Integer value);
 
         @POST
         @Path("validateExecutableNone")
-        @ValidateExecutable(ExecutableType.ALL)
+        @ValidateOnExecution(type = ExecutableType.ALL)
         Integer validateExecutableNone(final Integer value);
     }
 
     public static abstract class ValidateExecutableOnMethodsAbstractResource implements ValidateExecutableOnMethodsJaxRs {
 
-        @ValidateExecutable(ExecutableType.NONE)
+        @ValidateOnExecution(type = ExecutableType.NONE)
         public abstract Integer validateExecutableDefault(final Integer value);
 
-        @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+        @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
         public abstract Integer validateExecutableMatch(final Integer value);
 
-        @ValidateExecutable(ExecutableType.ALL)
+        @ValidateOnExecution(type = ExecutableType.ALL)
         public abstract Integer validateExecutableMiss(final Integer value);
 
-        @ValidateExecutable(ExecutableType.NON_GETTER_METHODS)
+        @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
         public abstract Integer validateExecutableNone(final Integer value);
     }
 
@@ -157,13 +157,13 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     }
 
     /**
-     * This {@link ValidateExecutable} annotation should be considered during validating phase.
+     * This {@link ValidateOnExecution} annotation should be considered during validating phase.
      */
-    @ValidateExecutable
+    @ValidateOnExecution
     public static interface ValidateExecutableOnTypeDefault extends ValidateExecutableOnType {
     }
 
-    @ValidateExecutable(ExecutableType.GETTER_METHODS)
+    @ValidateOnExecution(type = ExecutableType.GETTER_METHODS)
     public static abstract class ValidateExecutableOnTypeDefaultAbstractResource implements ValidateExecutableOnTypeDefault {
 
         public Integer validateExecutable(final Integer value) {
@@ -172,18 +172,18 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     }
 
     @Path("on-type-default")
-    @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+    @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
     public static class ValidateExecutableOnTypeDefaultResource extends ValidateExecutableOnTypeDefaultAbstractResource {
     }
 
     /**
-     * This {@link ValidateExecutable} annotation should be considered during validating phase.
+     * This {@link ValidateOnExecution} annotation should be considered during validating phase.
      */
-    @ValidateExecutable(ExecutableType.NON_GETTER_METHODS)
+    @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
     public static interface ValidateExecutableOnTypeMatch extends ValidateExecutableOnType {
     }
 
-    @ValidateExecutable(ExecutableType.GETTER_METHODS)
+    @ValidateOnExecution(type = ExecutableType.GETTER_METHODS)
     public static abstract class ValidateExecutableOnTypeMatchAbstractResource implements ValidateExecutableOnTypeMatch {
 
         public Integer validateExecutable(final Integer value) {
@@ -192,18 +192,18 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     }
 
     @Path("on-type-match")
-    @ValidateExecutable(ExecutableType.NONE)
+    @ValidateOnExecution(type = ExecutableType.NONE)
     public static class ValidateExecutableOnTypeMatchResource extends ValidateExecutableOnTypeMatchAbstractResource {
     }
 
     /**
-     * This {@link ValidateExecutable} annotation should be considered during validating phase.
+     * This {@link ValidateOnExecution} annotation should be considered during validating phase.
      */
-    @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+    @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
     public static interface ValidateExecutableOnTypeMiss extends ValidateExecutableOnType {
     }
 
-    @ValidateExecutable(ExecutableType.NON_GETTER_METHODS)
+    @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
     public static abstract class ValidateExecutableOnTypeMissAbstractResource implements ValidateExecutableOnTypeMiss {
 
         public Integer validateExecutable(final Integer value) {
@@ -212,18 +212,18 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     }
 
     @Path("on-type-miss")
-    @ValidateExecutable
+    @ValidateOnExecution
     public static class ValidateExecutableOnTypeMissResource extends ValidateExecutableOnTypeMissAbstractResource {
     }
 
     /**
-     * This {@link ValidateExecutable} annotation should be considered during validating phase.
+     * This {@link ValidateOnExecution} annotation should be considered during validating phase.
      */
-    @ValidateExecutable(ExecutableType.NONE)
+    @ValidateOnExecution(type = ExecutableType.NONE)
     public static interface ValidateExecutableOnTypeNone extends ValidateExecutableOnType {
     }
 
-    @ValidateExecutable(ExecutableType.ALL)
+    @ValidateOnExecution(type = ExecutableType.ALL)
     public static abstract class ValidateExecutableOnTypeNoneAbstractResource implements ValidateExecutableOnTypeNone {
 
         public Integer validateExecutable(final Integer value) {
@@ -232,7 +232,7 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     }
 
     @Path("on-type-none")
-    @ValidateExecutable({ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS})
+    @ValidateOnExecution(type = {ExecutableType.CONSTRUCTORS, ExecutableType.NON_GETTER_METHODS})
     public static class ValidateExecutableOnTypeNoneResource extends ValidateExecutableOnTypeNoneAbstractResource {
     }
 
@@ -240,11 +240,11 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
      * MIXED.
      */
 
-    @ValidateExecutable(ExecutableType.NONE)
+    @ValidateOnExecution(type = ExecutableType.NONE)
     public static interface ValidateExecutableMixedDefault {
 
         @Min(0)
-        @ValidateExecutable
+        @ValidateOnExecution
         public Integer validateExecutable(@Max(10) final Integer value);
     }
 
@@ -252,17 +252,17 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     public static class ValidateExecutableMixedDefaultResource implements ValidateExecutableMixedDefault {
 
         @POST
-        @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+        @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
         public Integer validateExecutable(final Integer value) {
             return value;
         }
     }
 
-    @ValidateExecutable
+    @ValidateOnExecution
     public static interface ValidateExecutableMixedNone {
 
         @Min(0)
-        @ValidateExecutable(ExecutableType.NONE)
+        @ValidateOnExecution(type = ExecutableType.NONE)
         public Integer validateExecutable(@Max(10) final Integer value);
     }
 
@@ -270,13 +270,13 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     public static class ValidateExecutableMixedNoneResource implements ValidateExecutableMixedNone {
 
         @POST
-        @ValidateExecutable(ExecutableType.ALL)
+        @ValidateOnExecution(type = ExecutableType.ALL)
         public Integer validateExecutable(final Integer value) {
             return value;
         }
     }
 
-    @ValidateExecutable
+    @ValidateOnExecution
     public static interface ValidateExecutableMixedClassDefault {
 
         @Min(0)
@@ -284,17 +284,17 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     }
 
     @Path("mixed-class-default")
-    @ValidateExecutable(ExecutableType.NONE)
+    @ValidateOnExecution(type = ExecutableType.NONE)
     public static class ValidateExecutableMixedClassDefaultResource implements ValidateExecutableMixedClassDefault {
 
         @POST
-        @ValidateExecutable(ExecutableType.CONSTRUCTORS)
+        @ValidateOnExecution(type = ExecutableType.CONSTRUCTORS)
         public Integer validateExecutable(final Integer value) {
             return value;
         }
     }
 
-    @ValidateExecutable(ExecutableType.NONE)
+    @ValidateOnExecution(type = ExecutableType.NONE)
     public static interface ValidateExecutableMixedClassNone {
 
         @Min(0)
@@ -302,11 +302,11 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     }
 
     @Path("mixed-class-none")
-    @ValidateExecutable(ExecutableType.NON_GETTER_METHODS)
+    @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
     public static class ValidateExecutableMixedClassNoneResource implements ValidateExecutableMixedClassNone {
 
         @POST
-        @ValidateExecutable(ExecutableType.ALL)
+        @ValidateOnExecution(type = ExecutableType.ALL)
         public Integer validateExecutable(final Integer value) {
             return value;
         }
@@ -331,13 +331,13 @@ public class ValidateExecutableInheritanceTest extends ValidateExecutableBasicTe
     }
 
     @Test
-    public void testMixedClassValidateInputFailDefault() throws Exception {
-        _test("mixed-class-default", 15, 400);
+    public void testMixedClassValidateInputPassNoValidateDefault() throws Exception {
+        _test("mixed-class-default", 15, 200);
     }
 
     @Test
-    public void testMixedClassValidateResultFailDefault() throws Exception {
-        _test("mixed-class-default", -15, 500);
+    public void testMixedClassValidateResultPassNoValidateDefault() throws Exception {
+        _test("mixed-class-default", -15, 200);
     }
 
     @Test

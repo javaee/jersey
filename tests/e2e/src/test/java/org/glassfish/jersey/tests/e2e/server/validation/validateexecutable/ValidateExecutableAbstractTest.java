@@ -139,8 +139,8 @@ public abstract class ValidateExecutableAbstractTest extends JerseyTest {
     }
 
     @Test
-    public void testOnTypeValidateInputFailValidateExecutableDefault() throws Exception {
-        _testOnType("default", 15, 400);
+    public void testOnTypeValidateInputPassNoValidateExecutableDefault() throws Exception {
+        _testOnType("default", 15, 200);
     }
 
     @Test
@@ -179,8 +179,8 @@ public abstract class ValidateExecutableAbstractTest extends JerseyTest {
     }
 
     @Test
-    public void testOnTypeValidateResultFailValidateExecutableDefault() throws Exception {
-        _testOnType("default", -15, 500);
+    public void testOnTypeValidateResultPassNoValidateExecutableDefault() throws Exception {
+        _testOnType("default", -15, 200);
     }
 
     @Test

@@ -42,10 +42,8 @@ package org.glassfish.jersey.server.validation.internal;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -58,7 +56,7 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ExecutableValidator;
-import javax.validation.executable.ValidateExecutable;
+import javax.validation.executable.ValidateOnExecution;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.MethodDescriptor;
 
@@ -137,19 +135,17 @@ public class ConfiguredValidatorImpl implements ConfiguredValidator {
             constraintViolations.addAll(validate(resource));
         }
 
-        if (beanDescriptor.hasConstrainedExecutables()) {
-            final Method validationMethod = resourceMethod.getValidateMethod();
+        final Method validationMethod = resourceMethod.getValidateMethod();
 
-            // Resource method validation - input parameters.
-            final Method handlingMethod = resourceMethod.getHandlingMethod();
-            final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
-                    validationMethod.getParameterTypes());
+        // Resource method validation - input parameters.
+        final Method handlingMethod = resourceMethod.getHandlingMethod();
+        final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
+                validationMethod.getParameterTypes());
 
-            if (methodDescriptor != null
-                    && methodDescriptor.areParametersConstrained()
-                    && validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
-                constraintViolations.addAll(forExecutables().validateParameters(resource, validationMethod, args));
-            }
+        if (methodDescriptor != null
+                && methodDescriptor.hasConstrainedParameters()
+                && validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
+            constraintViolations.addAll(forExecutables().validateParameters(resource, validationMethod, args));
         }
 
         if (!constraintViolations.isEmpty()) {
@@ -164,25 +160,23 @@ public class ConfiguredValidatorImpl implements ConfiguredValidator {
 
         final BeanDescriptor beanDescriptor = getConstraintsForClass(resource.getClass());
 
-        if (beanDescriptor.hasConstrainedExecutables()) {
-            final Method handlingMethod = resourceMethod.getHandlingMethod();
-            final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
-                    validationMethod.getParameterTypes());
+        final Method handlingMethod = resourceMethod.getHandlingMethod();
+        final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
+                validationMethod.getParameterTypes());
 
-            if (methodDescriptor != null
-                    && methodDescriptor.isReturnValueConstrained()
-                    && validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
-                constraintViolations.addAll(forExecutables().validateReturnValue(resource, validationMethod, result));
+        if (methodDescriptor != null
+                && methodDescriptor.hasConstrainedReturnValue()
+                && validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
+            constraintViolations.addAll(forExecutables().validateReturnValue(resource, validationMethod, result));
 
-                if (result instanceof Response) {
-                    constraintViolations.addAll(forExecutables().validateReturnValue(resource, validationMethod,
-                            ((Response) result).getEntity()));
-                }
+            if (result instanceof Response) {
+                constraintViolations.addAll(forExecutables().validateReturnValue(resource, validationMethod,
+                        ((Response) result).getEntity()));
             }
+        }
 
-            if (!constraintViolations.isEmpty()) {
-                throw new ConstraintViolationException(constraintViolations);
-            }
+        if (!constraintViolations.isEmpty()) {
+            throw new ConstraintViolationException(constraintViolations);
         }
     }
 
@@ -204,21 +198,21 @@ public class ConfiguredValidatorImpl implements ConfiguredValidator {
                     // Method.
                     ExecutableType[] executableTypes = getExecutableTypes(overriddenMethod);
                     if (executableTypes != null) {
-                        validateMethodCache.putIfAbsent(validationMethod, validateMethod(overriddenMethod, executableTypes));
+                        validateMethodCache.putIfAbsent(validationMethod, validateMethod(overriddenMethod, true, executableTypes));
                         break;
                     }
                     // Class.
                     executableTypes = getExecutableTypes(overriddenClass);
                     if (executableTypes != null) {
-                        validateMethodCache.putIfAbsent(validationMethod, validateMethod(overriddenMethod, executableTypes));
+                        validateMethodCache.putIfAbsent(validationMethod, validateMethod(overriddenMethod, false, executableTypes));
                         break;
                     }
                 }
             }
 
             // Return value from validation.xml.
-            validateMethodCache.putIfAbsent(validationMethod, validateMethod(method, configuration.getBootstrapConfiguration()
-                    .getValidatedExecutableTypes()));
+            validateMethodCache.putIfAbsent(validationMethod, validateMethod(method, false,
+                    configuration.getBootstrapConfiguration().getDefaultValidatedExecutableTypes()));
         }
         return validateMethodCache.get(validationMethod);
     }
@@ -227,22 +221,25 @@ public class ConfiguredValidatorImpl implements ConfiguredValidator {
      * Determine whether the given {@link Method method} should be validated depending on the given {@code executableTypes}.
      *
      * @param method method to be examined.
+     * @param allowImplicit allows check for {@link ExecutableType#IMPLICIT} type.
      * @param executableTypes executable types assigned to the method.
      * @return {@code true} if the method should be validated, {@code false otherwise}.
      */
-    private boolean validateMethod(final Method method, final ExecutableType... executableTypes) {
-        return validateMethod(method, Sets.newHashSet(executableTypes));
+    private boolean validateMethod(final Method method, final boolean allowImplicit, final ExecutableType... executableTypes) {
+        return validateMethod(method, allowImplicit, Sets.newHashSet(executableTypes));
     }
 
     /**
      * Determine whether the given {@link Method method} should be validated depending on the given {@code executableTypes}.
      *
      * @param method method to be examined.
+     * @param allowImplicit allows check for {@link ExecutableType#IMPLICIT} type.
      * @param executableTypes executable types assigned to the method.
      * @return {@code true} if the method should be validated, {@code false otherwise}.
      */
-    private boolean validateMethod(final Method method, final Set<ExecutableType> executableTypes) {
-        if (executableTypes.contains(ExecutableType.ALL)) {
+    private boolean validateMethod(final Method method, final boolean allowImplicit, final Set<ExecutableType> executableTypes) {
+        if (executableTypes.contains(ExecutableType.ALL)
+                || (allowImplicit && executableTypes.contains(ExecutableType.IMPLICIT))) {
             return true;
         }
         return ReflectionHelper.isGetter(method) ? executableTypes.contains(ExecutableType.GETTER_METHODS)
@@ -250,18 +247,18 @@ public class ConfiguredValidatorImpl implements ConfiguredValidator {
     }
 
     /**
-     * Return an array of executable types contained in {@link ValidateExecutable} annotation belonging to the {@code element}.
+     * Return an array of executable types contained in {@link ValidateOnExecution} annotation belonging to the {@code element}.
      *
-     * @param element element to be examined for {@link ValidateExecutable}.
-     * @return an array of executable types or {@code null} if the element is not annotated with {@link ValidateExecutable}.
+     * @param element element to be examined for {@link ValidateOnExecution}.
+     * @return an array of executable types or {@code null} if the element is not annotated with {@link ValidateOnExecution}.
      */
     private ExecutableType[] getExecutableTypes(final AnnotatedElement element) {
-        final ValidateExecutable validateExecutable = element.getAnnotation(ValidateExecutable.class);
-        return validateExecutable != null ? validateExecutable.value() : null;
+        final ValidateOnExecution validateExecutable = element.getAnnotation(ValidateOnExecution.class);
+        return validateExecutable != null ? validateExecutable.type() : null;
     }
 
     /**
-     * Get a class hierarchy for the given {@code clazz} suitable to be looked for {@link ValidateExecutable} annotation
+     * Get a class hierarchy for the given {@code clazz} suitable to be looked for {@link ValidateOnExecution} annotation
      * in order according to the priority defined by Bean Validation spec (superclasses, interfaces).
      *
      * @param clazz class to obtain hierarchy for.
