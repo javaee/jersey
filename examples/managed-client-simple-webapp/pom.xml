@@ -49,7 +49,7 @@
 
     <artifactId>managed-client-simple-webapp</artifactId>
     <packaging>jar</packaging>
-    <name>Jersey managed client simple web application example</name>
+    <name>jersey-examples-managed-client-simple-webapp</name>
 
     <dependencies>
         <dependency>
@@ -70,7 +70,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>            
+            </plugin>
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>maven-jetty-plugin</artifactId>
