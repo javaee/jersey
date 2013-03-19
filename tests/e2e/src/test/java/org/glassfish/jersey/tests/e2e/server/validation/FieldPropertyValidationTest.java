@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,69 +40,81 @@
 
 package org.glassfish.jersey.tests.e2e.server.validation;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Produces;
-import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.executable.ExecutableType;
-import javax.validation.executable.ValidateOnExecution;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 
-import org.hibernate.validator.constraints.Email;
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@NonEmptyNames
-@ValidateOnExecution(type = ExecutableType.ALL)
-public class BasicSubResource {
+public class FieldPropertyValidationTest extends JerseyTest {
 
-    @NotNull
-    @FormParam("firstName")
-    private String firstName;
-
-    @NotNull
-    @FormParam("lastName")
-    private String lastName;
-
-    private String email;
-
-    /**
-     * Note: Constructor input parameter should not be validated.
-     */
-    @SuppressWarnings("UnusedParameters")
-    public BasicSubResource(@NotNull @Context final ResourceContext resourceContext) {
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(FieldPropertyValidationResource.class);
     }
 
-    @FormParam("email")
-    public void setEmail(String email) {
-        this.email = email;
+    @Test
+    public void testValid() throws Exception {
+        _test("valid", 200);
     }
 
-    @NotNull
-    @Email(regexp = "[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}")
-    public String getEmail() {
-        return email;
+    @Test
+    public void testInvalidPropertyGetterAndClassNull() throws Exception {
+        _test("invalidPropertyGetterAndClassNull", 400);
     }
 
-    public String getFirstName() {
-        return firstName;
+    @Test
+    public void testValidPropertyGetterAndClassLong() throws Exception {
+        _test("validPropertyGetterAndClassLong", 200);
     }
 
-    public String getLastName() {
-        return lastName;
+    @Test
+    public void testInvalidPropertyAndClassNull() throws Exception {
+        _test("invalidPropertyAndClassNull", 400);
     }
 
-    @POST
-    @Consumes("application/x-www-form-urlencoded")
-    @Produces("application/contactBean")
-    public ContactBean getContactValidationBean() {
-        final ContactBean contactBean = new ContactBean();
-        contactBean.setName(firstName + " " + lastName);
-        contactBean.setEmail(getEmail());
-        return contactBean;
+    @Test
+    public void testInvalidFieldAndClassNull() throws Exception {
+        _test("invalidFieldAndClassNull", 400);
+    }
+
+    @Test
+    public void testInvalidPropertyGetterNull() throws Exception {
+        _test("invalidPropertyGetterNull", 400);
+    }
+
+    @Test
+    public void testValidPropertyGetterLong() throws Exception {
+        _test("validPropertyGetterLong", 200);
+    }
+
+    @Test
+    public void testInvalidPropertyNull() throws Exception {
+        _test("invalidPropertyNull", 400);
+    }
+
+    @Test
+    public void testInvalidFieldNull() throws Exception {
+        _test("invalidFieldNull", 400);
+    }
+
+    private void _test(final String path, final int status) {
+        final Response response = target("fieldPropertyValidationResource")
+                .path(path)
+                .request()
+                .get();
+
+        assertThat(response.getStatus(), equalTo(status));
+
+        if (status == 200) {
+            assertThat(response.readEntity(String.class), equalTo("ok"));
+        }
     }
 }

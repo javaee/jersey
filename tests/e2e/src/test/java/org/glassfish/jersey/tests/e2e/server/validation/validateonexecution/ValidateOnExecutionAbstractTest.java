@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.tests.e2e.server.validation.validateexecutable;
+package org.glassfish.jersey.tests.e2e.server.validation.validateonexecution;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
@@ -51,7 +51,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public abstract class ValidateExecutableAbstractTest extends JerseyTest {
+public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
 
     @Test
     public void testOnMethodValidateInputPassValidateExecutableDefault() throws Exception {
@@ -139,11 +139,6 @@ public abstract class ValidateExecutableAbstractTest extends JerseyTest {
     }
 
     @Test
-    public void testOnTypeValidateInputPassNoValidateExecutableDefault() throws Exception {
-        _testOnType("default", 15, 200);
-    }
-
-    @Test
     public void testOnTypeValidateInputPassValidateExecutableMatch() throws Exception {
         _testOnType("match", 0, 200);
     }
@@ -176,11 +171,6 @@ public abstract class ValidateExecutableAbstractTest extends JerseyTest {
     @Test
     public void testOnTypeValidateResultPassValidateExecutableDefault() throws Exception {
         _testOnType("default", 0, 200);
-    }
-
-    @Test
-    public void testOnTypeValidateResultPassNoValidateExecutableDefault() throws Exception {
-        _testOnType("default", -15, 200);
     }
 
     @Test
