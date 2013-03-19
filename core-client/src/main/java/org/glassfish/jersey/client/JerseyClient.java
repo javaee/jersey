@@ -43,6 +43,8 @@ import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
@@ -52,6 +54,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.SslConfigurator;
+import org.glassfish.jersey.client.internal.LocalizationMessages;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -63,6 +66,9 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyClient implements javax.ws.rs.client.Client {
+
+    private static final Logger LOGGER = Logger.getLogger(JerseyClient.class.getName());
+
     private final AtomicBoolean closedFlag = new AtomicBoolean(false);
     private final ClientConfig config;
     private final HostnameVerifier hostnameVerifier;
@@ -141,41 +147,41 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * @throws IllegalStateException in case the client instance has been closed already.
      */
     void checkNotClosed() throws IllegalStateException {
-        checkState(!closedFlag.get(), "Client instance has been closed.");
+        checkState(!closedFlag.get(), LocalizationMessages.CLIENT_INSTANCE_CLOSED());
     }
 
     @Override
     public JerseyWebTarget target(String uri) throws IllegalArgumentException, NullPointerException {
         checkNotClosed();
-        checkNotNull(uri, "URI template of the newly created target must not be 'null'.");
+        checkNotNull(uri, LocalizationMessages.CLIENT_URI_TEMPLATE_NULL());
         return new JerseyWebTarget(uri, this);
     }
 
     @Override
     public JerseyWebTarget target(URI uri) throws NullPointerException {
         checkNotClosed();
-        checkNotNull(uri, "URI of the newly created target must not be 'null'.");
+        checkNotNull(uri, LocalizationMessages.CLIENT_URI_NULL());
         return new JerseyWebTarget(uri, this);
     }
 
     @Override
     public JerseyWebTarget target(UriBuilder uriBuilder) throws NullPointerException {
         checkNotClosed();
-        checkNotNull(uriBuilder, "URI builder of the newly created target must not be 'null'.");
+        checkNotNull(uriBuilder, LocalizationMessages.CLIENT_URI_BUILDER_NULL());
         return new JerseyWebTarget(uriBuilder, this);
     }
 
     @Override
     public JerseyWebTarget target(Link link) throws NullPointerException {
         checkNotClosed();
-        checkNotNull(link, "Link to the newly created target must not be 'null'.");
+        checkNotNull(link, LocalizationMessages.CLIENT_TARGET_LINK_NULL());
         return new JerseyWebTarget(link, this);
     }
 
     @Override
     public JerseyInvocation.Builder invocation(Link link) throws NullPointerException, IllegalArgumentException {
         checkNotClosed();
-        checkNotNull(link, "Link of the newly created invocation must not be 'null'.");
+        checkNotNull(link, LocalizationMessages.CLIENT_INVOCATION_LINK_NULL());
         JerseyWebTarget t = new JerseyWebTarget(link, this);
         final String acceptType = link.getType();
         return (acceptType != null) ? t.request(acceptType) : t.request();
@@ -205,7 +211,11 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     @Override
     public JerseyClient register(Class<?> providerClass, Class<?>... contracts) {
         checkNotClosed();
-        config.register(providerClass, contracts);
+        if (contracts != null && contracts.length > 0) {
+            config.register(providerClass, contracts);
+        } else {
+            LOGGER.log(Level.WARNING, LocalizationMessages.CLIENT_REGISTER_EMPTY_CONTRACT(providerClass));
+        }
         return this;
     }
 

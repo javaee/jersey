@@ -64,6 +64,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -136,6 +137,12 @@ public class JerseyClientTest {
     @Test(expected = IllegalArgumentException.class)
     public void testTargetIAE() {
         final UriBuilder uriBuilder = UriBuilder.fromUri(":xxx:8080//yyy:90090//jaxrs ");
+    }
+
+    @Test
+    public void testRegister() {
+        client.register(JerseyClientTest.class,  (Class<?>[]) null);
+        assertFalse(client.getConfiguration().isRegistered(JerseyClientTest.class));
     }
 
     @Test
