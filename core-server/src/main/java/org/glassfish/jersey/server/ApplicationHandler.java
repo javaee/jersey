@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.server;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.security.Principal;
@@ -84,6 +83,7 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.message.internal.NullOutputStream;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.model.internal.RankedComparator;
@@ -704,12 +704,7 @@ public final class ApplicationHandler {
      * @return response future.
      */
     public Future<ContainerResponse> apply(final ContainerRequest requestContext) {
-        return apply(requestContext, new OutputStream() {
-            @Override
-            public void write(int i) throws IOException {
-                // dummy
-            }
-        });
+        return apply(requestContext, new NullOutputStream());
     }
 
     /**
