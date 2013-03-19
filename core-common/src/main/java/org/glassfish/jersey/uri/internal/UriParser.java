@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.uri.internal;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
+
 /**
  * Parser for string URI with template parameters which produces {@link java.net.URI URIs} from Strings.
  * Example of parsed uri: {@code "http://user@{host}:{port}/a/{path}?query=1#fragment"}.
@@ -49,7 +51,7 @@ package org.glassfish.jersey.uri.internal;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class UriParser {
-    private static final String ERROR_STATE = "The parser was not executed yet. Call the parse() method first.";
+    private static final String ERROR_STATE = LocalizationMessages.URI_PARSER_NOT_EXECUTED();
     private final String input;
     private CharacterIterator ci;
     private String scheme;
@@ -131,7 +133,7 @@ class UriParser {
         if (mayEnd) {
             return sb.length() == 0 ? null : sb.toString();
         }
-        throw new IllegalArgumentException("does not end by a delimiter '" + delimiters + "'");
+        throw new IllegalArgumentException(LocalizationMessages.URI_PARSER_COMPONENT_DELIMITER(delimiters, ci.pos()));
     }
 
     /**
@@ -154,6 +156,9 @@ class UriParser {
         this.opaque = false;
         if (ci.current() == ':') {
             // absolute
+            if (comp == null) {
+                throw new IllegalArgumentException(LocalizationMessages.URI_PARSER_SCHEME_EXPECTED(ci.pos(), input));
+            }
             scheme = comp;
             char c = ci.next();
             if (c == '/') {

@@ -133,6 +133,11 @@ public class JerseyClientTest {
         assertEquals(client.getConfiguration(), target.getConfiguration());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testTargetIAE() {
+        final UriBuilder uriBuilder = UriBuilder.fromUri(":xxx:8080//yyy:90090//jaxrs ");
+    }
+
     @Test
     public void testTargetConfigUpdate() {
         final JerseyWebTarget target = client.target("http://jersey.java.net/examples");
