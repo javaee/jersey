@@ -50,6 +50,8 @@ import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.util.collection.UnsafeValue;
+import org.glassfish.jersey.internal.util.collection.Values;
 
 /**
  * Jersey provider of {@link javax.ws.rs.client.ClientBuilder JAX-RS client builder}.
@@ -118,15 +120,22 @@ public class JerseyClientBuilder extends ClientBuilder {
 
     @Override
     public JerseyClient build() {
-        SSLContext ctx = sslContext;
-        if (ctx == null) {
-            if (sslConfigurator != null) {
-                ctx = sslConfigurator.createSSLContext();
-            } else {
-                ctx = SslConfigurator.getDefaultContext();
-            }
+        if (sslContext != null) {
+            return new JerseyClient(config, sslContext, hostnameVerifier);
+        } else if (sslConfigurator != null) {
+            final SslConfigurator sslConfiguratorCopy = sslConfigurator.copy();
+            return new JerseyClient(
+                    config,
+                    Values.lazy(new UnsafeValue<SSLContext, IllegalStateException>() {
+                        @Override
+                        public SSLContext get() throws IllegalStateException {
+                            return sslConfiguratorCopy.createSSLContext();
+                        }
+                    }),
+                    hostnameVerifier);
+        } else {
+            return new JerseyClient(config, (UnsafeValue<SSLContext, IllegalStateException>) null, hostnameVerifier);
         }
-        return new JerseyClient(config, ctx, hostnameVerifier);
     }
 
     @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -85,6 +85,12 @@ public class Servlet25Init1ITCase extends JerseyTest {
     public void testHelloWorldAtWrongPath() {
         Response r = target().path("application_path/helloworld").request().get();
         assertTrue("Request to application_path/helloworld should have failed, but did not. That means two applications are registered.", r.getStatus() >= 400);
+    }
+
+    @Test
+    public void testHelloWorldViaClientInResource() throws Exception {
+        String s = target().path("servlet_path/viaclient/helloworld").request().get(String.class);
+        assertEquals("Hello World! " + this.getClass().getPackage().getName(), s);
     }
 
     @Test

@@ -51,7 +51,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Arrays;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -232,13 +234,15 @@ public final class SslConfigurator {
      * </p>
      */
     public static final String TRUST_MANAGER_FACTORY_PROVIDER = "ssl.trustManagerFactory.provider";
-
     /**
-     * Default SSL configuration. If you have changed any of
-     * {@link System#getProperties()} of javax.net.ssl family you should refresh
-     * this configuration by calling {@link #retrieve(java.util.Properties)}.
+     * Default SSL configuration that is used to create default SSL context instances that do not take into
+     * account system properties.
      */
-    private static final SslConfigurator DEFAULT_CONFIG = new SslConfigurator(true);
+    private static final SslConfigurator DEFAULT_CONFIG_NO_PROPS = new SslConfigurator(false);
+    /**
+     * Logger.
+     */
+    private static final Logger LOGGER = Logger.getLogger(SslConfigurator.class.getName());
 
     private KeyStore keyStore;
     private KeyStore trustStore;
@@ -268,13 +272,33 @@ public final class SslConfigurator {
     private String securityProtocol = "TLS";
 
     /**
-     * Get a new instance of a {@link SSLContext} configured using default
-     * configuration settings.
+     * Get a new instance of a {@link SSLContext} configured using default configuration settings.
      *
-     * @return new instance of a default SSL context.
+     * The default SSL configuration is initialized from system properties. This method is a shortcut
+     * for {@link #getDefaultContext(boolean) getDefaultContext(true)}.
+     *
+     * @return new instance of a default SSL context initialized from system properties.
      */
     public static SSLContext getDefaultContext() {
-        return DEFAULT_CONFIG.createSSLContext();
+        return getDefaultContext(true);
+    }
+
+    /**
+     * Get a new instance of a {@link SSLContext} configured using default configuration settings.
+     *
+     * If {@code readSystemProperties} parameter is set to {@code true}, the default SSL configuration
+     * is initialized from system properties.
+     *
+     * @param readSystemProperties if {@code true}, the default SSL context will be initialized using
+     *                             system properties.
+     * @return new instance of a default SSL context initialized from system properties.
+     */
+    public static SSLContext getDefaultContext(boolean readSystemProperties) {
+        if (readSystemProperties) {
+            return new SslConfigurator(true).createSSLContext();
+        } else {
+            return DEFAULT_CONFIG_NO_PROPS.createSSLContext();
+        }
     }
 
     /**
@@ -286,7 +310,7 @@ public final class SslConfigurator {
      * @return new & initialized SSL configurator instance.
      */
     public static SslConfigurator newInstance() {
-        return new SslConfigurator(true);
+        return new SslConfigurator(false);
     }
 
     /**
@@ -305,6 +329,36 @@ public final class SslConfigurator {
         if (readSystemProperties) {
             retrieve(System.getProperties());
         }
+    }
+
+    private SslConfigurator(SslConfigurator that) {
+        this.keyStore = that.keyStore;
+        this.trustStore = that.trustStore;
+        this.trustStoreProvider = that.trustStoreProvider;
+        this.keyStoreProvider = that.keyStoreProvider;
+        this.trustStoreType = that.trustStoreType;
+        this.keyStoreType = that.keyStoreType;
+        this.trustStorePass = that.trustStorePass;
+        this.keyStorePass = that.keyStorePass;
+        this.keyPass = that.keyPass;
+        this.trustStoreFile = that.trustStoreFile;
+        this.keyStoreFile = that.keyStoreFile;
+        this.trustStoreBytes = that.trustStoreBytes;
+        this.keyStoreBytes = that.keyStoreBytes;
+        this.trustManagerFactoryAlgorithm = that.trustManagerFactoryAlgorithm;
+        this.keyManagerFactoryAlgorithm = that.keyManagerFactoryAlgorithm;
+        this.trustManagerFactoryProvider = that.trustManagerFactoryProvider;
+        this.keyManagerFactoryProvider = that.keyManagerFactoryProvider;
+        this.securityProtocol = that.securityProtocol;
+    }
+
+    /**
+     * Create a copy of the current SSL configurator instance.
+     *
+     * @return copy of the current SSL configurator instance
+     */
+    public SslConfigurator copy() {
+        return new SslConfigurator(this);
     }
 
     /**
@@ -641,7 +695,18 @@ public final class SslConfigurator {
                 } else {
                     keyManagerFactory = KeyManagerFactory.getInstance(kmfAlgorithm);
                 }
-                keyManagerFactory.init(_keyStore, keyPass != null ? keyPass : keyStorePass);
+                final char[] password = keyPass != null ? keyPass : keyStorePass;
+                if (password != null) {
+                    keyManagerFactory.init(_keyStore, password);
+                } else {
+                    String ksName =
+                            keyStoreProvider != null ? LocalizationMessages.SSL_KMF_NO_PASSWORD_FOR_PROVIDER_BASED_KS() :
+                                    keyStoreBytes != null ? LocalizationMessages.SSL_KMF_NO_PASSWORD_FOR_BYTE_BASED_KS() :
+                                            keyStoreFile;
+
+                    LOGGER.config(LocalizationMessages.SSL_KMF_NO_PASSWORD_SET(ksName));
+                    keyManagerFactory = null;
+                }
             } catch (KeyStoreException e) {
                 throw new IllegalStateException(LocalizationMessages.SSL_KMF_INIT_FAILED(), e);
             } catch (UnrecoverableKeyException e) {
@@ -738,8 +803,9 @@ public final class SslConfigurator {
      * Retrieve the SSL context configuration from the supplied properties.
      *
      * @param props properties containing the SSL context configuration.
+     * @return updated SSL configurator instance.
      */
-    public void retrieve(Properties props) {
+    public SslConfigurator retrieve(Properties props) {
         trustStoreProvider = props.getProperty(TRUST_STORE_PROVIDER);
         keyStoreProvider = props.getProperty(KEY_STORE_PROVIDER);
 
@@ -771,5 +837,99 @@ public final class SslConfigurator {
         keyStore = null;
 
         securityProtocol = "TLS";
+
+        return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SslConfigurator that = (SslConfigurator) o;
+
+        if (keyManagerFactoryAlgorithm != null ?
+                !keyManagerFactoryAlgorithm.equals(that.keyManagerFactoryAlgorithm) : that.keyManagerFactoryAlgorithm != null) {
+            return false;
+        }
+        if (keyManagerFactoryProvider != null ?
+                !keyManagerFactoryProvider.equals(that.keyManagerFactoryProvider) : that.keyManagerFactoryProvider != null) {
+            return false;
+        }
+        if (!Arrays.equals(keyPass, that.keyPass)) {
+            return false;
+        }
+        if (keyStore != null ? !keyStore.equals(that.keyStore) : that.keyStore != null) {
+            return false;
+        }
+        if (!Arrays.equals(keyStoreBytes, that.keyStoreBytes)) {
+            return false;
+        }
+        if (keyStoreFile != null ? !keyStoreFile.equals(that.keyStoreFile) : that.keyStoreFile != null) {
+            return false;
+        }
+        if (!Arrays.equals(keyStorePass, that.keyStorePass)) {
+            return false;
+        }
+        if (keyStoreProvider != null ? !keyStoreProvider.equals(that.keyStoreProvider) : that.keyStoreProvider != null) {
+            return false;
+        }
+        if (keyStoreType != null ? !keyStoreType.equals(that.keyStoreType) : that.keyStoreType != null) {
+            return false;
+        }
+        if (securityProtocol != null ? !securityProtocol.equals(that.securityProtocol) : that.securityProtocol != null) {
+            return false;
+        }
+        if (trustManagerFactoryAlgorithm != null ? !trustManagerFactoryAlgorithm.equals(that.trustManagerFactoryAlgorithm)
+                : that.trustManagerFactoryAlgorithm != null) {
+            return false;
+        }
+        if (trustManagerFactoryProvider != null ? !trustManagerFactoryProvider.equals(that.trustManagerFactoryProvider) :
+                that.trustManagerFactoryProvider != null) {
+            return false;
+        }
+        if (trustStore != null ? !trustStore.equals(that.trustStore) : that.trustStore != null) {
+            return false;
+        }
+        if (!Arrays.equals(trustStoreBytes, that.trustStoreBytes)) {
+            return false;
+        }
+        if (trustStoreFile != null ? !trustStoreFile.equals(that.trustStoreFile) : that.trustStoreFile != null) {
+            return false;
+        }
+        if (!Arrays.equals(trustStorePass, that.trustStorePass)) {
+            return false;
+        }
+        if (trustStoreProvider != null ? !trustStoreProvider.equals(that.trustStoreProvider) : that.trustStoreProvider != null) {
+            return false;
+        }
+        if (trustStoreType != null ? !trustStoreType.equals(that.trustStoreType) : that.trustStoreType != null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = keyStore != null ? keyStore.hashCode() : 0;
+        result = 31 * result + (trustStore != null ? trustStore.hashCode() : 0);
+        result = 31 * result + (trustStoreProvider != null ? trustStoreProvider.hashCode() : 0);
+        result = 31 * result + (keyStoreProvider != null ? keyStoreProvider.hashCode() : 0);
+        result = 31 * result + (trustStoreType != null ? trustStoreType.hashCode() : 0);
+        result = 31 * result + (keyStoreType != null ? keyStoreType.hashCode() : 0);
+        result = 31 * result + (trustStorePass != null ? Arrays.hashCode(trustStorePass) : 0);
+        result = 31 * result + (keyStorePass != null ? Arrays.hashCode(keyStorePass) : 0);
+        result = 31 * result + (keyPass != null ? Arrays.hashCode(keyPass) : 0);
+        result = 31 * result + (trustStoreFile != null ? trustStoreFile.hashCode() : 0);
+        result = 31 * result + (keyStoreFile != null ? keyStoreFile.hashCode() : 0);
+        result = 31 * result + (trustStoreBytes != null ? Arrays.hashCode(trustStoreBytes) : 0);
+        result = 31 * result + (keyStoreBytes != null ? Arrays.hashCode(keyStoreBytes) : 0);
+        result = 31 * result + (trustManagerFactoryAlgorithm != null ? trustManagerFactoryAlgorithm.hashCode() : 0);
+        result = 31 * result + (keyManagerFactoryAlgorithm != null ? keyManagerFactoryAlgorithm.hashCode() : 0);
+        result = 31 * result + (trustManagerFactoryProvider != null ? trustManagerFactoryProvider.hashCode() : 0);
+        result = 31 * result + (keyManagerFactoryProvider != null ? keyManagerFactoryProvider.hashCode() : 0);
+        result = 31 * result + (securityProtocol != null ? securityProtocol.hashCode() : 0);
+        return result;
     }
 }

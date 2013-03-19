@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,23 +39,27 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_25_init_1;
 
-import java.util.Set;
+import java.net.URI;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-
-import com.google.common.collect.Sets;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 /**
- * JAX-RS application for the Servlet 2.5 initialization test #01.
+ * A resource that instantiated & uses JAX-RS/Jersey client to access another resource.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@ApplicationPath("application_path")
-public class Servlet25init1 extends Application {
-    @SuppressWarnings({"unchecked"})
-    @Override
-    public Set<Class<?>> getClasses() {
-        return Sets.newHashSet(HelloWorldResource.class, MultipleLinksResource.class, ClientUsingResource.class);
+@Path("viaclient")
+public class ClientUsingResource {
+    @Path("helloworld")
+    @GET
+    public String getProxiedMessage(@Context UriInfo uriInfo) {
+        return ClientBuilder.newClient()
+                .target(uriInfo.resolve(URI.create("helloworld")))
+                .request("text/plain")
+                .get(String.class);
     }
 }

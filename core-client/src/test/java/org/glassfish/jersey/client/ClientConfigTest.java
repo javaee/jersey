@@ -48,6 +48,9 @@ import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
+import javax.net.ssl.SSLContext;
+
+import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
 
@@ -152,7 +155,7 @@ public class ClientConfigTest {
         assertEquals(1, instance.getInstances().size());
 
         // Features are registered at the time of provider bindings.
-        final JerseyClient jerseyClient = new JerseyClient(instance, null, null);
+        final JerseyClient jerseyClient = new JerseyClient(instance, (UnsafeValue<SSLContext, IllegalStateException>) null, null);
         ClientConfig config = jerseyClient.getConfiguration();
         final ClientRuntime runtime = config.getRuntime();
 
@@ -198,7 +201,8 @@ public class ClientConfigTest {
         clientConfig.register(unconfigurableFeature);
 
         // Features are registered at the time of provider bindings.
-        final JerseyClient jerseyClient = new JerseyClient(clientConfig, null, null);
+        final JerseyClient jerseyClient =
+                new JerseyClient(clientConfig, (UnsafeValue<SSLContext, IllegalStateException>) null, null);
         clientConfig = jerseyClient.getConfiguration();
         clientConfig.getRuntime();
 
@@ -232,7 +236,8 @@ public class ClientConfigTest {
         ClientConfig clientConfig = clientConfig2.loadFrom(clientConfig1);
 
         // Features are registered at the time of provider bindings.
-        final JerseyClient jerseyClient = new JerseyClient(clientConfig, null, null);
+        final JerseyClient jerseyClient =
+                new JerseyClient(clientConfig, (UnsafeValue<SSLContext, IllegalStateException>) null, null);
         clientConfig = jerseyClient.getConfiguration();
         clientConfig.getRuntime();
 

@@ -55,6 +55,8 @@ import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.util.collection.UnsafeValue;
+import org.glassfish.jersey.internal.util.collection.Values;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -72,7 +74,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     private final AtomicBoolean closedFlag = new AtomicBoolean(false);
     private final ClientConfig config;
     private final HostnameVerifier hostnameVerifier;
-    private final SSLContext sslContext;
+    private final UnsafeValue<SSLContext, IllegalStateException> sslContext;
     private final LinkedBlockingDeque<LifecycleListener> listeners = new LinkedBlockingDeque<LifecycleListener>();
 
     /**
@@ -89,9 +91,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * Create a new Jersey client instance using a default configuration.
      */
     protected JerseyClient() {
-        this.config = new ClientConfig(this);
-        this.hostnameVerifier = null;
-        this.sslContext = SslConfigurator.getDefaultContext();
+        this(null, (UnsafeValue<SSLContext, IllegalStateException>) null, null);
     }
 
     /**
@@ -101,10 +101,34 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      * @param sslContext jersey client SSL context.
      * @param verifier   jersey client host name verifier.
      */
-    protected JerseyClient(final Configuration config, final SSLContext sslContext, final HostnameVerifier verifier) {
+    protected JerseyClient(final Configuration config,
+                           final SSLContext sslContext,
+                           final HostnameVerifier verifier) {
+        this(config, Values.<SSLContext, IllegalStateException>unsafe(sslContext), verifier);
+    }
+
+    /**
+     * Create a new Jersey client instance.
+     *
+     * @param config             jersey client configuration.
+     * @param sslContextProvider jersey client SSL context provider.
+     * @param verifier           jersey client host name verifier.
+     */
+    protected JerseyClient(final Configuration config,
+                           final UnsafeValue<SSLContext, IllegalStateException> sslContextProvider,
+                           final HostnameVerifier verifier) {
         this.config = config == null ? new ClientConfig(this) : new ClientConfig(this, config);
-        this.sslContext = sslContext == null ? SslConfigurator.getDefaultContext() : sslContext;
+        this.sslContext = Values.lazy(sslContextProvider != null ? sslContextProvider : createSslContextProvider());
         this.hostnameVerifier = verifier;
+    }
+
+    private UnsafeValue<SSLContext, IllegalStateException> createSslContextProvider() {
+        return new UnsafeValue<SSLContext, IllegalStateException>() {
+            @Override
+            public SSLContext get() throws IllegalStateException {
+                return SslConfigurator.getDefaultContext();
+            }
+        };
     }
 
     @Override
@@ -262,7 +286,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
 
     @Override
     public SSLContext getSslContext() {
-        return sslContext;
+        return sslContext.get();
     }
 
     /**
