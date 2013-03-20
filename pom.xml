@@ -810,18 +810,10 @@
 
             <dependency>
                 <groupId>org.glassfish.hk2</groupId>
-                <artifactId>hk2-api</artifactId>
+                <artifactId>hk2-bom</artifactId>
                 <version>${hk2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.hk2</groupId>
-                <artifactId>hk2-locator</artifactId>
-                <version>${hk2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.hk2.external</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>${hk2.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
 
             <dependency>
@@ -940,16 +932,6 @@
                 <scope>provided</scope>
             </dependency>
 
-            <dependency>
-                <groupId>javax.validation</groupId>
-                <artifactId>validation-api</artifactId>
-                <version>${validation.api.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-validator</artifactId>
-                <version>${validation.ri.version}</version>
-            </dependency>
             <!-- HV OSGi dependencies. -->
             <dependency>
                 <groupId>org.jboss.logging</groupId>
@@ -1064,7 +1046,7 @@
                 examples/osgi-helloworld-webapp/war-bundle/pom.xml
         -->
         <jaxrs.api.version>2.0-rc2</jaxrs.api.version>
-        <hk2.version>2.1.71</hk2.version>
+        <hk2.version>2.1.76</hk2.version>
         <grizzly2.version>2.3-rc6</grizzly2.version>
         <jackson.version>1.9.11</jackson.version>
         <jersey1.version>1.17</jersey1.version>
