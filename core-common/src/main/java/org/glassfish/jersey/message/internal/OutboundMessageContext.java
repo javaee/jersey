@@ -57,7 +57,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
@@ -109,9 +108,9 @@ public class OutboundMessageContext {
          * @param contentLength the size of the buffered entity or -1 if the entity exceeded the maximum buffer
          *                      size or if the buffering is disabled.
          * @return the adapted output stream into which the serialized entity should be written. May return null
-         *                      which will cause ignoring the written entity (in that case the entity will
-         *                      still be written by {@link javax.ws.rs.ext.MessageBodyWriter message body writers}
-         *                      but the output will be ignored).
+         *         which will cause ignoring the written entity (in that case the entity will
+         *         still be written by {@link javax.ws.rs.ext.MessageBodyWriter message body writers}
+         *         but the output will be ignored).
          * @throws java.io.IOException in case of an IO error.
          */
         public OutputStream getOutputStream(int contentLength) throws IOException;
@@ -839,18 +838,26 @@ public class OutboundMessageContext {
     public void close() {
         if (hasEntity()) {
             try {
-                getEntityStream().flush();
-                getEntityStream().close();
-
-                // In case some of the output stream wrapper does not delegate close() call we
-                // close the root stream manually to make sure it commits the data.
-                committingOutputStream.close();
+                final OutputStream es = getEntityStream();
+                es.flush();
+                es.close();
             } catch (IOException e) {
                 // Happens when the client closed connection before receiving the full response.
                 // This is OK and not interesting in vast majority of the cases
                 // hence the log level set to FINE to make sure it does not flood the log unnecessarily
                 // (especially for clients disconnecting from SSE listening, which is very common).
                 Logger.getLogger(OutboundMessageContext.class.getName()).log(Level.FINE, e.getMessage(), e);
+            } finally {
+                // In case some of the output stream wrapper does not delegate close() call we
+                // close the root stream manually to make sure it commits the data.
+                if (!committingOutputStream.isClosed()) {
+                    try {
+                        committingOutputStream.close();
+                    } catch (IOException e) {
+                        // Just log the exception
+                        Logger.getLogger(OutboundMessageContext.class.getName()).log(Level.FINE, e.getMessage(), e);
+                    }
+                }
             }
         }
     }

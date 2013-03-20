@@ -216,4 +216,57 @@ public class OutboundJaxrsResponseTest {
         assertFalse("Unbuffered closed response stream entity should not be read.", tis.isRead);
         assertTrue("Closed response stream entity should have been closed.", tis.isClosed);
     }
+
+    /**
+     * Test of closing response with empty entity.
+     */
+    @Test
+    public void testCloseEmptyEntityNoStreamProvider() {
+        final OutboundJaxrsResponse r = OutboundJaxrsResponse.from(rb.build());
+        r.close();
+        try {
+            r.bufferEntity();
+            fail("IllegalStateException expected when buffering entity on closed response.");
+        } catch (IllegalStateException ex) {
+            // ok
+        }
+        r.close(); // second call should pass
+    }
+
+    /**
+     * Test of closing response with non-stream entity.
+     */
+    @Test
+    public void testCloseNonStreamEntityNoStreamProvider() {
+        final OutboundJaxrsResponse r = OutboundJaxrsResponse.from(rb.entity(new Object()).build());
+        r.close();
+        try {
+            r.bufferEntity();
+            fail("IllegalStateException expected when buffering entity on closed response.");
+        } catch (IllegalStateException ex) {
+            // ok
+        }
+        r.close(); // second call should pass
+    }
+
+    /**
+     * Test of closing response with stream entity.
+     */
+    @Test
+    public void testCloseStreamEntityNoStreamProvider() {
+        TestInputStream tis = new TestInputStream();
+        final OutboundJaxrsResponse r = OutboundJaxrsResponse.from(rb.entity(tis).build());
+        r.close();
+        try {
+            r.bufferEntity();
+            fail("IllegalStateException expected when buffering entity on closed response.");
+        } catch (IllegalStateException ex) {
+            // ok
+        }
+        r.close(); // second call should pass
+
+        assertFalse("Unbuffered closed response stream entity should not be read.", tis.isRead);
+        assertTrue("Closed response stream entity should have been closed.", tis.isClosed);
+    }
+
 }

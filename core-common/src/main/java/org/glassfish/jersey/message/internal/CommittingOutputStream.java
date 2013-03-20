@@ -60,7 +60,7 @@ import com.google.common.base.Preconditions;
  * with an actual measured entity size. If the entity is too large to
  * fit into the internal buffer and the buffer exceeds before the {@link #commit()}
  * is called then the stream is automatically committed and the callback is called
- * with parameter <code>size</code> -1.
+ * with parameter {@code size} value of {@code -1}.
  * </p>
  * <p>
  * Callback method also returns the output stream in which the output will be written. The committing output stream
@@ -71,10 +71,8 @@ import com.google.common.base.Preconditions;
  * The buffering is by default disabled and can be enabled by calling {@link #enableBuffering()}
  * or {@link #enableBuffering(int)} before writing the first byte into this output stream. The former
  * method enables buffering with the default size
- * <tt>{@value org.glassfish.jersey.message.internal.CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt> bytes specified
- * in {@link #DEFAULT_BUFFER_SIZE}.
+ * <tt>{@value CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt> bytes specified in {@link #DEFAULT_BUFFER_SIZE}.
  * </p>
- *
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -83,6 +81,16 @@ import com.google.common.base.Preconditions;
 final class CommittingOutputStream extends OutputStream {
 
     private static final Logger LOGGER = Logger.getLogger(CommittingOutputStream.class.getName());
+    /**
+     * Null stream provider.
+     */
+    private static final OutboundMessageContext.StreamProvider NULL_STREAM_PROVIDER =
+            new OutboundMessageContext.StreamProvider() {
+                @Override
+                public OutputStream getOutputStream(int contentLength) throws IOException {
+                    return new NullOutputStream();
+                }
+            };
     /**
      * Default size of the buffer which will be used if no user defined size is specified.
      */
@@ -104,13 +112,17 @@ final class CommittingOutputStream extends OutputStream {
      */
     private ByteArrayOutputStream buffer;
     /**
-     * When {@code true} the data are written directly to output stream and not to the buffer.
+     * When {@code true}, the data are written directly to output stream and not to the buffer.
      */
     private boolean directWrite = true;
     /**
-     * When {@code true} the stream is already committed (redirected to adaptedOutput).
+     * When {@code true}, the stream is already committed (redirected to adaptedOutput).
      */
     private boolean isCommitted;
+    /**
+     * When {@code true}, the stream is already closed.
+     */
+    private boolean isClosed;
 
     /**
      * Creates new committing output stream. The returned stream instance still needs to be initialized before
@@ -127,6 +139,9 @@ final class CommittingOutputStream extends OutputStream {
      * @param streamProvider non-null stream provider callback.
      */
     public void setStreamProvider(OutboundMessageContext.StreamProvider streamProvider) {
+        if (isClosed) {
+            throw new IllegalStateException(LocalizationMessages.OUTPUT_STREAM_CLOSED());
+        }
         Preconditions.checkNotNull(streamProvider);
 
         if (this.streamProvider != null) {
@@ -247,8 +262,26 @@ final class CommittingOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
+        if (isClosed) {
+            return;
+        }
+
+        isClosed = true;
+
+        if (streamProvider == null) {
+            streamProvider = NULL_STREAM_PROVIDER;
+        }
         commit();
         adaptedOutput.close();
+    }
+
+    /**
+     * Check if the committing output stream has been closed already.
+     *
+     * @return {@code true} if the stream has been closed, {@code false} otherwise.
+     */
+    public boolean isClosed() {
+        return isClosed;
     }
 
     @Override
@@ -274,21 +307,4 @@ final class CommittingOutputStream extends OutputStream {
         }
     }
 
-    private static class NullOutputStream extends OutputStream {
-
-        @Override
-        public void write(int b) throws IOException {
-            // do nothing
-        }
-
-        @Override
-        public void write(byte[] b) throws IOException {
-            // do nothing
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            // do nothing
-        }
-    }
 }
