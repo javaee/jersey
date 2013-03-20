@@ -144,6 +144,9 @@ class UriParser {
         this.parserExecuted = true;
         this.ci = new CharacterIterator(input);
         if (!ci.hasNext()) {
+            // empty string on input -> set both SSP and path to ""
+            this.path = "";
+            this.ssp = "";
             return;
         }
         ci.next();
@@ -160,6 +163,12 @@ class UriParser {
                 throw new IllegalArgumentException(LocalizationMessages.URI_PARSER_SCHEME_EXPECTED(ci.pos(), input));
             }
             scheme = comp;
+            if (!ci.hasNext()) {
+                // empty SSP/path -> set both SSP and path to ""
+                this.path = "";
+                this.ssp = "";
+                return;
+            }
             char c = ci.next();
             if (c == '/') {
                 // hierarchical

@@ -86,6 +86,21 @@ public class JerseyUriBuilderTest {
         assertEquals(userInfo, uri.getRawUserInfo());
     }
 
+    // Reproducer for JERSEY-1800
+    @Test
+    public void testEmptyUriString() throws URISyntaxException {
+        final URI uri = URI.create("");
+        JerseyUriBuilder ub = new JerseyUriBuilder().uri("news:comp.lang.java").uri(uri);
+        assertEquals("news:", ub.toTemplate());
+        // note that even though the URI is valid according to RFC 3986,
+        // it is not possible to create a java.net.URI from this builder if SSP is empty
+
+        ub = new JerseyUriBuilder().uri("news:comp.lang.java").uri("");
+        assertEquals("news:", ub.toTemplate());
+        // note that even though the URI is valid according to RFC 3986,
+        // it is not possible to create a java.net.URI from this builder if SSP is empty
+    }
+
     @Test
     public void testToTemplate() throws URISyntaxException {
         JerseyUriBuilder ub = new JerseyUriBuilder()
