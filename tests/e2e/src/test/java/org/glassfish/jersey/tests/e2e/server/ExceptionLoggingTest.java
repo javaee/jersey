@@ -43,6 +43,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Handler;
+import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -60,6 +67,7 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.tests.api.MessageBodyReaderTest;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -69,15 +77,16 @@ import org.junit.Test;
  */
 public class ExceptionLoggingTest extends JerseyTest {
 
-    private static class MyCheckedException extends Exception {
-    }
+    private static class MyCheckedException extends Exception {}
+
+    private static class MyRuntimeException extends RuntimeException {}
 
     @Path("/")
     public static class ExceptionResource {
 
         @Path("runtime")
         public String runtimeException() {
-            throw new NullPointerException();
+            throw new MyRuntimeException();
         }
 
         @Path("checked")
@@ -91,18 +100,23 @@ public class ExceptionLoggingTest extends JerseyTest {
         return new ResourceConfig(ExceptionResource.class, Writer.class, Resource.class);
     }
 
+    @BeforeClass
+    public static void beforeTest() {
+        registerLogHandler();
+    }
+
     @Test
     public void testRuntime() throws Exception {
         final Response response = target().path("runtime").request().get();
         Assert.assertEquals(500, response.getStatus());
-        // TODO: check the error log
+        Assert.assertEquals(lastLogRecord.getThrown().getClass(), MyRuntimeException.class);
     }
 
     @Test
     public void testChecked() throws Exception {
         final Response response = target().path("checked").request().get();
         Assert.assertEquals(500, response.getStatus());
-        // TODO: check the error log
+        Assert.assertEquals(lastLogRecord.getThrown().getClass(), MyCheckedException.class);
     }
 
 
@@ -139,8 +153,43 @@ public class ExceptionLoggingTest extends JerseyTest {
     public void testReaderFails() throws Exception {
         final Response response = target().path("resource/entity").request().get();
         Assert.assertEquals(500, response.getStatus());
-        // TODO: check the error log
+        Assert.assertEquals(lastLogRecord.getThrown().getMessage(), "test");
     }
 
+    static LogRecord lastLogRecord;
 
+    static void registerLogHandler() {
+        final LogManager logManager = LogManager.getLogManager();
+        final Enumeration<String> loggerNames = logManager.getLoggerNames();
+
+        final Set<Logger> rootLoggers = new HashSet<Logger>();
+
+        while(loggerNames.hasMoreElements()) {
+            Logger logger = logManager.getLogger(loggerNames.nextElement());
+            while(logger.getParent() != null) {
+                logger = logger.getParent();
+            }
+            rootLoggers.add(logger);
+        }
+
+        for (Logger root : rootLoggers) {
+            root.addHandler(new Handler() {
+
+                @Override
+                public void publish(LogRecord record) {
+                    if (record.getLevel().intValue() > 800) {
+                        lastLogRecord = record;
+                    }
+                }
+
+                @Override
+                public void flush() {
+                }
+
+                @Override
+                public void close() throws SecurityException {
+                }
+            });
+        }
+    }
 }
