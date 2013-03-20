@@ -48,10 +48,10 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;

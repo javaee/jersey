@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Priority;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -51,6 +50,8 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -61,14 +62,12 @@ import org.glassfish.jersey.server.model.Resource;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
+import org.junit.Assert;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-
-import junit.framework.Assert;
-
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test for JAX-RS filters.
@@ -100,7 +99,7 @@ public class ApplicationFilterTest {
 
         @Override
         protected void configure() {
-            for(T provider : providers) {
+            for (T provider : providers) {
                 bind(provider).to(providerType);
             }
         }
@@ -341,7 +340,11 @@ public class ApplicationFilterTest {
         });
         resourceConfig.registerResources(rb.build());
         final ApplicationHandler application = new ApplicationHandler(resourceConfig);
-
-        assertEquals(500, application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus());
+        try {
+            application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus();
+            Assert.fail("should throw an exception");
+        } catch (Exception e) {
+            // ok
+        }
     }
 }

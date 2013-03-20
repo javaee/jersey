@@ -45,7 +45,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.glassfish.jersey.internal.ProcessingException;
+import javax.ws.rs.ProcessingException;
+
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
 

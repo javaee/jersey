@@ -39,15 +39,13 @@
  */
 package org.glassfish.jersey.server;
 
-import java.io.IOException;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.internal.RankedComparator;
@@ -55,6 +53,7 @@ import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.process.Endpoint;
+import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 
@@ -148,25 +147,23 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
         for (ContainerRequestFilter filter : sortedRequestFilters) {
             try {
                 filter.filter(requestContext);
-                final Response abortResponse = requestContext.getAbortResponse();
-                if (abortResponse != null) {
-                    // abort accepting & return response
-                    return Continuation.of(requestContext, Stages.asStage(
-                            new Endpoint() {
-                                @Override
-                                public ContainerResponse apply(
-                                        final ContainerRequest requestContext) {
-                                    return new ContainerResponse(requestContext, abortResponse);
-                                }
-                            }));
-                }
-            } catch (IOException ex) {
-                final Response abortResponse = requestContext.getAbortResponse();
-                if (abortResponse == null) {
-                    throw new WebApplicationException(ex);
-                } else {
-                    throw new WebApplicationException(ex, abortResponse);
-                }
+            } catch (WebApplicationException wae) {
+                throw wae;
+            } catch (Exception exception) {
+                throw new MappableException(exception);
+            }
+
+            final Response abortResponse = requestContext.getAbortResponse();
+            if (abortResponse != null) {
+                // abort accepting & return response
+                return Continuation.of(requestContext, Stages.asStage(
+                        new Endpoint() {
+                            @Override
+                            public ContainerResponse apply(
+                                    final ContainerRequest requestContext) {
+                                return new ContainerResponse(requestContext, abortResponse);
+                            }
+                        }));
             }
         }
         return Continuation.of(requestContext, getDefaultNext());
@@ -185,18 +182,20 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
         @SuppressWarnings("unchecked")
         public Continuation<ContainerResponse> apply(ContainerResponse responseContext) {
 
-            try {
-                RoutingContext rc = locator.getService(RoutingContext.class);
+            RoutingContext rc = locator.getService(RoutingContext.class);
 
-                Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.sortRankedProviders(
-                        new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), filters, rc.getBoundResponseFilters()
-                );
+            Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.sortRankedProviders(
+                    new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), filters, rc.getBoundResponseFilters()
+            );
 
-                for (ContainerResponseFilter filter : sortedResponseFilters) {
+            for (ContainerResponseFilter filter : sortedResponseFilters) {
+                try {
                     filter.filter(responseContext.getRequestContext(), responseContext);
+                } catch (WebApplicationException wae) {
+                    throw wae;
+                } catch (Exception ex) {
+                    throw new MappableException(ex);
                 }
-            } catch (IOException ex) {
-                throw new WebApplicationException(ex);
             }
 
             return Continuation.of(responseContext, getDefaultNext());

@@ -39,11 +39,10 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverter;
-
-import org.glassfish.jersey.internal.ProcessingException;
 
 /**
  * Extract value of the parameter using a single parameter value and the underlying

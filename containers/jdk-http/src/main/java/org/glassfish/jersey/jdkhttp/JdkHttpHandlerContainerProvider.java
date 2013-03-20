@@ -39,7 +39,8 @@
  */
 package org.glassfish.jersey.jdkhttp;
 
-import org.glassfish.jersey.internal.ProcessingException;
+import javax.ws.rs.ProcessingException;
+
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 

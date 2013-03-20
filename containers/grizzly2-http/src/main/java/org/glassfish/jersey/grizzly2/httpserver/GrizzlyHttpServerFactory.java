@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,8 @@ package org.glassfish.jersey.grizzly2.httpserver;
 import java.io.IOException;
 import java.net.URI;
 
-import org.glassfish.jersey.internal.ProcessingException;
+import javax.ws.rs.ProcessingException;
+
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -213,7 +214,6 @@ public class GrizzlyHttpServerFactory {
     }
 
 
-
     /**
      * Creates HttpServer instance.
      *
@@ -239,7 +239,7 @@ public class GrizzlyHttpServerFactory {
         final HttpServer server = new HttpServer();
         final NetworkListener listener = new NetworkListener("grizzly", host, port);
         listener.setSecure(secure);
-        if(sslEngineConfigurator != null) {
+        if (sslEngineConfigurator != null) {
             listener.setSSLEngineConfig(sslEngineConfigurator);
         }
 

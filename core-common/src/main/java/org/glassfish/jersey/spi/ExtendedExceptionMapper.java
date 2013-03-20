@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,55 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal;
+
+package org.glassfish.jersey.spi;
+
+import javax.ws.rs.ext.ExceptionMapper;
 
 /**
- * Runtime exception to be caught by the container.
- * <p>
- * This exception may be thrown by the application signaling that the
- * container should handle the exception to produce an appropriate HTTP response.
- * <p>
- * This exception may also be thrown by the runtime if an exception
- * occurs that should be handled by the container.
+ * Extension of a {@link ExceptionMapper exception mapper interface}. The exception mapping
+ * providers can extend from this interface to add jersey specific functionality to these
+ * providers.
  *
- * @author Paul Sandoz
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ *
+ * @param <T> A type of the exception processed by the exception mapper.
  */
-public class ProcessingException extends RuntimeException {
-
-    private static final long serialVersionUID = -4473231199487742382L;
-
+public interface ExtendedExceptionMapper<T extends Throwable> extends ExceptionMapper<T> {
     /**
-     * Construct a new container exception with the supplied message.
-     */
-    public ProcessingException() {
-        super();
-    }
-
-    /**
-     * Construct a new container exception with the supplied message.
+     * Determine whether this provider is able to process a supplied exception instance.
+     * <p>
+     * This method is called only on those exception mapping providers that are able to
+     * process the type of the {@code exception} as defined by the JAX-RS
+     * {@link ExceptionMapper} contract. By returning {@code false} this method can reject
+     * any given exception instance and change the default JAX-RS exception mapper
+     * selection behaviour.
+     * </p>
      *
-     * @param message the exception message.
+     * @param exception exception instance which should be processed.
+     * @return {@code true} if the mapper is able to map the particular exception instance,
+     *         {@code false} otherwise.
      */
-    public ProcessingException(String message) {
-        super(message);
-    }
-
-    /**
-     * Construct a new container exception with the supplied message and cause.
-     *
-     * @param message the exception message.
-     * @param cause the exception cause.
-     */
-    public ProcessingException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    /**
-     * Construct a new container exception with the supplied cause.
-     *
-     * @param cause the exception cause.
-     */
-    public ProcessingException(Throwable cause) {
-        super(cause);
-    }
+    public boolean isMappable(T exception);
 }

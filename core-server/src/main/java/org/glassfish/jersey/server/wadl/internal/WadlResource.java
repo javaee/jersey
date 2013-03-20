@@ -49,6 +49,7 @@ import java.util.Date;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -57,7 +58,6 @@ import javax.ws.rs.core.UriInfo;
 import javax.inject.Singleton;
 import javax.xml.bind.Marshaller;
 
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 

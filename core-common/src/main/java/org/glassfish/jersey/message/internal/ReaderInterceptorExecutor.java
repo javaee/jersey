@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -57,7 +58,6 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -107,8 +107,8 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
      *            be executed on the client side.
      */
     public ReaderInterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-            MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate, InputStream inputStream,
-            MessageBodyWorkers workers, boolean intercept) {
+                                     MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate, InputStream inputStream,
+                                     MessageBodyWorkers workers, boolean intercept) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
@@ -118,7 +118,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
 
         final Object readerInterceptorsProperty = propertiesDelegate.getProperty(INTERCEPTORS);
         final Collection<ReaderInterceptor> readerInterceptors = (readerInterceptorsProperty != null)
-                ? (Collection<ReaderInterceptor>)readerInterceptorsProperty : workers.getReaderInterceptors();
+                ? (Collection<ReaderInterceptor>) readerInterceptorsProperty : workers.getReaderInterceptors();
 
         for (ReaderInterceptor interceptor : readerInterceptors) {
             if (intercept || (interceptor instanceof ExceptionWrapperInterceptor)) {
@@ -201,7 +201,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
                     return null;
                 } else {
                     throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(
-                        context.getMediaType(), context.getType(), context.getGenericType()));
+                            context.getMediaType(), context.getType(), context.getGenericType()));
                 }
             }
 

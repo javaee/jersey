@@ -39,19 +39,20 @@
  */
 package org.glassfish.jersey.test.simple;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.internal.ProcessingException;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.simple.SimpleContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainer;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.ProcessingException;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.simple.SimpleContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainer;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 /**
  * Factory for testing {@link org.glassfish.jersey.simple.SimpleContainer}.
@@ -60,56 +61,56 @@ import java.util.logging.Logger;
  */
 public class SimpleTestContainerFactory implements TestContainerFactory {
 
-  private static class SimpleTestContainer implements TestContainer {
+    private static class SimpleTestContainer implements TestContainer {
 
-    private final URI uri;
-    private final ApplicationHandler appHandler;
-    private Closeable server;
-    private static final Logger LOGGER = Logger.getLogger(SimpleTestContainer.class.getName());
+        private final URI uri;
+        private final ApplicationHandler appHandler;
+        private Closeable server;
+        private static final Logger LOGGER = Logger.getLogger(SimpleTestContainer.class.getName());
 
-    private SimpleTestContainer(URI uri, ApplicationHandler appHandler) {
-      this.appHandler = appHandler;
-      this.uri = uri;
+        private SimpleTestContainer(URI uri, ApplicationHandler appHandler) {
+            this.appHandler = appHandler;
+            this.uri = uri;
+        }
+
+        @Override
+        public ClientConfig getClientConfig() {
+            return null;
+        }
+
+        @Override
+        public URI getBaseUri() {
+            return uri;
+        }
+
+        @Override
+        public void start() {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.log(Level.INFO, "Starting SimpleTestContainer...");
+            }
+
+            try {
+                this.server = SimpleContainerFactory.create(uri, appHandler);
+            } catch (ProcessingException e) {
+                throw new TestContainerException(e);
+            }
+        }
+
+        @Override
+        public void stop() {
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.log(Level.INFO, "Stopping SimpleTestContainer...");
+            }
+            try {
+                this.server.close();
+            } catch (IOException ex) {
+                LOGGER.log(Level.INFO, "Error Stopping SimpleTestContainer...", ex);
+            }
+        }
     }
 
     @Override
-    public ClientConfig getClientConfig() {
-      return null;
+    public TestContainer create(URI uri, ApplicationHandler appHandler) throws IllegalArgumentException {
+        return new SimpleTestContainer(uri, appHandler);
     }
-
-    @Override
-    public URI getBaseUri() {
-      return uri;
-    }
-
-    @Override
-    public void start() {
-      if (LOGGER.isLoggable(Level.INFO)) {
-        LOGGER.log(Level.INFO, "Starting SimpleTestContainer...");
-      }
-
-      try {
-        this.server = SimpleContainerFactory.create(uri, appHandler);
-      } catch (ProcessingException e) {
-        throw new TestContainerException(e);
-      }
-    }
-
-    @Override
-    public void stop() {
-      if (LOGGER.isLoggable(Level.INFO)) {
-        LOGGER.log(Level.INFO, "Stopping SimpleTestContainer...");
-      }
-      try {
-        this.server.close();
-      } catch (IOException ex) {
-        LOGGER.log(Level.INFO, "Error Stopping SimpleTestContainer...", ex);
-      }
-    }
-  }
-
-  @Override
-  public TestContainer create(URI uri, ApplicationHandler appHandler) throws IllegalArgumentException {
-    return new SimpleTestContainer(uri, appHandler);
-  }
 }

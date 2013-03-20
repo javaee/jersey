@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.message.internal;
 
-import org.glassfish.jersey.internal.ProcessingException;
+import javax.ws.rs.ProcessingException;
 
 /**
  * {@link ProcessingException Processing exception} indicating that an attempt to
@@ -50,13 +50,53 @@ import org.glassfish.jersey.internal.ProcessingException;
  */
 public class HeaderValueException extends ProcessingException {
     private static final long serialVersionUID = 981810773601231157L;
+    private final Context context;
 
-    public HeaderValueException(String message, Throwable cause) {
+    /**
+     * Context that contains header problems causing this exception (e.g. for {@link InboundMessageContext}
+     * the corresponding value is {@link Context#INBOUND}).
+     */
+    public static enum Context {
+        /**
+         * Inbound context.
+         */
+        INBOUND,
+
+        /**
+         * Outbound context.
+         */
+        OUTBOUND
+    }
+
+    /**
+     * Create a new header value exception from message, cause and context.
+     *
+     * @param message Exception message.
+     * @param cause Exception cause.
+     * @param context Context in which this exception was thrown.
+     */
+    public HeaderValueException(String message, Throwable cause, Context context) {
         super(message, cause);
+        this.context = context;
     }
 
-    public HeaderValueException(String message) {
+    /**
+     * Create a new header value exception from message and context.
+     *
+     * @param message Exception message.
+     * @param context Context in which this exception was thrown.
+     */
+    public HeaderValueException(String message, Context context) {
         super(message);
+        this.context = context;
     }
 
+    /**
+     * Get the exception context.
+     *
+     * @return Context in which the exception was thrown.
+     */
+    public Context getContext() {
+        return context;
+    }
 }

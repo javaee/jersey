@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -57,7 +58,6 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
@@ -212,7 +212,6 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
                 throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYWRITER(
                         context.getMediaType(), context.getType(), context.getGenericType()));
             }
-
             writer.writeTo(context.getEntity(), context.getType(), context.getGenericType(), context.getAnnotations(),
                     context.getMediaType(), context.getHeaders(), context.getOutputStream());
         }

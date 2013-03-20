@@ -269,7 +269,7 @@ public class InboundMessageContext {
      * Get a single typed header value.
      *
      * @param name        header name.
-     * @param converter   from string conversion function. Is expected to throw {@link org.glassfish.jersey.internal.ProcessingException}
+     * @param converter   from string conversion function. Is expected to throw {@link ProcessingException}
      *                    if conversion fails.
      * @param convertNull if {@code true} this method calls the provided converter even for {@code null}. Otherwise this
      *                    method returns the {@code null} without calling the converter.
@@ -282,7 +282,8 @@ public class InboundMessageContext {
             return convertNull ? converter.apply(null) : null;
         }
         if (values.size() > 1) {
-            throw new HeaderValueException(LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()));
+            throw new HeaderValueException(LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()),
+                    HeaderValueException.Context.INBOUND);
         }
 
         Object value = values.get(0);
@@ -292,13 +293,14 @@ public class InboundMessageContext {
 
         try {
             return converter.apply(HeadersFactory.asString(value, null));
-        } catch (org.glassfish.jersey.internal.ProcessingException ex) {
+        } catch (ProcessingException ex) {
             throw exception(name, value, ex);
         }
     }
 
     private static HeaderValueException exception(final String headerName, Object headerValue, Exception e) {
-        return new HeaderValueException(LocalizationMessages.UNABLE_TO_PARSE_HEADER_VALUE(headerName, headerValue), e);
+        return new HeaderValueException(LocalizationMessages.UNABLE_TO_PARSE_HEADER_VALUE(headerName, headerValue), e,
+                HeaderValueException.Context.INBOUND);
     }
 
     /**
@@ -322,7 +324,7 @@ public class InboundMessageContext {
                 try {
                     return HttpHeaderReader.readDate(input);
                 } catch (ParseException ex) {
-                    throw new org.glassfish.jersey.internal.ProcessingException(ex);
+                    throw new ProcessingException(ex);
                 }
             }
         }, false);
@@ -374,7 +376,7 @@ public class InboundMessageContext {
                 try {
                     return new LanguageTag(input).getAsLocale();
                 } catch (ParseException e) {
-                    throw new org.glassfish.jersey.internal.ProcessingException(e);
+                    throw new ProcessingException(e);
                 }
             }
         }, false);
@@ -393,7 +395,7 @@ public class InboundMessageContext {
                 try {
                     return (input != null && input.length() > 0) ? Integer.parseInt(input) : -1;
                 } catch (NumberFormatException ex) {
-                    throw new org.glassfish.jersey.internal.ProcessingException(ex);
+                    throw new ProcessingException(ex);
                 }
             }
         }, true);
@@ -412,7 +414,7 @@ public class InboundMessageContext {
                 try {
                     return MediaType.valueOf(input);
                 } catch (IllegalArgumentException iae) {
-                    throw new org.glassfish.jersey.internal.ProcessingException(iae);
+                    throw new ProcessingException(iae);
                 }
             }
         }, false);
@@ -579,7 +581,7 @@ public class InboundMessageContext {
                 try {
                     return HttpHeaderReader.readDate(input);
                 } catch (ParseException e) {
-                    throw new org.glassfish.jersey.internal.ProcessingException(e);
+                    throw new ProcessingException(e);
                 }
             }
         }, false);
@@ -597,7 +599,7 @@ public class InboundMessageContext {
                 try {
                     return URI.create(value);
                 } catch (IllegalArgumentException ex) {
-                    throw new org.glassfish.jersey.internal.ProcessingException(ex);
+                    throw new ProcessingException(ex);
                 }
             }
         }, false);

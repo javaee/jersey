@@ -46,12 +46,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ext.ParamConverter;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.server.internal.LocalizationMessages;

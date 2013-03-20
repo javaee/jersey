@@ -47,10 +47,12 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ParamConverter;
 
-import org.glassfish.jersey.internal.ProcessingException;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+
 
 /**
  * Extract parameter value as a typed collection.
@@ -158,7 +160,7 @@ abstract class CollectionExtractor<T> extends AbstractParamValueExtractor<T> imp
         } else if (SortedSet.class == collectionType) {
             return new SortedSetValueOf<T>(converter, parameterName, defaultValueString);
         } else {
-            throw new ProcessingException("Unsupported collection type.");
+            throw new ProcessingException(LocalizationMessages.COLLECTION_EXTRACTOR_TYPE_UNSUPPORTED());
         }
     }
 }

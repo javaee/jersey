@@ -202,7 +202,7 @@ class EntityInputStream extends InputStream {
                 return false;
             }
         } catch (IOException ex) {
-            throw new org.glassfish.jersey.internal.ProcessingException(ex);
+            throw new ProcessingException(ex);
         }
     }
 

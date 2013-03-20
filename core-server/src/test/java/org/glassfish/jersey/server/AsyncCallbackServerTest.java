@@ -140,7 +140,6 @@ public class AsyncCallbackServerTest {
         }
     }
 
-
     public static class MyCompletionCallback implements CompletionCallback {
         @Override
         public void onComplete(Throwable throwable) {

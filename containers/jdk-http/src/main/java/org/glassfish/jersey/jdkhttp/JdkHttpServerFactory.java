@@ -44,7 +44,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.concurrent.Executors;
 
-import org.glassfish.jersey.internal.ProcessingException;
+import javax.ws.rs.ProcessingException;
+
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;

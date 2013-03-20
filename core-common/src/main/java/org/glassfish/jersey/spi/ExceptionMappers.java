@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,4 +60,31 @@ public interface ExceptionMappers {
      *     if none is found.
      */
     public <T extends Throwable> ExceptionMapper<T> find(Class<T> type);
+
+    /**
+     * Get an exception mapping provider for a particular exception instance.
+     * <p>
+     * This method is similar to method {@link #find(Class)}. In addition it takes
+     * into an account the result of the {@link ExtendedExceptionMapper#isMappable(Throwable)}
+     * of any mapper that implements Jersey {@link ExtendedExceptionMapper} API.
+     * If an extended exception mapper returns {@code false} from {@code isMappable(Throwable)},
+     * the mapper is disregarded from the search.
+     * Exception mapping providers are checked one by one until a first provider returns
+     * {@code true} from the {@code isMappable(Throwable)} method or until a first provider
+     * is found which best supports the exception type and does not implement {@code ExtendedExceptionMapper}
+     * API (i.e. it is a standard JAX-RS {@link ExceptionMapper}). The order in which the providers are
+     * checked is determined by the distance of the declared exception mapper type and the actual exception
+     * type.
+     * </p>
+     * <p>
+     * Note that if an exception mapping provider does not implement {@link ExtendedExceptionMapper}
+     * it is always considered applicable for a given exception instance.
+     * </p>
+     *
+     * @param exceptionInstance exception to be handled by the exception mapping provider.
+     * @param <T> type of the exception handled by the exception mapping provider.
+     * @return an {@link ExceptionMapper} for the supplied exception instance type or {@code null} if none
+     *          is found.
+     */
+    public <T extends Throwable> ExceptionMapper<T> findMapping(T exceptionInstance);
 }

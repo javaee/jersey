@@ -44,12 +44,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
 
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
@@ -134,9 +134,6 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
             throw new ProcessingException("Resource Java method invocation error.", ex);
         } catch (InvocationTargetException ex) {
             final Throwable cause = ex.getCause();
-            if (cause instanceof ProcessingException) {
-                throw (ProcessingException) cause;
-            }
             // exception cause potentially mappable
             throw new MappableException(cause);
         } catch (UndeclaredThrowableException ex) {

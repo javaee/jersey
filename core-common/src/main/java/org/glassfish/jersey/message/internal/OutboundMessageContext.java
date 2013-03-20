@@ -57,6 +57,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
@@ -71,7 +72,6 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.ProcessingException;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import com.google.common.base.Function;
@@ -203,7 +203,8 @@ public class OutboundMessageContext {
             return convertNull ? converter.apply(null) : null;
         }
         if (values.size() > 1) {
-            throw new HeaderValueException(LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()));
+            throw new HeaderValueException(LocalizationMessages.TOO_MANY_HEADER_VALUES(name, values.toString()),
+                    HeaderValueException.Context.OUTBOUND);
         }
 
         Object value = values.get(0);
@@ -223,7 +224,8 @@ public class OutboundMessageContext {
     }
 
     private static HeaderValueException exception(final String headerName, Object headerValue, Exception e) {
-        return new HeaderValueException(LocalizationMessages.UNABLE_TO_PARSE_HEADER_VALUE(headerName, headerValue), e);
+        return new HeaderValueException(LocalizationMessages.UNABLE_TO_PARSE_HEADER_VALUE(headerName, headerValue), e,
+                HeaderValueException.Context.OUTBOUND);
     }
 
     /**
