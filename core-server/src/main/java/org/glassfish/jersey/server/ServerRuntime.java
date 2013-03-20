@@ -516,6 +516,7 @@ class ServerRuntime {
         private void release(ContainerResponse responseContext) {
             try {
                 closeableService.get().close();
+
                 // Commit the container response writer if not in chunked mode
                 // responseContext may be null in case the request processing was cancelled.
                 if (responseContext != null && !responseContext.isChunked()) {

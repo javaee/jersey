@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,6 +67,7 @@ public interface CloseableService {
 
     /**
      * Invokes {@code Closeable#close()} method on all instances of {@link Closeable} added by the {@code #add(Closeable)} method.
+     * Subsequent calls of this method should not do anything.
      */
     public void close();
 

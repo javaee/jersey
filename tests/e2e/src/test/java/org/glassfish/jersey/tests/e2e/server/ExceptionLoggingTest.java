@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,13 +43,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Handler;
-import java.util.logging.LogManager;
+import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -64,11 +60,11 @@ import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.tests.api.MessageBodyReaderTest;
 
-import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Make sure exceptions, that are not mapped to responses get logged.
@@ -97,44 +93,44 @@ public class ExceptionLoggingTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(ExceptionResource.class, Writer.class, Resource.class);
-    }
+        set(TestProperties.RECORD_LOG_LEVEL, Level.INFO.intValue());
 
-    @BeforeClass
-    public static void beforeTest() {
-        registerLogHandler();
+        return new ResourceConfig(ExceptionResource.class, Writer.class, Resource.class);
     }
 
     @Test
     public void testRuntime() throws Exception {
         final Response response = target().path("runtime").request().get();
-        Assert.assertEquals(500, response.getStatus());
-        Assert.assertEquals(lastLogRecord.getThrown().getClass(), MyRuntimeException.class);
+        assertEquals(500, response.getStatus());
+        assertEquals(getLastLoggedRecord().getThrown().getClass(), MyRuntimeException.class);
     }
 
     @Test
     public void testChecked() throws Exception {
         final Response response = target().path("checked").request().get();
-        Assert.assertEquals(500, response.getStatus());
-        Assert.assertEquals(lastLogRecord.getThrown().getClass(), MyCheckedException.class);
+        assertEquals(500, response.getStatus());
+        assertEquals(getLastLoggedRecord().getThrown().getClass(), MyCheckedException.class);
     }
-
 
     @Provider
     @Produces(MediaType.WILDCARD)
     public static class Writer implements MessageBodyWriter<MessageBodyReaderTest.EntityForReader> {
+
         @Override
         public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
             return type == MessageBodyReaderTest.EntityForReader.class;
         }
 
         @Override
-        public long getSize(MessageBodyReaderTest.EntityForReader entityForReader, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        public long getSize(MessageBodyReaderTest.EntityForReader entityForReader, Class<?> type, Type genericType,
+                            Annotation[] annotations, MediaType mediaType) {
             return 0;
         }
 
         @Override
-        public void writeTo(MessageBodyReaderTest.EntityForReader entityForReader, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+        public void writeTo(MessageBodyReaderTest.EntityForReader entityForReader, Class<?> type, Type genericType,
+                            Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
             throw new RuntimeException("test");
         }
     }
@@ -152,44 +148,13 @@ public class ExceptionLoggingTest extends JerseyTest {
     @Test
     public void testReaderFails() throws Exception {
         final Response response = target().path("resource/entity").request().get();
-        Assert.assertEquals(500, response.getStatus());
-        Assert.assertEquals(lastLogRecord.getThrown().getMessage(), "test");
+        assertEquals(500, response.getStatus());
+
+        assertEquals(getLastLoggedRecord().getThrown().getMessage(), "test");
     }
 
-    static LogRecord lastLogRecord;
-
-    static void registerLogHandler() {
-        final LogManager logManager = LogManager.getLogManager();
-        final Enumeration<String> loggerNames = logManager.getLoggerNames();
-
-        final Set<Logger> rootLoggers = new HashSet<Logger>();
-
-        while(loggerNames.hasMoreElements()) {
-            Logger logger = logManager.getLogger(loggerNames.nextElement());
-            while(logger.getParent() != null) {
-                logger = logger.getParent();
-            }
-            rootLoggers.add(logger);
-        }
-
-        for (Logger root : rootLoggers) {
-            root.addHandler(new Handler() {
-
-                @Override
-                public void publish(LogRecord record) {
-                    if (record.getLevel().intValue() > 800) {
-                        lastLogRecord = record;
-                    }
-                }
-
-                @Override
-                public void flush() {
-                }
-
-                @Override
-                public void close() throws SecurityException {
-                }
-            });
-        }
+    private LogRecord getLastLoggedRecord() {
+        final List<LogRecord> loggedRecords = getLoggedRecords();
+        return loggedRecords.get(loggedRecords.size() - 1);
     }
 }

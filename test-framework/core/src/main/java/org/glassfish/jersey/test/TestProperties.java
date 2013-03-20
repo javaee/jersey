@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -113,6 +113,15 @@ public final class TestProperties {
      * @see #CONTAINER_PORT
      */
     public static final int DEFAULT_CONTAINER_PORT = 9998;
+
+    /**
+     * If set to a numeric value then this property enables to store log records at {@link java.util.logging.Level log level}
+     * value (or higher) defined by the value of this property.
+     * Log records can be retrieved in tests using {@link org.glassfish.jersey.test.JerseyTest#getLoggedRecords()}.
+     * <p />
+     * The name of the configuration property is <code>{@value}</code>.
+     */
+    public static final String RECORD_LOG_LEVEL = "jersey.config.test.logging.record.level";
 
     private TestProperties() {
         // prevents instantiation

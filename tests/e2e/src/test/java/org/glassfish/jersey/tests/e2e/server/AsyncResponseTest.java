@@ -42,9 +42,11 @@ package org.glassfish.jersey.tests.e2e.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Application;
@@ -53,8 +55,12 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -64,9 +70,13 @@ public class AsyncResponseTest extends JerseyTest {
     public static CountDownLatch callbackCalledSignal1 = new AsyncCallbackTest.TestLatch(3, "cancel() return value1");
     public static CountDownLatch callbackCalledSignal2 = new AsyncCallbackTest.TestLatch(3, "cancel() return value2");
 
+    public static CountDownLatch checkLog = new CountDownLatch(1);
+
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class);
+        set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
+
+        return new ResourceConfig(Resource.class, ErrorResource.class);
     }
 
     @Test
@@ -89,6 +99,21 @@ public class AsyncResponseTest extends JerseyTest {
         }
         response.close();
         callbackCalledSignal2.await();
+
+        assertTrue(getLoggedRecords().isEmpty());
+    }
+
+    @Test
+    public void testResumeExceptionLog() throws Exception {
+        final Response response = target().path("errorResource/resumeException").request().get();
+
+        assertThat(response.getStatus(), equalTo(500));
+        assertThat(response.readEntity(String.class), equalTo("resumeException"));
+
+        response.close();
+
+        checkLog.await();
+        assertTrue(getLoggedRecords().isEmpty());
     }
 
     @Path("resource")
@@ -123,6 +148,17 @@ public class AsyncResponseTest extends JerseyTest {
             if (!asyncResponse.cancel()) {
                 callbackCalledSignal2.countDown();
             }
+        }
+    }
+
+    @Path("errorResource")
+    public static class ErrorResource {
+
+        @GET
+        @Path("resumeException")
+        public void resumeException(final @Suspended AsyncResponse asyncResponse) {
+            asyncResponse.resume(new WebApplicationException(Response.serverError().entity("resumeException").build()));
+            checkLog.countDown();
         }
     }
 }

@@ -40,19 +40,18 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.io.Closeable;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Inject;
-
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.CloseableService;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import com.google.common.collect.Sets;
 
 /**
  * Binder and Factory implementations for {@code CloseableService}.
@@ -69,55 +68,34 @@ public class CloseableServiceBinder extends AbstractBinder {
 
         private final static Logger LOGGER = Logger.getLogger(DefaultCloseableService.class.getName());
 
-        private final ContainerRequest containerRequest;
+        private final AtomicBoolean closed = new AtomicBoolean(false);
 
-        @Inject
-        public DefaultCloseableService(final ContainerRequest containerRequest) {
-            this.containerRequest = containerRequest;
-        }
+        private final Set<Closeable> closeables = Sets.newIdentityHashSet();
 
         @Override
-        public void add(Closeable c) {
-            Set<Closeable> closeableSet = getCloseables();
-
-            if (closeableSet == null) {
-                closeableSet = new HashSet<Closeable>();
-                containerRequest.setProperty(DefaultCloseableService.class.getName(), closeableSet);
+        public void add(final Closeable closeable) {
+            if (!closed.get()) {
+                closeables.add(closeable);
             }
-
-            closeableSet.add(c);
         }
 
         @Override
         public void close() {
-            final Set<Closeable> closeableSet = getCloseables();
-
-            if (closeableSet != null) {
-                for (Closeable c : closeableSet) {
+            if (closed.compareAndSet(false, true)) {
+                for (final Closeable closeable : closeables) {
                     try {
-                        c.close();
+                        closeable.close();
                     } catch (Exception ex) {
-                        LOGGER.log(Level.SEVERE, LocalizationMessages.CLOSEABLE_UNABLE_TO_CLOSE(c.getClass().getName()), ex);
+                        LOGGER.log(Level.SEVERE,
+                                LocalizationMessages.CLOSEABLE_UNABLE_TO_CLOSE(closeable.getClass().getName()), ex);
                     }
                 }
             }
         }
-
-        @SuppressWarnings("unchecked")
-        private Set<Closeable> getCloseables() {
-            if (containerRequest == null) {
-                LOGGER.warning(LocalizationMessages.CLOSEABLE_INJECTED_REQUEST_CONTEXT_NULL(Thread.currentThread().getName()));
-                return null;
-            }
-
-            return (Set<Closeable>) containerRequest.getProperty(DefaultCloseableService.class.getName());
-        }
-
     }
 
     @Override
     protected void configure() {
         bind(DefaultCloseableService.class).to(CloseableService.class).in(RequestScoped.class);
     }
-
 }

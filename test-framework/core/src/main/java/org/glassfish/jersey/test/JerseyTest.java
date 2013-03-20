@@ -40,10 +40,15 @@
 package org.glassfish.jersey.test;
 
 import java.net.URI;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
@@ -65,7 +70,9 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.After;
 import org.junit.Before;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Parent class for all tests written using Jersey test framework.
@@ -105,6 +112,9 @@ public abstract class JerseyTest {
      * These property cannot be overridden with a system property.
      */
     private final Map<String, String> forcedPropertyMap = Maps.newHashMap();
+
+    private Handler logHandler;
+    private List<LogRecord> loggedRecords = Lists.newArrayList();
 
     /**
      * An extending class must implement the {@link #configure()} method to
@@ -222,6 +232,17 @@ public abstract class JerseyTest {
      */
     protected final void forceDisable(String featureName) {
         forcedPropertyMap.put(featureName, Boolean.FALSE.toString());
+    }
+
+    /**
+     * Programmatically set a value of a property with a given name.
+     * The property value may be overridden via a system property.
+     *
+     * @param propertyName name of the property.
+     * @param value property value.
+     */
+    protected final void set(String propertyName, Object value) {
+        set(propertyName, value.toString());
     }
 
     /**
@@ -414,6 +435,11 @@ public abstract class JerseyTest {
      */
     @Before
     public void setUp() throws Exception {
+        if (isLogRecordingEnabled()) {
+            loggedRecords.clear();
+            registerLogHandler();
+        }
+
         tc.start();
     }
 
@@ -425,6 +451,10 @@ public abstract class JerseyTest {
      */
     @After
     public void tearDown() throws Exception {
+        if (isLogRecordingEnabled()) {
+            unregisterLogHandler();
+        }
+
         tc.stop();
     }
 
@@ -508,5 +538,94 @@ public abstract class JerseyTest {
             }
         }
         return TestProperties.DEFAULT_CONTAINER_PORT;
+    }
+
+    /**
+     * Get stored {@link LogRecord log records} if enabled by setting {@link TestProperties#RECORD_LOG_LEVEL} or an empty list.
+     *
+     * @return list of log records or an empty list.
+     */
+    protected List<LogRecord> getLoggedRecords() {
+        return loggedRecords;
+    }
+
+    /**
+     * Retrieves a list of root loggers.
+     *
+     * @return list of root loggers.
+     */
+    private Set<Logger> getRootLoggers() {
+        final LogManager logManager = LogManager.getLogManager();
+        final Enumeration<String> loggerNames = logManager.getLoggerNames();
+
+        final Set<Logger> rootLoggers = Sets.newHashSet();
+
+        while(loggerNames.hasMoreElements()) {
+            Logger logger = logManager.getLogger(loggerNames.nextElement());
+            if (logger != null) {
+                while (logger.getParent() != null) {
+                    logger = logger.getParent();
+                }
+                rootLoggers.add(logger);
+            }
+        }
+
+        return rootLoggers;
+    }
+
+    /**
+     * Register {@link Handler log handler} to the list of root loggers.
+     */
+    private void registerLogHandler() {
+        for (final Logger root : getRootLoggers()) {
+            root.addHandler(getLogHandler());
+        }
+    }
+
+    /**
+     * Un-register {@link Handler log handler} from the list of root loggers.
+     */
+    private void unregisterLogHandler() {
+        for (final Logger root : getRootLoggers()) {
+            root.removeHandler(getLogHandler());
+        }
+    }
+
+    /**
+     * Return {@code true} if log recoding is enabled.
+     *
+     * @return {@code true} if log recoding is enabled, {@code false} otherwise.
+     */
+    private boolean isLogRecordingEnabled() {
+        return getProperty(TestProperties.RECORD_LOG_LEVEL) != null;
+    }
+
+    /**
+     * Retrieves {@link Handler log handler} capable of storing {@link LogRecord logged records}.
+     *
+     * @return log handler.
+     */
+    private Handler getLogHandler() {
+        if (logHandler == null) {
+            final Integer logLevel = Integer.valueOf(getProperty(TestProperties.RECORD_LOG_LEVEL));
+            logHandler = new Handler() {
+
+                @Override
+                public void publish(LogRecord record) {
+                    if (record.getLevel().intValue() >= logLevel) {
+                        loggedRecords.add(record);
+                    }
+                }
+
+                @Override
+                public void flush() {
+                }
+
+                @Override
+                public void close() throws SecurityException {
+                }
+            };
+        }
+        return logHandler;
     }
 }
