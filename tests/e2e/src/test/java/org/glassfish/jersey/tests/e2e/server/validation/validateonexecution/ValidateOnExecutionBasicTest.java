@@ -38,23 +38,32 @@
  * holder.
  */
 
-package org.glassfish.jersey.tests.e2e.server.validation.validateexecutable;
+package org.glassfish.jersey.tests.e2e.server.validation.validateonexecution;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.TestProperties;
+
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ValidateExecutableBasicTest extends ValidateExecutableAbstractTest {
+public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTest {
 
     /**
      * On METHOD.
@@ -157,15 +166,168 @@ public class ValidateExecutableBasicTest extends ValidateExecutableAbstractTest 
         }
     }
 
+    /**
+     * GETTERS.
+     */
+
+    public static abstract class ValidateGetterExecutable {
+
+        @GET
+        @Path("sanity")
+        public String getSanity() {
+            return "ok";
+        }
+    }
+
+    @Path("getter-on-method-default")
+    public static class ValidateGetterExecutableOnMethodDefault extends ValidateGetterExecutable {
+
+        @GET
+        @ValidateOnExecution
+        @NotNull
+        public String getDefault() {
+            return null;
+        }
+    }
+
+    @Path("getter-on-method-miss")
+    public static class ValidateGetterExecutableOnMethodMiss extends ValidateGetterExecutable {
+
+        @GET
+        @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
+        @NotNull
+        public String getMiss() {
+            return null;
+        }
+    }
+
+    @Path("getter-on-method-match")
+    public static class ValidateGetterExecutableOnMethodMatch extends ValidateGetterExecutable {
+
+        @GET
+        @ValidateOnExecution(type = {ExecutableType.NON_GETTER_METHODS, ExecutableType.GETTER_METHODS})
+        @NotNull
+        public String getMatch() {
+            return null;
+        }
+    }
+
+    @Path("getter-on-type-default")
+    @ValidateOnExecution
+    public static class ValidateGetterExecutableOnTypeDefault extends ValidateGetterExecutable {
+
+        @GET
+        @NotNull
+        public String getDefault() {
+            return null;
+        }
+    }
+
+    @Path("getter-on-type-miss")
+    @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
+    public static class ValidateGetterExecutableOnTypeMiss extends ValidateGetterExecutable {
+
+        @GET
+        @NotNull
+        public String getMiss() {
+            return null;
+        }
+    }
+
+    @Path("getter-on-type-match")
+    @ValidateOnExecution(type = {ExecutableType.NON_GETTER_METHODS, ExecutableType.GETTER_METHODS})
+    public static class ValidateGetterExecutableOnTypeMatch extends ValidateGetterExecutable {
+
+        @GET
+        @NotNull
+        public String getMatch() {
+            return null;
+        }
+    }
+
     @Override
     protected Application configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
+
         return new ResourceConfig(ValidateExecutableOnMethodsResource.class,
                 ValidateExecutableOnTypeDefault.class,
                 ValidateExecutableOnTypeMatch.class,
                 ValidateExecutableOnTypeMiss.class,
                 ValidateExecutableOnTypeNone.class,
                 ValidateExecutableMixedDefault.class,
-                ValidateExecutableMixedNone.class);
+                ValidateExecutableMixedNone.class,
+                ValidateGetterExecutableOnMethodDefault.class,
+                ValidateGetterExecutableOnMethodMiss.class,
+                ValidateGetterExecutableOnMethodMatch.class,
+                ValidateGetterExecutableOnTypeDefault.class,
+                ValidateGetterExecutableOnTypeMiss.class,
+                ValidateGetterExecutableOnTypeMatch.class);
     }
 
+    @Test
+    public void testOnTypeValidateInputFailValidateExecutableDefault() throws Exception {
+        _testOnType("default", 15, 400);
+    }
+
+    @Test
+    public void testOnTypeValidateResultFailValidateExecutableDefault() throws Exception {
+        _testOnType("default", -15, 500);
+    }
+
+    @Test
+    public void testOnMethodGetterDefault() throws Exception {
+        final WebTarget target = target("getter-on-method-default");
+
+        assertThat(target.request().get().getStatus(), equalTo(400));
+        assertThat(target.path("sanity").request().get().getStatus(), equalTo(400));
+    }
+
+    @Test
+    public void testOnMethodGetterMiss() throws Exception {
+        final WebTarget target = target("getter-on-method-miss");
+
+        Response response = target.request().get();
+        assertThat(response.getStatus(), equalTo(204));
+
+        response = target.path("sanity").request().get();
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("ok"));
+    }
+
+    @Test
+    public void testOnMethodGetterMatch() throws Exception {
+        final WebTarget target = target("getter-on-method-match");
+
+        assertThat(target.request().get().getStatus(), equalTo(400));
+        assertThat(target.path("sanity").request().get().getStatus(), equalTo(400));
+    }
+
+    @Test
+    public void testOnTypeGetterDefault() throws Exception {
+        final WebTarget target = target("getter-on-type-default");
+
+        assertThat(target.request().get().getStatus(), equalTo(500));
+        assertThat(target.path("sanity").request().get().getStatus(), equalTo(200));
+    }
+
+    @Test
+    public void testOnTypeGetterMiss() throws Exception {
+        final WebTarget target = target("getter-on-type-miss");
+
+        Response response = target.request().get();
+        assertThat(response.getStatus(), equalTo(204));
+
+        response = target.path("sanity").request().get();
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("ok"));
+    }
+
+    @Test
+    public void testOnTypeGetterMatch() throws Exception {
+        final WebTarget target = target("getter-on-type-match");
+
+        assertThat(target.request().get().getStatus(), equalTo(400));
+        assertThat(target.path("sanity").request().get().getStatus(), equalTo(400));
+    }
 }

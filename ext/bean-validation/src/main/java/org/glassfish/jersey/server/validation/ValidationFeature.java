@@ -45,7 +45,7 @@ import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.validation.internal.ConstraintViolationExceptionMapper;
+import org.glassfish.jersey.server.validation.internal.ValidationExceptionMapper;
 import org.glassfish.jersey.server.validation.internal.ValidationBinder;
 import org.glassfish.jersey.server.validation.internal.ValidationErrorMessageBodyWriter;
 
@@ -64,7 +64,7 @@ public final class ValidationFeature implements Feature {
         }
 
         context.register(new ValidationBinder());
-        context.register(ConstraintViolationExceptionMapper.class);
+        context.register(ValidationExceptionMapper.class);
         context.register(ValidationErrorMessageBodyWriter.class);
 
         return true;

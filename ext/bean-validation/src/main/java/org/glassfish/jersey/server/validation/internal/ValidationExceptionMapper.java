@@ -63,12 +63,13 @@ import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ElementKind;
 import javax.validation.Path;
+import javax.validation.ValidationException;
 
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.validation.ValidationError;
 
 /**
- * {@link ExceptionMapper} for {@link ConstraintViolationException}.
+ * {@link ExceptionMapper} for {@link ValidationException}.
  * <p/>
  * If {@value ServerProperties#FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY} property is enabled then a list of {@link ValidationError}
  * instances is sent in {@link Response} as well (in addition to HTTP 400/500 status code). Supported media types are:
@@ -78,7 +79,7 @@ import org.glassfish.jersey.server.validation.ValidationError;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @Priority(Priorities.USER)
-public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
+public class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
 
     @Context
     private Configuration config;
@@ -86,36 +87,41 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     private Provider<Request> request;
 
     @Override
-    public Response toResponse(final ConstraintViolationException exception) {
-        final Response.ResponseBuilder response = Response.status(getStatus(exception));
+    public Response toResponse(final ValidationException exception) {
+        if (exception instanceof ConstraintViolationException) {
+            final ConstraintViolationException cve = (ConstraintViolationException) exception;
+            final Response.ResponseBuilder response = Response.status(getStatus(cve));
 
-        // Entity.
-        final Object property = config.getProperty(ServerProperties.FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY);
-        if (property != null && Boolean.valueOf(property.toString())) {
-            final List<Variant> variants = Variant.mediaTypes(
-                    MediaType.TEXT_PLAIN_TYPE,
-                    MediaType.TEXT_HTML_TYPE,
-                    MediaType.APPLICATION_XML_TYPE,
-                    MediaType.APPLICATION_JSON_TYPE).build();
-            final Variant variant = request.get().selectVariant(variants);
-            if (variant != null) {
-                response.type(variant.getMediaType());
-            } else {
+            // Entity.
+            final Object property = config.getProperty(ServerProperties.FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY);
+            if (property != null && Boolean.valueOf(property.toString())) {
+                final List<Variant> variants = Variant.mediaTypes(
+                        MediaType.TEXT_PLAIN_TYPE,
+                        MediaType.TEXT_HTML_TYPE,
+                        MediaType.APPLICATION_XML_TYPE,
+                        MediaType.APPLICATION_JSON_TYPE).build();
+                final Variant variant = request.get().selectVariant(variants);
+                if (variant != null) {
+                    response.type(variant.getMediaType());
+                } else {
 
-                // default media type which will be used only when none media type from {@value variants} is in accept
-                // header of original request.
-                // could be settable by configuration property.
-                response.type(MediaType.TEXT_PLAIN_TYPE);
+                    // default media type which will be used only when none media type from {@value variants} is in accept
+                    // header of original request.
+                    // could be settable by configuration property.
+                    response.type(MediaType.TEXT_PLAIN_TYPE);
+                }
+                response.entity(
+                        new GenericEntity<List<ValidationError>>(
+                                getEntity(cve.getConstraintViolations()),
+                                new GenericType<List<ValidationError>>() {}.getType()
+                        )
+                );
             }
-            response.entity(
-                    new GenericEntity<List<ValidationError>>(
-                            getEntity(exception.getConstraintViolations()),
-                            new GenericType<List<ValidationError>>() {}.getType()
-                    )
-            );
-        }
 
-        return response.build();
+            return response.build();
+        } else {
+            return Response.serverError().entity(exception.getMessage()).build();
+        }
     }
 
     private List<ValidationError> getEntity(final Set<ConstraintViolation<?>> violations) {

@@ -53,6 +53,7 @@ import javax.ws.rs.ext.Providers;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.Configuration;
+import javax.validation.TraversableResolver;
 import javax.validation.Validation;
 import javax.validation.ValidationProviderResolver;
 import javax.validation.Validator;
@@ -170,7 +171,7 @@ public class ValidationBinder extends AbstractBinder {
     private static class ConfiguredValidatorProvider implements Factory<ConfiguredValidator> {
 
         @Inject
-        private Configuration configuration;
+        private Configuration config;
         @Inject
         private ValidatorFactory factory;
 
@@ -194,7 +195,9 @@ public class ValidationBinder extends AbstractBinder {
                 return getDefaultValidator();
             } else {
                 if (!validatorCache.containsKey(contextResolver)) {
-                    final ValidatorContext context = getDefaultValidatorContext();
+                    final ValidateOnExecutionHandler validateOnExecutionHandler = new ValidateOnExecutionHandler(config);
+
+                    final ValidatorContext context = getDefaultValidatorContext(validateOnExecutionHandler);
                     final ValidationConfig config = contextResolver.getContext(ValidationConfig.class);
 
                     if (config != null) {
@@ -205,7 +208,8 @@ public class ValidationBinder extends AbstractBinder {
 
                         // TraversableResolver
                         if (config.getTraversableResolver() != null) {
-                            context.traversableResolver(config.getTraversableResolver());
+                            context.traversableResolver(
+                                    getTraversableResolver(config.getTraversableResolver(), validateOnExecutionHandler));
                         }
 
                         // ConstraintValidatorFactory
@@ -219,7 +223,8 @@ public class ValidationBinder extends AbstractBinder {
                         }
                     }
 
-                    validatorCache.put(contextResolver, new ConfiguredValidatorImpl(context.getValidator(), configuration));
+                    validatorCache.put(contextResolver,
+                            new ConfiguredValidatorImpl(context.getValidator(), this.config, validateOnExecutionHandler));
                 }
 
                 return validatorCache.get(contextResolver);
@@ -233,7 +238,10 @@ public class ValidationBinder extends AbstractBinder {
          */
         private ConfiguredValidator getDefaultValidator() {
             if (defaultValidator == null) {
-                defaultValidator = new ConfiguredValidatorImpl(getDefaultValidatorContext().getValidator(), configuration);
+                final ValidateOnExecutionHandler validateOnExecutionHandler = new ValidateOnExecutionHandler(config);
+                final Validator validator = getDefaultValidatorContext(validateOnExecutionHandler).getValidator();
+
+                defaultValidator = new ConfiguredValidatorImpl(validator, config, validateOnExecutionHandler);
             }
             return defaultValidator;
         }
@@ -241,15 +249,40 @@ public class ValidationBinder extends AbstractBinder {
         /**
          * Return default {@link ValidatorContext validator context} able to inject JAX-RS resources/providers.
          *
+         * @param handler handler to create traversable resolver for.
          * @return default validator context.
          */
-        private ValidatorContext getDefaultValidatorContext() {
+        private ValidatorContext getDefaultValidatorContext(final ValidateOnExecutionHandler handler) {
             final ValidatorContext context = factory.usingContext();
 
             // Default Configuration.
             context.constraintValidatorFactory(resourceContext.getResource(InjectingConstraintValidatorFactory.class));
 
+            // Traversable Resolver.
+            context.traversableResolver(getTraversableResolver(factory.getTraversableResolver(), handler));
+
             return context;
+        }
+
+        /**
+         * Create traversable resolver able to process {@link javax.validation.executable.ValidateOnExecution} annotation on
+         * beans.
+         *
+         * @param delegate resolver to be wrapped into the custom traversable resolver.
+         * @param handler handler to create traversable resolver for.
+         * @return custom traversable resolver.
+         */
+        private ValidateOnExecutionTraversableResolver getTraversableResolver(TraversableResolver delegate,
+                                                                              final ValidateOnExecutionHandler handler) {
+            if (delegate == null) {
+                delegate = config.getDefaultTraversableResolver();
+            }
+
+            final boolean validationEnabled = config.getBootstrapConfiguration().isExecutableValidationEnabled();
+            final ValidateOnExecutionTraversableResolver traversableResolver = new
+                    ValidateOnExecutionTraversableResolver(delegate, handler, validationEnabled);
+
+            return resourceContext.initResource(traversableResolver);
         }
 
         @Override

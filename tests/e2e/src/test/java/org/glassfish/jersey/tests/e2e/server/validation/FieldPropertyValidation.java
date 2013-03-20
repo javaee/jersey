@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,69 +40,56 @@
 
 package org.glassfish.jersey.tests.e2e.server.validation;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Produces;
-import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.Context;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
+import java.util.List;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.executable.ExecutableType;
-import javax.validation.executable.ValidateOnExecution;
-
-import org.hibernate.validator.constraints.Email;
+import javax.validation.Constraint;
+import javax.validation.ConstraintValidator;
+import javax.validation.ConstraintValidatorContext;
+import javax.validation.Payload;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@NonEmptyNames
-@ValidateOnExecution(type = ExecutableType.ALL)
-public class BasicSubResource {
+@Retention(RetentionPolicy.RUNTIME)
+@Constraint(validatedBy = FieldPropertyValidation.Validator.class)
+public @interface FieldPropertyValidation {
 
-    @NotNull
-    @FormParam("firstName")
-    private String firstName;
+    String message() default "one or more fields are not valid";
 
-    @NotNull
-    @FormParam("lastName")
-    private String lastName;
+    Class<?>[] groups() default {};
 
-    private String email;
+    Class<? extends Payload>[] payload() default {};
 
-    /**
-     * Note: Constructor input parameter should not be validated.
-     */
-    @SuppressWarnings("UnusedParameters")
-    public BasicSubResource(@NotNull @Context final ResourceContext resourceContext) {
-    }
+    String[] elements() default {};
 
-    @FormParam("email")
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public class Validator implements ConstraintValidator<FieldPropertyValidation, FieldPropertyValidationResource.SubResource> {
 
-    @NotNull
-    @Email(regexp = "[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}")
-    public String getEmail() {
-        return email;
-    }
+        private List<String> properties;
 
-    public String getFirstName() {
-        return firstName;
-    }
+        @Override
+        public void initialize(final FieldPropertyValidation annotation) {
+            this.properties = Arrays.asList(annotation.elements());
+        }
 
-    public String getLastName() {
-        return lastName;
-    }
+        @Override
+        public boolean isValid(final FieldPropertyValidationResource.SubResource bean,
+                               final ConstraintValidatorContext constraintValidatorContext) {
+            boolean result = true;
 
-    @POST
-    @Consumes("application/x-www-form-urlencoded")
-    @Produces("application/contactBean")
-    public ContactBean getContactValidationBean() {
-        final ContactBean contactBean = new ContactBean();
-        contactBean.setName(firstName + " " + lastName);
-        contactBean.setEmail(getEmail());
-        return contactBean;
+            for (final String property : properties) {
+                if ("fieldAndClass".equals(property)) {
+                    result &= bean.fieldAndClass != null;
+                } else if ("propertyAndClass".equals(property)) {
+                    result &= bean.getPropertyAndClass() != null;
+                } else if ("propertyGetterAndClass".equals(property)) {
+                    result &= bean.getPropertyGetterAndClass() != null;
+                }
+            }
+
+            return result;
+        }
     }
 }
