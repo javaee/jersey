@@ -49,8 +49,8 @@
     <artifactId>jersey-quickstart-grizzly2</artifactId>
     <modelVersion>4.0.0</modelVersion>
     <description>
-    An archetype which contains a quick start Jersey project based on Grizzly container.
-  </description>
+        An archetype which contains a quick start Jersey project based on Grizzly container.
+    </description>
     <name>jersey-archetype-grizzly2</name>
     <build>
         <resources>

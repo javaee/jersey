@@ -43,11 +43,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-      <groupId>net.java</groupId>
-      <artifactId>jvnet-parent</artifactId>
-      <version>1</version>
+        <groupId>org.glassfish.jersey.examples</groupId>
+        <artifactId>osgi-helloworld-webapp</artifactId>
+        <version>2.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.glassfish.jersey.examples.helloworld-osgi-webapp</groupId>
     <artifactId>functional-test</artifactId>
     <version>2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -56,19 +55,11 @@
 
     <!-- we can use full maven properties incl. inheritance ! -->
     <properties>
-        <javax.annotation.version>1.2-b02</javax.annotation.version>
-        <junit-version>4.5</junit-version>
-        <pax-exam-version>1.2.3</pax-exam-version>
         <jetty-version>0.7.1</jetty-version>
-        <slf4j-log4j-binding-impl-version>1.6.4</slf4j-log4j-binding-impl-version>
-        <validation.api.version>1.1.0.CR2</validation.api.version>
-        <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
-        <osgi.version>4.2.0</osgi.version>
-        <!-- end of the workaround -->
     </properties>
 
     <profiles>
-       <profile>
+        <profile>
             <id>default</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -94,7 +85,6 @@
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
-            <version>${javax.annotation.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -107,47 +97,37 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j-log4j-binding-impl-version}</version>
+            <version>1.6.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam</artifactId>
-            <version>${pax-exam-version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-junit</artifactId>
-            <version>${pax-exam-version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-default</artifactId>
-            <version>${pax-exam-version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>${junit-version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
-            <version>${osgi.version}</version>
-            <!-- end of the workaround -->
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
-            <version>${osgi.version}</version>
-            <!-- end of the workaround -->
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -177,7 +157,6 @@
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
-            <version>${validation.api.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -187,7 +166,6 @@
             <plugin>
                 <groupId>org.ops4j.pax.exam</groupId>
                 <artifactId>maven-paxexam-plugin</artifactId>
-                <version>${pax-exam-version}</version>
                 <executions>
                     <execution>
                         <id>generate-config</id>
@@ -201,13 +179,13 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
-                  <execution>
-                    <id>test-compile</id>
-                    <phase>test-compile</phase>
-                    <goals>
-                      <goal>testCompile</goal>
-                    </goals>
-                  </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -221,7 +199,7 @@
                     </execution>
                 </executions>
             </plugin>
-             <plugin>
+            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludes>
@@ -231,40 +209,15 @@
                     <enableAssertions>false</enableAssertions>
                 </configuration>
                 <executions>
-                  <execution>
-                    <id>test</id>
-                    <phase>test</phase>
-                    <goals>
-                      <goal>test</goal>
-                    </goals>
-                  </execution>
+                    <execution>
+                        <id>test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
                 </executions>
-             </plugin>
-
-            <!-- TODO: the following is just a temporary workaround to fix copyright check until JERSEY-1112 gets resolved -->
-             <plugin>
-                 <groupId>org.glassfish.copyright</groupId>
-                 <artifactId>glassfish-copyright-maven-plugin</artifactId>
-                 <version>1.28</version>
-                 <configuration>
-                     <excludeFile>etc/config/copyright-exclude</excludeFile>
-                     <!--svn|mercurial|git - defaults to svn-->
-                     <scm>git</scm>
-                     <!-- turn on/off debugging -->
-                     <debug>false</debug>
-                     <!-- skip files not under SCM-->
-                     <scmOnly>true</scmOnly>
-                     <!-- turn off warnings -->
-                     <warn>true</warn>
-                     <!-- for use with repair -->
-                     <update>false</update>
-                     <!-- check that year is correct -->
-                     <ignoreYear>false</ignoreYear>
-                     <templateFile>etc/config/copyright.txt</templateFile>
-                 </configuration>
-             </plugin>
-             <!-- end of the temporary workaround -->
-
+            </plugin>
         </plugins>
     </build>
 

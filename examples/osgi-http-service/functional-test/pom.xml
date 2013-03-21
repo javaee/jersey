@@ -55,14 +55,6 @@
     <packaging>pom</packaging>
     <name>jersey-examples-osgi-http-service-test</name>
 
-    <!-- we can use full maven properties incl. inheritance ! -->
-    <properties>
-        <junit-version>4.5</junit-version>
-        <pax-exam-version>1.2.4</pax-exam-version>
-        <slf4j-log4j-binding-impl-version>1.6.4</slf4j-log4j-binding-impl-version>
-        <validation.api.version>1.1.0.CR2</validation.api.version>
-    </properties>
-
     <profiles>
         <profile>
             <id>default</id>
@@ -99,24 +91,21 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j-log4j-binding-impl-version}</version>
+            <version>1.6.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam</artifactId>
-            <version>${pax-exam-version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-junit</artifactId>
-            <version>${pax-exam-version}</version>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
             <artifactId>pax-exam-container-default</artifactId>
-            <version>${pax-exam-version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -133,7 +122,7 @@
             <artifactId>org.osgi.compendium</artifactId>
             <scope>test</scope>
         </dependency>
-       <dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.eventadmin</artifactId>
             <scope>test</scope>
@@ -184,16 +173,17 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
-                  <execution>
-                    <id>test-compile</id>
-                    <phase>test-compile</phase>
-                    <goals>
-                      <goal>testCompile</goal>
-                    </goals>
-                  </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
@@ -204,7 +194,7 @@
                     </execution>
                 </executions>
             </plugin>
-             <plugin>
+            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludes>
@@ -215,15 +205,15 @@
                     <!--skipTests>true</skipTests-->
                 </configuration>
                 <executions>
-                  <execution>
-                    <id>test</id>
-                    <phase>test</phase>
-                    <goals>
-                      <goal>test</goal>
-                    </goals>
-                  </execution>
+                    <execution>
+                        <id>test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
                 </executions>
-             </plugin>
+            </plugin>
         </plugins>
     </build>
 

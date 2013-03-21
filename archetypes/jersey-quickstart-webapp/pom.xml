@@ -48,8 +48,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <description>
-    An archetype which contains a quick start Jersey-based web application project.
-  </description>
+        An archetype which contains a quick start Jersey-based web application project.
+    </description>
     <artifactId>jersey-quickstart-webapp</artifactId>
     <name>jersey-archetype-webapp</name>
     <build>

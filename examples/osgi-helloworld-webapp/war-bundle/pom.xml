@@ -43,11 +43,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>net.java</groupId>
-        <artifactId>jvnet-parent</artifactId>
-        <version>1</version>
+        <groupId>org.glassfish.jersey.examples</groupId>
+        <artifactId>osgi-helloworld-webapp</artifactId>
+        <version>2.0-SNAPSHOT</version>
     </parent>
-    <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
     <artifactId>war-bundle</artifactId>
     <version>2.0-SNAPSHOT</version>
 
@@ -55,24 +54,13 @@
 
     <packaging>war</packaging>
 
-    <profiles>
-        <profile>
-            <id>default</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.glassfish.jersey.containers</groupId>
-                    <artifactId>jersey-container-servlet-core</artifactId>
-                    <version>${project.version}</version>
-                    <scope>provided</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
-
     <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
             <artifactId>lib-bundle</artifactId>
@@ -81,7 +69,6 @@
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
-            <version>2.0-rc2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -93,17 +80,11 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
-            <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
-            <version>${osgi.version}</version>
-            <!-- end of the workaround -->
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
-            <version>${osgi.version}</version>
-            <!-- end of the workaround -->
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -119,12 +100,10 @@
                 </configuration>
             </plugin>
 
-
             <!-- to generate the MANIFEST-FILE required by the bundle -->
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.7</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -171,38 +150,7 @@
                     </archive>
                 </configuration>
             </plugin>
-
-            <!-- TODO: the following is just a temporary workaround to fix copyright check until JERSEY-1112 gets resolved -->
-            <plugin>
-                <groupId>org.glassfish.copyright</groupId>
-                <artifactId>glassfish-copyright-maven-plugin</artifactId>
-                <version>1.28</version>
-                <configuration>
-                    <excludeFile>etc/config/copyright-exclude</excludeFile>
-                    <!--svn|mercurial|git - defaults to svn-->
-                    <scm>git</scm>
-                    <!-- turn on/off debugging -->
-                    <debug>false</debug>
-                    <!-- skip files not under SCM-->
-                    <scmOnly>true</scmOnly>
-                    <!-- turn off warnings -->
-                    <warn>true</warn>
-                    <!-- for use with repair -->
-                    <update>false</update>
-                    <!-- check that year is correct -->
-                    <ignoreYear>false</ignoreYear>
-                    <templateFile>etc/config/copyright.txt</templateFile>
-                </configuration>
-            </plugin>
-            <!-- end of the temporary workaround -->
-
         </plugins>
     </build>
-
-    <!-- TODO: remove the following temporary workaround after JERSEY-1112 gets fixed -->
-    <properties>
-        <osgi.version>4.2.0</osgi.version>
-    </properties>
-    <!-- end of the workaround -->
 
 </project>
