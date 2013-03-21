@@ -524,6 +524,7 @@ public class ResponseTest {
         }
     }
 
+    // Reproducer for JERSEY-1553
     @Test
     public void testVariants() {
         List<String> encoding = Arrays.asList("gzip", "compress");
@@ -532,9 +533,13 @@ public class ResponseTest {
                 .mediaTypes(MediaType.TEXT_PLAIN_TYPE)
                 .languages(new Locale("en", "US"), new Locale("en", "GB"))
                 .encodings(encoding.toArray(new String[0])).add().build();
-        final Response response = Response.ok().variants(list).build();
 
-        assertNotNull(response);
-        assertNotNull(response.getHeaderString(HttpHeaders.VARY));
+        final Response r1 = Response.ok().variants(list).build();
+        assertNotNull(r1);
+        assertNotNull(r1.getHeaderString(HttpHeaders.VARY));
+
+        final Response r2 = Response.ok().variants(list.toArray(new Variant[list.size()])).build();
+        assertNotNull(r2);
+        assertNotNull(r2.getHeaderString(HttpHeaders.VARY));
     }
 }
