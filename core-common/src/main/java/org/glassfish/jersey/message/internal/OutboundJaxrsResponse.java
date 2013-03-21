@@ -544,7 +544,7 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public ResponseBuilder variants(Variant... variants) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return variants(Arrays.asList(variants));
         }
 
         @Override
