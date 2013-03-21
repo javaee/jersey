@@ -1057,7 +1057,7 @@
         <ejb.version>3.2-b01</ejb.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
         <grizzly2.version>2.3-rc6</grizzly2.version>
-        <hk2.version>2.1.76</hk2.version>
+        <hk2.version>2.1.78</hk2.version>
         <jackson.version>1.9.11</jackson.version>
         <javax.annotation.version>1.2-b02</javax.annotation.version>
         <javax.annotation.bundle.version>1.1.99</javax.annotation.bundle.version>
@@ -1085,8 +1085,7 @@
         <servlet2.version>2.4</servlet2.version>
         <servlet3.version>3.0</servlet3.version>
         <simple.version>5.0.4</simple.version>
-        <validation.api.version>1.1.0.CR2</validation.api.version>
-        <validation.ri.version>5.0.0.CR3</validation.ri.version>
+        <validation.api.version>1.1.0.CR3</validation.api.version>
         <weld.version>2.0.0.Beta3</weld.version>
     </properties>
 </project>

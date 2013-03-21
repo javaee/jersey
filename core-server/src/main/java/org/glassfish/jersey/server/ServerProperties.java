@@ -244,7 +244,25 @@ public final class ServerProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    public static final String FEATURE_DISABLE_BEAN_VALIDATION = "jersey.config.disableBeanValidation.server";
+    public static final String FEATURE_DISABLE_BEAN_VALIDATION = "jersey.config.beanValidation.disable.server";
+
+    /**
+     * If {@code true} then disable check whether the overriding / implementing methods are annotated with
+     * {@link javax.validation.executable.ValidateOnExecution} as well as one of their predecessor (in hierarchy).
+     * <p>
+     * By default this checks is automatically enabled, if Bean Validation is enabled as well (see
+     * {@link #FEATURE_DISABLE_BEAN_VALIDATION}).
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @see javax.validation.executable.ValidateOnExecution
+     */
+    public static final String FEATURE_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK =
+            "jersey.config.beanValidation.disable.validateOnExecutableCheck.server";
 
     /**
      * If {@code true} then enable sending of validation error entity in {@code Response} (validation has to be enabled by registering
@@ -257,7 +275,7 @@ public final class ServerProperties {
      * </p>
      */
     public static final String FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY
-            = "jersey.config.server.validation.enableOutputValidationErrorEntity";
+            = "jersey.config.beanValidation.enableOutputValidationErrorEntity.server";
 
     /**
      * If {@code true} then disable auto discovery on server.

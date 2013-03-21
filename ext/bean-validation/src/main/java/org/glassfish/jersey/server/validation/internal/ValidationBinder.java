@@ -62,7 +62,9 @@ import javax.validation.ValidatorFactory;
 import javax.validation.spi.ValidationProvider;
 
 import org.glassfish.jersey.internal.ServiceFinder;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.validation.ValidationConfig;
 
@@ -171,10 +173,12 @@ public class ValidationBinder extends AbstractBinder {
     private static class ConfiguredValidatorProvider implements Factory<ConfiguredValidator> {
 
         @Inject
-        private Configuration config;
+        private Configuration validationConfig;
         @Inject
         private ValidatorFactory factory;
 
+        @Context
+        private javax.ws.rs.core.Configuration jaxRsConfig;
         @Context
         private Providers providers;
         @Context
@@ -195,7 +199,8 @@ public class ValidationBinder extends AbstractBinder {
                 return getDefaultValidator();
             } else {
                 if (!validatorCache.containsKey(contextResolver)) {
-                    final ValidateOnExecutionHandler validateOnExecutionHandler = new ValidateOnExecutionHandler(config);
+                    final ValidateOnExecutionHandler validateOnExecutionHandler =
+                            new ValidateOnExecutionHandler(validationConfig, !isValidateOnExecutableOverrideCheckDisabled());
 
                     final ValidatorContext context = getDefaultValidatorContext(validateOnExecutionHandler);
                     final ValidationConfig config = contextResolver.getContext(ValidationConfig.class);
@@ -224,7 +229,7 @@ public class ValidationBinder extends AbstractBinder {
                     }
 
                     validatorCache.put(contextResolver,
-                            new ConfiguredValidatorImpl(context.getValidator(), this.config, validateOnExecutionHandler));
+                            new ConfiguredValidatorImpl(context.getValidator(), this.validationConfig, validateOnExecutionHandler));
                 }
 
                 return validatorCache.get(contextResolver);
@@ -238,10 +243,11 @@ public class ValidationBinder extends AbstractBinder {
          */
         private ConfiguredValidator getDefaultValidator() {
             if (defaultValidator == null) {
-                final ValidateOnExecutionHandler validateOnExecutionHandler = new ValidateOnExecutionHandler(config);
+                final ValidateOnExecutionHandler validateOnExecutionHandler =
+                        new ValidateOnExecutionHandler(validationConfig, !isValidateOnExecutableOverrideCheckDisabled());
                 final Validator validator = getDefaultValidatorContext(validateOnExecutionHandler).getValidator();
 
-                defaultValidator = new ConfiguredValidatorImpl(validator, config, validateOnExecutionHandler);
+                defaultValidator = new ConfiguredValidatorImpl(validator, validationConfig, validateOnExecutionHandler);
             }
             return defaultValidator;
         }
@@ -275,14 +281,19 @@ public class ValidationBinder extends AbstractBinder {
         private ValidateOnExecutionTraversableResolver getTraversableResolver(TraversableResolver delegate,
                                                                               final ValidateOnExecutionHandler handler) {
             if (delegate == null) {
-                delegate = config.getDefaultTraversableResolver();
+                delegate = validationConfig.getDefaultTraversableResolver();
             }
 
-            final boolean validationEnabled = config.getBootstrapConfiguration().isExecutableValidationEnabled();
+            final boolean validationEnabled = validationConfig.getBootstrapConfiguration().isExecutableValidationEnabled();
             final ValidateOnExecutionTraversableResolver traversableResolver = new
                     ValidateOnExecutionTraversableResolver(delegate, handler, validationEnabled);
 
             return resourceContext.initResource(traversableResolver);
+        }
+
+        private boolean isValidateOnExecutableOverrideCheckDisabled() {
+            return PropertiesHelper.isProperty(
+                    jaxRsConfig.getProperty(ServerProperties.FEATURE_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK));
         }
 
         @Override

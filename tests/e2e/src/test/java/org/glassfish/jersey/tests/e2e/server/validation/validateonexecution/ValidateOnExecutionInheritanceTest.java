@@ -50,6 +50,7 @@ import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 
 import org.junit.Test;
 
@@ -322,7 +323,8 @@ public class ValidateOnExecutionInheritanceTest extends ValidateOnExecutionAbstr
                 ValidateExecutableMixedDefaultResource.class,
                 ValidateExecutableMixedNoneResource.class,
                 ValidateExecutableMixedClassNoneResource.class,
-                ValidateExecutableMixedClassDefaultResource.class);
+                ValidateExecutableMixedClassDefaultResource.class)
+                .property(ServerProperties.FEATURE_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true);
     }
 
     @Test
