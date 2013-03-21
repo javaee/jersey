@@ -47,7 +47,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,8 +77,6 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.inject.HttpContext;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
@@ -109,20 +106,13 @@ public class WebComponent {
     private static final AsyncContextDelegate DefaultAsyncDELEGATE = new AsyncContextDelegate() {
 
         @Override
-        public void suspend(final ContainerResponseWriter writer, final long timeOut, final TimeUnit timeUnit,
-                            final TimeoutHandler timeoutHandler) throws IllegalStateException {
-            throw new UnsupportedOperationException("Asynchronous processing not supported on Servlet 2.x container.");
-        }
-
-        @Override
-        public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException {
-            throw new UnsupportedOperationException("Asynchronous processing not supported on Servlet 2.x container.");
+        public void suspend() throws IllegalStateException {
+            throw new UnsupportedOperationException(LocalizationMessages.ASYNC_PROCESSING_NOT_SUPPORTED());
         }
 
         @Override
         public void complete() {
         }
-
     };
 
     private AsyncContextDelegateProvider getAsyncExtensionDelegate() {

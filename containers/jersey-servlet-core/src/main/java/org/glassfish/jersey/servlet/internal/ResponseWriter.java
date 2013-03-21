@@ -56,6 +56,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 
@@ -78,6 +79,8 @@ public class ResponseWriter implements ContainerResponseWriter {
     private final SettableFuture<ContainerResponse> responseContext;
     private final AsyncContextDelegate asyncExt;
 
+    private final JerseyRequestTimeoutHandler requestTimeoutHandler;
+
     /**
      * Creates a new instance to write a single Jersey response.
      *
@@ -90,13 +93,18 @@ public class ResponseWriter implements ContainerResponseWriter {
         this.response = response;
         this.asyncExt = asyncExt;
         this.responseContext = SettableFuture.create();
+
+        this.requestTimeoutHandler = new JerseyRequestTimeoutHandler(this);
     }
 
     @Override
     public boolean suspend(final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) {
         try {
-            asyncExt.suspend(this, timeOut, timeUnit, timeoutHandler);
-            return true;
+            // Suspend the servlet.
+            asyncExt.suspend();
+
+            // Suspend the internal request timeout handler.
+            return requestTimeoutHandler.suspend(timeOut, timeUnit, timeoutHandler);
         } catch (IllegalStateException ex) {
             return false;
         }
@@ -104,7 +112,7 @@ public class ResponseWriter implements ContainerResponseWriter {
 
     @Override
     public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
-        asyncExt.setSuspendTimeout(timeOut, timeUnit);
+        requestTimeoutHandler.setSuspendTimeout(timeOut, timeUnit);
     }
 
     @Override
