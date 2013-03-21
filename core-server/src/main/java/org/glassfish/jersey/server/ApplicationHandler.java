@@ -48,17 +48,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.RuntimeType;
-import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
@@ -90,6 +86,7 @@ import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
@@ -727,21 +724,18 @@ public final class ApplicationHandler {
     }
 
     private static class FutureResponseWriter extends AbstractFuture<ContainerResponse> implements ContainerResponseWriter {
-        private static final Logger LOGGER = Logger.getLogger(FutureResponseWriter.class.getName());
-        private static final Timer TIMER = new Timer("Jersey application request timer");
 
         private ContainerResponse response = null;
-        private TimerTask timeoutTask = null;
-        private TimeoutHandler timeoutHandler = null;
-        private boolean suspended = false;
-        private final Object runtimeLock = new Object();
 
         private final String requestMethodName;
         private final OutputStream outputStream;
 
+        private final JerseyRequestTimeoutHandler requestTimeoutHandler;
+
         private FutureResponseWriter(String requestMethodName, OutputStream outputStream) {
             this.requestMethodName = requestMethodName;
             this.outputStream = outputStream;
+            this.requestTimeoutHandler = new JerseyRequestTimeoutHandler(this);
         }
 
         @Override
@@ -758,55 +752,12 @@ public final class ApplicationHandler {
 
         @Override
         public boolean suspend(long time, TimeUnit unit, final TimeoutHandler handler) throws IllegalStateException {
-            synchronized (runtimeLock) {
-                if (suspended) {
-                    return false;
-                }
-
-                suspended = true;
-                timeoutHandler = handler;
-
-                setSuspendTimeout(time, unit);
-                return true;
-            }
+            return requestTimeoutHandler.suspend(time, unit, handler);
         }
 
         @Override
         public void setSuspendTimeout(long time, TimeUnit unit) throws IllegalStateException {
-            final TimerTask task = new TimerTask() {
-
-                @Override
-                public void run() {
-                    try {
-                        synchronized (runtimeLock) {
-                            timeoutHandler.onTimeout(FutureResponseWriter.this);
-                        }
-                    } catch (Throwable throwable) {
-                        LOGGER.log(Level.WARNING, LocalizationMessages.SUSPEND_HANDLER_EXECUTION_FAILED(), throwable);
-                    }
-                }
-            };
-            synchronized (runtimeLock) {
-                if (!suspended) {
-                    throw new IllegalStateException(LocalizationMessages.SUSPEND_NOT_SUSPENDED());
-                }
-
-                if (timeoutTask != null) {
-                    timeoutTask.cancel();
-                    timeoutTask = null;
-                }
-
-                if (time <= AsyncResponse.NO_TIMEOUT) {
-                    return;
-                }
-
-                timeoutTask = task;
-                try {
-                    TIMER.schedule(task, unit.toMillis(time));
-                } catch (IllegalStateException ex) {
-                    LOGGER.log(Level.WARNING, LocalizationMessages.SUSPEND_SHEDULING_ERROR(), ex);
-                }
-            }
+            requestTimeoutHandler.setSuspendTimeout(time, unit);
         }
 
         @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,25 +39,50 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_async;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.Future;
 
-import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
- * Asynchronous servlet-deployed resource application.
+ * Asynchronous servlet-deployed resource for testing {@link javax.ws.rs.container.AsyncResponse async response} timeouts.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@ApplicationPath("/")
-public class Servlet3Async extends Application {
+public class AsyncTimeoutResourceITCase extends JerseyTest {
 
     @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> hashSet = new HashSet<Class<?>>();
-        hashSet.add(AsyncServletResource.class);
-        hashSet.add(AsyncTimeoutResource.class);
-        return hashSet;
+    protected Application configure() {
+        return new Application();
+    }
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
+    }
+
+    @Test
+    public void testTimeout() throws Exception {
+        final WebTarget resourceTarget = target("timeout");
+        resourceTarget.register(new LoggingFilter());
+        final Future<Response> responseFuture = resourceTarget.path("suspend").request().async().get();
+
+        // Set timeout.
+        assertThat(resourceTarget.path("timeout").request().post(Entity.text("500")).getStatus(), equalTo(204));
+
+        // Wait for it.
+        assertThat(responseFuture.get().readEntity(String.class), equalTo("timeout1=true_timeout2=true_handled"));
     }
 }

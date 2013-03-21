@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,18 +39,12 @@
  */
 package org.glassfish.jersey.servlet.async;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.AsyncContext;
-import javax.servlet.AsyncEvent;
-import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 
@@ -70,10 +64,18 @@ public class AsyncContextDelegateProviderImpl implements AsyncContextDelegatePro
 
     private static final class ExtensionImpl implements AsyncContextDelegate {
 
+        private static final int NEVER_TIMEOUT_VALUE = -1;
+
         private final HttpServletRequest request;
         private final HttpServletResponse response;
         private final AtomicReference<AsyncContext> asyncContextRef;
 
+        /**
+         * Create a Servlet 3.x {@link AsyncContextDelegate} with given {@code request} and {@code response}.
+         *
+         * @param request request to create {@link AsyncContext} for.
+         * @param response response to create {@link AsyncContext} for.
+         */
         private ExtensionImpl(final HttpServletRequest request, final HttpServletResponse response) {
             this.request = request;
             this.response = response;
@@ -81,43 +83,13 @@ public class AsyncContextDelegateProviderImpl implements AsyncContextDelegatePro
         }
 
         @Override
-        public void suspend(final ContainerResponseWriter writer, final long timeOut, final TimeUnit timeUnit, final TimeoutHandler timeoutHandler) throws IllegalStateException {
+        public void suspend() throws IllegalStateException {
             final AsyncContext asyncContext = request.startAsync(request, response);
-            asyncContext.setTimeout(timeUnit.toMillis(timeOut));
-            asyncContext.addListener(new AsyncListener() {
 
-                @Override
-                public void onComplete(AsyncEvent event) throws IOException {
-                    // TODO ?
-                }
+            // Tell underlying asycContext to never time out.
+            asyncContext.setTimeout(NEVER_TIMEOUT_VALUE);
 
-                @Override
-                public void onTimeout(AsyncEvent event) throws IOException {
-                    if(timeoutHandler != null) {
-                        timeoutHandler.onTimeout(writer);
-                    }
-                }
-
-                @Override
-                public void onError(AsyncEvent event) throws IOException {
-                    // TODO ?
-                }
-
-                @Override
-                public void onStartAsync(AsyncEvent event) throws IOException {
-                    // TODO ?
-                }
-            });
             asyncContextRef.set(asyncContext);
-        }
-
-        @Override
-        public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException {
-            final AsyncContext asyncContext = asyncContextRef.get();
-            if (asyncContext == null) {
-                throw new IllegalStateException("Not suspended.");
-            }
-            asyncContext.setTimeout(timeUnit.toMillis(timeOut));
         }
 
         @Override

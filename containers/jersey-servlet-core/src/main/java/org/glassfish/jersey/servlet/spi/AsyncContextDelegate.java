@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.servlet.spi;
 
-import java.util.concurrent.TimeUnit;
-
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
 /**
@@ -54,32 +52,14 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 public interface AsyncContextDelegate {
 
     /**
-     * Invoked by the superior {@link ContainerResponseWriter} responsible
-     * for writing the response when processing is to be suspended.
-     * An implementation can throw an {@link UnsupportedOperationException} if suspend is not supported (the default behavior).
-     *
-     * @param writer response writer.
-     * @param timeOut time-out value.
-     * @param timeUnit time-out time unit.
-     * @param timeoutHandler response writer time-out handler.
-     * @throws IllegalStateException
+     * Invoked by the superior {@link ContainerResponseWriter} responsible for writing the response when processing is to be
+     * suspended. An implementation can throw an {@link UnsupportedOperationException} if suspend is not supported (the default
+     * behavior).
      *
      * @see ContainerResponseWriter#suspend(long, java.util.concurrent.TimeUnit, org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler)
+     * @throws IllegalStateException if underlying {@link javax.servlet.ServletRequest servlet request} throws an exception.
      */
-    public void suspend(final ContainerResponseWriter writer, final long timeOut, final TimeUnit timeUnit, final ContainerResponseWriter.TimeoutHandler timeoutHandler) throws IllegalStateException;
-
-    /**
-     * Invoked by the superior {@link ContainerResponseWriter} responsible
-     * for writing the response when new timeout values are to be set.
-     * An implementation can throw an {@link UnsupportedOperationException} if suspend is not supported (the default behavior).
-     *
-     * @param timeOut new time-out value.
-     * @param timeUnit new time-out time unit.
-     * @throws IllegalStateException
-     *
-     * @see ContainerResponseWriter#setSuspendTimeout(long, java.util.concurrent.TimeUnit)
-     */
-    public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException;
+    public void suspend() throws IllegalStateException;
 
     /**
      * Invoked upon a response writing completion when the response write is either committed or canceled.
