@@ -43,7 +43,6 @@ import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.Configuration;
@@ -235,11 +234,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     @Override
     public JerseyClient register(Class<?> providerClass, Class<?>... contracts) {
         checkNotClosed();
-        if (contracts != null && contracts.length > 0) {
-            config.register(providerClass, contracts);
-        } else {
-            LOGGER.log(Level.WARNING, LocalizationMessages.CLIENT_REGISTER_EMPTY_CONTRACT(providerClass));
-        }
+        config.register(providerClass, contracts);
         return this;
     }
 

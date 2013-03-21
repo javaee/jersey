@@ -39,13 +39,18 @@
  */
 package org.glassfish.jersey.server;
 
+import java.io.IOException;
 import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.junit.Test;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
@@ -154,5 +159,34 @@ public class ResourceConfigBuilderTest {
 
     private static ResourceConfig initApp(Class<? extends Application> appClass) {
         return new ApplicationHandler(appClass).getConfiguration();
+    }
+
+    public static class TestProvider implements ReaderInterceptor {
+
+        @Override
+        public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
+            return context.proceed();
+        }
+    }
+
+    // Reproducer JERSEY-1637
+    @Test
+    public void testRegisterNullOrEmptyContracts() {
+        final TestProvider provider = new TestProvider();
+
+        final ResourceConfig resourceConfig = new ResourceConfig();
+        resourceConfig.register(TestProvider.class, (Class<?>[]) null);
+        assertFalse(resourceConfig.getConfiguration().isRegistered(TestProvider.class));
+
+        resourceConfig.register(provider,  (Class<?>[]) null);
+        assertFalse(resourceConfig.getConfiguration().isRegistered(TestProvider.class));
+        assertFalse(resourceConfig.getConfiguration().isRegistered(provider));
+
+        resourceConfig.register(TestProvider.class,  new Class[0]);
+        assertFalse(resourceConfig.getConfiguration().isRegistered(TestProvider.class));
+
+        resourceConfig.register(provider,  new Class[0]);
+        assertFalse(resourceConfig.getConfiguration().isRegistered(TestProvider.class));
+        assertFalse(resourceConfig.getConfiguration().isRegistered(provider));
     }
 }

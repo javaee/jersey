@@ -39,21 +39,26 @@
  */
 package org.glassfish.jersey.client;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import com.google.common.collect.Lists;
@@ -88,6 +93,34 @@ public class JerseyWebTargetTest {
         } catch (IllegalStateException e) {
             // ignore
         }
+    }
+
+    public static class TestProvider implements ReaderInterceptor {
+
+        @Override
+        public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
+            return context.proceed();
+        }
+    }
+
+    // Reproducer JERSEY-1637
+    @Test
+    public void testRegisterNullOrEmptyContracts() {
+        final TestProvider provider = new TestProvider();
+
+        target.register(TestProvider.class, (Class<?>[]) null);
+        assertFalse(target.getConfiguration().isRegistered(TestProvider.class));
+
+        target.register(provider, (Class<?>[]) null);
+        assertFalse(target.getConfiguration().isRegistered(TestProvider.class));
+        assertFalse(target.getConfiguration().isRegistered(provider));
+
+        target.register(TestProvider.class, new Class[0]);
+        assertFalse(target.getConfiguration().isRegistered(TestProvider.class));
+
+        target.register(provider, new Class[0]);
+        assertFalse(target.getConfiguration().isRegistered(TestProvider.class));
+        assertFalse(target.getConfiguration().isRegistered(provider));
     }
 
     @Test
@@ -175,15 +208,25 @@ public class JerseyWebTargetTest {
         Assert.assertEquals("/path/a%2520%253F/*///b/", target.path("path/{a}/{b}").resolveTemplates(map,
                 false).getUri().toString());
 
-        List<Map<String,Object>> corruptedTemplateValuesList = Lists.<Map<String,Object>>newArrayList(
+        List<Map<String, Object>> corruptedTemplateValuesList = Lists.<Map<String, Object>>newArrayList(
                 null,
-                new HashMap<String, Object>() {{ put(null, "value"); }},
-                new HashMap<String, Object>() {{ put("name", null); }},
-                new HashMap<String, Object>() {{ put("a", "foo"); put("name", null); }},
-                new HashMap<String, Object>() {{ put("name", null); put("a", "foo"); }}
+                new HashMap<String, Object>() {{
+                    put(null, "value");
+                }},
+                new HashMap<String, Object>() {{
+                    put("name", null);
+                }},
+                new HashMap<String, Object>() {{
+                    put("a", "foo");
+                    put("name", null);
+                }},
+                new HashMap<String, Object>() {{
+                    put("name", null);
+                    put("a", "foo");
+                }}
         );
 
-        for (final Map<String,Object> corruptedTemplateValues : corruptedTemplateValuesList) {
+        for (final Map<String, Object> corruptedTemplateValues : corruptedTemplateValuesList) {
             try {
                 target.path("path/{a}/{b}").resolveTemplatesFromEncoded(corruptedTemplateValues);
                 fail("NullPointerException expected. " + corruptedTemplateValues);
@@ -194,7 +237,7 @@ public class JerseyWebTargetTest {
             }
         }
 
-        for (final Map<String,Object> corruptedTemplateValues : corruptedTemplateValuesList) {
+        for (final Map<String, Object> corruptedTemplateValues : corruptedTemplateValuesList) {
             try {
                 target.path("path/{a}/{b}").resolveTemplates(corruptedTemplateValues);
                 fail("NullPointerException expected. " + corruptedTemplateValues);
@@ -205,8 +248,8 @@ public class JerseyWebTargetTest {
             }
         }
 
-        for (final Map<String,Object> corruptedTemplateValues : corruptedTemplateValuesList) {
-            for (final boolean encode : new boolean[] {true, false}) {
+        for (final Map<String, Object> corruptedTemplateValues : corruptedTemplateValuesList) {
+            for (final boolean encode : new boolean[]{true, false}) {
                 try {
                     target.path("path/{a}/{b}").resolveTemplates(corruptedTemplateValues, encode);
                     fail("NullPointerException expected. " + corruptedTemplateValues);

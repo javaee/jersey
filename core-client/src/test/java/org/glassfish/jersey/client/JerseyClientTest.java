@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
@@ -51,6 +52,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import javax.inject.Inject;
 
@@ -139,10 +142,32 @@ public class JerseyClientTest {
         final UriBuilder uriBuilder = UriBuilder.fromUri(":xxx:8080//yyy:90090//jaxrs ");
     }
 
+    public static class TestProvider implements ReaderInterceptor {
+
+        @Override
+        public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
+            return context.proceed();
+        }
+    }
+
+    // Reproducer JERSEY-1637
     @Test
-    public void testRegister() {
-        client.register(JerseyClientTest.class,  (Class<?>[]) null);
-        assertFalse(client.getConfiguration().isRegistered(JerseyClientTest.class));
+    public void testRegisterNullOrEmptyContracts() {
+        final TestProvider provider = new TestProvider();
+
+        client.register(TestProvider.class,  (Class<?>[]) null);
+        assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
+
+        client.register(provider,  (Class<?>[]) null);
+        assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
+        assertFalse(client.getConfiguration().isRegistered(provider));
+
+        client.register(TestProvider.class,  new Class[0]);
+        assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
+
+        client.register(provider,  new Class[0]);
+        assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
+        assertFalse(client.getConfiguration().isRegistered(provider));
     }
 
     @Test
