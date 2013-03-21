@@ -396,6 +396,10 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     @Override
     public CommonConfig register(final Class<?> componentClass, final Class<?>... contracts) {
         checkComponentClassNotNull(componentClass);
+        if (contracts == null || contracts.length == 0) {
+            LOGGER.warning(LocalizationMessages.COMPONENT_CONTRACTS_EMPTY_OR_NULL(componentClass));
+            return this;
+        }
         if (componentBag.register(componentClass, asNewIdentitySet(contracts), getModelEnhancer(componentClass))) {
             processFeatureRegistration(null, componentClass);
         }
@@ -440,6 +444,10 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     public CommonConfig register(final Object component, final Class<?>... contracts) {
         checkProviderNotNull(component);
         final Class<?> componentClass = component.getClass();
+        if (contracts == null || contracts.length == 0) {
+            LOGGER.warning(LocalizationMessages.COMPONENT_CONTRACTS_EMPTY_OR_NULL(componentClass));
+            return this;
+        }
         if (componentBag.register(component, asNewIdentitySet(contracts), getModelEnhancer(componentClass))) {
             processFeatureRegistration(component, componentClass);
         }

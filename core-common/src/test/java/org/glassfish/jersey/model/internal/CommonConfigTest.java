@@ -46,7 +46,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -60,6 +59,8 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
+import javax.annotation.Priority;
+
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -70,10 +71,6 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -81,6 +78,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Test cases for {@link javax.ws.rs.core.Configuration}.
@@ -525,28 +525,24 @@ public class CommonConfigTest {
         assertEquals(0, contracts.size());
     }
 
+    // Reproducer JERSEY-1637
     @Test
-    public void testRegisterClassEmptyContracts() throws Exception {
-        //noinspection unchecked
-        config.register(ComplexEmptyProvider.class, new Class[0]);
+    public void testRegisterNullOrEmptyContracts() {
+        final ComplexEmptyProvider provider = new ComplexEmptyProvider();
 
-        final ContractProvider contractProvider =
-                config.getComponentBag().getModel(ComplexEmptyProvider.class);
-        final Set<Class<?>> contracts = contractProvider.getContracts();
+        config.register(ComplexEmptyProvider.class,  (Class<?>[]) null);
+        assertFalse(config.getConfiguration().isRegistered(ComplexEmptyProvider.class));
 
-        assertEquals(0, contracts.size());
-    }
+        config.register(provider,  (Class<?>[]) null);
+        assertFalse(config.getConfiguration().isRegistered(ComplexEmptyProvider.class));
+        assertFalse(config.getConfiguration().isRegistered(provider));
 
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testRegisterInstanceEmptyContracts() throws Exception {
-        config.register(new ComplexEmptyProvider(), new Class[0]);
+        config.register(ComplexEmptyProvider.class,  new Class[0]);
+        assertFalse(config.getConfiguration().isRegistered(ComplexEmptyProvider.class));
 
-        final ContractProvider contractProvider =
-                config.getComponentBag().getModel(ComplexEmptyProvider.class);
-        final Set<Class<?>> contracts = contractProvider.getContracts();
-
-        assertEquals(0, contracts.size());
+        config.register(provider,  new Class[0]);
+        assertFalse(config.getConfiguration().isRegistered(ComplexEmptyProvider.class));
+        assertFalse(config.getConfiguration().isRegistered(provider));
     }
 
     @Priority(300)
