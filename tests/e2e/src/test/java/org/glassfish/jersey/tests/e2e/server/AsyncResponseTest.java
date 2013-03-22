@@ -41,16 +41,21 @@ package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -59,6 +64,7 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -70,13 +76,11 @@ public class AsyncResponseTest extends JerseyTest {
     public static CountDownLatch callbackCalledSignal1 = new AsyncCallbackTest.TestLatch(3, "cancel() return value1");
     public static CountDownLatch callbackCalledSignal2 = new AsyncCallbackTest.TestLatch(3, "cancel() return value2");
 
-    public static CountDownLatch checkLog = new CountDownLatch(1);
-
     @Override
     protected Application configure() {
         set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
 
-        return new ResourceConfig(Resource.class, ErrorResource.class);
+        return new ResourceConfig(Resource.class, ErrorResource.class, MappedExceptionMapper.class);
     }
 
     @Test
@@ -104,16 +108,44 @@ public class AsyncResponseTest extends JerseyTest {
     }
 
     @Test
-    public void testResumeExceptionLog() throws Exception {
-        final Response response = target().path("errorResource/resumeException").request().get();
+    public void testResumeWebApplicationException() throws Exception {
+        testResumeException("resumeWebApplicationException", "resumeWebApplicationException", 0);
+    }
 
-        assertThat(response.getStatus(), equalTo(500));
-        assertThat(response.readEntity(String.class), equalTo("resumeException"));
+    @Test
+    public void testResumeMappedException() throws Exception {
+        testResumeException("resumeMappedException", "resumeMappedException", 0);
+    }
 
-        response.close();
+    @Test
+    public void testResumeRuntimeException() throws Exception {
+        testResumeException("resumeRuntimeException", null, 2);
+    }
 
-        checkLog.await();
-        assertTrue(getLoggedRecords().isEmpty());
+    @Test
+    public void testResumeCheckedException() throws Exception {
+        testResumeException("resumeCheckedException", null, 2);
+    }
+
+    private void testResumeException(final String path, final String entity, final int errorsInLog) throws Exception {
+        final WebTarget errorResource = target("errorResource");
+
+        final Future<Response> suspended = errorResource.path("suspend").request().async().get();
+        final Response response = errorResource.path(path).request().get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("ok"));
+
+        final Response suspendedResponse = suspended.get();
+
+        assertThat(suspendedResponse.getStatus(), equalTo(500));
+        if (entity != null) {
+            assertThat(suspendedResponse.readEntity(String.class), equalTo(entity));
+        }
+
+        suspendedResponse.close();
+
+        assertThat(getLoggedRecords().size(), is(errorsInLog));
     }
 
     @Path("resource")
@@ -151,14 +183,58 @@ public class AsyncResponseTest extends JerseyTest {
         }
     }
 
+    public static class MappedException extends RuntimeException {
+
+        public MappedException(final String message) {
+            super(message);
+        }
+    }
+
+    public static class MappedExceptionMapper implements ExceptionMapper<MappedException> {
+
+        @Override
+        public Response toResponse(final MappedException exception) {
+            return Response.serverError().entity(exception.getMessage()).build();
+        }
+    }
+
     @Path("errorResource")
     public static class ErrorResource {
 
+        private static final BlockingQueue<AsyncResponse> suspended = new ArrayBlockingQueue<AsyncResponse>(1);
+
         @GET
-        @Path("resumeException")
-        public void resumeException(final @Suspended AsyncResponse asyncResponse) {
-            asyncResponse.resume(new WebApplicationException(Response.serverError().entity("resumeException").build()));
-            checkLog.countDown();
+        @Path("suspend")
+        public void suspend(final @Suspended AsyncResponse asyncResponse) {
+            suspended.add(asyncResponse);
+        }
+
+        @GET
+        @Path("resumeWebApplicationException")
+        public String resumeWebApplicationException() throws Exception {
+            return resume(new WebApplicationException(Response.serverError().entity("resumeWebApplicationException").build()));
+        }
+
+        @GET
+        @Path("resumeMappedException")
+        public String resumeMappedException() throws Exception {
+            return resume(new MappedException("resumeMappedException"));
+        }
+
+        @GET
+        @Path("resumeRuntimeException")
+        public String resumeRuntimeException() throws Exception {
+            return resume(new RuntimeException("resumeRuntimeException"));
+        }
+
+        @GET
+        @Path("resumeCheckedException")
+        public String resumeCheckedException() throws Exception {
+            return resume(new IOException("resumeCheckedException"));
+        }
+
+        private String resume(final Throwable throwable) throws Exception {
+            return suspended.take().resume(throwable) ? "ok" : "ko";
         }
     }
 }

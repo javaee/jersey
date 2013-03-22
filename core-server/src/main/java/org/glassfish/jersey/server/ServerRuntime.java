@@ -666,7 +666,11 @@ class ServerRuntime {
             return resume(new Runnable() {
                 @Override
                 public void run() {
-                    responder.process(error);
+                    try {
+                        responder.process(new MappableException(error));
+                    } catch (final Throwable error) {
+                        // Ignore the exception - already resumed but may be rethrown by ContainerResponseWriter#failure.
+                    }
                 }
             });
         }
