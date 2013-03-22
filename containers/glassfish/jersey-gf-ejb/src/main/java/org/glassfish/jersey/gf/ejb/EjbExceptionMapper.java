@@ -87,11 +87,19 @@ public class EjbExceptionMapper implements ExtendedExceptionMapper<EJBException>
     }
 
     private Response causeToResponse(EJBException exception) {
+
         final Exception cause = exception.getCausedByException();
+
         if (cause != null) {
+
             final ExceptionMapper mapper = mappers.get().findMapping(cause);
             if (mapper != null && mapper != this) {
+
                 return mapper.toResponse(cause);
+
+            } else if (cause instanceof WebApplicationException) {
+
+                return ((WebApplicationException)cause).getResponse();
             }
         }
         return null;
