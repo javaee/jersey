@@ -45,6 +45,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,8 +67,6 @@ import javax.inject.Provider;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.Producer;
-import org.glassfish.jersey.message.internal.ReaderInterceptorExecutor;
-import org.glassfish.jersey.message.internal.WriterInterceptorExecutor;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.NameBound;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -110,8 +109,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     private final Class<?> resourceClass;
     private final List<RankedProvider<ContainerRequestFilter>> requestFilters = Lists.newArrayList();
     private final List<RankedProvider<ContainerResponseFilter>> responseFilters = Lists.newArrayList();
-    private final List<RankedProvider<ReaderInterceptor>> readerInterceptors;
-    private final List<RankedProvider<WriterInterceptor>> writerInterceptors;
+    private final Iterable<ReaderInterceptor> readerInterceptors;
+    private final Iterable<WriterInterceptor> writerInterceptors;
 
     /**
      * Resource method invoker "assisted" injection helper.
@@ -254,8 +253,10 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     method);
         }
 
-        this.readerInterceptors = _readerInterceptors;
-        this.writerInterceptors = _writerInterceptors;
+        this.readerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.sortRankedProviders(
+                new RankedComparator<ReaderInterceptor>(), _readerInterceptors)));
+        this.writerInterceptors = Collections.unmodifiableList(Lists.newArrayList(Providers.sortRankedProviders(
+                new RankedComparator<WriterInterceptor>(), _writerInterceptors)));
         this.requestFilters.addAll(_requestFilters);
         this.responseFilters.addAll(_responseFilters);
     }
@@ -318,11 +319,6 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     @SuppressWarnings("unchecked")
     public ContainerResponse apply(final ContainerRequest requestContext) {
         final Object resource = routingContextProvider.get().peekMatchedResource();
-
-        requestContext.setProperty(ReaderInterceptorExecutor.INTERCEPTORS,
-                Providers.sortRankedProviders(new RankedComparator<ReaderInterceptor>(), getReaderInterceptors()));
-        requestContext.setProperty(WriterInterceptorExecutor.INTERCEPTORS,
-                Providers.sortRankedProviders(new RankedComparator<WriterInterceptor>(), getWriterInterceptors()));
 
         if (method.isSuspendDeclared() || method.isManagedAsyncDeclared()) {
             asyncContextProvider.get().suspend();
@@ -417,7 +413,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
      *
      * @return All reader interceptors applicable to the {@link #getResourceMethod() resource method}.
      */
-    public Iterable<RankedProvider<WriterInterceptor>> getWriterInterceptors() {
+    public Iterable<WriterInterceptor> getWriterInterceptors() {
         return writerInterceptors;
     }
 
@@ -427,7 +423,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
      *
      * @return All writer interceptors applicable to the {@link #getResourceMethod() resource method}.
      */
-    public Iterable<RankedProvider<ReaderInterceptor>> getReaderInterceptors() {
+    public Iterable<ReaderInterceptor> getReaderInterceptors() {
         return readerInterceptors;
     }
 

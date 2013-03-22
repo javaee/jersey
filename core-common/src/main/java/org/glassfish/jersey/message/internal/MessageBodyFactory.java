@@ -82,18 +82,14 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageProperties;
-import org.glassfish.jersey.model.internal.RankedComparator;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.jvnet.hk2.annotations.Optional;
 
-import com.google.common.collect.Lists;
-
 /**
- * A factory for managing {@link MessageBodyReader}, {@link MessageBodyWriter}, {@link ReaderInterceptor}
- * and {@link WriterInterceptor} instances.
+ * A factory for managing {@link MessageBodyReader}, {@link MessageBodyWriter} instances.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -148,9 +144,6 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private final ServiceLocator locator;
     private final Boolean legacyProviderOrdering;
 
-    private List<ReaderInterceptor> readerInterceptors;
-    private List<WriterInterceptor> writerInterceptors;
-
     private List<MessageBodyWorkerPair<MessageBodyReader>> readers;
     private List<MessageBodyWorkerPair<MessageBodyWriter>> writers;
 
@@ -164,16 +157,6 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private final Map<TypeMediaTypePair, List<MessageBodyWorkerPair<MessageBodyWriter>>> mbwLookupCache =
             new ConcurrentHashMap<TypeMediaTypePair, List<MessageBodyWorkerPair<MessageBodyWriter>>>();
 
-
-    @Override
-    public List<ReaderInterceptor> getReaderInterceptors() {
-        return readerInterceptors;
-    }
-
-    @Override
-    public List<WriterInterceptor> getWriterInterceptors() {
-        return writerInterceptors;
-    }
 
     private static class MessageBodyWorkerPair<T> {
         final T provider;
@@ -202,7 +185,6 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         initReaders();
         initWriters();
-        initInterceptors();
     }
 
 
@@ -428,22 +410,6 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             result = 31 * result + (mediaType != null ? mediaType.hashCode() : 0);
             return result;
         }
-    }
-
-    private void initInterceptors() {
-        // TODO: only "global" interceptors should be taken into account here ?
-
-        this.readerInterceptors = Collections.unmodifiableList(
-                Lists.newArrayList(
-                        Providers.getAllProviders(locator, ReaderInterceptor.class, new RankedComparator<ReaderInterceptor>())
-                )
-        );
-
-        this.writerInterceptors = Collections.unmodifiableList(
-                Lists.newArrayList(
-                        Providers.getAllProviders(locator, WriterInterceptor.class, new RankedComparator<WriterInterceptor>())
-                )
-        );
     }
 
     private void initReaders() {
@@ -849,22 +815,22 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     @Override
     public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
                                MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate,
-                               InputStream entityStream, boolean intercept) throws WebApplicationException, IOException {
+                               InputStream entityStream, Iterable<ReaderInterceptor> readerInterceptors)
+            throws WebApplicationException, IOException {
 
         ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
-                httpHeaders, propertiesDelegate, entityStream, this, intercept);
+                httpHeaders, propertiesDelegate, entityStream, this, readerInterceptors);
         return executor.proceed();
     }
 
     @Override
     public <T> OutputStream writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
                                     MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate,
-                                    OutputStream entityStream, boolean intercept) throws IOException, WebApplicationException {
+                                    OutputStream entityStream, Iterable<WriterInterceptor> writerInterceptors)
+            throws IOException, WebApplicationException {
 
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
-                httpHeaders, propertiesDelegate, entityStream, this, intercept);
-
-
+                httpHeaders, propertiesDelegate, entityStream, this, writerInterceptors);
         executor.proceed();
 
         return executor.getOutputStream();

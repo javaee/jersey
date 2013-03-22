@@ -66,6 +66,7 @@ import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
@@ -95,6 +96,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
     volatile private ResourceMethod matchedResourceMethod = null;
     volatile private Resource matchedResourceModel = null;
+    private final ProcessingProviders processingProviders;
 
     /**
      * Injection constructor.
@@ -102,8 +104,9 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
      * @param requestContext request reference.
      */
     @Inject
-    UriRoutingContext(Ref<ContainerRequest> requestContext) {
+    UriRoutingContext(Ref<ContainerRequest> requestContext, ProcessingProviders processingProviders) {
         this.requestContext = requestContext;
+        this.processingProviders = processingProviders;
     }
 
     // RoutingContext
@@ -206,15 +209,17 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public Iterable<RankedProvider<ReaderInterceptor>> getBoundReaderInterceptors() {
-        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getReaderInterceptors() : null);
+    public Iterable<ReaderInterceptor> getBoundReaderInterceptors() {
+        return inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getReaderInterceptors()
+                : processingProviders.getSortedGlobalReaderInterceptors();
     }
 
     @Override
-    public Iterable<RankedProvider<WriterInterceptor>> getBoundWriterInterceptors() {
-        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getWriterInterceptors() : null);
+    public Iterable<WriterInterceptor> getBoundWriterInterceptors() {
+        return inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getWriterInterceptors()
+                : processingProviders.getSortedGlobalWriterInterceptors();
     }
 
     @Override

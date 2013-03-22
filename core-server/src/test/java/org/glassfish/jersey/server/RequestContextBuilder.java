@@ -46,6 +46,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,6 +59,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.RuntimeDelegate;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
@@ -108,7 +110,7 @@ public class RequestContextBuilder {
                     stream = workers.writeTo(entity, entity.getClass(), entityType.getType(),
                             new Annotation[0], getMediaType(),
                             myMap,
-                            propertiesDelegate, baos, true);
+                            propertiesDelegate, baos, Collections.<WriterInterceptor>emptyList());
                 } catch (IOException ex) {
                     Logger.getLogger(RequestContextBuilder.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (WebApplicationException ex) {

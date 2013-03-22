@@ -39,16 +39,18 @@
  */
 package org.glassfish.jersey.server;
 
+import javax.ws.rs.core.Request;
+import javax.ws.rs.ext.ReaderInterceptor;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import javax.ws.rs.core.Request;
 
 import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
 import org.glassfish.jersey.internal.inject.RequestInjectee;
 import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
 import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
@@ -103,11 +105,19 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
 
         containerRequest.setUriInfo(uriRoutingCtx);
 
+        containerRequest.setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
+            @Override
+            public Iterable<ReaderInterceptor> get() {
+                return uriRoutingCtx.getBoundReaderInterceptors();
+            }
+        });
+
         // JAX-RS proxies initialization
         uriInfoInjectee.set(uriRoutingCtx);
         httpHeadersInjectee.set(containerRequest);
         requestInjectee.set(containerRequest);
         securityContextInjectee.setRequest(containerRequest);
+
 
         return containerRequest;
     }

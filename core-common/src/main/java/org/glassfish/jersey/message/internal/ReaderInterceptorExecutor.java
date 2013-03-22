@@ -43,8 +43,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -61,6 +59,8 @@ import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
+import com.google.common.collect.Lists;
+
 /**
  * Represents reader interceptor chain executor for both client and server side.
  * It constructs wrapped interceptor chain and invokes it. At the end of the chain
@@ -72,12 +72,6 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  */
 public final class ReaderInterceptorExecutor extends InterceptorExecutor implements ReaderInterceptorContext {
 
-    /**
-     * Defines property, which is used to pass a list of reader interceptors
-     * to the executor via {@link PropertiesDelegate}.
-     */
-    public static final String INTERCEPTORS = "jersey.runtime.reader.interceptors";
-
     private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
 
@@ -85,10 +79,6 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
 
     /**
      * Constructs a new executor to read given type from provided {@link InputStream entityStream}.
-     * List of interceptors to be used is taken from given {@link MessageBodyWorkers workers} instance
-     * unless {@value #INTERCEPTORS} property is set in {@link PropertiesDelegate propertiesDelegate}.
-     * If such a property is present, the executor tries to cast it to {@code List&lt;ReaderInterceptor&gt;}
-     * and the list is then used to build the interceptor chain.
      *
      * @param rawType     raw Java entity type.
      * @param type        generic Java entity type.
@@ -102,30 +92,19 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
      * @param propertiesDelegate request-scoped properties delegate.
      * @param inputStream entity input stream.
      * @param workers {@link MessageBodyWorkers Message body workers}.
-     * @param intercept if set to true, user interceptors will be executed. Otherwise only
-     *            {@link ExceptionWrapperInterceptor exception wrapping interceptor} will
-     *            be executed on the client side.
+     * @param readerInterceptors Reader interceptor that are to be used to intercept the reading of an entity. The interceptors
+     *                           will be executed in the same order as given in this parameter.
      */
     public ReaderInterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                                     MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate, InputStream inputStream,
-                                     MessageBodyWorkers workers, boolean intercept) {
+                                     MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate,
+                                     InputStream inputStream, MessageBodyWorkers workers,
+                                     Iterable<ReaderInterceptor> readerInterceptors) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
         this.inputStream = inputStream;
 
-        final List<ReaderInterceptor> effectiveInterceptors = new ArrayList<ReaderInterceptor>();
-
-        final Object readerInterceptorsProperty = propertiesDelegate.getProperty(INTERCEPTORS);
-        final Collection<ReaderInterceptor> readerInterceptors = (readerInterceptorsProperty != null)
-                ? (Collection<ReaderInterceptor>) readerInterceptorsProperty : workers.getReaderInterceptors();
-
-        for (ReaderInterceptor interceptor : readerInterceptors) {
-            if (intercept || (interceptor instanceof ExceptionWrapperInterceptor)) {
-                effectiveInterceptors.add(interceptor);
-            }
-        }
-
+        final List<ReaderInterceptor> effectiveInterceptors = Lists.newArrayList(readerInterceptors);
         effectiveInterceptors.add(new TerminalReaderInterceptor(workers));
 
         this.iterator = effectiveInterceptors.iterator();

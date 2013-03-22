@@ -44,6 +44,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,7 +53,10 @@ import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.Statuses;
@@ -95,7 +100,8 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
                             try {
                                 stream = requestContext.getWorkers().writeTo(
                                         entity, entity.getClass(), null, null, response.getMediaType(),
-                                        response.getMetadata(), requestContext.getPropertiesDelegate(), baos, false);
+                                        response.getMetadata(), requestContext.getPropertiesDelegate(), baos,
+                                        Collections.<WriterInterceptor>emptyList());
                             } finally {
                                 if (stream != null) {
                                     stream.close();
@@ -124,7 +130,15 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
     public ClientResponse(Response.StatusType status, ClientRequest requestContext) {
         this.status = status;
         this.requestContext = requestContext;
+        final Iterable<ReaderInterceptor> readerInterceptors = requestContext.getReaderInterceptors();
+
         setWorkers(requestContext.getWorkers());
+        setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
+            @Override
+            public Iterable<ReaderInterceptor> get() {
+                return readerInterceptors;
+            }
+        });
     }
 
     @Override
