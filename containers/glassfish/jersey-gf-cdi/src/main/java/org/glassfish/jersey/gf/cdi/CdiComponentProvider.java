@@ -43,19 +43,24 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Application;
+
+import javax.annotation.ManagedBean;
+
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+
 import javax.inject.Singleton;
 
 import javax.naming.InitialContext;
-import javax.ws.rs.core.Application;
-import org.glassfish.hk2.api.ClassAnalyzer;
 
+import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -83,16 +88,36 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     /**
      * HK2 factory to provide CDI components obtained from CDI bean manager.
+     * The factory handles CDI managed components as well as non-contextual managed beans.
      */
     private static class CdiFactory<T> implements Factory<T> {
 
+        private interface InstanceManager<T> {
+            /**
+             * Get me correctly instantiated and injected instance.
+             *
+             * @param clazz type of the component to instantiate.
+             * @return injected component instance.
+             */
+            T getInstance(Class<T> clazz);
+
+            /**
+             * Do whatever needs to be done before given instance is destroyed.
+             *
+             * @param instance to be destroyed.
+             */
+            void preDestroy(T instance);
+        }
+
         final Class<T> clazz;
         final BeanManager beanManager;
+        final ServiceLocator locator;
+        final InstanceManager<T> referenceProvider;
 
         @SuppressWarnings("unchecked")
         @Override
         public T provide() {
-            final T instance = getClassReference();
+            final T instance = referenceProvider.getInstance(clazz);
             if (instance != null) {
                 return instance;
             }
@@ -101,34 +126,64 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         @Override
         public void dispose(T instance) {
-            // do nothing
+            referenceProvider.preDestroy(instance);
         }
 
         /**
          * Create new factory instance for given type and bean manager.
          *
-         * @param rawType is the type of the components to provide.
-         * @param beanManager is the current bean manager to get references from.
+         * @param rawType type of the components to provide.
+         * @param locator actual HK2 service locator instance
+         * @param beanManager current bean manager to get references from.
+         * @param cdiManaged set to true if the component should be managed by CDI
          */
-        CdiFactory(final Class<T> rawType, final BeanManager beanManager) {
+        CdiFactory(final Class<T> rawType, final ServiceLocator locator, final BeanManager beanManager, boolean cdiManaged) {
             this.clazz = rawType;
             this.beanManager = beanManager;
-        }
+            this.locator = locator;
+            this.referenceProvider = cdiManaged ? new InstanceManager<T>() {
+                @Override
+                public T getInstance(Class<T> clazz) {
 
-        /**
-         * Lookup the component in CDI.
-         *
-         * @return CDI managed component instance.
-         */
-        private T getClassReference() {
-            final Set<Bean<?>> beans = beanManager.getBeans(clazz);
-            for (Bean b : beans) {
-               final Object instance = beanManager.getReference(b, clazz, beanManager.createCreationalContext(b));
-               return (T)instance;
-            }
-            return null;
+                    final Set<Bean<?>> beans = beanManager.getBeans(clazz);
+                    for (Bean b : beans) {
+                        final Object instance = beanManager.getReference(b, clazz, beanManager.createCreationalContext(b));
+                        return (T) instance;
+                    }
+                    return null;
+                }
+
+                @Override
+                public void preDestroy(T instance) {
+                    // do nothing
+                }
+
+
+            } : new InstanceManager<T>() {
+
+                final AnnotatedType<T> annotatedType = beanManager.createAnnotatedType(clazz);
+                final InjectionTarget<T> injectionTarget = beanManager.createInjectionTarget(annotatedType);
+                final CreationalContext creationalContext = beanManager.createCreationalContext(null);
+
+                @Override
+                public T getInstance(Class<T> clazz) {
+                    final T instance = injectionTarget.produce(creationalContext);
+                    injectionTarget.inject(instance, creationalContext);
+                    if (locator != null) {
+                        locator.inject(instance, ProviderSkippingClassAnalyzer.NAME);
+                    }
+                    injectionTarget.postConstruct(instance);
+
+                    return instance;
+                }
+
+                @Override
+                public void preDestroy(T instance) {
+                    injectionTarget.preDestroy(instance);
+                }
+            };
         }
-   }
+    }
 
     @Override
     public void initialize(final ServiceLocator locator) {
@@ -148,14 +203,21 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @Override
     public boolean bind(final Class<?> clazz, final Set<Class<?>> providerContracts) {
 
-       if (beanManager == null || !isCdiComponent(clazz)) {
+        if (beanManager == null) {
+            return false;
+        }
+
+        final boolean isCdiManaged = isCdiComponent(clazz);
+        final boolean isManagedBean = isManagedBean(clazz);
+
+        if (!isCdiManaged && !isManagedBean) {
             return false;
         }
 
         DynamicConfiguration dc = Injections.getConfiguration(locator);
 
         final ServiceBindingBuilder bindingBuilder =
-                Injections.newFactoryBinder(new CdiFactory(clazz, beanManager));
+                Injections.newFactoryBinder(new CdiFactory(clazz, locator, beanManager, isCdiManaged));
 
         bindingBuilder.to(clazz);
         for (Class contract : providerContracts) {
@@ -174,12 +236,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private boolean isCdiComponent(Class<?> component) {
-        if (beanManager == null) {
-            return false;
-        }
         return !beanManager.getBeans(component).isEmpty();
-   }
+    }
 
+    private boolean isManagedBean(Class<?> component) {
+        return component.isAnnotationPresent(ManagedBean.class);
+    }
 
     @SuppressWarnings("unused")
     private void processInjectionTarget(@Observes ProcessInjectionTarget event) {

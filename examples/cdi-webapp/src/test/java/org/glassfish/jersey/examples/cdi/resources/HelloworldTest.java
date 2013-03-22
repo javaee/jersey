@@ -42,7 +42,7 @@ package org.glassfish.jersey.examples.cdi.resources;
 import org.junit.Test;
 
 import static org.junit.Assert.assertThat;
-import static org.junit.matchers.JUnitMatchers.containsString;
+import static org.hamcrest.CoreMatchers.containsString;
 
 /**
  * Test for the helloworld resource.

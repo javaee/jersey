@@ -52,12 +52,12 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import com.sun.jersey.samples.managedbeans.resources.MyApplication;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
 
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 
@@ -94,9 +94,11 @@ public class ManagedBeanWebAppTest extends JerseyTest {
 
         String responseMsg = perRequest.queryParam("x", "X").request().get(String.class);
         assertThat(responseMsg, containsString("X"));
+        assertThat(responseMsg, startsWith("INTERCEPTED"));
 
         responseMsg = perRequest.queryParam("x", "hi there").request().get(String.class);
         assertThat(responseMsg, containsString("hi there"));
+        assertThat(responseMsg, startsWith("INTERCEPTED"));
     }
 
     /**

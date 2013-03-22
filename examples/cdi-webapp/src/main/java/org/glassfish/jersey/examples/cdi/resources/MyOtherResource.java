@@ -49,17 +49,31 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
 
 import javax.annotation.ManagedBean;
+
 import javax.enterprise.context.RequestScoped;
+
+import javax.interceptor.AroundInvoke;
+import javax.interceptor.Interceptors;
+import javax.interceptor.InvocationContext;
 
 /**
  * Shows injection of context objects and path parameters into the fields of a managed bean.
  *
  * @author Roberto Chinnici
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @ManagedBean
 @RequestScoped
 @Path("/other/{c}/{d}")
 public class MyOtherResource {
+
+    public static class MyInterceptor {
+
+        @AroundInvoke
+        public String around(InvocationContext ctx) throws Exception {
+            return String.format("INTERCEPTED: %s", ctx.proceed());
+        }
+    }
 
     @Context UriInfo uriInfo;
     @Context Request request;
@@ -69,6 +83,7 @@ public class MyOtherResource {
 
     @GET
     @Produces("text/plain")
+    @Interceptors(MyInterceptor.class)
     public String get() {
         return String.format("OK %s %s, c=%s, d=%s", request.getMethod(), uriInfo.getRequestUri(), c, d);
     }
