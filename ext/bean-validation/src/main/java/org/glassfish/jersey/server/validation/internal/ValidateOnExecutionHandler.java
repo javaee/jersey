@@ -44,11 +44,13 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.validation.Configuration;
+import javax.validation.ValidationException;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -59,6 +61,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 
 /**
@@ -73,14 +76,18 @@ class ValidateOnExecutionHandler {
     private final ConcurrentMap<Method, Boolean> validateGetterCache = Maps.newConcurrentMap();
 
     private final Configuration config;
+    private final boolean checkOverrides;
 
     /**
      * Create {@link ValidateOnExecutionHandler}.
      *
      * @param config validation configuration to obtain bootstrap config.
+     * @param checkOverrides flag whether overriding/implementing methods should be checked if the {@link ValidateOnExecution}
+     * annotation is present.
      */
-    ValidateOnExecutionHandler(final Configuration config) {
+    ValidateOnExecutionHandler(final Configuration config, final boolean checkOverrides) {
         this.config = config;
+        this.checkOverrides = checkOverrides;
     }
 
     /**
@@ -126,18 +133,56 @@ class ValidateOnExecutionHandler {
      * @param validationMethod method used for cache.
      */
     private void processMethod(final Class<?> clazz, final Method method, final Method validationMethod) {
+        final Deque<Class<?>> hierarchy = getValidationClassHierarchy(clazz);
+        Boolean validateMethod = processAnnotation(method, hierarchy, checkOverrides);
+
+        if (validateMethod != null) {
+            validateMethodCache.putIfAbsent(validationMethod, validateMethod);
+            validateGetterCache.putIfAbsent(validationMethod, validateMethod);
+        }
+
+        // Return value from validation.xml.
+        if (!validateMethodCache.containsKey(validationMethod)) {
+            final Set<ExecutableType> defaultValidatedExecutableTypes = config.getBootstrapConfiguration()
+                    .getDefaultValidatedExecutableTypes();
+            validateMethod = validateMethod(method, false, defaultValidatedExecutableTypes);
+
+            validateGetterCache.putIfAbsent(validationMethod, validateMethod);
+
+            // When validateMethod is called and no ValidateOnExecution annotation is present we want to validate getters by
+            // default (see SPEC).
+            validateMethodCache.putIfAbsent(validationMethod, ReflectionHelper.isGetter(validationMethod) || validateMethod);
+        }
+    }
+
+    /**
+     * Process {@link ValidateOnExecution} annotation for given method on a class hierarchy.
+     *
+     * @param method method to be examined.
+     * @param hierarchy class hierarchy to be examined.
+     * @param checkOverrides flag whether a overriding/implementing methods should also be checked.
+     * @return {@code true} if the method should be validated, {@code false} if not, {@code null} if the flag cannot be
+     * determined (no annotation present).
+     */
+    private Boolean processAnnotation(final Method method, final Deque<Class<?>> hierarchy, final boolean checkOverrides) {
         // Overridden methods.
-        for (final Class<?> overriddenClass : getValidationClassHierarchy(clazz)) {
+        while(!hierarchy.isEmpty()) {
+            final Class<?> overriddenClass = hierarchy.removeFirst();
             final Method overriddenMethod = ReflectionHelper.findMethodOnClass(overriddenClass, method);
 
             if (overriddenMethod != null) {
                 // Method.
                 Set<ExecutableType> executableTypes = getExecutableTypes(overriddenMethod);
                 if (!executableTypes.isEmpty()) {
-                    final boolean validateMethod = validateMethod(overriddenMethod, true, executableTypes);
-                    validateMethodCache.putIfAbsent(validationMethod, validateMethod);
-                    validateGetterCache.putIfAbsent(validationMethod, validateMethod);
-                    break;
+
+                    // If an overriding/implementing method is annotated with @ValidateOnExecution, throw an exception.
+                    if (checkOverrides
+                            && processAnnotation(method, hierarchy, false) != null) {
+                        final String methodName = method.getDeclaringClass().getName() + "#" + method.getName();
+                        throw new ValidationException(LocalizationMessages.OVERRIDE_CHECK_ERROR(methodName));
+                    }
+
+                    return validateMethod(overriddenMethod, true, executableTypes);
                 }
 
                 // Class.
@@ -146,26 +191,12 @@ class ValidateOnExecutionHandler {
                         // It should contain not only ExecutableType#IMPLICIT but something else as well.
                         // ExecutableType#IMPLICIT on class itself does nothing.
                         && !(executableTypes.size() == 1 && executableTypes.contains(ExecutableType.IMPLICIT))) {
-                    final boolean validateMethod = validateMethod(overriddenMethod, false, executableTypes);
-                    validateMethodCache.putIfAbsent(validationMethod, validateMethod);
-                    validateGetterCache.putIfAbsent(validationMethod, validateMethod);
-                    break;
+
+                    return validateMethod(overriddenMethod, false, executableTypes);
                 }
             }
         }
-
-        // Return value from validation.xml.
-        if (!validateMethodCache.containsKey(validationMethod)) {
-            final Set<ExecutableType> defaultValidatedExecutableTypes = config.getBootstrapConfiguration()
-                    .getDefaultValidatedExecutableTypes();
-            final boolean validateMethod = validateMethod(method, false, defaultValidatedExecutableTypes);
-
-            validateGetterCache.putIfAbsent(validationMethod, validateMethod);
-
-            // When validateMethod is called and no ValidateOnExecution annotation is present we want to validate getters by
-            // default (see SPEC).
-            validateMethodCache.putIfAbsent(validationMethod, ReflectionHelper.isGetter(validationMethod) || validateMethod);
-        }
+        return null;
     }
 
     /**
@@ -203,7 +234,7 @@ class ValidateOnExecutionHandler {
      * @param clazz class to obtain hierarchy for.
      * @return class hierarchy.
      */
-    private List<Class<?>> getValidationClassHierarchy(final Class<?> clazz) {
+    private Deque<Class<?>> getValidationClassHierarchy(final Class<?> clazz) {
         final List<Class<?>> hierarchy = Lists.newArrayList();
 
         // Get all superclasses.
@@ -214,7 +245,7 @@ class ValidateOnExecutionHandler {
         hierarchy.addAll(getAllValidationInterfaces(clazz));
         Collections.reverse(hierarchy);
 
-        return hierarchy;
+        return Queues.newArrayDeque(hierarchy);
     }
 
     private List<Class<?>> getAllValidationInterfaces(final Class<?> clazz) {

@@ -54,6 +54,7 @@ import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
@@ -262,7 +263,8 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
                 ValidateGetterExecutableOnMethodMatch.class,
                 ValidateGetterExecutableOnTypeDefault.class,
                 ValidateGetterExecutableOnTypeMiss.class,
-                ValidateGetterExecutableOnTypeMatch.class);
+                ValidateGetterExecutableOnTypeMatch.class)
+                .property(ServerProperties.FEATURE_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true);
     }
 
     @Test

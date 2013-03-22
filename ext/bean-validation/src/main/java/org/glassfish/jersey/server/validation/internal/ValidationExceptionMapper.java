@@ -45,6 +45,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.Priorities;
 import javax.ws.rs.core.Configuration;
@@ -81,6 +83,8 @@ import org.glassfish.jersey.server.validation.ValidationError;
 @Priority(Priorities.USER)
 public class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
 
+    private static final Logger LOGGER = Logger.getLogger(ValidationExceptionMapper.class.getName());
+
     @Context
     private Configuration config;
     @Context
@@ -89,6 +93,8 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
     @Override
     public Response toResponse(final ValidationException exception) {
         if (exception instanceof ConstraintViolationException) {
+            LOGGER.log(Level.FINER, LocalizationMessages.CONSTRAINT_VIOLATIONS_ENCOUNTERED(), exception);
+
             final ConstraintViolationException cve = (ConstraintViolationException) exception;
             final Response.ResponseBuilder response = Response.status(getStatus(cve));
 
@@ -120,6 +126,8 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
 
             return response.build();
         } else {
+            LOGGER.log(Level.WARNING, LocalizationMessages.VALIDATION_EXCEPTION_RAISED(), exception);
+
             return Response.serverError().entity(exception.getMessage()).build();
         }
     }
