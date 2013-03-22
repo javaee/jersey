@@ -79,6 +79,7 @@
         <module>servlet-3-init-1</module>
         <module>servlet-3-init-2</module>
         <module>servlet-3-init-3</module>
+        <module>servlet-3-init-4</module>
         <module>servlet-3-params</module>
         <module>servlet-3-sse-1</module>
         <module>servlet-tests</module>
