@@ -95,7 +95,9 @@ public class JaxrsProviders implements javax.ws.rs.ext.Providers {
 
     @Override
     public <T extends Throwable> ExceptionMapper<T> getExceptionMapper(Class<T> type) {
-        return mappers.get().find(type);
+        // exception mappers are not supported on the client side
+        final ExceptionMappers actualMappers = mappers.get();
+        return (actualMappers != null) ? actualMappers.find(type) : null;
     }
 
     @Override
