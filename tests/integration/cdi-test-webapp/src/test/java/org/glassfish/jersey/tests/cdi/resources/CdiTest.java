@@ -52,9 +52,7 @@ import org.glassfish.jersey.test.JerseyTest;
  * <pre>
  * mvn clean package
  * $AS_HOME/bin/asadmin deploy target/cdi-test-webapp
- * mvn -Ptest \
- *       -Djersey.config.test.container.factory=org.glassfish.jersey.test.external.ExternalTestContainerFactory \
- *       -Djersey.config.test.container.port=8080 test</pre>
+ * mvn -DskipTests=false test</pre>
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */

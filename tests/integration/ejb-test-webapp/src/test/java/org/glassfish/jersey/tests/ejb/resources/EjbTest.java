@@ -51,6 +51,8 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.Test;
@@ -61,13 +63,11 @@ import org.junit.Test;
  * <pre>
  * mvn clean package
  * $AS_HOME/bin/asadmin deploy target/ejb-test-webapp
- * mvn -Ptest \
- *       -Djersey.config.test.container.factory=org.glassfish.jersey.test.external.ExternalTestContainerFactory \
- *       -Djersey.config.test.container.port=8080 test</pre>
+ * mvn -DskipTests=false test</pre>
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class EjbExceptionsTest extends JerseyTest {
+public class EjbTest extends JerseyTest {
 
     @Override
     protected Application configure() {
@@ -87,26 +87,54 @@ public class EjbExceptionsTest extends JerseyTest {
     @Test
     public void testEjbException() {
         final Response jerseyResponse = target().path("rest/exception/ejb").request().get();
-        _checkResponse(jerseyResponse, ExceptionEjbResource.EjbExceptionMESSAGE);
+        _check500Response(jerseyResponse, ExceptionEjbResource.EjbExceptionMESSAGE);
 
         final Response servletResponse =
                 target().path("servlet")
                   .queryParam("action", StandaloneServlet.ThrowEjbExceptionACTION).request().get();
-        _checkResponse(servletResponse, ExceptionEjbResource.EjbExceptionMESSAGE);
+        _check500Response(servletResponse, ExceptionEjbResource.EjbExceptionMESSAGE);
     }
 
     @Test
     public void testCheckedException() {
         final Response jerseyResponse = target().path("rest/exception/checked").request().get();
-        _checkResponse(jerseyResponse, ExceptionEjbResource.CheckedExceptionMESSAGE);
+        _check500Response(jerseyResponse, ExceptionEjbResource.CheckedExceptionMESSAGE);
 
         final Response servletResponse =
                 target().path("servlet")
                   .queryParam("action", StandaloneServlet.ThrowCheckedExceptionACTION).request().get();
-        _checkResponse(servletResponse, ExceptionEjbResource.CheckedExceptionMESSAGE);
+        _check500Response(servletResponse, ExceptionEjbResource.CheckedExceptionMESSAGE);
     }
 
-    private void _checkResponse(final Response response, final String expectedSubstring) {
+    @Test
+    public void testRemoteLocalEJBInterface() {
+
+        final String message = "Hi there";
+        final Response response = target().path("rest/echo").queryParam("message", message).request().get();
+
+        assertThat(response.getStatus(), is(200));
+
+        final String responseMessage = response.readEntity(String.class);
+
+        assertThat(responseMessage, startsWith(EchoBean.PREFIX));
+        assertThat(responseMessage, endsWith(message));
+    }
+
+    @Test
+    public void testRemoteAnnotationRegisteredEJBInterface() {
+
+        final String message = "Hi there";
+        final Response response = target().path("rest/raw-echo").queryParam("message", message).request().get();
+
+        assertThat(response.getStatus(), is(200));
+
+        final String responseMessage = response.readEntity(String.class);
+
+        assertThat(responseMessage, startsWith(EchoBean.PREFIX));
+        assertThat(responseMessage, endsWith(message));
+    }
+
+    private void _check500Response(final Response response, final String expectedSubstring) {
         assertThat(response.getStatus(), is(500));
         assertThat(response.readEntity(String.class), containsString(expectedSubstring));
     }

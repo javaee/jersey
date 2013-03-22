@@ -39,25 +39,30 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ejb.Stateful;
 
 /**
- * JAX-RS application to configure resources.
+ * Session bean capable of returning an echoed message back.
+ * This is to prove EJB container is used in {@link EchoResource}
+ * and {@link RawEchoResource} resources.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/rest")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-        }};
+@Stateful
+public class EchoBean {
+
+    /**
+     * Prefix, {@value}, to be attached to each message processed by this bean.
+     */
+    public static final String PREFIX = "ECHOED: ";
+
+    /**
+     * Echo message.
+     *
+     * @param message to be echoed.
+     * @return incoming message prefixed with {@link #PREFIX}.
+     */
+    public String echo(final String message) {
+        return String.format("%s%s", PREFIX, message);
     }
 }

@@ -66,9 +66,7 @@ import static org.hamcrest.CoreMatchers.not;
  * The application must be deployed and running on a standalone GlassFish container.
  * To run the tests then, you just launch the following command:
  * <pre>
- * mvn -Ptest \
- *       -Djersey.config.test.container.factory=org.glassfish.jersey.test.external.ExternalTestContainerFactory \
- *       -Djersey.config.test.container.port=8080 test</pre>
+ * mvn -DskipTests=false test</pre>
  *
  * @author Naresh Srinivas Bhimisetty
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)

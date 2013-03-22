@@ -39,25 +39,18 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ejb.Local;
+import javax.ejb.Remote;
 
 /**
- * JAX-RS application to configure resources.
+ * EJB local/remote interface. Part of the reproducer for GLASSFISH-16199.
+ * See also the other test case implemented by {@link RawEchoResource}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/rest")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-        }};
-    }
+@Local
+@Remote
+public interface  Echo {
+
+    String echo(String message);
 }

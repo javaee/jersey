@@ -50,20 +50,6 @@
     <artifactId>managed-beans-webapp</artifactId>
     <name>jersey-examples-managed-beans-webapp</name>
     <packaging>war</packaging>
-    <profiles>
-        <profile>
-            <id>test</id>
-        </profile>
-        <profile>
-            <id>skip-test</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <maven.test.skip>true</maven.test.skip>
-            </properties>
-        </profile>
-    </profiles>
     <dependencies>
         <dependency>
             <groupId>javax.ws.rs</groupId>
@@ -83,13 +69,11 @@
         <dependency>
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
-            <version>1.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-bundle</artifactId>
             <type>pom</type>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
    </dependencies>
@@ -103,6 +87,21 @@
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
             </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>${skipTests}</skipTests>
+                    <systemPropertyVariables>
+                        <jersey.config.test.container.factory>${testContainerFactory}</jersey.config.test.container.factory>
+                        <jersey.config.test.container.port>${testContainerPort}</jersey.config.test.container.port>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+    <properties>
+        <skipTests>true</skipTests>
+        <testContainerFactory>org.glassfish.jersey.test.external.ExternalTestContainerFactory</testContainerFactory>
+        <testContainerPort>8080</testContainerPort>
+    </properties>
 </project>

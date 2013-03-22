@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,9 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Basic test for adding/removing messages.
@@ -61,7 +63,7 @@ import static org.junit.Assert.*;
  *
  * To test the app, mvn clean package and asadmin deploy target/jersey-ejb
  * and then run the tests using extenrnal test container factory:
- * mvn -DskipTests=false -Djersey.config.test.container.factory=org.glassfish.jersey.test.external.ExternalTestContainerFactory test
+ * mvn -DskipTests=false test
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */

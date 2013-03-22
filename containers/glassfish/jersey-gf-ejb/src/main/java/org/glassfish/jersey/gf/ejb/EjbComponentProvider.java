@@ -40,27 +40,37 @@
 package org.glassfish.jersey.gf.ejb;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Singleton;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.spi.ComponentProvider;
+import javax.ejb.Local;
+import javax.ejb.Remote;
+
+import javax.inject.Singleton;
+
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.spi.ComponentProvider;
+import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
 /**
  * EJB component provider.
@@ -69,7 +79,7 @@ import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @SuppressWarnings("UnusedDeclaration")
-public final class EjbComponentProvider implements ComponentProvider {
+public final class EjbComponentProvider implements ComponentProvider, ResourceMethodInvocationHandlerProvider {
 
     private static final Logger LOGGER = Logger.getLogger(
             EjbComponentProvider.class.getName());
@@ -121,6 +131,9 @@ public final class EjbComponentProvider implements ComponentProvider {
     @Override
     public void initialize(final ServiceLocator locator) {
         this.locator = locator;
+        final DynamicConfiguration configuration = Injections.getConfiguration(locator);
+        Injections.addBinding(Injections.newBinder(this).to(ResourceMethodInvocationHandlerProvider.class), configuration);
+        configuration.commit();
     }
 
     private void registerEjbInterceptor() {
@@ -222,6 +235,59 @@ public final class EjbComponentProvider implements ComponentProvider {
         return false;
     }
 
+    @Override
+    public InvocationHandler create(Invocable method) {
+
+        final Class<?> resourceClass = method.getHandler().getHandlerClass();
+
+        if (resourceClass == null ||!isEjbComponent(resourceClass)) {
+            return null;
+        }
+
+        final Method handlingMethod = method.getHandlingMethod();
+
+        for (Class iFace : remoteAndLocalIfaces(resourceClass)) {
+            try {
+                final Method iFaceMethod = iFace.getDeclaredMethod(handlingMethod.getName(), handlingMethod.getParameterTypes());
+                if (iFaceMethod != null) {
+                    return new InvocationHandler() {
+                        @Override
+                        public Object invoke(Object target, Method ignored, Object[] args)
+                                throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+                            return iFaceMethod.invoke(target, args);
+                        }
+                    };
+                }
+            } catch (NoSuchMethodException ex) {
+                logLookupException(handlingMethod, resourceClass, iFace, ex);
+            } catch (SecurityException ex) {
+                logLookupException(handlingMethod, resourceClass, iFace, ex);
+            }
+        }
+        return null;
+    }
+
+    private void logLookupException(final Method method, final Class<?> component, Class<?> iFace, Exception ex) {
+        LOGGER.log(
+            Level.WARNING,
+            LocalizationMessages.EJB_INTERFACE_HANDLING_METHOD_LOOKUP_EXCEPTION(method, component, iFace), ex);
+    }
+
+    private List<Class> remoteAndLocalIfaces(final Class<?> resourceClass) {
+        final List<Class> allLocalOrRemoteIfaces = new LinkedList<Class>();
+        if (resourceClass.isAnnotationPresent(Remote.class)) {
+            allLocalOrRemoteIfaces.addAll(Arrays.asList(resourceClass.getAnnotation(Remote.class).value()));
+        }
+        if (resourceClass.isAnnotationPresent(Local.class)) {
+            allLocalOrRemoteIfaces.addAll(Arrays.asList(resourceClass.getAnnotation(Local.class).value()));
+        }
+        for (Class<?> i : resourceClass.getInterfaces()) {
+            if (i.isAnnotationPresent(Remote.class) || i.isAnnotationPresent(Local.class)) {
+                allLocalOrRemoteIfaces.add(i);
+            }
+        }
+        return allLocalOrRemoteIfaces;
+    }
 
     private static InitialContext getInitialContext() {
         try {

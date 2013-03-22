@@ -39,25 +39,31 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.ejb.EJB;
+import javax.ejb.Remote;
+import javax.ejb.Stateless;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 
 /**
- * JAX-RS application to configure resources.
+ * JAX-RS resource bean backed by an EJB session bean
+ * implementing EJB interface, {@link RawEcho}, that is registered using {@link Remote} annotations.
+ * Reproducible test case for GLASSFISH-16199.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/rest")
-public class MyApplication extends Application {
+@Stateless
+@Path("raw-echo")
+@Remote(Echo.class)
+public class RawEchoResource implements RawEcho {
+
+    @EJB EchoBean echoService;
+
+    @GET
     @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-        }};
+    public String echo(@QueryParam("message") String message) {
+        return echoService.echo(message);
     }
 }

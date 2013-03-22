@@ -60,7 +60,6 @@
         <dependency>
             <groupId>javax.ejb</groupId>
             <artifactId>javax.ejb-api</artifactId>
-            <version>${ejb.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -92,13 +91,17 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <skipTests>${skipTests}</skipTests>
+                    <systemPropertyVariables>
+                        <jersey.config.test.container.factory>${testContainerFactory}</jersey.config.test.container.factory>
+                        <jersey.config.test.container.port>${testContainerPort}</jersey.config.test.container.port>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
     </build>
     <properties>
-        <netbeans.hint.deploy.server>gfv3ee6</netbeans.hint.deploy.server>
-        <!-- this could be overriden from the command line -->
         <skipTests>true</skipTests>
+        <testContainerFactory>org.glassfish.jersey.test.external.ExternalTestContainerFactory</testContainerFactory>
+        <testContainerPort>8080</testContainerPort>
     </properties>
 </project>

@@ -39,25 +39,13 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-
 /**
- * JAX-RS application to configure resources.
+ * Part of the reproducer for GLASSFISH-16199. This EJB business interface
+ * is being registered by an annotation on the EJB component class, {@link RawEcho}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/rest")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-        }};
-    }
+public interface  RawEcho {
+
+    String echo(String message);
 }
