@@ -50,7 +50,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import static org.junit.Assert.assertThat;
-import static org.junit.matchers.JUnitMatchers.containsString;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.startsWith;
 
 /**
  * Test for the request scoped managed bean resource.
@@ -92,5 +93,6 @@ public class PerRequestBeanTest extends CdiTest {
         assertThat(s, containsString("GET"));
         assertThat(s, containsString(String.format("c=%s", c)));
         assertThat(s, containsString(String.format("d=%s", d)));
+        assertThat(s, startsWith("INTERCEPTED"));
     }
 }
