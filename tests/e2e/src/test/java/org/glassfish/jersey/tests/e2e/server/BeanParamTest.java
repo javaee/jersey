@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,9 +63,8 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Assert;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 /**
  * Tests {@link BeanParam bean param injections}.
@@ -77,7 +76,8 @@ public class BeanParamTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resouce.class);
+        return new ResourceConfig(Resouce.class,
+                ResourceInitializedBySetter.class);
     }
 
     @Test
@@ -500,4 +500,27 @@ public class BeanParamTest extends JerseyTest {
         }
     }
 
+    @Path("resource-setter")
+    public static class ResourceInitializedBySetter {
+        private FullBean fullBean;
+
+        @BeanParam
+        public void setFullBean(FullBean fullBean) {
+            this.fullBean = fullBean;
+        }
+
+        @POST
+        @Path("{path}")
+        public String post() {
+            return fullBean.toString();
+        }
+    }
+
+    @Test
+    public void testResourceInitializedBySetter() {
+        FullBean bean = getFullBean();
+        final Response response = doRequest(bean, "resource-setter");
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(bean.toString(), response.readEntity(String.class));
+    }
 }
