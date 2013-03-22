@@ -57,6 +57,7 @@ import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.Statuses;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
 
@@ -175,5 +176,16 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
                 return Link.fromLink(link).baseUri(requestContext.getUri()).build();
             }
         }));
+    }
+
+    @Override
+    public String toString() {
+        return Objects
+                .toStringHelper(this)
+                .add("method", requestContext.getMethod())
+                .add("uri", requestContext.getUri())
+                .add("status", status.getStatusCode())
+                .add("reason", status.getReasonPhrase())
+                .toString();
     }
 }

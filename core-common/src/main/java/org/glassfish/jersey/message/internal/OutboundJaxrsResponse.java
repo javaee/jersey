@@ -66,6 +66,8 @@ import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 
+import com.google.common.base.Objects;
+
 /**
  * An outbound JAX-RS response message.
  *
@@ -140,22 +142,22 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
     @Override
     public <T> T readEntity(Class<T> type) throws ProcessingException {
-        throw new IllegalStateException("Not supported on an outbound message");
+        throw new IllegalStateException(LocalizationMessages.NOT_SUPPORTED_ON_OUTBOUND_MESSAGE());
     }
 
     @Override
     public <T> T readEntity(GenericType<T> entityType) throws ProcessingException {
-        throw new IllegalStateException("Not supported on an outbound message");
+        throw new IllegalStateException(LocalizationMessages.NOT_SUPPORTED_ON_OUTBOUND_MESSAGE());
     }
 
     @Override
     public <T> T readEntity(Class<T> type, Annotation[] annotations) throws ProcessingException {
-        throw new IllegalStateException("Not supported on an outbound message");
+        throw new IllegalStateException(LocalizationMessages.NOT_SUPPORTED_ON_OUTBOUND_MESSAGE());
     }
 
     @Override
     public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws ProcessingException {
-        throw new IllegalStateException("Not supported on an outbound message");
+        throw new IllegalStateException(LocalizationMessages.NOT_SUPPORTED_ON_OUTBOUND_MESSAGE());
     }
 
     @Override
@@ -298,6 +300,18 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
     @SuppressWarnings("unchecked")
     public MultivaluedMap<String, Object> getMetadata() {
         return context.getHeaders();
+    }
+
+    @Override
+    public String toString() {
+        return Objects
+                .toStringHelper(this)
+                .add("status", status.getStatusCode())
+                .add("reason", status.getReasonPhrase())
+                .add("hasEntity", context.hasEntity())
+                .add("closed", closed)
+                .add("buffered", buffered)
+                .toString();
     }
 
     /**

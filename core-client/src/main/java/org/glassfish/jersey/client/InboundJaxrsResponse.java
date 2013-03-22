@@ -55,6 +55,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
+import com.google.common.base.Objects;
+
 /**
  * Implementation of an inbound JAX-RS response message.
  *
@@ -215,4 +217,11 @@ class InboundJaxrsResponse extends Response {
         return (MultivaluedMap<String, Object>) headers;
     }
 
+    @Override
+    public String toString() {
+        return Objects
+                .toStringHelper(this)
+                .addValue(context)
+                .toString();
+    }
 }
