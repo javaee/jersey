@@ -96,11 +96,19 @@ public interface RoutingContext extends ResourceInfo {
     public MatchResult peekMatchResult();
 
     /**
-     * Push matched request URI routing pattern {@link org.glassfish.jersey.uri.UriTemplate URI template}.
+     * Push matched request URI routing pattern {@link org.glassfish.jersey.uri.UriTemplate templates}
+     * for a single matched method.
+     * <p>
+     * In case only a single path matching has been performed on the resource (in case of resource methods,
+     * only the resource path is matched), the method template should be passed as {@code null}.
+     * In case a path matching has been performed on both a resource and method paths
+     * (in case of sub-resource methods and locators), both templates (resource and method) must be specified.
+     * </p>
      *
-     * @param template URI template of the matched request URI routing pattern.
+     * @param resourceTemplate resource URI template that should be pushed.
+     * @param methodTemplate (sub-resource) method or locator URI template that should be pushed.
      */
-    public void pushTemplate(UriTemplate template);
+    public void pushTemplates(UriTemplate resourceTemplate, UriTemplate methodTemplate);
 
     /**
      * Get the final matching group of the last successful request URI routing

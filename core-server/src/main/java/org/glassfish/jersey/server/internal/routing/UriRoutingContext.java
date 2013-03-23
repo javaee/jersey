@@ -101,7 +101,8 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     /**
      * Injection constructor.
      *
-     * @param requestContext request reference.
+     * @param requestContext      request reference.
+     * @param processingProviders processing providers.
      */
     @Inject
     UriRoutingContext(Ref<ContainerRequest> requestContext, ProcessingProviders processingProviders) {
@@ -139,19 +140,31 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public void pushTemplate(UriTemplate template) {
-        templates.addFirst(template);
-
+    public void pushTemplates(UriTemplate resourceTemplate, UriTemplate methodTemplate) {
         if (encodedTemplateValues == null) {
             encodedTemplateValues = new MultivaluedHashMap<String, String>();
         }
 
-        MatchResult matchResult = peekMatchResult();
+        final Iterator<MatchResult> matchResultIterator = matchResults.iterator();
+        templates.push(resourceTemplate);
+        if (methodTemplate != null) {
+            templates.push(methodTemplate);
+            // fast-forward the match result iterator to second element in the stack
+            matchResultIterator.next();
+        }
+
+        pushMatchedTemplateValues(resourceTemplate, matchResultIterator.next());
+        if (methodTemplate != null) {
+            // use the match result from the top of the stack
+            pushMatchedTemplateValues(methodTemplate, matchResults.peek());
+        }
+    }
+
+    private void pushMatchedTemplateValues(UriTemplate template, MatchResult matchResult) {
         int i = 1;
         for (String templateVariable : template.getTemplateVariables()) {
             final String value = matchResult.group(i++);
             encodedTemplateValues.addFirst(templateVariable, value);
-
             if (decodedTemplateValues != null) {
                 decodedTemplateValues.addFirst(
                         UriComponent.decode(templateVariable, UriComponent.Type.PATH_SEGMENT),

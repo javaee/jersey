@@ -110,6 +110,7 @@ public class RouterBinder extends AbstractBinder {
         bindAsContract(PathPatternRouter.Builder.class);
         bindAsContract(PushMethodHandlerRouter.Builder.class);
         bindAsContract(PushMatchedMethodResourceRouter.Builder.class);
+        bindAsContract(PushMatchedTemplateRouter.Builder.class);
         bindAsContract(PushMatchedRuntimeResourceRouter.Builder.class);
         bindAsContract(MethodSelectingRouter.Builder.class);
         bindAsContract(RoutingStage.Builder.class);

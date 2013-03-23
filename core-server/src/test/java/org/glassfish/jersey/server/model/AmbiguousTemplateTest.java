@@ -47,6 +47,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -54,10 +55,8 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import org.junit.Ignore;
+import org.junit.Assert;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 /**
  * Test matching of resources with ambiguous templates.
@@ -74,9 +73,15 @@ public class AmbiguousTemplateTest {
 
         @Path("a")
         @GET
+        public String getSub() {
+            return "a-abc:" + param;
+        }
+
+        @GET
         public String get() {
             return "abc:" + param;
         }
+
     }
 
     @Path("{xyz}")
@@ -84,13 +89,24 @@ public class AmbiguousTemplateTest {
         @PathParam("xyz")
         String param;
 
+        @POST
+        public String post(String post) {
+            return "xyz:" + param;
+        }
 
         @Path("x")
         @GET
         public String get() {
-            return "xyz:" + param;
+            return "x-xyz:" + param;
+        }
+
+        @Path("{sub-x}")
+        @GET
+        public String get(@PathParam("sub-x") String subx) {
+            return "subx-xyz:" + param + ":" + subx;
         }
     }
+
 
     @Test
     public void testPathParamOnAmbiguousTemplate() throws ExecutionException, InterruptedException {
@@ -98,17 +114,129 @@ public class AmbiguousTemplateTest {
                 ResourceXYZ.class));
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/uuu/a", "GET").build()).get();
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("abc:uuu", response.getEntity());
+        Assert.assertEquals("a-abc:uuu", response.getEntity());
     }
 
     @Test
-    @Ignore("JERSEY-1669: does not work with ambiguous templates.")
     public void testPathParamOnAmbiguousTemplate2() throws ExecutionException, InterruptedException {
         final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(ResourceABC.class,
                 ResourceXYZ.class));
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/test/x", "GET").build()).get();
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("xyz:test", response.getEntity());
+        Assert.assertEquals("x-xyz:test", response.getEntity());
+    }
+
+
+    @Test
+    public void testPathParamOnAmbiguousTemplate3() throws ExecutionException, InterruptedException {
+        final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(ResourceABC.class,
+                ResourceXYZ.class));
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/uuu", "GET").build()).get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("abc:uuu", response.getEntity());
+    }
+
+    @Test
+    public void testPathParamOnAmbiguousTemplate4() throws ExecutionException, InterruptedException {
+        final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(ResourceABC.class,
+                ResourceXYZ.class));
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/post", "POST")
+                .entity("entity").build()).get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("xyz:post", response.getEntity());
+    }
+
+    @Test
+    public void testPathParamOnAmbiguousTemplate5() throws ExecutionException, InterruptedException {
+        final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(ResourceABC.class,
+                ResourceXYZ.class));
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/xxx/foo", "GET").build()).get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("subx-xyz:xxx:foo", response.getEntity());
+    }
+
+    @Path("locator")
+    public static class SimpleLocator {
+        @Path("{resource}")
+        public Object locator(@PathParam("resource") String resource) {
+            if ("xyz".equals(resource)) {
+                return new ResourceXYZ();
+            } else if ("abc".equals(resource)) {
+                return new ResourceABC();
+            }
+            throw new WebApplicationException(404);
+        }
+    }
+
+    @Test
+    public void testPathParamOnAmbiguousTemplateTroughSubResourceLocator1() throws ExecutionException, InterruptedException {
+        final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(SimpleLocator.class));
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/locator/abc/uuu/a", "GET")
+                .build()).get();
+        Assert.assertEquals(404, response.getStatus());
+    }
+
+    @Test
+    public void testPathParamOnAmbiguousTemplateTroughSubResourceLocator2() throws ExecutionException, InterruptedException {
+        final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(SimpleLocator.class));
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/locator/abc/a", "GET")
+                .build()).get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("a-abc:null", response.getEntity());
+    }
+
+    @Test
+    public void testPathParamOnAmbiguousTemplateTroughSubResourceLocator3() throws ExecutionException, InterruptedException {
+        final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(SimpleLocator.class));
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/locator/xyz/subxfoo", "GET")
+                .build()).get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("subx-xyz:null:subxfoo", response.getEntity());
+    }
+
+
+    @Path("{xyz}")
+    public static class ResourceWithLocator {
+        @PathParam("xyz")
+        String param;
+
+
+        @Path("/")
+        public SubResource locator() {
+            return new SubResource(param);
+        }
+
+        @Path("{path}")
+        public SubResource subLocator(@PathParam("path") String path) {
+            return new SubResource(param + ":" + path);
+        }
+    }
+
+    public static class SubResource {
+        private final String str;
+
+        public SubResource(String str) {this.str = str;}
+
+        @GET
+        public String get() {
+            return str;
+        }
+    }
+
+    @Test
+    public void testSubResourceLocatorWithPathParams() throws ExecutionException, InterruptedException {
+        final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(ResourceWithLocator.class));
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/uuu", "GET").build()).get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("uuu", response.getEntity());
+    }
+
+    @Test
+    public void testSubResourceLocatorWithPathParams2() throws ExecutionException, InterruptedException {
+        final ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(ResourceWithLocator.class));
+        final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/uuu/test", "GET").build()).get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals("uuu:test", response.getEntity());
     }
 
 
@@ -118,8 +246,6 @@ public class AmbiguousTemplateTest {
         public String getA() {
             return "getA";
         }
-
-
     }
 
     @Path("{templateB}")
@@ -129,7 +255,6 @@ public class AmbiguousTemplateTest {
             return "postB";
         }
     }
-
 
     @Path("resq")
     public static class ResourceQ {
