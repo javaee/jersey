@@ -61,10 +61,10 @@ import org.glassfish.jersey.internal.PropertiesDelegate;
  * An injectable interface providing lookup of {@link MessageBodyReader} and
  * {@link MessageBodyWriter} instances.
  *
+ * @author Paul Sandoz
  * @see javax.ws.rs.core.Context
  * @see MessageBodyReader
  * @see MessageBodyWriter
- * @author Paul Sandoz
  */
 public interface MessageBodyWorkers {
     /**
@@ -104,25 +104,20 @@ public interface MessageBodyWorkers {
     /**
      * Get a message body reader that matches a set of criteria.
      *
-     * @param <T> the type of object to be read.
-     *
-     * @param type the class of object to be read.
-     *
+     * @param <T>         the type of object to be read.
+     * @param type        the class of object to be read.
      * @param genericType the type of object to be produced. E.g. if the message body is
-     *            to be converted into a method parameter, this will be the formal type of
-     *            the method parameter as returned by
-     *            {@code Class.getGenericParameterTypes}.
-     *
+     *                    to be converted into a method parameter, this will be the formal type of
+     *                    the method parameter as returned by
+     *                    {@code Class.getGenericParameterTypes}.
      * @param annotations an array of the annotations on the declaration of the artifact
-     *            that will be initialized with the produced instance. E.g. if the message
-     *            body is to be converted into a method parameter, this will be the
-     *            annotations on that parameter returned by
-     *            {@code Class.getParameterAnnotations}.
-     *
-     * @param mediaType the media type of the data that will be read, this will be
-     *            compared to the values of {@link javax.ws.rs.Consumes} for each
-     *            candidate reader and only matching readers will be queried.
-     *
+     *                    that will be initialized with the produced instance. E.g. if the message
+     *                    body is to be converted into a method parameter, this will be the
+     *                    annotations on that parameter returned by
+     *                    {@code Class.getParameterAnnotations}.
+     * @param mediaType   the media type of the data that will be read, this will be
+     *                    compared to the values of {@link javax.ws.rs.Consumes} for each
+     *                    candidate reader and only matching readers will be queried.
      * @return a MessageBodyReader that matches the supplied criteria or null if none is
      *         found.
      */
@@ -131,23 +126,18 @@ public interface MessageBodyWorkers {
     /**
      * Get a message body writer that matches a set of criteria.
      *
-     * @param <T> the type of the object that is to be written.
-     *
-     * @param type the class of object that is to be written.
-     *
+     * @param <T>         the type of the object that is to be written.
+     * @param type        the class of object that is to be written.
      * @param genericType the type of object to be written. E.g. if the message body is to
-     *            be produced from a field, this will be the declared type of the field as
-     *            returned by {@code Field.getGenericType}.
-     *
+     *                    be produced from a field, this will be the declared type of the field as
+     *                    returned by {@code Field.getGenericType}.
      * @param annotations an array of the annotations on the declaration of the artifact
-     *            that will be written. E.g. if the message body is to be produced from a
-     *            field, this will be the annotations on that field returned by
-     *            {@code Field.getDeclaredAnnotations}.
-     *
-     * @param mediaType the media type of the data that will be written, this will be
-     *            compared to the values of {@link javax.ws.rs.Produces} for each
-     *            candidate writer and only matching writers will be queried.
-     *
+     *                    that will be written. E.g. if the message body is to be produced from a
+     *                    field, this will be the annotations on that field returned by
+     *                    {@code Field.getDeclaredAnnotations}.
+     * @param mediaType   the media type of the data that will be written, this will be
+     *                    compared to the values of {@link javax.ws.rs.Produces} for each
+     *                    candidate writer and only matching writers will be queried.
      * @return a MessageBodyReader that matches the supplied criteria or null if none is
      *         found.
      */
@@ -156,19 +146,15 @@ public interface MessageBodyWorkers {
     /**
      * Get the list of media types supported for a Java type.
      *
-     * @param <T> the type of object that is to be read.
-     *
-     * @param type the class of object that is to be read.
-     *
+     * @param <T>         the type of object that is to be read.
+     * @param type        the class of object that is to be read.
      * @param genericType the type of object to be read. E.g. if the message body is to be
-     *            read as a method parameter, this will be the declared type of the
-     *            parameter as returned by {@code Method.getGenericParameterTypes}.
-     *
+     *                    read as a method parameter, this will be the declared type of the
+     *                    parameter as returned by {@code Method.getGenericParameterTypes}.
      * @param annotations an array of the annotations on the declaration of the artifact
-     *            that will be read. E.g. if the message body is to be consumed as a
-     *            method parameter, this will be the annotations on that parameter
-     *            returned by {@code Method.getParameterAnnotations}.
-     *
+     *                    that will be read. E.g. if the message body is to be consumed as a
+     *                    method parameter, this will be the annotations on that parameter
+     *                    returned by {@code Method.getParameterAnnotations}.
      * @return the list of supported media types, the list is ordered as follows: a/b &lt
      *         a/* &lt *\\/*
      */
@@ -177,19 +163,15 @@ public interface MessageBodyWorkers {
     /**
      * Get the list of media types supported for a Java type.
      *
-     * @param <T> the type of object that is to be written.
-     *
-     * @param type the class of object that is to be written.
-     *
+     * @param <T>         the type of object that is to be written.
+     * @param type        the class of object that is to be written.
      * @param genericType the type of object to be written. E.g. if the message body is to
-     *            be produced from a field, this will be the declared type of the field as
-     *            returned by {@code Field.getGenericType}.
-     *
+     *                    be produced from a field, this will be the declared type of the field as
+     *                    returned by {@code Field.getGenericType}.
      * @param annotations an array of the annotations on the declaration of the artifact
-     *            that will be written. E.g. if the message body is to be produced from a
-     *            field, this will be the annotations on that field returned by
-     *            {@code Field.getDeclaredAnnotations}.
-     *
+     *                    that will be written. E.g. if the message body is to be produced from a
+     *                    field, this will be the annotations on that field returned by
+     *                    {@code Field.getDeclaredAnnotations}.
      * @return the list of supported media types, the list is ordered as follows: a/b &lt
      *         a/* &lt *\\/*
      */
@@ -199,22 +181,18 @@ public interface MessageBodyWorkers {
      * Get the most acceptable media type supported for a Java type given a set of
      * acceptable media types.
      *
-     * @param <T> the type of object that is to be written.
-     *
-     * @param type the class of object that is to be written.
-     *
-     * @param genericType the type of object to be written. E.g. if the message body is to
-     *            be produced from a field, this will be the declared type of the field as
-     *            returned by {@code Field.getGenericType}.
-     *
-     * @param annotations an array of the annotations on the declaration of the artifact
-     *            that will be written. E.g. if the message body is to be produced from a
-     *            field, this will be the annotations on that field returned by
-     *            {@code Field.getDeclaredAnnotations}.
-     *
+     * @param <T>                  the type of object that is to be written.
+     * @param type                 the class of object that is to be written.
+     * @param genericType          the type of object to be written. E.g. if the message body is to
+     *                             be produced from a field, this will be the declared type of the field as
+     *                             returned by {@code Field.getGenericType}.
+     * @param annotations          an array of the annotations on the declaration of the artifact
+     *                             that will be written. E.g. if the message body is to be produced from a
+     *                             field, this will be the annotations on that field returned by
+     *                             {@code Field.getDeclaredAnnotations}.
      * @param acceptableMediaTypes the list of acceptable media types, sorted according to
-     *            the quality with the media type of highest quality occurring first
-     *            first.
+     *                             the quality with the media type of highest quality occurring first
+     *                             first.
      * @return the best media types
      */
     <T> MediaType getMessageBodyWriterMediaType(Class<T> type, Type genericType, Annotation[] annotations,
@@ -228,29 +206,37 @@ public interface MessageBodyWorkers {
      * choosen after the interceptor execution based on parameter passed to this method
      * and modified by the interceptors.
      *
-     * @param rawType     raw Java entity type.
-     * @param type        generic Java entity type.
-     * @param annotations an array of the annotations on the declaration of the artifact
-     *            that will be initialized with the produced instance. E.g. if the message
-     *            body is to be converted into a method parameter, this will be the
-     *            annotations on that parameter returned by
-     *            {@code Method.getParameterAnnotations}.
-     * @param mediaType the media type of the HTTP entity.
-     * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
+     * @param rawType            raw Java entity type.
+     * @param type               generic Java entity type.
+     * @param annotations        an array of the annotations on the declaration of the artifact
+     *                           that will be initialized with the produced instance. E.g. if the message
+     *                           body is to be converted into a method parameter, this will be the
+     *                           annotations on that parameter returned by
+     *                           {@code Method.getParameterAnnotations}.
+     * @param mediaType          the media type of the HTTP entity.
+     * @param httpHeaders        the mutable HTTP headers associated with HTTP entity.
      * @param propertiesDelegate request-scoped properties delegate.
-     * @param entityStream the {@link InputStream} of the HTTP entity. The stream is not
-     *            closed after reading the entity.
+     * @param entityStream       the {@link InputStream} of the HTTP entity. The stream is not
+     *                           closed after reading the entity.
      * @param readerInterceptors Reader interceptor that are to be used to intercept the reading of an entity. The interceptors
      *                           will be executed in the same order as given in this parameter.
-     *
+     * @param translateNce       if {@code true}, the {@link javax.ws.rs.core.NoContentException} thrown by a selected message body
+     *                           reader will be translated into a {@link javax.ws.rs.BadRequestException} as required by
+     *                           JAX-RS specification on the server side.
      * @return the entity that was read from the {@code entityStream}.
      * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
-     *             reader} fails.
-     * @throws IOException Thrown when reading from the {@code entityStream} fails.
+     *                                 reader} fails.
+     * @throws IOException             Thrown when reading from the {@code entityStream} fails.
      */
-    public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                               MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate,
-                               InputStream entityStream, Iterable<ReaderInterceptor> readerInterceptors)
+    public <T> Object readFrom(Class<T> rawType,
+                               Type type,
+                               Annotation[] annotations,
+                               MediaType mediaType,
+                               MultivaluedMap<String, String> httpHeaders,
+                               PropertiesDelegate propertiesDelegate,
+                               InputStream entityStream,
+                               Iterable<ReaderInterceptor> readerInterceptors,
+                               boolean translateNce)
             throws WebApplicationException, IOException;
 
     /**
@@ -261,22 +247,21 @@ public interface MessageBodyWorkers {
      * choosen after the interceptor execution based on parameter passed to this method
      * and modified by the interceptors.
      *
-     * @param entity Entity to be written to the entityStream
-     * @param rawType     raw Java entity type.
-     * @param type        generic Java entity type.
-     * @param annotations an array of the annotations on the resource method that returns
-     *            the object.
-     * @param mediaType the media type of the HTTP entity.
-     * @param httpHeaders the mutable HTTP headers associated with HTTP entity.
+     * @param entity             Entity to be written to the entityStream
+     * @param rawType            raw Java entity type.
+     * @param type               generic Java entity type.
+     * @param annotations        an array of the annotations on the resource method that returns
+     *                           the object.
+     * @param mediaType          the media type of the HTTP entity.
+     * @param httpHeaders        the mutable HTTP headers associated with HTTP entity.
      * @param propertiesDelegate request-scoped properties delegate.
-     * @param entityStream the {@link OutputStream} for the HTTP entity.
+     * @param entityStream       the {@link OutputStream} for the HTTP entity.
      * @param writerInterceptors Writer interceptor that are to be used to intercept the writing of an entity. The interceptors
      *                           will be executed in the same order as given in this parameter.
-     *
      * @return Outer output stream that should be closed by the caller.
      * @throws WebApplicationException Thrown when {@link MessageBodyReader message body
-     *             reader} fails.
-     * @throws IOException Thrown when reading from the {@code entityStream} fails.
+     *                                 reader} fails.
+     * @throws IOException             Thrown when reading from the {@code entityStream} fails.
      */
     public <T> OutputStream writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
                                     MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate,

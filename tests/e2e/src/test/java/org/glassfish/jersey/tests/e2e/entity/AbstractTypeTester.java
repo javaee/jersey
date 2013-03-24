@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.entity;
 
 import java.io.ByteArrayOutputStream;
@@ -46,8 +45,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashSet;
 
+import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -66,9 +67,11 @@ import org.glassfish.jersey.test.JerseyTest;
 import static junit.framework.Assert.assertEquals;
 
 /**
+ * Abstract entity type tester base class.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public abstract class AbstractTypeTester extends JerseyTest {
     protected static byte[] requestEntity;
@@ -94,7 +97,7 @@ public abstract class AbstractTypeTester extends JerseyTest {
 
     /**
      * Looks for all resources and providers declared as inner classes of the subclass of this class
-     * and adds them to the returned ResourceConfig.
+     * and adds them to the returned ResourceConfig (unless constrained to client side).
      *
      * @return ResourceConfig instance
      */
@@ -103,17 +106,35 @@ public abstract class AbstractTypeTester extends JerseyTest {
         HashSet<Class<?>> classes = new HashSet<Class<?>>();
 
         for (Class<?> cls : getClass().getDeclaredClasses()) {
-            if (cls.getAnnotation(Provider.class) != null || cls.getAnnotation(Path.class) != null) {
+            if (cls.getAnnotation(Path.class) != null) {
                 classes.add(cls);
+            } else if (cls.getAnnotation(Provider.class) != null) {
+                final ConstrainedTo constrainedTo = cls.getAnnotation(ConstrainedTo.class);
+                if (constrainedTo == null || constrainedTo.value() == RuntimeType.SERVER) {
+                    classes.add(cls);
+                }
             }
         }
 
         return new ResourceConfig(classes);
     }
 
+    /**
+     * Looks for all providers declared as inner classes of the subclass of this class
+     * and adds them to the client configuration (unless constrained to server side).
+     */
     @Override
     protected void configureClient(ClientConfig clientConfig) {
         clientConfig.register(RequestEntityInterceptor.class);
+
+        for (Class<?> cls : getClass().getDeclaredClasses()) {
+            if (cls.getAnnotation(Provider.class) != null) {
+                final ConstrainedTo constrainedTo = cls.getAnnotation(ConstrainedTo.class);
+                if (constrainedTo == null || constrainedTo.value() == RuntimeType.CLIENT) {
+                    clientConfig.register(cls);
+                }
+            }
+        }
     }
 
     protected <T> void _test(T in, Class resource) {

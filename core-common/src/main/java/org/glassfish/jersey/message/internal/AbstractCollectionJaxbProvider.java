@@ -77,6 +77,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import javax.ws.rs.core.NoContentException;
 
 /**
  * Base class for implementing JAXB collection readers and writers.
@@ -84,6 +85,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+
 /**
  * An abstract provider for <code>T[]</code>, <code>Collection&lt;T&gt;</code>,
  * and its subtypes as long as they have the public default constructor or
@@ -126,6 +128,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
 
     /**
      * This is to allow customized JAXB collections checking.
+     *
      * @see AbstractCollectionJaxbProvider#verifyArrayType
      * @see AbstractCollectionJaxbProvider#verifyGenericType
      */
@@ -133,6 +136,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
 
         boolean isJaxbType(Class<?> type);
     }
+
     private static final JaxbTypeChecker DefaultJaxbTypeCHECKER = new JaxbTypeChecker() {
 
         @Override
@@ -198,7 +202,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
      * The method could be used to check if given type is an array of JAXB beans.
      * It allows customizing the "is this a JAXB bean?" part.
      *
-     * @param type the array to be checked
+     * @param type    the array to be checked
      * @param checker allows JAXB bean check customization
      * @return true if given type is an array of JAXB beans
      */
@@ -218,7 +222,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
      * It allows customizing the "is this a JAXB bean?" part.
      *
      * @param genericType the type to be checked
-     * @param checker allows JAXB bean check customization
+     * @param checker     allows JAXB bean check customization
      * @return true if given type is a collection of JAXB beans
      */
     public static boolean verifyGenericType(Type genericType, JaxbTypeChecker checker) {
@@ -281,11 +285,11 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
     /**
      * Write a collection of JAXB objects as child elements of the root element.
      *
-     * @param elementType the element type in the collection.
-     * @param t the collecton to marshall
-     * @param mediaType the media type
-     * @param c the charset
-     * @param m the marshaller
+     * @param elementType  the element type in the collection.
+     * @param t            the collecton to marshall
+     * @param mediaType    the media type
+     * @param c            the charset
+     * @param m            the marshaller
      * @param entityStream the output stream to marshall the collection
      * @throws javax.xml.bind.JAXBException
      * @throws IOException
@@ -307,7 +311,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
 
         final EntityInputStream entityStream = EntityInputStream.create(inputStream);
         if (entityStream.isEmpty()) {
-            throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
+            throw new NoContentException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
         }
 
         try {
@@ -393,12 +397,13 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
     /**
      * Get the XMLStreamReader for unmarshalling.
      *
-     * @param elementType the individual element type.
-     * @param mediaType the media type.
+     * @param elementType  the individual element type.
+     * @param mediaType    the media type.
      * @param unmarshaller the unmarshaller as a carrier of possible config options.
      * @param entityStream the input stream.
      * @return the XMLStreamReader.
      * @throws javax.xml.stream.XMLStreamException
+     *
      */
     protected abstract XMLStreamReader getXMLStreamReader(Class<?> elementType, MediaType mediaType, Unmarshaller unmarshaller,
                                                           InputStream entityStream)
@@ -422,6 +427,7 @@ public abstract class AbstractCollectionJaxbProvider extends AbstractJaxbProvide
         }
         return (Class) ta;
     }
+
     private final NounInflector inflector = NounInflector.getInstance();
 
     private static String convertToXmlName(final String name) {

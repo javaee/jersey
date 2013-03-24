@@ -174,7 +174,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     /**
      * Create new message body workers factory.
      *
-     * @param locator service locator.
+     * @param locator       service locator.
      * @param configuration configuration. Optional - can be null.
      */
     @Inject
@@ -813,20 +813,31 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @Override
-    public <T> Object readFrom(Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                               MultivaluedMap<String, String> httpHeaders, PropertiesDelegate propertiesDelegate,
-                               InputStream entityStream, Iterable<ReaderInterceptor> readerInterceptors)
-            throws WebApplicationException, IOException {
+    public <T> Object readFrom(Class<T> rawType,
+                               Type type,
+                               Annotation[] annotations,
+                               MediaType mediaType,
+                               MultivaluedMap<String, String> httpHeaders,
+                               PropertiesDelegate propertiesDelegate,
+                               InputStream entityStream,
+                               Iterable<ReaderInterceptor> readerInterceptors,
+                               boolean translateNce) throws WebApplicationException, IOException {
 
         ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
-                httpHeaders, propertiesDelegate, entityStream, this, readerInterceptors);
+                httpHeaders, propertiesDelegate, entityStream, this, readerInterceptors, translateNce);
         return executor.proceed();
     }
 
     @Override
-    public <T> OutputStream writeTo(Object t, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                                    MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate,
-                                    OutputStream entityStream, Iterable<WriterInterceptor> writerInterceptors)
+    public <T> OutputStream writeTo(Object t,
+                                    Class<T> rawType,
+                                    Type type,
+                                    Annotation[] annotations,
+                                    MediaType mediaType,
+                                    MultivaluedMap<String, Object> httpHeaders,
+                                    PropertiesDelegate propertiesDelegate,
+                                    OutputStream entityStream,
+                                    Iterable<WriterInterceptor> writerInterceptors)
             throws IOException, WebApplicationException {
 
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,

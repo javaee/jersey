@@ -97,6 +97,7 @@ public class InboundMessageContext {
 
     private final MultivaluedMap<String, String> headers;
     private final EntityContent entityContent;
+    private final boolean translateNce;
     private MessageBodyWorkers workers;
     private Value<Iterable<ReaderInterceptor>> readerInterceptors;
 
@@ -144,8 +145,20 @@ public class InboundMessageContext {
      * Create new inbound message context.
      */
     public InboundMessageContext() {
+        this(false);
+    }
+
+    /**
+     * Create new inbound message context.
+     *
+     * @param translateNce if {@code true}, the {@link javax.ws.rs.core.NoContentException} thrown by a
+     *                     selected message body reader will be translated into a {@link javax.ws.rs.BadRequestException}
+     *                     as required by JAX-RS specification on the server side.
+     */
+    public InboundMessageContext(boolean translateNce) {
         this.headers = HeadersFactory.createInbound();
         this.entityContent = new EntityContent(EMPTY);
+        this.translateNce = translateNce;
     }
 
     // Message headers
@@ -825,7 +838,8 @@ public class InboundMessageContext {
                     headers,
                     propertiesDelegate,
                     entityContent.getWrappedStream(),
-                    entityContent.isInterceptable() ? readerInterceptors.get() : Collections.<ReaderInterceptor>emptyList());
+                    entityContent.isInterceptable() ? readerInterceptors.get() : Collections.<ReaderInterceptor>emptyList(),
+                    translateNce);
 
             if (!entityContent.isBuffered() && !(t instanceof Closeable) && !(t instanceof Source)) {
                 entityContent.close();
@@ -840,7 +854,8 @@ public class InboundMessageContext {
      * Buffer the entity stream (if not empty).
      *
      * @return {@code true} if the entity input stream was successfully buffered.
-     * @throws javax.ws.rs.ProcessingException in case of an IO error.
+     * @throws javax.ws.rs.ProcessingException
+     *          in case of an IO error.
      */
     public boolean bufferEntity() throws ProcessingException {
         entityContent.ensureNotClosed();

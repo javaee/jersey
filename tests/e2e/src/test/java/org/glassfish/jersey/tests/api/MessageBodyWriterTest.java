@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,7 +60,6 @@ import javax.ws.rs.ext.Provider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -132,7 +131,6 @@ public class MessageBodyWriterTest extends JerseyTest {
     }
 
     @Test
-    @Ignore
     public void testHeaders() throws Exception {
         final Response response = target().path("/").request("text/plain").
                 header(HEADER_NAME, HEADER_VALUE_CLIENT).post(Entity.entity("content", "text/plain"));

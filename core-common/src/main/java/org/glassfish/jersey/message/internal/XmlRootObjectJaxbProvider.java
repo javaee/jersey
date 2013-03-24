@@ -63,6 +63,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import javax.ws.rs.core.NoContentException;
 
 import org.glassfish.hk2.api.Factory;
 
@@ -160,7 +161,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
 
         final EntityInputStream entityStream = EntityInputStream.create(inputStream);
         if (entityStream.isEmpty()) {
-            throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
+            throw new NoContentException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
         }
 
         try {
@@ -180,7 +181,7 @@ public abstract class XmlRootObjectJaxbProvider extends AbstractJaxbProvider<Obj
 
     @Override
     public void writeTo(Object arg0, Class<?> arg1, Type arg2, Annotation[] arg3,
-            MediaType arg4, MultivaluedMap<String, Object> arg5, OutputStream arg6)
+                        MediaType arg4, MultivaluedMap<String, Object> arg5, OutputStream arg6)
             throws IOException, WebApplicationException {
         throw new IllegalArgumentException();
     }

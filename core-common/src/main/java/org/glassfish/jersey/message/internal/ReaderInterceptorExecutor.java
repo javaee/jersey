@@ -46,11 +46,13 @@ import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NoContentException;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
@@ -75,51 +77,46 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
     private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
 
-    private final Iterator<ReaderInterceptor> iterator;
+    private final Iterator<ReaderInterceptor> interceptors;
+    private final MessageBodyWorkers workers;
+    private final boolean translateNce;
 
     /**
      * Constructs a new executor to read given type from provided {@link InputStream entityStream}.
      *
-     * @param rawType     raw Java entity type.
-     * @param type        generic Java entity type.
-     * @param annotations array of annotations on the declaration of the artifact
-     *            that will be initialized with the produced instance. E.g. if the message
-     *            body is to be converted into a method parameter, this will be the
-     *            annotations on that parameter returned by
-     *            {@code Method.getParameterAnnotations}.
-     * @param mediaType media type of the HTTP entity.
-     * @param headers mutable message headers.
+     * @param rawType            raw Java entity type.
+     * @param type               generic Java entity type.
+     * @param annotations        array of annotations on the declaration of the artifact
+     *                           that will be initialized with the produced instance. E.g. if the message
+     *                           body is to be converted into a method parameter, this will be the annotations
+     *                           on that parameter returned by {@code Method.getParameterAnnotations}.
+     * @param mediaType          media type of the HTTP entity.
+     * @param headers            mutable message headers.
      * @param propertiesDelegate request-scoped properties delegate.
-     * @param inputStream entity input stream.
-     * @param workers {@link MessageBodyWorkers Message body workers}.
-     * @param readerInterceptors Reader interceptor that are to be used to intercept the reading of an entity. The interceptors
-     *                           will be executed in the same order as given in this parameter.
+     * @param inputStream        entity input stream.
+     * @param workers            {@link MessageBodyWorkers Message body workers}.
+     * @param readerInterceptors Reader interceptor that are to be used to intercept the reading of an entity.
+     *                           The interceptors will be executed in the same order as given in this parameter.
+     * @param translateNce       if {@code true}, the {@link NoContentException} thrown by a selected message body
+     *                           reader will be translated into a {@link BadRequestException} as required by
+     *                           JAX-RS specification on the server side.
      */
     public ReaderInterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
                                      MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate,
                                      InputStream inputStream, MessageBodyWorkers workers,
-                                     Iterable<ReaderInterceptor> readerInterceptors) {
+                                     Iterable<ReaderInterceptor> readerInterceptors,
+                                     boolean translateNce) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
         this.inputStream = inputStream;
+        this.workers = workers;
+        this.translateNce = translateNce;
 
         final List<ReaderInterceptor> effectiveInterceptors = Lists.newArrayList(readerInterceptors);
-        effectiveInterceptors.add(new TerminalReaderInterceptor(workers));
+        effectiveInterceptors.add(new TerminalReaderInterceptor());
 
-        this.iterator = effectiveInterceptors.iterator();
-    }
-
-    /**
-     * Returns next {@link ReaderInterceptor interceptor} in the chain. Stateful method.
-     *
-     * @return Next interceptor.
-     */
-    public ReaderInterceptor getNextInterceptor() {
-        if (!iterator.hasNext()) {
-            return null;
-        }
-        return iterator.next();
+        this.interceptors = effectiveInterceptors.iterator();
     }
 
     /**
@@ -130,11 +127,11 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
     @Override
     @SuppressWarnings("unchecked")
     public Object proceed() throws IOException {
-        ReaderInterceptor nextInterceptor = getNextInterceptor();
-        if (nextInterceptor == null) {
+        if (!interceptors.hasNext()) {
             throw new ProcessingException(LocalizationMessages.ERROR_INTERCEPTOR_READER_PROCEED());
         }
-        return nextInterceptor.aroundReadFrom(this);
+
+        return interceptors.next().aroundReadFrom(this);
     }
 
     @Override
@@ -159,13 +156,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
      * 1. choose the appropriate {@link MessageBodyReader} <br>
      * 3. reads the entity from the output stream <br>
      */
-    private static class TerminalReaderInterceptor implements ReaderInterceptor {
-        private final MessageBodyWorkers workers;
-
-        public TerminalReaderInterceptor(MessageBodyWorkers workers) {
-            super();
-            this.workers = workers;
-        }
+    private class TerminalReaderInterceptor implements ReaderInterceptor {
 
         @Override
         @SuppressWarnings("unchecked")
@@ -184,8 +175,19 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
                 }
             }
 
-            Object entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
-                    context.getMediaType(), context.getHeaders(), input);
+            Object entity;
+            if (translateNce) {
+                try {
+                    entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
+                            context.getMediaType(), context.getHeaders(), input);
+                } catch (NoContentException ex) {
+                    throw new BadRequestException(ex);
+                }
+
+            } else {
+                entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
+                        context.getMediaType(), context.getHeaders(), input);
+            }
 
             if (bodyReader instanceof CompletableReader) {
                 entity = ((CompletableReader) bodyReader).complete(entity);

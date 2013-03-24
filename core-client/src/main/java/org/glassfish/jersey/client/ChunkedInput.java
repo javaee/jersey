@@ -293,6 +293,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      *         has been closed while reading next chunk data.
      * @throws IllegalStateException in case this chunked input has been closed.
      */
+    @SuppressWarnings("unchecked")
     public T read() throws IllegalStateException {
         if (closed.get()) {
             throw new IllegalStateException(LocalizationMessages.CHUNKED_INPUT_CLOSED());
@@ -318,7 +319,8 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                         headers,
                         propertiesDelegate,
                         chunkStream,
-                        Collections.<ReaderInterceptor>emptyList());
+                        Collections.<ReaderInterceptor>emptyList(),
+                        false);
             }
         } catch (IOException e) {
             Logger.getLogger(this.getClass().getName()).log(Level.FINE, e.getMessage(), e);

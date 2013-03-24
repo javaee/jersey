@@ -67,7 +67,6 @@ import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
@@ -107,7 +106,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
             // request scope binding with specified custom annotation
             Injections.addBinding(
                     Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class)
-                            .qualifiedBy(new MyAnnotationImpl())
+                            .qualifiedBy(new MyQualifierImpl())
                             .in(RequestScoped.class),
                     dc);
 
@@ -133,11 +132,11 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
     @Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     @Qualifier
-    public static @interface MyAnnotation {
+    public static @interface MyQualifier {
 
     }
 
-    private static class MyAnnotationImpl extends AnnotationLiteral<MyAnnotation> implements MyAnnotation {
+    private static class MyQualifierImpl extends AnnotationLiteral<MyQualifier> implements MyQualifier {
     }
 
     @Path("/")
@@ -148,7 +147,8 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
         @Inject
         MyInjectableSingleton myInjectableSingleton;
 
-        @MyAnnotation
+        @Inject
+        @MyQualifier
         MyInjectablePerRequest myInjectablePerRequest2;
 
         @GET
@@ -158,7 +158,7 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
         }
 
         @GET
-        @Path("/perrequestCustomAnnotation")
+        @Path("/perrequestCustomQualifier")
         public String getAndIncPerRequest2() {
             return Integer.valueOf(++myInjectablePerRequest2.i).toString();
         }
@@ -195,9 +195,8 @@ public class CustomInjectablesApplicationTest extends JerseyTest {
     }
 
     @Test
-    @Ignore
-    public void testCustomAnnotation() throws Exception {
-        final javax.ws.rs.client.WebTarget perrequestCustomAnnotation = target().path("perrequestCustomAnnotation");
+    public void testCustomQualifier() throws Exception {
+        final javax.ws.rs.client.WebTarget perrequestCustomAnnotation = target().path("perrequestCustomQualifier");
 
         assertEquals("1", perrequestCustomAnnotation.request().get(String.class));
         assertEquals("1", perrequestCustomAnnotation.request().get(String.class));

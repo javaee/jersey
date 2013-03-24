@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.entity;
 
 import java.io.ByteArrayInputStream;
@@ -541,7 +540,6 @@ public class EntityTypesTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore // TODO: Reader representation is not supported for now
     public void testReaderRepresentation() throws Exception {
         _test(new StringReader("CONTENT"), ReaderResource.class);
     }
@@ -761,7 +759,8 @@ public class EntityTypesTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore // TODO: unignore once fi support implemented (JERSEY-1190)
+    @Ignore("TODO: unignore once fi support implemented (JERSEY-1190)")
+    // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJaxbBeanRepresentationFastInfoset() {
         WebTarget target = target("JaxbBeanResourceFastInfoset");
         JaxbBean in = new JaxbBean("CONTENT");
@@ -776,7 +775,8 @@ public class EntityTypesTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore // TODO: unignore once fi support implemented (JERSEY-1190)
+    @Ignore("TODO: unignore once fi support implemented (JERSEY-1190)")
+    // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBElementBeanRepresentationFastInfoset() {
         WebTarget target = target("JAXBElementBeanResourceFastInfoset");
         JaxbBean in = new JaxbBean("CONTENT");
@@ -795,7 +795,8 @@ public class EntityTypesTest extends AbstractTypeTester {
     }
 
     @Test
-    @Ignore // TODO: unignore once fi support implemented (JERSEY-1190)
+    @Ignore("TODO: unignore once fi support implemented (JERSEY-1190)")
+    // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBTypeRepresentationFastInfoset() {
         WebTarget target = target("JAXBTypeResourceFastInfoset");
         JaxbBean in = new JaxbBean("CONTENT");
@@ -984,7 +985,8 @@ public class EntityTypesTest extends AbstractTypeTester {
      * TODO, the unmarshalling fails.
      */
     @Test
-    @Ignore // TODO: unignore once fi support implemented (JERSEY-1190)
+    @Ignore("TODO: unignore once fi support implemented (JERSEY-1190)")
+    // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBListRepresentationFastInfoset() {
         WebTarget target = target("JAXBListResourceFastInfoset");
 

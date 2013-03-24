@@ -62,6 +62,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.transform.stream.StreamSource;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import javax.ws.rs.core.NoContentException;
 
 /**
  * An abstract provider for JAXB types that are annotated with
@@ -116,7 +117,7 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
         try {
             final EntityInputStream entityStream = EntityInputStream.create(inputStream);
             if (entityStream.isEmpty()) {
-                throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
+                throw new NoContentException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
             }
             return readFrom(type, mediaType, getUnmarshaller(type, mediaType), entityStream);
         } catch (UnmarshalException ex) {
@@ -131,15 +132,15 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
      * <p>
      * Implementing classes may override this method.
      *
-     * @param type the JAXB type
-     * @param mediaType the media type
-     * @param u the unmarshaller to use for unmarshalling.
+     * @param type         the JAXB type
+     * @param mediaType    the media type
+     * @param u            the unmarshaller to use for unmarshalling.
      * @param entityStream the input stream to unmarshal from.
      * @return an instance of the JAXB type.
      * @throws javax.xml.bind.JAXBException
      */
     protected Object readFrom(Class<Object> type, MediaType mediaType,
-            Unmarshaller u, InputStream entityStream)
+                              Unmarshaller u, InputStream entityStream)
             throws JAXBException {
         if (type.isAnnotationPresent(XmlRootElement.class)) {
             return u.unmarshal(entityStream);
@@ -175,15 +176,15 @@ public abstract class AbstractRootElementJaxbProvider extends AbstractJaxbProvid
      * <p>
      * Implementing classes may override this method.
      *
-     * @param t the instance of the JAXB type.
-     * @param mediaType the meida type.
-     * @param c the character set to serialize characters to.
-     * @param m the marshaller to marshaller the instance of the JAXB type.
+     * @param t            the instance of the JAXB type.
+     * @param mediaType    the meida type.
+     * @param c            the character set to serialize characters to.
+     * @param m            the marshaller to marshaller the instance of the JAXB type.
      * @param entityStream the output stream to marshal to.
      * @throws javax.xml.bind.JAXBException
      */
     protected void writeTo(Object t, MediaType mediaType, Charset c,
-            Marshaller m, OutputStream entityStream)
+                           Marshaller m, OutputStream entityStream)
             throws JAXBException {
         m.marshal(t, entityStream);
     }

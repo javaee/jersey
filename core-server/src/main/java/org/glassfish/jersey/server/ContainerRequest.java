@@ -145,6 +145,7 @@ public class ContainerRequest extends InboundMessageContext
             String httpMethod,
             SecurityContext securityContext,
             PropertiesDelegate propertiesDelegate) {
+        super(true);
 
         this.baseUri = baseUri == null ? DEFAULT_BASE_URI : normalizeBaseUri(baseUri);
         this.requestUri = requestUri;
@@ -422,6 +423,7 @@ public class ContainerRequest extends InboundMessageContext
     /**
      * Like {@link #setMethod(String)} but does not throw {@link IllegalStateException} if the method is invoked in other than
      * pre-matching phase.
+     *
      * @param method HTTP method.
      */
     public void setMethodWithoutException(String method) {

@@ -61,6 +61,7 @@ import javax.xml.bind.UnmarshalException;
 import javax.xml.bind.Unmarshaller;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import javax.ws.rs.core.NoContentException;
 
 /**
  * An abstract provider for {@link JAXBElement}.
@@ -112,7 +113,7 @@ public abstract class AbstractJaxbElementProvider extends AbstractJaxbProvider<J
 
         final EntityInputStream entityStream = EntityInputStream.create(inputStream);
         if (entityStream.isEmpty()) {
-            throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
+            throw new NoContentException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
         }
 
         final ParameterizedType pt = (ParameterizedType) genericType;

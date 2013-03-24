@@ -48,7 +48,6 @@ import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
@@ -59,6 +58,7 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
+import javax.ws.rs.core.NoContentException;
 
 /**
  * The basic types message body provider for {@link MediaType#TEXT_PLAIN} media type.
@@ -168,7 +168,7 @@ final class BasicTypesMessageProvider extends AbstractMessageReaderWriterProvide
             InputStream entityStream) throws IOException, WebApplicationException {
         final String entityString = readFromAsString(entityStream, mediaType);
         if (entityString.isEmpty()) {
-            throw new BadRequestException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
+            throw new NoContentException(LocalizationMessages.ERROR_READING_ENTITY_MISSING());
         }
         final PrimitiveTypes primitiveType = PrimitiveTypes.forType(type);
         if (primitiveType != null) {

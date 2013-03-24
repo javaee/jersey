@@ -43,24 +43,23 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import javax.inject.Inject;
-import javax.inject.Qualifier;
-import javax.inject.Singleton;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 
-import org.glassfish.hk2.api.AnnotationLiteral;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import javax.inject.Inject;
+import javax.inject.Qualifier;
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.glassfish.hk2.api.AnnotationLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -82,7 +81,7 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
             bind(new MyInjectableSingleton()).to(MyInjectableSingleton.class);
 
             // request scope binding with specified custom annotation
-            bindAsContract(MyInjectablePerRequest.class).qualifiedBy(new MyAnnotationImpl()).in(RequestScoped.class);
+            bindAsContract(MyInjectablePerRequest.class).qualifiedBy(new MyQualifierImpl()).in(RequestScoped.class);
         }
     }
 
@@ -98,11 +97,11 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
     @Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
     @Target(ElementType.FIELD)
     @Qualifier
-    public static @interface MyAnnotation {
+    public static @interface MyQualifier {
 
     }
 
-    private static class MyAnnotationImpl extends AnnotationLiteral<MyAnnotation> implements MyAnnotation {
+    private static class MyQualifierImpl extends AnnotationLiteral<MyQualifier> implements MyQualifier {
     }
 
     @Path("/")
@@ -113,7 +112,8 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
         @Inject
         MyInjectableSingleton myInjectableSingleton;
 
-        @MyAnnotation
+        @Inject
+        @MyQualifier
         MyInjectablePerRequest myInjectablePerRequest2;
 
         @GET
@@ -123,7 +123,7 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
         }
 
         @GET
-        @Path("/perrequestCustomAnnotation")
+        @Path("/perrequestCustomQualifier")
         public String getAndIncPerRequest2() {
             return Integer.valueOf(++myInjectablePerRequest2.i).toString();
         }
@@ -165,9 +165,8 @@ public class CustomInjectablesResourceConfigTest extends JerseyTest {
     }
 
     @Test
-    @Ignore
     public void testCustomAnnotation() throws Exception {
-        final javax.ws.rs.client.WebTarget perRequestCustomAnnotation = target().path("perrequestCustomAnnotation");
+        final javax.ws.rs.client.WebTarget perRequestCustomAnnotation = target().path("perrequestCustomQualifier");
 
         assertEquals("1", perRequestCustomAnnotation.request().get(String.class));
         assertEquals("1", perRequestCustomAnnotation.request().get(String.class));

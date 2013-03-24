@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.entity;
 
 import javax.ws.rs.Consumes;
@@ -65,17 +64,17 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 
 /**
- *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
 @RunWith(Enclosed.class)
 public class JAXBContextResolverTest {
     @Provider
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class JAXBContextResolver implements ContextResolver<JAXBContext> {
         private JAXBContext context;
         private int invoked;
+
         public JAXBContextResolver() {
             try {
                 this.context = JAXBContext.newInstance(JaxbBean.class);
@@ -98,10 +97,11 @@ public class JAXBContextResolverTest {
     }
 
     @Provider
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class MarshallerResolver implements ContextResolver<Marshaller> {
         private JAXBContext context;
         private int invoked;
+
         public MarshallerResolver() {
             try {
                 this.context = JAXBContext.newInstance(JaxbBean.class);
@@ -128,10 +128,11 @@ public class JAXBContextResolverTest {
     }
 
     @Provider
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class UnmarshallerResolver implements ContextResolver<Unmarshaller> {
         private JAXBContext context;
         private int invoked;
+
         public UnmarshallerResolver() {
             try {
                 this.context = JAXBContext.newInstance(JaxbBean.class);
@@ -158,7 +159,7 @@ public class JAXBContextResolverTest {
     }
 
     @Path("/")
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class JaxbBeanResource {
         @POST
         public JaxbBean get(JaxbBean b) {
@@ -207,24 +208,28 @@ public class JAXBContextResolverTest {
 
     @Provider
     @Produces("application/xml")
-    @Ignore
-    public static class JAXBContextResolverApp extends JAXBContextResolver { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class JAXBContextResolverApp extends JAXBContextResolver {
+    }
 
     @Provider
     @Produces("application/xml")
-    @Ignore
-    public static class MarshallerResolverApp extends MarshallerResolver { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class MarshallerResolverApp extends MarshallerResolver {
+    }
 
     @Provider
     @Produces("application/xml")
-    @Ignore
-    public static class UnmarshallerResolverApp extends UnmarshallerResolver { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class UnmarshallerResolverApp extends UnmarshallerResolver {
+    }
 
     @Path("/")
     @Consumes("application/xml")
     @Produces("application/xml")
-    @Ignore
-    public static class JaxbBeanResourceApp extends JaxbBeanResource { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class JaxbBeanResourceApp extends JaxbBeanResource {
+    }
 
     public static class JAXBContextAppTest extends AbstractTypeTester {
         private JAXBContextResolver cr;
@@ -280,28 +285,30 @@ public class JAXBContextResolverTest {
         }
     }
 
-
+    @Provider
+    @Produces("text/xml")
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class JAXBContextResolverText extends JAXBContextResolver {
+    }
 
     @Provider
     @Produces("text/xml")
-    @Ignore
-    public static class JAXBContextResolverText extends JAXBContextResolver { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class MarshallerResolverText extends MarshallerResolver {
+    }
 
     @Provider
     @Produces("text/xml")
-    @Ignore
-    public static class MarshallerResolverText extends MarshallerResolver { }
-
-    @Provider
-    @Produces("text/xml")
-    @Ignore
-    public static class UnmarshallerResolverText extends UnmarshallerResolver { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class UnmarshallerResolverText extends UnmarshallerResolver {
+    }
 
     @Path("/")
     @Consumes("text/xml")
     @Produces("text/xml")
-    @Ignore
-    public static class JaxbBeanResourceText extends JaxbBeanResource { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class JaxbBeanResourceText extends JaxbBeanResource {
+    }
 
     public static class JAXBContextTextTest extends AbstractTypeTester {
         private JAXBContextResolver cr;
@@ -352,19 +359,22 @@ public class JAXBContextResolverTest {
 
     @Provider
     @Produces("text/foo+xml")
-    @Ignore
-    public static class MarshallerResolverFoo extends MarshallerResolver { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class MarshallerResolverFoo extends MarshallerResolver {
+    }
 
     @Provider
     @Produces("text/foo+xml")
-    @Ignore
-    public static class UnmarshallerResolverFoo extends UnmarshallerResolver { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class UnmarshallerResolverFoo extends UnmarshallerResolver {
+    }
 
     @Path("/")
     @Consumes("text/foo+xml")
     @Produces("text/foo+xml")
-    @Ignore
-    public static class JaxbBeanResourceFoo extends JaxbBeanResource { }
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
+    public static class JaxbBeanResourceFoo extends JaxbBeanResource {
+    }
 
     public static class UnmarshallerFooTest extends AbstractTypeTester {
         private JAXBContextResolver cr;
@@ -402,7 +412,7 @@ public class JAXBContextResolverTest {
     }
 
     @Path("/")
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class JaxbBeanResourceAll {
         @POST
         @Consumes("application/foo+xml")
@@ -522,11 +532,14 @@ public class JAXBContextResolverTest {
     }
 
     @XmlRootElement
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class OtherJaxbBean {
 
         public String value;
-        public OtherJaxbBean() {}
+
+        public OtherJaxbBean() {
+        }
+
         public OtherJaxbBean(String str) {
             value = str;
         }
@@ -536,12 +549,12 @@ public class JAXBContextResolverTest {
         }
 
         public String toString() {
-            return "JAXBClass: "+value;
+            return "JAXBClass: " + value;
         }
     }
 
     @Path("/")
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class JaxbBeanResourceAllOtherJaxbBean {
         @POST
         @Consumes("application/foo+xml")

@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.entity;
 
 import java.util.Arrays;
@@ -79,7 +78,7 @@ public class EmptyRequestWithJaxbTest {
 
     @SuppressWarnings("UnusedParameters")
     @Path("/")
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static class Resource {
 
         @POST
@@ -154,7 +153,7 @@ public class EmptyRequestWithJaxbTest {
         }
     }
 
-    @Ignore
+    @Ignore("This class is not a test class & must be ignored by the Enclosed test runner.")
     public static abstract class CR implements ContextResolver<JAXBContext> {
 
         private final JAXBContext context;
