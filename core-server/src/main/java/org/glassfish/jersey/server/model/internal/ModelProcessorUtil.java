@@ -57,6 +57,7 @@ import org.glassfish.jersey.server.model.RuntimeResource;
 
 import com.google.common.collect.Sets;
 
+
 /**
  * Helper class with methods supporting processing resource model by {@link org.glassfish.jersey.server.model.ModelProcessor
  * model processors}.
@@ -72,13 +73,19 @@ public class ModelProcessorUtil {
      * @return Set of resource methods that can be invoked on the given resource.
      */
     public static Set<String> getAllowedMethods(RuntimeResource resource) {
+        boolean getFound = false;
         Set<String> allowedMethods = Sets.newHashSet();
         for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
             final String httpMethod = resourceMethod.getHttpMethod();
             allowedMethods.add(httpMethod);
+            if (!getFound && httpMethod.equals(HttpMethod.GET)) {
+                getFound = true;
+            }
         }
         allowedMethods.add(HttpMethod.OPTIONS);
-        allowedMethods.add(HttpMethod.HEAD);
+        if (getFound) {
+            allowedMethods.add(HttpMethod.HEAD);
+        }
         return allowedMethods;
     }
 
@@ -126,6 +133,7 @@ public class ModelProcessorUtil {
 
         private final Class<? extends Inflector<ContainerRequestContext, Response>> inflectorClass;
         private final Inflector<ContainerRequestContext, Response> inflector;
+
         /**
          * Create new method instance.
          *

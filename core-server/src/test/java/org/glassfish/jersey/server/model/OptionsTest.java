@@ -44,6 +44,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.DELETE;
@@ -56,6 +57,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -65,14 +67,14 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 
+import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.sun.research.ws.wadl.Application;
-
-import junit.framework.Assert;
 
 /**
  *
@@ -225,12 +227,7 @@ public class OptionsTest {
     @Test
     public void testRequestTextPlain() throws ExecutionException, InterruptedException {
         ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class, ResponseTextFilter.class));
-        final ContainerRequest request = RequestContextBuilder.from("/resource", "OPTIONS").accept(MediaType.TEXT_PLAIN_TYPE)
-                .build();
-        final ContainerResponse response = application.apply(request).get();
-        Assert.assertEquals(200, response.getStatus());
-        final MediaType type = response.getMediaType();
-        Assert.assertEquals(MediaType.TEXT_PLAIN_TYPE, type);
+        final ContainerResponse response = testOptions(MediaType.TEXT_PLAIN_TYPE, application, "/resource");
         final String entity = (String) response.getEntity();
         Assert.assertTrue(entity.contains("GET"));
     }
@@ -239,12 +236,7 @@ public class OptionsTest {
     public void testRequestTextHtml() throws ExecutionException, InterruptedException {
         ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class, ResponseHtmlFilter.class));
         final MediaType requestType = MediaType.TEXT_HTML_TYPE;
-        final ContainerRequest request = RequestContextBuilder.from("/resource", "OPTIONS").accept(requestType)
-                .build();
-        final ContainerResponse response = application.apply(request).get();
-        Assert.assertEquals(200, response.getStatus());
-        final MediaType type = response.getMediaType();
-        Assert.assertEquals(requestType, type);
+        final ContainerResponse response = testOptions(requestType, application, "/resource");
         Assert.assertTrue(response.getAllowedMethods().contains("GET"));
     }
 
@@ -252,12 +244,7 @@ public class OptionsTest {
     public void testRequestWadl() throws ExecutionException, InterruptedException {
         ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class, ResponseWadlFilter.class));
         final MediaType requestType = MediaTypes.WADL;
-        final ContainerRequest request = RequestContextBuilder.from("/resource", "OPTIONS").accept(requestType)
-                .build();
-        final ContainerResponse response = application.apply(request).get();
-        Assert.assertEquals(200, response.getStatus());
-        final MediaType type = response.getMediaType();
-        Assert.assertEquals(requestType, type);
+        final ContainerResponse response = testOptions(requestType, application, "/resource");
     }
 
     private static class ResponseTextFilter implements ContainerResponseFilter {
@@ -289,5 +276,64 @@ public class OptionsTest {
             responseContext.getEntity().getClass().equals(Application.class);
 
         }
+    }
+
+    @Path("no-get")
+    private static class ResourceWithoutGetMethod {
+        @POST
+        public String post(String entity) {
+            return entity;
+        }
+
+        @POST
+        @Path("sub")
+        public String subPost(String entity) {
+            return entity;
+        }
+
+    }
+
+    @Test
+    public void testNoHead() throws ExecutionException, InterruptedException {
+        ApplicationHandler application = new ApplicationHandler(new ResourceConfig(ResourceWithoutGetMethod.class));
+        final ContainerResponse response = testOptions(MediaType.TEXT_PLAIN_TYPE, application, "/no-get");
+
+        Assert.assertFalse(((String) response.getEntity()).contains("HEAD"));
+    }
+
+
+    @Test
+    public void testNoHeadWildcard() throws ExecutionException, InterruptedException {
+        final ResourceConfig resourceConfig = new ResourceConfig(ResourceWithoutGetMethod.class);
+        resourceConfig.property(ServerProperties.FEATURE_DISABLE_WADL, true);
+        ApplicationHandler application = new ApplicationHandler(resourceConfig);
+
+        final ContainerRequest request = RequestContextBuilder.from("/no-get", "OPTIONS").accept(MediaType.MEDIA_TYPE_WILDCARD)
+                .build();
+        final ContainerResponse response = application.apply(request).get();
+        Assert.assertEquals(200, response.getStatus());
+
+        final List<String> strings = response.getStringHeaders().get(HttpHeaders.ALLOW);
+        for (String allow : strings) {
+            Assert.assertFalse(allow.contains("HEAD"));
+        }
+    }
+
+    private ContainerResponse testOptions(MediaType requestType, ApplicationHandler application, String path) throws InterruptedException, ExecutionException {
+        final ContainerRequest request = RequestContextBuilder.from(path, "OPTIONS").accept(requestType)
+                .build();
+        final ContainerResponse response = application.apply(request).get();
+        Assert.assertEquals(200, response.getStatus());
+        final MediaType type = response.getMediaType();
+        Assert.assertEquals(requestType, type);
+        return response;
+    }
+
+    @Test
+    public void testNoHeadInSub() throws ExecutionException, InterruptedException {
+        ApplicationHandler application = new ApplicationHandler(new ResourceConfig(ResourceWithoutGetMethod.class));
+        final MediaType requestType = MediaType.TEXT_PLAIN_TYPE;
+        final ContainerResponse response = testOptions(requestType, application, "/no-get/sub");
+        Assert.assertFalse(((String) response.getEntity()).contains("HEAD"));
     }
 }
