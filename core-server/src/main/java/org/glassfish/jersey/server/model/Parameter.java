@@ -313,8 +313,8 @@ public class Parameter implements AnnotatedElement {
             } else if (DefaultValue.class == annotation.annotationType()) {
                 paramDefault = ((DefaultValue) annotation).value();
             } else {
-                // lets only clear things down if we've not found a ANNOTATION_HELPER_MAP annotation already
-                if (paramAnnotation == null) {
+                // Take latest unknown annotation, but don't override known annotation
+                if ((paramAnnotation == null) || (paramSource == Source.UNKNOWN)) {
                     paramAnnotation = annotation;
                     paramSource = Source.UNKNOWN;
                     paramName = getValue(annotation);
