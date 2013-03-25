@@ -48,6 +48,7 @@
         <version>2.0-SNAPSHOT</version>
     </parent>
 
+    <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
     <artifactId>war-bundle</artifactId>
     <name>jersey-examples-osgi-helloworld-webapp-wab</name>
     <packaging>war</packaging>
@@ -56,7 +57,6 @@
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet-core</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -131,6 +131,7 @@
                         <Webapp-Context>helloworld</Webapp-Context>
                         <Web-ContextPath>helloworld</Web-ContextPath>
                         <Bundle-Activator>org.glassfish.jersey.examples.osgi.helloworld.WebAppContextListener</Bundle-Activator>
+                        <_wab>src/main/webapp</_wab>
                     </instructions>
                 </configuration>
             </plugin>
@@ -140,6 +141,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <configuration>
                     <attachClasses>true</attachClasses>
+                    <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
                     <archive>
                         <manifestFile>${project.build.directory}/META-INF/MANIFEST.MF</manifestFile>
                         <manifestEntries>
