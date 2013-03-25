@@ -115,6 +115,7 @@ public abstract class JerseyTest {
 
     private Handler logHandler;
     private List<LogRecord> loggedRecords = Lists.newArrayList();
+    private Map<Logger, Level> logLevelMap = Maps.newIdentityHashMap();
 
     /**
      * An extending class must implement the {@link #configure()} method to
@@ -550,6 +551,16 @@ public abstract class JerseyTest {
     }
 
     /**
+     * Get last stored {@link LogRecord log record} if enabled by setting {@link TestProperties#RECORD_LOG_LEVEL} or {@code null}.
+     *
+     * @return last stored {@link LogRecord log record} or {@code null}.
+     */
+    protected LogRecord getLastLoggedRecord() {
+        final List<LogRecord> loggedRecords = getLoggedRecords();
+        return loggedRecords.isEmpty() ? null : loggedRecords.get(loggedRecords.size() - 1);
+    }
+
+    /**
      * Retrieves a list of root loggers.
      *
      * @return list of root loggers.
@@ -577,7 +588,19 @@ public abstract class JerseyTest {
      * Register {@link Handler log handler} to the list of root loggers.
      */
     private void registerLogHandler() {
+        final String recordLogLevel = getProperty(TestProperties.RECORD_LOG_LEVEL);
+        final int recordLogLevelInt = Integer.valueOf(recordLogLevel);
+        final Level level = Level.parse(recordLogLevel);
+
+        logLevelMap.clear();
+
         for (final Logger root : getRootLoggers()) {
+            logLevelMap.put(root, root.getLevel());
+
+            if (root.getLevel().intValue() > recordLogLevelInt) {
+                root.setLevel(level);
+            }
+
             root.addHandler(getLogHandler());
         }
     }
@@ -587,6 +610,7 @@ public abstract class JerseyTest {
      */
     private void unregisterLogHandler() {
         for (final Logger root : getRootLoggers()) {
+            root.setLevel(logLevelMap.get(root));
             root.removeHandler(getLogHandler());
         }
     }
@@ -612,7 +636,11 @@ public abstract class JerseyTest {
 
                 @Override
                 public void publish(LogRecord record) {
-                    if (record.getLevel().intValue() >= logLevel) {
+                    final String loggerName = record.getLoggerName();
+
+                    if (record.getLevel().intValue() >= logLevel
+                            && loggerName.startsWith("org.glassfish.jersey")
+                            && !loggerName.startsWith("org.glassfish.jersey.test")) {
                         loggedRecords.add(record);
                     }
                 }

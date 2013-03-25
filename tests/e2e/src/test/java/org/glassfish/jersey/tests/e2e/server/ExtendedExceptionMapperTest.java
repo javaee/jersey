@@ -40,6 +40,9 @@
 
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
@@ -49,11 +52,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Assert;
 import org.junit.Test;
+import static org.junit.Assert.fail;
 
 /**
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
@@ -63,6 +69,8 @@ public class ExtendedExceptionMapperTest extends JerseyTest {
 
     @Override
     protected Application configure() {
+        set(TestProperties.RECORD_LOG_LEVEL, Level.FINE.intValue());
+
         return new ResourceConfig(
                 TestResource.class,
                 ExceptionMapperA.class,
@@ -281,6 +289,18 @@ public class ExtendedExceptionMapperTest extends JerseyTest {
         _test("X-ABCDE", null);
         _test("X-ABCDEX", "X");
         _test("X-X", "X");
+
+        // Check logs. (??)
+        for (final LogRecord logRecord : getLoggedRecords()) {
+            for (final String message : new String[] {
+                    LocalizationMessages.ERROR_EXCEPTION_MAPPING_ORIGINAL_EXCEPTION(),
+                    LocalizationMessages.ERROR_EXCEPTION_MAPPING_THROWN_TO_CONTAINER() }) {
+
+                if (logRecord.getMessage().contains(message) && logRecord.getLevel().intValue() > Level.FINE.intValue()) {
+                    fail("Log message should be logged at lower (FINE) level: " + message);
+                }
+            }
+        }
     }
 
     private void _test(String input, String expectedMapper) {
