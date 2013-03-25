@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,31 +39,30 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.RequestScoped;
 
 /**
- * JAX-RS application to configure resources.
+ * Request scoped CDI bean to be injected into {@link JCDIBeanDependentResource}.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        return classes;
-    }
+@RequestScoped
+public class JCDIBeanRequestScopedTimer {
+
+   private long ms;
+
+   /**
+    * Provide information on actual request time.
+    *
+    * @return milliseconds when the current bean was post-constructed.
+    */
+   public long getMiliseconds() {
+       return ms;
+   }
+
+   @PostConstruct
+   public void init() {
+       this.ms = System.currentTimeMillis();
+   }
 }

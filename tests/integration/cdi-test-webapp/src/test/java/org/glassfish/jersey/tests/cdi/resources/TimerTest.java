@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,31 +39,46 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+import org.junit.Test;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.is;
 
 /**
- * JAX-RS application to configure resources.
+ * Reproducer for JERSEY-1747.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        return classes;
+public class TimerTest extends CdiTest {
+
+    @Test
+    public void testGet() {
+
+        final WebTarget target = target().path("jcdibean/dependent/timer");
+
+        final Response firstResponse = target.request().get();
+        assertThat(firstResponse.getStatus(), is(200));
+        long firstMillis = Long.decode(firstResponse.readEntity(String.class));
+        sleep(2);
+
+        final Response secondResponse = target.request().get();
+        assertThat(secondResponse.getStatus(), is(200));
+        long secondMillis = Long.decode(secondResponse.readEntity(String.class));
+
+        assertTrue("Second request should have greater millis!", secondMillis > firstMillis);
     }
+
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(TimerTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
 }

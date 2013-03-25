@@ -44,8 +44,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
@@ -53,6 +51,9 @@ import org.glassfish.hk2.api.MultiException;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
+import java.util.Map;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Class analyzer that ignores {@link javax.inject.Provider} injection points
@@ -68,12 +69,14 @@ public final class ProviderSkippingClassAnalyzer implements ClassAnalyzer {
     public static final String NAME = "ProviderSkippingClassAnalyzer";
 
     private final ClassAnalyzer defaultAnalyzer;
+    private final Map<Class<?>, Set<Method>> methodsToSkip;
+    private final Map<Class<?>, Set<Field>> fieldsToSkip;
 
-    @Inject
-    public ProviderSkippingClassAnalyzer(@Named(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME) ClassAnalyzer defaultAnalyzer) {
+    public ProviderSkippingClassAnalyzer(ClassAnalyzer defaultAnalyzer, Map<Class<?>, Set<Method>> methodsToSkip, Map<Class<?>, Set<Field>> fieldsToSkip) {
         this.defaultAnalyzer = defaultAnalyzer;
+        this.methodsToSkip = methodsToSkip;
+        this.fieldsToSkip = fieldsToSkip;
     }
-
 
     @Override
     public <T> Constructor<T> getConstructor(Class<T> type) throws MultiException, NoSuchMethodException {
@@ -82,12 +85,16 @@ public final class ProviderSkippingClassAnalyzer implements ClassAnalyzer {
 
     @Override
     public <T> Set<Method> getInitializerMethods(Class<T> type) throws MultiException {
-        return removeProviderSetters(defaultAnalyzer.getInitializerMethods(type));
+        final Set<Method> originalMethods = defaultAnalyzer.getInitializerMethods(type);
+        final Set<Method> skippedMethods = methodsToSkip.get(type);
+        return skippedMethods == null ? originalMethods : Sets.difference(originalMethods, skippedMethods);
     }
 
     @Override
     public <T> Set<Field> getFields(Class<T> type) throws MultiException {
-        return removeProviderFields(defaultAnalyzer.getFields(type));
+        final Set<Field> originalFields = defaultAnalyzer.getFields(type);
+        final Set<Field> skippedFields = fieldsToSkip.get(type);
+        return skippedFields == null ? originalFields : Sets.difference(originalFields, skippedFields);
     }
 
     @Override
@@ -98,38 +105,5 @@ public final class ProviderSkippingClassAnalyzer implements ClassAnalyzer {
     @Override
     public <T> Method getPreDestroyMethod(Class<T> type) throws MultiException {
         throw new IllegalStateException(LocalizationMessages.CDI_CLASS_ANALYZER_MISUSED());
-    }
-
-    /**
-     * Filter out methods that take exactly one parameter typed as {@link Provider}.
-     * These methods are expected to be covered by CDI container.
-     *
-     * @param set of methods to be filtered.
-     * @return input set of methods without Provider setters.
-     */
-    private Set<Method> removeProviderSetters(Set<Method> initializerMethods) {
-        return Sets.filter(initializerMethods, new Predicate<Method>(){
-
-            @Override
-            public boolean apply(Method m) {
-                final Class<?>[] parameterTypes = m.getParameterTypes();
-                return parameterTypes == null || parameterTypes.length != 1 || parameterTypes[0] != Provider.class;
-            }
-        });
-    }
-
-    /**
-     * Filter out {@link Provider} fields. These are expected to be covered by CDI container.
-     * @param fields set of fields to be filtered.
-     * @return input set with Providers filtered out.
-     */
-    private Set<Field> removeProviderFields(Set<Field> fields) {
-        return Sets.filter(fields, new Predicate<Field>(){
-
-            @Override
-            public boolean apply(Field t) {
-                return t.getType() != Provider.class;
-            }
-        });
     }
 }

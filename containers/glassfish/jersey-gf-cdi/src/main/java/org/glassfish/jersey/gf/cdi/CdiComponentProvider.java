@@ -39,6 +39,12 @@
  */
 package org.glassfish.jersey.gf.cdi;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -53,10 +59,10 @@ import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
+import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
 
-import javax.inject.Singleton;
 
 import javax.naming.InitialContext;
 
@@ -64,6 +70,7 @@ import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -85,6 +92,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     private ServiceLocator locator;
     private BeanManager beanManager;
+
+    private Map<Class<?>, Set<Method>> methodsToSkip = new HashMap<Class<?>, Set<Method>>();
+    private Map<Class<?>, Set<Field>> fieldsToSkip = new HashMap<Class<?>, Set<Field>>();
 
     /**
      * HK2 factory to provide CDI components obtained from CDI bean manager.
@@ -195,6 +205,8 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             final CdiComponentProvider extension = beanManager.getExtension(this.getClass());
             if (extension != null) {
                 extension.locator = this.locator;
+                this.fieldsToSkip = extension.fieldsToSkip;
+                this.methodsToSkip = extension.methodsToSkip;
                 LOGGER.config(LocalizationMessages.CDI_PROVIDER_INITIALIZED());
             }
         }
@@ -209,8 +221,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         final boolean isCdiManaged = isCdiComponent(clazz);
         final boolean isManagedBean = isManagedBean(clazz);
+        final boolean isJaxRsComponent = isJaxRsComponentType(clazz);
 
-        if (!isCdiManaged && !isManagedBean) {
+        if (!isCdiManaged && !isManagedBean && !isJaxRsComponent) {
             return false;
         }
 
@@ -246,7 +259,20 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @SuppressWarnings("unused")
     private void processInjectionTarget(@Observes ProcessInjectionTarget event) {
         final InjectionTarget it = event.getInjectionTarget();
-       if (isJaxRsComponentType(event.getAnnotatedType().getJavaClass())) {
+        final Class<?> componentClass = event.getAnnotatedType().getJavaClass();
+
+        final Set<InjectionPoint> injectionPoints = it.getInjectionPoints();
+
+        for (InjectionPoint injectionPoint : injectionPoints) {
+            final Member member = injectionPoint.getMember();
+            if (member instanceof Field) {
+                addInjecteeToSkip(componentClass, fieldsToSkip, (Field) member);
+            } else if (member instanceof Method) {
+                addInjecteeToSkip(componentClass, methodsToSkip, (Method) member);
+            }
+        }
+
+       if (isJaxRsComponentType(componentClass)) {
            event.setInjectionTarget(new InjectionTarget() {
 
                 @Override
@@ -285,6 +311,13 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
     }
 
+    private <T> void addInjecteeToSkip(final Class<?> componentClass, final Map<Class<?>, Set<T>> toSkip, final T member) {
+        if (!toSkip.containsKey(componentClass)) {
+            toSkip.put(componentClass, new HashSet<T>());
+        }
+        toSkip.get(componentClass).add(member);
+    }
+
     /**
      * Introspect given type to determine if it represents a JAX-RS component.
      *
@@ -307,15 +340,21 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private void bindProviderSkippingAnalyzer() {
+
+        final ProviderSkippingClassAnalyzer
+                customizedClassAnalyzer =new ProviderSkippingClassAnalyzer(
+                                                locator.getService(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME),
+                                                methodsToSkip,
+                                                fieldsToSkip);
+
         DynamicConfiguration dc = Injections.getConfiguration(locator);
 
-        final ServiceBindingBuilder bindingBuilder =
-                Injections.newBinder(ProviderSkippingClassAnalyzer.class);
+        final ScopedBindingBuilder bindingBuilder =
+                Injections.newBinder(customizedClassAnalyzer);
 
         bindingBuilder.analyzeWith(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME)
                 .to(ClassAnalyzer.class)
-                .named(ProviderSkippingClassAnalyzer.NAME)
-                .in(Singleton.class);
+                .named(ProviderSkippingClassAnalyzer.NAME);
 
         Injections.addBinding(bindingBuilder, dc);
 
