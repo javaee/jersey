@@ -747,7 +747,7 @@ public class ReflectionHelper {
                 } else if (a instanceof TypeVariable) {
                     final TypeVariable tv = (TypeVariable) a;
                     ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, tv);
-                    cas[i] = (ctp != null) ? ctp.rawClass() : (Class<?>)(tv.getBounds()[0]);
+                    cas[i] = (ctp != null) ? ctp.rawClass() : (Class<?>) (tv.getBounds()[0]);
                 } else if (a instanceof GenericArrayType) {
                     final GenericArrayType gat = (GenericArrayType) a;
                     Type t = gat.getGenericComponentType();
@@ -784,6 +784,10 @@ public class ReflectionHelper {
                     ras[i] = a;
                 } else if (a instanceof TypeVariable) {
                     ClassTypePair ctp = resolveTypeVariable(p.concreteClass, p.declaringClass, (TypeVariable) a);
+                    if (ctp == null) {
+                        throw new IllegalArgumentException(
+                                LocalizationMessages.ERROR_RESOLVING_GENERIC_TYPE_VALUE(p.genericInterface, p.concreteClass));
+                    }
                     ras[i] = ctp.type();
                 }
             }
@@ -1059,7 +1063,7 @@ public class ReflectionHelper {
     /**
      * Find a {@link Method method} that overrides the given {@code method} on the given {@link Class class}.
      *
-     * @param clazz class to find overriding method on.
+     * @param clazz  class to find overriding method on.
      * @param method an abstract method to find implementing method for.
      * @return method that overrides the given method or the given method itself if a better alternative cannot be found.
      */
@@ -1086,7 +1090,7 @@ public class ReflectionHelper {
     /**
      * Compare generic parameter types of two methods.
      *
-     * @param ts generic parameter types of the first method.
+     * @param ts  generic parameter types of the first method.
      * @param _ts generic parameter types of the second method.
      * @return {@code true} if the given types are understood to be equal, {@code false} otherwise.
      * @see #compareParameterTypes(java.lang.reflect.Type, java.lang.reflect.Type)
@@ -1105,7 +1109,7 @@ public class ReflectionHelper {
     /**
      * Compare respective generic parameter types of two methods.
      *
-     * @param ts generic parameter type of the first method.
+     * @param ts  generic parameter type of the first method.
      * @param _ts generic parameter type of the second method.
      * @return {@code true} if the given types are understood to be equal, {@code false} otherwise.
      */
@@ -1166,11 +1170,10 @@ public class ReflectionHelper {
      * Otherwise (non OSGi environment) or if OSGi fails to provide the input stream, the return value
      * will be taken from the provided loader getResourceAsStream method.
      *
-     * @param loader class loader where to lookup the resource in non-OSGi environment or if OSGi means fail.
+     * @param loader      class loader where to lookup the resource in non-OSGi environment or if OSGi means fail.
      * @param originClass if not null, and OSGi environment is detected, the resource will be taken from the bundle including the originClass type.
-     * @param name filename of the desired resource.
+     * @param name        filename of the desired resource.
      * @return an input stream corresponding to the required resource or null if the resource could not be found.
-     *
      */
     public static InputStream getResourceAsStream(final ClassLoader loader, final Class<?> originClass, final String name) {
         try {

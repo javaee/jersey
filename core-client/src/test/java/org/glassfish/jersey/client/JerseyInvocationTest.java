@@ -60,8 +60,10 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -204,5 +206,49 @@ public class JerseyInvocationTest {
 
             assertEquals(1110, ai.get());
         }
+    }
+
+    public static class MyUnboundCallback<V> implements InvocationCallback<V> {
+        private final CountDownLatch latch;
+        private volatile Throwable throwable;
+
+        public MyUnboundCallback(CountDownLatch latch) {
+            this.latch = latch;
+        }
+
+        @Override
+        public void completed(V v) {
+            latch.countDown();
+        }
+
+        @Override
+        public void failed(Throwable throwable) {
+            this.throwable = throwable;
+            latch.countDown();
+        }
+
+        public Throwable getThrowable() {
+            return throwable;
+        }
+    }
+
+    @Test
+    public void failedUnboundGenericCallback() throws InterruptedException {
+        Invocation invocation = ClientBuilder.newClient().target("http://localhost:888/").request().buildGet();
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        final MyUnboundCallback<String> callback = new MyUnboundCallback<String>(latch);
+        invocation.submit(callback);
+
+        latch.await(1, TimeUnit.SECONDS);
+
+        assertThat(callback.getThrowable(),
+                CoreMatchers.instanceOf(ProcessingException.class));
+        assertThat(callback.getThrowable().getCause(),
+                CoreMatchers.instanceOf(IllegalArgumentException.class));
+        assertThat(callback.getThrowable().getCause().getMessage(),
+                CoreMatchers.allOf(
+                        CoreMatchers.containsString(MyUnboundCallback.class.getName()),
+                        CoreMatchers.containsString(InvocationCallback.class.getName())));
     }
 }
