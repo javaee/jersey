@@ -46,6 +46,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -64,9 +65,9 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -78,7 +79,7 @@ public class AsyncResponseTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        set(TestProperties.RECORD_LOG_LEVEL, Level.WARNING.intValue());
+        set(TestProperties.RECORD_LOG_LEVEL, Level.FINE.intValue());
 
         return new ResourceConfig(Resource.class, ErrorResource.class, MappedExceptionMapper.class);
     }
@@ -103,31 +104,33 @@ public class AsyncResponseTest extends JerseyTest {
         }
         response.close();
         callbackCalledSignal2.await();
-
-        assertTrue(getLoggedRecords().isEmpty());
     }
 
     @Test
     public void testResumeWebApplicationException() throws Exception {
-        testResumeException("resumeWebApplicationException", "resumeWebApplicationException", 0);
+        testResumeException("resumeWebApplicationException", "resumeWebApplicationException");
     }
 
     @Test
     public void testResumeMappedException() throws Exception {
-        testResumeException("resumeMappedException", "resumeMappedException", 0);
+        testResumeException("resumeMappedException", "resumeMappedException");
     }
 
     @Test
     public void testResumeRuntimeException() throws Exception {
-        testResumeException("resumeRuntimeException", null, 2);
+        testResumeException("resumeRuntimeException", null);
+
+        assertThat(getLastLoggedRecord().getThrown(), instanceOf(RuntimeException.class));
     }
 
     @Test
     public void testResumeCheckedException() throws Exception {
-        testResumeException("resumeCheckedException", null, 2);
+        testResumeException("resumeCheckedException", null);
+
+        assertThat(getLastLoggedRecord().getThrown(), instanceOf(IOException.class));
     }
 
-    private void testResumeException(final String path, final String entity, final int errorsInLog) throws Exception {
+    private void testResumeException(final String path, final String entity) throws Exception {
         final WebTarget errorResource = target("errorResource");
 
         final Future<Response> suspended = errorResource.path("suspend").request().async().get();
@@ -145,7 +148,13 @@ public class AsyncResponseTest extends JerseyTest {
 
         suspendedResponse.close();
 
-        assertThat(getLoggedRecords().size(), is(errorsInLog));
+        // Check there is no NPE.
+        for (final LogRecord record : getLoggedRecords()) {
+            final Throwable thrown = record.getThrown();
+            if (thrown != null && thrown instanceof NullPointerException) {
+                fail("Unexpected NPE.");
+            }
+        }
     }
 
     @Path("resource")

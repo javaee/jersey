@@ -92,12 +92,13 @@ import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
+
+import org.glassfish.hk2.api.ServiceLocator;
+
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Preconditions;
 
@@ -118,7 +119,6 @@ class ServerRuntime {
     private final Provider<AsyncContext> asyncContextProvider;
     private final ExecutorsFactory<ContainerRequest> asyncExecutorsFactory;
     private final Configuration configuration;
-    private static final Logger LOGGER = Logger.getLogger(ServerRuntime.class.getName());
 
     /**
      * Server-side request processing runtime builder.
@@ -333,12 +333,11 @@ class ServerRuntime {
                     throw respError;
                 }
             } catch (Throwable responseError) {
-                if (throwable != responseError) {
-                    LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_EXCEPTION_MAPPING_ORIGINAL_EXCEPTION(), throwable);
-                } else {
-                    LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_EXCEPTION_MAPPING());
+                if (throwable != responseError
+                        && !(throwable instanceof MappableException && throwable.getCause() == responseError)) {
+                    LOGGER.log(Level.FINE, LocalizationMessages.ERROR_EXCEPTION_MAPPING_ORIGINAL_EXCEPTION(), throwable);
                 }
-                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_EXCEPTION_MAPPING_THROWN_TO_CONTAINER(), responseError);
+                LOGGER.log(Level.FINE, LocalizationMessages.ERROR_EXCEPTION_MAPPING_THROWN_TO_CONTAINER(), responseError);
 
                 try {
                     request.getResponseWriter().failure(responseError);

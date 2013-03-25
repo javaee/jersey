@@ -43,9 +43,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -93,7 +91,7 @@ public class ExceptionLoggingTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        set(TestProperties.RECORD_LOG_LEVEL, Level.INFO.intValue());
+        set(TestProperties.RECORD_LOG_LEVEL, Level.FINE.intValue());
 
         return new ResourceConfig(ExceptionResource.class, Writer.class, Resource.class);
     }
@@ -151,10 +149,5 @@ public class ExceptionLoggingTest extends JerseyTest {
         assertEquals(500, response.getStatus());
 
         assertEquals(getLastLoggedRecord().getThrown().getMessage(), "test");
-    }
-
-    private LogRecord getLastLoggedRecord() {
-        final List<LogRecord> loggedRecords = getLoggedRecords();
-        return loggedRecords.get(loggedRecords.size() - 1);
     }
 }
