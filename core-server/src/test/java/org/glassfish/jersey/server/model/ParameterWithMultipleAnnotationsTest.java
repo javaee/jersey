@@ -51,29 +51,44 @@ import static org.junit.Assert.assertEquals;
  * Checks that Parameters work fine with multiple annotations
  */
 public class ParameterWithMultipleAnnotationsTest {
-
+    
     @Test
-    public void testParametersWithMultiple() throws NoSuchMethodException {
+    public void testParametersWithMultiple() throws Exception {
+        checkMyResourceMethod("processTrailingUnknown");
+        checkMyResourceMethod("processLeadingUnknown");
+        checkMyResourceMethod("processLeadingAndTrailingUnknown");
+        checkMyResourceMethod("processSingleUnknown");
+        checkMyResourceMethod("processDoubleUnknown");
+    }
+    
+    private void checkMyResourceMethod(String methodName) throws Exception {
         Class<?> declaring = MyResource.class;
-        Method method = declaring.getMethod("process", String.class);
+        Method method = declaring.getMethod(methodName, String.class);
         final List<Parameter> parameters = Parameter.create(declaring, declaring, method, false);
         assertEquals(1, parameters.size());
         Parameter parameter = parameters.get(0);
-        assertEquals(String.class, parameter.getRawType());
-        assertEquals(String.class, parameter.getType());
-        assertEquals("id", parameter.getSourceName());
+        assertEquals(methodName, String.class, parameter.getRawType());
+        assertEquals(methodName, String.class, parameter.getType());
+        assertEquals(methodName, "correct", parameter.getSourceName());
     }
-
-    private static class MyResource {
-        public void process(@PathParam("id") @DummyAnnotation String id) {
-
-        }
+    
+    @java.lang.annotation.Target({java.lang.annotation.ElementType.PARAMETER, java.lang.annotation.ElementType.METHOD, java.lang.annotation.ElementType.FIELD})
+    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+    public @interface LeadAnnotation {
+        String value() default "lead";
     }
 
     @java.lang.annotation.Target({java.lang.annotation.ElementType.PARAMETER, java.lang.annotation.ElementType.METHOD, java.lang.annotation.ElementType.FIELD})
     @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
-    public @interface DummyAnnotation {
+    public @interface TrailAnnotation {
+        String value() default "trail";
+    }
+
+    private static class MyResource {
+        public void processTrailingUnknown(@PathParam("correct") @TrailAnnotation String id) {}
+        public void processLeadingUnknown(@LeadAnnotation @PathParam("correct") String id) {}
+        public void processLeadingAndTrailingUnknown(@LeadAnnotation @PathParam("correct") @TrailAnnotation String id) {}
+        public void processSingleUnknown(@LeadAnnotation("correct") String id) {}
+        public void processDoubleUnknown(@LeadAnnotation @TrailAnnotation("correct") String id) {}
     }
 }
-
-
