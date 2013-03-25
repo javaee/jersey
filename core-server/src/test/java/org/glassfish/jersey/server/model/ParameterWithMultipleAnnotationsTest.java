@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -48,32 +50,62 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Checks that Parameters work fine with multiple annotations
+ * Checks that Parameters work fine with multiple annotations.
  */
 public class ParameterWithMultipleAnnotationsTest {
 
     @Test
-    public void testParametersWithMultiple() throws NoSuchMethodException {
-        Class<?> declaring = MyResource.class;
-        Method method = declaring.getMethod("process", String.class);
-        final List<Parameter> parameters = Parameter.create(declaring, declaring, method, false);
+    public void testParametersWithMultiple() throws Exception {
+        checkMyResourceMethod("processTrailingUnknown");
+        checkMyResourceMethod("processLeadingUnknown");
+        checkMyResourceMethod("processLeadingAndTrailingUnknown");
+        checkMyResourceMethod("processSingleUnknown");
+        checkMyResourceMethod("processDoubleUnknown");
+    }
+
+    private void checkMyResourceMethod(String methodName) throws Exception {
+        final Method method = MyResource.class.getMethod(methodName, String.class);
+        final List<Parameter> parameters = Parameter.create(MyResource.class, MyResource.class, method, false);
+
         assertEquals(1, parameters.size());
-        Parameter parameter = parameters.get(0);
-        assertEquals(String.class, parameter.getRawType());
-        assertEquals(String.class, parameter.getType());
-        assertEquals("id", parameter.getSourceName());
+
+        final Parameter parameter = parameters.get(0);
+        assertEquals(methodName, String.class, parameter.getRawType());
+        assertEquals(methodName, String.class, parameter.getType());
+        assertEquals(methodName, "correct", parameter.getSourceName());
+    }
+
+    @Target({java.lang.annotation.ElementType.PARAMETER, java.lang.annotation.ElementType.METHOD,
+            java.lang.annotation.ElementType.FIELD})
+    @Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+    public @interface LeadAnnotation {
+
+        String value() default "lead";
+    }
+
+    @Target({java.lang.annotation.ElementType.PARAMETER, java.lang.annotation.ElementType.METHOD,
+            java.lang.annotation.ElementType.FIELD})
+    @Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+    public @interface TrailAnnotation {
+
+        String value() default "trail";
     }
 
     private static class MyResource {
-        public void process(@PathParam("id") @DummyAnnotation String id) {
 
+        public void processTrailingUnknown(@PathParam("correct") @TrailAnnotation String id) {
+        }
+
+        public void processLeadingUnknown(@LeadAnnotation @PathParam("correct") String id) {
+        }
+
+        public void processLeadingAndTrailingUnknown(@LeadAnnotation @PathParam("correct") @TrailAnnotation String id) {
+        }
+
+        public void processSingleUnknown(@LeadAnnotation("correct") String id) {
+        }
+
+        public void processDoubleUnknown(@LeadAnnotation @TrailAnnotation("correct") String id) {
         }
     }
-
-    @java.lang.annotation.Target({java.lang.annotation.ElementType.PARAMETER, java.lang.annotation.ElementType.METHOD, java.lang.annotation.ElementType.FIELD})
-    @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
-    public @interface DummyAnnotation {
-    }
 }
-
-
