@@ -62,6 +62,7 @@
         <module>bookmark</module>
         <module>bookmark-em</module>
         <module>bookstore-webapp</module>
+        <module>cdi-webapp</module>
         <module>clipboard</module>
         <module>clipboard-programmatic</module>
         <module>extended-wadl-webapp</module>
