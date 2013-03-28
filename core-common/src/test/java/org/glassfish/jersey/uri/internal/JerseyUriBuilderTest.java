@@ -1616,4 +1616,32 @@ public class JerseyUriBuilderTest {
         String second = "http://comp.lang.java";
         UriBuilder.fromUri(new URI(first)).uri(new URI(second));
     }
+
+    @Test
+    public void testQueryParamEncoded() {
+        final UriBuilder uriBuilder = UriBuilder.fromUri("http://localhost:8080/path");
+        uriBuilder.queryParam("query", "%dummy23");
+        Assert.assertEquals("http://localhost:8080/path?query=%25dummy23", uriBuilder.build().toString());
+    }
+
+    @Test
+    public void testQueryParamEncoded2() {
+        final UriBuilder uriBuilder = UriBuilder.fromUri("http://localhost:8080/path");
+        uriBuilder.queryParam("query", "{param}");
+        Assert.assertEquals("http://localhost:8080/path?query=%25dummy23", uriBuilder.build("%dummy23").toString());
+    }
+
+    @Test
+    public void testQueryParamEncoded3() {
+        final UriBuilder uriBuilder = UriBuilder.fromUri("http://localhost:8080/path");
+        uriBuilder.queryParam("query", "{param}");
+        Assert.assertEquals("http://localhost:8080/path?query=%2525test", uriBuilder.build("%25test").toString());
+    }
+
+    @Test
+    public void testQueryParamEncoded4() {
+        final UriBuilder uriBuilder = UriBuilder.fromUri("http://localhost:8080/path");
+        uriBuilder.queryParam("query", "{param}");
+        Assert.assertEquals("http://localhost:8080/path?query=%25test", uriBuilder.buildFromEncoded("%25test").toString());
+    }
 }
