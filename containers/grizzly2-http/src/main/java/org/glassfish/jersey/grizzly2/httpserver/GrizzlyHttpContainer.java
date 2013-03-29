@@ -228,7 +228,13 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                                                           final ContainerResponse context)
                 throws ContainerException {
             try {
-                grizzlyResponse.setStatus(context.getStatus());
+                final javax.ws.rs.core.Response.StatusType statusInfo = context.getStatusInfo();
+                if (statusInfo.getReasonPhrase() == null) {
+                    grizzlyResponse.setStatus(statusInfo.getStatusCode());
+                } else {
+                    grizzlyResponse.setStatus(statusInfo.getStatusCode(), statusInfo.getReasonPhrase());
+                }
+
                 grizzlyResponse.setContentLengthLong(contentLength);
 
                 for (final Map.Entry<String, List<String>> e : context.getStringHeaders().entrySet()) {

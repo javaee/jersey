@@ -134,6 +134,12 @@
             <artifactId>jsr305</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-grizzly-connector</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 </project>

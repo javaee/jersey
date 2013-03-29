@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,60 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.entity;
 
-import java.io.IOException;
-import java.io.OutputStream;
+package org.glassfish.jersey.tests.integration.jersey1829;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import com.google.common.collect.Sets;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * Application class with test resource that returns custom status reason phrase.
+ *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Path("/")
-public class StreamingOutputTest extends JerseyTest {
-    @GET
-    @Path("wae")
-    public StreamingOutput test2() {
-        return new StreamingOutput() {
-            public void write(OutputStream output) throws IOException {
-                throw new WebApplicationException(Response.Status.BAD_GATEWAY.getStatusCode());
-            }
-        };
-    }
+public class Jersey1829 extends Application {
+    public static final String REASON_PHRASE = "my-phrase";
 
+    @SuppressWarnings("unchecked")
     @Override
-    protected Application configure() {
-        return new ResourceConfig(StreamingOutputTest.class);
+    public Set<Class<?>> getClasses() {
+        final HashSet<Class<?>> classes = Sets.newHashSet();
+        classes.add(TestResource.class);
+        return classes;
     }
 
-    @Test
-    public void testWebApplicationException() {
-        Response r = target("wae").request().get();
-        assertEquals(Response.Status.BAD_GATEWAY.getStatusCode(), r.getStatusInfo().getStatusCode());
+    @Path("resource")
+    public static class TestResource {
+        @GET
+        @Path("428")
+        public Response get() {
+            return Response.status(new Custom428Type()).build();
+        }
+
+        @GET
+        @Path("428-entity")
+        public Response getWithEntity() {
+            return Response.status(new Custom428Type()).entity("entity").build();
+        }
     }
+
+
+    public static class Custom428Type implements Response.StatusType {
+        @Override
+        public int getStatusCode() { return 428; }
+
+        @Override
+        public String getReasonPhrase() { return REASON_PHRASE; }
+
+        @Override
+        public Response.Status.Family getFamily() { return Response.Status.Family.CLIENT_ERROR; }
+    }
+
 }

@@ -144,7 +144,13 @@ public class ResponseWriter implements ContainerResponseWriter {
                 response.addHeader(header, it.next());
             }
         }
-        response.setStatus(responseContext.getStatus());
+
+        final String reasonPhrase = responseContext.getStatusInfo().getReasonPhrase();
+        if (reasonPhrase != null) {
+            response.setStatus(responseContext.getStatus(), reasonPhrase);
+        } else {
+            response.setStatus(responseContext.getStatus());
+        }
 
         if (!responseContext.hasEntity()) {
             return null;

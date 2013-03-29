@@ -55,6 +55,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -289,8 +290,12 @@ public class HttpUrlConnector implements Connector {
             writeOutBoundHeaders(request.getStringHeaders(), uc);
         }
 
+        final int code = uc.getResponseCode();
+        final String reasonPhrase = uc.getResponseMessage();
+        final Response.StatusType status = reasonPhrase == null ?
+                Statuses.from(code) : Statuses.from(code, reasonPhrase);
         ClientResponse responseContext = new ClientResponse(
-                Statuses.from(uc.getResponseCode()), request);
+                status, request);
         responseContext.headers(Maps.<String, List<String>>filterKeys(uc.getHeaderFields(), Predicates.notNull()));
         responseContext.setEntityStream(getInputStream(uc));
 

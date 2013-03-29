@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -95,7 +95,8 @@ public class MainTest extends JerseyTest {
     @Test
     public void testGetOnForm() {
         Response response = target().path("form").request(MediaType.TEXT_HTML).get();
-        assertEquals("GET on the 'form' resource doesn't give expected response", Response.Status.OK, response.getStatusInfo());
+        assertEquals("GET on the 'form' resource doesn't give expected response", Response.Status.OK.getStatusCode(),
+                response.getStatusInfo().getStatusCode());
     }
 
     /**
@@ -110,7 +111,7 @@ public class MainTest extends JerseyTest {
         formData.add("hint", "re");
 
         Response response = target().path("form").request().post(Entity.entity(formData, MediaType.APPLICATION_FORM_URLENCODED));
-        assertEquals(Response.Status.OK, response.getStatusInfo());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatusInfo().getStatusCode());
 
         // check that the generated response is the expected one
         InputStream responseInputStream = response.readEntity(InputStream.class);
@@ -134,7 +135,7 @@ public class MainTest extends JerseyTest {
         // without the query param "match"
         Response response = target().path("form").path("colours").request(MediaType.TEXT_PLAIN).get();
         assertEquals("GET on path '/form/colours' with mime type 'text/html' doesn't give expected response",
-                Response.Status.OK, response.getStatusInfo());
+                Response.Status.OK.getStatusCode(), response.getStatusInfo().getStatusCode());
 
         String responseMsg = target().path("form").path("colours").request(MediaType.TEXT_PLAIN).get(String.class);
         assertEquals("Response content doesn't match the expected value", "red\norange\nyellow\ngreen\nblue\nindigo\nviolet\n",
@@ -154,7 +155,7 @@ public class MainTest extends JerseyTest {
     public void testGetColoursAsJson() {
         Response response = target().path("form").path("colours").request(MediaType.APPLICATION_JSON).get();
         assertEquals("GET on path '/form/colours' with mime type 'application/json' doesn't give expected response",
-                Response.Status.OK, response.getStatusInfo());
+                Response.Status.OK.getStatusCode(), response.getStatusInfo().getStatusCode());
 
         JSONArray jsonArray = target().path("form").path("colours").request(MediaType.APPLICATION_JSON).get(JSONArray.class);
         assertEquals("Returned JSONArray doesn't have expected number of entries", 7, jsonArray.length());
