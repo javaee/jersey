@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -92,7 +92,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
 
     private final BundleContext bundleContext;
     private final Map<Long, Map<String, Callable<List<Class<?>>>>> factories =
-                                                        new HashMap<Long, Map<String, Callable<List<Class<?>>>>>();
+            new HashMap<Long, Map<String, Callable<List<Class<?>>>>>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     private static OsgiRegistry instance;
@@ -278,7 +278,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
 
         for (Bundle bundle : bundleContext.getBundles()) {
             // Look for resources at the given <packagePath> and at WEB-INF/classes/<packagePath> in case a WAR is being examined.
-            for (String bundlePackagePath : new String[] {packagePath, "WEB-INF/classes/" + packagePath}) {
+            for (String bundlePackagePath : new String[]{packagePath, "WEB-INF/classes/" + packagePath}) {
                 final Enumeration<URL> enumeration = (Enumeration<URL>) bundle.findEntries(bundlePackagePath, "*", false);
 
                 if (enumeration != null) {
@@ -299,10 +299,26 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             final Enumeration<URL> jars = bundle.findEntries("/", "*.jar", true);
             if (jars != null) {
                 while (jars.hasMoreElements()) {
+                    final URL jar = jars.nextElement();
+                    final InputStream inputStream = classLoader.getResourceAsStream(jar.getPath());
+                    if (inputStream == null) {
+                        LOGGER.config(LocalizationMessages.OSGI_REGISTRY_ERROR_OPENING_RESOURCE_STREAM(jar));
+                        continue;
+                    }
+                    final JarInputStream jarInputStream;
                     try {
-                        final InputStream inputStream = classLoader.getResourceAsStream(jars.nextElement().getPath());
-                        final JarInputStream jarInputStream = new JarInputStream(inputStream);
+                        jarInputStream = new JarInputStream(inputStream);
+                    } catch (IOException ex) {
+                        LOGGER.log(Level.CONFIG, LocalizationMessages.OSGI_REGISTRY_ERROR_PROCESSING_RESOURCE_STREAM(jar), ex);
+                        try {
+                            inputStream.close();
+                        } catch (IOException e) {
+                            // ignored
+                        }
+                        continue;
+                    }
 
+                    try {
                         JarEntry jarEntry;
                         while ((jarEntry = jarInputStream.getNextJarEntry()) != null) {
                             final String jarEntryName = jarEntry.getName();
@@ -312,8 +328,14 @@ public final class OsgiRegistry implements SynchronousBundleListener {
                                 result.add(bundle.getResource(jarEntryName));
                             }
                         }
-                    } catch (Exception e) {
-                        // Ignore.
+                    } catch (Exception ex) {
+                        LOGGER.log(Level.CONFIG, LocalizationMessages.OSGI_REGISTRY_ERROR_PROCESSING_RESOURCE_STREAM(jar), ex);
+                    } finally {
+                        try {
+                            jarInputStream.close();
+                        } catch (IOException e) {
+                            // ignored
+                        }
                     }
                 }
             }
@@ -356,7 +378,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         for (Bundle bundle : bundleContext.getBundles()) {
             final Enumeration entries = bundle.findEntries(path, propertiesName, false);
             if (entries != null && entries.hasMoreElements()) {
-                final URL entryUrl = (URL)entries.nextElement();
+                final URL entryUrl = (URL) entries.nextElement();
                 try {
                     return new PropertyResourceBundle(entryUrl.openStream());
                 } catch (IOException ex) {
