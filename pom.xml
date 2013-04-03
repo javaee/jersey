@@ -46,7 +46,7 @@
     <parent>
         <groupId>net.java</groupId>
         <artifactId>jvnet-parent</artifactId>
-        <version>3</version>
+        <version>4</version>
     </parent>
 
     <groupId>org.glassfish.jersey</groupId>
@@ -1057,7 +1057,7 @@
         <cdi.api.version>1.1-20130121</cdi.api.version>
         <ejb.version>3.2-b01</ejb.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
-        <grizzly2.version>2.3-rc7</grizzly2.version>
+        <grizzly2.version>2.3</grizzly2.version>
         <hk2.version>2.1.78</hk2.version>
         <jackson.version>1.9.11</jackson.version>
         <javax.annotation.version>1.2-b02</javax.annotation.version>
