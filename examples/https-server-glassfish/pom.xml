@@ -40,36 +40,34 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
-        <artifactId>project</artifactId>
+        <artifactId>webapp-example-parent</artifactId>
+        <relativePath>../webapp-example-parent/pom.xml</relativePath>
         <version>2.0-SNAPSHOT</version>
     </parent>
+
     <artifactId>https-server-glassfish</artifactId>
     <name>jersey-examples-https-server-glassfish</name>
-    <description>HTTPS Server - Jersey sample - GlassFish</description>
     <packaging>war</packaging>
+
+    <description>Jersey HTTPS server on GlassFish example.</description>
+
     <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-grizzly2-servlet</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
         </dependency>
+
         <!-- javax.servlet.http.HttpServletRequest -->
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -77,28 +75,41 @@
             <version>${servlet2.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
     <build>
-        <finalName>${artifactId}</finalName>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
             <!-- Uncomment to run the application using "mvn embedded-glassfish:run"
                  (does not work with the security config required by example at the moment) -->
             <!--plugin>
-                <groupId>org.glassfish</groupId>
+                <groupId>org.glassfish.embedded</groupId>
                 <artifactId>maven-embedded-glassfish-plugin</artifactId>
             </plugin-->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>examples-source-zip</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>xml-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>

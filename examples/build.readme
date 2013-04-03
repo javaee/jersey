@@ -1,0 +1,42 @@
+This read-me file briefly summarizes options for building Jersey examples.
+
+To build examples without generating individual example project source ZIP
+bundles, run:
+
+  > mvn clean install
+
+
+To build examples and generate individual example project source ZIP bundles,
+run the build with "examples-source-zip" profile enabled:
+
+  > mvn clean install -P examples-source-zip
+
+
+Some examples contain tests that depend on external container to be up and
+running. Tests in these examples are disabled by default. To enable the tests
+to be run against a properly set-up external container version, run the build
+with "run-external-tests" profile enabled:
+
+  > mvn clean install -P run-external-tests
+
+When running the build with the "run-external-tests" profile, following command
+line properties can be used to customize the build:
+
+  external.container.factory
+
+     - defines external test container factory class to be used for the tests
+       executed as part of the "run-external-tests" profile
+
+     - defaults to "org.glassfish.jersey.test.external.ExternalTestContainerFactory"
+
+
+  external.container.port
+
+     - defines the TCP/IP port of the external test container to be used for
+       the tests executed as part of the "run-external-tests" profile
+
+     - defaults to "8080"
+
+For example:
+
+  > mvn clean install -P run-external-tests -Dexternal.container.port=9090

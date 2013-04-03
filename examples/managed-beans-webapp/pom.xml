@@ -40,16 +40,24 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
-        <artifactId>project</artifactId>
+        <artifactId>webapp-example-parent</artifactId>
+        <relativePath>../webapp-example-parent/pom.xml</relativePath>
         <version>2.0-SNAPSHOT</version>
     </parent>
+
     <artifactId>managed-beans-webapp</artifactId>
     <name>jersey-examples-managed-beans-webapp</name>
     <packaging>war</packaging>
+
+    <description>Jersey Managed Beans Web Application Example.</description>
+
     <dependencies>
         <dependency>
             <groupId>javax.ws.rs</groupId>
@@ -70,38 +78,51 @@
             <groupId>javax.persistence</groupId>
             <artifactId>persistence-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-bundle</artifactId>
-            <type>pom</type>
-            <scope>test</scope>
-        </dependency>
-   </dependencies>
-    <build>
-        <finalName>${project.artifactId}</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <skipTests>${skipTests}</skipTests>
-                    <systemPropertyVariables>
-                        <jersey.config.test.container.factory>${testContainerFactory}</jersey.config.test.container.factory>
-                        <jersey.config.test.container.port>${testContainerPort}</jersey.config.test.container.port>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>run-external-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <jersey.config.test.container.factory>${external.container.factory}</jersey.config.test.container.factory>
+                                <jersey.config.test.container.port>${external.container.port}</jersey.config.test.container.port>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <!-- External test container configuration is done via properties to allow overriding via command line. -->
+                <external.container.factory>org.glassfish.jersey.test.external.ExternalTestContainerFactory</external.container.factory>
+                <external.container.port>8080</external.container.port>
+                <maven.test.skip>false</maven.test.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>examples-source-zip</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>xml-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <properties>
-        <skipTests>true</skipTests>
-        <testContainerFactory>org.glassfish.jersey.test.external.ExternalTestContainerFactory</testContainerFactory>
-        <testContainerPort>8080</testContainerPort>
+        <maven.test.skip>true</maven.test.skip>
     </properties>
+
 </project>

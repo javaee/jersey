@@ -38,7 +38,8 @@
   only if the new code is made subject to such option by the copyright
   holder.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -47,30 +48,30 @@
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.examples</groupId>
     <artifactId>server-async-standalone</artifactId>
     <version>2.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>jersey-examples-server-async-standalone</name>
 
-    <description>Standalone Jersey JAX-RS server-side asynchronous processing example</description>
+    <description>Standalone Jersey JAX-RS asynchronous server-side processing example.</description>
 
     <modules>
         <module>client</module>
         <module>webapp</module>
     </modules>
 
-    <build>
-        <finalName>${artifactId}</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+    <profiles>
+        <profile>
+            <id>examples-source-zip</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

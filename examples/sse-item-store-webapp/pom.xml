@@ -38,12 +38,15 @@
   ~ only if the new code is made subject to such option by the copyright
   ~ holder.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
-        <artifactId>project</artifactId>
+        <artifactId>webapp-example-parent</artifactId>
+        <relativePath>../webapp-example-parent/pom.xml</relativePath>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
@@ -51,7 +54,7 @@
     <packaging>war</packaging>
     <name>jersey-examples-sse-item-store-webapp</name>
 
-    <description>Jersey SSE-based item store example</description>
+    <description>Jersey SSE-based item store example.</description>
 
     <dependencies>
         <dependency>
@@ -63,39 +66,21 @@
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-sse</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-bundle</artifactId>
-            <type>pom</type>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
-        <finalName>${artifactId}</finalName>
         <plugins>
+            <!-- Run the application using "mvn jetty:run" -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                </configuration>
-            </plugin>
-            <plugin>
+                <!-- TODO unify Jetty in all examples -->
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
-                <version>9.0.0.RC2</version>
                 <configuration>
                     <scanIntervalSeconds>10</scanIntervalSeconds>
                     <stopPort>9999</stopPort>
                     <stopKey>STOP</stopKey>
                     <webApp>
-                        <contextPath>/${artifactId}</contextPath>
+                        <contextPath>/${project.artifactId}</contextPath>
                     </webApp>
                     <systemProperties>
                         <systemProperty>
@@ -105,15 +90,26 @@
                     </systemProperties>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>examples-source-zip</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>xml-maven-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <properties>
         <jersey.config.test.container.port>8080</jersey.config.test.container.port>

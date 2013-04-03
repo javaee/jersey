@@ -53,13 +53,72 @@
     </xsl:template>
 
     <xsl:template
-            match="pom:plugins/pom:plugin[pom:artifactId='maven-surefire-plugin']/pom:configuration">
+            match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
+            or pom:groupId='org.glassfish.jersey.containers'
+            or pom:groupId='org.glassfish.jersey.media'
+            or pom:artifactId='jersey-mvc-jsp'
+            or pom:artifactId='jersey-bean-validation'
+            or pom:groupId='com.sun.xml.bind'
+            or pom:groupId='javax.servlet']/pom:scope[text()!=test]">
+        <scope>provided</scope>
+    </xsl:template>
+
+    <xsl:template
+            match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
+            or pom:groupId='org.glassfish.jersey.containers'
+            or pom:groupId='org.glassfish.jersey.media'
+            or pom:artifactId='jersey-mvc-jsp'
+            or pom:artifactId='jersey-bean-validation'
+            or pom:groupId='com.sun.xml.bind'
+            or pom:groupId='javax.validation'
+            or pom:groupId='javax.servlet']">
         <xsl:copy>
             <xsl:apply-templates />
-            <excludes>
-                <exclude>**/ExtendedWadlWebappOsgiTest.java</exclude>
-            </excludes>
+            <xsl:if test="count(pom:scope)=0">
+                <scope>provided</scope>
+            </xsl:if>
         </xsl:copy>
+    </xsl:template>
+
+    <!-- remove <packagingExcludes>WEB-INF/glassfish-web.xml</packagingExcludes>
+         as this file is required in Glassfish bundle since <class-loader>
+         is defined in it -->
+    <xsl:template match="pom:plugin[pom:artifactId='maven-war-plugin']/pom:configuration[pom:packagingExcludes]">
+    </xsl:template>
+
+    <!--build war even if web.xml is missing as it's not required,
+        <packagingIncludes> defaults to 'all' so it includes
+        <packagingIncludes>WEB-INF/glassfish-web.xml</packagingIncludes>
+        to pick up <class-loader> -->
+    <xsl:template match="pom:plugin[pom:artifactId='maven-war-plugin']">
+        <xsl:copy>
+            <xsl:apply-templates />
+            <xsl:if test="count(pom:configuration)=1">
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </xsl:if>
+        </xsl:copy>
+    </xsl:template>
+
+    <!-- remove examples-source-zip profile -->
+    <xsl:template match="pom:profile/pom:plugins/pom:plugin[pom:id='examples-source-zip']">
+    </xsl:template>
+
+    <!--&lt;!&ndash; remove xslt-maven-plugin &ndash;&gt;-->
+    <!--<xsl:template match="pom:plugin[pom:artifactId='xml-maven-plugin']">-->
+    <!--</xsl:template>-->
+
+    <!--&lt;!&ndash; remove maven-assembly-plugin &ndash;&gt;-->
+    <!--<xsl:template match="pom:plugin[pom:artifactId='maven-assembly-plugin']">-->
+    <!--</xsl:template>-->
+
+    <!-- remove maven-jetty-plugin -->
+    <xsl:template match="pom:plugin[pom:artifactId='maven-jetty-plugin']">
+    </xsl:template>
+
+    <!-- remove jetty-maven-plugin -->
+    <xsl:template match="pom:plugin[pom:artifactId='jetty-maven-plugin']">
     </xsl:template>
 
     <xsl:template match="comment()">

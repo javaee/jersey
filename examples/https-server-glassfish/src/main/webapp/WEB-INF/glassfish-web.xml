@@ -40,33 +40,26 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.glassfish.jersey.bundles.glassfish</groupId>
-        <artifactId>project</artifactId>
-        <version>2.0-SNAPSHOT</version>
-    </parent>
-    <groupId>org.glassfish.jersey.bundles.glassfish.v4_0</groupId>
-    <artifactId>project</artifactId>
-    <name>jersey-bundles-glassfish-v4.0</name>
-    <description>
-        Jersey GlassFish V4.0 Update Center Packages
-    </description>
-    <packaging>pom</packaging>
-    <modules>
-        <module>core</module>
-        <!-- docs-and-examples will be built for attach-src-and-docs profile only, see bellow -->
-    </modules>
-    <profiles>
-        <profile>
-            <id>attach-src-and-docs</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <modules>
-                <module>docs-and-examples</module>
-            </modules>
-        </profile>
-    </profiles>
-</project>
+<!DOCTYPE glassfish-web-app PUBLIC "-//GlassFish.org//DTD GlassFish Application Server 3.1 Servlet 3.0//EN" "http://glassfish.org/dtds/glassfish-web-app_3_0-1.dtd">
+<glassfish-web-app error-url="">
+    <context-root>/https-server-glassfish-webapp</context-root>
+
+    <security-role-mapping>
+        <!-- maps "Users" group to myRole -->
+        <role-name>myRole</role-name>
+        <group-name>Users</group-name>
+    </security-role-mapping>
+
+    <class-loader delegate="true" />
+    <jsp-config>
+        <property name="classdebuginfo" value="true">
+            <description>Enable debug info compilation in the generated servlet class</description>
+        </property>
+        <property name="keepgenerated" value="true">
+            <description>Keep a copy of the generated servlet class' java code.</description>
+        </property>
+        <property name="mappedfile" value="true">
+            <description>Maintain a one-to-one correspondence between static content and the generated servlet class' java code</description>
+        </property>
+    </jsp-config>
+</glassfish-web-app>

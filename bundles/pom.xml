@@ -40,7 +40,9 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -54,24 +56,32 @@
     <packaging>pom</packaging>
     <name>jersey-bundles</name>
 
-    <description>Jersey bundles providers umbrella project module</description>
+    <description>Jersey bundles providers umbrella project module.</description>
 
     <modules>
         <module>jax-rs-ri-archive</module>
         <module>jax-rs-ri-bundle</module>
-        <module>glassfish</module>
     </modules>
 
     <profiles>
-      <profile>
-        <id>attach-src-and-docs</id>
-        <activation>
-            <activeByDefault>false</activeByDefault>
-        </activation>
-        <modules>
-            <module>apidocs</module>
-        </modules>
-      </profile>
+        <profile>
+            <id>attach-src-and-docs</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>apidocs</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>examples-source-zip</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>examples</module>
+            </modules>
+        </profile>
     </profiles>
 
- </project>
+</project>

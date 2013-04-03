@@ -40,7 +40,8 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -53,22 +54,7 @@
     <packaging>jar</packaging>
     <name>jersey-examples-server-async-standalone-client</name>
 
-    <description>Standalone Jersey JAX-RS server-side asynchronous processing example client</description>
-
-    <profiles>
-        <profile>
-            <id>test</id>
-        </profile>
-        <profile>
-            <id>skip-test</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <maven.test.skip>true</maven.test.skip>
-            </properties>
-        </profile>
-    </profiles>
+    <description>Standalone Jersey JAX-RS asynchronous server-side processing example client.</description>
 
     <dependencies>
         <dependency>
@@ -93,16 +79,7 @@
     </dependencies>
 
     <build>
-        <finalName>client</finalName>
         <plugins>
-            <!--  Maven Exec Plug-In: http://mojo.codehaus.org/exec-maven-plugin/  -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>org.glassfish.jersey.examples.server.async.MainWindow</mainClass>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -120,28 +97,60 @@
                     </archive>
                 </configuration>
             </plugin>
+            <!-- Run the application using "mvn exec:java" -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>none</phase>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <artifactId>exec-maven-plugin</artifactId>
                 <configuration>
-                    <skipAssembly>true</skipAssembly>
+                    <mainClass>org.glassfish.jersey.examples.server.async.MainWindow</mainClass>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>none</phase>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>run-external-tests</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <jersey.config.test.container.factory>${external.container.factory}</jersey.config.test.container.factory>
+                                <jersey.config.test.container.port>${external.container.port}</jersey.config.test.container.port>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <!-- External test container configuration is done via properties to allow overriding via command line. -->
+                <external.container.factory>org.glassfish.jersey.test.external.ExternalTestContainerFactory</external.container.factory>
+                <external.container.port>8080</external.container.port>
+                <maven.test.skip>false</maven.test.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>examples-source-zip</id>
+            <!-- do not create source zip bundles -->
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <skipAssembly>true</skipAssembly>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <properties>
+        <maven.test.skip>true</maven.test.skip>
+    </properties>
 
 </project>
