@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,29 +39,46 @@
  */
 package org.glassfish.jersey.internal;
 
-import java.io.*;
-import java.lang.annotation.*;
-import java.lang.reflect.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
-import javax.ws.rs.*;
-import javax.ws.rs.container.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.ext.*;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.RuntimeDelegate;
 
-import javax.inject.*;
+import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.*;
+import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.message.internal.*;
+import org.glassfish.jersey.message.internal.MessagingBinders;
 
-import org.glassfish.hk2.api.*;
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.*;
-import com.google.common.collect.*;
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import junit.framework.Assert;
 

@@ -62,6 +62,7 @@ import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
@@ -114,7 +115,6 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.net.HttpHeaders;
 import com.google.common.util.concurrent.AbstractFuture;
 
 /**

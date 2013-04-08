@@ -54,6 +54,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -65,8 +66,6 @@ import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeadersFactory;
-
-import com.google.common.net.HttpHeaders;
 
 /**
  * Used by tests to create mock JerseyContainerRequestContext instances.
