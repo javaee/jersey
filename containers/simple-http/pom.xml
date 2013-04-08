@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
     Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
@@ -55,6 +54,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.glassfish.hk2.external</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.simpleframework</groupId>
             <artifactId>simple</artifactId>
         </dependency>
@@ -68,7 +71,6 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <inherited>true</inherited>
             </plugin>
-
         </plugins>
 
         <resources>

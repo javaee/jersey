@@ -74,6 +74,7 @@
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -89,28 +90,28 @@
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <inherited>true</inherited>
             </plugin>
-             <plugin>
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                  <instructions>
-                     <!--Import-Package>javax.interceptor;version="[1.0-4)",*</Import-Package-->
-                     <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
-                     <_nodefaultversion>false</_nodefaultversion>
-                   </instructions>
+                    <instructions>
+                        <!--Import-Package>javax.interceptor;version="[1.0-4)",*</Import-Package-->
+                        <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+                        <_nodefaultversion>false</_nodefaultversion>
+                    </instructions>
                 </configuration>
-                    <executions>
-                        <execution>
-                            <id>osgi-bundle</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>bundle</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-              </plugin>
-         </plugins>
+                <executions>
+                    <execution>
+                        <id>osgi-bundle</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
 </project>
