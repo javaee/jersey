@@ -57,6 +57,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
@@ -312,7 +313,11 @@ public class ApacheConnector implements Connector {
                 response = client.execute(getHost(request), request);
             }
 
-            final ClientResponse responseContext = new ClientResponse(Statuses.from(response.getStatusLine().getStatusCode()), clientRequest);
+            final Response.StatusType status = response.getStatusLine().getReasonPhrase() == null ?
+                    Statuses.from(response.getStatusLine().getStatusCode()) :
+                    Statuses.from(response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase());
+
+            final ClientResponse responseContext = new ClientResponse(status, clientRequest);
 
             final Header[] respHeaders = response.getAllHeaders();
             for (Header header : respHeaders) {

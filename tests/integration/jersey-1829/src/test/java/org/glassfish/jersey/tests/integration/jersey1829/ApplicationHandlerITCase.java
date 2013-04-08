@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,49 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.entity;
+package org.glassfish.jersey.tests.integration.jersey1829;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
+import org.junit.Assert;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * Tests JERSEY issue 1744. Custom status reason phrase returned from the resource method was not propagated out of the
+ * servlet container.
+ *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Path("/")
-public class StreamingOutputTest extends JerseyTest {
-    @GET
-    @Path("wae")
-    public StreamingOutput test2() {
-        return new StreamingOutput() {
-            public void write(OutputStream output) throws IOException {
-                throw new WebApplicationException(Response.Status.BAD_GATEWAY.getStatusCode());
-            }
-        };
+public class ApplicationHandlerITCase extends JerseyTest {
+
+    @Override
+    protected ResourceConfig configure() {
+        return new ResourceConfig(Jersey1829.class);
     }
 
     @Override
-    protected Application configure() {
-        return new ResourceConfig(StreamingOutputTest.class);
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
     }
 
     @Test
-    public void testWebApplicationException() {
-        Response r = target("wae").request().get();
-        assertEquals(Response.Status.BAD_GATEWAY.getStatusCode(), r.getStatusInfo().getStatusCode());
+    public void testCustomResponse428() {
+        final Response response = target().path("resource/428").request().get();
+        Assert.assertEquals(428, response.getStatusInfo().getStatusCode());
+        Assert.assertEquals("my-phrase", response.getStatusInfo().getReasonPhrase());
+    }
+
+    @Test
+    public void testCustomResponse428WithEntity() {
+        final Response response = target().path("resource/428-entity").request().get();
+        Assert.assertEquals(428, response.getStatusInfo().getStatusCode());
+        Assert.assertEquals("my-phrase", response.getStatusInfo().getReasonPhrase());
+
     }
 }

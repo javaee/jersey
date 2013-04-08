@@ -106,7 +106,7 @@ public class TraceSupportTest extends JerseyTest {
         @TRACE
         @Produces("text/plain")
         public String trace(Request request) {
-            return stringify((ContainerRequest)request);
+            return stringify((ContainerRequest) request);
         }
     }
 
@@ -122,7 +122,7 @@ public class TraceSupportTest extends JerseyTest {
                 if (request == null) {
                     return Response.noContent().build();
                 } else {
-                    return Response.ok(stringify((ContainerRequest)request), MediaType.TEXT_PLAIN).build();
+                    return Response.ok(stringify((ContainerRequest) request), MediaType.TEXT_PLAIN).build();
                 }
             }
         });
@@ -153,7 +153,7 @@ public class TraceSupportTest extends JerseyTest {
     public void testProgrammaticApp() throws Exception {
         Response response = prepareTarget(ROOT_PATH_PROGRAMMATIC).request("text/plain").method(TRACE.NAME);
 
-        assertEquals(Response.Status.OK, response.getStatusInfo());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatusInfo().getStatusCode());
 
         String responseEntity = response.readEntity(String.class);
         for (String expectedFragment : expectedFragmentsProgrammatic) {
@@ -167,7 +167,7 @@ public class TraceSupportTest extends JerseyTest {
     public void testAnnotatedApp() throws Exception {
         Response response = prepareTarget(ROOT_PATH_ANNOTATED).request("text/plain").method(TRACE.NAME);
 
-        assertEquals(Response.Status.OK, response.getStatusInfo());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatusInfo().getStatusCode());
 
         String responseEntity = response.readEntity(String.class);
         for (String expectedFragment : expectedFragmentsAnnotated) {

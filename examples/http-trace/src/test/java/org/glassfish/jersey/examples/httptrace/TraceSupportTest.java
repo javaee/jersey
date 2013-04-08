@@ -84,7 +84,7 @@ public class TraceSupportTest extends JerseyTest {
     public void testProgrammaticApp() throws Exception {
         Response response = prepareTarget(App.ROOT_PATH_PROGRAMMATIC).request("text/plain").method(TRACE.NAME);
 
-        assertEquals(Response.Status.OK, response.getStatusInfo());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatusInfo().getStatusCode());
 
         String responseEntity = response.readEntity(String.class);
         for (String expectedFragment : expectedFragmentsProgrammatic) {
@@ -98,7 +98,7 @@ public class TraceSupportTest extends JerseyTest {
     public void testAnnotatedApp() throws Exception {
         Response response = prepareTarget(App.ROOT_PATH_ANNOTATED).request("text/plain").method(TRACE.NAME);
 
-        assertEquals(Response.Status.OK, response.getStatusInfo());
+        assertEquals(Response.Status.OK.getStatusCode(), response.getStatusInfo().getStatusCode());
 
         String responseEntity = response.readEntity(String.class);
         for (String expectedFragment : expectedFragmentsAnnotated) {

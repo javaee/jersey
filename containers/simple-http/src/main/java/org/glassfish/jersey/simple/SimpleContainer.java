@@ -144,12 +144,15 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
         @Override
         public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse context) throws ContainerException {
-            int code = context.getStatus();
-            String text = Status.getDescription(code);
+            final javax.ws.rs.core.Response.StatusType statusInfo = context.getStatusInfo();
+
+            final int code = statusInfo.getStatusCode();
+            final String reason = statusInfo.getReasonPhrase() == null ? Status.getDescription(code)
+                    : statusInfo.getReasonPhrase();
             String method = request.getMethod();
 
             response.setCode(code);
-            response.setDescription(text);
+            response.setDescription(reason);
 
             if (!method.equalsIgnoreCase("HEAD") && contentLength != -1 && contentLength < Integer.MAX_VALUE) {
                 response.setContentLength((int) contentLength);

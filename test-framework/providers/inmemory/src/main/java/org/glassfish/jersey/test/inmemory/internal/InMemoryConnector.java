@@ -285,7 +285,6 @@ public class InMemoryConnector implements Connector {
         });
         clientResponse.getHeaders().putAll(responseWriter.getHeaders());
         clientResponse.setEntityStream(new ByteArrayInputStream(responseWriter.getEntity()));
-        clientResponse.setStatus(responseWriter.getStatusInfo().getStatusCode());
         return clientResponse;
     }
 
