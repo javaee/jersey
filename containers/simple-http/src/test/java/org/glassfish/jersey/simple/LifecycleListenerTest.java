@@ -39,26 +39,30 @@
  */
 package org.glassfish.jersey.simple;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.Container;
-import org.junit.Test;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.Container;
+
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 
 /**
- * Simple Reload Test
+ * Reload and ContainerLifecycleListener support test.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ReloadTest extends AbstractSimpleServerTester {
+public class LifecycleListenerTest extends AbstractSimpleServerTester {
 
     @Path("/one")
     public static class One {
@@ -115,5 +119,35 @@ public class ReloadTest extends AbstractSimpleServerTester {
         assertEquals("two", r.path("two").request().get(String.class));
     }
 
+    static class StartStopListener extends AbstractContainerLifecycleListener {
+        volatile boolean started;
+        volatile boolean stopped;
 
+        @Override
+        public void onStartup(Container container) {
+            started = true;
+        }
+
+        @Override
+        public void onShutdown(Container container) {
+            stopped = true;
+        }
+    }
+
+    @Test
+    public void testStartupShutdownHooks() {
+        final StartStopListener listener = new StartStopListener();
+
+        startServer(new ResourceConfig(One.class).register(listener));
+
+        WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
+
+        assertThat(r.path("one").request().get(String.class), equalTo("one"));
+        assertThat(r.path("two").request().get(Response.class).getStatus(), equalTo(404));
+
+        stopServer();
+
+        assertTrue("ContainerLifecycleListener.onStartup has not been called.", listener.started);
+        assertTrue("ContainerLifecycleListener.onShutdown has not been called.", listener.stopped);
+    }
 }

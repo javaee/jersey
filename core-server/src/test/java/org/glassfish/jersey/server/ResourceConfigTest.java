@@ -53,8 +53,8 @@ import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -133,6 +133,24 @@ public class ResourceConfigTest {
         ah = new ApplicationHandler(rc);
         assertEquals(2, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
         assertTrue(ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).contains(defaultBinder));
+    }
+
+    @Test
+    public void testApplicationName() {
+        final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
+        resourceConfig.setApplicationName("app");
+        assertEquals("app", resourceConfig.getApplicationName());
+        resourceConfig.lock();
+        assertEquals("app", resourceConfig.getApplicationName());
+    }
+
+    @Test
+    public void testApplicationNameDefinedByProperty() {
+        final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
+        resourceConfig.property(ServerProperties.APPLICATION_NAME, "app");
+        assertNull(resourceConfig.getApplicationName());
+        resourceConfig.lock();
+        assertEquals("app", resourceConfig.getApplicationName());
     }
 
     public static class EmtpyResourceConfigWithoutWadl extends ResourceConfig {

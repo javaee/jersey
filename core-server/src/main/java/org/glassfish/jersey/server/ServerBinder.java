@@ -40,6 +40,10 @@
 package org.glassfish.jersey.server;
 
 import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
@@ -48,10 +52,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -78,6 +78,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
+import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
@@ -139,7 +140,8 @@ public class ServerBinder extends AbstractBinder {
                 new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
                 new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, runtimeType),
-                new MappableExceptionWrapperInterceptor.Binder());
+                new MappableExceptionWrapperInterceptor.Binder(),
+                new MonitoringContainerListener.Binder());
 
         // Request/Response injection interfaces
         bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {

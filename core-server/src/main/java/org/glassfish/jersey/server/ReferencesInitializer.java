@@ -39,11 +39,10 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.ws.rs.core.Request;
-import javax.ws.rs.ext.ReaderInterceptor;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
 import org.glassfish.jersey.internal.inject.RequestInjectee;
@@ -104,6 +103,7 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
         final UriRoutingContext uriRoutingCtx = uriRoutingCtxProvider.get();
 
         containerRequest.setUriInfo(uriRoutingCtx);
+        containerRequest.getRequestEventBuilder().setExtendedUriInfo(uriRoutingCtx);
 
         containerRequest.setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
             @Override

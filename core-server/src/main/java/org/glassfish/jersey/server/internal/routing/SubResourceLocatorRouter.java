@@ -59,6 +59,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.ComponentModelValidator;
 import org.glassfish.jersey.server.model.ModelProcessor;
@@ -125,7 +126,7 @@ class SubResourceLocatorRouter implements Router {
     public Continuation apply(final ContainerRequest request) {
         final RoutingContext routingCtx = Injections.getOrCreate(locator, RoutingContext.class);
 
-        Object subResourceInstance = getResource(routingCtx);
+        Object subResourceInstance = getResource(routingCtx, request);
         if (subResourceInstance == null) {
             throw new NotFoundException();
         }
@@ -157,6 +158,9 @@ class SubResourceLocatorRouter implements Router {
         }
 
         subResource = resourceModel.getResources().get(0);
+        routingCtx.pushLocatorSubResource(subResource);
+        request.triggerEvent(RequestEventImpl.Type.SUBRESOURCE_LOCATED);
+
 
         for (Class<?> handlerClass : subResource.getHandlerClasses()) {
             resourceContext.bindResource(handlerClass);
@@ -177,12 +181,12 @@ class SubResourceLocatorRouter implements Router {
 
         for (ModelProcessor modelProcessor : modelProcessors) {
             subResourceModel = modelProcessor.processSubResource(subResourceModel, configuration);
-            validateEnhancedModel(subResourceModel, modelProcessor);
+            validateEnhancedModel(subResourceModel);
         }
         return subResourceModel;
     }
 
-    private void validateEnhancedModel(final ResourceModel subResourceModel, final ModelProcessor modelProcessor) {
+    private void validateEnhancedModel(final ResourceModel subResourceModel) {
         if (subResourceModel.getResources().size() != 1) {
             throw new ProcessingException(LocalizationMessages.ERROR_SUB_RESOURCE_LOCATOR_MORE_RESOURCES(
                     subResourceModel.getResources().size()));
@@ -205,11 +209,14 @@ class SubResourceLocatorRouter implements Router {
         });
     }
 
-    private Object getResource(RoutingContext routingCtx) {
+    private Object getResource(RoutingContext routingCtx, ContainerRequest request) {
         final Object resource = routingCtx.peekMatchedResource();
         try {
             Method handlingMethod = locatorModel.getInvocable().getHandlingMethod();
-            return handlingMethod.invoke(resource, ParameterValueHelper.getParameterValues(valueProviders));
+            final Object[] parameterValues = ParameterValueHelper.getParameterValues(valueProviders);
+
+            request.triggerEvent(RequestEventImpl.Type.LOCATOR_MATCHED);
+            return handlingMethod.invoke(resource, parameterValues);
         } catch (IllegalAccessException ex) {
             throw new ProcessingException("Resource Java method invocation error.", ex);
         } catch (InvocationTargetException ex) {

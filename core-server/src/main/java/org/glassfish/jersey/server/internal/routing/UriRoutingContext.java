@@ -104,8 +104,10 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private Inflector<ContainerRequest, ContainerResponse> inflector;
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
     volatile private ResourceMethod matchedResourceMethod = null;
-    volatile private Resource matchedResourceModel = null;
     private final ProcessingProviders processingProviders;
+    private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
+    private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
+
 
     /**
      * Injection constructor.
@@ -133,6 +135,11 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     @Override
     public Object peekMatchedResource() {
         return matchedResources.peek();
+    }
+
+    @Override
+    public void pushMatchedLocator(ResourceMethod resourceLocator) {
+        matchedLocators.push(resourceLocator);
     }
 
     @Override
@@ -250,13 +257,13 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public void setMatchedResource(Resource resourceModel) {
-        this.matchedResourceModel = resourceModel;
+    public void pushMatchedRuntimeResource(RuntimeResource runtimeResource) {
+        this.matchedRuntimeResources.push(runtimeResource);
     }
 
     @Override
-    public void pushMatchedRuntimeResource(RuntimeResource runtimeResource) {
-        this.matchedRuntimeResources.push(runtimeResource);
+    public void pushLocatorSubResource(Resource subResourceFromLocator) {
+        this.locatorSubResources.push(subResourceFromLocator);
     }
 
     // UriInfo
@@ -525,9 +532,20 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public Resource getMatchedModelResource() {
-        return matchedResourceModel;
+    public List<ResourceMethod> getMatchedResourceLocators() {
+        return matchedLocators;
     }
+
+    @Override
+    public List<Resource> getLocatorSubResources() {
+        return locatorSubResources;
+    }
+
+    @Override
+    public Resource getMatchedModelResource() {
+        return matchedResourceMethod == null ? null : matchedResourceMethod.getParent();
+    }
+
 
     @Override
     public URI resolve(URI uri) {

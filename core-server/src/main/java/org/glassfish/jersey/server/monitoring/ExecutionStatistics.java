@@ -37,57 +37,51 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+package org.glassfish.jersey.server.monitoring;
 
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethod;
+import java.util.Date;
+import java.util.Map;
 
 /**
- * Router that pushes matched {@link Resource resource or child resource} and {@link ResourceMethod resourceMethod}
- * to {@link RoutingContext routing context}.
+ * Monitoring statistics of execution of one target. {@code ExecutionStatistics} contains
+ * {@link TimeWindowStatistics} for various time window sizes.
+ * <p/>
+ * Statistics retrieved from Jersey runtime might be mutable and thanks to it might provide inconsistent data
+ * as not all statistics are updated in the same time. To retrieve the immutable and consistent
+ * statistics data the method {@link #snapshot()} should be used.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @see MonitoringStatistics See monitoring statistics for general details about statistics.
  */
-
-class PushMatchedMethodResourceRouter implements Router {
+public interface ExecutionStatistics {
 
     /**
-     * Builder for creating {@link PushMatchedMethodResourceRouter push matched resource router} instances. New builder instance
-     * must be injected and not directly created by constructor call.
+     * Return time when target was executed last time. The time is measured before the target was executed.
+     *
+     * @return Time of last execution.
      */
-    static class Builder {
-        @Inject
-        private Provider<RoutingContext> routingContext;
+    public Date getLastStartTime();
 
-        /**
-         * Builds new instance of router.
-         * @param resource The matched resource that should be pushed into the {@link RoutingContext routing context}.
-         * @param method The matched resource method that should be pushed into the {@link RoutingContext routing context}.
-         * @return New instance of the router.
-         */
-        PushMatchedMethodResourceRouter build(Resource resource, ResourceMethod method) {
-            return new PushMatchedMethodResourceRouter(method, resource, routingContext);
-        }
-    }
+    /**
+     * Returns time window statistics for available time window sizes. The returned map contains sizes
+     * of a time window in milliseconds as keys and
+     * {@link TimeWindowStatistics time window statistics} for the corresponding time window
+     * as value.
+     *
+     * @return Map with size of a time window in milliseconds as keys and
+     *         {@link TimeWindowStatistics time window statistics} for the corresponding time window
+     *         as value.
+     */
+    public Map<Long, TimeWindowStatistics> getTimeWindowStatistics();
 
-    private final ResourceMethod resourceMethod;
-    private final Resource resource;
-    private final Provider<RoutingContext> routingContext;
-
-    private PushMatchedMethodResourceRouter(ResourceMethod resourceMethod, Resource resource, Provider<RoutingContext> routingContext) {
-        this.resourceMethod = resourceMethod;
-        this.resource = resource;
-        this.routingContext = routingContext;
-    }
-
-    @Override
-    public Continuation apply(ContainerRequest data) {
-        routingContext.get().setMatchedResource(resource);
-        routingContext.get().setMatchedResourceMethod(resourceMethod);
-        return Continuation.of(data);
-    }
+    /**
+     * Get the immutable consistent snapshot of the monitoring statistics. Working with snapshots might
+     * have negative performance impact as snapshot must be created but ensures consistency of data over time.
+     * However, the usage of snapshot is encouraged to avoid working with inconsistent data. Not all statistics
+     * must be updated in the same time on mutable version of statistics.
+     *
+     * @return Snapshot of execution statistics.
+     */
+    public ExecutionStatistics snapshot();
 }

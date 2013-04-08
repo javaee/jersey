@@ -292,9 +292,9 @@ public class ExtendedExceptionMapperTest extends JerseyTest {
 
         // Check logs. (??)
         for (final LogRecord logRecord : getLoggedRecords()) {
-            for (final String message : new String[] {
+            for (final String message : new String[]{
                     LocalizationMessages.ERROR_EXCEPTION_MAPPING_ORIGINAL_EXCEPTION(),
-                    LocalizationMessages.ERROR_EXCEPTION_MAPPING_THROWN_TO_CONTAINER() }) {
+                    LocalizationMessages.ERROR_EXCEPTION_MAPPING_THROWN_TO_CONTAINER()}) {
 
                 if (logRecord.getMessage().contains(message) && logRecord.getLevel().intValue() > Level.FINE.intValue()) {
                     fail("Log message should be logged at lower (FINE) level: " + message);

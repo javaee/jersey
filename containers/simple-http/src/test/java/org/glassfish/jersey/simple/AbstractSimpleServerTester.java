@@ -54,6 +54,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.After;
 
 /**
+ * Abstract Simple HTTP Server unit tester.
+ *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Arul Dhesiaseelan (aruld at acm.org)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
@@ -136,6 +138,8 @@ public abstract class AbstractSimpleServerTester {
 
     @After
     public void tearDown() {
-        stopServer();
+        if (server != null) {
+            stopServer();
+        }
     }
 }

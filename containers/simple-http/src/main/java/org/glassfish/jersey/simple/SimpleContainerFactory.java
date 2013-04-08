@@ -49,6 +49,7 @@ import javax.ws.rs.ProcessingException;
 
 import javax.net.ssl.SSLContext;
 
+import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -236,7 +237,7 @@ public final class SimpleContainerFactory {
 
     /**
      * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provder classes found by searching the
+     * in turn manages all root resource and provider classes found by searching the
      * classes referenced in the java classpath.
      *
      * @param address   the URI to create the http server. The URI scheme must be
@@ -248,46 +249,21 @@ public final class SimpleContainerFactory {
      * @return the closeable connection, with the endpoint started
      * @throws ProcessingException Thrown when problems during server creation
      */
-    public static Closeable create(final URI address, final SSLContext context, final SimpleContainer container)
-            throws ProcessingException {
-        if (address == null) {
-            throw new IllegalArgumentException("The URI must not be null");
-        }
-        String scheme = address.getScheme();
-        int defaultPort = 80;
+    public static Closeable create(final URI address,
+                                   final SSLContext context,
+                                   final SimpleContainer container) throws ProcessingException {
 
-        if (context == null) {
-            if (!scheme.equalsIgnoreCase("http")) {
-                throw new IllegalArgumentException("The URI scheme should be 'http' when not using SSL");
+        return _create(address, context, container, new UnsafeValue<Server, IOException>() {
+            @Override
+            public Server get() throws IOException {
+                return new ContainerServer(container);
             }
-        } else {
-            if (!scheme.equalsIgnoreCase("https")) {
-                throw new IllegalArgumentException("The URI scheme should be 'https' when using SSL");
-            }
-            defaultPort = 143; // default HTTPS port
-        }
-        int port = address.getPort();
-
-        if (port == -1) {
-            port = defaultPort;
-        }
-        SocketAddress listen = new InetSocketAddress(port);
-        Connection connection;
-        try {
-            Server server = new ContainerServer(container);
-            connection = new SocketConnection(server);
-
-            connection.connect(listen, context);
-            container.onServerStart();
-        } catch (IOException ex) {
-            throw new ProcessingException("IOException thrown when trying to create simple server", ex);
-        }
-        return connection;
+        });
     }
 
     /**
      * Create a {@link Closeable} that registers an {@link Container} that
-     * in turn manages all root resource and provder classes found by searching the
+     * in turn manages all root resource and provider classes found by searching the
      * classes referenced in the java classpath.
      *
      * @param address   the URI to create the http server. The URI scheme must be
@@ -301,8 +277,24 @@ public final class SimpleContainerFactory {
      * @return the closeable connection, with the endpoint started
      * @throws ProcessingException Thrown when problems during server creation
      */
-    public static Closeable create(final URI address, final SSLContext context, final SimpleContainer container, int count, int select)
-            throws ProcessingException {
+    public static Closeable create(final URI address,
+                                   final SSLContext context,
+                                   final SimpleContainer container,
+                                   final int count,
+                                   final int select) throws ProcessingException {
+
+        return _create(address, context, container, new UnsafeValue<Server, IOException>() {
+            @Override
+            public Server get() throws IOException {
+                return new ContainerServer(container, count, select);
+            }
+        });
+    }
+
+    private static Closeable _create(final URI address,
+                                     final SSLContext context,
+                                     final SimpleContainer container,
+                                     final UnsafeValue<Server, IOException> serverProvider) throws ProcessingException {
         if (address == null) {
             throw new IllegalArgumentException("The URI must not be null");
         }
@@ -325,9 +317,9 @@ public final class SimpleContainerFactory {
             port = defaultPort;
         }
         SocketAddress listen = new InetSocketAddress(port);
-        Connection connection;
+        final Connection connection;
         try {
-            Server server = new ContainerServer(container, count, select);
+            Server server = serverProvider.get();
             connection = new SocketConnection(server);
 
             connection.connect(listen, context);
@@ -335,6 +327,12 @@ public final class SimpleContainerFactory {
         } catch (IOException ex) {
             throw new ProcessingException("IOException thrown when trying to create simple server", ex);
         }
-        return connection;
+        return new Closeable() {
+            @Override
+            public void close() throws IOException {
+                container.onServerStop();
+                connection.close();
+            }
+        };
     }
 }
