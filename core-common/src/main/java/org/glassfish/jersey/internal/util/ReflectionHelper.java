@@ -111,7 +111,7 @@ public class ReflectionHelper {
 
     /**
      * Create a string representation of an object.
-     * <p>
+     * <p/>
      * Returns a string consisting of the name of the class of which the
      * object is an instance, the at-sign character {@code '&#64;'}, and
      * the unsigned hexadecimal representation of the hash code of the
@@ -138,7 +138,7 @@ public class ReflectionHelper {
     /**
      * Create a string representation of a method and an instance whose
      * class implements the method.
-     * <p>
+     * <p/>
      * Returns a string consisting of the name of the class of which the object
      * is an instance, the at-sign character {@code '&#64;'},
      * the unsigned hexadecimal representation of the hash code of the
@@ -201,7 +201,7 @@ public class ReflectionHelper {
 
     /**
      * Get the Class from the class name.
-     * <p>
+     * <p/>
      * The context class loader will be utilized if accessible and non-null.
      * Otherwise the defining class loader of this class will
      * be utilized.
@@ -247,7 +247,7 @@ public class ReflectionHelper {
 
     /**
      * Get the Class from the class name.
-     * <p>
+     * <p/>
      * The context class loader will be utilized if accessible and non-null.
      * Otherwise the defining class loader of this class will
      * be utilized.
@@ -307,6 +307,26 @@ public class ReflectionHelper {
     }
 
     /**
+     * Set the context class loader.
+     *
+     * @param classLoader the context class loader to be set.
+     */
+    public static void setContextClassLoader(final ClassLoader classLoader) {
+        AccessController.doPrivileged(
+                new PrivilegedAction() {
+
+                    @Override
+                    public Object run() {
+                        try {
+                            Thread.currentThread().setContextClassLoader(classLoader);
+                        } catch (SecurityException ex) {
+                        }
+                        return null;
+                    }
+                });
+    }
+
+    /**
      * Set a method to be accessible.
      *
      * @param m the method to be set as accessible
@@ -331,7 +351,7 @@ public class ReflectionHelper {
     /**
      * Get the list of classes that represent the type arguments of a
      * {@link ParameterizedType parameterized} input type.
-     * <p />
+     * <p/>
      * For any given argument in the returned list, following rules apply:
      * <ul>
      * <li>If a type argument is a class then the class is returned.</li>
@@ -369,7 +389,7 @@ public class ReflectionHelper {
     /**
      * Get the list of class-type pairs that represent the type arguments of a
      * {@link ParameterizedType parameterized} input type.
-     * <p />
+     * <p/>
      * For any given {@link ClassTypePair#rawClass() class} part of each pair
      * in the returned list, following rules apply:
      * <ul>
@@ -420,7 +440,7 @@ public class ReflectionHelper {
 
     /**
      * Get the type arguments for a parameterized type.
-     *
+     * <p/>
      * In case the type is not a {@link ParameterizedType parameterized type},
      * the method returns {@code null}.
      *
@@ -438,7 +458,7 @@ public class ReflectionHelper {
 
     /**
      * Get a type argument at particular index for a parameterized type.
-     *
+     * <p/>
      * In case the type is not a {@link ParameterizedType parameterized type},
      * the method returns {@code null}.
      *
@@ -459,7 +479,7 @@ public class ReflectionHelper {
     /**
      * JDK 5.0 has a bug of creating {@link GenericArrayType} where it shouldn't.
      * fix that manually to work around the problem.
-     *
+     * <p/>
      * See bug 6202725.
      */
     private static Type fix(Type t) {
@@ -513,7 +533,7 @@ public class ReflectionHelper {
 
     /**
      * Get the {@link Class} representation of the given type.
-     *
+     * <p/>
      * This corresponds to the notion of the erasure in JSR-14.
      *
      * @param type type to provide the erasure for.
@@ -1027,11 +1047,11 @@ public class ReflectionHelper {
 
     /**
      * Find a method on a class given an existing method.
-     * <p>
+     * <p/>
      * If there exists a public method on the class that has the same name
      * and parameters as the existing method then that public method is
      * returned.
-     * <p>
+     * <p/>
      * Otherwise, if there exists a public method on the class that has
      * the same name and the same number of parameters as the existing method,
      * and each generic parameter type, in order, of the public method is equal

@@ -53,6 +53,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.ExtendedResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
@@ -99,8 +100,20 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
         JAXBContext jaxb;
         try {
+            // Nasty ClassLoader magic. JAXB-API has some strange limitation about what classloader can
+            // be used in OSGi environment - it must be same as context ClassLoader. Following code just
+            // workarounds this limitation
+            // see JERSEY-1818
+            // see JSR222-46
+
+            final ClassLoader contextClassLoader = ReflectionHelper.getContextClassLoader();
+            final ClassLoader jerseyModuleClassLoader = wadlGenerator.getClass().getClassLoader();
+            ReflectionHelper.setContextClassLoader(jerseyModuleClassLoader);
+
             jaxb = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath(),
-                    wadlGenerator.getClass().getClassLoader());
+                    jerseyModuleClassLoader);
+
+            ReflectionHelper.setContextClassLoader(contextClassLoader);
         } catch (JAXBException ex) {
             try {
                 // fallback for glassfish
