@@ -39,12 +39,15 @@
   ~ holder.
   -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>project</artifactId>
         <groupId>org.glassfish.jersey.examples</groupId>
+        <artifactId>webapp-example-parent</artifactId>
+        <relativePath>../webapp-example-parent/pom.xml</relativePath>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
@@ -52,13 +55,19 @@
     <name>jersey-examples-extended-wadl-webapp</name>
     <packaging>war</packaging>
 
-    <description>Extended wadl example</description>
+    <description>Extended WADL example.</description>
 
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>
         </dependency>
+        <dependency>
+            <!-- Extended Wadl Config: Dependency to jersey-wadl-doclet is needed here to keep the correct build order. -->
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-wadl-doclet</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
@@ -69,21 +78,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-bundle</artifactId>
-            <type>pom</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-grizzly2-servlet</artifactId>
-        </dependency>
-
-        <!-- Extended Wadl Config: Dependency to jersey-wadl-doclet is needed here to keep the correct build order. -->
-        <dependency>
-            <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-wadl-doclet</artifactId>
         </dependency>
 
         <dependency>
@@ -98,7 +94,6 @@
             <version>3.0</version>
             <scope>runtime</scope>
         </dependency>
-        <!-- END TODO-->
 
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
@@ -143,35 +138,7 @@
     </dependencies>
 
     <build>
-        <finalName>${artifactId}</finalName>
-        <!-- Extended Wadl Config: These resources are used for generating additional content of wadl -->
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-        </resources>
-
         <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <mainClass>org.glassfish.jersey.examples.extendedwadl.App</mainClass>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-
             <!-- Extended Wadl Config: this plugin generates the jaxb beans from xsd schemas -->
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>
@@ -202,13 +169,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.4</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>javadoc</goal>
                         </goals>
-                        <phase>compile</phase>
+                        <phase>process-classes</phase>
                     </execution>
                 </executions>
                 <configuration>
@@ -248,47 +214,64 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <forkMode>always</forkMode>
                     <enableAssertions>false</enableAssertions>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>test</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.ops4j.pax.exam</groupId>
                 <artifactId>maven-paxexam-plugin</artifactId>
             </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>xslt-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>create-example-gf-pom</id>
-                        <phase>package</phase> <!-- append to the packaging phase. -->
-                        <goals>
-                            <goal>transform</goal> <!-- goals == mojos -->
-                        </goals>
-                        <configuration>
-                          <xslFile>src/main/xslt/gf.xsl</xslFile>
-                          <srcDir>.</srcDir>
-                          <srcIncludes>pom.xml</srcIncludes>
-                          <destDir>target/gf-pom-file</destDir>
-                       </configuration>
-                    </execution>
-                </executions>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>org.glassfish.jersey.examples.extendedwadl.App</mainClass>
+                </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-            </plugin>
-         </plugins>
+        </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>examples-source-zip</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>xml-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>transform-gf-pom</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>transform</goal>
+                                </goals>
+                                <configuration>
+                                    <transformationSets>
+                                        <transformationSet>
+                                            <dir>${project.build.directory}/gf-pom-file</dir>
+                                            <includes>
+                                                <include>pom.xml</include>
+                                            </includes>
+                                            <stylesheet>src/main/xslt/gf.xsl</stylesheet>
+                                            <outputDir>${project.build.directory}/gf-pom-file</outputDir>
+                                        </transformationSet>
+                                    </transformationSets>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -45,108 +45,84 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.glassfish.jersey</groupId>
+        <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>project</artifactId>
         <version>2.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>org.glassfish.jersey.examples</groupId>
-    <artifactId>project</artifactId>
+    <artifactId>webapp-example-parent</artifactId>
     <packaging>pom</packaging>
-    <name>jersey-examples</name>
+    <name>jersey-examples-webapp-parent-pom</name>
 
-    <description>Jersey examples</description>
+    <description>Jersey Web Application (Servlet) examples parent POM.</description>
 
-    <modules>
-        <module>bean-validation-webapp</module>
-        <module>bookmark</module>
-        <module>bookmark-em</module>
-        <module>bookstore-webapp</module>
-        <module>cdi-webapp</module>
-        <module>clipboard</module>
-        <module>clipboard-programmatic</module>
-        <module>extended-wadl-webapp</module>
-        <module>exception-mapping</module>
-        <module>freemarker-webapp</module>
-        <module>helloworld</module>
-        <module>helloworld-programmatic</module>
-        <module>helloworld-pure-jax-rs</module>
-        <module>helloworld-webapp</module>
-        <module>http-trace</module>
-        <module>https-clientserver-grizzly</module>
-        <module>https-server-glassfish</module>
-        <module>jaxb</module>
-        <module>jaxrs-types-injection</module>
-        <module>jersey-ejb</module>
-        <module>json-jackson</module>
-        <module>json-jettison</module>
-        <module>json-moxy</module>
-        <module>json-processing-webapp</module>
-        <module>json-with-padding</module>
-        <module>managed-beans-webapp</module>
-        <module>managed-client</module>
-        <module>managed-client-webapp</module>
-        <module>managed-client-simple-webapp</module>
-        <module>multipart-webapp</module>
-        <module>osgi-helloworld-webapp</module>
-        <module>osgi-http-service</module>
-        <module>reload</module>
-        <module>server-async</module>
-        <module>server-async-managed</module>
-        <module>server-async-standalone</module>
-        <module>server-sent-events</module>
-        <module>simple-console</module>
-        <module>sse-item-store-webapp</module>
-        <module>sse-twitter-aggregator</module>
-        <module>system-properties-example</module>
-        <module>webapp-example-parent</module>
-        <module>xml-moxy</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+        </dependency>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.glassfish.jersey</groupId>
-                <artifactId>jersey-bom</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-bundle</artifactId>
+            <type>pom</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
-        <finalName>${project.artifactId}</finalName>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>xml-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>assemble-gf-src-zip</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>transform</goal>
+                            </goals>
+                            <configuration>
+                                <transformationSets>
+                                    <transformationSet>
+                                        <dir>${project.basedir}</dir>
+                                        <includes>
+                                            <include>pom.xml</include>
+                                        </includes>
+                                        <stylesheet>../etc/gf-project-src-pom.xsl</stylesheet>
+                                        <outputDir>${project.build.directory}/gf-pom-file</outputDir>
+                                    </transformationSet>
+                                </transformationSets>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <executions>
                         <execution>
-                            <id>assemble-src-zip</id>
+                            <id>assemble-gf-src-zip</id>
                             <phase>package</phase>
                             <goals>
                                 <goal>attached</goal>
                             </goals>
                             <configuration>
                                 <descriptors>
-                                    <descriptor>../etc/project-src-assembly.xml</descriptor>
+                                    <descriptor>../etc/gf-project-src-assembly.xml</descriptor>
                                 </descriptors>
                             </configuration>
                         </execution>
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>java</goal>
-                            </goals>
-                        </execution>
-                    </executions>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>maven-jetty-plugin</artifactId>
+                    <configuration>
+                        <webApp>${project.build.directory}/${project.artifactId}.war</webApp>
+                        <contextPath>${project.artifactId}</contextPath>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
