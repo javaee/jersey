@@ -86,7 +86,7 @@
                         <supportedProjectType>jar</supportedProjectType>
                     </supportedProjectTypes>
                     <instructions>
-                        <Bundle-SymbolicName>${pom.artifactId}</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Import-Package>*</Import-Package>
                         <Export-Package>org.glassfish.jersey.examples.osgi.helloworld.resource</Export-Package>
                     </instructions>
