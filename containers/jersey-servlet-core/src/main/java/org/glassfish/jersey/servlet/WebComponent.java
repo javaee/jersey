@@ -387,7 +387,10 @@ public class WebComponent {
         for (Enumeration<String> names = request.getHeaderNames(); names.hasMoreElements(); ) {
             String name = names.nextElement();
             for (Enumeration<String> values = request.getHeaders(name); values.hasMoreElements(); ) {
-                requestContext.header(name, values.nextElement());
+                final String value = values.nextElement();
+                if (value != null) { // filter out null values
+                    requestContext.header(name, value);
+                }
             }
         }
     }

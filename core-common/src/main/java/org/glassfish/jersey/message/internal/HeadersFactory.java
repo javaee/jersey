@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,7 +78,7 @@ public final class HeadersFactory {
      * as well as outbound.
      *
      * @param <V> header value type. Typically {@link Object} in case of the outbound
-     *     headers and {@link String} in case of the inbound headers.
+     *            headers and {@link String} in case of the inbound headers.
      * @return an immutable empty message headers container.
      */
     public static <V> MultivaluedMap<String, V> empty() {
@@ -96,7 +96,8 @@ public final class HeadersFactory {
 
     /**
      * Convert a message header value, represented as a general object, to it's
-     * string representation.
+     * string representation. If the supplied header value is {@code null},
+     * this method returns {@code null}.
      * <p>
      * This method defers to {@link RuntimeDelegate#createHeaderDelegate} to
      * obtain a {@link HeaderDelegate} to convert the value to a {@code String}.
@@ -104,14 +105,18 @@ public final class HeadersFactory {
      * method on the header object is utilized.
      *
      * @param headerValue the header value represented as an object.
-     * @param rd runtime delegate instance to be used for header delegate
-     *     retrieval. If {@code null}, a default {@code RuntimeDelegate}
-     *     instance will be {@link RuntimeDelegate#getInstance() obtained} and
-     *     used.
-     * @return the string representation of the supplied header value.
+     * @param rd          runtime delegate instance to be used for header delegate
+     *                    retrieval. If {@code null}, a default {@code RuntimeDelegate}
+     *                    instance will be {@link RuntimeDelegate#getInstance() obtained} and
+     *                    used.
+     * @return the string representation of the supplied header value or {@code null}
+     *         if the supplied header value is {@code null}.
      */
     @SuppressWarnings("unchecked")
     public static String asString(final Object headerValue, RuntimeDelegate rd) {
+        if (headerValue == null) {
+            return null;
+        }
         if (headerValue instanceof String) {
             return (String) headerValue;
         }
@@ -128,18 +133,26 @@ public final class HeadersFactory {
      * the view also supports removal of elements. Does not support other modifications.
      *
      * @param headerValues header values.
-     * @param rd RuntimeDelegate instance (can be passed in as a perf. optimization) or {@code null} (in that case
-     *           {@link RuntimeDelegate#getInstance()} will be called for each element conversion.
+     * @param rd           RuntimeDelegate instance or {@code null} (in that case {@link RuntimeDelegate#getInstance()}
+     *                     will be called for before element conversion.
      * @return String view of header values.
      */
     public static List<String> asStringList(final List<Object> headerValues, final RuntimeDelegate rd) {
         if (headerValues == null || headerValues.isEmpty()) {
             return Collections.emptyList();
         }
+
+        final RuntimeDelegate delegate;
+        if (rd == null) {
+            delegate = RuntimeDelegate.getInstance();
+        } else {
+            delegate = rd;
+        }
+
         return Lists.transform(headerValues, new Function<Object, String>() {
             @Override
             public String apply(Object input) {
-                return (input == null) ? "[null]" : HeadersFactory.asString(input, rd);
+                return (input == null) ? "[null]" : HeadersFactory.asString(input, delegate);
             }
 
         });
@@ -150,9 +163,13 @@ public final class HeadersFactory {
      * supports removal of elements. Does not support other modifications.
      *
      * @param headers headers.
-     * @return String view of headers.
+     * @return String view of headers or {@code null} if {code headers} input parameter is {@code null}.
      */
     public static MultivaluedMap<String, String> asStringHeaders(final MultivaluedMap<String, Object> headers) {
+        if (headers == null) {
+            return null;
+        }
+
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
         return new AbstractMultivaluedMap<String, String>(
                 Maps.transformValues(headers, new Function<List<Object>, List<String>>() {
@@ -161,7 +178,8 @@ public final class HeadersFactory {
                         return HeadersFactory.asStringList(input, rd);
                     }
                 })
-        ) {};
+        ) {
+        };
     }
 
     /**
@@ -174,9 +192,9 @@ public final class HeadersFactory {
      * for the header value class or using its {@code toString()} method if a header
      * delegate is not available.
      *
-     * @param values list of individual header values
-     * @param rd RuntimeDelegate instance (can be passed in as a perf. optimization) or {@code null} (in that case
-     *           {@link RuntimeDelegate#getInstance()} will be called for each element conversion.
+     * @param values list of individual header values.
+     * @param rd     {@link RuntimeDelegate} instance or {@code null} (in that case {@link RuntimeDelegate#getInstance()}
+     *               will be called for before conversion of elements).
      * @return single string consisting of all the values passed in as a parameter. If values parameter is {@code null},
      *         {@code null} is returned. If the list of values is empty, an empty string is returned.
      */
@@ -198,7 +216,7 @@ public final class HeadersFactory {
     }
 
     /**
-     * Preventing instantiation
+     * Preventing instantiation.
      */
     private HeadersFactory() {
     }
