@@ -450,7 +450,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
             try {
                 commitStream();
             } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM());
+                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
             }
         }
     }
