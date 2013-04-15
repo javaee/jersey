@@ -70,7 +70,7 @@ public class MyOtherResource {
     public static class MyInterceptor {
 
         @AroundInvoke
-        public String around(InvocationContext ctx) throws Exception {
+        public Object around(InvocationContext ctx) throws Exception {
             return String.format("INTERCEPTED: %s", ctx.proceed());
         }
     }

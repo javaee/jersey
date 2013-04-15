@@ -80,6 +80,19 @@
         </xsl:copy>
     </xsl:template>
 
+    <xsl:template match="pom:dependencies">
+      <xsl:copy>
+        <xsl:apply-templates />
+        <xsl:if test="count(pom:dependency[pom:artifactId='jersey-container-servlet-core'])=0">
+          <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <scope>provided</scope>
+          </dependency>
+        </xsl:if>
+      </xsl:copy>
+    </xsl:template>
+
     <!-- remove <packagingExcludes>WEB-INF/glassfish-web.xml</packagingExcludes>
          as this file is required in Glassfish bundle since <class-loader>
          is defined in it -->
