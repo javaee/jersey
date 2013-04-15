@@ -50,7 +50,7 @@
             <param-value>org.glassfish.jersey.examples.beanvalidation.webapp.MyApplication</param-value>
         </init-param>
         <init-param>
-            <param-name>jersey.config.beanValidation.disable.validateOnExecutableCheck.server</param-name>
+            <param-name>jersey.config.beanValidation.enableOutputValidationErrorEntity.server</param-name>
             <param-value>true</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
