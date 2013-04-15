@@ -59,6 +59,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
@@ -89,8 +90,16 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private final LinkedList<MatchResult> matchResults = Lists.newLinkedList();
     private final LinkedList<Object> matchedResources = Lists.newLinkedList();
     private final LinkedList<UriTemplate> templates = Lists.newLinkedList();
+
     private MultivaluedHashMap<String, String> encodedTemplateValues;
+    private ImmutableMultivaluedMap<String, String> encodedTemplateValuesView;
+
     private MultivaluedHashMap<String, String> decodedTemplateValues;
+    private ImmutableMultivaluedMap<String, String> decodedTemplateValuesView;
+
+    private ImmutableMultivaluedMap<String, String> encodedQueryParamsView;
+    private ImmutableMultivaluedMap<String, String> decodedQueryParamsView;
+
     private final LinkedList<String> paths = Lists.newLinkedList();
     private Inflector<ContainerRequest, ContainerResponse> inflector;
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
@@ -324,27 +333,34 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     @Override
     public MultivaluedMap<String, String> getPathParameters(boolean decode) {
         if (decode) {
-            if (decodedTemplateValues != null) {
-                return decodedTemplateValues;
+            if (decodedTemplateValuesView != null) {
+                return decodedTemplateValuesView;
+            } else if (decodedTemplateValues == null) {
+                decodedTemplateValues = new MultivaluedHashMap<String, String>();
+                for (Map.Entry<String, List<String>> e : encodedTemplateValues.entrySet()) {
+                    decodedTemplateValues.put(
+                            UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
+                            // we need to keep the ability to add new entries
+                            new LinkedList<String>(Lists.transform(e.getValue(), new Function<String, String>() {
+
+                                @Override
+                                public String apply(String input) {
+                                    return UriComponent.decode(input, UriComponent.Type.PATH);
+                                }
+                            })));
+                }
             }
+            decodedTemplateValuesView = new ImmutableMultivaluedMap<String, String>(decodedTemplateValues);
 
-            decodedTemplateValues = new MultivaluedHashMap<String, String>();
-            for (Map.Entry<String, List<String>> e : encodedTemplateValues.entrySet()) {
-                decodedTemplateValues.put(
-                        UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
-                        // we need to keep the ability to add new entries
-                        new LinkedList<String>(Lists.transform(e.getValue(), new Function<String, String>() {
-
-                            @Override
-                            public String apply(String input) {
-                                return UriComponent.decode(input, UriComponent.Type.PATH);
-                            }
-                        })));
-            }
-
-            return decodedTemplateValues;
+            return decodedTemplateValuesView;
         } else {
-            return encodedTemplateValues;
+            if (encodedTemplateValuesView != null) {
+                return encodedTemplateValuesView;
+            } else if (encodedTemplateValues == null) {
+                encodedTemplateValues = new MultivaluedHashMap<String, String>();
+            }
+            encodedTemplateValuesView = new ImmutableMultivaluedMap<String, String>(encodedTemplateValues);
+            return encodedTemplateValuesView;
         }
     }
 
@@ -364,17 +380,36 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     public List<PathSegment> getPathSegments(boolean decode) {
         final String ep = getEncodedPath();
         final String base = getBaseUri().toString();
-        return UriComponent.decodePath(ep.substring(base.length()), decode);
+        return Collections.unmodifiableList(UriComponent.decodePath(ep.substring(base.length()), decode));
     }
 
     @Override
     public MultivaluedMap<String, String> getQueryParameters() {
-        return UriComponent.decodeQuery(getRequestUri(), false);
+        return getQueryParameters(false);
     }
 
     @Override
     public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
-        return UriComponent.decodeQuery(getRequestUri(), decode);
+        if (decode) {
+            if (decodedQueryParamsView != null) {
+                return decodedQueryParamsView;
+            }
+
+            decodedQueryParamsView =
+                    new ImmutableMultivaluedMap<String, String>(UriComponent.decodeQuery(getRequestUri(), true));
+
+            return decodedQueryParamsView;
+        } else {
+            if (encodedQueryParamsView != null) {
+                return encodedQueryParamsView;
+            }
+
+            encodedQueryParamsView =
+                    new ImmutableMultivaluedMap<String, String>(UriComponent.decodeQuery(getRequestUri(), false));
+
+            return encodedQueryParamsView;
+
+        }
     }
 
     @Override

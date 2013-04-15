@@ -56,6 +56,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -138,6 +139,13 @@ public class UriRoutingContextTest {
         assertEquals(2, lps.size());
         assertEquals("my resource", lps.get(0).getPath());
         assertEquals("my subresource", lps.get(1).getPath());
+
+        try {
+            lps.remove(0);
+            fail("UnsupportedOperationException expected - returned list should not be modifiable.");
+        } catch (UnsupportedOperationException ex) {
+            // passed
+        }
     }
 
     @Test
@@ -147,21 +155,43 @@ public class UriRoutingContextTest {
         assertEquals(2, lps.size());
         assertEquals("my%20resource", lps.get(0).getPath());
         assertEquals("my%20subresource", lps.get(1).getPath());
+
+        try {
+            lps.remove(0);
+            fail("UnsupportedOperationException expected - returned list should not be modifiable.");
+        } catch (UnsupportedOperationException ex) {
+            // passed
+        }
     }
 
     @Test
     public void testQueryParams() throws URISyntaxException {
         MultivaluedMap<String, String> map =
                 createContext("http://example.org/app/resource?foo1=bar1&foo2=bar2", "GET").getQueryParameters();
+        assertEquals(2, map.size());
         assertEquals("bar1", map.getFirst("foo1"));
         assertEquals("bar2", map.getFirst("foo2"));
+
+        try {
+            map.remove("foo1");
+            fail("UnsupportedOperationException expected - returned list should not be modifiable.");
+        } catch (UnsupportedOperationException ex) {
+            // passed
+        }
     }
 
     @Test
     public void testQueryParamsDecoded() throws URISyntaxException {
         MultivaluedMap<String, String> map =
                 createContext("http://example.org/app/resource?foo1=%7Bbar1%7D&foo2=%7Bbar2%7D", "GET").getQueryParameters(true);
+        assertEquals(2, map.size());
         assertEquals("{bar1}", map.getFirst("foo1"));
         assertEquals("{bar2}", map.getFirst("foo2"));
+        try {
+            map.remove("foo1");
+            fail("UnsupportedOperationException expected - returned list should not be modifiable.");
+        } catch (UnsupportedOperationException ex) {
+            // passed
+        }
     }
 }
