@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -85,12 +85,12 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
 
     @Override
     public void putSingle(K key, V value) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
     public void add(K key, V value) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
@@ -100,17 +100,17 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
 
     @Override
     public void addAll(K key, V... newValues) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
     public void addAll(K key, List<V> valueList) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
     public void addFirst(K key, V value) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
@@ -140,22 +140,22 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
 
     @Override
     public List<V> put(K key, List<V> value) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
     public List<V> remove(Object key) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
     public void putAll(Map<? extends K, ? extends List<V>> m) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
     public void clear() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("This MultivaluedMap implementation is immutable.");
     }
 
     @Override
