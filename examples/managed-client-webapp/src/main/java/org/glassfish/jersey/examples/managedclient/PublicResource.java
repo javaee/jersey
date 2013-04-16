@@ -62,6 +62,7 @@ import org.glassfish.jersey.server.Uri;
  */
 @Path("public")
 public class PublicResource {
+
     @Uri("a") @ClientA // resolves to <base>/internal/a
     private WebTarget targetA;
 

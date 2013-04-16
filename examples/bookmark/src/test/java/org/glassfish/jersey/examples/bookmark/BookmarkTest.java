@@ -45,6 +45,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -78,7 +79,7 @@ public class BookmarkTest extends JerseyTest {
 
     @Override
     protected URI getBaseUri() {
-        return URI.create(super.getBaseUri().toString() + "Bookmark");
+        return UriBuilder.fromUri(super.getBaseUri()).path("bookmark").build();
     }
 
     @Override

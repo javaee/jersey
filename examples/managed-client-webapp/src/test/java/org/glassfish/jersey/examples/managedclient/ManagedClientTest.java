@@ -42,6 +42,9 @@ package org.glassfish.jersey.examples.managedclient;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+
+import java.net.URI;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -67,8 +70,13 @@ public class ManagedClientTest extends JerseyTest {
 
         final MyApplication app = new MyApplication();
         // overriding ClientA base Uri property for test purposes
-        app.property(ClientA.class.getName() + ".baseUri", this.getBaseUri().toString() + "internal");
+        app.property(ClientA.class.getName() + ".baseUri", UriBuilder.fromUri(getBaseUri()).path("internal").build());
         return app;
+    }
+
+    @Override
+    protected URI getBaseUri() {
+       return UriBuilder.fromUri(super.getBaseUri()).path("managed-client-webapp").build();
     }
 
 //    Uncomment to use Grizzly async client

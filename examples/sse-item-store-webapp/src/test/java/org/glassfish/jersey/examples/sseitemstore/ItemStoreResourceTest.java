@@ -40,6 +40,7 @@
 package org.glassfish.jersey.examples.sseitemstore;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,6 +58,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.sse.EventListener;
@@ -64,6 +66,7 @@ import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -86,6 +89,13 @@ public class ItemStoreResourceTest extends JerseyTest {
     @Override
     protected void configureClient(ClientConfig clientConfig) {
         clientConfig.register(SseFeature.class);
+    }
+
+    @Override
+    protected URI getBaseUri() {
+        final UriBuilder baseUriBuilder = UriBuilder.fromUri(super.getBaseUri()).path("sse-item-store-webapp");
+        final boolean externalFactoryInUse = getTestContainerFactory() instanceof ExternalTestContainerFactory;
+        return externalFactoryInUse ? baseUriBuilder.path("resources").build() : baseUriBuilder.build();
     }
 
     /**

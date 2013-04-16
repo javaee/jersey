@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.examples.beanvalidation.webapp;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +51,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.examples.beanvalidation.webapp.domain.ContactCard;
@@ -58,6 +60,7 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.validation.ValidationError;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -97,6 +100,13 @@ public class ContactCardTest extends JerseyTest {
         super.configureClient(clientConfig);
 
         clientConfig.register(MoxyJsonFeature.class);
+    }
+
+    @Override
+    protected URI getBaseUri() {
+        final UriBuilder baseUriBuilder = UriBuilder.fromUri(super.getBaseUri()).path("bean-validation-webapp");
+        final boolean externalFactoryInUse = getTestContainerFactory() instanceof ExternalTestContainerFactory;
+        return externalFactoryInUse ? baseUriBuilder.path("api").build() : baseUriBuilder.build();
     }
 
     @Test

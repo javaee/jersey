@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.examples.jsonp;
 
+import java.net.URI;
 import java.util.HashSet;
 import java.util.List;
 
@@ -47,6 +48,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -57,6 +59,7 @@ import javax.json.JsonObject;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -92,6 +95,11 @@ public class JsonProcessingResourceTest extends JerseyTest {
     @Override
     protected Application configure() {
         return new MyApplication();
+    }
+
+    @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path("json-processing-webapp").build();
     }
 
     @Test

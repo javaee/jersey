@@ -40,6 +40,9 @@
 package org.glassfish.jersey.examples.freemarker;
 
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.UriBuilder;
+
+import java.net.URI;
 
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerProperties;
 import org.glassfish.jersey.test.JerseyTest;
@@ -59,6 +62,11 @@ public class FreemarkerTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
 
         return new MyApplication().property(FreemarkerProperties.TEMPLATES_BASE_PATH, "freemarker");
+    }
+
+    @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path("freemarker-webapp").build();
     }
 
     @Test
