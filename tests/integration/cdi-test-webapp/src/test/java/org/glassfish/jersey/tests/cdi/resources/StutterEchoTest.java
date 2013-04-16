@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,34 +39,52 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
+import javax.ws.rs.client.WebTarget;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 /**
- * JAX-RS application to configure resources.
+ * Test for qualified injection.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        classes.add(StutteringEchoResource.class);
-        classes.add(StutteringEcho.class);
-        classes.add(ReversingEchoResource.class);
-        return classes;
+@RunWith(Parameterized.class)
+public class StutterEchoTest extends CdiTest {
+
+    @Parameterized.Parameters
+    public static List<Object[]> testData() {
+        return Arrays.asList(new Object[][]{
+            {"alpha", "alphaalpha"}
+            ,{"gogol", "gogolgogol"}
+            ,{"elcaro", "elcaroelcaro"}
+        });
+    };
+
+    final String in, out;
+    final WebTarget stutterService;
+
+    /**
+     * Construct instance with the above test data injected.
+     *
+     * @param in query parameter.
+     * @param out expected output.
+     */
+    public StutterEchoTest(String in, String out) {
+        this.in = in;
+        this.out = out;
+        this.stutterService = target().path("stutter").queryParam("s", in);
+    }
+
+    @Test
+    public void testGet() {
+        String s = stutterService.request().get(String.class);
+        assertThat(s, equalTo(out));
     }
 }

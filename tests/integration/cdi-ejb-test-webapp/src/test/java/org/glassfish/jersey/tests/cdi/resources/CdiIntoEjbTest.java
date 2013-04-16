@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,34 +39,54 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.ws.rs.client.WebTarget;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 /**
- * JAX-RS application to configure resources.
+ * Test CDI timers injected into EJB beans.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        classes.add(StutteringEchoResource.class);
-        classes.add(StutteringEcho.class);
-        classes.add(ReversingEchoResource.class);
-        return classes;
+public class CdiIntoEjbTest extends TestBase {
+
+    @Test
+    public void testStateless() {
+        _testRequestScoped("stateless");
+        _testAppScoped("stateless");
+    }
+
+    @Test
+    public void testStateful() {
+        _testRequestScoped("stateful");
+        _testAppScoped("stateful");
+    }
+
+    @Test
+    public void testSingleton() {
+        _testRequestScoped("singleton");
+        _testAppScoped("singleton");
+    }
+
+    private void _testRequestScoped(final String ejbType) {
+
+        final WebTarget target = target().path(ejbType).path("request-scoped-timer");
+        long firstMillis = _getMillis(target);
+        sleep(2);
+        long secondMillis = _getMillis(target);
+
+        assertTrue("Second request should have greater millis!", secondMillis > firstMillis);
+    }
+
+    private void _testAppScoped(final String ejbType) {
+
+        final WebTarget target = target().path(ejbType).path("app-scoped-timer");
+        long firstMillis = _getMillis(target);
+        sleep(2);
+        long secondMillis = _getMillis(target);
+
+        assertTrue("Second request should have the same millis!", secondMillis == firstMillis);
     }
 }

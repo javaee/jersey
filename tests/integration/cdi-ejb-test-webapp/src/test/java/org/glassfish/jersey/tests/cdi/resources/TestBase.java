@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,34 +39,54 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.test.JerseyTest;
+
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.is;
 
 /**
- * JAX-RS application to configure resources.
+ * Test for CDI web application resources.
+ * Run with:
+ * <pre>
+ * mvn clean package
+ * $AS_HOME/bin/asadmin deploy target/cdi-test-webapp
+ * mvn -DskipTests=false test</pre>
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
+public class TestBase extends JerseyTest {
+
     @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        classes.add(StutteringEchoResource.class);
-        classes.add(StutteringEcho.class);
-        classes.add(ReversingEchoResource.class);
-        return classes;
+    protected Application configure() {
+        return new MyApplication();
+    }
+
+    @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path("cdi-ejb-test-webapp").build();
+    }
+
+    protected long _getMillis(final WebTarget target) throws NumberFormatException {
+        final Response response = target.request().get();
+        assertThat(response.getStatus(), is(200));
+        return Long.decode(response.readEntity(String.class));
+    }
+
+    protected void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(CdiIntoEjbTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
+

@@ -48,25 +48,19 @@ import javax.ws.rs.core.Application;
 /**
  * JAX-RS application to configure resources.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @ApplicationPath("/*")
 public class MyApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        classes.add(StutteringEchoResource.class);
-        classes.add(StutteringEcho.class);
-        classes.add(ReversingEchoResource.class);
+        classes.add(CdiRequestScopedResource.class);
+        classes.add(CdiRequestScopedTimer.class);
+        classes.add(CdiAppScopedTimer.class);
+        classes.add(EjbStatelessResource.class);
+        classes.add(EjbStatefulResource.class);
+        classes.add(EjbSingletonResource.class);
         return classes;
     }
 }
