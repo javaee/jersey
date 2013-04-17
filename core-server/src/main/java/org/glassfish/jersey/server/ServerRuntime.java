@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
@@ -52,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -84,6 +84,7 @@ import org.glassfish.jersey.process.internal.ExecutorsFactory;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.BackgroundScheduler;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
@@ -92,13 +93,12 @@ import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Preconditions;
 
@@ -111,6 +111,8 @@ class ServerRuntime {
     private final Stage<ContainerRequest> requestProcessingRoot;
 
     private final ServiceLocator locator;
+
+    private final ScheduledExecutorService backgroundScheduler;
 
     private final RequestScope requestScope;
     private final ExceptionMappers exceptionMappers;
@@ -126,6 +128,8 @@ class ServerRuntime {
     public static class Builder {
         @Inject
         private ServiceLocator locator;
+        @Inject @BackgroundScheduler
+        private ScheduledExecutorService backgroundScheduler;
         @Inject
         private RequestScope requestScope;
         @Inject
@@ -151,6 +155,7 @@ class ServerRuntime {
             return new ServerRuntime(
                     requestProcessingRoot,
                     locator,
+                    backgroundScheduler,
                     requestScope,
                     exceptionMappers,
                     closeableServiceProvider,
@@ -163,6 +168,7 @@ class ServerRuntime {
 
     private ServerRuntime(Stage<ContainerRequest> requestProcessingRoot,
                           ServiceLocator locator,
+                          ScheduledExecutorService backgroundScheduler,
                           RequestScope requestScope,
                           ExceptionMappers exceptionMappers,
                           Provider<CloseableService> closeableServiceProvider,
@@ -172,6 +178,7 @@ class ServerRuntime {
                           Configuration configuration) {
         this.requestProcessingRoot = requestProcessingRoot;
         this.locator = locator;
+        this.backgroundScheduler = backgroundScheduler;
         this.requestScope = requestScope;
         this.exceptionMappers = exceptionMappers;
         this.closeableServiceProvider = closeableServiceProvider;
@@ -226,6 +233,16 @@ class ServerRuntime {
                 }
             }
         });
+    }
+
+    /**
+     * Get the Jersey server runtime background scheduler.
+     *
+     * @return server runtime background scheduler.
+     * @see BackgroundScheduler
+     */
+    ScheduledExecutorService getBackgroundScheduler() {
+        return backgroundScheduler;
     }
 
     private static class AsyncResponderHolder implements Value<AsyncContext> {
@@ -499,10 +516,9 @@ class ServerRuntime {
                         } catch (IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                         }
-                        // suspend the writer
-                        if (writer.suspend(0, TimeUnit.SECONDS, null)) {
-                            // TODO already suspended - what to do? override the timeout value?
-                        }
+                        // suspend the writer indefinitely (passing null timeout handler is ok in such case).
+                        writer.suspend(0, TimeUnit.SECONDS, null);
+                        // TODO what to do if we detect that the writer has already been suspended? override the timeout value?
                     } else {
                         try {
                             // the response must be closed here instead of just flushed or committed. Some

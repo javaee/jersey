@@ -37,11 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,32 +51,35 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
 
 /**
- * Common
- * {@link ContainerResponseWriter#suspend(long, java.util.concurrent.TimeUnit, org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler)}
- * /
- * {@link ContainerResponseWriter#setSuspendTimeout(long, java.util.concurrent.TimeUnit)} that can be used in {@link ContainerResponseWriter} implementations instead of the
- * underlying infrastructure.
+ * Common {@link ContainerResponseWriter#suspend(long, TimeUnit, ContainerResponseWriter.TimeoutHandler)}
+ * and {@link ContainerResponseWriter#setSuspendTimeout(long, TimeUnit)} handler that can be used in
+ * {@link ContainerResponseWriter} implementations instead of the underlying infrastructure.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyRequestTimeoutHandler {
     private static final Logger LOGGER = Logger.getLogger(JerseyRequestTimeoutHandler.class.getName());
-    private static final Timer TIMER = new Timer("jersey-request-timeout-handler-scheduler");
 
-    private TimerTask timeoutTask = null;
-    private ContainerResponseWriter.TimeoutHandler timeoutHandler = null;
-    private boolean suspended = false;
+    private ScheduledFuture<?> timeoutTask = null; // guarded by runtimeLock
+    private ContainerResponseWriter.TimeoutHandler timeoutHandler = null; // guarded by runtimeLock
+    private boolean suspended = false; // guarded by runtimeLock
     private final Object runtimeLock = new Object();
 
     private final ContainerResponseWriter containerResponseWriter;
+    private final ScheduledExecutorService executor;
 
     /**
      * Create request timeout handler for the giver {@link ContainerResponseWriter response writer}.
      *
      * @param containerResponseWriter response writer to create request timeout handler for.
+     * @param timeoutTaskExecutor     Jersey runtime executor used for background execution of timeout
+     *                                handling tasks.
      */
-    public JerseyRequestTimeoutHandler(final ContainerResponseWriter containerResponseWriter) {
+    public JerseyRequestTimeoutHandler(final ContainerResponseWriter containerResponseWriter,
+                                       final ScheduledExecutorService timeoutTaskExecutor) {
         this.containerResponseWriter = containerResponseWriter;
+        this.executor = timeoutTaskExecutor;
     }
 
     /**
@@ -114,7 +116,7 @@ public class JerseyRequestTimeoutHandler {
      * @see ContainerResponseWriter#setSuspendTimeout(long, TimeUnit)
      */
     public void setSuspendTimeout(long timeOut, TimeUnit unit) throws IllegalStateException {
-        final TimerTask task = new TimerTask() {
+        final Runnable task = new Runnable() {
 
             @Override
             public void run() {
@@ -134,7 +136,7 @@ public class JerseyRequestTimeoutHandler {
             }
 
             if (timeoutTask != null) {
-                timeoutTask.cancel();
+                timeoutTask.cancel(true);
                 timeoutTask = null;
             }
 
@@ -142,9 +144,8 @@ public class JerseyRequestTimeoutHandler {
                 return;
             }
 
-            timeoutTask = task;
             try {
-                TIMER.schedule(task, unit.toMillis(timeOut));
+                timeoutTask = executor.schedule(task, timeOut, unit);
             } catch (IllegalStateException ex) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.SUSPEND_SHEDULING_ERROR(), ex);
             }
