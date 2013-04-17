@@ -47,6 +47,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,6 +77,7 @@ import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.internal.inject.HttpContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
@@ -227,6 +229,10 @@ public class WebComponent {
      */
     final ApplicationHandler appHandler;
     /**
+     * Jersey background task scheduler - used for scheduling request timeout event handling tasks
+     */
+    final ScheduledExecutorService backgroundTaskScheduler;
+    /**
      * Web component configuration.
      */
     final WebConfig webConfig;
@@ -257,6 +263,9 @@ public class WebComponent {
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&
                 resourceConfig.isProperty(ServletProperties.FILTER_FORWARD_ON_404);
+
+        this.backgroundTaskScheduler = appHandler.getServiceLocator()
+                .getService(ScheduledExecutorService.class, new RuntimeExecutorsBinder.BackgroundSchedulerLiteral());
     }
 
     /**
@@ -294,8 +303,11 @@ public class WebComponent {
         filterFormParameters(servletRequest, requestContext);
 
         try {
-            final ResponseWriter responseWriter = new ResponseWriter(forwardOn404, servletResponse,
-                    asyncExtensionDelegate.createDelegate(servletRequest, servletResponse));
+            final ResponseWriter responseWriter = new ResponseWriter(
+                    forwardOn404,
+                    servletResponse,
+                    asyncExtensionDelegate.createDelegate(servletRequest, servletResponse),
+                    backgroundTaskScheduler);
 
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override

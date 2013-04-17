@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.servlet.internal;
 
 import java.io.IOException;
@@ -46,6 +45,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -84,17 +84,22 @@ public class ResponseWriter implements ContainerResponseWriter {
     /**
      * Creates a new instance to write a single Jersey response.
      *
-     * @param useSetStatusOn404 true if status should be written explicitly when 404 is returned
-     * @param response          original HttpResponseRequest
-     * @param asyncExt          delegate to use for async features implementation
+     * @param useSetStatusOn404   true if status should be written explicitly when 404 is returned
+     * @param response            original HttpResponseRequest
+     * @param asyncExt            delegate to use for async features implementation
+     * @param timeoutTaskExecutor Jersey runtime executor used for background execution of timeout
+     *                            handling tasks.
      */
-    public ResponseWriter(final boolean useSetStatusOn404, final HttpServletResponse response, AsyncContextDelegate asyncExt) {
+    public ResponseWriter(final boolean useSetStatusOn404,
+                          final HttpServletResponse response,
+                          final AsyncContextDelegate asyncExt,
+                          final ScheduledExecutorService timeoutTaskExecutor) {
         this.useSetStatusOn404 = useSetStatusOn404;
         this.response = response;
         this.asyncExt = asyncExt;
         this.responseContext = SettableFuture.create();
 
-        this.requestTimeoutHandler = new JerseyRequestTimeoutHandler(this);
+        this.requestTimeoutHandler = new JerseyRequestTimeoutHandler(this, timeoutTaskExecutor);
     }
 
     @Override

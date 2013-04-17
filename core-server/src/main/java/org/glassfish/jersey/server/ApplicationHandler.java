@@ -49,6 +49,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -721,7 +722,8 @@ public final class ApplicationHandler {
      */
     public Future<ContainerResponse> apply(final ContainerRequest request,
                                            final OutputStream outputStream) {
-        final FutureResponseWriter responseFuture = new FutureResponseWriter(request.getMethod(), outputStream);
+        final FutureResponseWriter responseFuture =
+                new FutureResponseWriter(request.getMethod(), outputStream, runtime.getBackgroundScheduler());
 
         request.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
         request.setWriter(responseFuture);
@@ -740,10 +742,10 @@ public final class ApplicationHandler {
 
         private final JerseyRequestTimeoutHandler requestTimeoutHandler;
 
-        private FutureResponseWriter(String requestMethodName, OutputStream outputStream) {
+        private FutureResponseWriter(String requestMethodName, OutputStream outputStream, ScheduledExecutorService backgroundScheduler) {
             this.requestMethodName = requestMethodName;
             this.outputStream = outputStream;
-            this.requestTimeoutHandler = new JerseyRequestTimeoutHandler(this);
+            this.requestTimeoutHandler = new JerseyRequestTimeoutHandler(this, backgroundScheduler);
         }
 
         @Override

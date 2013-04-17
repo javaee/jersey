@@ -73,6 +73,7 @@ import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
+import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
@@ -119,6 +120,7 @@ public class ServerBinder extends AbstractBinder {
                 new ProcessingProviders.Binder(),
                 new ContainerFilteringStage.Binder(),
                 new ResourceModelBinder(),
+                new RuntimeExecutorsBinder(),
                 new RouterBinder(),
                 new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
                 new CloseableServiceBinder(),
