@@ -38,7 +38,7 @@
  * holder.
  */
 
-package com.sun.jersey.samples.managedbeans.resources;
+package org.glassfish.jersey.examples.managedbeans.resources;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;

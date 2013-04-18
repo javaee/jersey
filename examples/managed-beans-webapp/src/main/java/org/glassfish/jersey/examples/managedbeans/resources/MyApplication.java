@@ -38,7 +38,7 @@
  * holder.
  */
 
-package com.sun.jersey.samples.managedbeans.resources;
+package org.glassfish.jersey.examples.managedbeans.resources;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -38,39 +38,51 @@
  * holder.
  */
 
-package com.sun.jersey.samples.managedbeans.resources;
+package org.glassfish.jersey.examples.managedbeans.resources;
 
-import java.io.Serializable;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.annotation.ManagedBean;
+
+import javax.interceptor.AroundInvoke;
+import javax.interceptor.Interceptors;
+import javax.interceptor.InvocationContext;
 
 /**
- * Simple JPA entity made accessible via {@link ManagedBeanSingletonResource}.
+ * JAX-RS root resource treated as managed bean.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
-@Entity
-public class Widget implements Serializable {
+@Path("/managedbean/per-request")
+@ManagedBean
+public class ManagedBeanPerRequestResource {
 
-    @Id
-    int id;
+    @Context UriInfo ui;
 
-    String val;
+    @QueryParam("x") String x;
 
-    /**
-     * No-arg constructor to make JPA happy.
-     */
-    public Widget() {
+    public static class MyInterceptor {
+
+        @AroundInvoke
+        public Object around(InvocationContext ctx) throws Exception {
+            return String.format("INTERCEPTED: %s", ctx.proceed());
+        }
     }
 
-    /**
-     * Create a new widget with given id and value.
-     * @param id widget id
-     * @param val widget value
-     */
-    public Widget(int id, String val) {
-        this.id = id;
-        this.val = val;
+    @GET
+    @Produces("text/plain")
+    @Interceptors(MyInterceptor.class)
+    public String getMessage() {
+        return String.format("echo from %s: %s", ui.getPath(), x);
+    }
+
+    @Path("exception")
+    public String getException() {
+        throw new ManagedBeanException();
     }
 }

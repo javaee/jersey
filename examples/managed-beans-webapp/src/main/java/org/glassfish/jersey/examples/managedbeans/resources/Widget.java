@@ -37,57 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package com.sun.jersey.samples.managedbeans.resources;
 
-import javax.ws.rs.container.ResourceContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+package org.glassfish.jersey.examples.managedbeans.resources;
 
-import javax.annotation.ManagedBean;
-import javax.annotation.PostConstruct;
+import java.io.Serializable;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
- * Custom exception mapper.
+ * Simple JPA entity made accessible via {@link ManagedBeanSingletonResource}.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Provider
-@ManagedBean
-public class ManagedBeanExceptionMapper implements ExceptionMapper<ManagedBeanException> {
+@Entity
+public class Widget implements Serializable {
 
-    private @Context
-    UriInfo uiFieldInject;
+    @Id
+    int id;
 
-    private @Context
-    ResourceContext rc;
+    String val;
 
-    private UriInfo uiMethodInject;
-
-    private UriInfo ui;
-
-    @Context
-    public void set(UriInfo ui) {
-        this.uiMethodInject = ui;
+    /**
+     * No-arg constructor to make JPA happy.
+     */
+    public Widget() {
     }
 
-    @PostConstruct
-    public void postConstruct() {
-        ensureInjected();
-        this.ui = uiMethodInject;
-   }
-
-    @Override
-    public Response toResponse(ManagedBeanException exception) {
-        ensureInjected();
-        return Response.serverError().entity(String.format("ManagedBeanException from %s", ui.getPath())).build();
-    }
-
-    private void ensureInjected() throws IllegalStateException {
-        if (uiFieldInject == null || uiMethodInject == null || rc == null) {
-            throw new IllegalStateException();
-        }
+    /**
+     * Create a new widget with given id and value.
+     * @param id widget id
+     * @param val widget value
+     */
+    public Widget(int id, String val) {
+        this.id = id;
+        this.val = val;
     }
 }

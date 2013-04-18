@@ -38,7 +38,7 @@
  * holder.
  */
 
-package com.sun.jersey.samples.managedbeans;
+package org.glassfish.jersey.examples.managedbeans;
 
 import java.net.URI;
 
@@ -50,7 +50,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.test.JerseyTest;
 
-import com.sun.jersey.samples.managedbeans.resources.MyApplication;
+import org.glassfish.jersey.examples.managedbeans.resources.MyApplication;
 import javax.ws.rs.client.Entity;
 
 import org.junit.Test;

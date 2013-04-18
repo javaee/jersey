@@ -37,52 +37,57 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.examples.managedbeans.resources;
 
-package com.sun.jersey.samples.managedbeans.resources;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
 import javax.annotation.ManagedBean;
-
-import javax.interceptor.AroundInvoke;
-import javax.interceptor.Interceptors;
-import javax.interceptor.InvocationContext;
+import javax.annotation.PostConstruct;
 
 /**
- * JAX-RS root resource treated as managed bean.
+ * Custom exception mapper.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
-@Path("/managedbean/per-request")
+@Provider
 @ManagedBean
-public class ManagedBeanPerRequestResource {
+public class ManagedBeanExceptionMapper implements ExceptionMapper<ManagedBeanException> {
 
-    @Context UriInfo ui;
+    private @Context
+    UriInfo uiFieldInject;
 
-    @QueryParam("x") String x;
+    private @Context
+    ResourceContext rc;
 
-    public static class MyInterceptor {
+    private UriInfo uiMethodInject;
 
-        @AroundInvoke
-        public String around(InvocationContext ctx) throws Exception {
-            return String.format("INTERCEPTED: %s", ctx.proceed());
+    private UriInfo ui;
+
+    @Context
+    public void set(UriInfo ui) {
+        this.uiMethodInject = ui;
+    }
+
+    @PostConstruct
+    public void postConstruct() {
+        ensureInjected();
+        this.ui = uiMethodInject;
+   }
+
+    @Override
+    public Response toResponse(ManagedBeanException exception) {
+        ensureInjected();
+        return Response.serverError().entity(String.format("ManagedBeanException from %s", ui.getPath())).build();
+    }
+
+    private void ensureInjected() throws IllegalStateException {
+        if (uiFieldInject == null || uiMethodInject == null || rc == null) {
+            throw new IllegalStateException();
         }
-    }
-
-    @GET
-    @Produces("text/plain")
-    @Interceptors(MyInterceptor.class)
-    public String getMessage() {
-        return String.format("echo from %s: %s", ui.getPath(), x);
-    }
-
-    @Path("exception")
-    public String getException() {
-        throw new ManagedBeanException();
     }
 }

@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package com.sun.jersey.samples.managedbeans.resources;
+package org.glassfish.jersey.examples.managedbeans.resources;
 
 /**
  * Exception to be thrown and mapped by the web application.
