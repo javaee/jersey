@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,29 +40,35 @@
     holder.
 
 -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
-<!ENTITY % ents SYSTEM "jersey.ent" >
-%ents;
-]>
-
-<chapter id="how-to-build">
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="how-to-build">
     <title>Building and Testing Jersey</title>
 
-    <section id="checkout">
+    <section xml:id="checkout">
         <title>Checking Out the Source</title>
         <para>
             Jersey source code is available in a Git repository you can browse at
-            <ulink url="http://java.net/projects/jersey/sources/code/show">http://java.net/projects/jersey/sources/code/show</ulink>.
+            <link xlink:href="http://java.net/projects/jersey/sources/code/show">http://java.net/projects/jersey/sources/code/show</link>.
         </para>
         <para>
             In case you are not familiar with Git, we recommend reading on of the many "Getting Started with Git" articles
-            you can find on the web. For example this <ulink url="http://refcardz.dzone.com/refcardz/getting-started-git">DZone RefCard</ulink>.
+            you can find on the web. For example this
+            <link xlink:href="http://refcardz.dzone.com/refcardz/getting-started-git">DZone RefCard</link>.
         </para>
         <para>
-            Before you can clone Jersey repository you have to sign up for a <ulink url="http://java.net">java.net</ulink>
+            Before you can clone Jersey repository you have to sign up for a
+            <link xlink:href="http://java.net">java.net</link>
             account. Once you are registered, you have to add an SSH key to your java.net profile - see this article on how
-            to do that: <ulink url="http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab">http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab</ulink>
+            to do that:
+            <link xlink:href="http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab">http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab</link>
         </para>
         <para>
             To clone the Jersey repository you can execute the following command on the command-line
@@ -75,7 +81,7 @@
         </para>
     </section>
 
-    <section id="building">
+    <section xml:id="building">
         <title>Building the Source</title>
         <para>
             Jersey source code requires Java SE 6 or greater. The build is based on Maven.
@@ -96,7 +102,7 @@
         </para>
     </section>
 
-    <section id="testing">
+    <section xml:id="testing">
         <title>Testing</title>
         <para>
             Jersey contains many tests. Unit tests are in the individual Jersey modules,
@@ -104,14 +110,16 @@
             You can run tests related to a particular area using the following command:
             <programlisting language="bash" linenumbering="unnumbered">mvn -Dtest=&lt;pattern&gt; test</programlisting>
             where
-            <literal>pattern</literal> may be a comma separated set of names matching
+            <literal>pattern</literal>
+            may be a comma separated set of names matching
             tests.
         </para>
     </section>
-    <section id="netbeans-build">
+    <section xml:id="netbeans-build">
         <title>Using NetBeans</title>
         <para>
-            <ulink href="http://netbeans.org">NetBeans IDE</ulink> has excellent maven support. The Jersey maven
+            <link xlink:href="http://netbeans.org">NetBeans IDE</link>
+            has excellent maven support. The Jersey maven
             modules can be loaded, built and tested in NetBeans without any additional
             NetBeans-specific project files.
         </para>

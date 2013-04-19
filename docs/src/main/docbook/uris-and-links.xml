@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,83 +40,107 @@
     holder.
 
 -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
-<!ENTITY % ents SYSTEM "jersey.ent" >
-%ents;
-]>
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="uris-and-links">
+    <title>URIs and Links</title>
 
-<chapter id="uris-and-links">
-  <title>URIs and Links</title>
+    <section>
+        <title>Building URIs</title>
 
-  <section>
-    <title>Building URIs</title>
+        <para>A very important aspects of REST is hyperlinks, URIs, in
+            representations that clients can use to transition the Web service to new
+            application states (this is otherwise known as "hypermedia as the engine
+            of application state"). HTML forms present a good example of this in
+            practice.
+        </para>
 
-    <para>A very important aspects of REST is hyperlinks, URIs, in
-    representations that clients can use to transition the Web service to new
-    application states (this is otherwise known as "hypermedia as the engine
-    of application state"). HTML forms present a good example of this in
-    practice.</para>
+        <para>Building URIs and building them safely is not easy with
+            <link xlink:href="http://docs.oracle.com/javase/1.5.0/docs/api/java/net/URI.html">java.net.URI</link>,
+            which is why JAX-RS has the &jaxrs.core.UriBuilder; class that makes it simple and easy to build URIs safely.
+        </para>
 
-    <para>Building URIs and building them safely is not easy with <ulink
-    url="http://docs.oracle.com/javase/1.5.0/docs/api/java/net/URI.html">java.net.URI</ulink>,
-    which is why JAX-RS has the &jaxrs.core.UriBuilder; class that makes it simple and easy to build URIs safely.</para>
+        <para>&jaxrs.core.UriBuilder; can be used to build new URIs or build from existing URIs. For resource
+            classes it is more than likely that URIs will be built from the base URI the web service is deployed at
+            or from the request URI. The class &jaxrs.core.UriInfo; provides such information (in addition to further
+            information, see next section).
+        </para>
 
-    <para>&jaxrs.core.UriBuilder; can be used to build new URIs or build from existing URIs. For resource
-    classes it is more than likely that URIs will be built from the base URI the web service is deployed at
-    or from the request URI. The class &jaxrs.core.UriInfo; provides such information (in addition to further
-    information, see next section).</para>
+        <para>The following example shows URI building with &jaxrs.core.UriInfo; and &jaxrs.core.UriBuilder;
+            from the bookmark sample:
+        </para>
 
-    <para>The following example shows URI building with &jaxrs.core.UriInfo; and &jaxrs.core.UriBuilder;
-    from the bookmark sample:</para>
+        <para>
+            <example>
+                <title>URI building</title>
+                <programlisting language="java" linenumbering="numbered">@Path("/users/")
+                    public class UsersResource {
 
-    <para><example>
-<title>URI building</title><programlisting language="java" linenumbering="numbered">@Path("/users/")
-public class UsersResource {
+                    @Context UriInfo uriInfo;
 
-    @Context UriInfo uriInfo;
+                    ...
 
-    ...
-
-    @GET
-    @Produces("application/json")
-    public JSONArray getUsersAsJsonArray() {
-        JSONArray uriArray = new JSONArray();
-        for (UserEntity userEntity : getUsers()) {
-            UriBuilder ub = uriInfo.getAbsolutePathBuilder();
-            URI userUri = ub.
+                    @GET
+                    @Produces("application/json")
+                    public JSONArray getUsersAsJsonArray() {
+                    JSONArray uriArray = new JSONArray();
+                    for (UserEntity userEntity : getUsers()) {
+                    UriBuilder ub = uriInfo.getAbsolutePathBuilder();
+                    URI userUri = ub.
                     path(userEntity.getUserid()).
                     build();
-            uriArray.put(userUri.toASCIIString());
-        }
-        return uriArray;
-    }
-}</programlisting></example></para>
+                    uriArray.put(userUri.toASCIIString());
+                    }
+                    return uriArray;
+                    }
+                    }
+                </programlisting>
+            </example>
+        </para>
 
-    <para>&jaxrs.core.UriInfo; is obtained using the @Context annotation, and in this particular example injection onto
-    the field of the root resource class is performed, previous examples showed the use of @Context on resource method parameters.</para>
+        <para>&jaxrs.core.UriInfo; is obtained using the @Context annotation, and in this particular example injection onto
+            the field of the root resource class is performed, previous examples showed the use of @Context on resource method parameters.
+        </para>
 
-    <para>&jaxrs.core.UriInfo; can be used to obtain URIs and associated &jaxrs.core.UriBuilder; instances for
-    the following URIs: the base URI the application is deployed at; the request URI; and the absolute path URI, which
-    is the request URI minus any query components.</para>
+        <para>&jaxrs.core.UriInfo; can be used to obtain URIs and associated &jaxrs.core.UriBuilder; instances for
+            the following URIs: the base URI the application is deployed at; the request URI; and the absolute path URI, which
+            is the request URI minus any query components.
+        </para>
 
-    <para>The <literal>getUsersAsJsonArray</literal> method constructs a
-    JSONArrray where each element is a URI identifying a specific user
-    resource. The URI is built from the absolute path of the request URI by
-    calling <ulink url="&jax-rs.javadoc.path;/core/UriInfo.html#getAbsolutePathBuilder()">UriInfo.getAbsolutePathBuilder()</ulink>.
-    A new path segment is added, which is the user ID, and then the URI is
-    built. Notice that it is not necessary to worry about the inclusion of '/'
-    characters or that the user ID may contain characters that need to be
-    percent encoded. UriBuilder takes care of such details.</para>
+        <para>The
+            <literal>getUsersAsJsonArray</literal>
+            method constructs a
+            JSONArrray where each element is a URI identifying a specific user
+            resource. The URI is built from the absolute path of the request URI by
+            calling
+            <link xlink:href="&jax-rs.javadoc.path;/core/UriInfo.html#getAbsolutePathBuilder()">UriInfo.getAbsolutePathBuilder()</link>.
+            A new path segment is added, which is the user ID, and then the URI is
+            built. Notice that it is not necessary to worry about the inclusion of '/'
+            characters or that the user ID may contain characters that need to be
+            percent encoded. UriBuilder takes care of such details.
+        </para>
 
-    <para>&jaxrs.core.UriBuilder; can be used to build/replace query or matrix parameters. URI templates can also be declared,
-    for example the following will build the URI "http://localhost/segment?name=value":</para>
+        <para>&jaxrs.core.UriBuilder; can be used to build/replace query or matrix parameters. URI templates can also be declared,
+            for example the following will build the URI "http://localhost/segment?name=value":
+        </para>
 
-    <para><example>
-<title>Building URIs using query parameters</title><programlisting language="java" linenumbering="numbered">UriBuilder.fromUri("http://localhost/").
-    path("{a}").
-    queryParam("name", "{value}").
-    build("segment", "value");</programlisting></example></para>
-  </section>
+        <para>
+            <example>
+                <title>Building URIs using query parameters</title>
+                <programlisting language="java" linenumbering="numbered">UriBuilder.fromUri("http://localhost/").
+                    path("{a}").
+                    queryParam("name", "{value}").
+                    build("segment", "value");
+                </programlisting>
+            </example>
+        </para>
+    </section>
 
 </chapter>

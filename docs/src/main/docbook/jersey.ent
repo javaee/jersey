@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -53,64 +53,64 @@
 <!ENTITY jax-rs.javadoc.path "&jax-rs.release.path;/javax/ws/rs">
 
 <!-- API Links -->
-<!ENTITY jaxrs.ApplicationPath "<ulink url='&jax-rs.javadoc.path;/ApplicationPath.html'>@ApplicationPath</ulink>">
-<!ENTITY jaxrs.Consumes "<ulink url='&jax-rs.javadoc.path;/Consumes.html'>@Consumes</ulink>">
-<!ENTITY jaxrs.CookieParam "<ulink url='&jax-rs.javadoc.path;/CookieParam.html'>@CookieParam</ulink>">
-<!ENTITY jaxrs.DefaultValue "<ulink url='&jax-rs.javadoc.path;/DefaultValue.html'>@DefaultValue</ulink>">
-<!ENTITY jaxrs.DELETE "<ulink url='&jax-rs.javadoc.path;/DELETE.html'>@DELETE</ulink>">
-<!ENTITY jaxrs.Encoded "<ulink url='&jax-rs.javadoc.path;/Encoded.html'>@Encoded</ulink>">
-<!ENTITY jaxrs.FormParam "<ulink url='&jax-rs.javadoc.path;/FormParam.html'>@FormParam</ulink>">
-<!ENTITY jaxrs.GET "<ulink url='&jax-rs.javadoc.path;/GET.html'>@GET</ulink>">
-<!ENTITY jaxrs.HEAD "<ulink url='&jax-rs.javadoc.path;/HEAD.html'>@HEAD</ulink>">
-<!ENTITY jaxrs.HeaderParam "<ulink url='&jax-rs.javadoc.path;/HeaderParam.html'>@HeaderParam</ulink>">
-<!ENTITY jaxrs.HttpMethod "<ulink url='&jax-rs.javadoc.path;/HttpMethod.html'>@HttpMethod</ulink>">
-<!ENTITY jaxrs.MatrixParam "<ulink url='&jax-rs.javadoc.path;/MatrixParam.html'>@MatrixParam</ulink>">
-<!ENTITY jaxrs.OPTIONS "<ulink url='&jax-rs.javadoc.path;/OPTIONS.html'>@OPTIONS</ulink>">
-<!ENTITY jaxrs.Path "<ulink url='&jax-rs.javadoc.path;/Path.html'>@Path</ulink>">
-<!ENTITY jaxrs.PathParam "<ulink url='&jax-rs.javadoc.path;/PathParam.html'>@PathParam</ulink>">
-<!ENTITY jaxrs.BeanParam "<ulink url='&jax-rs.javadoc.path;/BeanParam.html'>@BeanParam</ulink>">
-<!ENTITY jaxrs.POST "<ulink url='&jax-rs.javadoc.path;/POST.html'>@POST</ulink>">
-<!ENTITY jaxrs.Produces "<ulink url='&jax-rs.javadoc.path;/Produces.html'>@Produces</ulink>">
-<!ENTITY jaxrs.PUT "<ulink url='&jax-rs.javadoc.path;/PUT.html'>@PUT</ulink>">
-<!ENTITY jaxrs.QueryParam "<ulink url='&jax-rs.javadoc.path;/QueryParam.html'>@QueryParam</ulink>">
-<!ENTITY jaxrs.WebApplicationException "<ulink url='&jax-rs.javadoc.path;/WebApplicationException.html'>WebApplicationException</ulink>">
+<!ENTITY jaxrs.ApplicationPath "<link xlink:href='&jax-rs.javadoc.path;/ApplicationPath.html'>@ApplicationPath</link>">
+<!ENTITY jaxrs.Consumes "<link xlink:href='&jax-rs.javadoc.path;/Consumes.html'>@Consumes</link>">
+<!ENTITY jaxrs.CookieParam "<link xlink:href='&jax-rs.javadoc.path;/CookieParam.html'>@CookieParam</link>">
+<!ENTITY jaxrs.DefaultValue "<link xlink:href='&jax-rs.javadoc.path;/DefaultValue.html'>@DefaultValue</link>">
+<!ENTITY jaxrs.DELETE "<link xlink:href='&jax-rs.javadoc.path;/DELETE.html'>@DELETE</link>">
+<!ENTITY jaxrs.Encoded "<link xlink:href='&jax-rs.javadoc.path;/Encoded.html'>@Encoded</link>">
+<!ENTITY jaxrs.FormParam "<link xlink:href='&jax-rs.javadoc.path;/FormParam.html'>@FormParam</link>">
+<!ENTITY jaxrs.GET "<link xlink:href='&jax-rs.javadoc.path;/GET.html'>@GET</link>">
+<!ENTITY jaxrs.HEAD "<link xlink:href='&jax-rs.javadoc.path;/HEAD.html'>@HEAD</link>">
+<!ENTITY jaxrs.HeaderParam "<link xlink:href='&jax-rs.javadoc.path;/HeaderParam.html'>@HeaderParam</link>">
+<!ENTITY jaxrs.HttpMethod "<link xlink:href='&jax-rs.javadoc.path;/HttpMethod.html'>@HttpMethod</link>">
+<!ENTITY jaxrs.MatrixParam "<link xlink:href='&jax-rs.javadoc.path;/MatrixParam.html'>@MatrixParam</link>">
+<!ENTITY jaxrs.OPTIONS "<link xlink:href='&jax-rs.javadoc.path;/OPTIONS.html'>@OPTIONS</link>">
+<!ENTITY jaxrs.Path "<link xlink:href='&jax-rs.javadoc.path;/Path.html'>@Path</link>">
+<!ENTITY jaxrs.PathParam "<link xlink:href='&jax-rs.javadoc.path;/PathParam.html'>@PathParam</link>">
+<!ENTITY jaxrs.BeanParam "<link xlink:href='&jax-rs.javadoc.path;/BeanParam.html'>@BeanParam</link>">
+<!ENTITY jaxrs.POST "<link xlink:href='&jax-rs.javadoc.path;/POST.html'>@POST</link>">
+<!ENTITY jaxrs.Produces "<link xlink:href='&jax-rs.javadoc.path;/Produces.html'>@Produces</link>">
+<!ENTITY jaxrs.PUT "<link xlink:href='&jax-rs.javadoc.path;/PUT.html'>@PUT</link>">
+<!ENTITY jaxrs.QueryParam "<link xlink:href='&jax-rs.javadoc.path;/QueryParam.html'>@QueryParam</link>">
+<!ENTITY jaxrs.WebApplicationException "<link xlink:href='&jax-rs.javadoc.path;/WebApplicationException.html'>WebApplicationException</link>">
 
-<!ENTITY jaxrs.core.HttpHeaders "<ulink url='&jax-rs.javadoc.path;/core/HttpHeaders.html'>HttpHeaders</ulink>">
-<!ENTITY jaxrs.core.MultivaluedMap "<ulink url='&jax-rs.javadoc.path;/core/MultivaluedMap.html'>MultivaluedMap&lt;K,V&gt;</ulink>">
-<!ENTITY jaxrs.core.PathSegment "<ulink url='&jax-rs.javadoc.path;/core/PathSegment.html'>PathSegment</ulink>">
-<!ENTITY jaxrs.core.Request "<ulink url='&jax-rs.javadoc.path;/core/Request.html'>Request</ulink>">
-<!ENTITY jaxrs.core.Response.StatusType "<ulink url='&jax-rs.javadoc.path;/core/Response.StatusType.html'>Response.StatusType</ulink>">
-<!ENTITY jaxrs.core.SecurityContext "<ulink url='&jax-rs.javadoc.path;/core/SecurityContext.html'>SecurityContext</ulink>">
-<!ENTITY jaxrs.core.StreamingOutput "<ulink url='&jax-rs.javadoc.path;/core/StreamingOutput.html'>StreamingOutput</ulink>">
-<!ENTITY jaxrs.core.UriInfo "<ulink url='&jax-rs.javadoc.path;/core/UriInfo.html'>UriInfo</ulink>">
+<!ENTITY jaxrs.core.HttpHeaders "<link xlink:href='&jax-rs.javadoc.path;/core/HttpHeaders.html'>HttpHeaders</link>">
+<!ENTITY jaxrs.core.MultivaluedMap "<link xlink:href='&jax-rs.javadoc.path;/core/MultivaluedMap.html'>MultivaluedMap&lt;K,V&gt;</link>">
+<!ENTITY jaxrs.core.PathSegment "<link xlink:href='&jax-rs.javadoc.path;/core/PathSegment.html'>PathSegment</link>">
+<!ENTITY jaxrs.core.Request "<link xlink:href='&jax-rs.javadoc.path;/core/Request.html'>Request</link>">
+<!ENTITY jaxrs.core.Response.StatusType "<link xlink:href='&jax-rs.javadoc.path;/core/Response.StatusType.html'>Response.StatusType</link>">
+<!ENTITY jaxrs.core.SecurityContext "<link xlink:href='&jax-rs.javadoc.path;/core/SecurityContext.html'>SecurityContext</link>">
+<!ENTITY jaxrs.core.StreamingOutput "<link xlink:href='&jax-rs.javadoc.path;/core/StreamingOutput.html'>StreamingOutput</link>">
+<!ENTITY jaxrs.core.UriInfo "<link xlink:href='&jax-rs.javadoc.path;/core/UriInfo.html'>UriInfo</link>">
 
-<!ENTITY jaxrs.core.Application "<ulink url='&jax-rs.javadoc.path;/core/Application.html'>Application</ulink>">
-<!ENTITY jaxrs.core.CacheControl "<ulink url='&jax-rs.javadoc.path;/core/CacheControl.html'>CacheControl</ulink>">
-<!ENTITY jaxrs.core.Cookie "<ulink url='&jax-rs.javadoc.path;/core/Cookie.html'>Cookie</ulink>">
-<!ENTITY jaxrs.core.EntityTag "<ulink url='&jax-rs.javadoc.path;/core/EntityTag.html'>EntityTag</ulink>">
-<!ENTITY jaxrs.core.GenericEntity "<ulink url='&jax-rs.javadoc.path;/core/GenericEntity.html'>GenericEntity&lt;T&gt;</ulink>">
-<!ENTITY jaxrs.core.MediaType "<ulink url='&jax-rs.javadoc.path;/core/MediaType.html'>MediaType</ulink>">
-<!ENTITY jaxrs.core.NewCookie "<ulink url='&jax-rs.javadoc.path;/core/NewCookie.html'>NewCookie</ulink>">
-<!ENTITY jaxrs.core.Response "<ulink url='&jax-rs.javadoc.path;/core/Response.html'>Response</ulink>">
-<!ENTITY jaxrs.core.Response.ResponseBuilder "<ulink url='&jax-rs.javadoc.path;/core/Response.ResponseBuilder.html'>Response.ResponseBuilder</ulink>">
-<!ENTITY jaxrs.core.UriBuilder "<ulink url='&jax-rs.javadoc.path;/core/UriBuilder.html'>UriBuilder</ulink>">
-<!ENTITY jaxrs.core.Variant "<ulink url='&jax-rs.javadoc.path;/core/Variant.html'>Variant</ulink>">
-<!ENTITY jaxrs.core.Variant.VariantListBuilder "<ulink url='&jax-rs.javadoc.path;/core/Variant.VariantListBuilder.html'>Variant.VariantListBuilder</ulink>">
+<!ENTITY jaxrs.core.Application "<link xlink:href='&jax-rs.javadoc.path;/core/Application.html'>Application</link>">
+<!ENTITY jaxrs.core.CacheControl "<link xlink:href='&jax-rs.javadoc.path;/core/CacheControl.html'>CacheControl</link>">
+<!ENTITY jaxrs.core.Cookie "<link xlink:href='&jax-rs.javadoc.path;/core/Cookie.html'>Cookie</link>">
+<!ENTITY jaxrs.core.EntityTag "<link xlink:href='&jax-rs.javadoc.path;/core/EntityTag.html'>EntityTag</link>">
+<!ENTITY jaxrs.core.GenericEntity "<link xlink:href='&jax-rs.javadoc.path;/core/GenericEntity.html'>GenericEntity&lt;T&gt;</link>">
+<!ENTITY jaxrs.core.MediaType "<link xlink:href='&jax-rs.javadoc.path;/core/MediaType.html'>MediaType</link>">
+<!ENTITY jaxrs.core.NewCookie "<link xlink:href='&jax-rs.javadoc.path;/core/NewCookie.html'>NewCookie</link>">
+<!ENTITY jaxrs.core.Response "<link xlink:href='&jax-rs.javadoc.path;/core/Response.html'>Response</link>">
+<!ENTITY jaxrs.core.Response.ResponseBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/Response.ResponseBuilder.html'>Response.ResponseBuilder</link>">
+<!ENTITY jaxrs.core.UriBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/UriBuilder.html'>UriBuilder</link>">
+<!ENTITY jaxrs.core.Variant "<link xlink:href='&jax-rs.javadoc.path;/core/Variant.html'>Variant</link>">
+<!ENTITY jaxrs.core.Variant.VariantListBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/Variant.VariantListBuilder.html'>Variant.VariantListBuilder</link>">
 
-<!ENTITY jaxrs.core.Response.Status "<ulink url='&jax-rs.javadoc.path;/core/Response.Status.html'>Response.Status</ulink>">
-<!ENTITY jaxrs.core.Response.Status.Family "<ulink url='&jax-rs.javadoc.path;/core/Response.Status.Family.html'>Response.Status.Family</ulink>">
+<!ENTITY jaxrs.core.Response.Status "<link xlink:href='&jax-rs.javadoc.path;/core/Response.Status.html'>Response.Status</link>">
+<!ENTITY jaxrs.core.Response.Status.Family "<link xlink:href='&jax-rs.javadoc.path;/core/Response.Status.Family.html'>Response.Status.Family</link>">
 
-<!ENTITY jaxrs.core.UriBuilderException "<ulink url='&jax-rs.javadoc.path;/core/UriBuilderException.html'>UriBuilderException</ulink>">
+<!ENTITY jaxrs.core.UriBuilderException "<link xlink:href='&jax-rs.javadoc.path;/core/UriBuilderException.html'>UriBuilderException</link>">
 
-<!ENTITY jaxrs.core.Context "<ulink url='&jax-rs.javadoc.path;/core/Context.html'>@Context</ulink>">
+<!ENTITY jaxrs.core.Context "<link xlink:href='&jax-rs.javadoc.path;/core/Context.html'>@Context</link>">
 
-<!ENTITY jaxrs.ext.ContextResolver "<ulink url='&jax-rs.javadoc.path;/ext/ContextResolver.html'>ContextResolver&lt;T&gt;</ulink>">
-<!ENTITY jaxrs.ext.ExceptionMapper "<ulink url='&jax-rs.javadoc.path;/ext/ExceptionMapper.html'>ExceptionMapper&lt;E extends Throwable&gt;</ulink>">
-<!ENTITY jaxrs.ext.MessageBodyReader "<ulink url='&jax-rs.javadoc.path;/ext/MessageBodyReader.html'>MessageBodyReader&lt;T&gt;</ulink>">
-<!ENTITY jaxrs.ext.MessageBodyWriter "<ulink url='&jax-rs.javadoc.path;/ext/MessageBodyWriter.html'>MessageBodyWriter&lt;T&gt;</ulink>">
-<!ENTITY jaxrs.ext.Providers "<ulink url='&jax-rs.javadoc.path;/ext/Providers.html'>Providers</ulink>">
-<!ENTITY jaxrs.ext.RuntimeDelegate.HeaderDelegate "<ulink url='&jax-rs.javadoc.path;/ext/RuntimeDelegate.HeaderDelegate.html'>RuntimeDelegate.HeaderDelegate&lt;T&gt;</ulink>">
+<!ENTITY jaxrs.ext.ContextResolver "<link xlink:href='&jax-rs.javadoc.path;/ext/ContextResolver.html'>ContextResolver&lt;T&gt;</link>">
+<!ENTITY jaxrs.ext.ExceptionMapper "<link xlink:href='&jax-rs.javadoc.path;/ext/ExceptionMapper.html'>ExceptionMapper&lt;E extends Throwable&gt;</link>">
+<!ENTITY jaxrs.ext.MessageBodyReader "<link xlink:href='&jax-rs.javadoc.path;/ext/MessageBodyReader.html'>MessageBodyReader&lt;T&gt;</link>">
+<!ENTITY jaxrs.ext.MessageBodyWriter "<link xlink:href='&jax-rs.javadoc.path;/ext/MessageBodyWriter.html'>MessageBodyWriter&lt;T&gt;</link>">
+<!ENTITY jaxrs.ext.Providers "<link xlink:href='&jax-rs.javadoc.path;/ext/Providers.html'>Providers</link>">
+<!ENTITY jaxrs.ext.RuntimeDelegate.HeaderDelegate "<link xlink:href='&jax-rs.javadoc.path;/ext/RuntimeDelegate.HeaderDelegate.html'>RuntimeDelegate.HeaderDelegate&lt;T&gt;</link>">
 
-<!ENTITY jaxrs.ext.RuntimeDelegate "<ulink url='&jax-rs.javadoc.path;/ext/RuntimeDelegate.html'>RuntimeDelegate</ulink>">
+<!ENTITY jaxrs.ext.RuntimeDelegate "<link xlink:href='&jax-rs.javadoc.path;/ext/RuntimeDelegate.html'>RuntimeDelegate</link>">
 
-<!ENTITY jaxrs.ext.Provider "<ulink url='&jax-rs.javadoc.path;/ext/Provider.html'>@Provider</ulink>">
+<!ENTITY jaxrs.ext.Provider "<link xlink:href='&jax-rs.javadoc.path;/ext/Provider.html'>@Provider</link>">

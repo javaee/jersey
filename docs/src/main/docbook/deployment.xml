@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2011 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,140 +40,192 @@
     holder.
 
 -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
-<!ENTITY % ents SYSTEM "jersey.ent" >
-%ents;
-]>
-
-<chapter id="deployment">
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="deployment">
     <title>Deploying a RESTful Web Service</title>
 
-    <para>JAX-RS provides a deployment agnostic abstract class &jaxrs.core.Application;
-    for declaring root resource and provider classes, and root resource and provider singleton instances.
-    A Web service may extend this class to declare root resource and provider classes. For
-    example,</para>
+    <para>
+        JAX-RS provides a deployment agnostic abstract class &jaxrs.core.Application;
+        for declaring root resource and provider classes, and root resource and provider singleton instances.
+        A Web service may extend this class to declare root resource and provider classes. For
+        example,
+    </para>
 
-    <para><example>
-<title>Deployment agnostic application model</title>
-<programlisting language="java" linenumbering="numbered">public class MyApplication extends Application {
-    public Set&lt;Class&lt;?&gt;&gt; getClasses() {
-        Set&lt;Class&lt;?&gt;&gt; s = new HashSet&lt;Class&lt;?&gt;&gt;();
-        s.add(HelloWorldResource.class);
-        return s;
-    }
-}</programlisting></example>Alternatively it is possible to reuse one of Jersey's
-    implementations that scans for root resource and provider classes given a classpath or
-    a set of package names. Such classes are automatically added to the set of
-    classes that are returned by <literal>getClasses</literal>. For example,
-    the following scans for root resource and provider classes in packages "org.foo.rest",
-    "org.bar.rest" and in any sub-packages of those two:</para>
+    <para>
+        <example>
+            <title>Deployment agnostic application model</title>
+            <programlisting language="java" linenumbering="numbered">public class MyApplication extends Application {
+                public Set&lt;Class&lt;?&gt;&gt; getClasses() {
+                Set&lt;Class&lt;?&gt;&gt; s = new HashSet&lt;Class&lt;?&gt;&gt;();
+                s.add(HelloWorldResource.class);
+                return s;
+                }
+                }
+            </programlisting>
+        </example>
+        Alternatively it is possible to reuse one of Jersey's
+        implementations that scans for root resource and provider classes given a classpath or
+        a set of package names. Such classes are automatically added to the set of
+        classes that are returned by<literal>getClasses</literal>. For example,
+        the following scans for root resource and provider classes in packages "org.foo.rest",
+        "org.bar.rest" and in any sub-packages of those two:
+    </para>
 
-    <para><example>
-<title>Reusing Jersey implementation in your custom application model</title>
-<programlisting language="java" linenumbering="numbered">public class MyApplication extends PackagesResourceConfig {
-    public MyApplication() {
-        super("org.foo.rest;org.bar.rest");
-    }
-}</programlisting></example></para>
+    <para>
+        <example>
+            <title>Reusing Jersey implementation in your custom application model</title>
+            <programlisting language="java" linenumbering="numbered">public class MyApplication extends PackagesResourceConfig {
+                public MyApplication() {
+                super("org.foo.rest;org.bar.rest");
+                }
+                }
+            </programlisting>
+        </example>
+    </para>
     <para>There are multiple deployment options for the class that implements &jaxrs.core.Application;
-    interface in the Servlet 3.0 container. For simple deployments, no <literal>web.xml</literal>
-    is needed at all. Instead, an &jaxrs.ApplicationPath; annotation can be used to annotate the
-    user defined application class and specify the the base resource URI of all application resources:</para>
-    <para><example>
-        <title>Deployment of a JAX-RS application using <literal>@ApplicationPath</literal> with Servlet 3.0</title>
-        <programlisting language="java" linenumbering="numbered">@ApplicationPath("resources")
-public class MyApplication extends PackagesResourceConfig {
-    public MyApplication() {
-        super("org.foo.rest;org.bar.rest");
-    }
-    ...
-}</programlisting>
-    </example></para>
-    <para>You also need to set maven-war-plugin attribute &maven-war-plugin.failOnMissingWebXml; to false in pom.xml when building .war without web.xml file using maven:</para>
-    <para><example>
-        <title>Configuration of maven-war-plugin in <literal>pom.xml</literal> with Servlet 3.0</title>
-        <programlisting language="xml" linenumbering="numbered">&lt;plugins&gt;
- ...
- &lt;plugin&gt;
-   &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
-   &lt;artifactId&gt;maven-war-plugin&lt;/artifactId&gt;
-   &lt;version&gt;2.1.1&lt;/version&gt;
-   &lt;configuration&gt;
-       &lt;failOnMissingWebXml&gt;false&lt;/failOnMissingWebXml&gt;
-   &lt;/configuration&gt;
-   &lt;/plugin&gt;
- ...
- &lt;/plugins&gt;</programlisting>
-    </example></para>
-    <para>Another deployment option is to declare JAX-RS application details in the <literal>web.xml</literal>.
-    This is usually suitable in case of more complex deployments, e.g. when security model needs to be properly defined
-    or when additional initialization parameters have to be passed to Jersey runtime.
-    JAX-RS 1.1 specifies that a fully qualified name of the class that
-    implements &jaxrs.core.Application;
-    may be declared in the <literal>&lt;servlet-name&gt;</literal> element of the JAX-RS application's
-    <literal>web.xml</literal>. This is supported in a Web container implementing Servlet 3.0 as follows:</para>
-    <para><example>
-        <title>Deployment of a JAX-RS application using <literal>web.xml</literal> with Servlet 3.0</title>
-        <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;org.foo.rest.MyApplication&lt;/servlet-name&gt;
-    &lt;/servlet&gt;
-    ...
-    &lt;servlet-mapping&gt;
-        &lt;servlet-name&gt;org.foo.rest.MyApplication&lt;/servlet-name&gt;
-        &lt;url-pattern&gt;/resources&lt;/url-pattern&gt;
-    &lt;/servlet-mapping&gt;
-    ...
-&lt;/web-app&gt;</programlisting>
-    </example></para>
-    <para>Note that the <literal>&lt;servlet-class&gt;</literal> element is omitted from the servlet declaration.
-    This is a correct declaration utilizing the Servlet 3.0 extension mechanism. Also note that
-    <literal>&lt;servlet-mapping&gt;</literal> is used to define the base resource URI.</para>
+        interface in the Servlet 3.0 container. For simple deployments, no
+        <literal>web.xml</literal>
+        is needed at all. Instead, an &jaxrs.ApplicationPath; annotation can be used to annotate the
+        user defined application class and specify the the base resource URI of all application resources:
+    </para>
+    <para>
+        <example>
+            <title>Deployment of a JAX-RS application using
+                <literal>@ApplicationPath</literal>
+                with Servlet 3.0
+            </title>
+            <programlisting language="java" linenumbering="numbered">@ApplicationPath("resources")
+                public class MyApplication extends PackagesResourceConfig {
+                public MyApplication() {
+                super("org.foo.rest;org.bar.rest");
+                }
+                ...
+                }
+            </programlisting>
+        </example>
+    </para>
+    <para>
+        You also need to set maven-war-plugin attribute
+        <link xlink:href="http://maven.apache.org/plugins/maven-war-plugin/war-mojo.html#failOnMissingWebXml">failOnMissingWebXml</link>
+        to false in pom.xml when building .war without web.xml file using maven:
+    </para>
+    <para>
+        <example>
+            <title>Configuration of maven-war-plugin in
+                <literal>pom.xml</literal>
+                with Servlet 3.0
+            </title>
+            <programlisting language="xml" linenumbering="numbered">&lt;plugins&gt;
+                ...
+                &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-war-plugin&lt;/artifactId&gt;
+                &lt;version&gt;2.1.1&lt;/version&gt;
+                &lt;configuration&gt;
+                &lt;failOnMissingWebXml&gt;false&lt;/failOnMissingWebXml&gt;
+                &lt;/configuration&gt;
+                &lt;/plugin&gt;
+                ...
+                &lt;/plugins&gt;</programlisting>
+        </example>
+    </para>
+    <para>Another deployment option is to declare JAX-RS application details in the<literal>web.xml</literal>.
+        This is usually suitable in case of more complex deployments, e.g. when security model needs to be properly defined
+        or when additional initialization parameters have to be passed to Jersey runtime.
+        JAX-RS 1.1 specifies that a fully qualified name of the class that
+        implements &jaxrs.core.Application;
+        may be declared in the
+        <literal>&lt;servlet-name&gt;</literal>
+        element of the JAX-RS application's
+        <literal>web.xml</literal>. This is supported in a Web container implementing Servlet 3.0 as follows:
+    </para>
+    <para>
+        <example>
+            <title>Deployment of a JAX-RS application using
+                <literal>web.xml</literal>
+                with Servlet 3.0
+            </title>
+            <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
+                &lt;servlet&gt;
+                &lt;servlet-name&gt;org.foo.rest.MyApplication&lt;/servlet-name&gt;
+                &lt;/servlet&gt;
+                ...
+                &lt;servlet-mapping&gt;
+                &lt;servlet-name&gt;org.foo.rest.MyApplication&lt;/servlet-name&gt;
+                &lt;url-pattern&gt;/resources&lt;/url-pattern&gt;
+                &lt;/servlet-mapping&gt;
+                ...
+                &lt;/web-app&gt;</programlisting>
+        </example>
+    </para>
+    <para>Note that the
+        <literal>&lt;servlet-class&gt;</literal>
+        element is omitted from the servlet declaration.
+        This is a correct declaration utilizing the Servlet 3.0 extension mechanism. Also note that
+        <literal>&lt;servlet-mapping&gt;</literal>
+        is used to define the base resource URI.
+    </para>
     <para>When running in a Servlet 2.x then instead it is necessary to declare the Jersey
-    specific servlet and pass the &jaxrs.core.Application; implementation class name as
-    one of the servlet's <literal>init-param</literal> entries:
-    <example>
-        <title>Deployment of your application using Jersey specific servlet</title>
-        <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;Jersey Web Application&lt;/servlet-name&gt;
-        &lt;servlet-class&gt;com.sun.jersey.spi.container.servlet.ServletContainer&lt;/servlet-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;javax.ws.rs.Application&lt;/param-name&gt;
-            &lt;param-value&gt;org.foo.rest.MyApplication&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        ...
-    &lt;/servlet&gt;
-    ...
-&lt;/web-app&gt;</programlisting>
-    </example></para>
-    <para>Alternatively a simpler approach is to let Jersey choose the <literal>PackagesResourceConfig</literal>
-    implementation automatically by declaring the packages as follows:
+        specific servlet and pass the &jaxrs.core.Application; implementation class name as
+        one of the servlet's
+        <literal>init-param</literal>
+        entries:
+        <example>
+            <title>Deployment of your application using Jersey specific servlet</title>
+            <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
+                &lt;servlet&gt;
+                &lt;servlet-name&gt;Jersey Web Application&lt;/servlet-name&gt;
+                &lt;servlet-class&gt;com.sun.jersey.spi.container.servlet.ServletContainer&lt;/servlet-class&gt;
+                &lt;init-param&gt;
+                &lt;param-name&gt;javax.ws.rs.Application&lt;/param-name&gt;
+                &lt;param-value&gt;org.foo.rest.MyApplication&lt;/param-value&gt;
+                &lt;/init-param&gt;
+                ...
+                &lt;/servlet&gt;
+                ...
+                &lt;/web-app&gt;</programlisting>
+        </example>
+    </para>
+    <para>Alternatively a simpler approach is to let Jersey choose the
+        <literal>PackagesResourceConfig</literal>
+        implementation automatically by declaring the packages as follows:
 
-    <example>
-        <title>Using Jersey specific servlet without an application model instance</title>
-        <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
-    &lt;servlet&gt;
-        &lt;servlet-name&gt;Jersey Web Application&lt;/servlet-name&gt;
-        &lt;servlet-class&gt;com.sun.jersey.spi.container.servlet.ServletContainer&lt;/servlet-class&gt;
-        &lt;init-param&gt;
-            &lt;param-name&gt;com.sun.jersey.config.property.packages&lt;/param-name&gt;
-            &lt;param-value&gt;org.foo.rest;org.bar.rest&lt;/param-value&gt;
-        &lt;/init-param&gt;
-        ...
-    &lt;/servlet&gt;
-    ...
-&lt;/web-app&gt;</programlisting>
-    </example></para>
+        <example>
+            <title>Using Jersey specific servlet without an application model instance</title>
+            <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
+                &lt;servlet&gt;
+                &lt;servlet-name&gt;Jersey Web Application&lt;/servlet-name&gt;
+                &lt;servlet-class&gt;com.sun.jersey.spi.container.servlet.ServletContainer&lt;/servlet-class&gt;
+                &lt;init-param&gt;
+                &lt;param-name&gt;com.sun.jersey.config.property.packages&lt;/param-name&gt;
+                &lt;param-value&gt;org.foo.rest;org.bar.rest&lt;/param-value&gt;
+                &lt;/init-param&gt;
+                ...
+                &lt;/servlet&gt;
+                ...
+                &lt;/web-app&gt;</programlisting>
+        </example>
+    </para>
     <para>JAX-RS also provides the ability to obtain a container specific artifact
-    from an &jaxrs.core.Application; instance. For example, Jersey supports using
-    <ulink url="http://grizzly.java.net/">Grizzly</ulink> as follows:
-    <programlisting language="java">SelectorThread st = RuntimeDelegate.createEndpoint(new MyApplication(), SelectorThread.class);</programlisting>
-    Jersey also provides <ulink url="http://grizzly.java.net/">Grizzly</ulink>
-    helper classes to deploy the ServletThread instance at a base URL for
-    in-process deployment.</para>
+        from an &jaxrs.core.Application; instance. For example, Jersey supports using
+        <link xlink:href="http://grizzly.java.net/">Grizzly</link>
+        as follows:
+        <programlisting language="java">SelectorThread st = RuntimeDelegate.createEndpoint(new MyApplication(), SelectorThread.class);</programlisting>
+        Jersey also provides
+        <link xlink:href="http://grizzly.java.net/">Grizzly</link>
+        helper classes to deploy the ServletThread instance at a base URL for
+        in-process deployment.
+    </para>
 
     <para>The Jersey samples provide many examples of Servlet-based and
-    Grizzly-in-process-based deployments.</para>
+        Grizzly-in-process-based deployments.
+    </para>
 </chapter>

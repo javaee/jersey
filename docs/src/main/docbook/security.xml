@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,24 +40,31 @@
     holder.
 
 -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
-<!ENTITY % ents SYSTEM "jersey.ent" >
-%ents;
-]>
-
-<chapter id="security">
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="security">
     <title>Security</title>
 
     <para>Security information is available by obtaining the &jaxrs.core.SecurityContext; using &jaxrs.core.Context;,
-    which is essentially the equivalent functionality available on the <ulink url="http://docs.oracle.com/javaee/5/api/javax/servlet/http/HttpServletRequest.html">HttpServletRequest</ulink>.</para>
+        which is essentially the equivalent functionality available on the
+        <link xlink:href="http://docs.oracle.com/javaee/5/api/javax/servlet/http/HttpServletRequest.html">HttpServletRequest</link>.
+    </para>
 
     <para>&jaxrs.core.SecurityContext; can be used in conjunction with sub-resource locators to return different
-    resources if the user principle is included in a certain role. For example, a sub-resource locator could return
-    a different resource if a user is a preferred customer:</para>
+        resources if the user principle is included in a certain role. For example, a sub-resource locator could return
+        a different resource if a user is a preferred customer:
+    </para>
 
     <para><example>
-<title>Accessing <code>SecurityContext</code></title><programlisting language="java" linenumbering="numbered">@Path("basket")
+    <title>Accessing <code>SecurityContext</code></title>
+        <programlisting language="java" linenumbering="numbered">@Path("basket")
 public ShoppingBasketResource get(@Context SecurityContext sc) {
     if (sc.isUserInRole("PreferredCustomer") {
        return new PreferredCustomerShoppingBaskestResource();

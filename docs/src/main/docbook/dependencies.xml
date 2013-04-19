@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,104 +40,129 @@
     holder.
 
 -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-"http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
-<!ENTITY % ents SYSTEM "jersey.ent" >
-%ents;
-]>
-<chapter id="modules-and-dependencies">
-  <title>Jersey Modules and Dependencies</title>
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent"> %ents;]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="modules-and-dependencies">
+    <title>Jersey Modules and Dependencies</title>
 
-  <para>Jersey is built, assembled and installed using Maven. Jersey is
-  deployed to the Java.Net maven repository at the following location: <ulink
-  url="https://maven.java.net/index.html">http://maven.java.net/</ulink>.
-  The Jersey modules can be browsed at the following location: <ulink
-  url="https://maven.java.net/content/repositories/&repository;/org/glassfish/jersey">https://maven.java.net/content/repositories/&repository;/org/glassfish/jersey</ulink>.
-  Jars, Jar sources, Jar JavaDoc and samples are all available on the java.net
-  maven repository.</para>
+    <para>Jersey is built, assembled and installed using Maven. Jersey is
+        deployed to the Java.Net maven repository at the following location:
+        <link xlink:href="https://maven.java.net/index.html">http://maven.java.net/</link>.
+        The Jersey modules can be browsed at the following location:
+        <link xlink:href="https://maven.java.net/content/repositories/&repository;/org/glassfish/jersey">https://maven.java.net/content/repositories/&repository;/org/glassfish/jersey</link>.
+        Jars, Jar sources, Jar JavaDoc and samples are all available on the java.net
+        maven repository.
+    </para>
 
-  <para>An application depending on Jersey requires that it in turn includes
-  the set of jars that Jersey depends on. Jersey has a pluggable component
-  architecture so the set of jars required to be include in the class path can
-  be different for each application.</para>
+    <para>An application depending on Jersey requires that it in turn includes
+        the set of jars that Jersey depends on. Jersey has a pluggable component
+        architecture so the set of jars required to be include in the class path can
+        be different for each application.
+    </para>
 
-  <para>
-  All Jersey components are built using Java SE 6 compiler. It means, you will also need at least Java SE 6
-  to be able to compile and run your application.
-  </para>
+    <para>
+        All Jersey components are built using Java SE 6 compiler. It means, you will also need at least Java SE 6
+        to be able to compile and run your application.
+    </para>
 
-  <para>Developers using maven are likely to find it easier to include and
-  manage dependencies of their applications than developers using ant or other
-  build technologies. This document will explain to both maven and non-maven
-  developers how to depend on Jersey for their application. Ant developers are
-  likely to find the <ulink url="http://maven.apache.org/ant-tasks/index.html">Ant
-  Tasks for Maven</ulink> very useful.</para>
+    <para>Developers using maven are likely to find it easier to include and
+        manage dependencies of their applications than developers using ant or other
+        build technologies. This document will explain to both maven and non-maven
+        developers how to depend on Jersey for their application. Ant developers are
+        likely to find the
+        <link xlink:href="http://maven.apache.org/ant-tasks/index.html">Ant
+            Tasks for Maven
+        </link>
+        very useful.
+    </para>
 
-  <para>The following table provides an overview of all Jersey modules
-  and their dependencies with links to the respective binaries.</para>
+    <para>The following table provides an overview of all Jersey modules
+        and their dependencies with links to the respective binaries.
+    </para>
 
-  <!-- TODO: Could we generate this table from the project metadata? See the site plugin. -->
-<table frame='all' id="dependencies-table">
-<title>Jersey modules and dependencies</title>
-<tgroup cols='3' align='left' colsep='1' rowsep='1'>
-<colspec colname='c1' colwidth="2*"/>
-<colspec colname='c2' colwidth="5*"/>
-<colspec colname='c3' colwidth="7*"/>
-<thead>
-<row>
-  <entry>Module</entry>
-  <entry>Dependencies</entry>
-  <entry>Description</entry>
-</row>
-</thead>
-<tbody>
-<row>
-    <entry namest="c1" nameend="c3" align="center">Core</entry>
-</row>
-<row>
-  <entry><ulink href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-server&amp;v=&version;&amp;e=pom">
-  jersey-server</ulink></entry>
-  <entry><ulink href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-commons&amp;v=&version;&amp;e=pom">
-  jersey-commons</ulink></entry>
-  <entry>Base server functionality.</entry>
-</row>
-<row>
-  <entry>jersey-client</entry>
-  <entry>jersey-commons</entry>
-  <entry>Basic client functionality.</entry>
-</row>
-<row>
-  <entry>jersey-commons</entry>
-  <entry></entry>
-  <entry>Common functionality shared by client and server.</entry>
-</row>
-<row>
-    <entry namest="c1" nameend="c3" align="center">Containers</entry>
-</row>
-<row>
-  <entry>...</entry>
-  <entry>...</entry>
-  <entry>...</entry>
-</row>
-</tbody>
-</tgroup>
-</table>
+    <!-- TODO: Could we generate this table from the project metadata? See the site plugin. -->
+    <table frame='all' xml:id="dependencies-table">
+        <title>Jersey modules and dependencies</title>
+        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
+            <colspec colname='c1' colwidth="2*" />
+            <colspec colname='c2' colwidth="5*" />
+            <colspec colname='c3' colwidth="7*" />
+            <thead>
+                <row>
+                    <entry>Module</entry>
+                    <entry>Dependencies</entry>
+                    <entry>Description</entry>
+                </row>
+            </thead>
+            <tbody>
+                <row>
+                    <entry namest="c1" nameend="c3" align="center">Core</entry>
+                </row>
+                <row>
+                    <entry>
+                        <link xlink:href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-server&amp;v=&version;&amp;e=pom">
+                            jersey-server
+                        </link>
+                    </entry>
+                    <entry>
+                        <link xlink:href="http://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=org.glassfish.jersey&amp;a=jersey-commons&amp;v=&version;&amp;e=pom">
+                            jersey-commons
+                        </link>
+                    </entry>
+                    <entry>Base server functionality.</entry>
+                </row>
+                <row>
+                    <entry>jersey-client</entry>
+                    <entry>jersey-commons</entry>
+                    <entry>Basic client functionality.</entry>
+                </row>
+                <row>
+                    <entry>jersey-commons</entry>
+                    <entry></entry>
+                    <entry>Common functionality shared by client and server.</entry>
+                </row>
+                <row>
+                    <entry namest="c1" nameend="c3" align="center">Containers</entry>
+                </row>
+                <row>
+                    <entry>...</entry>
+                    <entry>...</entry>
+                    <entry>...</entry>
+                </row>
+            </tbody>
+        </tgroup>
+    </table>
 
-  <section id="examples">
-  <title>Sample Scenarios</title>
+    <section xml:id="examples">
+        <title>Sample Scenarios</title>
 
-  <section id="examples_basicserver">
-  <title>Basic Server-Side Application</title>
-  <para>For a server side Jersey application you typically need to depend on jersey-server module
-  to provide the basic functionality, then you may want to support JSON mapping and a standard
-  JavaEE servlet container you would deploy your application to. So this would be the common set
-  of dependencies for your project for this kind of scenario:
-  <itemizedlist>
-  	<listitem>jersey-server</listitem>
-  	<listitem>jersey-commons</listitem>
-  	<listitem>...</listitem>
-  </itemizedlist>
-  </para>
-  </section> <!-- examples_basicserver -->
-  </section> <!-- examples -->
+        <section xml:id="examples_basicserver">
+            <title>Basic Server-Side Application</title>
+            <para>For a server side Jersey application you typically need to depend on jersey-server module
+                to provide the basic functionality, then you may want to support JSON mapping and a standard
+                JavaEE servlet container you would deploy your application to. So this would be the common set
+                of dependencies for your project for this kind of scenario:
+                <itemizedlist>
+                    <listitem>
+                        <simpara>jersey-server</simpara>
+                    </listitem>
+                    <listitem>
+                        <simpara>jersey-commons</simpara>
+                    </listitem>
+                    <listitem>
+                        <simpara>...</simpara>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+        <!-- examples_basicserver -->
+    </section>
+    <!-- examples -->
 </chapter>
