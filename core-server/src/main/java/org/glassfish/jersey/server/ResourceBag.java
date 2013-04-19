@@ -162,7 +162,7 @@ final class ResourceBag {
     /**
      * Returns list of root resources.
      *
-     * @return {@link Resource#isRoot Root} resources.
+     * @return list of root resources.
      */
     List<Resource> getRootResources() {
         List<Resource> rootResources = new ArrayList<Resource>();

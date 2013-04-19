@@ -849,8 +849,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
                     try {
                         afl.process(next, resourceFinder.open());
                     } catch (IOException e) {
-                        // TODO L10N
-                        LOGGER.log(Level.WARNING, "Unable to process {0}", next);
+                        LOGGER.log(Level.WARNING, LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_PROCESS(next));
                     }
                 }
             }

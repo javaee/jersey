@@ -98,4 +98,9 @@ public class RankedProvider<T> {
     public int getRank() {
         return rank;
     }
+
+    @Override
+    public String toString() {
+        return provider.getClass().getName();
+    }
 }

@@ -47,10 +47,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
@@ -67,6 +69,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
@@ -113,7 +117,9 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.AbstractFuture;
@@ -363,10 +369,10 @@ public final class ApplicationHandler {
         final ProcessingProviders processingProviders = getProcessingProviders(componentBag);
 
         // initialize processing provider reference
-        final GenericType<Ref<ProcessingProviders>> refGenericType = new GenericType<Ref<ProcessingProviders>>() {};
+        final GenericType<Ref<ProcessingProviders>> refGenericType = new GenericType<Ref<ProcessingProviders>>() {
+        };
         final Ref<ProcessingProviders> refProcessingProvider = locator.getService(refGenericType.getType());
         refProcessingProvider.set(processingProviders);
-
 
         ResourceModel resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
 
@@ -423,6 +429,83 @@ public final class ApplicationHandler {
 
         // inject self
         locator.inject(this);
+
+        if (LOGGER.isLoggable(Level.CONFIG)) {
+            final StringBuilder sb = new StringBuilder(LocalizationMessages.LOGGING_APPLICATION_INITIALIZED()).append('\n');
+
+            final List<Resource> rootResourceClasses = resourceBag.getRootResources();
+
+            if (!rootResourceClasses.isEmpty()) {
+                sb.append(LocalizationMessages.LOGGING_ROOT_RESOURCE_CLASSES()).append(":");
+                for (Resource r : rootResourceClasses) {
+                    for (Class clazz : r.getHandlerClasses()) {
+                        sb.append('\n').append("  ").append(clazz.getName());
+                    }
+                }
+            }
+
+            sb.append('\n');
+
+            Set<MessageBodyReader> messageBodyReaders;
+            Set<MessageBodyWriter> messageBodyWriters;
+
+            if (LOGGER.isLoggable(Level.FINE)) {
+                messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyReader.class));
+                messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyWriter.class));
+            } else {
+                messageBodyReaders = Providers.getCustomProviders(locator, MessageBodyReader.class);
+                messageBodyWriters = Providers.getCustomProviders(locator, MessageBodyWriter.class);
+            }
+
+            printProviders(LocalizationMessages.LOGGING_PRE_MATCH_FILTERS(), processingProviders.getPreMatchFilters(), sb);
+            printProviders(LocalizationMessages.LOGGING_GLOBAL_REQUEST_FILTERS(), processingProviders.getGlobalRequestFilters(), sb);
+            printProviders(LocalizationMessages.LOGGING_GLOBAL_RESPOSE_FILTERS(), processingProviders.getGlobalResponseFilters(), sb);
+            printProviders(LocalizationMessages.LOGGING_GLOBAL_READER_INTERCEPTORS(), processingProviders.getGlobalReaderInterceptors(), sb);
+            printProviders(LocalizationMessages.LOGGING_GLOBAL_WRITER_INTERCEPTORS(), processingProviders.getGlobalWriterInterceptors(), sb);
+            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_REQUEST_FILTERS(), processingProviders.getNameBoundRequestFilters(), sb);
+            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_RESPOSE_FILTERS(), processingProviders.getNameBoundResponseFilters(), sb);
+            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_READER_INTERCEPTORS(), processingProviders.getNameBoundReaderInterceptors(), sb);
+            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_WRITER_INTERCEPTORS(), processingProviders.getNameBoundWriterInterceptors(), sb);
+            printProviders(LocalizationMessages.LOGGING_DYNAMIC_FEATURES(), processingProviders.getDynamicFeatures(), sb);
+            printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_READERS(), Collections2.transform(messageBodyReaders, new WorkersToStringTransform<MessageBodyReader>()), sb);
+            printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_WRITERS(), Collections2.transform(messageBodyWriters, new WorkersToStringTransform<MessageBodyWriter>()), sb);
+            LOGGER.log(Level.CONFIG, sb.toString());
+        }
+    }
+
+    private class WorkersToStringTransform<T> implements Function<T, String> {
+        @Override
+        public String apply(T t) {
+            if (t != null) {
+                return t.getClass().getName();
+            }
+            return null;
+        }
+    }
+
+    private <T> void printNameBoundProviders(String title, Map<Class<? extends Annotation>, List<RankedProvider<T>>> providers, StringBuilder sb) {
+        if (!providers.isEmpty()) {
+            sb.append(title).append(":").append('\n');
+
+            for (Map.Entry<Class<? extends Annotation>, List<RankedProvider<T>>> entry : providers.entrySet()) {
+                for (RankedProvider rankedProvider : entry.getValue()) {
+                    sb.append("   ").append(LocalizationMessages.LOGGING_PROVIDER_BOUND(rankedProvider, entry.getKey())).append('\n');
+                }
+            }
+        }
+    }
+
+    private <T> void printProviders(String title, Iterable<T> providers, StringBuilder sb) {
+        final Iterator<T> iterator = providers.iterator();
+        boolean first = true;
+        while (iterator.hasNext()) {
+            if (first) {
+                sb.append(title).append(":").append('\n');
+                first = false;
+            }
+            final T provider = iterator.next();
+            sb.append("   ").append(provider).append('\n');
+        }
     }
 
     private ProcessingProviders getProcessingProviders(ComponentBag componentBag) {
@@ -455,7 +538,6 @@ public final class ApplicationHandler {
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerRequestFilter>> nameBoundRequestFilters
                 = filterNameBound(requestFilters, preMatchFilters, componentBag, applicationNameBindings, nameBoundRequestFiltersInverse);
-
 
         final Iterable<RankedProvider<ReaderInterceptor>> readerInterceptors = Providers.getAllRankedProviders(locator,
                 ReaderInterceptor.class);
@@ -517,7 +599,7 @@ public final class ApplicationHandler {
      * and separates out all name-bound filters/interceptors, returns them as a separate MultivaluedMap,
      * mapping the name-bound annotation to the list of name-bound filters/interceptors. The same key values
      * are also added into the inverse map passed in {@code inverseNameBoundMap}.
-     *
+     * <p/>
      * Note, the name-bound filters/interceptors are removed from the original filters/interceptors collection.
      * If non-null collection is passed in the postMatching parameter (applicable for filters only),
      * this method also removes all the global
@@ -798,6 +880,7 @@ public final class ApplicationHandler {
         protected void interruptTask() {
             // TODO implement cancellation logic.
         }
+
     }
 
     /**

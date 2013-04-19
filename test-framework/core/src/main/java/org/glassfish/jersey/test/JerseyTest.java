@@ -114,7 +114,8 @@ public abstract class JerseyTest {
     private final Map<String, String> forcedPropertyMap = Maps.newHashMap();
 
     private Handler logHandler;
-    private List<LogRecord> loggedRecords = Lists.newArrayList();
+    private List<LogRecord> loggedStartupRecords = Lists.newArrayList();
+    private List<LogRecord> loggedRuntimeRecords = Lists.newArrayList();
     private Map<Logger, Level> logLevelMap = Maps.newIdentityHashMap();
 
     /**
@@ -122,35 +123,50 @@ public abstract class JerseyTest {
      * provide an application descriptor.
      *
      * @throws TestContainerException if the default test container factory
-     *         cannot be obtained, or the application descriptor is not
-     *         supported by the test container factory.
+     *                                cannot be obtained, or the application descriptor is not
+     *                                supported by the test container factory.
      */
     public JerseyTest() throws TestContainerException {
-        ResourceConfig config =  getResourceConfig(configure());
+        ResourceConfig config = getResourceConfig(configure());
         config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
-        this.application = new ApplicationHandler(config);
 
+        if (isLogRecordingEnabled()) {
+            registerLogHandler();
+        }
+        this.application = new ApplicationHandler(config);
         this.tc = getContainer(application, getTestContainerFactory());
+        if (isLogRecordingEnabled()) {
+            loggedStartupRecords.addAll(loggedRuntimeRecords);
+            loggedRuntimeRecords.clear();
+            unregisterLogHandler();
+        }
     }
 
     /**
      * Construct a new instance with a test container factory.
-     * <p>
+     * <p/>
      * An extending class must implement the {@link #configure()} method to
      * provide an application descriptor.
      *
      * @param testContainerFactory the test container factory to use for testing.
      * @throws TestContainerException if the application descriptor is not
-     *         supported by the test container factory.
+     *                                supported by the test container factory.
      */
     public JerseyTest(TestContainerFactory testContainerFactory) {
         setTestContainerFactory(testContainerFactory);
 
-        ResourceConfig config =  getResourceConfig(configure());
+        ResourceConfig config = getResourceConfig(configure());
         config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        if (isLogRecordingEnabled()) {
+            registerLogHandler();
+        }
         this.application = new ApplicationHandler(config);
-
         this.tc = getContainer(application, testContainerFactory);
+        if (isLogRecordingEnabled()) {
+            loggedStartupRecords.addAll(loggedRuntimeRecords);
+            loggedRuntimeRecords.clear();
+            unregisterLogHandler();
+        }
     }
 
     private ResourceConfig getResourceConfig(Application app) {
@@ -162,34 +178,48 @@ public abstract class JerseyTest {
      * how the test container is configured.
      *
      * @param jaxrsApplication an application describing how to configure the
-     *        test container.
+     *                         test container.
      * @throws TestContainerException if the default test container factory
-     *         cannot be obtained, or the application descriptor is not
-     *         supported by the test container factory.
+     *                                cannot be obtained, or the application descriptor is not
+     *                                supported by the test container factory.
      */
     public JerseyTest(Application jaxrsApplication) throws TestContainerException {
         ResourceConfig config = getResourceConfig(jaxrsApplication);
         config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        if (isLogRecordingEnabled()) {
+            registerLogHandler();
+        }
         this.application = new ApplicationHandler(config);
-
         this.tc = getContainer(application, getTestContainerFactory());
+        if (isLogRecordingEnabled()) {
+            loggedStartupRecords.addAll(loggedRuntimeRecords);
+            loggedRuntimeRecords.clear();
+            unregisterLogHandler();
+        }
     }
 
     /**
      * Construct a new instance with an {@link Application} class.
      *
      * @param jaxrsApplicationClass an application describing how to configure the
-     *        test container.
+     *                              test container.
      * @throws TestContainerException if the default test container factory
-     *         cannot be obtained, or the application descriptor is not
-     *         supported by the test container factory.
+     *                                cannot be obtained, or the application descriptor is not
+     *                                supported by the test container factory.
      */
     public JerseyTest(Class<? extends Application> jaxrsApplicationClass) throws TestContainerException {
         ResourceConfig config = ResourceConfig.forApplicationClass(jaxrsApplicationClass);
         config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        if (isLogRecordingEnabled()) {
+            registerLogHandler();
+        }
         this.application = new ApplicationHandler(config);
-
         this.tc = getContainer(application, getTestContainerFactory());
+        if (isLogRecordingEnabled()) {
+            loggedStartupRecords.addAll(loggedRuntimeRecords);
+            loggedRuntimeRecords.clear();
+            unregisterLogHandler();
+        }
     }
 
     /**
@@ -240,7 +270,7 @@ public abstract class JerseyTest {
      * The property value may be overridden via a system property.
      *
      * @param propertyName name of the property.
-     * @param value property value.
+     * @param value        property value.
      */
     protected final void set(String propertyName, Object value) {
         set(propertyName, value.toString());
@@ -251,7 +281,7 @@ public abstract class JerseyTest {
      * The property value may be overridden via a system property.
      *
      * @param propertyName name of the property.
-     * @param value property value.
+     * @param value        property value.
      */
     protected final void set(String propertyName, String value) {
         propertyMap.put(propertyName, value);
@@ -262,7 +292,7 @@ public abstract class JerseyTest {
      * The force-set property value cannot be overridden via a system property.
      *
      * @param propertyName name of the property.
-     * @param value property value.
+     * @param value        property value.
      */
     protected final void forceSet(String propertyName, String value) {
         forcedPropertyMap.put(propertyName, value);
@@ -292,12 +322,12 @@ public abstract class JerseyTest {
     /**
      * Return an JAX-RS application that defines how the application in the
      * test container is configured.
-     * <p>
+     * <p/>
      * If a constructor is utilized that does not supply an application
      * descriptor then this method must be overridden to return an application
      * descriptor, otherwise an {@link UnsupportedOperationException} exception
      * will be thrown.
-     * <p>
+     * <p/>
      * If a constructor is utilized that does supply an application descriptor
      * then this method does not require to be overridden and will not be
      * invoked.
@@ -313,7 +343,7 @@ public abstract class JerseyTest {
      * Sets the test container factory to to be used for testing.
      *
      * @param testContainerFactory the test container factory to to be used for
-     *        testing.
+     *                             testing.
      */
     protected final void setTestContainerFactory(TestContainerFactory testContainerFactory) {
         this.testContainerFactory = testContainerFactory;
@@ -406,7 +436,7 @@ public abstract class JerseyTest {
     /**
      * Create a web resource whose URI refers to the base URI the Web
      * application is deployed at plus the path specified in the argument.
-     *
+     * <p/>
      * This method is an equivalent of calling {@code target().path(path)}.
      *
      * @param path Relative path (from base URI) this target should point to.
@@ -437,7 +467,7 @@ public abstract class JerseyTest {
     @Before
     public void setUp() throws Exception {
         if (isLogRecordingEnabled()) {
-            loggedRecords.clear();
+            loggedRuntimeRecords.clear();
             registerLogHandler();
         }
 
@@ -453,6 +483,7 @@ public abstract class JerseyTest {
     @After
     public void tearDown() throws Exception {
         if (isLogRecordingEnabled()) {
+            loggedRuntimeRecords.clear();
             unregisterLogHandler();
         }
 
@@ -469,14 +500,14 @@ public abstract class JerseyTest {
 
     /**
      * Creates an instance of {@link Client}.
-     *
+     * <p/>
      * Checks whether TestContainer provides ClientConfig instance and
      * if not, empty new {@link org.glassfish.jersey.client.ClientConfig} instance
      * will be used to create new client instance.
-     *
+     * <p/>
      * This method is called exactly once when JerseyTest is created.
      *
-     * @param tc instance of {@link TestContainer}
+     * @param tc                 instance of {@link TestContainer}
      * @param applicationHandler instance of {@link ApplicationHandler}
      * @return A Client instance.
      */
@@ -509,6 +540,7 @@ public abstract class JerseyTest {
 
     /**
      * Returns the base URI of the application.
+     *
      * @return The base URI of the application
      */
     protected URI getBaseUri() {
@@ -547,7 +579,10 @@ public abstract class JerseyTest {
      * @return list of log records or an empty list.
      */
     protected List<LogRecord> getLoggedRecords() {
-        return loggedRecords;
+        final List<LogRecord> logRecords = Lists.newArrayList();
+        logRecords.addAll(loggedStartupRecords);
+        logRecords.addAll(loggedRuntimeRecords);
+        return logRecords;
     }
 
     /**
@@ -571,7 +606,7 @@ public abstract class JerseyTest {
 
         final Set<Logger> rootLoggers = Sets.newHashSet();
 
-        while(loggerNames.hasMoreElements()) {
+        while (loggerNames.hasMoreElements()) {
             Logger logger = logManager.getLogger(loggerNames.nextElement());
             if (logger != null) {
                 while (logger.getParent() != null) {
@@ -613,6 +648,7 @@ public abstract class JerseyTest {
             root.setLevel(logLevelMap.get(root));
             root.removeHandler(getLogHandler());
         }
+        logHandler = null;
     }
 
     /**
@@ -641,7 +677,7 @@ public abstract class JerseyTest {
                     if (record.getLevel().intValue() >= logLevel
                             && loggerName.startsWith("org.glassfish.jersey")
                             && !loggerName.startsWith("org.glassfish.jersey.test")) {
-                        loggedRecords.add(record);
+                        loggedRuntimeRecords.add(record);
                     }
                 }
 
