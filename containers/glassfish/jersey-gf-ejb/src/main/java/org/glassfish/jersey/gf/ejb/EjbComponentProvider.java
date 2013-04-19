@@ -54,6 +54,8 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.ext.ExceptionMapper;
 
+import javax.annotation.Priority;
+
 import javax.ejb.Local;
 import javax.ejb.Remote;
 
@@ -78,12 +80,14 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerP
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+@Priority(300)
 @SuppressWarnings("UnusedDeclaration")
 public final class EjbComponentProvider implements ComponentProvider, ResourceMethodInvocationHandlerProvider {
 
     private static final Logger LOGGER = Logger.getLogger(
             EjbComponentProvider.class.getName());
 
+    private InitialContext initialContext;
     private boolean ejbInterceptorRegistered = false;
 
     /**
@@ -138,11 +142,8 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
     private void registerEjbInterceptor() {
         try {
-            InitialContext ic = getInitialContext();
-            if (ic == null) {
-                throw new IllegalStateException(LocalizationMessages.INITIAL_CONTEXT_NOT_FOUND());
-            }
-            Object interceptorBinder = ic.lookup("java:org.glassfish.ejb.container.interceptor_binding_spi");
+            initialContext = getInitialContext();
+            Object interceptorBinder = initialContext.lookup("java:org.glassfish.ejb.container.interceptor_binding_spi");
             // Some implementations of InitialContext return null instead of
             // throwing NamingException if there is no Object associated with
             // the name
@@ -183,6 +184,10 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
     @Override
     public boolean bind(Class<?> component, Set<Class<?>> providerContracts) {
 
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine(LocalizationMessages.EJB_CLASS_BEING_CHECKED(component));
+        }
+
         if (locator == null) {
             throw new IllegalStateException(LocalizationMessages.EJB_COMPONENT_PROVIDER_NOT_INITIALIZED_PROPERLY());
         }
@@ -195,25 +200,24 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             registerEjbInterceptor();
         }
 
-        try {
-            DynamicConfiguration dc = Injections.getConfiguration(locator);
+        DynamicConfiguration dc = Injections.getConfiguration(locator);
 
-            final ServiceBindingBuilder bindingBuilder =
-                    Injections.newFactoryBinder(new EjbFactory(component, new InitialContext()));
+        final ServiceBindingBuilder bindingBuilder = Injections.newFactoryBinder(new EjbFactory(component, initialContext));
 
-            bindingBuilder.to(component);
-            for (Class contract : providerContracts) {
-                bindingBuilder.to(contract);
-            }
-
-            Injections.addBinding(bindingBuilder, dc);
-
-            dc.commit();
-            return true;
-        } catch (NamingException ex) {
-            Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
+        bindingBuilder.to(component);
+        for (Class contract : providerContracts) {
+            bindingBuilder.to(contract);
         }
+
+        Injections.addBinding(bindingBuilder, dc);
+
+        dc.commit();
+
+        if (LOGGER.isLoggable(Level.CONFIG)) {
+            LOGGER.config(LocalizationMessages.EJB_CLASS_BOUND_WITH_CDI(component));
+        }
+
+        return true;
     }
 
     @Override
@@ -294,10 +298,8 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             // Deployment on Google App Engine will
             // result in a LinkageError
             return new InitialContext();
-        } catch (NamingException ex) {
-            return null;
-        } catch (LinkageError ex) {
-            return null;
+        } catch (Exception ex) {
+            throw new IllegalStateException(LocalizationMessages.INITIAL_CONTEXT_NOT_AVAILABLE(), ex);
         }
     }
 

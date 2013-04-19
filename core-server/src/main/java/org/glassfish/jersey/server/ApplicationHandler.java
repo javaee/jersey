@@ -44,8 +44,8 @@ import java.lang.annotation.Annotation;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +78,7 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.Errors;
+import org.glassfish.jersey.internal.ServiceConfigurationError;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -91,6 +92,7 @@ import org.glassfish.jersey.message.internal.NullOutputStream;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.model.internal.RankedComparator;
+import org.glassfish.jersey.model.internal.RankedComparator.Order;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
@@ -353,9 +355,10 @@ public final class ApplicationHandler {
         runtimeConfig.lock();
 
         // Registering Injection Bindings
-        final Set<ComponentProvider> componentProviders = new HashSet<ComponentProvider>();
+        final List<ComponentProvider> componentProviders = new LinkedList<ComponentProvider>();
 
-        for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
+        for (RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
+            final ComponentProvider provider = rankedProvider.getProvider();
             provider.initialize(locator);
             componentProviders.add(provider);
         }
@@ -508,6 +511,16 @@ public final class ApplicationHandler {
         }
     }
 
+
+    private List<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
+        final List<RankedProvider<ComponentProvider>> result = new LinkedList<RankedProvider<ComponentProvider>>();
+        for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
+            result.add(new RankedProvider<ComponentProvider>(provider));
+        }
+        Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
+        return result;
+    }
+
     private ProcessingProviders getProcessingProviders(ComponentBag componentBag) {
 
         // scan for NameBinding annotations attached to the application class
@@ -575,7 +588,7 @@ public final class ApplicationHandler {
     }
 
     private void bindEnhancingResourceClasses(ResourceModel resourceModel, ResourceBag resourceBag,
-                                              Set<ComponentProvider> componentProviders) {
+                                              Collection<ComponentProvider> componentProviders) {
         Set<Class<?>> newClasses = Sets.newHashSet();
         Set<Object> newInstances = Sets.newHashSet();
         for (Resource res : resourceModel.getRootResources()) {
@@ -659,7 +672,7 @@ public final class ApplicationHandler {
     }
 
     private void bindProvidersAndResources(
-            final Set<ComponentProvider> componentProviders,
+            final Collection<ComponentProvider> componentProviders,
             final ComponentBag componentBag,
             final Set<Class<?>> resourceClasses,
             final Set<Object> resourceInstances) {

@@ -41,7 +41,7 @@ package org.glassfish.jersey.server.model;
 
 /**
  * Abstract implementation of {@link ResourceModelVisitor resource model visitor} containing empty implementations
- * of interface methods. This class can be derivered by validator implementing only methods needed for specific
+ * of interface methods. This class can be derived by validator implementing only methods needed for specific
  * validations.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)

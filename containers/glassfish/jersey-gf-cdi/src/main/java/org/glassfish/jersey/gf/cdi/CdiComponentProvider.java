@@ -50,11 +50,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
 
 import javax.annotation.ManagedBean;
+import javax.annotation.Priority;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
@@ -65,8 +67,8 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
-import javax.inject.Qualifier;
 
+import javax.inject.Qualifier;
 
 import javax.naming.InitialContext;
 
@@ -90,6 +92,7 @@ import org.glassfish.jersey.server.spi.ComponentProvider;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+@Priority(200)
 public class CdiComponentProvider implements ComponentProvider, Extension {
 
     private static final Logger LOGGER = Logger.getLogger(CdiComponentProvider.class.getName());
@@ -226,6 +229,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @Override
     public boolean bind(final Class<?> clazz, final Set<Class<?>> providerContracts) {
 
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine(LocalizationMessages.CDI_CLASS_BEING_CHECKED(clazz));
+        }
+
         if (beanManager == null) {
             return false;
         }
@@ -251,6 +258,11 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         Injections.addBinding(bindingBuilder, dc);
 
         dc.commit();
+
+        if (LOGGER.isLoggable(Level.CONFIG)) {
+            LOGGER.config(LocalizationMessages.CDI_CLASS_BOUND_WITH_CDI(clazz));
+        }
+
         return true;
     }
 
