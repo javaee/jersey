@@ -80,6 +80,23 @@
         </xsl:copy>
     </xsl:template>
 
+    <xsl:template
+            match="pom:dependencies/pom:dependency[pom:artifactId='jersey-mvc-freemarker']">
+        <xsl:copy>
+            <xsl:apply-templates />
+            <exclusions>
+              <exclusion>
+                <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-mvc</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+              </exclusion>
+            </exclusions>
+        </xsl:copy>
+    </xsl:template>
+
     <xsl:template match="pom:dependencies">
       <xsl:copy>
         <xsl:apply-templates />
@@ -90,7 +107,29 @@
             <scope>provided</scope>
           </dependency>
         </xsl:if>
-      </xsl:copy>
+        <xsl:if test="count(pom:dependency[pom:artifactId='jersey-mvc-freemarker'])=1">
+          <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-mvc</artifactId>
+            <scope>provided</scope>
+          </dependency>
+        </xsl:if>
+       </xsl:copy>
+    </xsl:template>
+
+    <xsl:template match="pom:project">
+       <xsl:copy>
+        <xsl:apply-templates />
+        <xsl:if test="count(pom:dependencies)=0">
+          <dependencies>
+            <dependency>
+              <groupId>org.glassfish.jersey.containers</groupId>
+              <artifactId>jersey-container-servlet-core</artifactId>
+              <scope>provided</scope>
+            </dependency>
+          </dependencies>
+        </xsl:if>
+        </xsl:copy>
     </xsl:template>
 
     <!-- remove <packagingExcludes>WEB-INF/glassfish-web.xml</packagingExcludes>
