@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,34 +39,35 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.ws.rs.client.WebTarget;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import org.junit.Test;
+
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 /**
- * JAX-RS application to configure resources.
+ * Test EJB timers injected into CDI beans.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        classes.add(StutteringEchoResource.class);
-        classes.add(StutteringEcho.class);
-        classes.add(ReversingEchoResource.class);
-        return classes;
+public class EjbIntoCdiTest extends TestBase {
+
+    @Test
+    public void testInjection() {
+
+        final WebTarget cdiResource = target().path("request-scoped");
+        final WebTarget ejbInjectedTimer = cdiResource.path("ejb-injected-timer");
+        final WebTarget jsr330InjectedTimer = cdiResource.path("jsr330-injected-timer");
+
+        String firstResource = cdiResource.request().get(String.class);
+        long firstMillis = _getMillis(ejbInjectedTimer);
+        sleep(2);
+        String secondResource = cdiResource.request().get(String.class);
+        long secondMillis = _getMillis(jsr330InjectedTimer);
+
+        assertThat(firstMillis, equalTo(secondMillis));
+        assertThat(firstResource, not(equalTo(secondResource)));
     }
 }

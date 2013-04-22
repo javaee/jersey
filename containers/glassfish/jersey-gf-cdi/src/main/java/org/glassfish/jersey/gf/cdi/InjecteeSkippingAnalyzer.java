@@ -43,36 +43,26 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Set;
-
-import javax.inject.Provider;
+import java.util.Map;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.MultiException;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
-import java.util.Map;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 /**
- * Class analyzer that ignores {@link javax.inject.Provider} injection points
- * to avoid replacing CDI provided injections.
+ * Class analyzer that ignores given injection points.
+ * Used for CDI integration, where we need to avoid HK2 replacing CDI injected entities.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public final class ProviderSkippingClassAnalyzer implements ClassAnalyzer {
-
-    /**
-     * Name to be used when binding this analyzer to HK2 service locator.
-     */
-    public static final String NAME = "ProviderSkippingClassAnalyzer";
+public final class InjecteeSkippingAnalyzer implements ClassAnalyzer {
 
     private final ClassAnalyzer defaultAnalyzer;
     private final Map<Class<?>, Set<Method>> methodsToSkip;
     private final Map<Class<?>, Set<Field>> fieldsToSkip;
 
-    public ProviderSkippingClassAnalyzer(ClassAnalyzer defaultAnalyzer, Map<Class<?>, Set<Method>> methodsToSkip, Map<Class<?>, Set<Field>> fieldsToSkip) {
+    public InjecteeSkippingAnalyzer(ClassAnalyzer defaultAnalyzer, Map<Class<?>, Set<Method>> methodsToSkip, Map<Class<?>, Set<Field>> fieldsToSkip) {
         this.defaultAnalyzer = defaultAnalyzer;
         this.methodsToSkip = methodsToSkip;
         this.fieldsToSkip = fieldsToSkip;

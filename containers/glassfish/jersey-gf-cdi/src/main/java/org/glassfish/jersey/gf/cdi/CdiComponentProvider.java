@@ -39,11 +39,14 @@
  */
 package org.glassfish.jersey.gf.cdi;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -62,6 +65,7 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+import javax.inject.Qualifier;
 
 
 import javax.naming.InitialContext;
@@ -89,6 +93,11 @@ import org.glassfish.jersey.server.spi.ComponentProvider;
 public class CdiComponentProvider implements ComponentProvider, Extension {
 
     private static final Logger LOGGER = Logger.getLogger(CdiComponentProvider.class.getName());
+
+    /**
+     * Name to be used when binding CDI injectee skipping class analyzer to HK2 service locator.
+     */
+    public static final String CDI_CLASS_ANALYZER = "CdiInjecteeSkippingClassAnalyzer";
 
     private ServiceLocator locator;
     private BeanManager beanManager;
@@ -123,6 +132,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         final BeanManager beanManager;
         final ServiceLocator locator;
         final InstanceManager<T> referenceProvider;
+        final Annotation[] qualifiers;
 
         @SuppressWarnings("unchecked")
         @Override
@@ -149,13 +159,14 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
          */
         CdiFactory(final Class<T> rawType, final ServiceLocator locator, final BeanManager beanManager, boolean cdiManaged) {
             this.clazz = rawType;
+            this.qualifiers = getQualifiers(clazz.getAnnotations());
             this.beanManager = beanManager;
             this.locator = locator;
             this.referenceProvider = cdiManaged ? new InstanceManager<T>() {
                 @Override
                 public T getInstance(Class<T> clazz) {
 
-                    final Set<Bean<?>> beans = beanManager.getBeans(clazz);
+                    final Set<Bean<?>> beans = beanManager.getBeans(clazz, qualifiers);
                     for (Bean b : beans) {
                         final Object instance = beanManager.getReference(b, clazz, beanManager.createCreationalContext(b));
                         return (T) instance;
@@ -180,7 +191,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                     final T instance = injectionTarget.produce(creationalContext);
                     injectionTarget.inject(instance, creationalContext);
                     if (locator != null) {
-                        locator.inject(instance, ProviderSkippingClassAnalyzer.NAME);
+                        locator.inject(instance, CDI_CLASS_ANALYZER);
                     }
                     injectionTarget.postConstruct(instance);
 
@@ -245,11 +256,22 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     @Override
     public void done() {
-        bindProviderSkippingAnalyzer();
+        bindHk2ClassAnalyzer();
     }
 
     private boolean isCdiComponent(Class<?> component) {
-        return !beanManager.getBeans(component).isEmpty();
+        final Annotation[] qualifiers = getQualifiers(component.getAnnotations());
+        return !beanManager.getBeans(component, qualifiers).isEmpty();
+    }
+
+    private static Annotation[] getQualifiers(Annotation[] annotations) {
+        List<Annotation> result = new ArrayList<Annotation>(annotations.length);
+        for (Annotation a : annotations) {
+            if (a.annotationType().isAnnotationPresent(Qualifier.class)) {
+                result.add(a);
+            }
+        }
+        return result.toArray(new Annotation[result.size()]);
     }
 
     private boolean isManagedBean(Class<?> component) {
@@ -279,7 +301,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 public void inject(Object t, CreationalContext cc) {
                    it.inject(t, cc);
                     if (locator != null) {
-                        locator.inject(t, ProviderSkippingClassAnalyzer.NAME);
+                        locator.inject(t, CDI_CLASS_ANALYZER);
                     }
                 }
 
@@ -339,13 +361,18 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
     }
 
-    private void bindProviderSkippingAnalyzer() {
+    private void bindHk2ClassAnalyzer() {
 
-        final ProviderSkippingClassAnalyzer
-                customizedClassAnalyzer =new ProviderSkippingClassAnalyzer(
-                                                locator.getService(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME),
+        final ClassAnalyzer defaultClassAnalyzer =
+                locator.getService(ClassAnalyzer.class, ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME);
+
+        final int skippedElements = methodsToSkip.size() + fieldsToSkip.size();
+
+        final ClassAnalyzer customizedClassAnalyzer =
+                skippedElements > 0 ? new InjecteeSkippingAnalyzer(
+                                                defaultClassAnalyzer,
                                                 methodsToSkip,
-                                                fieldsToSkip);
+                                                fieldsToSkip) : defaultClassAnalyzer;
 
         DynamicConfiguration dc = Injections.getConfiguration(locator);
 
@@ -354,7 +381,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         bindingBuilder.analyzeWith(ClassAnalyzer.DEFAULT_IMPLEMENTATION_NAME)
                 .to(ClassAnalyzer.class)
-                .named(ProviderSkippingClassAnalyzer.NAME);
+                .named(CDI_CLASS_ANALYZER);
 
         Injections.addBinding(bindingBuilder, dc);
 
