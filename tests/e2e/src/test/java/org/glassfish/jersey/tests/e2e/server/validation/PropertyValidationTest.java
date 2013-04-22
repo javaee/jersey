@@ -175,10 +175,10 @@ public class PropertyValidationTest {
             resourceConfig.register(ValidationFeature.class);
         }
         if (disableAutoDiscovery != null) {
-            resourceConfig.property(ServerProperties.FEATURE_DISABLE_AUTO_DISCOVERY, disableAutoDiscovery);
+            resourceConfig.property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, disableAutoDiscovery);
         }
         if (disableValidation != null) {
-            resourceConfig.property(ServerProperties.FEATURE_DISABLE_BEAN_VALIDATION, disableValidation);
+            resourceConfig.property(ServerProperties.BV_FEATURE_DISABLE, disableValidation);
         }
 
         final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);

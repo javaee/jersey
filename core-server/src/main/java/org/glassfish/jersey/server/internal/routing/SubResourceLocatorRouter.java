@@ -90,14 +90,15 @@ class SubResourceLocatorRouter implements Router {
     private final RuntimeModelBuilder runtimeModelBuilder;
     private final JerseyResourceContext resourceContext;
     private final boolean disableValidation;
+    private final boolean ignoreValidationErrors;
 
 
     /**
      * Create a new sub-resource locator router.
      *
-     * @param locator                     HK2 locator.
+     * @param locator             HK2 locator.
      * @param runtimeModelBuilder original runtime model builder.
-     * @param locatorModel                resource locator method model.
+     * @param locatorModel        resource locator method model.
      */
     public SubResourceLocatorRouter(
             final ServiceLocator locator,
@@ -108,12 +109,16 @@ class SubResourceLocatorRouter implements Router {
         this.locatorModel = locatorModel;
         this.valueProviders = ParameterValueHelper.createValueProviders(locator, locatorModel.getInvocable());
         this.resourceContext = locator.getService(JerseyResourceContext.class);
+
         final Configuration config = locator.getService(Configuration.class);
         this.disableValidation = PropertiesHelper.getValue(config.getProperties(),
-                ServerProperties.RESOURCE_LOCATOR_VALIDATION_DISABLE,
+                ServerProperties.RESOURCE_VALIDATION_DISABLE,
                 Boolean.FALSE,
                 Boolean.class);
-
+        this.ignoreValidationErrors = PropertiesHelper.getValue(config.getProperties(),
+                ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS,
+                Boolean.FALSE,
+                Boolean.class);
     }
 
     @Override
@@ -148,7 +153,7 @@ class SubResourceLocatorRouter implements Router {
         ResourceModel resourceModel = new ResourceModel.Builder(true).addResource(subResource).build();
         resourceModel = processSubResource(resourceModel);
         if (!disableValidation) {
-            validate(resourceModel);
+            validate(resourceModel, ignoreValidationErrors);
         }
 
         subResource = resourceModel.getResources().get(0);
@@ -185,14 +190,14 @@ class SubResourceLocatorRouter implements Router {
 
     }
 
-    private void validate(final ResourceModel resourceModel) {
+    private void validate(final ResourceModel resourceModel, final boolean ignoreFatalIssues) {
         Errors.process(new Runnable() {
             @Override
             public void run() {
                 final ComponentModelValidator validator = new ComponentModelValidator(locator);
                 validator.validate(resourceModel);
 
-                if (Errors.fatalIssuesFound()) {
+                if (Errors.fatalIssuesFound() && !ignoreFatalIssues) {
                     throw new ModelValidationException(LocalizationMessages.ERROR_VALIDATION_SUBRESOURCE(),
                             ModelErrors.getErrorsAsResourceModelIssues());
                 }

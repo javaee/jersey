@@ -293,7 +293,7 @@ public class ValidationBinder extends AbstractBinder {
 
         private boolean isValidateOnExecutableOverrideCheckDisabled() {
             return PropertiesHelper.isProperty(
-                    jaxRsConfig.getProperty(ServerProperties.FEATURE_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK));
+                    jaxRsConfig.getProperty(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK));
         }
 
         @Override

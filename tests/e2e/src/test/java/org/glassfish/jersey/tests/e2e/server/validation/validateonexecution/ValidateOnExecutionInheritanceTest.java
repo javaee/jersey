@@ -324,7 +324,7 @@ public class ValidateOnExecutionInheritanceTest extends ValidateOnExecutionAbstr
                 ValidateExecutableMixedNoneResource.class,
                 ValidateExecutableMixedClassNoneResource.class,
                 ValidateExecutableMixedClassDefaultResource.class)
-                .property(ServerProperties.FEATURE_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true);
+                .property(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true);
     }
 
     @Test

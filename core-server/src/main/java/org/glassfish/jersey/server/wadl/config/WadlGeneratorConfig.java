@@ -74,7 +74,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * </p>
  * <p>
  * If you want to specify the {@link WadlGeneratorConfig} in the web.xml you have
- * to subclass it and set the servlet init-param {@link org.glassfish.jersey.server.ServerProperties#PROPERTY_WADL_GENERATOR_CONFIG}
+ * to subclass it and set the servlet init-param {@link org.glassfish.jersey.server.ServerProperties#WADL_GENERATOR_CONFIG}
  * to the name of your subclass. This class might look like this:
  * <pre>
  *  class MyWadlGeneratorConfig extends WadlGeneratorConfig {

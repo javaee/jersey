@@ -157,10 +157,10 @@ public class AutoDiscoverableServerTest {
                 .property(PROPERTY, true);
 
         if (globalDisable != null) {
-            resourceConfig.property(CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY, globalDisable);
+            resourceConfig.property(CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, globalDisable);
         }
         if (serverDisable != null) {
-            resourceConfig.property(ServerProperties.FEATURE_DISABLE_AUTO_DISCOVERY, serverDisable);
+            resourceConfig.property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, serverDisable);
         }
 
         final ApplicationHandler app = new ApplicationHandler(resourceConfig);

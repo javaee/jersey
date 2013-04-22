@@ -48,7 +48,7 @@ package org.glassfish.jersey;
 public final class CommonProperties {
 
     /**
-     * If {@code true} then disable auto discovery on client/server.
+     * If {@code true} then disable feature auto discovery globally on client/server.
      * <p>
      * By default auto discovery is automatically enabled. The value of this property may be overridden by the client/server
      * variant of this property.
@@ -59,7 +59,7 @@ public final class CommonProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    public static final String FEATURE_DISABLE_AUTO_DISCOVERY = "jersey.config.disableAutoDiscovery";
+    public static final String FEATURE_AUTO_DISCOVERY_DISABLE = "jersey.config.disableAutoDiscovery";
 
     /**
      * If {@code true} then disable registration of Json Processing (JSR-353) feature.
@@ -73,18 +73,18 @@ public final class CommonProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    public static final String FEATURE_DISABLE_JSON_PROCESSING = "jersey.config.disableJsonProcessing";
+    public static final String JSON_PROCESSING_FEATURE_DISABLE = "jersey.config.disableJsonProcessing";
 
     /**
-     * An integer value that defines the buffer size used to buffer the outbound response entity in order to
+     * An integer value that defines the buffer size used to buffer the outbound message entity in order to
      * determine its size and set the value of HTTP <tt>{@value javax.ws.rs.core.HttpHeaders#CONTENT_LENGTH}</tt> header.
      * <p>
      * If the entity size exceeds the configured buffer size, the buffering would be cancelled and the entity size
      * would not be determined. Value less or equal to zero disable the buffering of the entity at all.
      * </p>
      * The value of this property may be overridden by the client/server variant of this property by defining the suffix
-     * to this property "<code>.server</code>" or "<code>.client</code>"
-     * (<tt>{@value}</tt><code>.server</code> or  <tt>{@value}</tt><code>.client</code>).
+     * to this property "<tt>.server</tt>" or "<tt>.client</tt>"
+     * (<tt>{@value}.server</tt> or  <tt>{@value}.client</tt>).
      * <p>
      * The default value is <tt>{@value org.glassfish.jersey.message.internal.CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt>.
      * </p>
@@ -92,7 +92,7 @@ public final class CommonProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    public static final String CONTENT_LENGTH_BUFFER = "jersey.config.contentLength.buffer";
+    public static final String OUTBOUND_CONTENT_LENGTH_BUFFER = "jersey.config.contentLength.buffer";
 
     /**
      * Prevent instantiation.

@@ -58,7 +58,7 @@ public final class ValidationFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
-        final Object disableProperty = context.getConfiguration().getProperty(ServerProperties.FEATURE_DISABLE_BEAN_VALIDATION);
+        final Object disableProperty = context.getConfiguration().getProperty(ServerProperties.BV_FEATURE_DISABLE);
         if (PropertiesHelper.isProperty(disableProperty)) {
             return false;
         }

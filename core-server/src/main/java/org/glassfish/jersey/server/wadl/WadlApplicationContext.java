@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.wadl;
 
 import javax.ws.rs.core.UriInfo;
@@ -75,16 +74,17 @@ public interface WadlApplicationContext {
      * the root resource classes, and configure the base URI.
      *
      * @param ui the URI information from which the base URI is set on the
-     *        WADL application.
+     *           WADL application.
      * @return the application description, the contents may be modified.
      */
     ApplicationDescription getApplication(UriInfo ui);
 
 
     /**
-     * Get a new instance of {@link Application} for a particular resource
-     * @param info the URI information from which the base URI is set on the
-     *        WADL application.
+     * Get a new instance of {@link Application} for a particular resource.
+     *
+     * @param info     the URI information from which the base URI is set on the
+     *                 WADL application.
      * @param resource the resource to build the Application for
      * @return the application for this resource
      */
@@ -110,8 +110,8 @@ public interface WadlApplicationContext {
      * Enable/disable WADL generation.
      *
      * @param wadlGenerationEnabled if wadlGenerationEnabled is true and
-     * {@link org.glassfish.jersey.server.ServerProperties#FEATURE_DISABLE_WADL}
-     * is false, WADL generation is enabled. In all other cases is disabled.
+     *                              {@link org.glassfish.jersey.server.ServerProperties#WADL_FEATURE_DISABLE}
+     *                              is false, WADL generation is enabled. In all other cases is disabled.
      */
     void setWadlGenerationEnabled(boolean wadlGenerationEnabled);
 
@@ -119,7 +119,7 @@ public interface WadlApplicationContext {
      * Get WADL generation status.
      *
      * @return true when WADL generation is enabled. Does not take
-     * {@link org.glassfish.jersey.server.ServerProperties#FEATURE_DISABLE_WADL}
+     *         {@link org.glassfish.jersey.server.ServerProperties#WADL_FEATURE_DISABLE}
      */
     boolean isWadlGenerationEnabled();
 }

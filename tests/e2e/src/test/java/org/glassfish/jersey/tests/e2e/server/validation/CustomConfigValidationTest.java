@@ -119,7 +119,7 @@ public class CustomConfigValidationTest extends JerseyTest {
         resourceConfig.register(MoxyXmlFeature.class);
         resourceConfig.register(ValidationConfigurationContextResolver.class);
 
-        resourceConfig.property(ServerProperties.FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY, true);
+        resourceConfig.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
 
         return resourceConfig;
     }

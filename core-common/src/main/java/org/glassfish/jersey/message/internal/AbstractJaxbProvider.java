@@ -73,7 +73,6 @@ import org.xml.sax.InputSource;
  * A base class for implementing JAXB-based readers and writers.
  *
  * @param <T> Java type supported by the provider.
- *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -163,7 +162,8 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
             }
         }
 
-        return getJAXBContext(type, mt).createUnmarshaller();
+        final JAXBContext ctx = getJAXBContext(type, mt);
+        return (ctx == null) ? null : ctx.createUnmarshaller();
     }
 
     private Unmarshaller getUnmarshaller(Class type) throws JAXBException {
@@ -175,7 +175,8 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
             }
         }
 
-        return getJAXBContext(type).createUnmarshaller();
+        final JAXBContext ctx = getJAXBContext(type);
+        return (ctx == null) ? null : ctx.createUnmarshaller();
     }
 
     protected final Marshaller getMarshaller(Class type, MediaType mt) throws JAXBException {
@@ -191,7 +192,12 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
             }
         }
 
-        Marshaller m = getJAXBContext(type, mt).createMarshaller();
+        final JAXBContext ctx = getJAXBContext(type, mt);
+        if (ctx == null) {
+            return null;
+        }
+
+        Marshaller m = ctx.createMarshaller();
         if (formattedOutput.get()) {
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, formattedOutput.get());
         }
@@ -208,7 +214,12 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
             }
         }
 
-        Marshaller m = getJAXBContext(type).createMarshaller();
+        final JAXBContext ctx = getJAXBContext(type);
+        if (ctx == null) {
+            return null;
+        }
+
+        Marshaller m = ctx.createMarshaller();
         if (formattedOutput.get()) {
             m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, formattedOutput.get());
         }
@@ -252,7 +263,7 @@ public abstract class AbstractJaxbProvider<T> extends AbstractMessageReaderWrite
     }
 
     protected static SAXSource getSAXSource(SAXParserFactory spf,
-            InputStream entityStream) throws JAXBException {
+                                            InputStream entityStream) throws JAXBException {
         try {
             return new SAXSource(
                     spf.newSAXParser().getXMLReader(),

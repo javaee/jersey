@@ -73,7 +73,7 @@ import org.glassfish.jersey.server.validation.ValidationError;
 /**
  * {@link ExceptionMapper} for {@link ValidationException}.
  * <p/>
- * If {@value ServerProperties#FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY} property is enabled then a list of {@link ValidationError}
+ * If {@value ServerProperties#BV_SEND_ERROR_IN_RESPONSE} property is enabled then a list of {@link ValidationError}
  * instances is sent in {@link Response} as well (in addition to HTTP 400/500 status code). Supported media types are:
  * {@code application/json}/{@code application/xml} (in appropriate provider is registered on server) or
  * {@code text/html}/{@code text/plain} (via custom {@link ValidationErrorMessageBodyWriter}).
@@ -99,7 +99,7 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
             final Response.ResponseBuilder response = Response.status(getStatus(cve));
 
             // Entity.
-            final Object property = config.getProperty(ServerProperties.FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY);
+            final Object property = config.getProperty(ServerProperties.BV_SEND_ERROR_IN_RESPONSE);
             if (property != null && Boolean.valueOf(property.toString())) {
                 final List<Variant> variants = Variant.mediaTypes(
                         MediaType.TEXT_PLAIN_TYPE,

@@ -97,7 +97,7 @@ public class SubResourceValidationTest {
     @Test
     public void testEnable() throws ExecutionException, InterruptedException {
         ResourceConfig resourceConfig = new ResourceConfig(RootResource.class);
-        resourceConfig.property(ServerProperties.RESOURCE_LOCATOR_VALIDATION_DISABLE, "false");
+        resourceConfig.property(ServerProperties.RESOURCE_VALIDATION_DISABLE, "false");
 
         ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
 
@@ -114,7 +114,7 @@ public class SubResourceValidationTest {
     @Test
     public void testDisable() throws ExecutionException, InterruptedException {
         ResourceConfig resourceConfig = new ResourceConfig(RootResource.class);
-        resourceConfig.property(ServerProperties.RESOURCE_LOCATOR_VALIDATION_DISABLE, "true");
+        resourceConfig.property(ServerProperties.RESOURCE_VALIDATION_DISABLE, "true");
 
         ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
 

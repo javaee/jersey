@@ -141,10 +141,10 @@ public class JsonProcessingAutoDiscoverableServerTest {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, Filter.class);
 
         if (globalDisable != null) {
-            resourceConfig.property(CommonProperties.FEATURE_DISABLE_JSON_PROCESSING, globalDisable);
+            resourceConfig.property(CommonProperties.JSON_PROCESSING_FEATURE_DISABLE, globalDisable);
         }
         if (serverDisable != null) {
-            resourceConfig.property(ServerProperties.FEATURE_DISABLE_JSON_PROCESSING, serverDisable);
+            resourceConfig.property(ServerProperties.JSON_PROCESSING_FEATURE_DISABLE, serverDisable);
         }
 
         final ApplicationHandler app = new ApplicationHandler(resourceConfig);

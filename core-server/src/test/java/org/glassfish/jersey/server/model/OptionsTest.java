@@ -305,7 +305,7 @@ public class OptionsTest {
     @Test
     public void testNoHeadWildcard() throws ExecutionException, InterruptedException {
         final ResourceConfig resourceConfig = new ResourceConfig(ResourceWithoutGetMethod.class);
-        resourceConfig.property(ServerProperties.FEATURE_DISABLE_WADL, true);
+        resourceConfig.property(ServerProperties.WADL_FEATURE_DISABLE, true);
         ApplicationHandler application = new ApplicationHandler(resourceConfig);
 
         final ContainerRequest request = RequestContextBuilder.from("/no-get", "OPTIONS").accept(MediaType.MEDIA_TYPE_WILDCARD)

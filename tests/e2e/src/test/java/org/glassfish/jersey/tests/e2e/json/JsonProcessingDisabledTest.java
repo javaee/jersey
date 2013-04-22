@@ -87,7 +87,7 @@ public class JsonProcessingDisabledTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ResourceConfig(Resource.class).property(ServerProperties.FEATURE_DISABLE_JSON_PROCESSING, true);
+        return new ResourceConfig(Resource.class).property(ServerProperties.JSON_PROCESSING_FEATURE_DISABLE, true);
     }
 
     @Test

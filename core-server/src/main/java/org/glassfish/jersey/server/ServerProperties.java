@@ -214,7 +214,7 @@ public final class ServerProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    public static final String PROPERTY_WADL_GENERATOR_CONFIG = "jersey.config.server.wadl.generatorConfig";
+    public static final String WADL_GENERATOR_CONFIG = "jersey.config.server.wadl.generatorConfig";
 
     /**
      * If {@code true} then disable WADL generation.
@@ -228,30 +228,40 @@ public final class ServerProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     *
+     * @see #FEATURE_AUTO_DISCOVERY_DISABLE
+     * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
      */
-    public static final String FEATURE_DISABLE_WADL = "jersey.config.server.wadl.disableWadl";
+    public static final String WADL_FEATURE_DISABLE = "jersey.config.server.wadl.disableWadl";
 
     /**
-     * If {@code true} then disable Bean Validation.
+     * If {@code true} then disable Bean Validation support.
      * <p>
-     * By default Bean Validation is automatically enabled, if appropriate Jersey module is
-     * present in the classpath and the auto-discovery feature is enabled or if an appropriate {@link javax.ws.rs.core.Feature
-     * feature} is enabled.
+     * By default Bean Validation (JSR-349) is automatically enabled, if {@code org.glassfish.jersey.ext::jersey-bean-validation}
+     * Jersey module is present in the classpath and the auto-discovery support is not disabled (see
+     * {@link #FEATURE_AUTO_DISCOVERY_DISABLE}) or &mdash; in case the Jersey auto-discovery support is disabled &mdash; if the
+     * {@code org.glassfish.jersey.server.validation.ValidationFeature} is explicitly registered in a JAX-RS/Jersey application.
      * <p>
      * The default value is {@code false}.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     *
+     * @see #FEATURE_AUTO_DISCOVERY_DISABLE
+     * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
      */
-    public static final String FEATURE_DISABLE_BEAN_VALIDATION = "jersey.config.beanValidation.disable.server";
+    public static final String BV_FEATURE_DISABLE = "jersey.config.beanValidation.disable.server";
 
     /**
-     * If {@code true} then disable check whether the overriding / implementing methods are annotated with
-     * {@link javax.validation.executable.ValidateOnExecution} as well as one of their predecessor (in hierarchy).
+     * A Bean Validation (JSR-349) support customization property.
+     *
+     * If {@code true} the check whether the overriding / implementing methods are annotated with
+     * {@link javax.validation.executable.ValidateOnExecution} as well as one of their predecessor (in hierarchy)
+     * is disabled.
      * <p>
-     * By default this checks is automatically enabled, if Bean Validation is enabled as well (see
-     * {@link #FEATURE_DISABLE_BEAN_VALIDATION}).
+     * By default this checks is automatically enabled, unless the Bean Validation support is disabled explicitly (see
+     * {@link #BV_FEATURE_DISABLE}).
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -261,27 +271,31 @@ public final class ServerProperties {
      *
      * @see javax.validation.executable.ValidateOnExecution
      */
-    public static final String FEATURE_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK =
+    public static final String BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK =
             "jersey.config.beanValidation.disable.validateOnExecutableCheck.server";
 
     /**
-     * If {@code true} then enable sending of validation error entity in {@code Response} (validation has to be enabled by registering
-     * {@code ValidationFeature} in the application).
+     * A Bean Validation (JSR-349) support customization property.
+     *
+     * If set to {@code true} and Bean Validation support has not been explicitly disabled (see
+     * {@link #BV_FEATURE_DISABLE}), the validation error information will be sent in the entity of the
+     * returned {@link javax.ws.rs.core.Response}.
      * <p>
-     * The default value is {@code false} and only status code is sent in the {@code Response}.
+     * The default value is {@code false}. This means that in case of an error response caused by a Bean Validation
+     * error, only a status code is sent in the server {@code Response} by default.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      */
-    public static final String FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY
+    public static final String BV_SEND_ERROR_IN_RESPONSE
             = "jersey.config.beanValidation.enableOutputValidationErrorEntity.server";
 
     /**
      * If {@code true} then disable auto discovery on server.
      * <p>
      * By default auto discovery is automatically enabled if global property
-     * {@value org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY} is not disabled. If set then the server
+     * {@value org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE} is not disabled. If set then the server
      * property value overrides the global property value.
      * <p>
      * The default value is {@code false}.
@@ -290,17 +304,17 @@ public final class ServerProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
-     * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY
-     * @see #FEATURE_DISABLE_BEAN_VALIDATION
-     * @see #FEATURE_DISABLE_WADL
+     * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
+     * @see #BV_FEATURE_DISABLE
+     * @see #WADL_FEATURE_DISABLE
      */
-    public static final String FEATURE_DISABLE_AUTO_DISCOVERY = CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY + ".server";
+    public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE + ".server";
 
     /**
      * If {@code true} then disable registration of Json Processing (JSR-353) feature on server.
      * <p>
      * By default Json Processing is automatically enabled if global property
-     * {@value org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING} is not disabled. If set then the server
+     * {@value org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE} is not disabled. If set then the server
      * property value overrides the global property value.
      * <p>
      * The default value is {@code false}.
@@ -309,29 +323,52 @@ public final class ServerProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
-     * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING
+     * @see org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE
      */
-    public static final String FEATURE_DISABLE_JSON_PROCESSING = CommonProperties.FEATURE_DISABLE_JSON_PROCESSING + ".server";
-
+    public static final String JSON_PROCESSING_FEATURE_DISABLE = CommonProperties.JSON_PROCESSING_FEATURE_DISABLE + ".server";
 
     /**
-     * If {@code true} then validation of sub resource locator model is disabled.
-     * <p/>
-     * This options is used for performance purpose and can cause problems during runtime.
-     * <p/>
-     * The validation is run on the model which is created either from returned class or instance or on directly
-     * returned {@link org.glassfish.jersey.server.model.Resource resource}. Disabling a validation (by {@code false})
-     * could cause invalid behaviour and errors during the processing of sub resource locator model in the case the model
-     * contains problems which cannot be handled by disabled validation.
-     * <p/>
-     * Default value is {@code false}.
+     * If {@code true} then the extensive validation of application resource model is disabled.
+     *
+     * This impacts both the validation of root resources during deployment as well as validation of any sub resources
+     * returned from sub-resource locators.
+     * <p>
+     * This option is typically used for performance purpose. Note however that in case the application resource models are
+     * not valid, setting the property to {@code true} can cause invalid behaviour and hard to diagnose issues at runtime.
+     * </p>
+     * <p>
+     * By default the resource validation is run on models which are created either from the supplied resource class or instance
+     * as well as on any  directly provided {@link org.glassfish.jersey.server.model.Resource resource} models.
+     * </p>
+     * <p>
+     * The default value is {@code false}.
+     * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
+     * @see #RESOURCE_VALIDATION_IGNORE_ERRORS
      */
-    public static final String RESOURCE_LOCATOR_VALIDATION_DISABLE = "jersey.config.server.resource.locator.validation.disable";
+    public static final String RESOURCE_VALIDATION_DISABLE = "jersey.config.server.resource.validation.disable";
 
+    /**
+     * If {@code true} then validation of application resource models does not fail even in case of a fatal
+     * validation errors. All resource model validation issues are still output to the log, unless the resource
+     * model validation is completely disabled (see {@link #RESOURCE_VALIDATION_DISABLE}).
+     *
+     * This impacts both the validation of root resources during deployment as well as validation of any sub resources
+     * returned from sub-resource locators. The option is typically used during development and testing.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @see #RESOURCE_VALIDATION_DISABLE
+     */
+    public static final String RESOURCE_VALIDATION_IGNORE_ERRORS =
+            "jersey.config.server.resource.validation.ignoreErrors";
 
     private ServerProperties() {
         // prevents instantiation

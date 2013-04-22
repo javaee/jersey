@@ -124,10 +124,10 @@ public class JsonProcessingAutoDiscoverableClientTest {
         config.register(Filter.class);
 
         if (globalDisable != null) {
-            config.property(CommonProperties.FEATURE_DISABLE_JSON_PROCESSING, globalDisable);
+            config.property(CommonProperties.JSON_PROCESSING_FEATURE_DISABLE, globalDisable);
         }
         if (clientDisable != null) {
-            config.property(ClientProperties.FEATURE_DISABLE_JSON_PROCESSING, clientDisable);
+            config.property(ClientProperties.JSON_PROCESSING_FEATURE_DISABLE, clientDisable);
         }
 
         final Client client = ClientBuilder.newClient(config);

@@ -91,7 +91,7 @@ public class ContactCardTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
 
         final MyApplication application = new MyApplication();
-        application.property(ServerProperties.FEATURE_OUTPUT_VALIDATION_ERROR_ENTITY, true);
+        application.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
         return application;
     }
 

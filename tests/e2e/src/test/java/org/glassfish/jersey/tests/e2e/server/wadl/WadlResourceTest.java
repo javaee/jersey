@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -244,7 +243,7 @@ public class WadlResourceTest {
         @Test
         public void testDisableWadl() throws ExecutionException, InterruptedException {
             ResourceConfig rc = new ResourceConfig(WidgetsResource.class, ExtraResource.class);
-            rc.property(ServerProperties.FEATURE_DISABLE_WADL, true);
+            rc.property(ServerProperties.WADL_FEATURE_DISABLE, true);
 
             ApplicationHandler applicationHandler = new ApplicationHandler(rc);
 
@@ -258,7 +257,7 @@ public class WadlResourceTest {
         @Test
         public void testEnableWadl() throws ExecutionException, InterruptedException {
             ResourceConfig rc = new ResourceConfig(WidgetsResource.class, ExtraResource.class);
-            rc.property(ServerProperties.FEATURE_DISABLE_WADL, false);
+            rc.property(ServerProperties.WADL_FEATURE_DISABLE, false);
 
             ApplicationHandler applicationHandler = new ApplicationHandler(rc);
 
@@ -857,7 +856,7 @@ public class WadlResourceTest {
         @Test
         public void testCustomWadlResourcesBaseUri() throws Exception {
             ResourceConfig rc = new ResourceConfig(WidgetsResource.class, ExtraResource.class);
-            rc.property(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG, MyWadlGeneratorConfig.class.getName());
+            rc.property(ServerProperties.WADL_GENERATOR_CONFIG, MyWadlGeneratorConfig.class.getName());
 
             ApplicationHandler applicationHandler = new ApplicationHandler(rc);
 
@@ -928,7 +927,7 @@ public class WadlResourceTest {
         @Test
         public void testEmptyProduces() throws Exception {
             ResourceConfig rc = new ResourceConfig(EmptyProducesTestResource.class);
-            rc.property(ServerProperties.FEATURE_DISABLE_WADL, false);
+            rc.property(ServerProperties.WADL_FEATURE_DISABLE, false);
 
             ApplicationHandler applicationHandler = new ApplicationHandler(rc);
 

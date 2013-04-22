@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.model;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 import javax.ws.rs.BeanParam;
@@ -69,7 +70,13 @@ import org.glassfish.jersey.Severity;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerBinder;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 
 import org.glassfish.hk2.api.PerLookup;
@@ -1091,5 +1098,74 @@ public class ValidatorTest {
 
         assertEquals(1, issues.size());
         assertEquals(Severity.HINT, issues.get(0).getSeverity());
+    }
+
+    /**
+     * Test of disabled validation failing on errors.
+     */
+    @Path("test-disable-validation-fail-on-error")
+    public static class TestDisableValidationFailOnErrorResource {
+        @GET
+        public String get() {
+            return "PASSED";
+        }
+    }
+
+    @Test
+    public void testDisableFailOnErrors() throws ExecutionException, InterruptedException {
+        final ResourceConfig rc = new ResourceConfig(
+                AmbiguousLocatorResource1.class,
+                AmbiguousLocatorResource2.class,
+                AmbiguousParameterResource.class,
+                AmbiguousResource1.class,
+                AmbiguousResource2.class,
+                ConcreteGenericArrayResource.class,
+                ConcreteParameterizedTypeResource.class,
+                EmptyResource.class,
+                GenericArrayResource.class,
+                MethodAndLocatorResource.class,
+                MethodAndLocatorResource2.class,
+                MyBeanParam.class,
+                ParameterizedTypeResource.class,
+                PercentEncodedCaseSensitiveTest.class,
+                PercentEncodedTest.class,
+                ResourceAsProvider.class,
+                ResourceMethodWithVoidReturnType.class,
+                ResourceRoot.class,
+                ResourceRootNotUnique.class,
+                ResourceSubPathRoot.class,
+                ResourceWithMultipleScopes.class,
+                TestAmbiguousParams.class,
+                TestAsyncGetRMReturningVoid.class,
+                TestEmptyPathSegment.class,
+                TestEntityParamOnSRL.class,
+                TestGetRMConsumingEntity.class,
+                TestGetRMConsumingFormParam.class,
+                TestGetRMReturningVoid.class,
+                TestGetSRMConsumingEntity.class,
+                TestGetSRMConsumingFormParam.class,
+                TestGetSRMReturningVoid.class,
+                TestMoreThanOneEntity.class,
+                TestMultipleHttpMethodDesignatorsRM.class,
+                TestMultipleHttpMethodDesignatorsSRM.class,
+                TestNonConflictingHttpMethodDelete.class,
+                TestNonPublicRM.class,
+                TestRelaxedProducesConsumesParserRules.class,
+                TestRootResourceNonAmbigCtors.class,
+                TestSRLReturningVoid.class,
+                TwoLocatorsResource.class,
+                TypeVariableResource.class,
+                UniqueResource.class,
+
+                TestDisableValidationFailOnErrorResource.class // we should still be able to invoke a GET on this one.
+                );
+        rc.property(ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS, true);
+        ApplicationHandler ah = new ApplicationHandler(rc);
+
+        final ContainerRequest request = RequestContextBuilder.from("/test-disable-validation-fail-on-error", "GET").build();
+        ContainerResponse response = ah.apply(request).get();
+
+        assertEquals(200, response.getStatus());
+        assertEquals("PASSED", response.getEntity());
     }
 }

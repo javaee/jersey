@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.internal;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
@@ -117,36 +120,72 @@ public class Errors {
         getInstance().issues.add(new ErrorMessage(source, message, Severity.HINT));
     }
 
-    private static List<ErrorMessage> processErrors(final boolean throwException) {
-        final List<ErrorMessage> messages = new ArrayList<ErrorMessage>(errors.get().issues);
+    /**
+     * Log errors and throw an exception if there are any fatal issues detected and
+     * the {@code throwException} flag has been set to {@code true}.
+     *
+     * @param throwException if set to {@code true}, any fatal issues will cause a {@link ErrorMessagesException}
+     *                       to be thrown.
+     */
+    private static void processErrors(final boolean throwException) {
+        final List<ErrorMessage> errors = new ArrayList<ErrorMessage>(Errors.errors.get().issues);
+        boolean isFatal = logErrors(errors);
+        if (throwException && isFatal) {
+            throw new ErrorMessagesException(errors);
+        }
+    }
+
+    /**
+     * Log errors and return a status flag indicating whether a fatal issue has been found
+     * in the error collection.
+     * <p>
+     * The {@code afterMark} flag indicates whether only those issues should be logged that were
+     * added after a {@link #mark() mark has been set}.
+     * </p>
+     *
+     * @param afterMark if {@code true}, only issues added after a mark has been set are returned,
+     *                  if {@code false} all issues are returned.
+     * @return {@code true} if there are any fatal issues present in the collection, {@code false}
+     *         otherwise.
+     */
+    public static boolean logErrors(final boolean afterMark) {
+        return logErrors(getInstance()._getErrorMessages(afterMark));
+    }
+
+    /**
+     * Log supplied errors and return a status flag indicating whether a fatal issue has been found
+     * in the error collection.
+     *
+     * @param errors a collection of errors to be logged.
+     * @return {@code true} if there are any fatal issues present in the collection, {@code false}
+     *         otherwise.
+     */
+    private static boolean logErrors(final Collection<ErrorMessage> errors) {
         boolean isFatal = false;
 
-        if (!messages.isEmpty()) {
-            StringBuilder errors = new StringBuilder("\n");
+        if (!errors.isEmpty()) {
+            StringBuilder fatals = new StringBuilder("\n");
             StringBuilder warnings = new StringBuilder();
             StringBuilder hints = new StringBuilder();
 
-            for (final ErrorMessage issue : messages) {
-                switch (issue.getSeverity()) {
+            for (final ErrorMessage error : errors) {
+                switch (error.getSeverity()) {
                     case FATAL:
                         isFatal = true;
-                        errors.append(LocalizationMessages.ERROR_MSG(issue.getMessage())).append('\n');
+                        fatals.append(LocalizationMessages.ERROR_MSG(error.getMessage())).append('\n');
                         break;
                     case WARNING:
-                        warnings.append(LocalizationMessages.WARNING_MSG(issue.getMessage())).append('\n');
+                        warnings.append(LocalizationMessages.WARNING_MSG(error.getMessage())).append('\n');
                         break;
                     case HINT:
-                        warnings.append(LocalizationMessages.HINT_MSG(issue.getMessage())).append('\n');
+                        warnings.append(LocalizationMessages.HINT_MSG(error.getMessage())).append('\n');
                         break;
                 }
             }
 
             if (isFatal) {
-                LOGGER.severe(LocalizationMessages.ERRORS_AND_WARNINGS_DETECTED(errors.append(warnings)
+                LOGGER.severe(LocalizationMessages.ERRORS_AND_WARNINGS_DETECTED(fatals.append(warnings)
                         .append(hints).toString()));
-                if (throwException) {
-                    throw new ErrorMessagesException(messages);
-                }
             } else {
                 if (warnings.length() > 0) {
                     LOGGER.warning(LocalizationMessages.WARNINGS_DETECTED(warnings.toString()));
@@ -158,8 +197,9 @@ public class Errors {
             }
         }
 
-        return messages;
+        return isFatal;
     }
+
 
     /**
      * Check whether a fatal error is present in the list of all messages.
@@ -310,9 +350,10 @@ public class Errors {
 
     /**
      * Get the list of error messages.
-     * <p/>
+     * <p>
      * The {@code afterMark} flag indicates whether only those issues should be returned that were
      * added after a {@link #mark() mark has been set}.
+     * </p>
      *
      * @param afterMark if {@code true}, only issues added after a mark has been set are returned,
      *                  if {@code false} all issues are returned.
@@ -337,9 +378,8 @@ public class Errors {
     }
 
     /**
-     * Removes all issues that have been added since the last marked position.
-     * <p/>
-     * If no mark has been set in the errors list, the method call is ignored.
+     * Removes all issues that have been added since the last marked position as well as
+     * removes the last mark.
      */
     public static void reset() {
         getInstance()._reset();
@@ -350,21 +390,23 @@ public class Errors {
     private Errors() {
     }
 
-    private int mark = -1;
+    private Deque<Integer> mark = new ArrayDeque<Integer>(4);
     private int stack = 0;
 
     private void _mark() {
-        mark = issues.size();
+        mark.addLast(issues.size());
     }
 
     private void _unmark() {
-        mark = -1;
+        mark.pollLast();
     }
 
     private void _reset() {
-        if (mark >= 0 && mark < issues.size()) {
-            issues.subList(mark, issues.size()).clear();
-            _unmark();
+        final Integer _pos = mark.pollLast(); // also performs "unmark" functionality
+        final int markedPos = (_pos == null) ? -1 : _pos;
+
+        if (markedPos >= 0 && markedPos < issues.size()) {
+            issues.subList(markedPos, issues.size()).clear();
         }
     }
 
@@ -387,11 +429,16 @@ public class Errors {
     }
 
     private List<ErrorMessage> _getErrorMessages(final boolean afterMark) {
-        if (afterMark && mark >= 0 && mark < issues.size()) {
-            return Collections.unmodifiableList(new ArrayList<ErrorMessage>(issues.subList(mark, issues.size())));
-        } else {
-            return Collections.unmodifiableList(new ArrayList<ErrorMessage>(issues));
+        if (afterMark) {
+            final Integer _pos = mark.peekLast();
+            final int markedPos = (_pos == null) ? -1 : _pos;
+
+            if (markedPos >= 0 && markedPos < issues.size()) {
+                return Collections.unmodifiableList(new ArrayList<ErrorMessage>(issues.subList(markedPos, issues.size())));
+            } // else return all errors
         }
+
+        return Collections.unmodifiableList(new ArrayList<ErrorMessage>(issues));
     }
 
     /**
@@ -433,7 +480,7 @@ public class Errors {
         /**
          * Get {@link Severity}.
          *
-         * @return severity of current {@link ErrorMessage}.
+         * @return severity of current {@code ErrorMessage}.
          */
         public Severity getSeverity() {
             return severity;

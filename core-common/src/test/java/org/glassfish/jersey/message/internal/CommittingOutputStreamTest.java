@@ -239,7 +239,7 @@ public class CommittingOutputStreamTest {
     public void testPropertiesWithMessageContext() throws IOException {
         final int size = 20;
         Map<String, Object> properties = Maps.newHashMap();
-        properties.put(CommonProperties.CONTENT_LENGTH_BUFFER, size);
+        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
         final RuntimeType runtime = RuntimeType.CLIENT;
 
         checkBufferSize(size, properties, runtime);
@@ -249,7 +249,7 @@ public class CommittingOutputStreamTest {
     public void testPropertiesWithMessageContextVeryBigBuffer() throws IOException {
         final int size = 200000;
         Map<String, Object> properties = Maps.newHashMap();
-        properties.put(CommonProperties.CONTENT_LENGTH_BUFFER, size);
+        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
         final RuntimeType runtime = RuntimeType.CLIENT;
 
         checkBufferSize(size, properties, runtime);
@@ -259,8 +259,8 @@ public class CommittingOutputStreamTest {
     public void testPropertiesWithMessageContextMissingServerSpecific() throws IOException {
         final int size = 22;
         Map<String, Object> properties = Maps.newHashMap();
-        properties.put(CommonProperties.CONTENT_LENGTH_BUFFER, size);
-        properties.put(CommonProperties.CONTENT_LENGTH_BUFFER + ".client", size * 2);
+        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
+        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".client", size * 2);
         checkBufferSize(size, properties, RuntimeType.SERVER);
     }
 
@@ -268,7 +268,7 @@ public class CommittingOutputStreamTest {
     public void testPropertiesWithMessageContextMissingServerAtAll() throws IOException {
         final int size = 22;
         Map<String, Object> properties = Maps.newHashMap();
-        properties.put(CommonProperties.CONTENT_LENGTH_BUFFER + ".client", size);
+        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".client", size);
         checkBufferSize(CommittingOutputStream.DEFAULT_BUFFER_SIZE, properties, RuntimeType.SERVER);
         checkBufferSize(size, properties, RuntimeType.CLIENT);
     }
@@ -277,8 +277,8 @@ public class CommittingOutputStreamTest {
     public void testPropertiesWithMessageContextClientOverrides() throws IOException {
         final int size = 22;
         Map<String, Object> properties = Maps.newHashMap();
-        properties.put(CommonProperties.CONTENT_LENGTH_BUFFER, size);
-        properties.put(CommonProperties.CONTENT_LENGTH_BUFFER + ".client", size * 2);
+        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
+        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".client", size * 2);
 
         checkBufferSize(size * 2, properties, RuntimeType.CLIENT);
         checkBufferSize(size, properties, RuntimeType.SERVER);

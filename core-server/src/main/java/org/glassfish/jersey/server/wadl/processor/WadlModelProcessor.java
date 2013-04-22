@@ -98,7 +98,7 @@ public class WadlModelProcessor implements ModelProcessor {
 
     @Override
     public ResourceModel processResourceModel(final ResourceModel resourceModel, final Configuration configuration) {
-        final boolean disabled = PropertiesHelper.isProperty(configuration.getProperty(ServerProperties.FEATURE_DISABLE_WADL));
+        final boolean disabled = PropertiesHelper.isProperty(configuration.getProperty(ServerProperties.WADL_FEATURE_DISABLE));
         if (disabled) {
             return resourceModel;
         }
@@ -159,7 +159,7 @@ public class WadlModelProcessor implements ModelProcessor {
 
     @Override
     public ResourceModel processSubResource(ResourceModel resourceModel, Configuration configuration) {
-        final boolean disabled = PropertiesHelper.isProperty(configuration.getProperty(ServerProperties.FEATURE_DISABLE_WADL));
+        final boolean disabled = PropertiesHelper.isProperty(configuration.getProperty(ServerProperties.WADL_FEATURE_DISABLE));
         if (disabled) {
             return resourceModel;
         }

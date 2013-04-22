@@ -397,7 +397,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
     /**
      * Enable a buffering of serialized entity. The buffering will be configured from runtime configuration
      * associated with this request. The property determining the size of the buffer
-     * is {@link org.glassfish.jersey.CommonProperties#CONTENT_LENGTH_BUFFER}.
+     * is {@link org.glassfish.jersey.CommonProperties#OUTBOUND_CONTENT_LENGTH_BUFFER}.
      * <p/>
      * The buffering functionality is by default disabled and could be enabled by calling this method. In this case
      * this method must be called before first bytes are written to the {@link #getEntityStream() entity stream}.

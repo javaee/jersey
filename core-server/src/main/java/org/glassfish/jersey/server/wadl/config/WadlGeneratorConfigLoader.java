@@ -61,7 +61,7 @@ public class WadlGeneratorConfigLoader {
 
     /**
      * Load the {@link WadlGeneratorConfig} from the provided {@link org.glassfish.jersey.server.ResourceConfig} using the
-     * property {@link org.glassfish.jersey.server.ServerProperties#PROPERTY_WADL_GENERATOR_CONFIG}.
+     * property {@link org.glassfish.jersey.server.ServerProperties#WADL_GENERATOR_CONFIG}.
      *
      * <p>
      * The type of this property must be a subclass or an instance of a subclass of
@@ -75,7 +75,7 @@ public class WadlGeneratorConfigLoader {
      */
     public static WadlGeneratorConfig loadWadlGeneratorsFromConfig(Map<String, Object> properties) {
         final Object wadlGeneratorConfigProperty = properties.get(
-                ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG);
+                ServerProperties.WADL_GENERATOR_CONFIG);
         if (wadlGeneratorConfigProperty == null) {
             return new WadlGeneratorConfig() {
                 @Override
@@ -100,14 +100,14 @@ public class WadlGeneratorConfigLoader {
                             asSubclass(WadlGeneratorConfig.class);
                 } else {
                     throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER_PROPERTY(
-                            ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
+                            ServerProperties.WADL_GENERATOR_CONFIG,
                             wadlGeneratorConfigProperty.getClass().getName()));
                 }
                 return configClazz.newInstance();
 
             } catch (Exception e) {
                 throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER(
-                        ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG), e);
+                        ServerProperties.WADL_GENERATOR_CONFIG), e);
             }
         }
     }

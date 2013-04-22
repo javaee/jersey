@@ -59,7 +59,7 @@ public class JsonProcessingFeature implements Feature {
     @Override
     public boolean configure(final FeatureContext context) {
         if (PropertiesHelper.getValue(context.getConfiguration().getProperties(), context.getConfiguration().getRuntimeType(),
-                CommonProperties.FEATURE_DISABLE_JSON_PROCESSING, Boolean.FALSE, Boolean.class)) {
+                CommonProperties.JSON_PROCESSING_FEATURE_DISABLE, Boolean.FALSE, Boolean.class)) {
             return false;
         }
 

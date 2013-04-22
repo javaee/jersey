@@ -170,13 +170,13 @@ public class DetermineContentLengthTest extends JerseyTest {
     @Override
     protected Application configure() {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, DoubleInterceptor.class);
-        resourceConfig.property(CommonProperties.CONTENT_LENGTH_BUFFER, BUFFER_SIZE);
+        resourceConfig.property(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, BUFFER_SIZE);
         return resourceConfig;
     }
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.property(CommonProperties.CONTENT_LENGTH_BUFFER, BUFFER_SIZE);
+        clientConfig.property(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, BUFFER_SIZE);
         clientConfig.register(DoubleInterceptor.class);
     }
 

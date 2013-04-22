@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.HEAD;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.RuntimeType;
@@ -313,76 +314,110 @@ public final class ApplicationHandler {
             ((ResourceConfig) application).lock();
         }
 
-        // AutoDiscoverable.
-        if (!PropertiesHelper.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
-                CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY, Boolean.FALSE, Boolean.class)) {
-            runtimeConfig.configureAutoDiscoverableProviders(locator);
-        }
+        final boolean ignoreValidationErrors = PropertiesHelper.getValue(runtimeConfig.getProperties(),
+                ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS,
+                Boolean.FALSE,
+                Boolean.class);
+        final boolean disableValidation = PropertiesHelper.getValue(runtimeConfig.getProperties(),
+                ServerProperties.RESOURCE_VALIDATION_DISABLE,
+                Boolean.FALSE,
+                Boolean.class);
 
-        // Configure binders and features.
-        runtimeConfig.configureMetaProviders(locator);
+        final ResourceBag resourceBag;
+        final ProcessingProviders processingProviders;
+        final List<ComponentProvider> componentProviders;
+        final ComponentBag componentBag;
+        ResourceModel resourceModel;
 
-        // Introspecting classes & instances
-        final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
-        for (Class<?> c : runtimeConfig.getClasses()) {
-            try {
-                Resource resource = Resource.from(c);
-                if (resource != null) {
-                    resourceBagBuilder.registerResource(c, resource);
+        Errors.mark(); // mark begin of validation phase
+        try {
+            // AutoDiscoverable.
+            if (!PropertiesHelper.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
+                    CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
+                runtimeConfig.configureAutoDiscoverableProviders(locator);
+            }
+
+            // Configure binders and features.
+            runtimeConfig.configureMetaProviders(locator);
+
+            final ResourceBag.Builder resourceBagBuilder = new ResourceBag.Builder();
+
+            // Adding programmatic resource models
+            for (Resource programmaticResource : runtimeConfig.getResources()) {
+                resourceBagBuilder.registerProgrammaticResource(programmaticResource);
+            }
+
+            // Introspecting classes & instances
+            for (Class<?> c : runtimeConfig.getClasses()) {
+                try {
+                    Resource resource = Resource.from(c, disableValidation);
+                    if (resource != null) {
+                        resourceBagBuilder.registerResource(c, resource);
+                    }
+                } catch (IllegalArgumentException ex) {
+                    LOGGER.warning(ex.getMessage());
                 }
-            } catch (IllegalArgumentException ex) {
-                LOGGER.warning(ex.getMessage());
+            }
+
+            for (Object o : runtimeConfig.getSingletons()) {
+                try {
+                    Resource resource = Resource.from(o.getClass(), disableValidation);
+                    if (resource != null) {
+                        resourceBagBuilder.registerResource(o, resource);
+                    }
+                } catch (IllegalArgumentException ex) {
+                    LOGGER.warning(ex.getMessage());
+                }
+            }
+
+            resourceBag = resourceBagBuilder.build();
+
+            runtimeConfig.lock();
+
+            // Registering Injection Bindings
+            componentProviders = new LinkedList<ComponentProvider>();
+
+            // Registering Injection Bindings
+            for (RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
+                final ComponentProvider provider = rankedProvider.getProvider();
+                provider.initialize(locator);
+                componentProviders.add(provider);
+            }
+
+            componentBag = runtimeConfig.getComponentBag();
+            bindProvidersAndResources(componentProviders, componentBag, resourceBag.classes, resourceBag.instances);
+            for (ComponentProvider componentProvider : componentProviders) {
+                componentProvider.done();
+            }
+
+            processingProviders = getProcessingProviders(componentBag);
+
+            // initialize processing provider reference
+            final GenericType<Ref<ProcessingProviders>> refGenericType = new GenericType<Ref<ProcessingProviders>>() {
+            };
+            final Ref<ProcessingProviders> refProcessingProvider = locator.getService(refGenericType.getType());
+            refProcessingProvider.set(processingProviders);
+
+            resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
+            resourceModel = processResourceModel(resourceModel);
+
+            if (!disableValidation) {
+                final ComponentModelValidator validator = new ComponentModelValidator(locator);
+                validator.validate(resourceModel);
+            }
+
+            if (Errors.fatalIssuesFound() && !ignoreValidationErrors) {
+                throw new ModelValidationException(LocalizationMessages.RESOURCE_MODEL_VALIDATION_FAILED_AT_INIT(),
+                        ModelErrors.getErrorsAsResourceModelIssues(true));
+            }
+        } finally {
+            if (ignoreValidationErrors) {
+                Errors.logErrors(true);
+                Errors.reset(); // reset errors to the state before validation phase
+            } else {
+                Errors.unmark();
             }
         }
-
-        for (Object o : runtimeConfig.getSingletons()) {
-            try {
-                Resource resource = Resource.from(o.getClass());
-                if (resource != null) {
-                    resourceBagBuilder.registerResource(o, resource);
-                }
-            } catch (IllegalArgumentException ex) {
-                LOGGER.warning(ex.getMessage());
-            }
-        }
-
-        // Adding programmatic resource models
-        for (Resource programmaticResource : runtimeConfig.getResources()) {
-            resourceBagBuilder.registerProgrammaticResource(programmaticResource);
-        }
-
-        final ResourceBag resourceBag = resourceBagBuilder.build();
-
-        runtimeConfig.lock();
-
-        // Registering Injection Bindings
-        final List<ComponentProvider> componentProviders = new LinkedList<ComponentProvider>();
-
-        for (RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
-            final ComponentProvider provider = rankedProvider.getProvider();
-            provider.initialize(locator);
-            componentProviders.add(provider);
-        }
-
-        final ComponentBag componentBag = runtimeConfig.getComponentBag();
-        bindProvidersAndResources(componentProviders, componentBag, resourceBag.classes, resourceBag.instances);
-        for (ComponentProvider componentProvider : componentProviders) {
-            componentProvider.done();
-        }
-
-        final ProcessingProviders processingProviders = getProcessingProviders(componentBag);
-
-        // initialize processing provider reference
-        final GenericType<Ref<ProcessingProviders>> refGenericType = new GenericType<Ref<ProcessingProviders>>() {
-        };
-        final Ref<ProcessingProviders> refProcessingProvider = locator.getService(refGenericType.getType());
-        refProcessingProvider.set(processingProviders);
-
-        ResourceModel resourceModel = new ResourceModel.Builder(resourceBag.getRootResources(), false).build();
-
-        resourceModel = processResourceModel(resourceModel);
-        // validate the models
-        validate(resourceModel);
 
         bindEnhancingResourceClasses(resourceModel, resourceBag, componentProviders);
 
@@ -588,8 +623,9 @@ public final class ApplicationHandler {
         return resourceModel;
     }
 
-    private void bindEnhancingResourceClasses(ResourceModel resourceModel, ResourceBag resourceBag,
-                                              Collection<ComponentProvider> componentProviders) {
+    private void bindEnhancingResourceClasses(
+            ResourceModel resourceModel, ResourceBag resourceBag, Collection<ComponentProvider> componentProviders) {
+
         Set<Class<?>> newClasses = Sets.newHashSet();
         Set<Object> newInstances = Sets.newHashSet();
         for (Resource res : resourceModel.getRootResources()) {
@@ -789,14 +825,6 @@ public final class ApplicationHandler {
             binder.bind(dc);
         }
         dc.commit();
-    }
-
-    private void validate(ResourceModel resourceModel) {
-        final ComponentModelValidator validator = new ComponentModelValidator(locator);
-        validator.validate(resourceModel);
-        if (Errors.fatalIssuesFound()) {
-            throw new ModelValidationException(ModelErrors.getErrorsAsResourceModelIssues());
-        }
     }
 
     /**

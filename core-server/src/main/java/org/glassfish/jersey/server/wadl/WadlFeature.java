@@ -66,7 +66,7 @@ public class WadlFeature implements Feature {
     @Override
     public boolean configure(FeatureContext context) {
         final boolean disabled = PropertiesHelper.isProperty(context.getConfiguration().getProperty(ServerProperties
-                .FEATURE_DISABLE_WADL));
+                .WADL_FEATURE_DISABLE));
         if (disabled) {
             return false;
         }

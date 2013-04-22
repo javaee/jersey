@@ -148,10 +148,10 @@ public class AutoDiscoverableClientTest {
         config.property(PROPERTY, true);
 
         if (globalDisable != null) {
-            config.property(CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY, globalDisable);
+            config.property(CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, globalDisable);
         }
         if (clientDisable != null) {
-            config.property(ClientProperties.FEATURE_DISABLE_AUTO_DISCOVERY, clientDisable);
+            config.property(ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE, clientDisable);
         }
 
         final Client client = ClientBuilder.newClient(config);

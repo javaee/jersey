@@ -66,7 +66,6 @@ import org.glassfish.jersey.server.ServerProperties;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -192,7 +191,7 @@ public class ExtendedWadlWebappOsgiTest {
 
     ResourceConfig createResourceConfig() {
         final ResourceConfig resourceConfig = new ResourceConfig(new MyApplication().getClasses());
-        resourceConfig.property(ServerProperties.PROPERTY_WADL_GENERATOR_CONFIG,
+        resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG,
                 SampleWadlGeneratorConfig.class.getName());
         return resourceConfig;
     }

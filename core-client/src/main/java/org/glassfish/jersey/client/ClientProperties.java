@@ -164,7 +164,7 @@ public final class ClientProperties {
      * If {@code true} then disable auto-discovery on the client.
      * <p>
      * By default auto-discovery on client is automatically enabled if global property
-     * {@value org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY} is not disabled. If set then the client
+     * {@value org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE} is not disabled. If set then the client
      * property value overrides the global property value.
      * <p>
      * The default value is {@code false}.
@@ -173,15 +173,15 @@ public final class ClientProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
-     * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_AUTO_DISCOVERY
+     * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
      */
-    public static final String FEATURE_DISABLE_AUTO_DISCOVERY = CommonProperties.FEATURE_DISABLE_AUTO_DISCOVERY + ".client";
+    public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE + ".client";
 
     /**
      * If {@code true} then disable registration of Json Processing (JSR-353) feature on client.
      * <p>
      * By default Json Processing on client is automatically enabled if global property
-     * {@value org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING} is not disabled. If set then the client
+     * {@value org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE} is not disabled. If set then the client
      * property value overrides the global property value.
      * <p>
      * The default value is {@code false}.
@@ -190,9 +190,9 @@ public final class ClientProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
-     * @see org.glassfish.jersey.CommonProperties#FEATURE_DISABLE_JSON_PROCESSING
+     * @see org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE
      */
-    public static final String FEATURE_DISABLE_JSON_PROCESSING = CommonProperties.FEATURE_DISABLE_JSON_PROCESSING + ".client";
+    public static final String JSON_PROCESSING_FEATURE_DISABLE = CommonProperties.JSON_PROCESSING_FEATURE_DISABLE + ".client";
 
     private ClientProperties() {
         // prevents instantiation

@@ -373,7 +373,7 @@ public class ContainerResponse implements ContainerResponseContext {
 
     /**
      * Enable a buffering of serialized entity. The buffering will be configured from configuration. The property
-     * determining the size of the buffer is {@link org.glassfish.jersey.CommonProperties#CONTENT_LENGTH_BUFFER}.
+     * determining the size of the buffer is {@link org.glassfish.jersey.CommonProperties#OUTBOUND_CONTENT_LENGTH_BUFFER}.
      * <p/>
      * The buffering functionality is by default disabled and could be enabled by calling this method. In this case
      * this method must be called before first bytes are written to the {@link #getEntityStream() entity stream}.
