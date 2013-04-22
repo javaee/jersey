@@ -927,25 +927,6 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
-     * Gets the most internal wrapped {@link Application application} class. This method is similar to {@link #getApplication()}
-     * except ff this config was created by wrapping multiple resource configs this method returns the original application
-     * and not the wrapped resource config.
-     *
-     * @return Application.
-     */
-    final Application getWrappedApplication() {
-        Application app = this;
-        while (app instanceof  ResourceConfig) {
-            final Application wrappedApplication = ((ResourceConfig) app).getApplication();
-            if (wrappedApplication == app) {
-                break;
-            }
-            app = wrappedApplication;
-        }
-        return app;
-    }
-
-    /**
      * Method used by ApplicationHandler to retrieve application class
      * (this method is overridden by WrappingResourceConfig).
      *

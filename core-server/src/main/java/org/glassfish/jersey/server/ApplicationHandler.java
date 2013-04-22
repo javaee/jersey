@@ -96,6 +96,7 @@ import org.glassfish.jersey.model.internal.RankedComparator.Order;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -525,7 +526,7 @@ public final class ApplicationHandler {
 
         // scan for NameBinding annotations attached to the application class
         Collection<Class<? extends Annotation>> applicationNameBindings =
-                ReflectionHelper.getAnnotationTypes(runtimeConfig.getWrappedApplication().getClass(), NameBinding.class);
+                ReflectionHelper.getAnnotationTypes(ConfigHelper.getWrappedApplication(runtimeConfig).getClass(), NameBinding.class);
 
 
         // find all filters, interceptors and dynamic features

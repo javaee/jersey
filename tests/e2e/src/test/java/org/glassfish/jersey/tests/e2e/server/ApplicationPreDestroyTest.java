@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,52 +37,75 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
+package org.glassfish.jersey.tests.e2e.server;
+
 import java.util.Set;
-import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
-import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 
+import javax.annotation.PreDestroy;
+
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.spi.TestContainerException;
+
+import com.google.common.collect.Sets;
+import org.junit.AfterClass;
+
+import static org.hamcrest.CoreMatchers.is;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
+
 /**
- * JAX-RS application to configure resources.
+ * Assert that {@link Application} pre destroy method is invoked.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
+public class ApplicationPreDestroyTest extends JerseyTest {
 
-    private static final Logger LOGGER = Logger.getLogger(MyApplication.class.getName());
+    static boolean appDestroyInvoked = false;
 
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        classes.add(StutteringEchoResource.class);
-        classes.add(StutteringEcho.class);
-        classes.add(ReversingEchoResource.class);
-        return classes;
+    @Path("/")
+    public static class Resource {
+
+        @GET
+        public String get() {
+            return "Hi!";
+        }
     }
 
-    @PostConstruct
-    public void postConstruct() {
-        LOGGER.info(String.format("%s: POST CONSTRUCT.", this.getClass().getName()));
+    public static class MyApplication extends Application {
+
+        @PreDestroy
+        public void preDestroy() {
+            appDestroyInvoked = true;
+        }
+
+        @Override
+        public Set<Class<?>> getClasses() {
+            return Sets.<Class<?>>newHashSet(Resource.class);
+        }
     }
 
-    @PreDestroy
-    public void preDestroy() {
-        LOGGER.info(String.format("%s: PRE DESTROY.", this.getClass().getName()));
+    public ApplicationPreDestroyTest() throws TestContainerException {
+        super(MyApplication.class);
+    }
+
+    @Test
+    public void testApplicationResource() throws Exception {
+        assertThat(target().request().get(String.class), is("Hi!"));
+        assertFalse(appDestroyInvoked);
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        assertTrue(appDestroyInvoked);
     }
 }
