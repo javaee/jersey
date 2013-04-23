@@ -52,7 +52,7 @@
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0-rc2</version>
     <name>jersey</name>
     <description>
         Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
@@ -160,7 +160,7 @@
         <connection>scm:git:git://java.net/jersey~code</connection>
         <developerConnection>scm:git:ssh://git.java.net/jersey~code</developerConnection>
         <url>http://java.net/projects/jersey/sources/code/show</url>
-        <tag>HEAD</tag>
+        <tag>2.0-rc2</tag>
     </scm>
 
     <organization>
@@ -1111,14 +1111,14 @@
         <grizzly2.version>2.3</grizzly2.version>
         <hk2.version>2.1.88</hk2.version>
         <jackson.version>1.9.11</jackson.version>
-        <javax.annotation.version>1.2-b02</javax.annotation.version>
+        <javax.annotation.version>1.2-b04</javax.annotation.version>
         <javax.annotation.bundle.version>1.1.99</javax.annotation.bundle.version>
         <javax.el.version>2.2.4</javax.el.version>
         <javax.interceptor.version>1.2-b02</javax.interceptor.version>
         <javax.persistence.version>1.0</javax.persistence.version>
         <jaxb.api.version>2.2.7</jaxb.api.version>
         <jaxb.ri.version>2.2.7-b63</jaxb.ri.version>
-        <jaxrs.api.version>2.0-rc3</jaxrs.api.version>
+        <jaxrs.api.version>2.0</jaxrs.api.version>
         <jaxrs.api.last.final.version>1.1</jaxrs.api.last.final.version>
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <jersey1.version>1.17</jersey1.version>
