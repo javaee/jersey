@@ -91,17 +91,19 @@ public class JsonWithPaddingInterceptor implements WriterInterceptor {
     @Override
     public void aroundWriteTo(final WriterInterceptorContext context) throws IOException, WebApplicationException {
         final boolean isJavascript = isJavascript(context.getMediaType());
+        final JSONP annotation = isJavascript ? getJsonpAnnotation(context) : null;
+        final boolean isJsonp = isJavascript && annotation != null;
 
-        if (isJavascript) {
+        if (isJsonp) {
             context.setMediaType(MediaType.APPLICATION_JSON_TYPE);
 
-            context.getOutputStream().write(getCallbackName(context).getBytes());
+            context.getOutputStream().write(getCallbackName(annotation).getBytes());
             context.getOutputStream().write('(');
         }
 
         context.proceed();
 
-        if (isJavascript) {
+        if (isJsonp) {
             context.getOutputStream().write(')');
         }
     }
@@ -127,24 +129,19 @@ public class JsonWithPaddingInterceptor implements WriterInterceptor {
      * JSONP} annotation or is set to the {@value JSONP#DEFAULT_CALLBACK} if the name cannot be obtained from the {@link
      * JSONP} annotation.
      *
-     * @param context context to determine the callback name from.
+     * @param jsonp {@link JSONP} annotation to determine the callback name from.
      * @return a JavaScript callback name.
      */
-    private String getCallbackName(final InterceptorContext context) {
-        String callback = JSONP.DEFAULT_CALLBACK;
+    private String getCallbackName(final JSONP jsonp) {
+        String callback = jsonp.callback();
 
-        JSONP jsonp = getJsonpAnnotation(context);
-        if (jsonp != null) {
-            callback = jsonp.callback();
+        if (!"".equals(jsonp.queryParam())) {
+            final ContainerRequest containerRequest = containerRequestProvider.get();
+            final UriInfo uriInfo = containerRequest.getUriInfo();
+            final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
+            final List<String> queryParameter = queryParameters.get(jsonp.queryParam());
 
-            if (!"".equals(jsonp.queryParam())) {
-                final ContainerRequest containerRequest = containerRequestProvider.get();
-                final UriInfo uriInfo = containerRequest.getUriInfo();
-                final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
-                final List<String> queryParameter = queryParameters.get(jsonp.queryParam());
-
-                callback = (queryParameter != null && !queryParameter.isEmpty()) ? queryParameter.get(0) : callback;
-            }
+            callback = (queryParameter != null && !queryParameter.isEmpty()) ? queryParameter.get(0) : callback;
         }
 
         return callback;
