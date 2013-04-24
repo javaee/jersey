@@ -82,7 +82,6 @@
         <module>json-jettison</module>
         <module>json-moxy</module>
         <module>json-processing-webapp</module>
-        <module>json-with-padding</module>
         <module>managed-beans-webapp</module>
         <module>managed-client</module>
         <module>managed-client-webapp</module>

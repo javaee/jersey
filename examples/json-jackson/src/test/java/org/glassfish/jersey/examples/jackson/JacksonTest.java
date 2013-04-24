@@ -80,13 +80,6 @@ public class JacksonTest extends JerseyTest {
     }
 
     @Test
-    public void testJSONPPresent() {
-        WebTarget target = target();
-        String responseMsg = target.path("nonJaxbResource").request("application/javascript").get(String.class);
-        assertTrue(responseMsg.startsWith("callback("));
-    }
-
-    @Test
     public void testJSONDoesNotReflectJSONPWrapper() {
         WebTarget target = target();
         String responseMsg = target.path("nonJaxbResource").request("application/json").get(String.class);
