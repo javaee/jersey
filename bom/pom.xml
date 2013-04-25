@@ -284,11 +284,20 @@
         </pluginManagement>
     </build>
 
-    <!-- placeholder required for site:stage -->
-    <distributionManagement>
-        <site>
-            <id>localhost</id>
-            <url>http://localhost</url>
-        </site>
-    </distributionManagement>
+    <profiles>
+        <profile>
+            <id>maven-project-info-reports-plugin</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+
+            <!-- placeholder required for site:stage -->
+            <distributionManagement>
+                <site>
+                    <id>localhost</id>
+                    <url>http://localhost</url>
+                </site>
+            </distributionManagement>
+        </profile>
+    </profiles>
 </project>

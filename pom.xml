@@ -649,6 +649,35 @@
                 </repository>
             </repositories>
         </profile>
+        <profile>
+            <id>maven-project-info-reports-plugin</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-project-info-reports-plugin</artifactId>
+                        <version>2.6</version>
+                        <reportSets>
+                            <reportSet>
+                                <reports>
+                                    <report>dependencies</report>
+                                </reports>
+                            </reportSet>
+                        </reportSets>
+                    </plugin>
+                </plugins>
+            </reporting>
+            <!-- placeholder required for site:stage -->
+            <distributionManagement>
+                <site>
+                    <id>localhost</id>
+                    <url>http://localhost</url>
+                </site>
+            </distributionManagement>
+        </profile>
     </profiles>
 
     <reporting>
@@ -754,18 +783,6 @@
                     </reportSet>
                 </reportSets>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>2.6</version>
-                <reportSets>
-                    <reportSet>
-                        <reports>
-                            <report>dependencies</report>
-                        </reports>
-                    </reportSet>
-                </reportSets>
-            </plugin>
         </plugins>
     </reporting>
 
@@ -789,14 +806,6 @@
     </modules>
 
     <!--distributionManagement /-->
-
-    <!-- placeholder required for site:stage -->
-    <distributionManagement>
-        <site>
-            <id>localhost</id>
-            <url>http://localhost</url>
-        </site>
-    </distributionManagement>
 
     <pluginRepositories>
         <pluginRepository>
