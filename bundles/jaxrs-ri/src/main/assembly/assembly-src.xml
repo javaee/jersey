@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
     Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
@@ -38,48 +37,50 @@
     and therefore, elected the GPL Version 2 license, then the option applies
     only if the new code is made subject to such option by the copyright
     holder.
-
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<assembly>
+    <id>src</id>
 
-    <modelVersion>4.0.0</modelVersion>
+    <formats>
+        <format>zip</format>
+        <format>tar.gz</format>
+        <format>tar.bz2</format>
+    </formats>
 
-    <parent>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>project</artifactId>
-        <version>2.0-SNAPSHOT</version>
-    </parent>
+    <includeBaseDirectory>false</includeBaseDirectory>
 
-    <groupId>org.glassfish.jersey.bundles</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-bundles</name>
+    <componentDescriptors>
+        <componentDescriptor>${project.basedir}/src/main/assembly/common-dependencies.xml</componentDescriptor>
+    </componentDescriptors>
 
-    <description>Jersey bundles providers umbrella project module.</description>
+    <dependencySets>
+        <!-- JAX-RS RI Sources -->
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>jaxrs-ri/src</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0644</fileMode>
+            <unpack>true</unpack>
+            <unpackOptions>
+                <excludes>
+                    <exclude>META-INF/MANIFEST.MF</exclude>
+                </excludes>
+            </unpackOptions>
+            <includes>
+                <include>org.glassfish.jersey.*:*:*:sources:*</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
 
-    <modules>
-        <module>jaxrs-ri</module>
-    </modules>
-
-    <profiles>
-        <profile>
-            <id>attach-src-and-docs</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <modules>
-                <module>apidocs</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>examples-source-zip</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <modules>
-                <module>examples</module>
-            </modules>
-        </profile>
-    </profiles>
-
-</project>
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources</directory>
+            <outputDirectory>jaxrs-ri</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}/dependency/META-INF/services</directory>
+            <outputDirectory>jaxrs-ri/src/META-INF/services</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>

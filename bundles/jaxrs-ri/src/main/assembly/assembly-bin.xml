@@ -1,5 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
-
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
     Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
@@ -37,59 +37,39 @@
     and therefore, elected the GPL Version 2 license, then the option applies
     only if the new code is made subject to such option by the copyright
     holder.
-
 -->
 <assembly>
-    <id>dist</id>
+    <id>binaries</id>
+
     <formats>
         <format>zip</format>
         <format>tar.gz</format>
         <format>tar.bz2</format>
     </formats>
-        <fileSets>
-        <fileSet>
-            <directory>src/main/resources</directory>
-            <outputDirectory></outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>target/assembly/apidocs</directory>
-            <outputDirectory>apidocs</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>target/assembly</directory>
+
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <componentDescriptors>
+        <componentDescriptor>${project.basedir}/src/main/assembly/common-dependencies.xml</componentDescriptor>
+    </componentDescriptors>
+
+    <dependencySets>
+        <!-- JAX-RS RI Binaries-->
+        <dependencySet>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <outputDirectory>jaxrs-ri/lib</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0644</fileMode>
             <includes>
-                <include>*.jar</include>
-            </includes>
-            <outputDirectory>lib</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>target/dependency</directory>
-            <includes>
-                <include>javax.ws.rs*.jar</include>
-            </includes>
-            <outputDirectory>api</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>target/dependency</directory>
-            <includes>
-                <include>*.jar</include>
+                <include>org.glassfish.jersey.*</include>
             </includes>
             <excludes>
-                <exclude>jersey*.jar</exclude>
-                <exclude>javax.ws.rs*.jar</exclude>
+                <exclude>*:sources:*</exclude>
             </excludes>
-            <outputDirectory>ext</outputDirectory>
-        </fileSet>
-    </fileSets>
-    <files>
-        <file>
-        <source>../../LICENSE.txt</source>
-        <destName>Jersey-LICENSE.txt</destName>
-        <outputDirectory></outputDirectory>
-      </file>
-       <file>
-        <source>../../third-party-license-readme.txt</source>
-        <outputDirectory></outputDirectory>
-      </file>
-    </files>
+        </dependencySet>
+    </dependencySets>
+
+    <!-- TODO apidocs? -->
 </assembly>
