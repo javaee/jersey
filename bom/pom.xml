@@ -283,4 +283,12 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <!-- placeholder required for site:stage -->
+    <distributionManagement>
+        <site>
+            <id>localhost</id>
+            <url>http://localhost</url>
+        </site>
+    </distributionManagement>
 </project>
