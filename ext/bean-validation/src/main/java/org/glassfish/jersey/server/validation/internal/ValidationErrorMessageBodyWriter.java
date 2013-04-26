@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,9 +74,15 @@ public class ValidationErrorMessageBodyWriter implements MessageBodyWriter<Objec
     }
 
     private boolean isSupportedType(final Class<?> type, final Type genericType) {
-        return ValidationError.class.isAssignableFrom(type)
-                || (Collection.class.isAssignableFrom(type)
-                    && ValidationError.class.isAssignableFrom((Class) ((ParameterizedType) genericType).getActualTypeArguments()[0]));
+        if (ValidationError.class.isAssignableFrom(type)) {
+            return true;
+        } else if (Collection.class.isAssignableFrom(type)) {
+            if (genericType instanceof ParameterizedType) {
+                return ValidationError.class
+                        .isAssignableFrom((Class) ((ParameterizedType) genericType).getActualTypeArguments()[0]);
+            }
+        }
+        return false;
     }
 
     private boolean isSupportedMediaType(final MediaType mediaType) {

@@ -86,7 +86,7 @@ public class MediaTypeSelectionTest extends AbstractTypeTester {
         }
 
         @GET
-        @Produces("*/*")
+        @Produces("application/*")
         @Path("any")
         public String getAny() {
             return "text";

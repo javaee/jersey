@@ -146,7 +146,6 @@ public interface MessageBodyWorkers {
     /**
      * Get the list of media types supported for a Java type.
      *
-     * @param <T>         the type of object that is to be read.
      * @param type        the class of object that is to be read.
      * @param genericType the type of object to be read. E.g. if the message body is to be
      *                    read as a method parameter, this will be the declared type of the
@@ -158,12 +157,29 @@ public interface MessageBodyWorkers {
      * @return the list of supported media types, the list is ordered as follows: a/b &lt
      *         a/* &lt *\\/*
      */
-    <T> List<MediaType> getMessageBodyReaderMediaTypes(Class<T> type, Type genericType, Annotation[] annotations);
+    List<MediaType> getMessageBodyReaderMediaTypes(Class<?> type, Type genericType, Annotation[] annotations);
 
     /**
      * Get the list of media types supported for a Java type.
      *
-     * @param <T>         the type of object that is to be written.
+     * @param type        the class of object that is to be read.
+     * @return the list of supported media types, the list is ordered as follows: a/b &lt
+     *         a/* &lt *\\/*
+     */
+    List<MediaType> getMessageBodyReaderMediaTypesByType(Class<?> type);
+
+    /**
+     * Get a list of {@code MessageBodyReader}s that are suitable for the given {@code type}. The list is sorted based on the
+     * class hierarchy (most specific readers are first).
+     *
+     * @param type the class of object readers are requested for.
+     * @return the list of supported {@code MessageBodyReader}s for given class.
+     */
+    List<MessageBodyReader> getMessageBodyReadersForType(Class<?> type);
+
+    /**
+     * Get the list of media types supported for a Java type.
+     *
      * @param type        the class of object that is to be written.
      * @param genericType the type of object to be written. E.g. if the message body is to
      *                    be produced from a field, this will be the declared type of the field as
@@ -175,13 +191,30 @@ public interface MessageBodyWorkers {
      * @return the list of supported media types, the list is ordered as follows: a/b &lt
      *         a/* &lt *\\/*
      */
-    <T> List<MediaType> getMessageBodyWriterMediaTypes(Class<T> type, Type genericType, Annotation[] annotations);
+    List<MediaType> getMessageBodyWriterMediaTypes(Class<?> type, Type genericType, Annotation[] annotations);
+
+    /**
+     * Get the list of media types supported for a Java type.
+     *
+     * @param type        the class of object that is to be written.
+     * @return the list of supported media types, the list is ordered as follows: a/b &lt
+     *         a/* &lt *\\/*
+     */
+    List<MediaType> getMessageBodyWriterMediaTypesByType(Class<?> type);
+
+    /**
+     * Get a list of {@code MessageBodyWriter}s that are suitable for the given {@code type}. The list is sorted based on the
+     * class hierarchy (most specific writers are first).
+     *
+     * @param type the class of object writers are requested for.
+     * @return the list of supported {@code MessageBodyWriter}s for given class.
+     */
+    List<MessageBodyWriter> getMessageBodyWritersForType(Class<?> type);
 
     /**
      * Get the most acceptable media type supported for a Java type given a set of
      * acceptable media types.
      *
-     * @param <T>                  the type of object that is to be written.
      * @param type                 the class of object that is to be written.
      * @param genericType          the type of object to be written. E.g. if the message body is to
      *                             be produced from a field, this will be the declared type of the field as
@@ -195,15 +228,15 @@ public interface MessageBodyWorkers {
      *                             first.
      * @return the best media types
      */
-    <T> MediaType getMessageBodyWriterMediaType(Class<T> type, Type genericType, Annotation[] annotations,
-                                                List<MediaType> acceptableMediaTypes);
+    MediaType getMessageBodyWriterMediaType(Class<?> type, Type genericType, Annotation[] annotations,
+                                            List<MediaType> acceptableMediaTypes);
 
     /**
      * Reads a type from the {@link InputStream entityStream} using interceptors. If the
      * parameter {@code intercept} is true then {@link ReaderInterceptor reader
-     * interceptors} are excecuted before calling the {@link MessageBodyReader message
+     * interceptors} are executed before calling the {@link MessageBodyReader message
      * body reader}. The appropriate {@link MessageBodyReader message body reader} is
-     * choosen after the interceptor execution based on parameter passed to this method
+     * chosen after the interceptor execution based on parameter passed to this method
      * and modified by the interceptors.
      *
      * @param rawType            raw Java entity type.
@@ -228,23 +261,23 @@ public interface MessageBodyWorkers {
      *                                 reader} fails.
      * @throws IOException             Thrown when reading from the {@code entityStream} fails.
      */
-    public <T> Object readFrom(Class<T> rawType,
-                               Type type,
-                               Annotation[] annotations,
-                               MediaType mediaType,
-                               MultivaluedMap<String, String> httpHeaders,
-                               PropertiesDelegate propertiesDelegate,
-                               InputStream entityStream,
-                               Iterable<ReaderInterceptor> readerInterceptors,
-                               boolean translateNce)
+    public Object readFrom(Class<?> rawType,
+                           Type type,
+                           Annotation[] annotations,
+                           MediaType mediaType,
+                           MultivaluedMap<String, String> httpHeaders,
+                           PropertiesDelegate propertiesDelegate,
+                           InputStream entityStream,
+                           Iterable<ReaderInterceptor> readerInterceptors,
+                           boolean translateNce)
             throws WebApplicationException, IOException;
 
     /**
      * Writers a type to the {@link OutputStream entityStream} using interceptors. If the
      * parameter {@code intercept} is true then {@link WriterInterceptor writer
-     * interceptors} are excecuted before calling the {@link MessageBodyWriter message
+     * interceptors} are executed before calling the {@link MessageBodyWriter message
      * body writer}. The appropriate {@link MessageBodyWriter message body writer} is
-     * choosen after the interceptor execution based on parameter passed to this method
+     * chosen after the interceptor execution based on parameter passed to this method
      * and modified by the interceptors.
      *
      * @param entity             Entity to be written to the entityStream
@@ -263,10 +296,10 @@ public interface MessageBodyWorkers {
      *                                 reader} fails.
      * @throws IOException             Thrown when reading from the {@code entityStream} fails.
      */
-    public <T> OutputStream writeTo(Object entity, Class<T> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                                    MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate,
-                                    OutputStream entityStream,
-                                    Iterable<WriterInterceptor> writerInterceptors)
+    public OutputStream writeTo(Object entity, Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
+                                MultivaluedMap<String, Object> httpHeaders, PropertiesDelegate propertiesDelegate,
+                                OutputStream entityStream,
+                                Iterable<WriterInterceptor> writerInterceptors)
             throws java.io.IOException, javax.ws.rs.WebApplicationException;
 
 }

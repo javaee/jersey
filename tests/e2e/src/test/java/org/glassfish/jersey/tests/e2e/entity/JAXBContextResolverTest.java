@@ -46,6 +46,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
@@ -61,7 +62,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -178,9 +181,12 @@ public class JAXBContextResolverTest {
 
         @Test
         public void testJAXBContext() throws Exception {
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), MediaType.APPLICATION_XML),
-                    JaxbBean.class).value);
-            assertEquals(2, cr.invoked());
+            final Response response = target().request(MediaType.APPLICATION_XML_TYPE).post(Entity.xml(new JaxbBean("foo")));
+            assertThat(response.getMediaType(), equalTo(MediaType.APPLICATION_XML_TYPE));
+
+            final JaxbBean foo = response.readEntity(JaxbBean.class);
+            assertThat(foo.value, equalTo("foo"));
+            assertThat(cr.invoked(), equalTo(2));
         }
     }
 
@@ -199,10 +205,14 @@ public class JAXBContextResolverTest {
 
         @Test
         public void testUnmarshaller() throws Exception {
-            assertEquals("foo", target().request().post(Entity.entity(new JaxbBean("foo"), "application/xml"), JaxbBean.class).value);
-            assertEquals(0, cr.invoked());
-            assertEquals(1, mr.invoked());
-            assertEquals(1, umr.invoked());
+            final Response response = target().request(MediaType.APPLICATION_XML_TYPE).post(Entity.xml(new JaxbBean("foo")));
+            assertThat(response.getMediaType(), equalTo(MediaType.APPLICATION_XML_TYPE));
+
+            final JaxbBean foo = response.readEntity(JaxbBean.class);
+            assertThat(foo.value, equalTo("foo"));
+            assertThat(cr.invoked(), equalTo(0));
+            assertThat(mr.invoked(), equalTo(1));
+            assertThat(umr.invoked(), equalTo(1));
         }
     }
 

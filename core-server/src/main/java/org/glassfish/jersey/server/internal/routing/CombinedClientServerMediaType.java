@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -164,6 +164,7 @@ class CombinedClientServerMediaType {
      * annotation and therefore was derived from {@link MessageBodyWorkers}.
      */
     static class EffectiveMediaType {
+
         /**
          * True if the MediaType was not defined by annotation and therefore was
          * derived from Message Body Providers.
@@ -208,28 +209,20 @@ class CombinedClientServerMediaType {
          * Returns true if Type of {@link MediaType} was originally  defined as wildcard.
          *
          * @return Returns true if method {@link Consumes} or {@link Produces} was
-         *         annotated with wildcard type (for example '*&#47;*') or it has no
-         *         annotation at all.
+         *         annotated with wildcard type (for example '*&#47;*').
          */
         public boolean isWildcardType() {
-            if (mediaType.isWildcardType()) {
-                return true;
-            }
-            return derived;
+            return mediaType.isWildcardType();
         }
 
         /**
          * Returns True if SubType of {@link MediaType} was originally defined as wildcard.
          *
          * @return Returns true if method {@link Consumes} or {@link Produces} was
-         *         annotated with wildcard subtype (for example 'text&#47;*') or it has no
-         *         annotation at all.
+         *         annotated with wildcard subtype (for example 'text&#47;*').
          */
         public boolean isWildcardSubType() {
-            if (mediaType.isWildcardSubtype()) {
-                return true;
-            }
-            return derived;
+            return mediaType.isWildcardSubtype();
         }
 
         /**
@@ -239,6 +232,17 @@ class CombinedClientServerMediaType {
          */
         public MediaType getMediaType() {
             return mediaType;
+        }
+
+        /**
+         * Return flag value whether the {@code MediaType} was not defined by annotation and therefore was derived from
+         * Message Body Providers.
+         *
+         * @return {@code true} if the {@code MediaType} was not defined by annotation and therefore was derived from
+         * Message Body Providers, {@code false} otherwise.
+         */
+        boolean isDerived() {
+            return derived;
         }
 
         @Override

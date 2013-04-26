@@ -373,7 +373,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     if (invocableType != null &&
                             Void.TYPE != invocableType &&
                             Void.class != invocableType &&
-                            Response.class != invocableType) {
+                            // Do NOT change the entity type for Response or it's subclasses.
+                            (!(invocableType instanceof Class) || !Response.class.isAssignableFrom((Class) invocableType))) {
                         response.setEntityType(invocableType);
                     }
                 }
