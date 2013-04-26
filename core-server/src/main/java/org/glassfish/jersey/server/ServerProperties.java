@@ -311,7 +311,7 @@ public final class ServerProperties {
     public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE + ".server";
 
     /**
-     * If {@code true} then disable registration of Json Processing (JSR-353) feature on server.
+     * If {@code true} then disable configuration of Json Processing (JSR-353) feature on server.
      * <p>
      * By default Json Processing is automatically enabled if global property
      * {@value org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE} is not disabled. If set then the server
@@ -326,6 +326,23 @@ public final class ServerProperties {
      * @see org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE
      */
     public static final String JSON_PROCESSING_FEATURE_DISABLE = CommonProperties.JSON_PROCESSING_FEATURE_DISABLE + ".server";
+
+    /**
+     * If {@code true} then disable configuration of MOXy Json feature on server.
+     * <p>
+     * By default MOXy Json is automatically enabled if global property
+     * {@value org.glassfish.jersey.CommonProperties#MOXY_JSON_FEATURE_DISABLE} is not disabled. If set then the server
+     * property value overrides the global property value.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @see org.glassfish.jersey.CommonProperties#MOXY_JSON_FEATURE_DISABLE
+     */
+    public static final String MOXY_JSON_FEATURE_DISABLE = CommonProperties.MOXY_JSON_FEATURE_DISABLE + ".server";
 
     /**
      * If {@code true} then the extensive validation of application resource model is disabled.

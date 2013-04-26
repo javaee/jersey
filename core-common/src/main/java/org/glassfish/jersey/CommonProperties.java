@@ -62,7 +62,7 @@ public final class CommonProperties {
     public static final String FEATURE_AUTO_DISCOVERY_DISABLE = "jersey.config.disableAutoDiscovery";
 
     /**
-     * If {@code true} then disable registration of Json Processing (JSR-353) feature.
+     * If {@code true} then disable configuration of Json Processing (JSR-353) feature.
      * <p>
      * By default Json Processing is automatically enabled. The value of this property may be overridden by the client/server
      * variant of this property.
@@ -74,6 +74,20 @@ public final class CommonProperties {
      * </p>
      */
     public static final String JSON_PROCESSING_FEATURE_DISABLE = "jersey.config.disableJsonProcessing";
+
+    /**
+     * If {@code true} then disable configuration of MOXy Json feature.
+     * <p>
+     * By default MOXy Json is automatically enabled. The value of this property may be overridden by the client/server
+     * variant of this property.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     */
+    public static final String MOXY_JSON_FEATURE_DISABLE = "jersey.config.disableMoxyJson";
 
     /**
      * An integer value that defines the buffer size used to buffer the outbound message entity in order to

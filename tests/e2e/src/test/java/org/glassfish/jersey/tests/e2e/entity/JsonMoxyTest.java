@@ -158,7 +158,6 @@ public class JsonMoxyTest extends AbstractTypeTester {
     @Override
     protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
-        clientConfig.register(new MoxyJsonFeature());
         clientConfig.register(new MoxyJsonConfigurationContextResolver());
     }
 
@@ -170,10 +169,14 @@ public class JsonMoxyTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanJSONRepresentation() {
-        WebTarget target = target("JAXBElementBeanJSONResource");
+        final WebTarget target = target("JAXBElementBeanJSONResource");
+
+        final GenericType<JAXBElement<String>> genericType = new GenericType<JAXBElement<String>>() {};
+        final GenericEntity<JAXBElement<String>> jaxbElementGenericEntity = new GenericEntity<JAXBElement<String>>(new
+                JAXBElement<String>(new QName("test"), String.class, "CONTENT"), genericType.getType());
 
         Response rib = target.request().post(
-                Entity.entity(new JAXBElement<String>(new QName("test"), String.class, "CONTENT"), "application/json"));
+                Entity.entity(jaxbElementGenericEntity, "application/json"));
 
         // TODO: the following would not be needed if i knew how to workaround JAXBElement<String>.class literal
         byte[] inBytes = requestEntity;

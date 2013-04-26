@@ -51,7 +51,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
-import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -82,7 +81,6 @@ public class App {
     public static ResourceConfig createApp() {
         return new ResourceConfig().
                 packages("org.glassfish.jersey.examples.jsonmoxy").
-                register(new MoxyJsonFeature()).
                 registerInstances(new JsonMoxyConfigurationContextResolver());
     }
 

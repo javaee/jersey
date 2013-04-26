@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.jsonp;
 
+import javax.ws.rs.Priorities;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
@@ -63,8 +64,11 @@ public class JsonProcessingFeature implements Feature {
             return false;
         }
 
-        context.register(JsonStructureBodyReader.class);
-        context.register(JsonStructureBodyWriter.class);
+        // Make sure JSON-P workers have higher priority than other Json providers (in case there is a need to use JSON-P and some
+        // other provider in an application).
+        context.register(JsonStructureBodyReader.class, Priorities.USER + 1000);
+        context.register(JsonStructureBodyWriter.class, Priorities.USER + 1000);
+
         return true;
     }
 }

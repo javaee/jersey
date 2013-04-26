@@ -44,7 +44,6 @@ import java.util.List;
 
 import javax.ws.rs.core.Feature;
 
-import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.osgi.test.util.Helper;
 
 import org.ops4j.pax.exam.Option;
@@ -79,6 +78,6 @@ public class JsonMoxyTest extends AbstractJsonOsgiIntegrationTest {
 
     @Override
     protected Feature getJsonProviderFeature() {
-        return new MoxyJsonFeature();
+        return null;
     }
 }

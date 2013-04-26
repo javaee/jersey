@@ -41,119 +41,200 @@ package org.glassfish.jersey.moxy.json;
 
 import java.util.Map;
 
+import javax.xml.bind.Marshaller;
+
+import org.eclipse.persistence.jaxb.MarshallerProperties;
+import org.eclipse.persistence.jaxb.UnmarshallerProperties;
 import org.eclipse.persistence.oxm.XMLConstants;
+
+import com.google.common.collect.Maps;
 
 /**
  * Configuration class for MOXy JSON provider.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@SuppressWarnings("JavaDoc")
-public class MoxyJsonConfig {
+public final class MoxyJsonConfig {
 
-    private String attributePrefix = null;
-    private boolean formattedOutput = false;
-    private boolean includeRoot = false;
-    private boolean marshalEmptyCollections = true;
-    private Map<String, String> namespacePrefixMapper;
-    private char namespaceSeparator = XMLConstants.DOT;
-    private String valueWrapper;
+    private final Map<String, Object> marshallerProperties = Maps.newHashMap();
+    private final Map<String, Object> unmarshallerProperties = Maps.newHashMap();
+
+    public MoxyJsonConfig() {
+        this(true);
+    }
+
+    public MoxyJsonConfig(final boolean initDefaultProperties) {
+        if (initDefaultProperties) {
+            // javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT
+            setFormattedOutput(false);
+
+            // org.eclipse.persistence.jaxb.JAXBContextProperties.JSON_INCLUDE_ROOT
+            setIncludeRoot(false);
+
+            // org.eclipse.persistence.jaxb.MarshallerProperties.JSON_MARSHAL_EMPTY_COLLECTIONS
+            setMarshalEmptyCollections(true);
+
+            // org.eclipse.persistence.jaxb.JAXBContextProperties.JSON_NAMESPACE_SEPARATOR
+            setNamespaceSeparator(XMLConstants.DOT);
+        }
+    }
+
+    public MoxyJsonConfig property(final String name, final Object value) {
+        marshallerProperty(name, value);
+        unmarshallerProperty(name, value);
+        return this;
+    }
+
+    public MoxyJsonConfig marshallerProperty(final String name, final Object value) {
+        marshallerProperties.put(name, value);
+        return this;
+    }
+
+    public MoxyJsonConfig unmarshallerProperty(final String name, final Object value) {
+        unmarshallerProperties.put(name, value);
+        return this;
+    }
+
+    public MoxyJsonConfig setMarshallerProperties(final Map<String, Object> marshallerProperties) {
+        this.marshallerProperties.putAll(marshallerProperties);
+        return this;
+    }
+
+    public MoxyJsonConfig setUnmarshallerProperties(final Map<String, Object> unmarshallerProperties) {
+        this.unmarshallerProperties.putAll(unmarshallerProperties);
+        return this;
+    }
+
+    public Map<String, Object> getMarshallerProperties() {
+        return marshallerProperties;
+    }
+
+    public Map<String, Object> getUnmarshallerProperties() {
+        return unmarshallerProperties;
+    }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#getAttributePrefix()
      */
     public String getAttributePrefix() {
-        return attributePrefix;
+        return (String) marshallerProperties.get(MarshallerProperties.JSON_ATTRIBUTE_PREFIX);
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#setAttributePrefix(String)
      */
-    public void setAttributePrefix(final String attributePrefix) {
-        this.attributePrefix = attributePrefix;
+    public MoxyJsonConfig setAttributePrefix(final String attributePrefix) {
+        if (attributePrefix != null) {
+            marshallerProperties.put(MarshallerProperties.JSON_ATTRIBUTE_PREFIX, attributePrefix);
+            unmarshallerProperties.put(UnmarshallerProperties.JSON_ATTRIBUTE_PREFIX, attributePrefix);
+        } else {
+            marshallerProperties.remove(MarshallerProperties.JSON_ATTRIBUTE_PREFIX);
+            unmarshallerProperties.remove(UnmarshallerProperties.JSON_ATTRIBUTE_PREFIX);
+        }
+        return this;
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#isFormattedOutput()
      */
     public boolean isFormattedOutput() {
-        return formattedOutput;
+        return (Boolean) marshallerProperties.get(Marshaller.JAXB_FORMATTED_OUTPUT);
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#setFormattedOutput(boolean)
      */
-    public void setFormattedOutput(final boolean formattedOutput) {
-        this.formattedOutput = formattedOutput;
+    public MoxyJsonConfig setFormattedOutput(final boolean formattedOutput) {
+        marshallerProperties.put(Marshaller.JAXB_FORMATTED_OUTPUT, formattedOutput);
+        return this;
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#isIncludeRoot()
      */
     public boolean isIncludeRoot() {
-        return includeRoot;
+        return (Boolean) marshallerProperties.get(MarshallerProperties.JSON_INCLUDE_ROOT);
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#setIncludeRoot(boolean)
      */
-    public void setIncludeRoot(final boolean includeRoot) {
-        this.includeRoot = includeRoot;
+    public MoxyJsonConfig setIncludeRoot(final boolean includeRoot) {
+        marshallerProperties.put(MarshallerProperties.JSON_INCLUDE_ROOT, includeRoot);
+        unmarshallerProperties.put(UnmarshallerProperties.JSON_INCLUDE_ROOT, includeRoot);
+        return this;
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#isMarshalEmptyCollections()
      */
     public boolean isMarshalEmptyCollections() {
-        return marshalEmptyCollections;
+        return (Boolean) marshallerProperties.get(MarshallerProperties.JSON_MARSHAL_EMPTY_COLLECTIONS);
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#setMarshalEmptyCollections(boolean)
      */
-    public void setMarshalEmptyCollections(final boolean marshalEmptyCollections) {
-        this.marshalEmptyCollections = marshalEmptyCollections;
+    public MoxyJsonConfig setMarshalEmptyCollections(final boolean marshalEmptyCollections) {
+        marshallerProperties.put(MarshallerProperties.JSON_MARSHAL_EMPTY_COLLECTIONS, marshalEmptyCollections);
+        return this;
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#getNamespacePrefixMapper()
      */
     public Map<String, String> getNamespacePrefixMapper() {
-        return namespacePrefixMapper;
+        return (Map<String, String>) marshallerProperties.get(MarshallerProperties.NAMESPACE_PREFIX_MAPPER);
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#setNamespacePrefixMapper(java.util.Map)
      */
-    public void setNamespacePrefixMapper(final Map<String, String> namespacePrefixMapper) {
-        this.namespacePrefixMapper = namespacePrefixMapper;
+    public MoxyJsonConfig setNamespacePrefixMapper(final Map<String, String> namespacePrefixMapper) {
+        if (namespacePrefixMapper != null) {
+            marshallerProperties.put(MarshallerProperties.NAMESPACE_PREFIX_MAPPER, namespacePrefixMapper);
+            unmarshallerProperties.put(UnmarshallerProperties.JSON_NAMESPACE_PREFIX_MAPPER, namespacePrefixMapper);
+        } else {
+            marshallerProperties.remove(MarshallerProperties.NAMESPACE_PREFIX_MAPPER);
+            unmarshallerProperties.remove(UnmarshallerProperties.JSON_NAMESPACE_PREFIX_MAPPER);
+        }
+        return this;
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#getNamespaceSeparator()
      */
     public char getNamespaceSeparator() {
-        return namespaceSeparator;
+        return (Character) marshallerProperties.get(MarshallerProperties.JSON_NAMESPACE_SEPARATOR);
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#setNamespaceSeparator(char)
      */
-    public void setNamespaceSeparator(final char namespaceSeparator) {
-        this.namespaceSeparator = namespaceSeparator;
+    public MoxyJsonConfig setNamespaceSeparator(final char namespaceSeparator) {
+        marshallerProperties.put(MarshallerProperties.JSON_NAMESPACE_SEPARATOR, namespaceSeparator);
+        unmarshallerProperties.put(UnmarshallerProperties.JSON_NAMESPACE_SEPARATOR, namespaceSeparator);
+        return this;
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#getValueWrapper()
      */
     public String getValueWrapper() {
-        return valueWrapper;
+        return (String) marshallerProperties.get(MarshallerProperties.JSON_VALUE_WRAPPER);
     }
 
     /**
      * @see org.eclipse.persistence.jaxb.rs.MOXyJsonProvider#setValueWrapper(String)
      */
-    public void setValueWrapper(final String valueWrapper) {
-        this.valueWrapper = valueWrapper;
+    public MoxyJsonConfig setValueWrapper(final String valueWrapper) {
+        if (valueWrapper != null) {
+            marshallerProperties.put(MarshallerProperties.JSON_VALUE_WRAPPER, valueWrapper);
+            unmarshallerProperties.put(UnmarshallerProperties.JSON_VALUE_WRAPPER, valueWrapper);
+        } else {
+            marshallerProperties.remove(MarshallerProperties.JSON_VALUE_WRAPPER);
+            unmarshallerProperties.remove(UnmarshallerProperties.JSON_VALUE_WRAPPER);
+        }
+        return this;
     }
 }

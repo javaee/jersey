@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,19 +39,32 @@
  */
 package org.glassfish.jersey.moxy.json;
 
+import javax.ws.rs.Priorities;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
+
+import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.moxy.json.internal.ConfigurableMoxyJsonProvider;
 
 /**
  * Feature used to register MOXy JSON providers.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class MoxyJsonFeature implements Feature {
 
     @Override
-    public boolean configure(FeatureContext context) {
-        context.register(ConfigurableMoxyJsonProvider.class);
+    public boolean configure(final FeatureContext context) {
+        if (PropertiesHelper.getValue(context.getConfiguration().getProperties(), context.getConfiguration().getRuntimeType(),
+                CommonProperties.MOXY_JSON_FEATURE_DISABLE, Boolean.FALSE, Boolean.class)) {
+            return false;
+        }
+
+        // Set a slightly lower priority of workers than JSON-P so MOXy is not pick-ed up for JsonStructures (if both are used).
+        context.register(ConfigurableMoxyJsonProvider.class, Priorities.USER + 2000);
+
         return true;
     }
 }

@@ -54,7 +54,9 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonStructure;
 
+import org.glassfish.jersey.jsonp.JsonProcessingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -101,7 +103,10 @@ public class JsonProcessingTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ResourceConfig(Resource.class);
+        return new ResourceConfig(Resource.class)
+                // Make sure to disable auto-discovery (MOXy, BeanValidation, ...) and register ValidationFeature.
+                .property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true)
+                .register(JsonProcessingFeature.class);
     }
 
     @Test

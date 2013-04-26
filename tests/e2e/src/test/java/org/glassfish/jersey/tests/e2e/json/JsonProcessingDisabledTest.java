@@ -87,7 +87,10 @@ public class JsonProcessingDisabledTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
 
-        return new ResourceConfig(Resource.class).property(ServerProperties.JSON_PROCESSING_FEATURE_DISABLE, true);
+        return new ResourceConfig(Resource.class)
+                .property(ServerProperties.JSON_PROCESSING_FEATURE_DISABLE, true)
+                // Make sure MOXy Json is disabled as well (it is actually on classpath & auto-discoverable).
+                .property(ServerProperties.MOXY_JSON_FEATURE_DISABLE, true);
     }
 
     @Test

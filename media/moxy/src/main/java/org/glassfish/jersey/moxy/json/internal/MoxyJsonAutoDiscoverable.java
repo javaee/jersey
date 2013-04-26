@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,58 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.osgi.test.basic;
 
-import java.net.URI;
+package org.glassfish.jersey.moxy.json.internal;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.osgi.test.util.Helper;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import static org.junit.Assert.assertTrue;
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
 /**
- * Abstract JSON OSGi integration test.
+ * {@link AutoDiscoverable} registering {@link MoxyJsonFeature} if this feature is not already registered.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@RunWith(JUnit4TestRunner.class)
-public abstract class AbstractJsonOsgiIntegrationTest {
+public class MoxyJsonAutoDiscoverable implements AutoDiscoverable {
 
-    private static final String CONTEXT = "/jersey";
-    private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(Helper.port).path(CONTEXT).build();
-
-    protected abstract Feature getJsonProviderFeature();
-
-    @Test
-    public void testJson() throws Exception {
-        final Feature jsonProviderFeature = getJsonProviderFeature();
-        final Client client = ClientBuilder.newClient();
-        final ResourceConfig resourceConfig = new ResourceConfig(JsonResource.class);
-
-        if (jsonProviderFeature != null) {
-            client.register(jsonProviderFeature);
-            resourceConfig.register(jsonProviderFeature);
+    @Override
+    public void configure(final FeatureContext context) {
+        if (!context.getConfiguration().isRegistered(MoxyJsonFeature.class)) {
+            context.register(MoxyJsonFeature.class);
         }
-
-        final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
-
-        final String result = client.target(baseUri).path("/json").request(MediaType.APPLICATION_JSON).get(String.class);
-
-        System.out.println("RESULT = " + result);
-        assertTrue(result.contains("Jim"));
-
-        server.stop();
     }
 }

@@ -70,7 +70,7 @@ import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 /**
- * Basic test of Bean Validation.
+ * Basic test of Json Processing.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,8 @@ import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.glassfish.jersey.CommonProperties;
+
 import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 
 /**
@@ -55,6 +57,10 @@ public class JacksonFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
+        final String disableMoxy = CommonProperties.MOXY_JSON_FEATURE_DISABLE + '.'
+                + context.getConfiguration().getRuntimeType().name().toLowerCase();
+        context.property(disableMoxy, true);
+
         context.register(JacksonJaxbJsonProvider.class, MessageBodyReader.class, MessageBodyWriter.class);
         return true;
     }
