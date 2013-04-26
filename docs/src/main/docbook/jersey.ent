@@ -52,6 +52,15 @@
 <!ENTITY jax-rs.release.path "http://jax-rs-spec.java.net/nonav/&jax-rs.version;/apidocs">
 <!ENTITY jax-rs.javadoc.path "&jax-rs.release.path;/javax/ws/rs">
 
+<!-- Common Literals -->
+<!ENTITY lit.http.GET "<literal>GET</literal>">
+<!ENTITY lit.http.PUT "<literal>PUT</literal>">
+<!ENTITY lit.http.POST "<literal>POST</literal>">
+<!ENTITY lit.http.DELETE "<literal>DELETE</literal>">
+<!ENTITY lit.http.HEAD "<literal>HEAD</literal>">
+<!ENTITY lit.http.OPTIONS "<literal>OPTIONS</literal>">
+<!ENTITY lit.http.TRACE "<literal>TRACE</literal>">
+
 <!-- API Links -->
 <!ENTITY jaxrs.ApplicationPath "<link xlink:href='&jax-rs.javadoc.path;/ApplicationPath.html'>@ApplicationPath</link>">
 <!ENTITY jaxrs.Consumes "<link xlink:href='&jax-rs.javadoc.path;/Consumes.html'>@Consumes</link>">
@@ -114,3 +123,67 @@
 <!ENTITY jaxrs.ext.RuntimeDelegate "<link xlink:href='&jax-rs.javadoc.path;/ext/RuntimeDelegate.html'>RuntimeDelegate</link>">
 
 <!ENTITY jaxrs.ext.Provider "<link xlink:href='&jax-rs.javadoc.path;/ext/Provider.html'>@Provider</link>">
+
+<!-- API Literals -->
+<!ENTITY lit.jaxrs.ApplicationPath "<literal>@ApplicationPath</literal>">
+<!ENTITY lit.jaxrs.Consumes "<literal>@Consumes</literal>">
+<!ENTITY lit.jaxrs.CookieParam "<literal>@CookieParam</literal>">
+<!ENTITY lit.jaxrs.DefaultValue "<literal>@DefaultValue</literal>">
+<!ENTITY lit.jaxrs.DELETE "<literal>@DELETE</literal>">
+<!ENTITY lit.jaxrs.Encoded "<literal>@Encoded</literal>">
+<!ENTITY lit.jaxrs.FormParam "<literal>@FormParam</literal>">
+<!ENTITY lit.jaxrs.GET "<literal>@GET</literal>">
+<!ENTITY lit.jaxrs.HEAD "<literal>@HEAD</literal>">
+<!ENTITY lit.jaxrs.HeaderParam "<literal>@HeaderParam</literal>">
+<!ENTITY lit.jaxrs.HttpMethod "<literal>@HttpMethod</literal>">
+<!ENTITY lit.jaxrs.MatrixParam "<literal>@MatrixParam</literal>">
+<!ENTITY lit.jaxrs.OPTIONS "<literal>@OPTIONS</literal>">
+<!ENTITY lit.jaxrs.Path "<literal>@Path</literal>">
+<!ENTITY lit.jaxrs.PathParam "<literal>@PathParam</literal>">
+<!ENTITY lit.jaxrs.BeanParam "<literal>@BeanParam</literal>">
+<!ENTITY lit.jaxrs.POST "<literal>@POST</literal>">
+<!ENTITY lit.jaxrs.Produces "<literal>@Produces</literal>">
+<!ENTITY lit.jaxrs.PUT "<literal>@PUT</literal>">
+<!ENTITY lit.jaxrs.QueryParam "<literal>@QueryParam</literal>">
+<!ENTITY lit.jaxrs.WebApplicationException "<literal>WebApplicationException</literal>">
+
+<!ENTITY lit.jaxrs.core.HttpHeaders "<literal>HttpHeaders</literal>">
+<!ENTITY lit.jaxrs.core.MultivaluedMap "<literal>MultivaluedMap&lt;K,V&gt;</literal>">
+<!ENTITY lit.jaxrs.core.PathSegment "<literal>PathSegment</literal>">
+<!ENTITY lit.jaxrs.core.Request "<literal>Request</literal>">
+<!ENTITY lit.jaxrs.core.Response.StatusType "<literal>Response.StatusType</literal>">
+<!ENTITY lit.jaxrs.core.SecurityContext "<literal>SecurityContext</literal>">
+<!ENTITY lit.jaxrs.core.StreamingOutput "<literal>StreamingOutput</literal>">
+<!ENTITY lit.jaxrs.core.UriInfo "<literal>UriInfo</literal>">
+
+<!ENTITY lit.jaxrs.core.Application "<literal>Application</literal>">
+<!ENTITY lit.jaxrs.core.CacheControl "<literal>CacheControl</literal>">
+<!ENTITY lit.jaxrs.core.Cookie "<literal>Cookie</literal>">
+<!ENTITY lit.jaxrs.core.EntityTag "<literal>EntityTag</literal>">
+<!ENTITY lit.jaxrs.core.GenericEntity "<literal>GenericEntity&lt;T&gt;</literal>">
+<!ENTITY lit.jaxrs.core.MediaType "<literal>MediaType</literal>">
+<!ENTITY lit.jaxrs.core.NewCookie "<literal>NewCookie</literal>">
+<!ENTITY lit.jaxrs.core.Response "<literal>Response</literal>">
+<!ENTITY lit.jaxrs.core.Response.ResponseBuilder "<literal>Response.ResponseBuilder</literal>">
+<!ENTITY lit.jaxrs.core.UriBuilder "<literal>UriBuilder</literal>">
+<!ENTITY lit.jaxrs.core.Variant "<literal>Variant</literal>">
+<!ENTITY lit.jaxrs.core.Variant.VariantListBuilder "<literal>Variant.VariantListBuilder</literal>">
+
+<!ENTITY lit.jaxrs.core.Response.Status "<literal>Response.Status</literal>">
+<!ENTITY lit.jaxrs.core.Response.Status.Family "<literal>Response.Status.Family</literal>">
+
+<!ENTITY lit.jaxrs.core.UriBuilderException "<literal>UriBuilderException</literal>">
+
+<!ENTITY lit.jaxrs.core.Context "<literal>@Context</literal>">
+
+<!ENTITY lit.jaxrs.ext.ContextResolver "<literal>ContextResolver&lt;T&gt;</literal>">
+<!ENTITY lit.jaxrs.ext.ExceptionMapper "<literal>ExceptionMapper&lt;E extends Throwable&gt;</literal>">
+<!ENTITY lit.jaxrs.ext.MessageBodyReader "<literal>MessageBodyReader&lt;T&gt;</literal>">
+<!ENTITY lit.jaxrs.ext.MessageBodyWriter "<literal>MessageBodyWriter&lt;T&gt;</literal>">
+<!ENTITY lit.jaxrs.ext.Providers "<literal>Providers</literal>">
+<!ENTITY lit.jaxrs.ext.RuntimeDelegate.HeaderDelegate "<literal>RuntimeDelegate.HeaderDelegate&lt;T&gt;</literal>">
+
+<!ENTITY lit.jaxrs.ext.RuntimeDelegate "<literal>RuntimeDelegate</literal>">
+
+<!ENTITY lit.jaxrs.ext.Provider "<literal>@Provider</literal>">
+
