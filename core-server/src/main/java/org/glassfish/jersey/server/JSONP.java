@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,9 +46,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation can be used to define the JavaScript callback function name if the valid JSONP format is requested as an
- * acceptable {@link javax.ws.rs.core.MediaType media type} of this request. At the moment only resource methods should be
- * annotated with this annotation.
+ * Annotation can be used to define the JavaScript callback function name if the valid JSONP format is requested as an
+ * acceptable {@link javax.ws.rs.core.MediaType media type} of this request. At the moment only resource methods are supported to
+ * be annotated with this annotation.
  * <p/>
  * The acceptable JavaScript media types for JSONP compatible with this annotation are:
  * <ul>

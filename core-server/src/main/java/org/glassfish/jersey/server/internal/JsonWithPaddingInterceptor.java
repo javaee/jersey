@@ -41,9 +41,6 @@ package org.glassfish.jersey.server.internal;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +61,9 @@ import javax.inject.Provider;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.JSONP;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 /**
  * A {@link WriterInterceptor} implementation for JSONP format. This interceptor wraps a JSON stream obtained by a underlying
  * JSON provider into a callback function that can be defined by the {@link JSONP} annotation.
@@ -74,34 +74,35 @@ import org.glassfish.jersey.server.JSONP;
 @Priority(Priorities.HEADER_DECORATOR)
 public class JsonWithPaddingInterceptor implements WriterInterceptor {
 
-    private final Map<String, Set<String>> javascriptTypes;
-    private Provider<ContainerRequest> containerRequestProvider;
+    private static final Map<String, Set<String>> JAVASCRIPT_TYPES;
+
+    static {
+        JAVASCRIPT_TYPES = Maps.newHashMapWithExpectedSize(2);
+
+        JAVASCRIPT_TYPES.put("application", Sets.newHashSet("x-javascript", "ecmascript", "javascript"));
+        JAVASCRIPT_TYPES.put("text", Sets.newHashSet("javascript", "x-javascript", "ecmascript", "jscript"));
+    }
 
     @Inject
-    public JsonWithPaddingInterceptor(Provider<ContainerRequest> containerRequestProvider) {
-        this.containerRequestProvider = containerRequestProvider;
-
-        javascriptTypes = new HashMap<String, Set<String>>();
-        javascriptTypes.put("application", new HashSet<String>(
-                Arrays.asList("x-javascript", "ecmascript", "javascript")));
-        javascriptTypes.put("text", new HashSet<String>(
-                Arrays.asList("javascript", "x-javascript", "ecmascript", "jscript")));
-    }
+    private Provider<ContainerRequest> containerRequestProvider;
 
     @Override
     public void aroundWriteTo(final WriterInterceptorContext context) throws IOException, WebApplicationException {
         final boolean isJavascript = isJavascript(context.getMediaType());
+        final JSONP jsonp = getJsonpAnnotation(context);
 
-        if (isJavascript) {
+        final boolean wrapIntoCallback = isJavascript && jsonp != null;
+
+        if (wrapIntoCallback) {
             context.setMediaType(MediaType.APPLICATION_JSON_TYPE);
 
-            context.getOutputStream().write(getCallbackName(context).getBytes());
+            context.getOutputStream().write(getCallbackName(jsonp).getBytes());
             context.getOutputStream().write('(');
         }
 
         context.proceed();
 
-        if (isJavascript) {
+        if (wrapIntoCallback) {
             context.getOutputStream().write(')');
         }
     }
@@ -109,42 +110,36 @@ public class JsonWithPaddingInterceptor implements WriterInterceptor {
     /**
      * Returns a flag whether the given {@link MediaType media type} belongs to the group of JavaScript media types.
      *
-     * @param m media type to check.
+     * @param mediaType media type to check.
      * @return {@code true} if the given media type is a JavaScript type, {@code false} otherwise (or if the media type is
      *         {@code null}}
      */
-    private boolean isJavascript(MediaType m) {
-        if (m == null) {
+    private boolean isJavascript(MediaType mediaType) {
+        if (mediaType == null) {
             return false;
         }
 
-        Set<String> subtypes = javascriptTypes.get(m.getType());
-        return subtypes != null && subtypes.contains(m.getSubtype());
+        final Set<String> subtypes = JAVASCRIPT_TYPES.get(mediaType.getType());
+        return subtypes != null && subtypes.contains(mediaType.getSubtype());
     }
 
     /**
-     * Returns a JavaScript callback name to wrap the JSON result into. The callback name is determined either from the {@link
-     * JSONP} annotation or is set to the {@value JSONP#DEFAULT_CALLBACK} if the name cannot be obtained from the {@link
-     * JSONP} annotation.
+     * Returns a JavaScript callback name to wrap the JSON entity into. The callback name is determined from the {@link JSONP}
+     * annotation.
      *
-     * @param context context to determine the callback name from.
+     * @param jsonp {@link JSONP} annotation to determine the callback name from.
      * @return a JavaScript callback name.
      */
-    private String getCallbackName(final InterceptorContext context) {
-        String callback = JSONP.DEFAULT_CALLBACK;
+    private String getCallbackName(final JSONP jsonp) {
+        String callback = jsonp.callback();
 
-        JSONP jsonp = getJsonpAnnotation(context);
-        if (jsonp != null) {
-            callback = jsonp.callback();
+        if (!"".equals(jsonp.queryParam())) {
+            final ContainerRequest containerRequest = containerRequestProvider.get();
+            final UriInfo uriInfo = containerRequest.getUriInfo();
+            final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
+            final List<String> queryParameter = queryParameters.get(jsonp.queryParam());
 
-            if (!"".equals(jsonp.queryParam())) {
-                final ContainerRequest containerRequest = containerRequestProvider.get();
-                final UriInfo uriInfo = containerRequest.getUriInfo();
-                final MultivaluedMap<String, String> queryParameters = uriInfo.getQueryParameters();
-                final List<String> queryParameter = queryParameters.get(jsonp.queryParam());
-
-                callback = (queryParameter != null && !queryParameter.isEmpty()) ? queryParameter.get(0) : callback;
-            }
+            callback = (queryParameter != null && !queryParameter.isEmpty()) ? queryParameter.get(0) : callback;
         }
 
         return callback;
