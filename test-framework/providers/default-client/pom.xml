@@ -53,7 +53,7 @@
     <packaging>jar</packaging>
     <name>jersey-test-framework-provider-default-client</name>
 
-    <description>TODO add project description</description>
+    <description>Jersey Test Framework Default Client Provider</description>
 
     <dependencies>
         <dependency>
