@@ -63,7 +63,7 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jettison</artifactId>
+            <artifactId>jersey-media-moxy</artifactId>
         </dependency>
 
         <dependency>

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,6 +49,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -59,10 +60,16 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.spi.TestContainer;
 
+import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.startsWith;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -101,8 +108,8 @@ public class JsonWithPaddingTest extends JerseyTest {
     public static class JsonResource {
 
         @GET
-        @Path("JsonWithPadding")
-        public JsonBean getJsonWithPadding() {
+        @Path("PureJson")
+        public JsonBean getPureJson() {
             return JsonBean.createTestInstance();
         }
 
@@ -147,6 +154,7 @@ public class JsonWithPaddingTest extends JerseyTest {
     }
 
     private final JsonTestProvider jsonTestProvider;
+    private final String errorMessage;
 
     public JsonWithPaddingTest(final JsonTestProvider jsonTestProvider) throws Exception {
         super(configureJaxrsApplication(jsonTestProvider));
@@ -154,6 +162,8 @@ public class JsonWithPaddingTest extends JerseyTest {
         enable(TestProperties.DUMP_ENTITY);
 
         this.jsonTestProvider = jsonTestProvider;
+        this.errorMessage = String.format("%s: Received JSON entity content does not match expected JSON entity content.",
+                jsonTestProvider.getClass().getSimpleName());
     }
 
     @Override
@@ -177,23 +187,27 @@ public class JsonWithPaddingTest extends JerseyTest {
 
     @Test
     public void testJson() throws Exception {
-        final String entity =
-                target("jsonp").path("JsonWithPadding").request("application/json").get(String.class);
+        final Response response = target("jsonp").path("PureJson").request("application/json").get();
 
-        assertTrue(
-                String.format("%s: Received JSON entity content does not match expected JSON entity content.",
-                        jsonTestProvider.getClass().getSimpleName()),
-                !entity.matches("^callback\\([^\\)]+\\)$"));
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.getMediaType().toString(), equalTo("application/json"));
+
+        final String entity = response.readEntity(String.class);
+
+        assertThat(errorMessage, entity, allOf(not(startsWith("callback(")), not(endsWith(")"))));
+    }
+
+    @Test
+    public void testJsonWithJavaScriptMediaType() throws Exception {
+        final Response response = target("jsonp").path("PureJson").request("application/x-javascript").get();
+
+        // Method is invoked but we do not have a MBW for application/x-javascript.
+        assertThat(response.getStatus(), equalTo(500));
     }
 
     @Test
     public void testJsonWithPaddingDefault() throws Exception {
         test("JsonWithPaddingDefault", "callback");
-    }
-
-    @Test
-    public void testJsonWithPadding() throws Exception {
-        test("JsonWithPadding", "callback");
     }
 
     @Test
@@ -269,13 +283,21 @@ public class JsonWithPaddingTest extends JerseyTest {
         if (queryParamName != null) {
             tempTarget = tempTarget.queryParam(queryParamName, queryParamValue);
         }
-        final String entity =
-                tempTarget.request("application/x-javascript").get(String.class);
 
-        assertTrue(
-                String.format("%s: Received JSON entity content does not match expected JSON entity content.",
-                        jsonTestProvider.getClass().getSimpleName()),
-                isNegative ^ entity.matches("^" + callback + "\\([^\\)]+\\)$"));
+        final Response response = tempTarget.request("application/x-javascript").get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.getMediaType().toString(), equalTo("application/x-javascript"));
+
+        final String entity = response.readEntity(String.class);
+
+        // Check the entity.
+        final Matcher<String> startsWith = startsWith(callback + "(");
+        final Matcher<String> endsWith = endsWith(")");
+
+        final Matcher<String> callbackMatcher = isNegative ? not(startsWith) : startsWith;
+
+        assertThat(errorMessage, entity, allOf(callbackMatcher, endsWith));
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,36 +39,43 @@
  */
 package org.glassfish.jersey.examples.jsonp;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.List;
 
-import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.Provider;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
-import javax.xml.bind.JAXBContext;
-
-import org.glassfish.jersey.jettison.JettisonConfig;
-import org.glassfish.jersey.jettison.JettisonJaxbContext;
+import org.glassfish.jersey.server.JSONP;
 
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@SuppressWarnings("FieldCanBeLocal")
-@Provider
-public final class JaxbContextResolver implements ContextResolver<JAXBContext> {
+@Path(App.ROOT_PATH)
+@Produces({"application/x-javascript", "application/json", "application/xml"})
+public class ChangeListResource {
 
-    private final JAXBContext context;
-    private final Set<Class<?>> types;
-    private final Class<?>[] cTypes = {ChangeRecordBean.class};
+    static final List<ChangeRecordBean> changes = new LinkedList<ChangeRecordBean>();
 
-    public JaxbContextResolver() throws Exception {
-        this.types = new HashSet<Class<?>>(Arrays.asList(cTypes));
-        this.context = new JettisonJaxbContext(JettisonConfig.DEFAULT, cTypes);
+    static {
+        changes.add(new ChangeRecordBean(false, 2, "title \"User Guide\" updated"));
+        changes.add(new ChangeRecordBean(true, 1, "fixed metadata"));
+        changes.add(new ChangeRecordBean(false, 91, "added index"));
+        changes.add(new ChangeRecordBean(false, 650, "\"Troubleshoothing\" chapter"));
+        changes.add(new ChangeRecordBean(false, 1, "fixing typo"));
     }
 
-    @Override
-    public JAXBContext getContext(Class<?> objectType) {
-        return (types.contains(objectType)) ? context : null;
+    @GET
+    @JSONP(queryParam = JSONP.DEFAULT_QUERY)
+    public List<ChangeRecordBean> getChanges(@QueryParam(JSONP.DEFAULT_QUERY) String callback, @QueryParam("type") int type) {
+        return changes;
+    }
+
+    @GET
+    @Path("latest")
+    @JSONP
+    public ChangeRecordBean getLastChange(@QueryParam("callback") String callback, @QueryParam("type") int type) {
+        return changes.get(changes.size() - 1);
     }
 }
