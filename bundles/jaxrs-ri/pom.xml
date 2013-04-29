@@ -237,7 +237,6 @@
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-SpecVersion>${jaxrs.api.last.final.version}.99.${parsedVersion.qualifier}</Bundle-SpecVersion>
-                        <Bundle-Version>${jersey1.last.final.version}.99.${parsedVersion.qualifier}</Bundle-Version>
                         <Specification-Version>
                             ${jaxrs.api.last.final.version}.99.${parsedVersion.qualifier}
                         </Specification-Version>

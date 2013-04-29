@@ -76,15 +76,8 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <!-- OSGi bundle (JAR) -->
-                <groupId>org.glassfish.jersey</groupId>
-                <artifactId>jax-rs-ri</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <!-- Zipped archive (ZIP, TAR.GZ, TAR.BZ2) -->
                 <groupId>org.glassfish.jersey.bundles</groupId>
-                <artifactId>jax-rs-ri</artifactId>
+                <artifactId>jaxrs-ri</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

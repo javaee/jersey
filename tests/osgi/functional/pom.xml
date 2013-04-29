@@ -222,8 +222,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey</groupId>
-            <artifactId>jax-rs-ri</artifactId>
+            <groupId>org.glassfish.jersey.bundles</groupId>
+            <artifactId>jaxrs-ri</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
