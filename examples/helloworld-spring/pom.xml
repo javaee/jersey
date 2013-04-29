@@ -76,6 +76,12 @@
       <scope>compile</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+      <version>3.2.2.RELEASE</version>
+      <scope>compile</scope>
+    </dependency>
     
   <dependency>
   <groupId>commons-logging</groupId>
