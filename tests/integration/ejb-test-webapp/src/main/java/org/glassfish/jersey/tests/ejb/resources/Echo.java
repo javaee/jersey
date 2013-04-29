@@ -39,16 +39,14 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
-import javax.ejb.Local;
 import javax.ejb.Remote;
 
 /**
- * EJB local/remote interface. Part of the reproducer for GLASSFISH-16199.
+ * EJB remote interface. Part of the reproducer for GLASSFISH-16199.
  * See also the other test case implemented by {@link RawEchoResource}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Local
 @Remote
 public interface  Echo {
 
