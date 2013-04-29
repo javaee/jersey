@@ -450,38 +450,36 @@ final class MethodSelectingRouter implements Router {
                                    final ResourceMethod resourceMethod,
                                    final List<MediaType> methodTypes,
                                    final boolean inputTypes) {
-        boolean consumesFromWorkers = false;
 
         // Add method types to the resulting list iff there is more than just */*
         if (methodTypes.size() > 1 || !methodTypes.contains(MediaType.WILDCARD_TYPE)) {
             effectiveTypes.addAll(methodTypes);
         }
 
-        if (workers != null) {
+        boolean mediaTypesFromWorkers = effectiveTypes.isEmpty();
+        if (workers != null && mediaTypesFromWorkers) {
             final Invocable invocableMethod = resourceMethod.getInvocable();
 
             // If not predefined from method - get it from workers.
-            if (effectiveTypes.isEmpty()) {
-                if (inputTypes) {
-                    fillInputTypesFromWorkers(effectiveTypes, invocableMethod);
-                } else {
-                    fillOutputTypesFromWorkers(effectiveTypes, invocableMethod.getRawResponseType());
-                }
-                consumesFromWorkers = !effectiveTypes.isEmpty();
+            if (inputTypes) {
+                fillInputTypesFromWorkers(effectiveTypes, invocableMethod);
+            } else {
+                fillOutputTypesFromWorkers(effectiveTypes, invocableMethod.getRawResponseType());
             }
+            mediaTypesFromWorkers = !effectiveTypes.isEmpty();
 
             // If still empty - get all available.
-            if (effectiveTypes.isEmpty()) {
+            if (!mediaTypesFromWorkers) {
                 if (inputTypes) {
                     effectiveTypes.addAll(workers.getMessageBodyReaderMediaTypesByType(Object.class));
                 } else {
                     effectiveTypes.addAll(workers.getMessageBodyWriterMediaTypesByType(Object.class));
                 }
-                consumesFromWorkers = true;
+                mediaTypesFromWorkers = true;
             }
         }
 
-        return consumesFromWorkers;
+        return mediaTypesFromWorkers;
     }
 
     private void fillOutputTypesFromWorkers(final Set<MediaType> effectiveOutputTypes, final Class<?> returnEntityType) {
@@ -739,7 +737,8 @@ final class MethodSelectingRouter implements Router {
                             satisfiable.getProduces());
                     final CombinedClientServerMediaType consumes = CombinedClientServerMediaType.create(effectiveContentType,
                             satisfiable.getConsumes());
-                    final RequestSpecificConsumesProducesAcceptor candidate = new RequestSpecificConsumesProducesAcceptor(consumes,
+                    final RequestSpecificConsumesProducesAcceptor candidate = new RequestSpecificConsumesProducesAcceptor(
+                            consumes,
                             satisfiable.getConsumes().isDerived(),
                             produces,
                             satisfiable.getProduces().isDerived(),
