@@ -23,37 +23,37 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
     private ApplicationContext ctx;
 
     public AutowiredInjectResolver(ApplicationContext ctx) {
-        LOGGER.info("AutowiredInjectResolver()");
+        LOGGER.fine("AutowiredInjectResolver()");
         this.ctx = ctx;
     }
     
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> root) {
-        LOGGER.info("resolve: "+injectee);
+        LOGGER.finer("resolve: "+injectee);
         Type t = injectee.getRequiredType();
         if(t instanceof Class) {
             Map<String, ?> beans = ctx.getBeansOfType((Class<?>)t);
             if(!beans.values().isEmpty()) {
                 Object o = beans.values().iterator().next();
-                LOGGER.info("resolve: "+o);
+                LOGGER.finer("resolve: "+o);
                 return o;
             }
-            LOGGER.info("no beans found, resolve failed");
+            LOGGER.info("no beans found, resolve failed for type "+t);
         } else {
-            LOGGER.info("unable to resolve, injectee type not class");
+            LOGGER.warning("unable to resolve, injectee type not class");
         }
         return null;
     }
 
     @Override
     public boolean isConstructorParameterIndicator() {
-        LOGGER.info("isConstructorParameterIndicator");
+        LOGGER.finer("isConstructorParameterIndicator");
         return false;
     }
 
     @Override
     public boolean isMethodParameterIndicator() {
-        LOGGER.info("isMethodParameterIndicator");
+        LOGGER.finer("isMethodParameterIndicator");
         return false;
     }
 

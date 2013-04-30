@@ -27,40 +27,41 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
     
     @Inject
     public SpringLifecycleListener(ServiceLocator loc) {
-        LOGGER.info("SpringLifecycleListener: "+loc);
+        LOGGER.fine("SpringLifecycleListener: "+loc);
         locator = loc;
     }
 
     @Override
     public void onStartup(Container container) {
-        LOGGER.info("onStartup: "+container);
+        LOGGER.fine("onStartup: "+container);
         
         ApplicationContext ctx = null;
         if(container instanceof ServletContainer) {
             ServletContainer sc = (ServletContainer)container;
             ctx = WebApplicationContextUtils.getWebApplicationContext(sc.getServletContext());
-            LOGGER.info("wac: "+ctx);
+            LOGGER.fine("context: "+ctx);
+            
+            LOGGER.fine("registering Spring injection resolver");
+            DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+            DynamicConfiguration c = dcs.createDynamicConfiguration();
+            AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
+            c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
+            c.commit();
+            
+            LOGGER.info("jersey-spring initialized");
         } else {
-            LOGGER.info("not a servletcontainer");
+            LOGGER.info("not a ServletContainer, jersey-spring init skipped");
         }
-        
-        DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-        DynamicConfiguration c = dcs.createDynamicConfiguration();
-        AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
-        c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
-        c.commit();
-        
-        LOGGER.info("resolver registered");
     }
 
     @Override
     public void onReload(Container container) {
-        LOGGER.info("onReload: "+container);
+        LOGGER.fine("onReload: "+container);
     }
 
     @Override
     public void onShutdown(Container container) {
-        LOGGER.info("onShutdown: "+container);
+        LOGGER.fine("onShutdown: "+container);
     }
 
 }
