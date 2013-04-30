@@ -5,6 +5,7 @@
 
   <module-name>helloworld-spring</module-name>
 
+<!-- 
   <listener>
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
   </listener>
@@ -13,6 +14,7 @@
     <param-name>contextConfigLocation</param-name>
     <param-value>classpath:applicationContext.xml</param-value>
   </context-param>
+ -->
   
     <servlet>
         <servlet-name>javax.ws.rs.core.Application</servlet-name>
