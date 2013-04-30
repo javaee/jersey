@@ -54,7 +54,7 @@
 
     <para>This chapter presents an overview of the core JAX-RS concepts - resources and sub-resources.</para>
 
-    <para>The JAX-RS &jax-rs.version; JavaDoc can be found online <link xlink:href="&jax-rs.release.path;/index.html">here</link>.
+    <para>The JAX-RS &jax-rs.version; JavaDoc can be found online <link xlink:href="&jax-rs.release.path;/apidocs/index.html">here</link>.
     </para>
 
     <para>The JAX-RS &jax-rs.version; specification draft can be found online <link

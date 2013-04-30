@@ -53,18 +53,66 @@
         <title>Jersey &version; User Guide</title>
     </info>
     <preface xml:id="preface">
-        <title>Preface</title>
-        <para>
-            This is user guide for Jersey &version;. We are trying to keep it up to date
-            as we add new feature. Please use also our API documentation linked
-            from the
-            <link xlink:href="http://jersey.java.net">Jersey home page</link>
-            as an additional source of information about Jersey features and API.
+        <section>
+            <title>Preface</title>
+            <para>
+                This is user guide for Jersey &version;. We are trying to keep it up to date as we add new features.
+                When reading the user guide, please consult also our
+                <link xlink:href="&jersey.javadoc.path;/index.html">Jersey API documentation</link> as an additional source
+                of information about Jersey features and API.
+            </para>
+            <para>
+                If you would like to contribute to the guide or have questions on things not covered in our docs, please
+                contact us at<link xlink:href="mailto:users@jersey.java.net">users@jersey.java.net</link>. Similarly,
+                in case you spot any errors in the Jersey documentation, please report them by filing a new issue in our
+                <link xlink:href="http://java.net/jira/browse/JERSEY">Jersey JIRA Issue Tracker</link>
+                under
+                <literal>docs</literal>
+                component. Please make sure to specify the version of the Jersey User Guide where the error has been spotted
+                by selecting the proper value for the
+                <literal>Affected Version</literal>
+                field.
+            </para>
+            <simplesect>
+                <title>Text formatting conventions</title>
+                <para>
+                    First mention of any Jersey and JAX-RS API component in a section links to the API documentation of the
+                    referenced component. Any sub-sequent mentions of the component in the same chapter are rendered using a
+                    <literal>monospace</literal>
+                    font.
+                </para>
+                <para>
+                    <emphasis>Emphasised font</emphasis>
+                    is used to a call attention to a newly introduce concept, when it first
+                    occurs in the text.
+                </para>
+                <para>
+                    In some of the code listings, certain lines are too long to be displayed on one line for the available
+                    page width. In such case, the lines that exceed the available page width are broken up into multiple lines
+                    using a
+                    <literal>'\'</literal>
+                    at the end of each line to indicate that a break has been introduced to
+                    fit the line in the page. For example:
 
-            If you would like to contribute to the guide or have questions
-            on things not covered in our docs, please contact us at
-            <link xlink:href="mailto:users@jersey.java.net">users@jersey.java.net</link>.
-        </para>
+                    <programlisting linenumbering="unnumbered">
+This is an overly long line that \
+might not fit the available page \
+width and had to be broken into \
+multiple lines.
+
+This line fits the page width.
+                    </programlisting>
+
+                    Should read as:
+
+                    <programlisting linenumbering="unnumbered">
+This is an overly long line that might not fit the available page width and had to be broken into multiple lines.
+
+This line fits the page width.
+                    </programlisting>
+                </para>
+            </simplesect>
+        </section>
     </preface>
 
     <xi:include href="getting-started.xml" />

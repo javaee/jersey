@@ -46,11 +46,15 @@
 
 <!ENTITY experimentalrepository "snapshots">
 
-<!-- JAX-RS Entities -->
+<!-- Version & External Link Base Entities -->
 <!ENTITY jax-rs.version "$jax-rs-version">
 <!ENTITY jax-rs-api-jar.version "$jax-rs-api-jar-version">
-<!ENTITY jax-rs.release.path "http://jax-rs-spec.java.net/nonav/&jax-rs.version;/apidocs">
-<!ENTITY jax-rs.javadoc.path "&jax-rs.release.path;/javax/ws/rs">
+<!ENTITY jax-rs.release.path "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
+<!ENTITY jax-rs.javadoc.path "&jax-rs.release.path;/apidocs/javax/ws/rs">
+
+<!ENTITY jersey.docs.root.path "http://jersey.java.net/nonav/documentation/&version;">
+<!ENTITY jersey.docs.index "http://jersey.java.net/nonav/documentation/&version;/index.html">
+<!ENTITY jersey.javadoc.path "http://jersey.java.net/nonav/apidocs/&version;/org/glassfish/jersey">
 
 <!-- Common Literals -->
 <!ENTITY lit.http.GET "<literal>GET</literal>">

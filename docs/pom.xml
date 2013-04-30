@@ -51,12 +51,12 @@
     <packaging>pom</packaging>
     <name>jersey-documentation</name>
     <profiles>
-      <profile>
-        <id>release</id>
-        <properties>
-          <javanet.repository.id>releases</javanet.repository.id>
-        </properties>
-     </profile>
+        <profile>
+            <id>release</id>
+            <properties>
+                <javanet.repository.id>releases</javanet.repository.id>
+            </properties>
+        </profile>
     </profiles>
     <build>
         <plugins>
@@ -71,10 +71,10 @@
                                 <copy todir="${src.dir}">
                                     <fileset dir="src/main/docbook" />
                                 </copy>
-                                <replace file="${src.dir}/jersey.ent" token="$version" value="${project.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$version" value="${jersey.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$repository" value="${javanet.repository.id}" />
-                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="${jaxrs.api.version}" />
-                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.api.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="${jaxrs.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.version}" />
                             </tasks>
                         </configuration>
                         <id>process-entities</id>
@@ -196,7 +196,9 @@
     <properties>
         <assembly.directory>${project.build.directory}/assembly</assembly.directory>
         <src.dir>${basedir}/target/gen-src</src.dir>
-          <javanet.repository.id>snapshots</javanet.repository.id>
+        <javanet.repository.id>snapshots</javanet.repository.id>
+        <jersey.version>${project.version}</jersey.version>
+        <jaxrs.version>${jaxrs.api.version}</jaxrs.version>
     </properties>
 
 </project>
