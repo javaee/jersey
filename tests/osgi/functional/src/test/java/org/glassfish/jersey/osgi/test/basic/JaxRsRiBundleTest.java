@@ -85,7 +85,7 @@ public class JaxRsRiBundleTest {
         options.addAll(Helper.expandedList(
                 // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
 
-                mavenBundle().groupId("org.glassfish.jersey").artifactId("jax-rs-ri").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.bundles").artifactId("jaxrs-ri").versionAsInProject(),
 
                 mavenBundle().groupId("org.mortbay.jetty").artifactId("servlet-api-2.5").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-servlet").versionAsInProject()
