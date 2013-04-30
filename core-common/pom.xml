@@ -116,11 +116,10 @@
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
 
-        <!-- TODO: uncomment when re-introducing javax.ws.rs-api 2.0 version -->
-        <!--dependency>
+        <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
-        </dependency-->
+        </dependency>
 
         <dependency>
             <groupId>org.osgi</groupId>
