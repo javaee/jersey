@@ -39,8 +39,11 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
         if(container instanceof ServletContainer) {
             ServletContainer sc = (ServletContainer)container;
             ctx = WebApplicationContextUtils.getWebApplicationContext(sc.getServletContext());
-            LOGGER.fine("context: "+ctx);
-            
+            if(ctx == null) {
+                LOGGER.info("failed to get Spring context, jersey-spring init skipped");
+                return;
+            }
+
             LOGGER.fine("registering Spring injection resolver");
             DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
             DynamicConfiguration c = dcs.createDynamicConfiguration();
