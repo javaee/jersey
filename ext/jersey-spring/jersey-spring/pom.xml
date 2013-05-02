@@ -41,55 +41,20 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>project</artifactId>
+        <artifactId>jersey-spring-parent</artifactId>
         <groupId>org.glassfish.jersey.ext</groupId>
         <version>2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>jersey-spring-parent</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-spring-parent</name>
+    <artifactId>jersey-spring</artifactId>
+    <packaging>jar</packaging>
+    <name>jersey-spring</name>
 
     <description>Jersey 2 Spring integration.
     </description>
 
 
     <profiles>
-        <profile>
-            <id>jdk1.7</id>
-            <activation>
-                <jdk>1.7</jdk>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                    <version>1.7.0</version>
-                    <scope>system</scope>
-                    <systemPath>${java.home}/../lib/tools.jar</systemPath>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>tools.jar</id>
-            <activation>
-                <!-- Activation should be done with <file>${java.home}/../lib/tools.jar</file But this is not working with maven as the property is not expansed. -->
-                <property>
-                    <name>java.vendor</name>
-                    <value>Sun Microsystems Inc.</value>
-                </property>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                    <version>1.6</version>
-                    <scope>system</scope>
-                    <systemPath>${java.home}/../lib/tools.jar</systemPath>
-                </dependency>
-            </dependencies>
-        </profile>
-
     </profiles>
 
     <dependencies>
@@ -155,36 +120,7 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
         </plugins>
     </build>
-    
-    <modules>
-      <module>jersey-spring</module>
-      <module>jersey-spring-it</module>
-    </modules>
 
 </project>
