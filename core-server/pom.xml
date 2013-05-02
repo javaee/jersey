@@ -75,9 +75,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <!-- Note: When you're changing these properties change them also in bundles/jax-rs-ri-bundle/pom.xml. -->
+                        <!-- Note: When you're changing these properties change them also in bundles/jaxrs-ri/pom.xml. -->
                         <Export-Package>org.glassfish.jersey.server.*;version=${project.version},com.sun.research.ws.wadl.*;version=${project.version}</Export-Package>
-                        <Import-Package>javax.annotation.*;version="[1.1.99,1.3)", *</Import-Package>
+                        <Import-Package>*</Import-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
