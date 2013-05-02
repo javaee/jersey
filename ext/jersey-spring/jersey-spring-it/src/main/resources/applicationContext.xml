@@ -8,4 +8,6 @@
   http://www.springframework.org/schema/context/spring-context.xsd"
   >
   
+  <bean id="greetingService" class="org.glassfish.jersey.tests.spring.GreetingServiceImpl"/>
+  
 </beans>
