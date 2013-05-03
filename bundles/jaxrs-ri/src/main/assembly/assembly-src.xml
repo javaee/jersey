@@ -68,6 +68,7 @@
                 </excludes>
             </unpackOptions>
             <includes>
+                <include>javax.ws.rs:*:*:sources:*</include>
                 <include>org.glassfish.jersey.*:*:*:sources:*</include>
             </includes>
         </dependencySet>
