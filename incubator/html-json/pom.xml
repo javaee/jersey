@@ -65,7 +65,7 @@
     <dependency>
       <groupId>org.apidesign.html</groupId>
       <artifactId>net.java.html.json</artifactId>
-      <version>0.2-SNAPSHOT</version>
+      <version>0.2</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
