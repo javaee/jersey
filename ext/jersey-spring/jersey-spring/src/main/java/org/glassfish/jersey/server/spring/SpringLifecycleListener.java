@@ -1,21 +1,14 @@
 package org.glassfish.jersey.server.spring;
 
-import java.lang.annotation.Annotation;
-import java.util.List;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.servlet.ServletContext;
 import javax.ws.rs.ext.Provider;
 
-import org.glassfish.hk2.api.Descriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
-import org.glassfish.hk2.api.Filter;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.BuilderHelper;
-import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -61,8 +54,10 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
             DynamicConfiguration c = dcs.createDynamicConfiguration();
             AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
+            
+            c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(ctx, null, ApplicationContext.class));
             c.commit();
-
+            
             LOGGER.info("jersey-spring initialized");
         } else {
             LOGGER.info("not a ServletContainer, jersey-spring init skipped: "+container);
