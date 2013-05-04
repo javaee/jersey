@@ -16,6 +16,7 @@ public class TestApp extends Application {
 
     @Override
     public Set<Class<?>> getClasses() {
+        System.out.println("XX getClasses()");
         final HashSet<Class<?>> classes = Sets.newHashSet();
         classes.add(TestResource.class);
         classes.add(SpringLifecycleListener.class);
@@ -30,8 +31,8 @@ public class TestApp extends Application {
         
         @GET
         public String get() {
+            System.out.println("XX GET()");
             String msg = greetingService.greet("world");
-            System.out.println("XXX "+msg);
             return msg;
         }
     }

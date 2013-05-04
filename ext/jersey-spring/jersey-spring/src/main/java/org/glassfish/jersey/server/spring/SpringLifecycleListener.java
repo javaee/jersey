@@ -1,18 +1,26 @@
 package org.glassfish.jersey.server.spring;
 
+import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.servlet.ServletContext;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.hk2.api.Descriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
+import org.glassfish.hk2.api.Filter;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
@@ -41,19 +49,23 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
             ctx = WebApplicationContextUtils.getWebApplicationContext(sc.getServletContext());
             if(ctx == null) {
                 LOGGER.info("failed to get Spring context, jersey-spring init skipped");
-                return;
             }
+        } else {
+            LOGGER.fine("initializing Spring context");
+            ctx = new ClassPathXmlApplicationContext(new String[] {"applicationContext.xml"});
+        }
 
+        if(ctx != null) {
             LOGGER.fine("registering Spring injection resolver");
             DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
             DynamicConfiguration c = dcs.createDynamicConfiguration();
             AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
             c.commit();
-            
+
             LOGGER.info("jersey-spring initialized");
         } else {
-            LOGGER.info("not a ServletContainer, jersey-spring init skipped");
+            LOGGER.info("not a ServletContainer, jersey-spring init skipped: "+container);
         }
     }
 
