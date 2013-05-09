@@ -121,7 +121,7 @@ Transfer {
     
     @Override
     public boolean isWriteable(Class type, Type type1, Annotation[] antns, MediaType mt) {
-        if (!mt.equals(MediaType.APPLICATION_JSON_TYPE)) {
+        if (!mt.isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
             return false;
         }
         return Models.isModel(type);
