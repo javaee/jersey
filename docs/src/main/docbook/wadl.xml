@@ -52,6 +52,484 @@
          xml:id="wadl">
 
     <title>WADL Support</title>
+    <section>
+        <title>WADL introduction</title>
+        <para>
+            Jersey contains support for Web Application Description Language (&wadl.project.link;). WADL is
+            a XML description of a deployed RESTful web application. It contains model of the deployed resources, their
+            structure, supported media types, HTTP methods and so on. In a sense, WADL is a similar to the WSDL
+            (Web Service Description Language) which describes SOAP web services. WADL is however specifically designed
+            to describe RESTful Web resources.
+        </para>
+        <para>
+            Let's start with the simple WADL example. In the example there is a simple <literal>CountryResource</literal>
+            deployed and we request a wadl of this resource. The context root path of the application is
+            <literal>http://localhost:9998</literal>.
+            <example>
+                <title>A simple WADL example - JAX-RS resource definition</title>
+                <programlisting language="java" linenumbering="numbered">@Path("country/{id}")
+public static class CountryResource {
 
-    <para>TODO: Describe WADL support</para>
+    private CountryService countryService;
+
+    public CountryResource() {
+        // init countryService
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    public Country getCountry(@PathParam("countryId") int countryId) {
+        return countryService.getCountry(countryId);
+    }
+}</programlisting>
+            </example>
+
+            The WADL of a Jersey application that contains the resource above can be requested by a
+            HTTP &lit.http.GET; request to <literal>http://localhost:9998/application.wadl</literal>.
+            The Jersey will return a response with a WADL content similar to the one in the following example:
+
+            <example>
+            <title>A simple WADL example - WADL content</title>
+            <programlisting language="xml" linenumbering="numbered">&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+&lt;application xmlns="http://wadl.dev.java.net/2009/02"&gt;
+    &lt;doc xmlns:jersey="http://jersey.java.net/" jersey:generatedBy="Jersey: 2.0-SNAPSHOT ${buildNumber}"/&gt;
+    &lt;grammars/&gt;
+    &lt;resources base="http://localhost:9998/"&gt;
+        &lt;resource path="country/{id}"&gt;
+            &lt;param xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                type="xs:int" style="template" name="countryId"/&gt;
+            &lt;method name="GET" id="getCountry"&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="application/xml"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="application/vnd.sun.wadl+xml"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="text/plain"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+        &lt;/resource&gt;
+        &lt;resource path="application.wadl"&gt;
+            &lt;method name="GET" id="getWadl"&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="application/vnd.sun.wadl+xml"/&gt;
+                    &lt;representation mediaType="application/xml"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="text/plain"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;resource path="{path}"&gt;
+                &lt;param xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    type="xs:string" style="template" name="path"/&gt;
+                &lt;method name="GET" id="geExternalGrammar"&gt;
+                    &lt;response&gt;
+                        &lt;representation mediaType="application/xml"/&gt;
+                    &lt;/response&gt;
+                &lt;/method&gt;
+                &lt;method name="OPTIONS" id="apply"&gt;
+                    &lt;request&gt;
+                        &lt;representation mediaType="*/*"/&gt;
+                    &lt;/request&gt;
+                    &lt;response&gt;
+                        &lt;representation mediaType="text/plain"/&gt;
+                    &lt;/response&gt;
+                &lt;/method&gt;
+                &lt;method name="OPTIONS" id="apply"&gt;
+                    &lt;request&gt;
+                        &lt;representation mediaType="*/*"/&gt;
+                    &lt;/request&gt;
+                    &lt;response&gt;
+                        &lt;representation mediaType="*/*"/&gt;
+                    &lt;/response&gt;
+                &lt;/method&gt;
+            &lt;/resource&gt;
+        &lt;/resource&gt;
+    &lt;/resources&gt;
+&lt;/application&gt;</programlisting>
+            </example>
+            In the example above the returned application WADL is shown in full. WADL schema is defined by the
+            WADL specification. The root WADL document element is the <literal>application</literal>. It contains global
+            information about the deployed JAX-RS application. Under this element there is a nested element
+            <literal>resources</literal> which contains zero or more <literal>resource</literal> elements. Each
+            <literal>resource</literal> element describes a single deployed resource. In our example, there are only two root
+            resources - <literal>"country/{id}"</literal> and <literal>"application.wadl"</literal>. The
+            <literal>"application.wadl"</literal> resource is the resource that was just requested in order to receive the
+            application WADL document. Even though WADL support is an additional feature in Jersey it is still
+            a resource deployed in the resource model and therefore it is itself present in the returned WADL document.
+            The first resource element with the <literal>path="country/{id}"</literal> is the element that describes our
+            custom deployed resource.
+            This resource contains a &lit.http.GET; method and three &lit.http.OPTIONS; methods.
+            The &lit.http.GET; method is our getCountry() method defined in the sample. There is a method name
+            in the <literal>id</literal> attribute and &jaxrs.Produces; is described in the
+            <literal>response/representation</literal> WADL element. &lit.http.OPTIONS; methods are the methods that
+            are automatically added by Jersey to each resource. There is an &lit.http.OPTIONS; method
+            returning <literal>"text/plain"</literal> media type, that will return a response with a string entity containing
+            the list of methods deployed on this resource (this means that instead of WADL you can use this &lit.http.OPTIONS;
+            method to get similar information in a textual representation).
+            Another &lit.http.OPTIONS; method returning <literal>*/*</literal> will return a response with no entity
+            and <literal>Allow</literal> header that will contain list of methods as a String.
+            The last &lit.http.OPTIONS; method producing <literal>"application/vnd.sun.wadl+xml"</literal> returns a
+            WADL description of the resource <literal>"country/{id}"</literal>. As you can see, all &lit.http.OPTIONS; methods
+            return information about the resource to which the HTTP &lit.http.OPTIONS; request is made.
+        </para>
+        <para>
+            Second resource with a path "application.wadl" has, again, similar &lit.http.OPTIONS; methods
+            and one &lit.http.GET; method which return this WADL. There is also
+            a sub-resource with a path defined by path param <literal>{path}</literal>. This means that you can request
+            a resource on the URI <literal>http://localhost:9998/application.wadl/something</literal>.
+            This is used only to return an external grammar if there is any attached. Such a external grammar can be
+            for example an <literal>XSD</literal> schema of the response entity which if the response entity is a JAXB bean.
+            An external grammar support via Jersey <emphasis>extended WADL support</emphasis> is described in sections below.
+        </para>
+        <para>
+            Let's now send an HTTP &lit.http.OPTIONS; request to <literal>"country/{id}"</literal> resource using the the
+            <literal>curl</literal> command:
+            <programlisting linenumbering="unnumbered">curl -X OPTIONS -H "Allow: application/vnd.sun.wadl+xml" \
+    -v http://localhost:9998/country/15</programlisting>
+
+            We should see a WADL returned similar to this one:
+
+            <example>
+                <title>OPTIONS method returning WADL</title>
+
+                <programlisting language="xml" linenumbering="numbered">&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+&lt;application xmlns="http://wadl.dev.java.net/2009/02"&gt;
+    &lt;doc xmlns:jersey="http://jersey.java.net/"
+        jersey:generatedBy="Jersey: 2.0-SNAPSHOT ${buildNumber}"/&gt;
+    &lt;grammars/&gt;
+    &lt;resources base="http://localhost:9998/"&gt;
+        &lt;resource path="country/15"&gt;
+            &lt;method name="GET" id="getCountry"&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="application/xml"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="application/vnd.sun.wadl+xml"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="text/plain"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+        &lt;/resource&gt;
+    &lt;/resources&gt;
+&lt;/application&gt;</programlisting>
+            </example>
+            The returned WADL document has the standard WADL structure that we saw in the WADL document returned for the
+            whole Jersey application earlier. The main difference here is that the only <literal>resource</literal> is the
+            resource to which the &lit.http.OPTIONS; HTTP request was sent. The resource has now path
+            <literal>"country/15"</literal> and not <literal>"country/{id}"</literal> as the path parameter
+            <literal>{id}</literal> was already specified in the request to this concrete resource.
+        </para>
+
+        <para>
+            Another, a more complex WADL example is shown in the next example.
+
+            <example>
+                <title>More complex WADL example - JAX-RS resource definition</title>
+
+                <programlisting language="java" linenumbering="numbered">@Path("customer/{id}")
+public static class CustomerResource {
+    private CustomerService customerService;
+
+    @GET
+    public Customer get(@PathParam("id") int id) {
+        return customerService.getCustomerById(id);
+    }
+
+    @PUT
+    public Customer put(Customer customer) {
+        return customerService.updateCustomer(customer);
+    }
+
+    @Path("address")
+    public CustomerAddressSubResource getCustomerAddress(@PathParam("id") int id) {
+        return new CustomerAddressSubResource(id);
+    }
+
+    @Path("additional-info")
+    public Object getAdditionalInfoSubResource(@PathParam("id") int id) {
+        return new CustomerAddressSubResource(id);
+    }
+
+}
+
+
+public static class CustomerAddressSubResource {
+    private final int customerId;
+    private CustomerService customerService;
+
+    public CustomerAddressSubResource(int customerId) {
+        this.customerId = customerId;
+        this.customerService = null; // init customer service here
+    }
+
+    @GET
+    public String getAddress() {
+        return customerService.getAddressForCustomer(customerId);
+    }
+
+    @PUT
+    public void updateAddress(String address) {
+        customerService.updateAddressForCustomer(customerId, address);
+    }
+
+    @GET
+    @Path("sub")
+    public String getDeliveryAddress() {
+        return customerService.getDeliveryAddressForCustomer(customerId);
+    }
+}</programlisting>
+            </example>
+
+            The &lit.http.GET; request to <literal>http://localhost:9998/application.wadl</literal> will
+            return the following WADL document:
+
+            <example>
+                <title>More complex WADL example - WADL content</title>
+                <programlisting language="xml" linenumbering="numbered">&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+&lt;application xmlns="http://wadl.dev.java.net/2009/02"&gt;
+    &lt;doc xmlns:jersey="http://jersey.java.net/"
+        jersey:generatedBy="Jersey: 2.0-SNAPSHOT ${buildNumber}"/&gt;
+    &lt;grammars/&gt;
+    &lt;resources base="http://localhost:9998/"&gt;
+        &lt;resource path="customer/{id}"&gt;
+            &lt;param xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                type="xs:int" style="template" name="id"/&gt;
+            &lt;method name="GET" id="get"&gt;
+                &lt;response/&gt;
+            &lt;/method&gt;
+            &lt;method name="PUT" id="put"&gt;
+                &lt;response/&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="application/vnd.sun.wadl+xml"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="text/plain"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;resource path="additional-info"&gt;
+                &lt;param xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    type="xs:int" style="template" name="id"/&gt;
+            &lt;/resource&gt;
+            &lt;resource path="address"&gt;
+                &lt;param xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    type="xs:int" style="template" name="id"/&gt;
+                &lt;method name="GET" id="getAddress"&gt;
+                    &lt;response/&gt;
+                &lt;/method&gt;
+                &lt;method name="PUT" id="updateAddress"/&gt;
+                &lt;resource path="sub"&gt;
+                    &lt;method name="GET" id="getDeliveryAddress"&gt;
+                        &lt;response/&gt;
+                    &lt;/method&gt;
+                &lt;/resource&gt;
+            &lt;/resource&gt;
+        &lt;/resource&gt;
+        &lt;resource path="application.wadl"&gt;
+            &lt;method name="GET" id="getWadl"&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="application/vnd.sun.wadl+xml"/&gt;
+                    &lt;representation mediaType="application/xml"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="text/plain"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;method name="OPTIONS" id="apply"&gt;
+                &lt;request&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/request&gt;
+                &lt;response&gt;
+                    &lt;representation mediaType="*/*"/&gt;
+                &lt;/response&gt;
+            &lt;/method&gt;
+            &lt;resource path="{path}"&gt;
+                &lt;param xmlns:xs="http://www.w3.org/2001/XMLSchema"
+                    type="xs:string" style="template" name="path"/&gt;
+                &lt;method name="GET" id="geExternalGrammar"&gt;
+                    &lt;response&gt;
+                        &lt;representation mediaType="application/xml"/&gt;
+                    &lt;/response&gt;
+                &lt;/method&gt;
+                &lt;method name="OPTIONS" id="apply"&gt;
+                    &lt;request&gt;
+                        &lt;representation mediaType="*/*"/&gt;
+                    &lt;/request&gt;
+                    &lt;response&gt;
+                        &lt;representation mediaType="text/plain"/&gt;
+                    &lt;/response&gt;
+                &lt;/method&gt;
+                &lt;method name="OPTIONS" id="apply"&gt;
+                    &lt;request&gt;
+                        &lt;representation mediaType="*/*"/&gt;
+                    &lt;/request&gt;
+                    &lt;response&gt;
+                        &lt;representation mediaType="*/*"/&gt;
+                    &lt;/response&gt;
+                &lt;/method&gt;
+            &lt;/resource&gt;
+        &lt;/resource&gt;
+    &lt;/resources&gt;
+&lt;/application&gt;</programlisting>
+            </example>
+
+            The <literal>resource</literal> with <literal>path="customer/{id}"</literal> is similar to the
+            country resource from the previous example. There is a path parameter which identifies the customer
+            by <literal>id</literal>. The resource contains 2 user-declared methods and again auto-generated
+            &lit.http.OPTIONS; methods added by Jersey. THe resource declares 2 sub-resource locators which are
+            represented in the returned WADL document as nested <literal>resource</literal> elements. Note that the sub-resource
+            locator <literal>getCustomerAddress()</literal> returns a type CustomerAddressSubResource in the
+            method declaration and also in the WADL there is a <literal>resource</literal> element for such
+            a sub resource with full internal description. The second method
+            <literal>getAdditionalInfoSubResource()</literal> returns only an <literal>Object</literal> in the method declaration.
+            While this is correct from the JAX-RS perspective as the real returned type can be computed from a request
+            information, it creates a problem for WADL generator because WADL is generated based on the static configuration
+            of the JAX-RS application resources. The WADL generator does not know what type would be actually returned to
+            a request at run time.
+            That is the reason why the nested <literal>resource</literal> element with <literal>path="additional-info"</literal>
+            does not contain any information about the supported resource representations.
+        </para>
+        <para>
+            The <literal>CustomerAddressSubResource</literal> sub-resource described in the nested element
+            <literal>&lt;resource path="address"&gt;</literal> does not contain an &lit.http.OPTIONS; method.
+            While these methods are in fact generated by Jersey for the sub-resource, Jersey WADL generator does not currently
+            support adding these methods to the sub-resource description. This should be addressed in the near future.
+            Still, there are two user-defined resource methods handling HTTP &lit.http.GET; and &lit.http.PUT; requests.
+            The sub-resource method <literal>getDeliveryAddress()</literal> is represented as a separate nested resource with
+            <literal>path="sub"</literal>. Should there be more sub-resource methods defined with <literal>path="sub"</literal>,
+            then all these method descriptions would be placed into the same <literal>resource</literal> element.
+            In other words, sub-resource methods are grouped in WADL as sub-resources based on their <literal>path</literal>
+            value.
+        </para>
+    </section>
+
+    <section>
+        <title>Configuration</title>
+
+        <para>
+            WADL generation is enabled in Jersey by default. This means that &lit.http.OPTIONS;
+            methods are added by default to each resource and an auto-generated <literal>/application.wadl</literal>
+            resource is deployed too. To override this default behavior and disable WADL generation in Jersey, setup the
+            configuration property in your application:
+
+            <programlisting>jersey.config.server.wadl.disableWadl=true</programlisting>
+
+            This property can be setup in a <literal>web.xml</literal> if the Jersey application is deployed
+            in the servlet with <literal>web.xml</literal> or the property can be returned from the &jaxrs.core.Application;.
+            <literal>getProperties()</literal>. See <link linkend="deployment">Deployment chapter</link> for more information
+            on setting the application configuration properties in various deployments.
+        </para>
+        <para>
+            WADL support in Jersey is implemented via &jersey.server.ModelProcessor; extension. This implementation enhances
+            the application resource model by adding the WADL providing resources. WADL &lit.jersey.server.ModelProcessor;
+            priority value is high (i.e. the priority is low) as it should be executed as one of the last model processors.
+            Therefore, any &lit.jersey.server.ModelProcessor; executed before will not see WADL extensions in the resource model.
+            WADL handling resource model extensions (resources and &lit.http.OPTIONS; resource methods) are not added to the
+            application resource model if there is already a matching resource or a resource method detected in the model.
+            In other words, if you define for example your own &lit.http.OPTIONS; method that would produce
+            <literal>"application.wadl"</literal> response content, this method will not be overridden by WADL model processor.
+            See <link linkend="resource-builder">Resource builder chapter</link> for more information on
+            &lit.jersey.server.ModelProcessor; extension mechanism.
+        </para>
+    </section>
+
+    <section>
+        <title>Extended WADL support</title>
+        <para>
+            <emphasis role="strong">Please note that the API of extended WADL support is going to be changed in one of the future
+            releases of Jersey 2.x (see below).</emphasis>
+        </para>
+        <para>
+            Jersey supports extension of WADL generation called <emphasis>extended WADL</emphasis>. Using the extended WADL
+            support you can enhance the generated WADL document with additional information, such as
+            resource method javadoc-based documentation of your REST APIs, adding general documentation,
+            adding external grammar support, or adding any custom WADL extension information.
+        </para>
+        <para>
+            The documentation of the existing extended WADL can be found here:
+            <link xlink:href="https://wikis.oracle.com/display/Jersey/WADL">Extended WADL in Jersey 1</link>. This contains
+            description of an extended WADL generation in Jersey 1.x that is currently supported also by Jersey 2.x.
+        </para>
+        <para>
+            <emphasis role="strong">Again, note that the extended WADL in Jersey 2.x is NOT the intended final version and
+            API is going to be changed.</emphasis> The existing set of features and functionality will be preserved but the
+            APIs will be significantly re-designed to support additional use cases. This impacts mainly the APIs of
+            &jersey.server.WadlGenerator;, &jersey.server.WadlGeneratorConfig; as well as any related classes. The API changes
+            may impact your code if you are using a custom &lit.jersey.server.WadlGenerator; or plan to implement one.
+        </para>
+    </section>
 </chapter>
