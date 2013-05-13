@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.incubator.html.json;
+package org.glassfish.jersey.media.htmljson;
 
 
 import javax.ws.rs.GET;
