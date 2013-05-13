@@ -52,6 +52,14 @@
   <artifactId>html-json</artifactId>
   <version>0.1-SNAPSHOT</version>
   <name>Reader/Writer via net.java.html.json library</name>
+  <description>
+      JSON serialization and deserialization using lightweight (no reflection)
+      net.java.html.json library. Define your objects via @Model annotation.
+      Use them in Jersey.
+
+      Jersey incubator for experimental modules that are in a prototyping or research stage,
+      not ready to be released as part of Jersey (yet).
+  </description>
   <url>http://maven.apache.org</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -122,12 +130,4 @@
       <type>jar</type>
     </dependency>
   </dependencies>
-    <description>
-JSON serialization and deserialization using lightweight (no reflection)
-net.java.html.json library. Define your objects via @Model annotation.
-Use them in Jersey.
-
-Jersey incubator for experimental modules that are in a prototyping or research stage,
-not ready to be released as part of Jersey (yet).
-    </description>
 </project>
