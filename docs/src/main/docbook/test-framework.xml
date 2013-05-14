@@ -54,4 +54,80 @@
     <title>Jersey Test Framework</title>
 
     <para>TODO: Describe Test Framework</para>
+
+    <!-- The following text is copied from Jersey 1 documentation / client-->
+    <section>
+        <title>Testing services</title>
+        <para>The Jersey client API was originally developed to aid the testing of the Jersey server-side,
+            primarily to make it easier to write functional tests in conjunction with the JUnit framework
+            for execution and reporting. It is used extensively and there are currently over 1000 tests.
+        </para>
+        <para>Embedded servers, Grizzly and a special in-memory server, are utilized to deploy the
+            test-based services. Many of the Jersey samples contain tests that utilize the client API to
+            server both for testing and examples of how to use the API. The samples utilize Grizzly or
+            embedded Glassfish to deploy the services.
+        </para>
+        <para>The following code snippets are presented from the single unit test
+            <literal>HelloWorldWebAppTest</literal>
+            of the
+            <link xlink:href="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey.samples&amp;a=helloworld-webapp&amp;v=&version;&amp;c=project&amp;e=zip">helloworld-webapp</link>
+            sample.
+            The
+            <literal>setUp</literal>
+            method, called before a test is executed, creates an instance of
+            the Glassfish server, deploys the application, and a
+            <literal>WebResource</literal>
+            instance
+            that references the base resource:
+            <programlisting language="java">@Override
+                protected void setUp() throws Exception {
+                super.setUp();
+
+                // Start Glassfish
+                glassfish = new GlassFish(BASE_URI.getPort());
+
+                // Deploy Glassfish referencing the web.xml
+                ScatteredWar war = new ScatteredWar(
+                BASE_URI.getRawPath(), new File("src/main/webapp"),
+                new File("src/main/webapp/WEB-INF/web.xml"),
+                Collections.singleton(
+                new File("target/classes").
+                toURI().toURL()));
+                glassfish.deploy(war);
+
+                Client c = Client.create();
+                r = c.resource(BASE_URI);
+                }
+            </programlisting>
+            The
+            <literal>tearDown</literal>
+            method, called after a test is executed,
+            stops the Glassfish server.
+            <programlisting language="java">@Override
+                protected void tearDown() throws Exception {
+                super.tearDown();
+                glassfish.stop();
+                }
+            </programlisting>
+        </para>
+        <para>The
+            <literal>testHelloWorld</literal>
+            method tests that the response
+            to a
+            <literal>GET</literal>
+            request to the Web resource returns “Hello World”:
+            <programlisting language="java">public void testHelloWorld() throws Exception {
+                String responseMsg = r.path("helloworld").
+                get(String.class);
+                assertEquals("Hello World", responseMsg);
+                }
+            </programlisting>
+            Note the use of the
+            <literal>path</literal>
+            method on the
+            <literal>WebResource</literal>
+            to
+            build from the base<literal>WebResource</literal>.
+        </para>
+    </section>
 </chapter>

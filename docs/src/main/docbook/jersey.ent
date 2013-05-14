@@ -62,6 +62,8 @@
 
 <!-- Common Literals -->
 <!ENTITY lit.null "<literal>null</literal>">
+<!ENTITY lit.true "<literal>true</literal>">
+<!ENTITY lit.false "<literal>false</literal>">
 <!ENTITY lit.http.GET "<literal>GET</literal>">
 <!ENTITY lit.http.PUT "<literal>PUT</literal>">
 <!ENTITY lit.http.POST "<literal>POST</literal>">
@@ -173,6 +175,7 @@
 <!ENTITY jaxrs.client.InvocationCallback "<link xlink:href='&jax-rs.javadoc.path;/client/InvocationCallback.html'>InvocationCallback</link>">
 <!ENTITY jaxrs.client.WebTarget "<link xlink:href='&jax-rs.javadoc.path;/client/WebTarget.html'>WebTarget</link>">
 <!ENTITY jaxrs.client.Invocation "<link xlink:href='&jax-rs.javadoc.path;/client/Invocation.html'>Invocation</link>">
+<!ENTITY jaxrs.client.Invocation.Builder "<link xlink:href='&jax-rs.javadoc.path;/client/Invocation.Builder.html'>Invocation.Builder</link>">
 <!ENTITY jaxrs.client.RequestFilter "<link xlink:href='&jax-rs.javadoc.path;/client/RequestFilter.html'>ClientRequestFilter</link>">
 <!ENTITY jaxrs.client.ClientRequestContext "<link xlink:href='&jax-rs.javadoc.path;/client/ClientRequestContext.html'>ClientRequestContext</link>">
 
@@ -317,6 +320,7 @@
 <!ENTITY lit.jersey.server.ChunkedInput "<literal>ChunkedInput</literal>">
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
+<!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
 <!ENTITY lit.jersey.server.WadlGenerator "<literal>WadlGenerator</literal>">
 <!ENTITY lit.jersey.server.WadlGeneratorConfig "<literal>WadlGeneratorConfig</literal>">
 <!ENTITY lit.jersey.client.Connector "<literal>Connector</literal>">
