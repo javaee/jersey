@@ -40,7 +40,8 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.glassfish.jersey</groupId>
@@ -66,10 +67,10 @@
                     <execution>
                         <configuration>
                             <tasks>
-                                <echo message="Preparing char entities" />
-                                <mkdir dir="${src.dir}" />
+                                <echo message="Preparing char entities"/>
+                                <mkdir dir="${src.dir}"/>
                                 <copy todir="${src.dir}">
-                                    <fileset dir="src/main/docbook" />
+                                    <fileset dir="src/main/docbook"/>
                                 </copy>
                                 <replace file="${src.dir}/jersey.ent" token="$version" value="${jersey.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$repository" value="${javanet.repository.id}" />
@@ -116,7 +117,7 @@
                     <calloutsExtension>true</calloutsExtension>
                     <calloutGraphics>false</calloutGraphics>
                     <highlightSource>true</highlightSource>
-                    <highlightDefaultLanguage />
+                    <highlightDefaultLanguage/>
                     <!--calloutGraphicsExtension>1</calloutGraphicsExtension-->
                 </configuration>
                 <executions>
