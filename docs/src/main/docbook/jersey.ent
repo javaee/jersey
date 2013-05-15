@@ -55,8 +55,13 @@
 <!ENTITY jersey.docs.root.path "http://jersey.java.net/nonav/documentation/&version;">
 <!ENTITY jersey.docs.index "http://jersey.java.net/nonav/documentation/&version;/index.html">
 <!ENTITY jersey.javadoc.path "http://jersey.java.net/nonav/apidocs/&version;/org/glassfish/jersey">
+<!ENTITY jee6.javadoc.path "http://docs.oracle.com/javaee/6/api">
+<!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
+
+<!ENTITY wadl.project.link "<link xlink:href='http://wadl.java.net/'>WADL</link>">
 
 <!-- Common Literals -->
+<!ENTITY lit.null "<literal>null</literal>">
 <!ENTITY lit.http.GET "<literal>GET</literal>">
 <!ENTITY lit.http.PUT "<literal>PUT</literal>">
 <!ENTITY lit.http.POST "<literal>POST</literal>">
@@ -64,6 +69,15 @@
 <!ENTITY lit.http.HEAD "<literal>HEAD</literal>">
 <!ENTITY lit.http.OPTIONS "<literal>OPTIONS</literal>">
 <!ENTITY lit.http.TRACE "<literal>TRACE</literal>">
+
+<!-- JDK links -->
+<!ENTITY jdk6.HttpUrlConnection "<link xlink:href='&jdk6.javadoc.path;//java/net/HttpURLConnection.html'>HttpURLConnection</link>">
+<!ENTITY jdk6.URI "<link xlink:href='&jdk6.javadoc.path;//java/net/URI.html'>URI</link>">
+<!ENTITY jdk6.KeyStore "<link xlink:href='&jdk6.javadoc.path;//java/security/KeyStore.html'>KeyStore</link>">
+<!ENTITY jdk6.TrustStore "<link xlink:href='&jdk6.javadoc.path;//java/security/TrustStore.html'>TrustStore</link>">
+<!ENTITY jdk6.SslContext "<link xlink:href='&jdk6.javadoc.path;//javax/net/ssl/SslContext.html'>SslContext</link>">
+<!ENTITY jdk6.HostnameVerifier "<link xlink:href='&jdk6.javadoc.path;//javax/net/ssl/HostnameVerifier.html'>HostnameVerifier</link>">
+
 
 <!-- API Links -->
 <!ENTITY jaxrs.ApplicationPath "<link xlink:href='&jax-rs.javadoc.path;/ApplicationPath.html'>@ApplicationPath</link>">
@@ -86,6 +100,7 @@
 <!ENTITY jaxrs.Produces "<link xlink:href='&jax-rs.javadoc.path;/Produces.html'>@Produces</link>">
 <!ENTITY jaxrs.PUT "<link xlink:href='&jax-rs.javadoc.path;/PUT.html'>@PUT</link>">
 <!ENTITY jaxrs.QueryParam "<link xlink:href='&jax-rs.javadoc.path;/QueryParam.html'>@QueryParam</link>">
+<!ENTITY jaxrs.core.Form "<link xlink:href='&jax-rs.javadoc.path;/core/Form.html'>Form</link>">
 <!ENTITY jaxrs.WebApplicationException "<link xlink:href='&jax-rs.javadoc.path;/WebApplicationException.html'>WebApplicationException</link>">
 
 <!ENTITY jaxrs.core.HttpHeaders "<link xlink:href='&jax-rs.javadoc.path;/core/HttpHeaders.html'>HttpHeaders</link>">
@@ -107,15 +122,17 @@
 <!ENTITY jaxrs.core.Response "<link xlink:href='&jax-rs.javadoc.path;/core/Response.html'>Response</link>">
 <!ENTITY jaxrs.core.Response.ResponseBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/Response.ResponseBuilder.html'>Response.ResponseBuilder</link>">
 <!ENTITY jaxrs.core.UriBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/UriBuilder.html'>UriBuilder</link>">
+<!ENTITY jaxrs.core.UriTemplate "<link xlink:href='&jax-rs.javadoc.path;/core/UriTemplate.html'>UriTemplate</link>">
 <!ENTITY jaxrs.core.Variant "<link xlink:href='&jax-rs.javadoc.path;/core/Variant.html'>Variant</link>">
 <!ENTITY jaxrs.core.Variant.VariantListBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/Variant.VariantListBuilder.html'>Variant.VariantListBuilder</link>">
-
+<!ENTITY jaxrs.core.Feature "<link xlink:href='&jax-rs.javadoc.path;/core/Feature.html'>Feature</link>">
 <!ENTITY jaxrs.core.Response.Status "<link xlink:href='&jax-rs.javadoc.path;/core/Response.Status.html'>Response.Status</link>">
 <!ENTITY jaxrs.core.Response.Status.Family "<link xlink:href='&jax-rs.javadoc.path;/core/Response.Status.Family.html'>Response.Status.Family</link>">
 
 <!ENTITY jaxrs.core.UriBuilderException "<link xlink:href='&jax-rs.javadoc.path;/core/UriBuilderException.html'>UriBuilderException</link>">
 
 <!ENTITY jaxrs.core.Context "<link xlink:href='&jax-rs.javadoc.path;/core/Context.html'>@Context</link>">
+<!ENTITY jaxrs.core.Configurable "<link xlink:href='&jax-rs.javadoc.path;/core/Configurable.html'>Configurable</link>">
 
 <!ENTITY jaxrs.ext.ContextResolver "<link xlink:href='&jax-rs.javadoc.path;/ext/ContextResolver.html'>ContextResolver&lt;T&gt;</link>">
 <!ENTITY jaxrs.ext.ExceptionMapper "<link xlink:href='&jax-rs.javadoc.path;/ext/ExceptionMapper.html'>ExceptionMapper&lt;E extends Throwable&gt;</link>">
@@ -132,23 +149,68 @@
 <!ENTITY jaxrs.container.ContainerRequestFilter  "<link xlink:href='&jax-rs.javadoc.path;/container/ContainerRequestFilter.html'>ContainerRequestFilter</link>">
 <!ENTITY jaxrs.client.ClientRequestFilter "<link xlink:href='&jax-rs.javadoc.path;/client/ClientRequestFilter.html'>ClientRequestFilter</link>">
 <!ENTITY jaxrs.client.ClientResponseFilter "<link xlink:href='&jax-rs.javadoc.path;/client/ClientResponseFilter.html'>ClientResponseFilter</link>">
-<!ENTITY jaxrs.ContainerRequestContext "<link xlink:href='&jax-rs.javadoc.path;/ContainerRequestContext.html'>ContainerRequestContext</link>">
-<!ENTITY jaxrs.ContainerResponseContext "<link xlink:href='&jax-rs.javadoc.path;/ContainerResponseContext.html'>ContainerResponseContext</link>">
+<!ENTITY jaxrs.ContainerRequestContext "<link xlink:href='&jax-rs.javadoc.path;/container/ContainerRequestContext.html'>ContainerRequestContext</link>">
+<!ENTITY jaxrs.ContainerResponseContext "<link xlink:href='&jax-rs.javadoc.path;/container/ContainerResponseContext.html'>ContainerResponseContext</link>">
 
+<!ENTITY jaxrs.container.AsyncResponse "<link xlink:href='&jax-rs.javadoc.path;/container/AsyncResponse.html'>AsyncResponse</link>">
+<!ENTITY jaxrs.container.Suspended "<link xlink:href='&jax-rs.javadoc.path;/container/Suspended.html'>@Suspended</link>">
+<!ENTITY jaxrs.container.CompletionCallback "<link xlink:href='&jax-rs.javadoc.path;/container/CompletionCallback.html'>CompletionCallback</link>">
+<!ENTITY jaxrs.container.ConnectionCallback "<link xlink:href='&jax-rs.javadoc.path;/container/ConnectionCallback.html'>ConnectionCallback</link>">
 
 <!ENTITY jaxrs.ReaderInterceptor "<link xlink:href='&jax-rs.javadoc.path;/ext/ReaderInterceptor.html'>ReaderInterceptor</link>">
 <!ENTITY jaxrs.WriterInterceptor "<link xlink:href='&jax-rs.javadoc.path;/ext/WriterInterceptor.html'>WriterInterceptor</link>">
 <!ENTITY jaxrs.ReaderInterceptorContext "<link xlink:href='&jax-rs.javadoc.path;/ext/ReaderInterceptorContext.html'>ReaderInterceptorContext</link>">
 <!ENTITY jaxrs.WriterInterceptorContext "<link xlink:href='&jax-rs.javadoc.path;/ext/WriterInterceptorContext.html'>WriterInterceptorContext</link>">
 <!ENTITY jaxrs.NameBinding "<link xlink:href='&jax-rs.javadoc.path;/NameBinding.html'>@NameBinding</link>">
-<!ENTITY jaxrs.Prematching "<link xlink:href='&jax-rs.javadoc.path;/Prematching.html'>@PreMatching</link>">
+<!ENTITY jaxrs.Prematching "<link xlink:href='&jax-rs.javadoc.path;/container/PreMatching.html'>@PreMatching</link>">
 <!ENTITY jaxrs.Priorities "<link xlink:href='&jax-rs.javadoc.path;/Priorities.html'>Priorities</link>">
 
 <!ENTITY jaxrs.server.DynamicFeature "<link xlink:href='&jax-rs.javadoc.path;/container/DynamicFeature.html'>DynamicFeature</link>">
 <!ENTITY jaxrs.server.ResourceInfo "<link xlink:href='&jax-rs.javadoc.path;/container/ResourceInfo.html'>ResourceInfo</link>">
 
+<!ENTITY jaxrs.client.SyncInvoker "<link xlink:href='&jax-rs.javadoc.path;/client/SyncInvoker.html'>SyncInvoker</link>">
+<!ENTITY jaxrs.client.AsyncInvoker "<link xlink:href='&jax-rs.javadoc.path;/client/AsyncInvoker.html'>AsyncInvoker</link>">
+<!ENTITY jaxrs.client.InvocationCallback "<link xlink:href='&jax-rs.javadoc.path;/client/InvocationCallback.html'>InvocationCallback</link>">
+<!ENTITY jaxrs.client.WebTarget "<link xlink:href='&jax-rs.javadoc.path;/client/WebTarget.html'>WebTarget</link>">
+<!ENTITY jaxrs.client.Invocation "<link xlink:href='&jax-rs.javadoc.path;/client/Invocation.html'>Invocation</link>">
+<!ENTITY jaxrs.client.RequestFilter "<link xlink:href='&jax-rs.javadoc.path;/client/RequestFilter.html'>ClientRequestFilter</link>">
+<!ENTITY jaxrs.client.ClientRequestContext "<link xlink:href='&jax-rs.javadoc.path;/client/ClientRequestContext.html'>ClientRequestContext</link>">
 
-        <!-- API Literals -->
+
+<!ENTITY jaxrs.client.WebTarget "<link xlink:href='&jax-rs.javadoc.path;/client/WebTarget.html'>WebTarget</link>">
+<!ENTITY jaxrs.client.Client "<link xlink:href='&jax-rs.javadoc.path;/client/Client.html'>Client</link>">
+<!ENTITY jaxrs.client.ClientBuilder "<link xlink:href='&jax-rs.javadoc.path;/client/ClientBuilder.html'>ClientBuilder</link>">
+<!ENTITY jaxrs.client.Entity "<link xlink:href='&jax-rs.javadoc.path;/client/Entity.html'>Entity</link>">
+
+
+<!-- Jersey Javadoc Links -->
+<!ENTITY jersey.server.ChunkedOutput "<link xlink:href='&jersey.javadoc.path;/server/ChunkedOuptut.html'>ChunkedOutput</link>">
+<!ENTITY jersey.client.ChunkedInput "<link xlink:href='&jersey.javadoc.path;/client/ChunkedInput.html'>ChunkedInput</link>">
+<!ENTITY jersey.client.ChunkParser "<link xlink:href='&jersey.javadoc.path;/client/ChunkParser.html'>ChunkParser</link>">
+<!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.path;/server/model/ModelProcessor.html'>ModelProcessor</link>">
+<!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
+<!ENTITY jersey.server.WadlGeneratorConfig "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGeneratorConfig.html'>WadlGeneratorConfig</link>">
+<!ENTITY jersey.server.RolesAllowedDynamicFeature "<link xlink:href='&jersey.javadoc.path;/server/RolesAllowedDynamicFeature.html'>RolesAllowedDynamicFeature</link>">
+<!ENTITY jersey.server.ResourceConfig "<link xlink:href='&jersey.javadoc.path;/server/ResourceConfig.html'>ResourceConfig</link>">
+<!ENTITY jersey.media.multipart "<link xlink:href='&jersey.javadoc.path;/media/multipart/package-info.html'>Multi Part</link>">
+<!ENTITY jersey.media.MoxyJsonFeature "<link xlink:href='&jersey.javadoc.path;/moxy/json/MoxyJsonFeature.html'>MoxyJsonFeature</link>">
+<!ENTITY jersey.client.Connector "<link xlink:href='&jersey.javadoc.path;/client/spi/Connector.html'>Connector</link>">
+<!ENTITY jersey.apache.ApacheConnector "<link xlink:href='&jersey.javadoc.path;/apache/ApacheConnector.html'>ApacheConnector</link>">
+<!ENTITY jersey.grizzly.GrizzlyConnector "<link xlink:href='&jersey.javadoc.path;/grizzly/GrizzlyConnector.html'>GrizzlyConnector</link>">
+<!ENTITY jersey.client.HttpUrlConnector "<link xlink:href='&jersey.javadoc.path;/client/HttpUrlConnector.html'>HttpUrlConnector</link>">
+<!ENTITY jersey.client.ClientConfig "<link xlink:href='&jersey.javadoc.path;/client/ClientConfig.html'>ClientConfig</link>">
+<!ENTITY jersey.common.SslConfigurator "<link xlink:href='&jersey.javadoc.path;/common/SslConfigurator.html'>ClientConfig</link>">
+<!ENTITY jersey.client.HttpBasicAuthFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/HttpBasicAuthFilter.html'>HttpBasicAuthFilter</link>">
+<!ENTITY jersey.client.CsrfProtectionFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/CsrfProtectionFilter.html'>CsrfProtectionFilter</link>">
+<!ENTITY jersey.client.EncodingFeature "<link xlink:href='&jersey.javadoc.path;/client/filter/EncodingFeature.html'>EncodingFeature</link>">
+<!ENTITY jersey.client.ContentEncoder "<link xlink:href='&jersey.javadoc.path;/common/spi/ContentEncoder.html'>ContentEncoder</link>">
+
+<!-- JEE links -->
+<!ENTITY jee6.annotations.RolesAllowed "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/RolesAllowed.html'>@RolesAllowed</link>">
+<!ENTITY jee6.annotations.PermitAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/PermitAll.html'>@PermitAll</link>">
+<!ENTITY jee6.servlet.HttpServletRequest "<link xlink:href='&jee6.javadoc.path;/javax/servlet/http/HttpServletRequest.html'>HttpServletRequest</link>">
+
+<!-- API Literals -->
 <!ENTITY lit.jaxrs.ApplicationPath "<literal>@ApplicationPath</literal>">
 <!ENTITY lit.jaxrs.Consumes "<literal>@Consumes</literal>">
 <!ENTITY lit.jaxrs.CookieParam "<literal>@CookieParam</literal>">
@@ -190,6 +252,7 @@
 <!ENTITY lit.jaxrs.core.Response "<literal>Response</literal>">
 <!ENTITY lit.jaxrs.core.Response.ResponseBuilder "<literal>Response.ResponseBuilder</literal>">
 <!ENTITY lit.jaxrs.core.UriBuilder "<literal>UriBuilder</literal>">
+<!ENTITY lit.jaxrs.core.UriTemplate "<literal>UriTemplate</literal>">
 <!ENTITY lit.jaxrs.core.Variant "<literal>Variant</literal>">
 <!ENTITY lit.jaxrs.core.Variant.VariantListBuilder "<literal>Variant.VariantListBuilder</literal>">
 
@@ -199,6 +262,9 @@
 <!ENTITY lit.jaxrs.core.UriBuilderException "<literal>UriBuilderException</literal>">
 
 <!ENTITY lit.jaxrs.core.Context "<literal>@Context</literal>">
+<!ENTITY lit.jaxrs.core.Form "<literal>Form</literal>">
+<!ENTITY lit.jaxrs.core.Configurable "<literal>Configurable</literal>">
+<!ENTITY lit.jaxrs.core.Feature "<link xlink:href='&jax-rs.javadoc.path;/core/Feature.html'>Feature</link>">
 
 <!ENTITY lit.jaxrs.ext.ContextResolver "<literal>ContextResolver&lt;T&gt;</literal>">
 <!ENTITY lit.jaxrs.ext.ExceptionMapper "<literal>ExceptionMapper&lt;E extends Throwable&gt;</literal>">
@@ -227,3 +293,53 @@
 <!ENTITY lit.jaxrs.Priorities "<literal>Priorities</literal>">
 <!ENTITY lit.jaxrs.DynamicFeature "<literal>DynamicFeature</literal>">
 <!ENTITY lit.jaxrs.server.ResourceInfo "<literal>ResourceInfo</literal>">
+
+<!ENTITY lit.jaxrs.container.AsyncResponse "<literal>AsyncResponse</literal>">
+<!ENTITY lit.jaxrs.container.Suspended "<literal>@Suspended</literal>">
+<!ENTITY lit.jaxrs.container.CompletionCallback "<literal>CompletionCallback</literal>">
+<!ENTITY lit.jaxrs.container.ConnectionCallback "<literal>ConnectionCallback</literal>">
+
+<!ENTITY lit.jaxrs.client.SyncInvoker "<literal>SyncInvoker</literal>">
+<!ENTITY lit.jaxrs.client.AsyncInvoker "<literal>AsyncInvoker</literal>">
+<!ENTITY lit.jaxrs.client.InvocationCallback "<literal>InvocationCallback</literal>">
+<!ENTITY lit.jaxrs.client.WebTarget "<literal>WebTarget</literal>">
+<!ENTITY lit.jaxrs.client.Client "<literal>Client</literal>">
+<!ENTITY lit.jaxrs.client.ClientBuilder "<literal>ClientBuilder</literal>">
+<!ENTITY lit.jaxrs.client.Entity "<literal>Entity</literal>">
+<!ENTITY lit.jaxrs.client.Invocation "<literal>Invocation</literal>">
+<!ENTITY lit.jaxrs.client.Invocation.Builder "<literal>Invocation.Builder</literal>">
+<!ENTITY lit.jaxrs.client.RequestFilter "<literal>ClientRequestFilter</literal>">
+<!ENTITY lit.jaxrs.client.ClientRequestContext "<literal>ClientRequestContext</literal>">
+
+
+<!-- Jersey literals -->
+<!ENTITY lit.jersey.server.ChunkedOutput "<literal>ChunkedOutput</literal>">
+<!ENTITY lit.jersey.server.ChunkedInput "<literal>ChunkedInput</literal>">
+<!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
+<!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
+<!ENTITY lit.jersey.server.WadlGenerator "<literal>WadlGenerator</literal>">
+<!ENTITY lit.jersey.server.WadlGeneratorConfig "<literal>WadlGeneratorConfig</literal>">
+<!ENTITY lit.jersey.client.Connector "<literal>Connector</literal>">
+<!ENTITY lit.jersey.apache.ApacheConnector "<literal>ApacheConnector</literal>">
+<!ENTITY lit.jersey.grizzly.GrizzlyConnector "<literal>GrizzlyConnector</literal>">
+<!ENTITY lit.jersey.client.HttpUrlConnector "<literal>HttpUrlConnector</literal>">
+<!ENTITY lit.jersey.client.ClientConfig "<literal>ClientConfig</literal>">
+<!ENTITY lit.jersey.common.SslConfigurator "<literal>SslConfigurator</literal>">
+<!ENTITY lit.jersey.client.HttpBasicAuthFilter "<literal>HttpBasicAuthFilter</literal>">
+<!ENTITY lit.jersey.client.CsrfProtectionFilter "<literal>CsrfProtectionFilter</literal>">
+<!ENTITY lit.jersey.client.EncodingFeature "<literal>EncodingFeature</literal>">
+<!ENTITY lit.jersey.client.ContentEncoder "<literal>ContentEncoder</literal>">
+<!ENTITY lit.jersey.server.RolesAllowedDynamicFeature "<literal>RolesAllowedDynamicFeature</literal>">
+
+<!--JDK 6 literals-->
+<!ENTITY lit.jdk6.HttpUrlConnection "<literal>HttpUrlConnection</literal>">
+<!ENTITY lit.jdk6.URI "<literal>URI</literal>">
+<!ENTITY lit.jdk6.KeyStore "<literal>KeyStore</literal>">
+<!ENTITY lit.jdk6.TrustStore "<literal>TrustStore</literal>">
+<!ENTITY lit.jdk6.SslContext "<literal>SslContext</literal>">
+<!ENTITY lit.jdk6.HostnameVerifier "<literal>HostnameVerifier</literal>">
+
+<!-- JEE literals-->
+<!ENTITY lit.jee6.annotations.RolesAllowed "<literal>@RolesAllowed</literal>">
+<!ENTITY lit.jee6.annotations.PermitAll "<literal>@PermitAll</literal>">
+<!ENTITY lit.jee6.servlet.HttpServletRequest "<literal>HttpServletRequest</literal>">

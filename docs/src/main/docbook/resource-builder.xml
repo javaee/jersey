@@ -133,7 +133,6 @@
                             resourceBuilder.path("helloworld");
 
                             final ResourceMethod.Builder methodBuilder = resourceBuilder.addMethod("GET");
-                            final ResourceMethod.Builder methodBuilder = resourceBuilder.addMethod("GET");
                             methodBuilder.produces(MediaType.TEXT_PLAIN_TYPE)
                                     .handledBy(new Inflector&lt;ContainerRequestContext, String>() {
 
