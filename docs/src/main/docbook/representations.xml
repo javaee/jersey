@@ -54,34 +54,57 @@
 
     <section xml:id="reps-and-types">
         <title>Representations and Java Types</title>
-        <para>Previous sections on &jaxrs.Produces; and &jaxrs.Consumes;
-            referred to MIME media types of representations and showed resource
-            methods that consume and produce the Java type String for a number of
-            different media types. However,
-            <literal>String</literal>
-            is just one of
-            many Java types that are required to be supported by JAX-RS
-            implementations.
-        </para>
+        <para>Previous sections on &jaxrs.Produces; and &jaxrs.Consumes; annotations
+            referred to media type of an entity representation. Examples above depicted resource
+            methods that could consume and/or produce String Java type for a number of
+	    different media types. This approach is easy to understand and relatively
+	    straightforward when applied to simple use cases.
+	    </para>
 
-        <para>Java types such as<literal>byte[]</literal>,
-            <literal>java.io.InputStream</literal>,
-            <literal>java.io.Reader</literal>
-            and
-            <literal>java.io.File</literal>
-            are supported. In addition JAXB beans
-            are supported. Such beans are
-            <literal>JAXBElement</literal>
-            or classes
-            annotated with
-            <link xlink:href="http://docs.oracle.com/javase/6/docs/api/javax/xml/bind/annotation/XmlRootElement.html">@XmlRootElement</link>
-            or<link xlink:href="http://docs.oracle.com/javase/6/docs/api/javax/xml/bind/annotation/XmlType.html">@XmlType</link>.
-            The samples jaxb and json-from-jaxb show the use of JAXB beans.
+	    <para>To cover also other cases, handling non-textual data for example or handling data stored in the file system, etc.,
+            JAX-RS implementations are required to support also other kinds of media type
+            conversions where additional, non-String, Java types are being utilized. Following is a short listing of the Java types
+            that are supported out of the box with respect to supported media type:
+            <itemizedlist>
+            	<listitem>All media types (<literal>*/*</literal>)
+            		<itemizedlist>
+            			<listitem><literal>byte[]</literal></listitem>
+				<listitem><literal>java.lang.String</literal></listitem>
+				<listitem><literal>java.io.Reader</literal> (inbound only)</listitem>
+				<listitem><literal>java.io.File</literal></listitem>
+				<listitem><literal>javax.activation.DataSource</literal></listitem>
+				<listitem><literal>javax.ws.rs.core.StreamingOutput</literal> (outbound only)</listitem>
+            		</itemizedlist>
+		</listitem>
+            	<listitem>XML media types (<literal>text/xml</literal>, <literal>application/xml</literal> and <literal>application/...+xml</literal>)
+            		<itemizedlist>
+            			<listitem><literal>javax.xml.transform.Source</literal></listitem>
+            			<listitem><literal>javax.xml.bind.JAXBElement</literal></listitem>
+            			<listitem>Application supplied JAXB classes (types annotated with
+	    <link xlink:href="http://docs.oracle.com/javase/6/docs/api/javax/xml/bind/annotation/XmlRootElement.html">@XmlRootElement</link>
+	    or<link xlink:href="http://docs.oracle.com/javase/6/docs/api/javax/xml/bind/annotation/XmlType.html">@XmlType</link>)</listitem>
+             		</itemizedlist>
+            	</listitem>
+                <listitem>Form content (<literal>application/x-www-form-urlencoded</literal>)
+                        <itemizedlist>
+                          <listitem><literal>MultivaluedMap&lt;String,String&gt;</literal></listitem>
+                        </itemizedlist>
+                 </listitem>
+                 <listitem>Plain text (<literal>text/plain</literal>)
+                        <itemizedlist>
+                          <listitem><literal>java.lang.Boolean</literal></listitem>
+                          <listitem><literal>java.lang.Character</literal></listitem>
+                          <listitem><literal>java.lang.Number</literal></listitem>
+                        </itemizedlist>
+                </listitem>
+            </itemizedlist>
         </para>
 
         <para>Unlike method parameters that are associated with the extraction of
             request parameters, the method parameter associated with the
-            representation being consumed does not require annotating. A maximum of
+            representation being consumed does not require annotating. In other words the
+            representation (entity) parameter does not require a specific 'entity' annotation. A method parameter
+            without a annotation is an entity. A maximum of
             one such unannotated method parameter may exist since there may only be a
             maximum of one such representation sent in a request.
         </para>
@@ -97,50 +120,47 @@
             <example>
                 <title>Using
                     <code>File</code>
-                    with a specific MIME type to produce a response
+                    with a specific media type to produce a response
                 </title>
                 <programlisting language="java" linenumbering="numbered">@GET
-                    @Path("/images/{image}")
-                    @Produces("image/*")
-                    public Response getImage(@PathParam("image") String image) {
-                    File f = new File(image);
+@Path("/images/{image}")
+@Produces("image/*")
+public Response getImage(@PathParam("image") String image) {
+  File f = new File(image);
 
-                    if (!f.exists()) {
-                    throw new WebApplicationException(404);
-                    }
+  if (!f.exists()) {
+    throw new WebApplicationException(404);
+  }
 
-                    String mt = new MimetypesFileTypeMap().getContentType(f);
-                    return Response.ok(f, mt).build();
-                    }
-                </programlisting>
+  String mt = new MimetypesFileTypeMap().getContentType(f);
+  return Response.ok(f, mt).build();
+}</programlisting>
             </example>
         </para>
 
-        <para>A
-            <literal>File</literal>
-            type can also be used when consuming, a
-            temporary file will be created where the request entity is stored.
+        <para>The
+            <literal>File</literal> type can also be used when consuming a representation (request entity).
+            In that case a temporary file will be created from the incoming request entity and passed as a
+            parameter to the resource method.
         </para>
 
-        <para>The
-            <literal>Content-Type</literal>
-            (if not set, see next section)
-            can be automatically set from the MIME media types declared by &jaxrs.Produces;
-            if the most acceptable media type is not a wild card (one that contains a
-            *, for example "application/" or "/*"). Given the following method, the most acceptable MIME type is used when multiple output MIME types allowed:
+        <para>
+            The <literal>Content-Type</literal> response header
+            (if not set programmatically as described in the next section)
+            will be automatically set based on the media types declared by &jaxrs.Produces; annotation.
+ Given the following method, the most acceptable media type is used when multiple output media types are allowed:
         </para>
         <para>
             <programlisting language="java" linenumbering="numbered">@GET
-                @Produces({"application/xml", "application/json"})
-                public String doGetAsXmlOrJson() {
-                ...
-                }
-            </programlisting>
+@Produces({"application/xml", "application/json"})
+public String doGetAsXmlOrJson() {
+  ...
+}</programlisting>
 
-            If "application/xml" is the most acceptable then the
-            <literal>Content-Type</literal>
-            of the response will be set to
-            "application/xml".
+            If <literal>application/xml</literal> is the most acceptable media type defined
+            by the request (e.g. by header <literal>Accept: application/xml</literal>), then the
+            <literal>Content-Type</literal> response header
+            will be set to <literal>application/xml</literal>.
         </para>
     </section>
 
@@ -165,13 +185,12 @@
                     header in response to POST request
                 </title>
                 <programlisting language="java" linenumbering="numbered">@POST
-                    @Consumes("application/xml")
-                    public Response post(String content) {
-                    URI createdUri = ...
-                    create(content);
-                    return Response.created(createdUri).build();
-                    }
-                </programlisting>
+@Consumes("application/xml")
+public Response post(String content) {
+  URI createdUri = ...
+  create(content);
+  return Response.created(createdUri).build();
+}</programlisting>
             </example>
         </para>
 
@@ -183,13 +202,12 @@
             <example>
                 <title>Adding an entity body to a custom response</title>
                 <programlisting language="java" linenumbering="numbered">@POST
-                    @Consumes("application/xml")
-                    public Response post(String content) {
-                    URI createdUri = ...
-                    String createdContent = create(content);
-                    return Response.created(createdUri).entity(createdContent).build();
-                    }
-                </programlisting>
+@Consumes("application/xml")
+public Response post(String content) {
+  URI createdUri = ...
+  String createdContent = create(content);
+  return Response.created(createdUri).entity(Entity.text(createdContent)).build();
+}</programlisting>
             </example>
         </para>
 
@@ -201,66 +219,68 @@
     <section>
         <title>WebApplicationException and Mapping Exceptions to Responses</title>
 
-        <para>Previous sections have shown how to return HTTP responses and it is
-            possible to return HTTP errors using the same mechanism. However,
-            sometimes when programming in Java it is more natural to use exceptions
-            for HTTP errors.
+        <para>Previous section shows how to return HTTP responses,
+              that are built up programmatically.
+            It is possible to use the very same mechanism
+            to return HTTP errors directly,
+            e.g. when handling exceptions in a try-catch block.
+            However, to better align with the Java programming model,
+            JAX-RS allows to define direct mapping of Java exceptions to HTTP error responses.
         </para>
 
-        <para>The following example shows the throwing of a
-            <literal>NotFoundException</literal>
-            from the bookmark sample:
+        <para>The following example shows throwing
+            <literal>CustomNotFoundException</literal>
+            from a resource method in order to return an error HTTP response to the client:
         </para>
 
         <para>
             <example>
-                <title>Throwing Jersey specific exceptions to control response</title>
+                <title>Throwing exceptions to control response</title>
                 <programlisting language="java" linenumbering="numbered">@Path("items/{itemid}/")
-                    public Item getItem(@PathParam("itemid") String itemid) {
-                    Item i = getItems().get(itemid);
-                    if (i == null)
-                    throw new NotFoundException("Item, " + itemid + ", is not found");
+public Item getItem(@PathParam("itemid") String itemid) {
+  Item i = getItems().get(itemid);
+  if (i == null) {
+    throw new CustomNotFoundException("Item, " + itemid + ", is not found");
+  }
 
-                    return i;
-                    }
-                </programlisting>
+  return i;
+}</programlisting>
             </example>
         </para>
 
-        <para>This exception is a Jersey specific exception that extends &jaxrs.WebApplicationException;
+        <para>This exception is an application specific exception that extends &jaxrs.WebApplicationException;
             and builds a HTTP response with the 404 status code and an optional
             message as the body of the response:
         </para>
 
         <para>
             <example>
-                <title>Jersey specific exception implementation</title>
-                <programlisting language="java" linenumbering="numbered">public class NotFoundException extends WebApplicationException {
+                <title>Application specific exception implementation</title>
+                <programlisting language="java" linenumbering="numbered">public class CustomNotFoundException extends WebApplicationException {
 
-                    /**
-                    * Create a HTTP 404 (Not Found) exception.
-                    */
-                    public NotFoundException() {
-                    super(Responses.notFound().build());
-                    }
+  /**
+  * Create a HTTP 404 (Not Found) exception.
+  */
+  public CustomNotFoundException() {
+    super(Responses.notFound().build());
+  }
 
-                    /**
-                    * Create a HTTP 404 (Not Found) exception.
-                    * @param message the String that is the entity of the 404 response.
-                    */
-                    public NotFoundException(String message) {
-                    super(Response.status(Responses.NOT_FOUND).
-                    entity(message).type("text/plain").build());
-                    }
-
-                    }
-                </programlisting>
+  /**
+  * Create a HTTP 404 (Not Found) exception.
+  * @param message the String that is the entity of the 404 response.
+  */
+  public CustomNotFoundException(String message) {
+    super(Response.status(Responses.NOT_FOUND).
+    entity(message).type("text/plain").build());
+  }
+}</programlisting>
             </example>
         </para>
 
         <para>In other cases it may not be appropriate to throw instances of &jaxrs.WebApplicationException;,
             or classes that extend &jaxrs.WebApplicationException;, and instead it may be preferable to map an existing exception to a
-            response. For such cases it is possible to use the &jaxrs.ext.ExceptionMapper; interface. For example, the following
+            response. For such cases it is possible to use a custom exception mapping provider. The provider must implement
+            the &jaxrs.ext.ExceptionMapper; interface. For example, the following
             maps the
             <link xlink:href="http://docs.oracle.com/javaee/5/api/javax/persistence/EntityNotFoundException.html">EntityNotFoundException</link>
             to a HTTP 404 (Not Found) response:
@@ -270,71 +290,81 @@
             <example>
                 <title>Mapping generic exceptions to responses</title>
                 <programlisting language="java" linenumbering="numbered">@Provider
-                    public class EntityNotFoundMapper implements
-                    ExceptionMapper&lt;javax.persistence.EntityNotFoundException&gt; {
-                    public Response toResponse(javax.persistence.EntityNotFoundException ex) {
-                    return Response.status(404).
-                    entity(ex.getMessage()).
-                    type("text/plain").
-                    build();
-                    }
-                    }
-                </programlisting>
+public class EntityNotFoundMapper implements ExceptionMapper&lt;javax.persistence.EntityNotFoundException&gt; {
+  public Response toResponse(javax.persistence.EntityNotFoundException ex) {
+    return Response.status(404).
+      entity(ex.getMessage()).
+      type("text/plain").
+      build();
+  }
+}</programlisting>
             </example>
         </para>
 
         <para>The above class is annotated with &jaxrs.ext.Provider;, this declares that the class is of interest to the JAX-RS runtime. Such a
             class may be added to the set of classes of the &jaxrs.core.Application; instance that is configured. When an application throws an
-            <link xlink:href="http://docs.oracle.com/javaee/5/api/javax/persistence/EntityNotFoundException.html">EntityNotFoundException</link>
+            <link xlink:href="http://docs.oracle.com/javaee/6/api/javax/persistence/EntityNotFoundException.html">EntityNotFoundException</link>
             the
             <literal>toResponse</literal>
             method of the
             <literal>EntityNotFoundMapper</literal>
             instance will be invoked.
         </para>
+
+        <para>
+            Jersey supports extension of the exception mappers. These extended mappers must implement
+            the <literal>org.glassfish.jersey.spi.ExtendedExceptionMapper</literal> interface. This interface additionally
+            defines method <literal>isMappable(Throwable)</literal> which will be invoked by the Jersey runtime
+            when exception is thrown and this provider is considered as mappable based on the exception type. Using this
+            method the provider can reject mapping of the exception before the method <literal>toResponse</literal>
+            is invoked. The provider can for example check the exception parameters and based on them return false
+            and let other provider to be chosen for the exception mapping.
+        </para>
+
     </section>
 
     <section>
         <title>Conditional GETs and Returning 304 (Not Modified) Responses</title>
 
         <para>Conditional GETs are a great way to reduce bandwidth, and
-            potentially server-side performance, depending on how the information used
-            to determine conditions is calculated. A well-designed web site may return
-            304 (Not Modified) responses for the many of the static images it
-            serves.
+            potentially improve on the server-side performance, depending on how the information used
+            to determine conditions is calculated. A well-designed web site may for example return
+            304 (Not Modified) responses for many of static images it serves.
         </para>
 
         <para>JAX-RS provides support for conditional GETs using the contextual interface &jaxrs.core.Request;.
         </para>
 
-        <para>The following example shows conditional GET support from the sparklines sample:</para>
+        <para>The following example shows conditional GET support:</para>
 
         <para>
             <example>
                 <title>Conditional GET support</title>
                 <programlisting language="java" linenumbering="numbered">public SparklinesResource(
-                    @QueryParam("d") IntegerList data,
-                    @DefaultValue("0,100") @QueryParam("limits") Interval limits,
-                    @Context Request request,
-                    @Context UriInfo ui) {
-                    if (data == null)
-                    throw new WebApplicationException(400);
+  @QueryParam("d") IntegerList data,
+  @DefaultValue("0,100") @QueryParam("limits") Interval limits,
+  @Context Request request,
+  @Context UriInfo ui) {
+  if (data == null) {
+    throw new WebApplicationException(400);
+  }
 
-                    this.data = data;
+  this.data = data;
+  this.limits = limits;
 
-                    this.limits = limits;
+  if (!limits.contains(data)) {
+    throw new WebApplicationException(400);
+  }
 
-                    if (!limits.contains(data))
-                    throw new WebApplicationException(400);
+  this.tag = computeEntityTag(ui.getRequestUri());
 
-                    this.tag = computeEntityTag(ui.getRequestUri());
-                    if (request.getMethod().equals("GET")) {
-                    Response.ResponseBuilder rb = request.evaluatePreconditions(tag);
-                    if (rb != null)
-                    throw new WebApplicationException(rb.build());
-                    }
-                    }
-                </programlisting>
+  if (request.getMethod().equals("GET")) {
+    Response.ResponseBuilder rb = request.evaluatePreconditions(tag);
+    if (rb != null) {
+      throw new WebApplicationException(rb.build());
+    }
+  }
+}</programlisting>
             </example>
         </para>
 
@@ -358,9 +388,12 @@
             returned.
         </para>
 
-        <para>Notice that in this example the constructor of a resource class can
-            be used perform actions that may otherwise have to be duplicated to
-            invoked for each resource method.
+        <para>Notice that in this example the constructor of a resource class is used
+            to perform actions that may otherwise have to be duplicated to
+            invoked for each resource method. The life cycle of resource classes is per-request
+            which means that the resource instance is created for each request and therefore
+            can work with request parameters and for example make changes to the request processing by
+            throwing an exception as it is shown in this example.
         </para>
     </section>
 </chapter>
