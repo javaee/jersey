@@ -321,12 +321,14 @@ public class ApacheConnector implements Connector {
 
             final Header[] respHeaders = response.getAllHeaders();
             for (Header header : respHeaders) {
-                List<String> list = responseContext.getHeaders().get(header.getName());
+                final String headerName = header.getName();
+                final MultivaluedMap<String, String> headers = responseContext.getHeaders();
+                List<String> list = headers.get(headerName);
                 if (list == null) {
                     list = new ArrayList<String>();
                 }
                 list.add(header.getValue());
-                responseContext.getHeaders().addAll(header.getName(), list);
+                headers.put(headerName, list);
             }
 
             try {
