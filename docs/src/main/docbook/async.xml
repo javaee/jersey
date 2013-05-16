@@ -473,8 +473,8 @@ System.out.println(entityFuture.get());]]></programlisting>
             <para>
                 You can, of course, process input on the client as a standard input stream but if you would like to
                 leverage Jersey infrastructure to provide support of translating message chunk data into Java types
-                using a &lit.jersey.server.ChunkedInput; is much more straightforward. See the usage of the
-                &lit.jersey.server.ChunkedInput; in the following example:
+                using a &lit.jersey.client.ChunkedInput; is much more straightforward. See the usage of the
+                &lit.jersey.client.ChunkedInput; in the following example:
 
                 <example>
                     <title>ChunkedInput example</title>
@@ -490,7 +490,7 @@ while ((chunk = chunkedInput.read()) != null) {
                 </example>
 
                 The response is retrieved in a standard way from the server. The entity is read as a
-                &lit.jersey.server.ChunkedInput; entity. In order to do that the &jaxrs.core.GenericEntity; is used to preserve
+                &lit.jersey.client.ChunkedInput; entity. In order to do that the &jaxrs.core.GenericEntity; is used to preserve
                 a generic information at run time. If you would not use &lit.jaxrs.core.GenericEntity;, Java language generic type
                 erasure would cause that the generic information would get lost at compile time and an exception would be thrown
                 at run time complaining about the missing chunk type definition.
@@ -505,9 +505,9 @@ while ((chunk = chunkedInput.read()) != null) {
             <para>
                 Writing chunks with &lit.jersey.server.ChunkedOutput; is simple, you only call method <literal>write()</literal>
                 which writes exactly one chunk to the output. With the input reading it is slightly more complicated. The
-                &lit.jersey.server.ChunkedInput; does not know how to distinguish chunks in the byte stream unless being told by
+                &lit.jersey.client.ChunkedInput; does not know how to distinguish chunks in the byte stream unless being told by
                 the developer. In order to define custom chunks boundaries,
-                the &lit.jersey.server.ChunkedInput; offers possibility to register a &jersey.client.ChunkParser; which
+                the &lit.jersey.client.ChunkedInput; offers possibility to register a &jersey.client.ChunkParser; which
                 reads chunks from the input stream and separates them. Jersey provides several chunk parser implementation and
                 you can implement your own parser to separate your chunks if you need. In our example above the default parser
                 provided by Jersey is used that separates chunks based on presence of a <literal>\r\n</literal> delimiting

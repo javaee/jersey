@@ -59,6 +59,9 @@
 <!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
 
 <!ENTITY wadl.project.link "<link xlink:href='http://wadl.java.net/'>WADL</link>">
+<!ENTITY sse.spec.link "<link xlink:href='http://www.w3.org/TR/2009/WD-eventsource-20091029/'>SSE API specification</link>">
+
+
 
 <!-- Common Literals -->
 <!ENTITY lit.null "<literal>null</literal>">
@@ -79,6 +82,7 @@
 <!ENTITY jdk6.TrustStore "<link xlink:href='&jdk6.javadoc.path;//java/security/TrustStore.html'>TrustStore</link>">
 <!ENTITY jdk6.SslContext "<link xlink:href='&jdk6.javadoc.path;//javax/net/ssl/SslContext.html'>SslContext</link>">
 <!ENTITY jdk6.HostnameVerifier "<link xlink:href='&jdk6.javadoc.path;//javax/net/ssl/HostnameVerifier.html'>HostnameVerifier</link>">
+
 
 
 <!-- API Links -->
@@ -190,6 +194,7 @@
 <!ENTITY jersey.server.ChunkedOutput "<link xlink:href='&jersey.javadoc.path;/server/ChunkedOuptut.html'>ChunkedOutput</link>">
 <!ENTITY jersey.client.ChunkedInput "<link xlink:href='&jersey.javadoc.path;/client/ChunkedInput.html'>ChunkedInput</link>">
 <!ENTITY jersey.client.ChunkParser "<link xlink:href='&jersey.javadoc.path;/client/ChunkParser.html'>ChunkParser</link>">
+<!ENTITY jersey.server.Broadcaster "<link xlink:href='&jersey.javadoc.path;/server/Broadcaster.html'>Broadcaster</link>">
 <!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.path;/server/model/ModelProcessor.html'>ModelProcessor</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
 <!ENTITY jersey.server.WadlGeneratorConfig "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGeneratorConfig.html'>WadlGeneratorConfig</link>">
@@ -207,11 +212,26 @@
 <!ENTITY jersey.client.CsrfProtectionFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/CsrfProtectionFilter.html'>CsrfProtectionFilter</link>">
 <!ENTITY jersey.client.EncodingFeature "<link xlink:href='&jersey.javadoc.path;/client/filter/EncodingFeature.html'>EncodingFeature</link>">
 <!ENTITY jersey.client.ContentEncoder "<link xlink:href='&jersey.javadoc.path;/common/spi/ContentEncoder.html'>ContentEncoder</link>">
+<!ENTITY jersey.sse.EventOutput "<link xlink:href='&jersey.javadoc.path;/media/sse/EventOutput.html'>EventOutput</link>">
+<!ENTITY jersey.sse.EventInput "<link xlink:href='&jersey.javadoc.path;/media/sse/EventInput.html'>EventInput</link>">
+<!ENTITY jersey.sse.EventInputReader "<link xlink:href='&jersey.javadoc.path;/media/sse/EventInputReader.html'>EventInputReader</link>">
+<!ENTITY jersey.sse.EventListener "<link xlink:href='&jersey.javadoc.path;/media/sse/EventListener.html'>EventListener</link>">
+<!ENTITY jersey.sse.EventSource "<link xlink:href='&jersey.javadoc.path;/media/sse/EventSource.html'>EventSource</link>">
+<!ENTITY jersey.sse.InboundEvent "<link xlink:href='&jersey.javadoc.path;/media/sse/InboundEvent.html'>InboundEvent</link>">
+<!ENTITY jersey.sse.InboundEventReader "<link xlink:href='&jersey.javadoc.path;/media/sse/InboundEventReader.html'>InboundEventReader</link>">
+<!ENTITY jersey.sse.OutboundEvent "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEvent.html'>OutboundEvent</link>">
+<!ENTITY jersey.sse.OutboundEventWriter "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEventWriter.html'>OutboundEvent</link>">
+<!ENTITY jersey.sse.SseBroadcaster "<link xlink:href='&jersey.javadoc.path;/media/sse/SseBroadcaster.html'>SseBroadcaster</link>">
+<!ENTITY jersey.sse.SseFeature "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html'>SseFeature</link>">
+
+
+
 
 <!-- JEE links -->
 <!ENTITY jee6.annotations.RolesAllowed "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/RolesAllowed.html'>@RolesAllowed</link>">
 <!ENTITY jee6.annotations.PermitAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/PermitAll.html'>@PermitAll</link>">
 <!ENTITY jee6.servlet.HttpServletRequest "<link xlink:href='&jee6.javadoc.path;/javax/servlet/http/HttpServletRequest.html'>HttpServletRequest</link>">
+<!ENTITY jee6.inject.Singleton "<link xlink:href='&jee6.javadoc.path;/javax/inject/Singleton.html'>@Singleton</link>">
 
 <!-- API Literals -->
 <!ENTITY lit.jaxrs.ApplicationPath "<literal>@ApplicationPath</literal>">
@@ -317,8 +337,9 @@
 
 <!-- Jersey literals -->
 <!ENTITY lit.jersey.server.ChunkedOutput "<literal>ChunkedOutput</literal>">
-<!ENTITY lit.jersey.server.ChunkedInput "<literal>ChunkedInput</literal>">
+<!ENTITY lit.jersey.client.ChunkedInput "<literal>ChunkedInput</literal>">
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
+<!ENTITY lit.jersey.server.Broadcaster "<literal>Broadcaster</literal>">
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
 <!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
 <!ENTITY lit.jersey.server.WadlGenerator "<literal>WadlGenerator</literal>">
@@ -334,6 +355,18 @@
 <!ENTITY lit.jersey.client.EncodingFeature "<literal>EncodingFeature</literal>">
 <!ENTITY lit.jersey.client.ContentEncoder "<literal>ContentEncoder</literal>">
 <!ENTITY lit.jersey.server.RolesAllowedDynamicFeature "<literal>RolesAllowedDynamicFeature</literal>">
+<!ENTITY lit.jersey.sse.EventOutput "<literal>EventOutput</literal>">
+<!ENTITY lit.jersey.sse.EventInput "<literal>EventInput</literal>">
+<!ENTITY lit.jersey.sse.EventInputReader "<literal>EventInputReader</literal>">
+<!ENTITY lit.jersey.sse.EventListener "<literal>EventListener</literal>">
+<!ENTITY lit.jersey.sse.EventSource "<literal>EventSource</literal>">
+<!ENTITY lit.jersey.sse.InboundEvent "<literal>InboundEvent</literal>">
+<!ENTITY lit.jersey.sse.InboundEventReader "<literal>InboundEventReader</literal>">
+<!ENTITY lit.jersey.sse.OutboundEvent "<literal>OutboundEvent</literal>">
+<!ENTITY lit.jersey.sse.OutboundEventWriter "<literal>OutboundEventWriter</literal>">
+<!ENTITY lit.jersey.sse.SseBroadcaster "<literal>SseBroadcaster</literal>">
+<!ENTITY lit.jersey.sse.SseFeature "<literal>SseFeature</literal>">
+
 
 <!--JDK 6 literals-->
 <!ENTITY lit.jdk6.HttpUrlConnection "<literal>HttpUrlConnection</literal>">
@@ -347,3 +380,4 @@
 <!ENTITY lit.jee6.annotations.RolesAllowed "<literal>@RolesAllowed</literal>">
 <!ENTITY lit.jee6.annotations.PermitAll "<literal>@PermitAll</literal>">
 <!ENTITY lit.jee6.servlet.HttpServletRequest "<literal>HttpServletRequest</literal>">
+<!ENTITY jee6.inject.Singleton "<literal>@Singleton</literal>">
