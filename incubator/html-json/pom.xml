@@ -41,93 +41,90 @@
 
 -->
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.glassfish.jersey.incubator</groupId>
-    <artifactId>project</artifactId>
-    <version>2.0-SNAPSHOT</version>
-  </parent>
-  <groupId>org.glassfish.jersey.media</groupId>
-  <artifactId>jersey-media-html-json</artifactId>
-  <version>2.1-SNAPSHOT</version>
-  <name>JAX-RS Reader/Writer via net.java.html.json library</name>
-  <description>
-      JSON serialization and deserialization using lightweight (no reflection)
-      net.java.html.json library. Define your objects via @Model annotation.
-      Use them in Jersey.
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
 
-      Jersey incubator for experimental modules that are in a prototyping or research stage,
-      not ready to be released as part of Jersey (yet).
-  </description>
-  <url>http://maven.apache.org</url>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  <repositories>
-      <repository>
-          <id>netbeans</id>
-          <name>NetBeans</name>
-          <url>http://bits.netbeans.org/maven2/</url>
-      </repository>
-  </repositories>
-  <dependencies>
-      <dependency>
-          <groupId>junit</groupId>
-          <artifactId>junit</artifactId>
-          <scope>test</scope>
-      </dependency>
-      <dependency>
-          <groupId>javax.ws.rs</groupId>
-          <artifactId>javax.ws.rs-api</artifactId>
-          <scope>provided</scope>
-      </dependency>
-    <dependency>
-      <groupId>org.glassfish.jersey.test-framework</groupId>
-      <artifactId>jersey-test-framework-core</artifactId>
-      <version>2.0-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.glassfish.jersey.connectors</groupId>
-        <artifactId>jersey-apache-connector</artifactId>
-        <scope>test</scope>
-        <version>2.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.glassfish.jersey.core</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>2.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>javax.annotation</groupId>
-        <artifactId>javax.annotation-api</artifactId>
-        <scope>test</scope>
-    </dependency>
-    <dependency>
-        <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-        <artifactId>jersey-test-framework-provider-bundle</artifactId>
-        <type>pom</type>
-        <scope>test</scope>
-        <version>2.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apidesign.html</groupId>
-      <artifactId>net.java.html.json</artifactId>
-      <version>0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.netbeans.api</groupId>
-      <artifactId>org-openide-util-lookup</artifactId>
-      <version>RELEASE73</version>
-      <type>jar</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20090211</version>
-      <type>jar</type>
-    </dependency>
-  </dependencies>
+    <parent>
+        <groupId>org.glassfish.jersey.incubator</groupId>
+        <artifactId>project</artifactId>
+        <version>2.1-SNAPSHOT</version>
+    </parent>
+
+    <groupId>org.glassfish.jersey.media</groupId>
+    <artifactId>html-json</artifactId>
+    <version>2.1-SNAPSHOT</version>
+
+    <name>jersey-media-html-json</name>
+
+    <description>
+        JAX-RS Reader/Writer via net.java.html.json library that provides
+        JSON serialization and deserialization using lightweight (no reflection)
+        net.java.html.json library. Define your objects via @Model annotation.
+        Use them in Jersey.
+    </description>
+
+    <repositories>
+        <repository>
+            <id>netbeans</id>
+            <name>NetBeans</name>
+            <url>http://bits.netbeans.org/maven2/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apidesign.html</groupId>
+            <artifactId>net.java.html.json</artifactId>
+            <version>0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-lookup</artifactId>
+            <version>RELEASE73</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20090211</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework</groupId>
+            <artifactId>jersey-test-framework-core</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-apache-connector</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-bundle</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>

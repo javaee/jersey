@@ -522,13 +522,12 @@
 
     <profiles>
         <profile>
-            <id>all-incl-incubator</id>
+            <id>incubator</id>
             <activation>
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
                 <module>incubator</module>
-                <module>tests</module>
             </modules>
         </profile>
         <profile>
