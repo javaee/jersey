@@ -56,13 +56,12 @@ import javax.ws.rs.QueryParam;
  */
 @Stateless
 @Path("raw-echo")
-@Remote(Echo.class)
-public class RawEchoResource implements RawEcho {
+@Remote(RawEcho.class)
+public class RawEchoResource {
 
     @EJB EchoBean echoService;
 
     @GET
-    @Override
     public String echo(@QueryParam("message") String message) {
         return echoService.echo(message);
     }

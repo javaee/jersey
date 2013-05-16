@@ -41,7 +41,10 @@ package org.glassfish.jersey.gf.cdi;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+
+import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 
@@ -76,14 +79,14 @@ public final class InjecteeSkippingAnalyzer implements ClassAnalyzer {
     @Override
     public <T> Set<Method> getInitializerMethods(Class<T> type) throws MultiException {
         final Set<Method> originalMethods = defaultAnalyzer.getInitializerMethods(type);
-        final Set<Method> skippedMethods = methodsToSkip.get(type);
+        final Set<Method> skippedMethods = getMembersToSkip(type, methodsToSkip);
         return skippedMethods == null ? originalMethods : Sets.difference(originalMethods, skippedMethods);
     }
 
     @Override
     public <T> Set<Field> getFields(Class<T> type) throws MultiException {
         final Set<Field> originalFields = defaultAnalyzer.getFields(type);
-        final Set<Field> skippedFields = fieldsToSkip.get(type);
+        final Set<Field> skippedFields = getMembersToSkip(type, fieldsToSkip);
         return skippedFields == null ? originalFields : Sets.difference(originalFields, skippedFields);
     }
 
@@ -95,5 +98,25 @@ public final class InjecteeSkippingAnalyzer implements ClassAnalyzer {
     @Override
     public <T> Method getPreDestroyMethod(Class<T> type) throws MultiException {
         throw new IllegalStateException(LocalizationMessages.CDI_CLASS_ANALYZER_MISUSED());
+    }
+
+    private <M extends Member> Set<M> getMembersToSkip(final Class<?> type, final Map<Class<?>, Set<M>> skippedMembers) {
+
+        final Set<M> directResult = skippedMembers.get(type);
+
+        if (directResult != null) {
+            return directResult;
+        }
+
+        // fallback for GLASSFISH-20255
+        final Set<M> compositeResult = new HashSet<M>();
+        for (Class<?> originalType : skippedMembers.keySet()) {
+
+            if (originalType.isAssignableFrom(type)) {
+                compositeResult.addAll(skippedMembers.get(originalType));
+            }
+        }
+
+        return compositeResult;
     }
 }

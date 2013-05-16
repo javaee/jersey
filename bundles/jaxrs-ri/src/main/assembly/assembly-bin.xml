@@ -54,6 +54,20 @@
     </componentDescriptors>
 
     <dependencySets>
+        <!-- JAX-RS API -->
+        <dependencySet>
+            <useProjectArtifact>false</useProjectArtifact>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <outputDirectory>jaxrs-ri/api</outputDirectory>
+            <directoryMode>0755</directoryMode>
+            <fileMode>0644</fileMode>
+            <includes>
+                <include>javax.ws.rs:*</include>
+            </includes>
+            <excludes>
+                <exclude>javax.ws.rs:*:*:sources:*</exclude>
+            </excludes>
+        </dependencySet>
         <!-- JAX-RS RI Binaries-->
         <dependencySet>
             <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
