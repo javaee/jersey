@@ -46,7 +46,6 @@
     <mkdir dir="build"/>
     <javac srcdir="src" destdir="build">
       <classpath>
-        <fileset dir="api" includes="**/*.jar"/>
         <fileset dir="ext" includes="**/*.jar"/>
       </classpath>
     </javac>
