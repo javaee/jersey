@@ -77,12 +77,11 @@
         <para>
             The following example shows a simple asynchronous resource method defined using the new JAX-RS async API:
             <example>
-                <title>Simple async method</title>
-                <programlisting language="java" linenumbering="numbered">@Path("resource")
+                <title>Simple async resource</title>
+                <programlisting language="java" linenumbering="numbered">@Path("/resource")
 public class AsyncResource {
     @GET
-    public void asyncGet(@Suspended final
-                    AsyncResponse asyncResponse) {
+    public void asyncGet(@Suspended final AsyncResponse asyncResponse) {
 
         new Thread(new Runnable() {
             @Override
@@ -92,7 +91,7 @@ public class AsyncResource {
             }
 
             private String veryExpensiveOperation() {
-                ... very expensive operation
+                // ... very expensive operation
             }
         }).start();
     }
@@ -114,9 +113,9 @@ public class AsyncResource {
             in our example. This is perfectly valid in case of an asynchronous JAX-RS resource method, even for a &jaxrs.GET;
             method, as the response is never returned directly from the resource method as its return value. Instead, the response
             is later returned using &lit.jaxrs.container.AsyncResponse; instance as it is demonstrated in the example. The
-            <literal>asyncGet</literal> resource method starts a new thread and exits from the method. In that state the the
+            <literal>asyncGet</literal> resource method starts a new thread and exits from the method. In that state the
             request processing is suspended and the container thread (the one which entered the resource method) is returned back
-            to the container and it can process other requests. New thread started in the resource method may
+            to the container's thread pool and it can process other requests. New thread started in the resource method may
             execute an expensive operation which might take a long time to finish. Once a result is ready it is resumed using
             the <literal>resume()</literal> method on the &lit.jaxrs.container.AsyncResponse; instance.
             The resumed response is then processed in the new thread by Jersey in a same way as any other synchronous response,
@@ -142,7 +141,7 @@ public class AsyncResource {
         <para>
             The following example shows the usage of timeouts:
             <example>
-                <title>Simple async method</title>
+                <title>Simple async method with timeout</title>
                 <programlisting language="java" linenumbering="numbered">@GET
 public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
     asyncResponse.setTimeoutHandler(new TimeoutHandler() {
@@ -150,7 +149,7 @@ public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
         @Override
         public void handleTimeout(AsyncResponse asyncResponse) {
             asyncResponse.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                .entity("Operation time out.").build());
+                    .entity("Operation time out.").build());
         }
     });
     asyncResponse.setTimeout(20, TimeUnit.SECONDS);
@@ -164,7 +163,7 @@ public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
         }
 
         private String veryExpensiveOperation() {
-            ... very expensive operation that typically finishes within 20 seconds
+            // ... very expensive operation that typically finishes within 20 seconds
         }
     }).start();
 }</programlisting>
@@ -196,38 +195,40 @@ public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
                 </itemizedlist>
                 <example>
                     <title>CompletionCallback example</title>
-                    <programlisting language="java" linenumbering="numbered">@Path("resource")
-public static class AsyncResource {
+                    <programlisting language="java" linenumbering="numbered">@Path("/resource")
+public class AsyncResource {
     private static int numberOfSuccessResponses = 0;
     private static int numberOfFailures = 0;
     private static Throwable lastException = null;
 
     @GET
-    public void asyncGetWithTimeout(
-                        @Suspended final AsyncResponse asyncResponse) {
-
-    asyncResponse.register(new CompletionCallback() {
-        @Override
-        public void onComplete(Throwable throwable) {
-            if (throwable == null) {
-                // no throwable - the processing ended successfully
-                // (response already written to the client)
-                numberOfSuccessResponses++;
-            } else {
-                numberOfFailures++;
-                lastException = null;
+    public void asyncGetWithTimeout(@Suspended final AsyncResponse asyncResponse) {
+        asyncResponse.register(new CompletionCallback() {
+            @Override
+            public void onComplete(Throwable throwable) {
+                if (throwable == null) {
+                    // no throwable - the processing ended successfully
+                    // (response already written to the client)
+                    numberOfSuccessResponses++;
+                } else {
+                    numberOfFailures++;
+                    lastException = throwable;
+                }
             }
-        }
-    });
+        });
 
-    new Thread(new Runnable() {
-        @Override
-        public void run() {
-            String result = veryLongOperation();
-            asyncResponse.resume(result);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String result = veryExpensiveOperation();
+                asyncResponse.resume(result);
+            }
+
+            private String veryExpensiveOperation() {
+                // ... very expensive operation
+            }
+        }).start();
     }
-
-    private String veryLongOperation() { ... }
 }</programlisting>
                 </example>
                 A completion callback is registered using <literal>register(...)</literal> method
@@ -284,16 +285,14 @@ public static class AsyncResource {
                 processing. Response headers will be sent to a client when the resource method returns and the client will wait
                 for the stream of chunked data which you will be able to write from different thread using the same
                 &lit.jersey.server.ChunkedOutput; instance returned from the resource method earlier. The following example
-                demonstrates this use case.
+                demonstrates this use case:
                 <example>
-                    <title>ChunkOutput example</title>
-                    <programlisting language="java" linenumbering="numbered">@Path("/resource")
-public static class MyResource {
-
+                    <title>ChunkedOutput example</title>
+                    <programlisting language="java" linenumbering="numbered"><![CDATA[@Path("/resource")
+public class AsyncResource {
     @GET
-    public ChunkedOutput&lt;String&gt; getChunkedResponse() {
-        final ChunkedOutput&lt;String&gt; output
-                        = new ChunkedOutput&lt;String&gt;(String.class);
+    public ChunkedOutput<String> getChunkedResponse() {
+        final ChunkedOutput<String> output = new ChunkedOutput<String>(String.class);
 
         new Thread() {
             public void run() {
@@ -308,7 +307,7 @@ public static class MyResource {
                     // chunks of response: should be handled
                 } finally {
                     output.close();
-                        // simplified:  IOException thrown from
+                        // simplified: IOException thrown from
                         // this close() should be handled here...
                 }
             }
@@ -320,10 +319,10 @@ public static class MyResource {
     }
 
     private String getNextString() {
-        ... long running operation that returns
-            next string or null if no other string is accessible
+        // ... long running operation that returns
+        //     next string or null if no other string is accessible
     }
-}</programlisting>
+}]]></programlisting>
                 </example>
                 The example above defines a &lit.http.GET; method that returns a &lit.jersey.server.ChunkedOutput; instance.
                 The generic type of &lit.jersey.server.ChunkedOutput; defines the chunk types (in this case chunks are Strings).
@@ -351,16 +350,16 @@ public static class MyResource {
     <section>
         <title>Client API</title>
         <para>The client API supports asynchronous processing too. Simple usage of asynchronous client API is shown in the
-        following example.
+        following example:
             <example>
                 <title>Simple client async invocation</title>
-<programlisting language="java" linenumbering="numbered">final AsyncInvoker asyncInvoker = target().path("standard")
-            .request().async();
-final Future&lt;Response&gt; responseFuture = asyncInvoker.get();
+<programlisting language="java" linenumbering="numbered"><![CDATA[final AsyncInvoker asyncInvoker = target().path("http://example.com/resource/")
+        .request().async();
+final Future<Response> responseFuture = asyncInvoker.get();
 System.out.println("Request is being processed asynchronously.");
 final Response response = responseFuture.get();
     // get() waits for the response to be ready
-System.out.println("Response received.");</programlisting>
+System.out.println("Response received.");]]></programlisting>
             </example>
             The difference against synchronous invocation is that the http method call <literal>get()</literal>
             is not called on &jaxrs.client.SyncInvoker; but on &jaxrs.client.AsyncInvoker;. The
@@ -377,9 +376,9 @@ System.out.println("Response received.");</programlisting>
             Asynchronous Client API in JAX-RS is fully integrated in the fluent JAX-RS Client API flow, so that
             the async client-side invocations can be written fluently just like in the following example:
             <example>
-                <title>Simple async method</title>
-                <programlisting language="java" linenumbering="numbered">final Future&lt;Response&gt; response = target()
-                    .path("http://localhost:8080/example/").request().async().get();</programlisting>
+                <title>Simple client fluent async invocation</title>
+                <programlisting language="java" linenumbering="numbered"><![CDATA[final Future<Response> responseFuture = target().path("http://example.com/resource/")
+        .request().async().get();]]></programlisting>
             </example>
         </para>
 
@@ -397,22 +396,21 @@ System.out.println("Response received.");</programlisting>
                 a loop.
                 A client-side asynchronous invocation callback can be registered as shown in the following example:
                 <example>
-                <title>Client async callback</title>
-                <programlisting language="java" linenumbering="numbered">final Future&lt;Response&gt; future = target()
-                    .path("http://localhost:8080/example/").request()
-                    .async().get(new InvocationCallback&lt;Response&gt;() {
-    @Override
-    public void completed(Response response) {
-        System.out.println("Response status code "
-                    + response.getStatus() + " received.");
-    }
+                    <title>Client async callback</title>
+                    <programlisting language="java" linenumbering="numbered"><![CDATA[final Future<Response> responseFuture = target().path("http://example.com/resource/")
+        .request().async().get(new InvocationCallback<Response>() {
+            @Override
+            public void completed(Response response) {
+                System.out.println("Response status code "
+                        + response.getStatus() + " received.");
+            }
 
-    @Override
-    public void failed(Throwable throwable) {
-        System.out.println("Invocation failed.");
-        throwable.printStackTrace();
-    }
-});</programlisting>
+            @Override
+            public void failed(Throwable throwable) {
+                System.out.println("Invocation failed.");
+                throwable.printStackTrace();
+            }
+        });]]></programlisting>
                 </example>
 
                 The registered callback is expected to implement the &jaxrs.client.InvocationCallback; interface that defines
@@ -435,31 +433,34 @@ System.out.println("Response received.");</programlisting>
                 As with the synchronous client API, you can retrieve the response entity as a Java type directly without
                 requesting a &lit.jaxrs.core.Response; first. In case of an &lit.jaxrs.client.InvocationCallback;, you need
                 to set its generic type to the expected response entity type instead of using the &lit.jaxrs.core.Response;
-                type as demonstrated in the example bellow.
+                type as demonstrated in the example bellow:
                 <example>
                     <title>Client async callback for specific entity</title>
-                    <programlisting language="java" linenumbering="numbered">final Future&lt;String&gt; futureEntity = target()
-                    .path("http://localhost:8080/example/")
-    .request().async().get(new InvocationCallback&lt;String&gt;() {
-    @Override
-    public void completed(String response) {
-        System.out.println("Response entity '" + response + "' received.");
-    }
+                    <programlisting language="java" linenumbering="numbered"><![CDATA[final Future<String> entityFuture = target().path("http://example.com/resource/")
+        .request().async().get(new InvocationCallback<String>() {
+            @Override
+            public void completed(String response) {
+                System.out.println("Response entity '" + response + "' received.");
+            }
 
-    @Override
-    public void failed(Throwable throwable) {
-        System.out.println("Invocation failed.");
-        throwable.printStackTrace();
-    }
-});
-System.out.println(futureEntity.get());</programlisting>
+            @Override
+            public void failed(Throwable throwable) {
+                System.out.println("Invocation failed.");
+                throwable.printStackTrace();
+            }
+        });
+System.out.println(entityFuture.get());]]></programlisting>
                 </example>
                 Here, the generic type of the invocation callback information is used to unmarshall the HTTP response content
                 into a desired Java type.
-                Please note that in this case the method <literal>failed(Throwable throwable)</literal> would be invoked even
-                for cases when a server responds with a non HTTP-<literal>2xx</literal> HTTP error code. This is because in this
-                case the user does not have any other means of finding out that the server returned an error response.
             </para>
+            <important>
+                <para>
+                    Please note that in this case the method <literal>failed(Throwable throwable)</literal> would be invoked even
+                    for cases when a server responds with a non HTTP-<literal>2xx</literal> HTTP error code. This is because in this
+                    case the user does not have any other means of finding out that the server returned an error response.
+                </para>
+            </important>
         </section>
 
         <section>
@@ -476,15 +477,16 @@ System.out.println(futureEntity.get());</programlisting>
                 &lit.jersey.server.ChunkedInput; in the following example:
 
                 <example>
-                    <title>ChunkInput</title>
-                    <programlisting language="java" linenumbering="numbered">final Response response = target().path("http://localhost:8080/resource")
-    .request().get();
-final ChunkedInput&lt;String&gt; chunkedInput =
-    response.readEntity(new GenericType&lt;ChunkedInput&lt;String&gt;&gt;() {});
+                    <title>ChunkedInput example</title>
+                    <programlisting language="java" linenumbering="numbered"><![CDATA[final Response response = target().path("http://example.com/resource/")
+        .request().get();
+final ChunkedInput<String> chunkedInput =
+        response.readEntity(new GenericType<ChunkedInput<String>>() {});
 String chunk;
 while ((chunk = chunkedInput.read()) != null) {
     System.out.println("Next chunk received: " + chunk);
-}</programlisting>
+}
+]]></programlisting>
                 </example>
 
                 The response is retrieved in a standard way from the server. The entity is read as a
