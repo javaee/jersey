@@ -1179,5 +1179,6 @@
         <httpclient.version>4.2.5</httpclient.version>
         <validation.api.version>1.1.0.Final</validation.api.version>
         <weld.version>2.0.0.Final</weld.version>
+        <gae.version>1.8.0</gae.version>
     </properties>
 </project>
