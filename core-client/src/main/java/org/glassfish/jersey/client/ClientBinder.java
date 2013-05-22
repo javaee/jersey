@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.client;
 
+import java.util.Map;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.ext.MessageBodyReader;
 
@@ -70,8 +72,14 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 class ClientBinder extends AbstractBinder {
+
+    private final RuntimeType runtimeType;
+
+    private final Map<String, Object> applicationProperties;
+
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ClientRequest> {
         @Inject
@@ -99,18 +107,24 @@ class ClientBinder extends AbstractBinder {
         }
     }
 
+
+    ClientBinder(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+        this.applicationProperties = applicationProperties;
+        this.runtimeType = runtimeType;
+    }
+
     @Override
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
                 new JerseyErrorService.Binder(),
                 new ContextInjectionResolver.Binder(),
                 new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(),
+                new MessagingBinders.MessageBodyProviders(applicationProperties, runtimeType),
                 new MessagingBinders.HeaderDelegateProviders(),
                 new MessageBodyFactory.Binder(),
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class));
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, runtimeType));
 
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);

@@ -53,6 +53,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.inject.Injections;
@@ -278,7 +279,7 @@ public class WadlGeneratorLoaderTest {
     }
 
     private ServiceLocator getServiceLocator() {
-        return Injections.createLocator(new ServerBinder());
+        return Injections.createLocator(new ServerBinder(null, RuntimeType.SERVER));
     }
 
 

@@ -53,6 +53,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
@@ -154,6 +155,16 @@ public class WebComponent {
     }
 
     private class WebComponentBinder extends AbstractBinder {
+
+        private final Map<String, Object> applicationProperties;
+
+        private final RuntimeType runtimeType;
+
+        private WebComponentBinder(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+            this.applicationProperties = applicationProperties;
+            this.runtimeType = runtimeType;
+        }
+
         @Override
         protected void configure() {
             bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class).in(PerLookup.class);
@@ -225,7 +236,7 @@ public class WebComponent {
                     //not used
                 }
             }).to(WebConfig.class).in(Singleton.class);
-            install(new ServiceFinderBinder<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class));
+            install(new ServiceFinderBinder<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class, applicationProperties, runtimeType));
         }
     }
 
@@ -263,10 +274,12 @@ public class WebComponent {
         if (resourceConfig == null) {
             resourceConfig = createResourceConfig(webConfig);
         }
+
         // SPI/extension hook to configure ResourceConfig
         configure(resourceConfig);
 
-        resourceConfig.register(new WebComponentBinder());
+        resourceConfig.register(new WebComponentBinder(resourceConfig.getProperties(), RuntimeType.SERVER));
+
         this.appHandler = new ApplicationHandler(resourceConfig);
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&

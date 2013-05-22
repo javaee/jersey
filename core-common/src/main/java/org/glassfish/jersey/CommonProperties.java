@@ -44,6 +44,7 @@ package org.glassfish.jersey;
  * Common (server/client) Jersey configuration properties.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public final class CommonProperties {
 
@@ -74,6 +75,23 @@ public final class CommonProperties {
      * </p>
      */
     public static final String JSON_PROCESSING_FEATURE_DISABLE = "jersey.config.disableJsonProcessing";
+
+    /**
+     * If {@code true} then disable META-INF/services lookup globally on client/server.
+     * <p>
+     * By default Jersey lookups SPI implementations described by META-INF/services/* files.
+     * Then you can register appropriate provider classes by {@link javax.ws.rs.core.Application}.
+     * </p>
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.1
+     */
+    public static final String METAINF_SERVICES_LOOKUP_DISABLE = "jersey.config.disableMetainfServicesLookup";
 
     /**
      * If {@code true} then disable configuration of MOXy Json feature.

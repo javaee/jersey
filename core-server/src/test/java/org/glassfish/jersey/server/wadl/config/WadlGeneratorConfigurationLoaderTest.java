@@ -43,6 +43,7 @@ package org.glassfish.jersey.server.wadl.config;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.inject.Injections;
@@ -84,7 +85,7 @@ public class WadlGeneratorConfigurationLoaderTest {
         resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG,
                 MyWadlGeneratorConfig.class.getName());
 
-        final ServiceLocator locator = Injections.createLocator(new ServerBinder());
+        final ServiceLocator locator = Injections.createLocator(new ServerBinder(resourceConfig.getProperties(), RuntimeType.SERVER));
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
                 .createWadlGenerator(locator);
         Assert.assertEquals(MyWadlGenerator.class, wadlGenerator.getClass());
@@ -97,7 +98,7 @@ public class WadlGeneratorConfigurationLoaderTest {
 
         final ResourceConfig resourceConfig = new ResourceConfig();
         resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG, config);
-        final ServiceLocator locator = Injections.createLocator(new ServerBinder());
+        final ServiceLocator locator = Injections.createLocator(new ServerBinder(resourceConfig.getProperties(), RuntimeType.SERVER));
         final WadlGenerator wadlGenerator = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(resourceConfig.getProperties())
                 .createWadlGenerator(locator);
         Assert.assertTrue(wadlGenerator instanceof MyWadlGenerator);

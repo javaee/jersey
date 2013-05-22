@@ -620,7 +620,15 @@ public final class ServiceFinder<T> implements Iterable<T> {
             String cn = nextName;
             nextName = null;
             try {
-                return AccessController.doPrivileged(ReflectionHelper.<T>classForNameWithExceptionPEA(cn, loader));
+
+                Class<T> tClass = AccessController.doPrivileged(ReflectionHelper.<T>classForNameWithExceptionPEA(cn, loader));
+
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.log(Level.FINEST, "Loading next class: " + tClass.getName());
+                }
+
+                return tClass;
+
             } catch (ClassNotFoundException ex) {
                 fail(serviceName,
                         LocalizationMessages.PROVIDER_NOT_FOUND(cn, service));
@@ -752,6 +760,9 @@ public final class ServiceFinder<T> implements Iterable<T> {
                 throw new NoSuchElementException();
             }
             nextName = null;
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.log(Level.FINEST, "Loading next object: " + t.getClass().getName());
+            }
             return t;
         }
 

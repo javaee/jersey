@@ -45,8 +45,12 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.RuntimeType;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
 
 /**
  * Helper class containing convenience methods for reading
@@ -55,6 +59,8 @@ import javax.ws.rs.RuntimeType;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class PropertiesHelper {
+
+    private static final Logger LOGGER = Logger.getLogger(PropertiesHelper.class.getName());
 
     /**
      * Get system properties.
@@ -248,7 +254,11 @@ public class PropertiesHelper {
             }
 
             // at this point we don't know what to return -> return null
-            // TODO: should also log warning
+            if (LOGGER.isLoggable(Level.WARNING)) {
+                LOGGER.warning(LocalizationMessages.PROPERTIES_HELPER_GET_VALUE_NO_TRANSFORM(String.valueOf(value),
+                        value.getClass().getName(), type.getName()));
+            }
+
             return null;
         }
 

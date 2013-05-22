@@ -48,6 +48,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -87,6 +88,7 @@ import junit.framework.Assert;
  *
  * @author Santiago Pericas-Geertsen (santiago.pericasgeertsen at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class ProviderBinderTest {
 
@@ -129,7 +131,7 @@ public class ProviderBinderTest {
         List<org.glassfish.hk2.utilities.Binder> binderList = Lists.newArrayList(binders);
 
         binderList.add(new ContextInjectionResolver.Binder());
-        binderList.add(new MessagingBinders.MessageBodyProviders());
+        binderList.add(new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER));
 
         return binderList.toArray(new org.glassfish.hk2.utilities.Binder[binderList.size()]);
     }

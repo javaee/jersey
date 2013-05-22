@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server;
 
+import java.util.Map;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
@@ -88,8 +90,14 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * Server injection binder.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @todo Move this class to the internal package???
  */
 public class ServerBinder extends AbstractBinder {
+
+    private final RuntimeType runtimeType;
+
+    private final Map<String, Object> applicationProperties;
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
         @Inject
@@ -104,6 +112,11 @@ public class ServerBinder extends AbstractBinder {
         }
     }
 
+    public ServerBinder(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+        this.applicationProperties = applicationProperties;
+        this.runtimeType = runtimeType;
+    }
+
     @Override
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
@@ -112,7 +125,7 @@ public class ServerBinder extends AbstractBinder {
                 new ContextInjectionResolver.Binder(),
                 new ParameterInjectionBinder(),
                 new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(),
+                new MessagingBinders.MessageBodyProviders(applicationProperties, runtimeType),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),
                 new ContextResolverFactory.Binder(),
@@ -122,10 +135,10 @@ public class ServerBinder extends AbstractBinder {
                 new ResourceModelBinder(),
                 new RuntimeExecutorsBinder(),
                 new RouterBinder(),
-                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
+                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class, applicationProperties, runtimeType),
                 new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class),
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, runtimeType),
                 new MappableExceptionWrapperInterceptor.Binder());
 
         // Request/Response injection interfaces

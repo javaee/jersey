@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,57 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal;
+package org.glassfish.jersey.tests.e2e.server;
 
-import java.util.Map;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.junit.Test;
 
-import javax.ws.rs.RuntimeType;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
+import javax.ws.rs.core.Application;
 
 /**
- * Simple ServiceFinder injection binder.
+ * Property {@link ServerProperties#METAINF_SERVICES_LOOKUP_DISABLE} IS set.
  *
- * Looks for all implementations of a given contract using {@link ServiceFinder}
- * and registers found instances to {@link org.glassfish.hk2.api.ServiceLocator}.
- *
- * @param <T> contract type.
- * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class ServiceFinderBinder<T> extends AbstractBinder {
+public class MetainfServicesLookupDisabledTest extends AbstractDisableMetainfServicesLookupTest {
 
-    private final Class<T> contract;
-
-    private final Map<String, Object> applicationProperties;
-
-    private final RuntimeType runtimeType;
-
-    /**
-     * Create a new service finder injection binder.
-     *
-     * @param contract contract of the service providers bound by this binder.
-     */
-    public ServiceFinderBinder(Class<T> contract, Map<String, Object> applicationProperties, RuntimeType runtimeType) {
-        this.contract = contract;
-        this.applicationProperties = applicationProperties;
-        this.runtimeType = runtimeType;
+    @Test
+    public void testGet() throws Exception {
+        testGet(500, 415);
     }
+
 
     @Override
-    protected void configure() {
-        final boolean METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT = false;
-        boolean enableMetainfServicesLookup = ! METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT;
-        if (applicationProperties != null) {
-            enableMetainfServicesLookup = ! PropertiesHelper.getValue(applicationProperties, runtimeType,
-                    CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT, Boolean.class);
-        }
-        if (enableMetainfServicesLookup) {
-            for (T t : ServiceFinder.find(contract, true)) {
-                bind(t).to(contract);
-            }
-        }
+    protected Application configure() {
+        ResourceConfig resourceConfig = (ResourceConfig)super.configure();
+        resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
+
+        return resourceConfig;
     }
+
 }

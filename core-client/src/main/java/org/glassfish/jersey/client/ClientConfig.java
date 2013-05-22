@@ -71,6 +71,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class ClientConfig implements Configurable<ClientConfig>, Configuration {
     /**
@@ -346,10 +347,11 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
              */
             markAsShared();
 
-            final ServiceLocator locator = Injections.createLocator(new ClientBinder());
-            locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
-
             final CommonConfig runtimeConfig = new CommonConfig(this.commonConfig);
+
+            final ServiceLocator locator = Injections.createLocator(
+                    new ClientBinder(runtimeConfig.getProperties(), RuntimeType.CLIENT));
+            locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
             // AutoDiscoverable.
             if (!PropertiesHelper.getValue(runtimeConfig.getProperties(), RuntimeType.CLIENT,

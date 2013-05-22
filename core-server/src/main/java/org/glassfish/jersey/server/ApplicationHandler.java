@@ -149,6 +149,7 @@ import com.google.common.util.concurrent.AbstractFuture;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  * @see ResourceConfig
  * @see javax.ws.rs.core.Configuration
  * @see org.glassfish.jersey.server.spi.ContainerProvider
@@ -156,6 +157,7 @@ import com.google.common.util.concurrent.AbstractFuture;
 public final class ApplicationHandler {
 
     private static final Logger LOGGER = Logger.getLogger(ApplicationHandler.class.getName());
+
     /**
      * Default dummy security context.
      */
@@ -239,7 +241,7 @@ public final class ApplicationHandler {
      *                              application handler.
      */
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
-        this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
+        this.locator = Injections.createLocator(new ServerBinder(null, RuntimeType.SERVER), new ApplicationBinder());
         locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
         this.application = createApplication(jaxrsApplicationClass);
@@ -261,7 +263,7 @@ public final class ApplicationHandler {
      *                    will be used to configure the new Jersey application handler.
      */
     public ApplicationHandler(Application application) {
-        this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
+        this.locator = Injections.createLocator(new ServerBinder(application.getProperties(), RuntimeType.SERVER), new ApplicationBinder());
         locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
         this.application = application;
@@ -549,10 +551,15 @@ public final class ApplicationHandler {
 
     private List<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
         final List<RankedProvider<ComponentProvider>> result = new LinkedList<RankedProvider<ComponentProvider>>();
-        for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-            result.add(new RankedProvider<ComponentProvider>(provider));
+
+        final boolean enableMetainfServicesLookup = ! PropertiesHelper.getValue(application.getProperties(), RuntimeType.SERVER,
+                    CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
+        if (enableMetainfServicesLookup) {
+            for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
+                result.add(new RankedProvider<ComponentProvider>(provider));
+            }
+            Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
         }
-        Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
         return result;
     }
 
