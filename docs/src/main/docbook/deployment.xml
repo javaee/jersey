@@ -63,13 +63,13 @@
         <example>
             <title>Deployment agnostic application model</title>
             <programlisting language="java" linenumbering="numbered">public class MyApplication extends Application {
-                public Set&lt;Class&lt;?&gt;&gt; getClasses() {
-                Set&lt;Class&lt;?&gt;&gt; s = new HashSet&lt;Class&lt;?&gt;&gt;();
-                s.add(HelloWorldResource.class);
-                return s;
-                }
-                }
-            </programlisting>
+    @Override
+    public Set&lt;Class&lt;?&gt;&gt; getClasses() {
+        Set&lt;Class&lt;?&gt;&gt; s = new HashSet&lt;Class&lt;?&gt;&gt;();
+        s.add(HelloWorldResource.class);
+        return s;
+    }
+}</programlisting>
         </example>
         Alternatively it is possible to reuse one of Jersey's
         implementations that scans for root resource and provider classes given a classpath or
@@ -82,12 +82,11 @@
     <para>
         <example>
             <title>Reusing Jersey implementation in your custom application model</title>
-            <programlisting language="java" linenumbering="numbered">public class MyApplication extends PackagesResourceConfig {
-                public MyApplication() {
-                super("org.foo.rest;org.bar.rest");
-                }
-                }
-            </programlisting>
+            <programlisting language="java" linenumbering="numbered">public class MyApplication extends ResourceConfig {
+    public MyApplication() {
+        packages("org.foo.rest;org.bar.rest");
+    }
+}</programlisting>
         </example>
     </para>
     <para>There are multiple deployment options for the class that implements &jaxrs.core.Application;
@@ -103,14 +102,16 @@
                 with Servlet 3.0
             </title>
             <programlisting language="java" linenumbering="numbered">@ApplicationPath("resources")
-                public class MyApplication extends PackagesResourceConfig {
-                public MyApplication() {
-                super("org.foo.rest;org.bar.rest");
-                }
-                ...
-                }
-            </programlisting>
+public class MyApplication extends ResourceConfig {
+    public MyApplication() {
+        packages("org.foo.rest;org.bar.rest");
+    }
+    ...
+}</programlisting>
         </example>
+
+        Please note that there is more which can be set or called during execution of ResourceConfig descendants
+        constructor, see &jersey.server.ResourceConfig; javadoc for more details.
     </para>
     <para>
         You also need to set maven-war-plugin attribute
@@ -124,17 +125,17 @@
                 with Servlet 3.0
             </title>
             <programlisting language="xml" linenumbering="numbered">&lt;plugins&gt;
-                ...
-                &lt;plugin&gt;
-                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
-                &lt;artifactId&gt;maven-war-plugin&lt;/artifactId&gt;
-                &lt;version&gt;2.1.1&lt;/version&gt;
-                &lt;configuration&gt;
-                &lt;failOnMissingWebXml&gt;false&lt;/failOnMissingWebXml&gt;
-                &lt;/configuration&gt;
-                &lt;/plugin&gt;
-                ...
-                &lt;/plugins&gt;</programlisting>
+    ...
+    &lt;plugin&gt;
+        &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+        &lt;artifactId&gt;maven-war-plugin&lt;/artifactId&gt;
+        &lt;version&gt;2.3&lt;/version&gt;
+        &lt;configuration&gt;
+            &lt;failOnMissingWebXml&gt;false&lt;/failOnMissingWebXml&gt;
+        &lt;/configuration&gt;
+    &lt;/plugin&gt;
+    ...
+&lt;/plugins&gt;</programlisting>
         </example>
     </para>
     <para>Another deployment option is to declare JAX-RS application details in the<literal>web.xml</literal>.
@@ -154,16 +155,16 @@
                 with Servlet 3.0
             </title>
             <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
-                &lt;servlet&gt;
-                &lt;servlet-name&gt;org.foo.rest.MyApplication&lt;/servlet-name&gt;
-                &lt;/servlet&gt;
-                ...
-                &lt;servlet-mapping&gt;
-                &lt;servlet-name&gt;org.foo.rest.MyApplication&lt;/servlet-name&gt;
-                &lt;url-pattern&gt;/resources&lt;/url-pattern&gt;
-                &lt;/servlet-mapping&gt;
-                ...
-                &lt;/web-app&gt;</programlisting>
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;org.foo.rest.MyApplication&lt;/servlet-name&gt;
+    &lt;/servlet&gt;
+    ...
+    &lt;servlet-mapping&gt;
+        &lt;servlet-name&gt;org.foo.rest.MyApplication&lt;/servlet-name&gt;
+        &lt;url-pattern&gt;/resources&lt;/url-pattern&gt;
+    &lt;/servlet-mapping&gt;
+    ...
+&lt;/web-app&gt;</programlisting>
         </example>
     </para>
     <para>Note that the
@@ -181,47 +182,46 @@
         <example>
             <title>Deployment of your application using Jersey specific servlet</title>
             <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
-                &lt;servlet&gt;
-                &lt;servlet-name&gt;Jersey Web Application&lt;/servlet-name&gt;
-                &lt;servlet-class&gt;com.sun.jersey.spi.container.servlet.ServletContainer&lt;/servlet-class&gt;
-                &lt;init-param&gt;
-                &lt;param-name&gt;javax.ws.rs.Application&lt;/param-name&gt;
-                &lt;param-value&gt;org.foo.rest.MyApplication&lt;/param-value&gt;
-                &lt;/init-param&gt;
-                ...
-                &lt;/servlet&gt;
-                ...
-                &lt;/web-app&gt;</programlisting>
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;Jersey Web Application&lt;/servlet-name&gt;
+        &lt;servlet-class&gt;org.glassfish.jersey.servlet.ServletContainer&lt;/servlet-class&gt;
+        &lt;init-param&gt;
+            &lt;param-name&gt;javax.ws.rs.Application&lt;/param-name&gt;
+            &lt;param-value&gt;org.foo.rest.MyApplication&lt;/param-value&gt;
+        &lt;/init-param&gt;
+        ...
+    &lt;/servlet&gt;
+    ...
+&lt;/web-app&gt;</programlisting>
         </example>
     </para>
-    <para>Alternatively a simpler approach is to let Jersey choose the
-        <literal>PackagesResourceConfig</literal>
-        implementation automatically by declaring the packages as follows:
+    <para>If there is no configuration to be set and deployed application consists only from resources and providers
+        stored in particular packages, Jersey can scan them and register automatically:
 
         <example>
             <title>Using Jersey specific servlet without an application model instance</title>
             <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
-                &lt;servlet&gt;
-                &lt;servlet-name&gt;Jersey Web Application&lt;/servlet-name&gt;
-                &lt;servlet-class&gt;com.sun.jersey.spi.container.servlet.ServletContainer&lt;/servlet-class&gt;
-                &lt;init-param&gt;
-                &lt;param-name&gt;com.sun.jersey.config.property.packages&lt;/param-name&gt;
-                &lt;param-value&gt;org.foo.rest;org.bar.rest&lt;/param-value&gt;
-                &lt;/init-param&gt;
-                ...
-                &lt;/servlet&gt;
-                ...
-                &lt;/web-app&gt;</programlisting>
+    &lt;servlet&gt;
+        &lt;servlet-name&gt;Jersey Web Application&lt;/servlet-name&gt;
+        &lt;servlet-class&gt;org.glassfish.jersey.servlet.ServletContainer&lt;/servlet-class&gt;
+        &lt;init-param&gt;
+            &lt;param-name&gt;jersey.config.server.provider.packages&lt;/param-name&gt;
+            &lt;param-value&gt;org.foo.rest;org.bar.rest&lt;/param-value&gt;
+        &lt;/init-param&gt;
+        ...
+    &lt;/servlet&gt;
+    ...
+&lt;/web-app&gt;</programlisting>
         </example>
     </para>
     <para>JAX-RS also provides the ability to obtain a container specific artifact
         from an &jaxrs.core.Application; instance. For example, Jersey supports using
         <link xlink:href="http://grizzly.java.net/">Grizzly</link>
         as follows:
-        <programlisting language="java">SelectorThread st = RuntimeDelegate.createEndpoint(new MyApplication(), SelectorThread.class);</programlisting>
+        <programlisting language="java">HttpHandler endpoint = RuntimeDelegate.getInstance().createEndpoint(new MyApplication(), HttpHandler.class);</programlisting>
         Jersey also provides
         <link xlink:href="http://grizzly.java.net/">Grizzly</link>
-        helper classes to deploy the ServletThread instance at a base URL for
+        helper classes to deploy the HttpHandler instance at a base URL for
         in-process deployment.
     </para>
 

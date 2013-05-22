@@ -50,9 +50,10 @@
          xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
                              http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
          xml:id="modules-and-dependencies">
+    <title>Modules and dependencies</title>
 
     <section>
-        <title>Jersey Java SE Compatibility</title>
+        <title>Java SE Compatibility</title>
 
         <para>
             All Jersey components are compiled with Java SE 6 target. It means, you will also need at least Java SE 6
@@ -60,7 +61,7 @@
         </para>
     </section>
     <section>
-        <title>Overview of Jersey Modules and Dependencies</title>
+        <title>Introduction to Jersey dependencies</title>
 
         <para>
             Jersey is built, assembled and installed using <link xlink:href="http://maven.apache.org/">Apache Maven</link>.
@@ -207,7 +208,7 @@
 
 
     <section xml:id="modules">
-        <title>Jersey modules</title>
+        <title>List of modules</title>
 
         <para>The following chapters provide an overview of all Jersey modules
             and their dependencies with links to the respective binaries (follow a link

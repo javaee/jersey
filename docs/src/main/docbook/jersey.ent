@@ -54,7 +54,7 @@
 
 <!ENTITY jersey.docs.root.path "http://jersey.java.net/nonav/documentation/&version;">
 <!ENTITY jersey.docs.index "http://jersey.java.net/nonav/documentation/&version;/index.html">
-<!ENTITY jersey.javadoc.path "http://jersey.java.net/nonav/apidocs/&version;/org/glassfish/jersey">
+<!ENTITY jersey.javadoc.path "http://jersey.java.net/nonav/apidocs/&version;/jersey/org/glassfish/jersey">
 <!ENTITY jee6.javadoc.path "http://docs.oracle.com/javaee/6/api">
 <!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
 
