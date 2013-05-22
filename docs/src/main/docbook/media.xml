@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" standalone="no"?>
 <!--
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
@@ -40,27 +40,1720 @@
     holder.
 
 -->
-<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<!DOCTYPE chapter [
+        <!ENTITY link.moxy "<link linkend='json.moxy'>MOXy</link>" >
+        <!ENTITY link.json-p "<link linkend='json.json-p'>Java API for JSON Processing (JSON-P)</link>" >
+        <!ENTITY link.jackson "<link linkend='json.jackson'>Jackson</link>" >
+        <!ENTITY link.jettison "<link linkend='json.jettison'>Jettison</link>" >
+
+        <!ENTITY % ents SYSTEM "jersey.ent" > %ents;
+]>
 <chapter xmlns="http://docbook.org/ns/docbook"
          version="5.0"
          xml:lang="en"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:xlink="http://www.w3.org/1999/xlink"
          xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
                              http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
          xml:id="media">
-    <title>Support for Common Media Types</title>
-    <section id="json">
+
+    <title>Support for Common Media Type Representations</title>
+
+    <section xml:id="json">
         <title>JSON</title>
-        TODO: Describe support for JSON (various notations/options)
+
+        <para>
+            Jersey JSON support comes as a set of extension modules where each of these modules contains an implementation of
+            a &jaxrs.core.Feature; that needs to be registered into your &jaxrs.core.Configurable; instance (client/server).
+            There are multiple frameworks that provide support for JSON processing and/or JSON-to-Java binding.
+            The modules listed bellow provide support for JSON representations by integrating the individual JSON frameworks into
+            Jersey. At present, Jersey integrates with the following modules to provide JSON support:
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        &link.moxy; - JSON binding support via MOXy is a default and preferred way of supporting JSON binding
+                        in your Jersey applications since Jersey 2.0. When JSON MOXy module is on the class-path, Jersey will
+                        automatically discover the module and seamlessly enable JSON binding support via MOXy in your
+                        applications. (See <xref linkend="deployment.autodiscoverable" />.)
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>&link.json-p;</para>
+                </listitem>
+                <listitem>
+                    <para>&link.jackson;</para>
+                </listitem>
+                <listitem>
+                    <para>&link.jettison;</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <section>
+            <title>Approaches to JSON Support</title>
+
+            <para>
+                Each of the aforementioned extension modules uses one or more of the three basic approaches available when
+                working with JSON representations:
+
+                <itemizedlist>
+                    <listitem>
+                        <para>POJO based JSON binding support</para>
+                    </listitem>
+                    <listitem>
+                        <para>JAXB based JSON binding support</para>
+                    </listitem>
+                    <listitem>
+                        <para>Low-level JSON parsing &amp; processing support</para>
+                    </listitem>
+                </itemizedlist>
+
+                The first method is pretty generic and allows you to map any Java Object to JSON and vice versa.
+                The other two approaches limit you in Java types your resource methods could produce and/or consume.
+                JAXB based approach is useful if you plan to utilize certain JAXB features and support both XML and JSON
+                representations. The last, low-level, approach gives you the best fine-grained control over the out-coming
+                JSON data format.
+            </para>
+
+            <section>
+                <title>POJO support</title>
+
+                <para>POJO support represents the easiest way to convert your Java Objects to JSON and back.</para>
+                <para>Media modules that support this approach are &link.moxy; and &link.jackson;</para>
+            </section>
+
+            <section>
+                <title>JAXB based JSON support</title>
+
+                <para>
+                    Taking this approach will save you a lot of time, if you want to easily produce/consume both JSON and XML
+                    data format. With JAXB beans you will be able to use a the same Java model to generate JSON as well as XML
+                    representations.
+                    Another advantage is simplicity of working with such a model and availability of the API in Java SE Platform.
+                    JAXB leverages annotated POJOs and these could be handled as simple Java beans.
+                </para>
+                <para>
+                    A disadvantage of JAXB based approach could be if you need to work with a very specific JSON format. Then it
+                    might be difficult to find a proper way to get such a format produced and consumed. This is a reason why a
+                    lot of configuration options are provided, so that you can control how JAXB beans get serialized and
+                    de-serialized. The extra configuration options however requires you to learn more details about the framework
+                    you are using.
+                </para>
+
+                <para>
+                    Following is a very simple example of how a JAXB bean could look like.
+
+                    <example>
+                        <title>Simple JAXB bean implementation</title>
+                        <programlisting language="java" linenumbering="numbered">@XmlRootElement
+public class MyJaxbBean {
+    public String name;
+    public int age;
+
+    public MyJaxbBean() {} // JAXB needs this
+
+    public MyJaxbBean(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+}</programlisting>
+                    </example>
+
+                    Using the above JAXB bean for producing JSON data format from you resource method, is then as simple as:
+
+                    <example>
+                        <title>JAXB bean used to generate JSON representation</title>
+                        <programlisting language="java" linenumbering="numbered">@GET
+@Produces("application/json")
+public MyJaxbBean getMyBean() {
+    return new MyJaxbBean("Agamemnon", 32);
+}</programlisting>
+                    </example>
+
+                    Notice, that JSON specific mime type is specified in &lit.jaxrs.Produces; annotation, and the method returns
+                    an instance of <literal>MyJaxbBean</literal>, which JAXB is able to process. Resulting JSON in this case
+                    would look like:
+
+                    <programlisting language="text" linenumbering="unnumbered">{"name":"Agamemnon", "age":"32"}</programlisting>
+                </para>
+                <para>
+                    A proper use of JAXB annotations itself enables you to control output JSON format to certain extent.
+                    Specifically, renaming and omitting items is easy to do directly just by using JAXB annotations.
+                    For example, the following example depicts changes in the above mentioned MyJaxbBean that will result in
+                    <literal>{"king":"Agamemnon"}</literal> JSON output.
+
+                    <example>
+                        <title>Tweaking JSON format using JAXB</title>
+                        <programlisting language="java" linenumbering="numbered">@XmlRootElement
+public class MyJaxbBean {
+
+    @XmlElement(name="king")
+    public String name;
+
+    @XmlTransient
+    public int age;
+
+    // several lines removed
+}</programlisting>
+                    </example>
+                </para>
+
+                <para>Media modules that support this approach are &link.moxy;, &link.jackson;, &link.jettison;</para>
+            </section>
+
+            <section>
+                <title>Low-level based JSON support</title>
+
+                <para>
+                    JSON Processing API is a new standard API for parsing and processing JSON structures in similar way to what
+                    SAX and StAX parsers provide for XML. The API is part of Java EE 7 and later. Another such JSON
+                    parsing/processing API is provided by Jettison framework. Both APIs provide a low-level access to producing
+                    and consuming JSON data structures. By adopting this low-level approach you would be working with
+                    <literal>JsonObject</literal> (or <literal>JSONObject</literal> respectively) and/or
+                    <literal>JsonArray</literal> (or <literal>JSONArray</literal> respectively) classes when processing your
+                    JSON data representations.
+                </para>
+
+                <para>
+                    The biggest advantage of these low-level APIs is that you will gain full control over the JSON format
+                    produced and consumed. You will also be able to produce and consume very large JSON structures using
+                    streaming JSON parser/generator APIs.
+                    On the other hand, dealing with your data model objects will probably be a lot more complex, compared
+                    to the POJO or JAXB based binding approach. Differences are depicted at the following code snippets.
+                </para>
+
+                <para>
+                    Let's start with JAXB-based approach.
+
+                    <example>
+                        <title>JAXB bean creation</title>
+                        <programlisting language="java" linenumbering="numbered">MyJaxbBean myBean = new MyJaxbBean("Agamemnon", 32);</programlisting>
+                    </example>
+
+                    Above you construct a simple JAXB bean, which could be written in JSON as
+                    <literal>{"name":"Agamemnon", "age":32}</literal>
+                </para>
+
+                <para>
+                    Now to build an equivalent <literal>JsonObject</literal>/<literal>JSONObject</literal> (in terms of
+                    resulting JSON expression), you would need several more lines of code. The following example illustrates
+                    how to construct the same JSON data using the standard Java EE 7 JSON-Processing API.
+                    <example>
+                        <title>Constructing a <literal>JsonObject</literal> (JSON-Processing)</title>
+                        <programlisting language="java" linenumbering="numbered">JsonObject myObject = Json.createObjectBuilder()
+        .add("name", "Agamemnon")
+        .add("age", 32)
+        .build();</programlisting>
+                    </example>
+
+                    And at last, here's how the same work can be done with Jettison API.
+                    <example>
+                        <title>Constructing a <literal>JSONObject</literal> (Jettison)</title>
+                        <programlisting language="java" linenumbering="numbered">JSONObject myObject = new JSONObject();
+try {
+    myObject.put("name", "Agamemnon");
+    myObject.put("age", 32);
+} catch (JSONException ex) {
+    LOGGER.log(Level.SEVERE, "Error ...", ex);
+}</programlisting>
+                    </example>
+                </para>
+                <para>
+                    Media modules that support the low-level JSON parsing and generating approach are &link.json-p;
+                    and &link.jettison;. Unless you have a strong reason for using the non-standard &link.jettison; API,
+                    we recommend you to use the new standard &link.json-p; API instead.
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="json.moxy">
+            <title>MOXy</title>
+
+            <section>
+                <title>Dependency</title>
+
+                <para>
+                    To use MOXy as your JSON provider you need to add &lit.jersey-media-moxy; module to your &lit.pom.xml; file:
+
+                    <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-media-moxy&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-moxy;) on the classpath.
+                </para>
+            </section>
+            <section>
+                <title>Configure and register</title>
+
+                <para>
+                    As stated in the <xref linkend="deployment.autodiscoverable"/> as well as earlier in this chapter, MOXy media
+                    module is one of the modules where you don't need to explicitly register it's &lit.jaxrs.core.Feature;s
+                    (&lit.jersey.media.MoxyJsonFeature;) in your client/server &jaxrs.core.Configurable; as this feature is
+                    automatically discovered and registered when you add &lit.jersey-media-moxy; module to your class-path.
+                </para>
+                <para>
+                    The auto-discoverable &lit.jersey-media-moxy; module defines a few properties that can be used to control the
+                    automatic registration of &lit.jersey.media.MoxyJsonFeature; (besides the generic
+                    &jersey.common.CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE; an the its client/server variants):
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>&jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE;</para>
+                        </listitem>
+                        <listitem>
+                            <para>&jersey.server.ServerProperties.MOXY_JSON_FEATURE_DISABLE;</para>
+                        </listitem>
+                        <listitem>
+                            <para>&jersey.client.ClientProperties.MOXY_JSON_FEATURE_DISABLE;</para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+                <note>
+                    <para>
+                        A manual registration of any other Jersey JSON provider feature (except for &link.json-p;)
+                        disables the automated enabling and configuration of &lit.jersey.media.MoxyJsonFeature;.
+                    </para>
+                </note>
+                <para>
+                    To configure &jaxrs.ext.MessageBodyReader;s / &jaxrs.ext.MessageBodyWriter;s provided by MOXy you can simply
+                    create an instance of &jersey.media.MoxyJsonConfig; and set values of needed properties. For most common
+                    properties you can use a particular method to set the value of the property or you can use more generic
+                    methods to set the property:
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                &jersey.media.MoxyJsonConfig.property; - sets a property value for both Marshaller and Unmarshaller.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                &jersey.media.MoxyJsonConfig.marshallerProperty; - sets a property value for Marshaller.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                &jersey.media.MoxyJsonConfig.unmarshallerProperty; - sets a property value for Unmarshaller.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+
+                    <example>
+                        <title>&jersey.media.MoxyJsonConfig; - Setting properties.</title>
+
+                        <programlisting language="java">final Map&lt;String, String&gt; namespacePrefixMapper = new HashMap&lt;String, String&gt;();
+namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
+
+final MoxyJsonConfig configuration = new MoxyJsonConfig()
+        .setNamespacePrefixMapper(namespacePrefixMapper)
+        .setNamespaceSeparator(':');
+                        </programlisting>
+                    </example>
+
+                    In order to make &lit.jersey.media.MoxyJsonConfig; visible for MOXy you need to create and register
+                    &lit.jaxrs.ext.ContextResolver; in your client/server code.
+
+                    <example>
+                        <title><literal>ContextResolver&lt;MoxyJsonConfig&gt;</literal></title>
+
+                        <programlisting language="java">@Provider
+public class JsonMoxyConfigurationContextResolver implements ContextResolver&lt;MoxyJsonConfig&gt; {
+
+    private final MoxyJsonConfig config;
+
+    public JsonMoxyConfigurationContextResolver() {
+        final Map&lt;String, String&gt; namespacePrefixMapper = new HashMap&lt;String, String&gt;();
+        namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
+
+        config = MoxyJsonConfig()
+            .setNamespacePrefixMapper(namespacePrefixMapper)
+            .setNamespaceSeparator(':');
+    }
+
+    @Override
+    public MoxyJsonConfig getContext(Class&lt;?&gt; objectType) {
+        return config;
+    }
+}</programlisting>
+                    </example>
+                </para>
+
+                <para>
+                    Another way to pass configuration properties to the underlying <literal>MOXyJsonProvider</literal> is to set
+                    them directly into your &jaxrs.core.Configurable; instance (see an example below). These are overwritten by
+                    properties set into the &jersey.media.MoxyJsonConfig;.
+
+                    <example>
+                        <title>Setting properties for MOXy providers into &jaxrs.core.Configurable;</title>
+
+                        <programlisting language="java">new ResourceConfig()
+                            .property(MarshallerProperties.JSON_NAMESPACE_SEPARATOR, ".")
+                            // further configuration</programlisting>
+                    </example>
+                </para>
+
+                <para>
+                    There are some properties for which Jersey sets the default value when
+                    &jaxrs.ext.MessageBodyReader; / &jaxrs.ext.MessageBodyWriter; from MOXy is used and they are:
+
+                    <table frame="all">
+                        <title>Default property values for MOXy &jaxrs.ext.MessageBodyReader; / &jaxrs.ext.MessageBodyWriter;</title>
+                        <tgroup cols="2" align="left">
+                            <tbody>
+                                <row>
+                                    <entry><literal>javax.xml.bind.Marshaller#JAXB_FORMATTED_OUTPUT</literal></entry>
+                                    <entry><literal>false</literal></entry>
+                                </row>
+                                <row>
+                                    <entry>
+                                        <literal>org.eclipse.persistence.jaxb.JAXBContextProperties#JSON_INCLUDE_ROOT</literal>
+                                    </entry>
+                                    <entry><literal>false</literal></entry>
+                                </row>
+                                <row>
+                                    <entry>
+                                        <literal>org.eclipse.persistence.jaxb.MarshallerProperties#JSON_MARSHAL_EMPTY_COLLECTIONS</literal>
+                                    </entry>
+                                    <entry><literal>true</literal></entry>
+                                </row>
+                                <row>
+                                    <entry>
+                                        <literal>org.eclipse.persistence.jaxb.JAXBContextProperties#JSON_NAMESPACE_SEPARATOR</literal>
+                                    </entry>
+                                    <entry><literal>org.eclipse.persistence.oxm.XMLConstants#DOT</literal></entry>
+                                </row>
+                            </tbody>
+                        </tgroup>
+                    </table>
+                </para>
+
+                <example>
+                    <title>Building client with MOXy JSON feature enabled.</title>
+
+                    <programlisting language="java">final Client client = ClientBuilder.newBuilder()
+        // The line bellow that registers MOXy feature can be
+        // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is
+        // not disabled.
+        .register(MoxyJsonFeature.class)
+        .register(JsonMoxyConfigurationContextResolver.class)
+        .build();</programlisting>
+                </example>
+
+                <example>
+                    <title>Creating JAX-RS application with MOXy JSON feature enabled.</title>
+
+                    <programlisting language="java">// Create JAX-RS application.
+final Application application = new ResourceConfig()
+        .packages("org.glassfish.jersey.examples.jsonmoxy")
+        // The line bellow that registers MOXy feature can be
+        // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is
+        // not disabled.
+        .register(MoxyJsonFeature.class)
+        .register(JsonMoxyConfigurationContextResolver.class);</programlisting>
+                </example>
+            </section>
+
+            <section>
+                <title>Examples</title>
+
+                <para>
+                    Jersey provides an &jersey.github.moxy.json.example.path; on how to use MOXy to consume/produce JSON.
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="json.json-p">
+            <title>Java API for JSON Processing (JSON-P)</title>
+
+            <section>
+                <title>Dependency</title>
+
+                <para>
+                    To use JSON-P as your JSON provider you need to add &lit.jersey-media-json-processing; module to your
+                    &lit.pom.xml; file:
+
+                    <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-media-processing&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-json-processing;)
+                    on the class-path.
+                </para>
+            </section>
+            <section>
+                <title>Configure and register</title>
+
+                <para>
+                    As stated in <xref linkend="deployment.autodiscoverable"/> JSON-Processing media module is one of the
+                    modules where you don't need to explicitly register it's
+                    &lit.jaxrs.core.Feature;s (&lit.jersey.media.JsonProcessingFeature;) in your client/server
+                    &jaxrs.core.Configurable; as this feature is automatically discovered and registered when you add
+                    &lit.jersey-media-json-processing; module to your classpath.
+                </para>
+                <para>
+                    As for the other modules, &lit.jersey-media-json-processing; has also few properties that can affect the
+                    registration of &lit.jersey.media.JsonProcessingFeature;
+                    (besides &jersey.common.CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE; and the like):
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>&jersey.common.CommonProperties.JSON_PROCESSING_FEATURE_DISABLE;</para>
+                        </listitem>
+                        <listitem>
+                            <para>&jersey.server.ServerProperties.JSON_PROCESSING_FEATURE_DISABLE;</para>
+                        </listitem>
+                        <listitem>
+                            <para>&jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE;</para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+                <para>
+                    To configure &jaxrs.ext.MessageBodyReader;s / &jaxrs.ext.MessageBodyWriter;s provided by JSON-P you can simply
+                    add values for supported properties into the &jaxrs.core.Configuration; instance (client/server). Currently
+                    supported are these properties:
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                <literal>JsonGenerator.PRETTY_PRINTING</literal>
+                                ("<literal>javax.json.stream.JsonGenerator.prettyPrinting</literal>")
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+
+                <example>
+                    <title>Building client with JSON-Processing JSON feature enabled.</title>
+
+                    <programlisting language="java">ClientBuilder.newClient(new ClientConfig()
+        // The line bellow that registers JSON-Processing feature can be
+        // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is not disabled.
+        .register(JsonProcessingFeature.class)
+        .property(JsonGenerator.PRETTY_PRINTING, true)
+);</programlisting>
+                </example>
+
+                <example>
+                    <title>Creating JAX-RS application with JSON-Processing JSON feature enabled.</title>
+
+                    <programlisting language="java">// Create JAX-RS application.
+final Application application = new ResourceConfig()
+        // The line bellow that registers JSON-Processing feature can be
+        // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is not disabled.
+        .register(JsonProcessingFeature.class)
+        .packages("org.glassfish.jersey.examples.jsonp")
+        .property(JsonGenerator.PRETTY_PRINTING, true);</programlisting>
+                </example>
+            </section>
+
+            <section>
+                <title>Examples</title>
+
+                <para>Jersey provides an &jersey.github.json.processing.example.path; on how to use JSON-Processing to
+                    consume/produce JSON.</para>
+            </section>
+        </section>
+        <section xml:id="json.jackson">
+            <title>Jackson</title>
+
+            <section>
+                <title>Dependency</title>
+
+                <para>
+                    To use Jackson as your JSON provider you need to add &lit.jersey-media-json-jackson; module to your
+                    &lit.pom.xml; file:
+
+                    <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-media-json-jackson&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-json-jackson;) on
+                    the classpath.
+                </para>
+            </section>
+            <section>
+                <title>Configure and register</title>
+
+                <para>
+                    Jackson JSON processor could be controlled via providing a custom Jackson &jersey.media.ObjectMapper;
+                    instance.
+                    This could be handy if you need to redefine the default Jackson behaviour and to fine-tune how your JSON data
+                    structures look like. Detailed description of all Jackson features is out of scope of this guide. The example
+                    bellow gives you a hint on how to wire your &lit.jersey.media.ObjectMapper; instance into your Jersey
+                    application.
+                </para>
+
+                <para>
+                    In order to use Jackson as your JSON (JAXB/POJO) provider you need to register &jersey.media.JacksonFeature;
+                    and a &lit.jaxrs.ext.ContextResolver; for &lit.jersey.media.ObjectMapper; (if needed) in your
+                    &jaxrs.core.Configurable; (client/server).
+
+                    <example>
+                        <title><literal>ContextResolver&lt;ObjectMapper&gt;</literal></title>
+
+                        <programlisting language="java" linenumbering="numbered">@Provider
+public class MyObjectMapperProvider implements ContextResolver&lt;ObjectMapper&gt; {
+
+    final ObjectMapper defaultObjectMapper;
+    final ObjectMapper combinedObjectMapper;
+
+    public MyObjectMapperProvider() {
+        defaultObjectMapper = createDefaultMapper();
+        combinedObjectMapper = createCombinedObjectMapper();
+    }
+
+    @Override
+    public ObjectMapper getContext(Class&lt;?&gt; type) {
+        if (type == CombinedAnnotationBean.class) {
+            return combinedObjectMapper;
+        } else {
+            return defaultObjectMapper;
+        }
+    }
+
+    private static ObjectMapper createDefaultMapper() {
+        final ObjectMapper result = new ObjectMapper();
+        result.configure(Feature.INDENT_OUTPUT, true);
+
+        return result;
+    }
+
+    // ...
+}</programlisting>
+                    </example>
+
+                    <example>
+                        <title>Building client with Jackson JSON feature enabled.</title>
+
+                        <programlisting language="java" linenumbering="numbered">final Client client = ClientBuilder.newBuilder()
+        .register(MyObjectMapperProvider.class)  // No need to register this provider if no special configuration is required.
+        .register(JacksonFeature.class)
+        .build();</programlisting>
+                    </example>
+
+                    <example>
+                        <title>Creating JAX-RS application with Jackson JSON feature enabled.</title>
+
+                        <programlisting language="java" linenumbering="numbered">// Create JAX-RS application.
+final Application application = new ResourceConfig()
+        .packages("org.glassfish.jersey.examples.jackson")
+        .register(MyObjectMapperProvider.class)  // No need to register this provider if no special configuration is required.
+        .register(JacksonFeature.class);</programlisting>
+                    </example>
+                </para>
+            </section>
+
+            <section>
+                <title>Examples</title>
+
+                <para>
+                    Jersey provides an &jersey.github.jackson.example.path; on how to use Jackson to consume/produce JSON.
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="json.jettison">
+            <title>Jettison</title>
+
+            <para>
+                JAXB approach for (de)serializing JSON in Jettison module provides, in addition to using pure JAXB,
+                configuration options that could be set on an &jersey.media.JettisonConfig; instance. The instance could be then
+                further used to create a &jersey.media.JettisonJaxbContext;, which serves as a main configuration point in this
+                area.
+                To pass your specialized &lit.jersey.media.JettisonJaxbContext; to Jersey, you will finally need to implement
+                a JAXBContext &jaxrs.ext.ContextResolver; (see below).
+            </para>
+
+            <section>
+                <title>Dependency</title>
+
+                <para>
+                    To use Jettison as your JSON provider you need to add &lit.jersey-media-json-jettison; module to your
+                    &lit.pom.xml; file:
+
+                    <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-media-json-jettison&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-json-jettison;) on
+                    the classpath.
+                </para>
+            </section>
+            <section>
+                <title>JSON Notations</title>
+
+                <para>
+                    &lit.jersey.media.JettisonConfig; allows you to use two JSON notations. Each of these notations serializes
+                    JSON in a different way. Following is a list of supported notations:
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>JETTISON_MAPPED (default notation)</para>
+                        </listitem>
+                        <listitem>
+                            <para>BADGERFISH</para>
+                        </listitem>
+                    </itemizedlist>
+
+                    You might want to use one of these notations, when working with more complex XML documents. Namely when you
+                    deal with multiple XML namespaces in your JAXB beans.
+                </para>
+
+                <para>
+                    Individual notations and their further configuration options are described bellow. Rather then explaining
+                    rules for mapping XML constructs into JSON, the notations will be described using a simple example. Following
+                    are JAXB beans, which will be used.
+
+                    <example>
+                        <title>JAXB beans for JSON supported notations description, simple address bean</title>
+
+                        <programlisting language="java" linenumbering="numbered">@XmlRootElement
+public class Address {
+    public String street;
+    public String town;
+
+    public Address(){}
+
+    public Address(String street, String town) {
+        this.street = street;
+        this.town = town;
+    }
+}</programlisting>
+                    </example>
+
+                    <example>
+                        <title>JAXB beans for JSON supported notations description, contact bean</title>
+
+                        <programlisting language="java" linenumbering="numbered">@XmlRootElement
+public class Contact {
+
+    public int id;
+    public String name;
+    public List&lt;Address&gt; addresses;
+
+    public Contact() {};
+
+    public Contact(int id, String name, List&lt;Address&gt; addresses) {
+        this.name = name;
+        this.id = id;
+        this.addresses =
+            (addresses != null) ? new LinkedList&lt;Address&gt;(addresses) : null;
+    }
+}</programlisting>
+                    </example>
+                </para>
+
+                <para>
+                    Following text will be mainly working with a contact bean initialized with:
+
+                    <example>
+                        <title>JAXB beans for JSON supported notations description, initialization</title>
+                        <programlisting language="java"  linenumbering="numbered">Address[] addresses = {new Address("Long Street 1", "Short Village")};
+Contact contact = new Contact(2, "Bob", Arrays.asList(addresses));</programlisting>
+                    </example>
+
+                    I.e. contact bean with <literal>id=2</literal>, <literal>name="Bob"</literal> containing
+                    a single address (<literal>street="Long Street 1"</literal>, <literal>town="Short Village"</literal>).
+                </para>
+
+                <para>
+                    All bellow described configuration options are documented also in api-docs at &jersey.media.JettisonConfig;.
+                </para>
+
+                <section>
+                    <title>Jettison mapped notation</title>
+
+                    <para>
+                        If you need to deal with various XML namespaces, you will find Jettison <literal>mapped</literal>
+                        notation pretty useful. Lets define a particular namespace for <code>id</code> item:
+
+                        <programlisting language="java" linenumbering="numbered">...
+@XmlElement(namespace="http://example.com")
+public int id;
+...</programlisting>
+
+                        Then you simply configure a mapping from XML namespace into JSON prefix as follows:
+
+                        <example xml:id="json.jaxb.jettison.mapped.ns.def">
+                            <title>
+                                XML namespace to JSON mapping configuration for Jettison based <literal>mapped</literal> notation
+                            </title>
+
+                            <programlisting language="java" linenumbering="numbered">Map&lt;String,String&gt; ns2json = new HashMap&lt;String, String&gt;();
+ns2json.put("http://example.com", "example");
+context = new JettisonJaxbContext(
+    JettisonConfig.mappedJettison().xml2JsonNs(ns2json).build(),
+    types);</programlisting>
+                        </example>
+
+                        Resulting JSON will look like in the example bellow.
+
+                        <example>
+                            <title>JSON expression with XML namespaces mapped into JSON</title>
+                            <programlisting language="xml" linenumbering="numbered">{
+   "contact":{
+      "exampleid":2,
+      "name":"Bob",
+      "addresses":{
+         "street":"Long Street 1",
+         "town":"Short Village"
+      }
+   }
+}</programlisting>
+                        </example>
+
+                        Please note, that <code>id</code> item became <code>example.id</code> based on the XML namespace mapping.
+                        If you have more XML namespaces in your XML, you will need to configure appropriate mapping for all of
+                        them.
+                    </para>
+                </section>
+
+                <section>
+                    <title>Badgerfish notation</title>
+
+                    <para>
+                        From JSON and JavaScript perspective, this notation is definitely the worst readable one.
+                        You will probably not want to use it, unless you need to make sure your JAXB beans could be flawlessly
+                        written and read back to and from JSON, without bothering with any formatting configuration, namespaces,
+                        etc.
+                    </para>
+
+                    <para>
+                        &lit.jersey.media.JettisonConfig; instance using <literal>badgerfish</literal> notation could be built
+                        with
+
+                        <programlisting language="java">JettisonConfig.badgerFish().build()</programlisting>
+
+                        and the JSON output JSON will be as follows.
+
+                        <example>
+                            <title>JSON expression produced using <literal>badgerfish</literal> notation</title>
+                            <programlisting language="xml" linenumbering="numbered">{
+   "contact":{
+      "id":{
+         "$":"2"
+      },
+      "name":{
+         "$":"Bob"
+      },
+      "addresses":{
+         "street":{
+            "$":"Long Street 1"
+         },
+         "town":{
+            "$":"Short Village"
+         }
+      }
+   }
+}</programlisting>
+                        </example>
+                    </para>
+                </section>
+            </section>
+
+            <section>
+                <title>Configure and register</title>
+
+                <para>
+                    In order to use Jettison as your JSON (JAXB/POJO) provider you need to register &jersey.media.JettisonFeature;
+                    and a &lit.jaxrs.ext.ContextResolver; for &lit.jaxb.JAXBContext; (if needed) in your &jaxrs.core.Configurable;
+                    (client/server).
+
+                    <example>
+                        <title><literal>ContextResolver&lt;ObjectMapper&gt;</literal></title>
+
+                        <programlisting language="java">@Provider
+public class JaxbContextResolver implements ContextResolver&lt;JAXBContext&gt; {
+
+    private final JAXBContext context;
+    private final Set&lt;Class&lt;?&gt;&gt; types;
+    private final Class&lt;?&gt;[] cTypes = {Flights.class, FlightType.class, AircraftType.class};
+
+    public JaxbContextResolver() throws Exception {
+        this.types = new HashSet&lt;Class&lt;?&gt;&gt;(Arrays.asList(cTypes));
+        this.context = new JettisonJaxbContext(JettisonConfig.DEFAULT, cTypes);
+    }
+
+    @Override
+    public JAXBContext getContext(Class&lt;?&gt; objectType) {
+        return (types.contains(objectType)) ? context : null;
+    }
+}</programlisting>
+                    </example>
+
+                    <example>
+                        <title>Building client with Jettison JSON feature enabled.</title>
+
+                        <programlisting language="java">final Client client = ClientBuilder.newBuilder()
+        .register(JaxbContextResolver.class)  // No need to register this provider if no special configuration is required.
+        .register(JettisonFeature.class)
+        .build();</programlisting>
+                    </example>
+
+                    <example>
+                        <title>Creating JAX-RS application with Jettison JSON feature enabled.</title>
+
+                        <programlisting language="java">// Create JAX-RS application.
+final Application application = new ResourceConfig()
+        .packages("org.glassfish.jersey.examples.jettison")
+        .register(JaxbContextResolver.class)  // No need to register this provider if no special configuration is required.
+        .register(JettisonFeature.class);</programlisting>
+                    </example>
+                </para>
+            </section>
+
+            <section>
+                <title>Examples</title>
+
+                <para>
+                    Jersey provides an &jersey.github.jettison.example.path; on how to use Jettison to consume/produce JSON.
+                </para>
+            </section>
+        </section>
+
+        <section>
+            <title><literal>@JSONP</literal> - JSON with Padding Support</title>
+
+            <para>
+                Jersey provides out-of-the-box support for &wiki.JSONP; - JSON with padding. The following conditions has to be
+                met to take advantage of this capability:
+
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Resource method, which should return wrapped JSON, needs to be annotated with &jersey.server.JSONP;
+                            annotation.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            &jaxrs.ext.MessageBodyWriter; for <literal>application/json</literal> media type, which also accepts
+                            the return type of the resource method, needs to be registered (see <link linkend="json">JSON</link>
+                            section of this chapter).
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            User's request has to contain &lit.http.header.Accept; header with one of the JavaScript media types
+                            defined (see below).
+                        </para>
+                    </listitem>
+                </itemizedlist>
+
+                Acceptable media types compatible with &lit.jersey.server.JSONP; are: <literal>application/javascript</literal>,
+                <literal>application/x-javascript</literal>, <literal>application/ecmascript</literal>,
+                <literal>text/javascript</literal>, <literal>text/x-javascript</literal>, <literal>text/ecmascript</literal>,
+                <literal>text/jscript</literal>.
+
+                <example>
+                    <title>Simplest case of using &lit.jersey.server.JSONP;</title>
+
+                    <programlisting language="java">@GET
+@JSONP
+@Produces({"application/json", "application/javascript"})
+public JaxbBean getSimpleJSONP() {
+    return new JaxbBean("jsonp");
+}</programlisting>
+                </example>
+
+                Assume that we have registered a JSON providers and that the <literal>JaxbBean</literal> looks like:
+
+                <example>
+                    <title>JaxbBean for @JSONP example</title>
+
+                    <programlisting language="java">@XmlRootElement
+public class JaxbBean {
+
+    private String value;
+
+    public JaxbBean() {}
+
+    public JaxbBean(final String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(final String value) {
+        this.value = value;
+    }
+}</programlisting>
+                </example>
+
+                When you send a &lit.http.GET; request with &lit.http.header.Accept; header set to
+                <literal>application/javascript</literal> you'll get a result entity that look like:
+
+                <programlisting language="xml">callback({
+    "value" : "jsonp",
+})</programlisting>
+            </para>
+
+            <para>
+                There are, of course, ways to configure wrapping method of the returned entity which defaults to
+                <literal>callback</literal> as you can see in the previous example.
+                &lit.jersey.server.JSONP; has two parameters that can be configured: <literal>callback</literal> and
+                <literal>queryParam</literal>.
+                <literal>callback</literal> stands for the name of the JavaScript callback function defined by the application.
+                The second parameter, <literal>queryParam</literal>, defines the name of the query parameter holding the name of
+                the callback function to be used (if present in the request). Value of <literal>queryParam</literal> defaults to
+                <literal>__callback</literal> so even if you do not set the name of the query parameter yourself, client can
+                always affect the result name of the wrapping JavaScript callback method.
+
+                <note>
+                    <para>
+                        <literal>queryParam</literal> value (if set) always takes precedence over <literal>callback</literal>
+                        value.
+                    </para>
+                </note>
+            </para>
+
+            <para>
+                Lets modify our example a little bit:
+
+                <example>
+                    <title>Example of &lit.jersey.server.JSONP; with configured parameters.</title>
+
+                    <programlisting language="java">@GET
+@Produces({"application/json", "application/javascript"})
+@JSONP(callback = "eval", queryParam = "jsonpCallback")
+public JaxbBean getSimpleJSONP() {
+    return new JaxbBean("jsonp");
+}</programlisting>
+                </example>
+
+                And make two requests:
+
+                <programlisting>curl -X GET http://localhost:8080/jsonp</programlisting>
+
+                will return
+
+                <programlisting language="xml">eval({
+    "value" : "jsonp",
+})</programlisting>
+
+                and the
+
+                <programlisting>curl -X GET http://localhost:8080/jsonp?jsonpCallback=alert</programlisting>
+
+                will return
+
+                <programlisting language="xml">alert({
+    "value" : "jsonp",
+})</programlisting>
+            </para>
+
+            <formalpara>
+                <title>Example</title>
+                <para>
+                    You can take a look at a provided example available at &jersey.github.json.with.padding.example.path;.
+                </para>
+            </formalpara>
+        </section>
     </section>
-    <section id="xml">
+
+    <section xml:id="xml">
         <title>XML</title>
-        TODO: Describe support for XML
+
+        <para>
+            As you probably already know, Jersey uses &lit.jaxrs.ext.MessageBodyWriter;s and &lit.jaxrs.ext.MessageBodyReader;s to
+            parse incoming requests and create outgoing responses. Every user can create its own representation but... this is not
+            recommended way how to do things. XML is proven standard for interchanging information, especially in web services.
+            Jerseys supports low level data types used for direct manipulation and JAXB XML entities.
+        </para>
+
+        <section>
+            <title xml:id="xml.lowlevel">Low level XML support</title>
+
+            <para>
+                Jersey currently support several low level data types: &jdk7.StreamSource;, &jdk7.SAXSource;, &jdk7.DOMSource;
+                and &jdk7.org.w3c.dom.Document;. You can use these types as the return type or as a method (resource) parameter.
+                Lets say we want to test this feature and we have &jersey.github.helloworld.example.path; as a starting point.
+                All we need to do is add methods (resources) which consumes and produces XML and types mentioned above will be
+                used.
+            </para>
+
+            <example>
+                <title>Low level XML test - methods added to <literal>HelloWorldResource.java</literal></title>
+                <programlisting language="java" linenumbering="numbered">@POST
+@Path("StreamSource")
+public StreamSource getStreamSource(StreamSource streamSource) {
+    return streamSource;
+}
+
+@POST
+@Path("SAXSource")
+public SAXSource getSAXSource(SAXSource saxSource) {
+    return saxSource;
+}
+
+@POST
+@Path("DOMSource")
+public DOMSource getDOMSource(DOMSource domSource) {
+    return domSource;
+}
+
+@POST
+@Path("Document")
+public Document getDocument(Document document) {
+    return document;
+}</programlisting>
+            </example>
+
+            <para>
+                Both &lit.jaxrs.ext.MessageBodyWriter; and &lit.jaxrs.ext.MessageBodyReader; are used in this case, all we need is
+                a &lit.http.POST; request with some XML document as a request entity. To keep this as simple as possible only root
+                element with no content will be sent: <literal>"&lt;test /&gt;"</literal>. You can create JAX-RS client to do that
+                or use some other tool, for example <literal>curl</literal>:
+                <informalexample>
+                    <programlisting>curl -v http://localhost:8080/base/helloworld/StreamSource -d "&lt;test/&gt;"</programlisting>
+                </informalexample>
+                You should get exactly the same XML from our service as is present in the request; in this case, XML headers are
+                added to response but content stays. Feel free to iterate through all resources.
+            </para>
+        </section>
+
+        <section>
+            <title xml:id="xml.jaxb.xmlRootElement">Getting started with JAXB</title>
+
+            <para>
+                Good start for people which already have some experience with JAXB annotations
+                is &jersey.github.jaxb.example.path;. You can see various use-cases there. This text is mainly meant for those who
+                don't have prior experience with JAXB. Don't expect that all possible annotations and their combinations will be
+                covered in this chapter,
+                <link xlink:href='http://jaxb.java.net'>JAXB (JSR 222 implementation)</link>
+                is pretty complex and comprehensive. But if you just want to know how you can interchange XML messages with your
+                REST service, you are looking at the right chapter.
+            </para>
+
+            <para>
+                Lets start with simple example. Lets say we have class <literal>Planet</literal> and service which produces
+                "Planets".
+            </para>
+
+            <example>
+                <title>Planet class</title>
+                <programlisting language="java" linenumbering="numbered">@XmlRootElement
+public class Planet {
+    public int id;
+    public String name;
+    public double radius;
+}</programlisting>
+            </example>
+
+            <example>
+                <title>Resource class</title>
+                <programlisting language="java" linenumbering="numbered">@Path("planet")
+public class Resource {
+
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    public Planet getPlanet() {
+        final Planet planet = new Planet();
+
+        planet.id = 1;
+        planet.name = "Earth";
+        planet.radius = 1.0;
+
+        return planet;
+    }
+}</programlisting>
+            </example>
+
+            <para>
+                You can see there is some extra annotation declared on <literal>Planet</literal> class, particularly
+                &jaxb.annotation.XmlRootElement;. This is an JAXB annotation which maps java classes
+                to XML elements. We don't need to specify anything else, because <literal>Planet</literal> is very simple class
+                and all fields are public. In this case, XML element name will be derived from the class name or
+                you can set the name property: <literal>@XmlRootElement(name="yourName")</literal>.
+            </para>
+
+            <para>
+                Our resource class will respond to <literal>GET /planet</literal> with
+
+                <programlisting language="xml">&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;
+&lt;planet&gt;
+    &lt;id&gt;1&lt;/id&gt;
+    &lt;name&gt;Earth&lt;/name&gt;
+    &lt;radius&gt;1.0&lt;/radius&gt;
+&lt;/planet&gt;</programlisting>
+
+                which might be exactly what we want... or not. Or we might not really care, because we
+                can use JAX-RS client for making requests to this resource and this is easy as:
+                <programlisting language="java" linenumbering="unnumbered">
+                    Planet planet = webTarget.path("planet").request(MediaType.APPLICATION_XML_TYPE).get(Planet.class);
+                </programlisting>
+                There is pre-created &lit.jaxrs.client.WebTarget; object which points to our applications context root and
+                we simply add path (in our case its <literal>planet</literal>), accept header (not mandatory, but service could
+                provide different content based on this header; for example <literal>text/html</literal> can be served for web
+                browsers) and at the end we specify that we are expecting <literal>Planet</literal> class via &lit.http.GET;
+                request.
+            </para>
+
+            <para>
+                There may be need for not just producing XML, we might want to consume it as well.
+
+                <example>
+                    <title>Method for consuming Planet</title>
+                    <programlisting language="java" linenumbering="numbered">@POST
+@Consumes(MediaType.APPLICATION_XML)
+public void setPlanet(Planet planet) {
+    System.out.println("setPlanet " + planet);
+}</programlisting>
+                </example>
+
+                After valid request is made, service will print out string representation of <literal>Planet</literal>, which can
+                look like <literal>Planet{id=2, name='Mars', radius=1.51}</literal>. With JAX-RS client you can do:
+                <programlisting language="java" linenumbering="unnumbered">
+                    webTarget.path("planet").post(planet);
+                </programlisting>
+            </para>
+
+            <para>
+                If there is a need for some other (non default) XML representation, other JAXB annotations would
+                need to be used. This process is usually simplified by generating java source from XML Schema which is
+                done by <literal>xjc</literal> which is XML to java compiler and it is part of JAXB.
+            </para>
+        </section>
+
+        <section>
+            <title xml:id="xml.jabx.JAXBElement">POJOs</title>
+
+            <para>
+                Sometimes you can't / don't want to add JAXB annotations to source code and you still want to have resources
+                consuming and producing XML representation of your classes. In this case, &jaxb.JAXBElement; class should help
+                you. Let's redo planet resource but this time we won't have an &jaxb.annotation.XmlRootElement; annotation on
+                <literal>Planet</literal> class.
+            </para>
+
+            <example>
+                <title>Resource class - JAXBElement</title>
+                <programlisting language="java" linenumbering="numbered">@Path("planet")
+public class Resource {
+
+    @GET
+    @Produces(MediaType.APPLICATION_XML)
+    public JAXBElement&lt;Planet&gt; getPlanet() {
+        Planet planet = new Planet();
+
+        planet.id = 1;
+        planet.name = "Earth";
+        planet.radius = 1.0;
+
+        return new JAXBElement&lt;Planet&gt;(new QName("planet"), Planet.class, planet);
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_XML)
+    public void setPlanet(JAXBElement&lt;Planet&gt; planet) {
+        System.out.println("setPlanet " + planet.getValue());
+    }
+}</programlisting>
+            </example>
+
+            <para>
+                As you can see, everything is little more complicated with &lit.jaxb.JAXBElement;. This is because now you need
+                to explicitly set element name for <literal>Planet</literal> class XML representation. Client side is even more
+                complicated than server side because you can't do <literal>JAXBElement&lt;Planet&gt;</literal> so JAX-RS client
+                API provides way how to workaround it by declaring subclass of &lit.jaxrs.core.GenericType;.
+            </para>
+
+            <example>
+                <title>Client side - JAXBElement</title>
+                <programlisting language="java" linenumbering="numbered">// GET
+GenericType&lt;JAXBElement&lt;Planet&gt;&gt; planetType = new GenericType&lt;JAXBElement&lt;Planet&gt;&gt;() {};
+
+Planet planet = (Planet) webTarget.path("planet").request(MediaType.APPLICATION_XML_TYPE).get(planetType).getValue();
+System.out.println("### " + planet);
+
+// POST
+planet = new Planet();
+
+// ...
+
+webTarget.path("planet").post(new JAXBElement&lt;Planet&gt;(new QName("planet"), Planet.class, planet));</programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title xml:id="xml.jaxb.JAXBContext">Using custom JAXBContext</title>
+
+            <para>In some scenarios you can take advantage of using custom &jaxb.JAXBContext;. Creating
+                &lit.jaxb.JAXBContext; is an expensive operation and if you already have one created, same instance
+                can be used by Jersey. Other possible use-case for this is when you need to set some specific things
+                to &lit.jaxb.JAXBContext;, for example to set a different class loader.
+            </para>
+
+            <example>
+                <title>PlanetJAXBContextProvider</title>
+                <programlisting language="java" linenumbering="numbered">@Provider
+public class PlanetJAXBContextProvider implements ContextResolver&lt;JAXBContext&gt; {
+    private JAXBContext context = null;
+
+    public JAXBContext getContext(Class&lt;?&gt; type) {
+        if (type != Planet.class) {
+            return null; // we don't support nothing else than Planet
+        }
+
+        if (context == null) {
+            try {
+                context = JAXBContext.newInstance(Planet.class);
+            } catch (JAXBException e) {
+                // log warning/error; null will be returned which indicates that this
+                // provider won't/can't be used.
+            }
+        }
+
+        return context;
+    }
+}</programlisting>
+            </example>
+
+            <para>
+                Sample above shows simple &lit.jaxb.JAXBContext; creation, all you need to do is put
+                this &lit.jaxrs.ext.Provider; annotated class somewhere where Jersey can find it. Users sometimes
+                have problems with using provider classes on client side, so just to reminder - you have to
+                declare them in the client config (client does not do anything like package scanning done by server).
+            </para>
+
+            <example>
+                <title>Using Provider with JAX-RS client</title>
+                <programlisting language="java" linenumbering="numbered">
+ClientConfig config = new ClientConfig();
+config.register(PlanetJAXBContextProvider.class);
+
+Client client = ClientBuilder.newClient(config);
+                </programlisting>
+            </example>
+        </section>
+
+        <section>
+            <title>MOXy</title>
+            <para>
+                If you want to use <link xlink:href='http://www.eclipse.org/eclipselink/moxy.php'>MOXy</link> as your JAXB
+                implementation instead of JAXB RI you have two options. You can either use the standard JAXB mechanisms to define
+                the <literal>JAXBContextFactory</literal> from which a &lit.jaxb.JAXBContext; instance would be obtained (for more
+                on this topic, read JavaDoc on &jaxb.JAXBContext;) or you can add <literal>jersey-media-moxy</literal> module to
+                your project and register/configure
+                <link xlink:href='&jersey.javadoc.path;/moxy/xml/MoxyXmlFeature.html'>MoxyXmlFeature</link> class/instance in
+                the &jaxrs.core.Configurable;.
+            </para>
+
+            <example>
+                <title>Add <literal>jersey-media-moxy</literal> dependency.</title>
+                <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-media-moxy&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+            </example>
+
+            <example>
+                <title>Register the <literal>MoxyXmlFeature</literal> class.</title>
+                <programlisting language="java" linenumbering="numbered">final ResourceConfig config = new ResourceConfig()
+    .packages("org.glassfish.jersey.examples.xmlmoxy")
+    .register(MoxyXmlFeature.class);</programlisting>
+            </example>
+
+            <example>
+                <title>Configure and register an <literal>MoxyXmlFeature</literal> instance.</title>
+                <programlisting language="java" linenumbering="numbered">// Configure Properties.
+final Map&lt;String, Object&gt; properties = new HashMap&lt;String, Object&gt;();
+// ...
+
+// Obtain a ClassLoader you want to use.
+final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+final ResourceConfig config = new ResourceConfig()
+    .packages("org.glassfish.jersey.examples.xmlmoxy")
+    .register(new MoxyXmlFeature(
+        properties,
+        classLoader,
+        true, // Flag to determine whether eclipselink-oxm.xml file should be used for lookup.
+        CustomClassA.class, CustomClassB.class  // Classes to be bound.
+    ));</programlisting>
+            </example>
+        </section>
     </section>
-    <section id="multipart">
+
+    <section xml:id="multipart">
         <title>Multipart</title>
-        TODO: Describe support for multipart
+
+        <section>
+            <title>Overview</title>
+
+            <para>
+                The classes in this module provide an integration of <literal>multipart/*</literal> request and response bodies
+                in a JAX-RS runtime environment. The set of registered providers is leveraged, in that the content type for a body
+                part of such a message reuses the same &lit.jaxrs.ext.MessageBodyReader;/&lit.jaxrs.ext.MessageBodyWriter;
+                implementations as would be used for that content type as a standalone entity.
+            </para>
+
+            <para>
+                The following list of general MIME MultiPart features is currently supported:
+
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            The <literal>MIME-Version: 1.0</literal> HTTP header is included on generated responses.
+                            It is accepted, but not required, on processed requests.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            A &jaxrs.ext.MessageBodyReader; implementation for consuming MIME MultiPart entities.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            A &lit.jaxrs.ext.MessageBodyWriter; implementation for producing MIME MultiPart entities.
+                            The appropriate &lit.jaxrs.ext.Provider; is used to serialize each body part, based on its media type.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Optional creation of an appropriate <literal>boundary</literal> parameter on a generated
+                            <literal>Content-Type</literal> header, if not already present.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <para>
+                For more information refer to &jersey.media.multipart;.
+            </para>
+
+            <section>
+                <title>Dependency</title>
+
+                <para>
+                    To use multipart features you need to add &lit.jersey-media-multipart; module to your &lit.pom.xml; file:
+
+                    <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-media-multipart&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-multipart;) on the
+                    class-path.
+                </para>
+            </section>
+
+            <section>
+                <title>Registration</title>
+
+                <para>
+                    Before you can use capabilities of the &lit.jersey-media-multipart; module in your client/server code, you
+                    need to register &jersey.media.multipart.MultiPartFeature;.
+
+                    <example>
+                        <title>Building client with MultiPart feature enabled.</title>
+
+                        <programlisting language="java">final Client client = ClientBuilder.newBuilder()
+    .register(MultiPartFeature.class)
+    .build();</programlisting>
+                    </example>
+
+                    <example>
+                        <title>Creating JAX-RS application with MultiPart feature enabled.</title>
+
+                        <programlisting language="java">// Create JAX-RS application.
+final Application application = new ResourceConfig()
+    .packages("org.glassfish.jersey.examples.multipart")
+    .register(MultiPartFeature.class)</programlisting>
+                    </example>
+                </para>
+            </section>
+
+            <section>
+                <title>Examples</title>
+
+                <para>Jersey provides an &jersey.github.multipart.example.path; on how to use multipart features.</para>
+            </section>
+        </section>
+
+        <section>
+            <title>Client</title>
+
+            <para>
+                &jersey.media.multipart.MultiPart; class (or it's subclasses) can be used as an entry point to using
+                &lit.jersey-media-multipart; module on the client side. This class represents a &wiki.Multipart; and is able
+                to hold an arbitrary number of &jersey.media.multipart.BodyPart;s. Default media type is &wiki.MultipartMixed;
+                for &lit.jersey.media.multipart.MultiPart; entity and <literal>text/plain</literal> for
+                &lit.jersey.media.multipart.BodyPart;.
+
+                <example>
+                    <title>&lit.jersey.media.multipart.MultiPart; entity</title>
+
+                    <programlisting language="java">final MultiPart multiPartEntity = new MultiPart()
+        .bodyPart(new BodyPart().entity("hello"))
+        .bodyPart(new BodyPart(new JaxbBean("xml"), MediaType.APPLICATION_XML_TYPE))
+        .bodyPart(new BodyPart(new JaxbBean("json"), MediaType.APPLICATION_JSON_TYPE));
+
+final WebTarget target = // Create WebTarget.
+final Response response = target
+        .request()
+        .post(Entity.entity(multiPartEntity, multiPartEntity.getMediaType()));</programlisting>
+                </example>
+
+                If you send a <literal>multiPartEntity</literal> to the server the entity with <literal>Content-Type</literal>
+                header in HTTP message would look like (don't forget to register a JSON provider):
+
+                <example>
+                    <title>&lit.jersey.media.multipart.MultiPart; entity in HTTP message.</title>
+
+                    <screen language="text" linenumbering="unnumbered"><emphasis>Content-Type: multipart/mixed; boundary=Boundary_1_829077776_1369128119878</emphasis>
+
+--Boundary_1_829077776_1369128119878
+Content-Type: text/plain
+
+hello
+--Boundary_1_829077776_1369128119878
+Content-Type: application/xml
+
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;jaxbBean&gt;&lt;value&gt;xml&lt;/value&gt;&lt;/jaxbBean&gt;
+--Boundary_1_829077776_1369128119878
+Content-Type: application/json
+
+{"value":"json"}
+--Boundary_1_829077776_1369128119878--</screen>
+                </example>
+            </para>
+            <para>
+                When working with forms (e.g. media type <literal>multipart/form-data</literal>) and various fields in them,
+                there is a more convenient class to be used - &jersey.media.multipart.FormDataMultiPart;. It automatically sets
+                the media type for the &lit.jersey.media.multipart.FormDataMultiPart; entity to
+                <literal>multipart/form-data</literal> and <literal>Content-Disposition</literal> header to
+                &lit.jersey.media.multipart.FormDataBodyPart; body parts.
+
+                <example>
+                    <title>&lit.jersey.media.multipart.FormDataMultiPart; entity</title>
+                    <programlisting language="java">final FormDataMultiPart multipart = new FormDataMultiPart()
+    .field("hello", "hello")
+    .field("xml", new JaxbBean("xml"))
+    .field("json", new JaxbBean("json"), MediaType.APPLICATION_JSON_TYPE);
+
+final WebTarget target = // Create WebTarget.
+final Response response = target.request().post(Entity.entity(multipart, multipart.getMediaType()));</programlisting>
+                </example>
+
+                To illustrate the difference when using &lit.jersey.media.multipart.FormDataMultiPart; instead of
+                &lit.jersey.media.multipart.FormDataBodyPart; you can take a look at the
+                &lit.jersey.media.multipart.FormDataMultiPart; entity from HTML message:
+
+                <example>
+                    <title>&lit.jersey.media.multipart.FormDataMultiPart; entity in HTTP message.</title>
+
+                    <screen language="text" linenumbering="unnumbered"><emphasis>Content-Type: multipart/form-data; boundary=Boundary_1_511262261_1369143433608</emphasis>
+
+--Boundary_1_511262261_1369143433608
+Content-Type: text/plain
+Content-Disposition: form-data; name="hello"
+
+hello
+--Boundary_1_511262261_1369143433608
+Content-Type: application/xml
+Content-Disposition: form-data; name="xml"
+
+&lt;?xml version="1.0" encoding="UTF-8" standalone="yes"?&gt;&lt;jaxbBean&gt;&lt;value&gt;xml&lt;/value&gt;&lt;/jaxbBean&gt;
+--Boundary_1_511262261_1369143433608
+Content-Type: application/json
+Content-Disposition: form-data; name="json"
+
+{"value":"json"}
+--Boundary_1_511262261_1369143433608--</screen>
+                </example>
+            </para>
+            <para>
+                A common use-case for many users is sending files from client to server. For this purpose you can use classes from
+                <literal>org.glassfish.jersey.jersey.media.multipart</literal> package, such as
+                &jersey.media.multipart.FileDataBodyPart; or &jersey.media.multipart.StreamDataBodyPart;.
+
+                <example>
+                    <title>Multipart - sending files.</title>
+
+                    <programlisting language="java">// MediaType of the body part will be derived from the file.
+final FileDataBodyPart filePart = new FileDataBodyPart("my_pom", new File("pom.xml"));
+
+final FormDataMultiPart multipart = new FormDataMultiPart()
+    .field("foo", "bar")
+    .bodyPart(filePart);
+
+final WebTarget target = // Create WebTarget.
+final Response response = target.request()
+    .post(Entity.entity(multipart, multipart.getMediaType()));</programlisting>
+                </example>
+            </para>
+        </section>
+
+        <section>
+            <title>Server</title>
+
+            <para>
+                Returning a multipart response from server to client is not much different from the parts described in the client
+                section above. To obtain a multipart entity, sent by a client, in the application you can use two approaches:
+
+                <itemizedlist>
+                    <listitem>
+                        <para>Injecting the whole &jersey.media.multipart.MultiPart; entity.</para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Injecting particular parts of a <literal>form-data</literal> multipart request via
+                            &jersey.media.multipart.FormDataParam; annotation.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+
+            <section>
+                <title>Injecting and returning the &lit.jersey.media.multipart.MultiPart; entity</title>
+
+                <para>
+                    Working with &lit.jersey.media.multipart.MultiPart; types is no different from injecting/returning other
+                    entity types.
+                    Jersey provides &lit.jaxrs.ext.MessageBodyReader; for reading the request entity and injecting this entity
+                    into a method parameter of a resource method and &lit.jaxrs.ext.MessageBodyWriter; for writing output entities.
+                    You can expect that either &lit.jersey.media.multipart.MultiPart; or
+                    &lit.jersey.media.multipart.FormDataMultiPart; (<literal>multipart/form-data</literal> media type) object
+                    to be injected into a resource method.
+                </para>
+
+                <example>
+                    <title>Resource method using &lit.jersey.media.multipart.MultiPart; as input parameter / return value.</title>
+
+                    <programlisting language="java">@POST
+@Produces("multipart/mixed")
+public MultiPart post(final FormDataMultiPart multiPart) {
+    return multiPart;
+}</programlisting>
+                </example>
+            </section>
+
+            <section>
+                <title>Injecting with &lit.jersey.media.multipart.FormDataParam;</title>
+
+                <para>
+                    If you just need to bin the named body part(s) of a <literal>multipart/form-data</literal> request
+                    entity body to a resource method parameter you can use &jersey.media.multipart.FormDataParam; annotation.
+                </para>
+                <para>
+                    This annotation in conjunction with the media type <literal>multipart/form-data</literal> should be used for
+                    submitting and consuming forms that contain files, non-ASCII data, and binary data.
+                </para>
+                <para>
+                    The type of the annotated parameter can be one of the following (for more detailed description see
+                    javadoc to &jersey.media.multipart.FormDataParam;):
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                &lit.jersey.media.multipart.FormDataBodyPart; - The value of the parameter will be the first
+                                named body part or &lit.null; if such a named body part is not present.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                A <literal>List</literal> or <literal>Collection</literal> of
+                                &lit.jersey.media.multipart.FormDataBodyPart;.
+                                The value of the parameter will one or more named body parts with the same name or
+                                &lit.null; if such a named body part is not present.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                &lit.jersey.media.multipart.FormDataContentDisposition; - The value of the parameter will be the
+                                content disposition of the first named body part part or &lit.null; if such a named body part
+                                is not present.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                A <literal>List</literal> or <literal>Collection</literal> of
+                                &lit.jersey.media.multipart.FormDataContentDisposition;.
+                                The value of the parameter will one or more content dispositions of the named body parts with the
+                                same name or &lit.null; if such a named body part is not present.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                A type for which a message body reader is available given the media type of the first named body
+                                part. The value of the parameter will be the result of reading using the message body reader given
+                                the type <literal>T</literal>, the media type of the named part, and the bytes of the named body
+                                part as input.
+                            </para>
+                            <para>
+                                If there is no named part present and there is a default value present as declared by
+                                &jaxrs.DefaultValue; then the media type will be set to <literal>text/plain</literal>.
+                                The value of the parameter will be the result of reading using the message body reader given the
+                                type <literal>T</literal>, the media type <literal>text/plain</literal>, and the UTF-8 encoded
+                                bytes of the default value as input.
+                            </para>
+                            <para>
+                                If there is no message body reader available and the type <literal>T</literal> conforms
+                                to a type specified by &jaxrs.FormParam; then processing is performed as specified by
+                                &lit.jaxrs.FormParam;, where the values of the form parameter are <literal>String</literal>
+                                instances produced by reading the bytes of the named body parts utilizing a message body reader
+                                for the <literal>String</literal> type and the media type <literal>text/plain</literal>.
+                            </para>
+                            <para>
+                                If there is no named part present then processing is performed as specified by
+                                &lit.jaxrs.FormParam;.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+
+                <example>
+                    <title>Use of &lit.jersey.media.multipart.FormDataParam; annotation</title>
+
+                    <programlisting language="java">@POST
+@Consumes(MediaType.MULTIPART_FORM_DATA_TYPE)
+public String postForm(
+    @DefaultValue("true") @FormDataParam("enabled") boolean enabled,
+    @FormDataParam("data") FileData bean,
+    @FormDataParam("file") InputStream file,
+    @FormDataParam("file") FormDataContentDisposition fileDisposition) {
+
+    // ...
+}</programlisting>
+                </example>
+
+                <para>
+                    In the example above the server consumes a <literal>multipart/form-data</literal> request entity body that
+                    contains one optional named body part <literal>enabled</literal> and two required named body parts
+                    <literal>data</literal> and <literal>file</literal>.
+                </para>
+                <para>
+                    The optional part <literal>enabled</literal> is processed
+                    as a <literal>boolean</literal> value, if the part is absent then the value will be <literal>true</literal>.
+                </para>
+                <para>
+                    The part <literal>data</literal> is processed as a JAXB bean and contains some meta-data about the following
+                    part.
+                </para>
+                <para>
+                    The part <literal>file</literal> is a file that is uploaded, this is processed as an
+                    <literal>InputStream</literal>. Additional information about the file from the
+                    <literal>Content-Disposition</literal> header can be accessed by the parameter
+                    <literal>fileDisposition</literal>.
+                </para>
+
+                <tip>
+                    <para>&lit.jersey.media.multipart.FormDataParam; annotation can be also used on fields.</para>
+                </tip>
+            </section>
+        </section>
     </section>
 </chapter>

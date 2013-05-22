@@ -59,9 +59,20 @@ public final class ValidationError {
 
     private String invalidValue;
 
+    /**
+     * Create a {@code ValidationError} instance. Constructor for JAXB providers.
+     */
     public ValidationError() {
     }
 
+    /**
+     * Create a {@code ValidationError} instance.
+     *
+     * @param message interpolated error message.
+     * @param messageTemplate non-interpolated error message.
+     * @param path property path.
+     * @param invalidValue value that failed to pass constraints.
+     */
     public ValidationError(final String message, final String messageTemplate, final String path, final String invalidValue) {
         this.message = message;
         this.messageTemplate = messageTemplate;

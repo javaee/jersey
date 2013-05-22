@@ -228,4 +228,88 @@ public class MyApplication extends ResourceConfig {
     <para>The Jersey samples provide many examples of Servlet-based and
         Grizzly-in-process-based deployments.
     </para>
+
+    <section xml:id="deployment.autodiscoverable">
+        <title>Auto-Discoverable Features</title>
+
+        <para>
+            For a few modules provided by Jersey there is no need to explicitly register their &jaxrs.core.Feature;s as these
+            &lit.jaxrs.core.Feature;s are discovered and registered in the &jaxrs.core.Configuration; (on client/server)
+            automatically by Jersey when the modules implementing these features are present on the classpath during the
+            an application deployment. The modules that are automatically discovered include:
+
+            <itemizedlist>
+                <listitem>
+                    <para><literal>jersey-media-moxy</literal> (JSON part)</para>
+                </listitem>
+                <listitem>
+                    <para><literal>jersey-media-json-processing</literal></para>
+                </listitem>
+                <listitem>
+                    <para><literal>jersey-bean-validation</literal></para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <para>
+            Besides these modules there are also few features/providers present in <literal>jersey-server</literal> module that
+            are discovered by this mechanism and their availability is affected by Jersey auto-discovery support configuration
+            (see <xref linkend="deployment.autodiscovery.config" />):
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jersey.server.WadlFeature; - enables WADL processing.</para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.server.UriConnegFilter; - a URI-based content negotiation filter.</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <note>
+            <para>
+                Auto discovery functionality is in Jersey supported by implementing an internal SPI
+                <literal>AutoDiscoverable</literal> interface. This interface is not public at the moment,
+                so be careful when using it.
+            </para>
+        </note>
+
+        <section xml:id="deployment.autodiscovery.config">
+            <title>Configuring the Feature Auto-discovery mechanism</title>
+
+            <para>
+                The auto-discovery of features in Jersey that is enabled by default can be disabled by using special
+                (common/server/client) properties:
+
+                <itemizedlist>
+                    <title>Common auto discovery properties</title>
+
+                    <listitem>
+                        <para>&jersey.common.CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</para>
+                        <para>Disables auto discovery globally on client/server.</para>
+                    </listitem>
+                    <listitem>
+                        <para>&jersey.common.CommonProperties.JSON_PROCESSING_FEATURE_DISABLE;</para>
+                        <para>Disables configuration of Json Processing (JSR-353) feature.</para>
+                    </listitem>
+                    <listitem>
+                        <para>&jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE;</para>
+                        <para>Disables configuration of MOXy Json feature.</para>
+                    </listitem>
+                </itemizedlist>
+
+                For each of these properties there is a client/server counter-part that only disables the feature on the
+                client or server respectively (see &jersey.client.ClientProperties;/&jersey.server.ServerProperties;).
+                Each of these client/server specific auto-discovery related properties overrides the value of the related common
+                property (if set).
+            </para>
+
+            <note>
+                <para>
+                    In case an auto-discoverable feature is disabled then all the featured, components and/or properties,
+                    registered with the feature by default using the auto-discovery mechanism have to be registered manually.
+                </para>
+            </note>
+        </section>
+
+    </section>
 </chapter>

@@ -1,0 +1,829 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="bean-validation">
+
+    <title>Bean Validation Support</title>
+
+    <para>
+        Validation is a process of verifying that some data obeys one or more pre-defined constraints. This chapter describes
+        support for &bv.project.link; in Jersey in terms of the needed dependencies, configuration, registration and usage.
+        For more detailed description on how JAX-RS provides native support for validating resource classes based on the
+        Bean Validation refer to the chapter in the <link xlink:href="http://jcp.org/en/jsr/detail?id=339">JAX-RS spec</link>.
+    </para>
+
+    <section>
+        <title>Bean Validation Dependencies</title>
+
+        <para>
+            Bean Validation support in Jersey is provided as an extension module and needs to be mentioned explicitly in your
+            &lit.pom.xml; file (in case of using Maven):
+
+            <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-bean-validation&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+            <note>
+                <para>
+                    If you're not using Maven make sure to have also all the transitive dependencies (see &jersey-bean-validation;) on
+                    the classpath.
+                </para>
+            </note>
+
+            This module depends directly on
+            <link xlink:href="http://www.hibernate.org/subprojects/validator.html">Hibernate Validator</link>
+            which provides a most commonly used implementation of the Bean Validation API spec.
+        </para>
+        <para>
+            If you want to use a different implementation of the Bean Validation API, use standard Maven mechanisms to exclude
+            Hibernate Validator from the modules dependencies and add a dependency of your own.
+
+            <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-bean-validation&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+    &lt;exclusions&gt;
+        &lt;exclusion&gt;
+            &lt;groupId&gt;org.hibernate&lt;/groupId&gt;
+            &lt;artifactId&gt;hibernate-validator&lt;/artifactId&gt;
+        &lt;/exclusion&gt;
+    &lt;/exclusions&gt;
+&lt;/dependency&gt;</programlisting>
+        </para>
+    </section>
+
+    <section>
+        <title>Enabling Bean Validation in Jersey</title>
+
+        <para>
+            As stated in <xref linkend="deployment.autodiscoverable"/>, Jersey Bean Validation is one of the modules where you
+            don't need to explicitly register it's &lit.jaxrs.core.Feature;s (&jersey.ext.ValidationFeature;) on the
+            server as it's features are automatically discovered and registered when you add the
+            &lit.jersey-bean-validation; module to your classpath.
+            There are three Jersey specific properties that could disable automatic discovery and registration of Jersey Bean
+            Validation integration module:
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jersey.common.CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.server.ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.server.ServerProperties.BV_FEATURE_DISABLE;</para>
+                </listitem>
+            </itemizedlist>
+
+            <note>
+                <para>Jersey does not support Bean Validation on the client at the moment.</para>
+            </note>
+        </para>
+    </section>
+
+    <section>
+        <title>Configuring Bean Validation Support</title>
+
+        <para>
+            Configuration of Bean Validation support in Jersey is twofold - there are few specific properties that affects Jersey
+            behaviour (e.g. sending validation error entities to the client) and then there is &jersey.ext.ValidationConfig; class
+            that configures &bv.Validator; used for validating resources in JAX-RS application.
+        </para>
+
+        <para>
+            To configure Jersey specific behaviour you can use the following properties:
+
+            <variablelist>
+                <varlistentry>
+                    <term>&jersey.server.ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK;</term>
+                    <listitem>
+                        <para>
+                            Disables &lit.bv.ValidateOnExecution; check. More on this is described in
+                            <xref linkend="bv.ValidateOnExecution" />.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>&jersey.server.ServerProperties.BV_SEND_ERROR_IN_RESPONSE;</term>
+                    <listitem>
+                        <para>
+                            Enables sending validation errors in response entity to the client. More on this in
+                            <xref linkend="bv.ValidationError" />.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+
+            <example xml:id="bv.example.jersey.properties">
+                <title>Configuring Jersey specific properties for Bean Validation.</title>
+
+                <programlisting language="java" linenumbering="numbered">new ResourceConfig()
+    // Now you can expect validation errors to be sent to the client.
+    .property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true)
+    // @ValidateOnExecution annotations on subclasses won't cause errors.
+    .property(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true)
+    // Further configuration of ResourceConfig.
+    .register( ... );</programlisting>
+            </example>
+
+            Customization of the &lit.bv.Validator; used in validation of resource classes/methods can be done using
+            &lit.jersey.ext.ValidationConfig; class and exposing it via &jaxrs.ext.ContextResolver; mechanism as shown in
+            <xref linkend="bv.example.ValidationConfig"/>. You can set custom instances for the following interfaces from
+            the Bean Validation API:
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        &bv.MessageInterpolator; - interpolates a given constraint violation message.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        &bv.TraversableResolver; - determines if a property can be accessed by the Bean Validation provider.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        &bv.ConstraintValidatorFactory; - instantiates a <literal>ConstraintValidator</literal> instance based
+                        off its class. Note that by setting a custom <literal>ConstraintValidatorFactory</literal> you may loose
+                        injection of available resources/providers at the moment. See <xref linkend="bv.injecting"/> how to
+                        handle this.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>&bv.ParameterNameProvider; - provides names for method and constructor parameters.</para>
+                </listitem>
+            </itemizedlist>
+
+            <tip>
+                <para>
+                    In the latest versions of Jersey, the old-style setter methods (<literal>set*</literal>) on
+                    &jersey.ext.ValidationConfig; are deprecated and replaced with methods that allow the fluent use of the API
+                    (e.g. <literal>ValidationConfig#messageInterpolator(MessageInterpolator)</literal>). Use of the new fluent methods
+                    is encouraged as the old setters will be removed from the API soon.
+                </para>
+            </tip>
+
+            <example xml:id="bv.example.ValidationConfig">
+                <title>Using &lit.jersey.ext.ValidationConfig; to configure &lit.bv.Validator;.</title>
+
+                <programlisting language="java">/**
+ * Custom configuration of validation. This configuration defines custom:
+ * &lt;ul&gt;
+ *     &lt;li&gt;ConstraintValidationFactory - so that validators are able to inject Jersey providers/resources.&lt;/li&gt;
+ *     &lt;li&gt;ParameterNameProvider - if method input parameters are invalid, this class returns actual parameter names
+ *     instead of the default ones ({@code arg0, arg1, ..})&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+public class ValidationConfigurationContextResolver implements ContextResolver&lt;ValidationConfig&gt; {
+
+    @Context
+    private ResourceContext resourceContext;
+
+    @Override
+    public ValidationConfig getContext(final Class&lt;?&gt; type) {
+        final ValidationConfig config = new ValidationConfig();
+        config.setConstraintValidatorFactory(resourceContext.getResource(InjectingConstraintValidatorFactory.class));
+        config.setParameterNameProvider(new CustomParameterNameProvider());
+        return config;
+    }
+
+    /**
+     * See ContactCardTest#testAddInvalidContact.
+     */
+    private class CustomParameterNameProvider implements ParameterNameProvider {
+
+        private final ParameterNameProvider nameProvider;
+
+        public CustomParameterNameProvider() {
+            nameProvider = Validation.byDefaultProvider().configure().getDefaultParameterNameProvider();
+        }
+
+        @Override
+        public List&lt;String&gt; getParameterNames(final Constructor&lt;?&gt; constructor) {
+            return nameProvider.getParameterNames(constructor);
+        }
+
+        @Override
+        public List&lt;String&gt; getParameterNames(final Method method) {
+            // See ContactCardTest#testAddInvalidContact.
+            if ("addContact".equals(method.getName())) {
+                return Arrays.asList("contact");
+            }
+            return nameProvider.getParameterNames(method);
+        }
+    }
+}</programlisting>
+
+                <para>Register this class in your app:</para>
+
+                <programlisting language="java">final Application application = new ResourceConfig()
+        // Validation.
+        .register(ValidationConfigurationContextResolver.class)
+        // Further configuration.
+        .register( ... );</programlisting>
+
+                <note>
+                    <para>This code snippet has been taken from &jersey.github.bv.example.path;.</para>
+                </note>
+            </example>
+        </para>
+    </section>
+
+    <section>
+        <title>Validating JAX-RS resources and methods</title>
+
+        <para>
+            JAX-RS specification states that constraint annotations are allowed in the same locations as the following
+            annotations: &lit.jaxrs.MatrixParam;, &lit.jaxrs.QueryParam;, &lit.jaxrs.PathParam;, &lit.jaxrs.CookieParam;,
+            &lit.jaxrs.HeaderParam; and &lit.jaxrs.core.Context;, <emphasis>except</emphasis> in class constructors and property
+            setters. Specifically, they are allowed in resource method parameters, fields and property getters as well as
+            resource classes, entity parameters and resource methods (return values).
+            Jersey provides support for validation (see following sections) annotated input parameters and return value of the
+            invoked resource method as well as validation of resource class (class constraints, field constraints) where this
+            resource method is placed.
+            Jersey does not support, and doesn't validate, constraints placed on constructors and Bean Validation groups (only
+            <literal>Default</literal> group is supported at the moment).
+        </para>
+
+        <section>
+            <title>Constraint Annotations</title>
+
+            <para>
+                The JAX-RS Server API provides support for extracting request values and mapping them into Java fields,
+                properties and parameters using annotations such as &jaxrs.HeaderParam;, &jaxrs.QueryParam;, etc. It also
+                supports mapping of the request entity bodies into Java objects via non-annotated parameters (i.e., parameters
+                without any JAX-RS annotations).
+            </para>
+            <para>
+                The Bean Validation specification supports the use of <emphasis>constraint annotations</emphasis>
+                as a way of declaratively validating beans, method parameters and method returned values. For example, consider
+                resource class from <xref linkend="bv.example.constraints"/> augmented with constraint annotations.
+
+                <example xml:id="bv.example.constraints">
+                    <title>Constraint annotations on input parameters</title>
+                    <programlisting language="java">@Path("/")
+class MyResourceClass {
+
+    @POST
+    @Consumes("application/x-www-form-urlencoded")
+    public void registerUser(
+            @NotNull @FormParam("firstName") String firstName,
+            @NotNull @FormParam("lastName") String lastName,
+            @Email @FormParam("email") String email) {
+        ...
+    }
+}</programlisting>
+                </example>
+
+                The annotations &lit.bv.NotNull; and &lit.bv.Email; impose additional constraints on the form parameters
+                <literal>firstName</literal>, <literal>lastName</literal> and <literal>email</literal>. The &lit.bv.NotNull;
+                constraint is built-in to the Bean Validation API; the &lit.bv.Email;
+                constraint is assumed to be user defined in the example above. These constraint annotations are not restricted to
+                method parameters, they can be used in any location in which JAX-RS binding annotations are allowed with the
+                exception of constructors and property setters.
+            </para>
+            <para>
+                Rather than using method parameters, the <literal>MyResourceClass</literal> shown above could have been written
+                as in <xref linkend="bv.example.constraints.fields"/>.
+
+                <example xml:id="bv.example.constraints.fields">
+                    <title>Constraint annotations on fields</title>
+                    <programlisting language="java">@Path("/")
+class MyResourceClass {
+
+    @NotNull
+    @FormParam("firstName")
+    private String firstName;
+
+    @NotNull
+    @FormParam("lastName")
+    private String lastName;
+
+    private String email;
+
+    @FormParam("email")
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    @Email
+    public String getEmail() {
+        return email;
+    }
+
+    ...
+}</programlisting>
+                </example>
+
+                Note that in this version, <literal>firstName</literal> and <literal>lastName</literal> are fields initialized
+                via injection and <literal>email</literal> is a resource class property. Constraint annotations on properties are
+                specified in their corresponding getters.
+            </para>
+            <para>
+                Constraint annotations are also allowed on resource classes. In addition to annotating fields and properties, an
+                annotation can be defined for the entire class. Let us assume that <literal>@NonEmptyNames</literal> validates
+                that one of the two <emphasis>name</emphasis> fields in <literal>MyResourceClass</literal> is provided. Using
+                such an annotation, the example above can be extended to look like <xref linkend="bv.example.constraints.class"/>
+
+                <example xml:id="bv.example.constraints.class">
+                    <title>Constraint annotations on class</title>
+                    <programlisting language="java">@Path("/")
+@NonEmptyNames
+class MyResourceClass {
+
+    @NotNull
+    @FormParam("firstName")
+    private String firstName;
+
+    @NotNull
+    @FormParam("lastName")
+    private String lastName;
+
+    private String email;
+
+    ...
+}</programlisting>
+                </example>
+
+                Constraint annotations on resource classes are useful for defining cross-field and cross-property constraints.
+            </para>
+        </section>
+
+        <section>
+            <title>Annotation constraints and Validators</title>
+
+            <para>
+                Annotation constraints and validators are defined in accordance with the Bean Validation specification.
+                The &lit.bv.Email; annotation used in <xref linkend="bv.example.constraints.fields"/> is defined using the
+                Bean Validation &bv.Constraint; meta-annotation, see <xref linkend="bv.example.constraints.definition"/>.
+
+                <example xml:id="bv.example.constraints.definition">
+                    <title>Definition of a constraint annotation</title>
+                    <programlisting language="java">@Target({ METHOD, FIELD, PARAMETER })
+@Retention(RUNTIME)
+@Constraint(validatedBy = EmailValidator.class)
+public @interface Email {
+
+    String message() default "{com.example.validation.constraints.email}";
+
+    Class&lt;?&gt;[] groups() default {};
+
+    Class&lt;? extends Payload&gt;[] payload() default {};
+}</programlisting>
+                </example>
+
+                The &lit.bv.Constraint; annotation must include a reference to the validator class that will be used to validate
+                decorated values. The <literal>EmailValidator</literal> class must implement
+                <literal>ConstraintValidator&lt;Email, T&gt;</literal> where <literal>T</literal> is the type of values being
+                validated, as described in <xref linkend="bv.example.validator.definition" />.
+
+                <example xml:id="bv.example.validator.definition">
+                    <title>Validator implementation.</title>
+                    <programlisting language="java">public class EmailValidator implements ConstraintValidator&lt;Email, String&gt; {
+
+    public void initialize(Email email) {
+        ...
+    }
+
+    public boolean isValid(String value, ConstraintValidatorContext context) {
+        ...
+    }
+}</programlisting>
+                </example>
+
+                Thus, <literal>EmailValidator</literal> applies to values annotated with &lit.bv.Email; that are of type
+                <literal>String</literal>. Validators for other Java types can be defined for the same constraint annotation.
+            </para>
+        </section>
+
+        <section>
+            <title>Entity Validation</title>
+
+            <para>
+                Request entity bodies can be mapped to resource method parameters. There are two ways in which these entities can
+                be validated. If the request entity is mapped to a Java bean whose class is decorated with Bean Validation
+                annotations, then validation can be enabled using &bv.Valid; as in <xref linkend="bv.example.constraints.entity"/>.
+
+                <example xml:id="bv.example.constraints.entity">
+                    <title>Entity validation</title>
+                    <programlisting language="java">@StandardUser
+class User {
+
+    @NotNull
+    private String firstName;
+
+    ...
+}
+
+
+@Path("/")
+class MyResourceClass {
+
+    @POST
+    @Consumes("application/xml")
+    public void registerUser(@Valid User user) {
+        ...
+    }
+}</programlisting>
+                </example>
+
+                In this case, the validator associated with <literal>@StandardUser</literal> (as well as those for non-class
+                level constraints like &lit.bv.NotNull;) will be called to verify the request entity mapped to
+                <literal>user</literal>.
+            </para>
+            <para>
+                Alternatively, a new annotation can be defined and used directly on the resource
+                method parameter (<xref linkend="bv.example.constraints.entity2"/>).
+
+                <example xml:id="bv.example.constraints.entity2">
+                    <title>Entity validation 2</title>
+                    <programlisting language="java">@Path("/")
+class MyResourceClass {
+
+    @POST
+    @Consumes("application/xml")
+    public void registerUser(@PremiumUser User user) {
+        ...
+    }
+}</programlisting>
+                </example>
+
+                In the example above, <literal>@PremiumUser</literal> rather than <literal>@StandardUser</literal> will be used
+                to validate the request entity. These two ways in which validation of entities can be triggered can also be
+                combined by including &lit.bv.Valid; in the list of constraints. The presence of &lit.bv.Valid; will trigger
+                validation of <emphasis>all</emphasis> the constraint annotations decorating a Java bean class.
+            </para>
+            <para>
+                Response entity bodies returned from resource methods can be validated in a similar manner by annotating the
+                resource method itself. To exemplify, assuming both <literal>@StandardUser</literal> and
+                <literal>@PremiumUser</literal> are required to be checked before returning a user, the
+                <literal>getUser</literal> method can be annotated as shown in
+                <xref linkend="bv.example.constraints.entity.response"/>.
+                <example xml:id="bv.example.constraints.entity.response">
+                    <title>Response entity validation</title>
+                    <programlisting language="java">@Path("/")
+class MyResourceClass {
+
+    @GET
+    @Path("{id}")
+    @Produces("application/xml")
+    @Valid @PremiumUser
+    public User getUser(@PathParam("id") String id) {
+        User u = findUser(id);
+        return u;
+    }
+
+    ...
+}</programlisting>
+                </example>
+
+                Note that <literal>@PremiumUser</literal> is explicitly listed and <literal>@StandardUser</literal> is triggered
+                by the presence of the &lit.bv.Valid; annotation - see definition of <literal>User</literal> class earlier in
+                this section.
+            </para>
+        </section>
+
+        <section>
+            <title>Annotation Inheritance</title>
+
+            <para>
+                The rules for inheritance of constraint annotation are defined in Bean Validation specification. It is worth
+                noting that these rules are incompatible with those defined by JAX-RS. Generally speaking, constraint
+                annotations in Bean Validation are cumulative (can be strengthen) across a given type hierarchy while JAX-RS
+                annotations are inherited or, overridden and ignored.
+            </para>
+            <para>
+                For Bean Validation annotations Jersey follows the constraint annotation rules defined in the Bean Validation
+                specification.
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="bv.ValidateOnExecution">
+        <title>@ValidateOnExecution</title>
+
+        <para>
+            According to Bean Validation specification, validation is enabled by default only for the so called
+            <emphasis>constrained</emphasis> methods. Getter
+            methods as defined by the Java Beans specification are not constrained methods, so they will not be validated by
+            default. The special annotation &lit.bv.ValidateOnExecution; can be used to selectively enable
+            and disable validation. For example, you can enable validation on method <literal>getEmail</literal> shown in
+            <xref linkend="bv.example.validateonexecution"/>.
+            <example xml:id="bv.example.validateonexecution">
+                <title>Validate getter on execution</title>
+
+                <programlisting language="java">@Path("/")
+class MyResourceClass {
+
+    @Email
+    @ValidateOnExecution
+    public String getEmail() {
+        return email;
+    }
+
+    ...
+}</programlisting>
+            </example>
+
+            The default value for the <literal>type</literal> attribute of &lit.bv.ValidateOnExecution; is
+            <literal>IMPLICIT</literal> which results in method <literal>getEmail</literal> being validated.
+            <note>
+                <para>
+                    According to Bean Validation specification &lit.bv.ValidateOnExecution; cannot be overridden once is
+                    declared on a method (i.e. in subclass/sub-interface) and in this situations a
+                    <literal>ValidationException</literal> should be raised. This default behaviour can be suppressed by
+                    setting &jersey.server.ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK;
+                    property (Jersey specific) to &lit.true;.
+                </para>
+            </note>
+        </para>
+    </section>
+
+    <section xml:id="bv.injecting">
+        <title>Injecting</title>
+
+        <para>
+            Jersey allows you to inject registered resources/providers into your &bv.ConstraintValidator; implementation and you
+            can inject &bv.Configuration;, &bv.ValidatorFactory; and &bv.Validator; as required by Bean Validation spec.
+
+            <note>
+                <para>
+                    Injected &bv.Configuration;, &bv.ValidatorFactory; and &bv.Validator; do not inherit configuration provided
+                    by &jersey.ext.ValidationConfig; and need to be configured manually.
+                </para>
+            </note>
+
+            Injection of JAX-RS components into &lit.bv.ConstraintValidator;s is supported via a custom
+            &lit.bv.ConstraintValidatorFactory; provided by Jersey. An example is shown in
+            <xref linkend="bv.examples.injecting"/>.
+
+            <example xml:id="bv.examples.injecting">
+                <title>Injecting UriInfo into a ConstraintValidator</title>
+                <programlisting language="java">public class EmailValidator implements ConstraintValidator&lt;Email, String&gt; {
+
+    @Context
+    private UriInfo uriInfo;
+
+    public void initialize(Email email) {
+        ...
+    }
+
+    public boolean isValid(String value, ConstraintValidatorContext context) {
+        // Use UriInfo.
+
+        ...
+    }
+}</programlisting>
+            </example>
+        </para>
+        <para>
+            Using a custom &bv.ConstraintValidatorFactory; of your own disables registration of the one provided by Jersey
+            and injection support for resources/providers (if needed) has to be provided by this new implementation.
+            <xref linkend="bv.examples.injecting.factory"/> shows how this can be achieved.
+
+            <example xml:id="bv.examples.injecting.factory">
+                <title>Support for injecting Jersey's resources/providers via ConstraintValidatorFactory.</title>
+                <programlisting language="java">public class InjectingConstraintValidatorFactory implements ConstraintValidatorFactory {
+
+    @Context
+    private ResourceContext resourceContext;
+
+    @Override
+    public &lt;T extends ConstraintValidator&lt;?, ?&gt;&gt; T getInstance(final Class&lt;T&gt; key) {
+        return resourceContext.getResource(key);
+    }
+
+    @Override
+    public void releaseInstance(final ConstraintValidator&lt;?, ?&gt; instance) {
+        // NOOP
+    }
+}</programlisting>
+            </example>
+            <note>
+                <para>
+                    This behaviour may likely change in one of the next version of Jersey to remove the need of
+                    manually providing support for injecting resources/providers from Jersey in your own
+                    &lit.bv.ConstraintValidatorFactory; implementation code.
+                </para>
+            </note>
+        </para>
+    </section>
+
+    <section>
+        <title>Error Reporting</title>
+
+        <para>
+            Bean Validation specification defines a small hierarchy of exceptions (they all inherit from
+            &bv.ValidationException;) that could be thrown during initialization of validation engine or (for our case more
+            importantly) during validation of input/output values (&bv.ConstraintViolationException;).
+            If a thrown exception is a subclass of &lit.bv.ValidationException; <emphasis>except</emphasis>
+            &lit.bv.ConstraintViolationException; then this exception is mapped to a HTTP response with status code 500
+            (Internal Server Error).
+            On the other hand, when a &lit.bv.ConstraintViolationException; is throw two different status code would be returned:
+
+            <itemizedlist>
+                <listitem>
+                    <para>500 (Internal Server Error)</para>
+                    <para>If the exception was thrown while validating a method return type.</para>
+                </listitem>
+                <listitem>
+                    <para>400 (Bad Request)</para>
+                    <para>Otherwise.</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <section xml:id="bv.ValidationError">
+            <title>ValidationError</title>
+
+            <para>
+                By default, (during mapping &lit.bv.ConstraintViolationException;s) Jersey doesn't return any entities that would
+                include validation errors to the client. This default behaviour could be changed by enabling
+                &jersey.server.ServerProperties.BV_SEND_ERROR_IN_RESPONSE; property in your application
+                (<xref linkend="bv.example.jersey.properties"/>).
+                When this property is enabled then our custom &jaxrs.ext.ExceptionMapper; (that is handling
+                &lit.bv.ValidationException;s) would transform &lit.bv.ConstraintViolationException;(s) into
+                &jersey.ext.ValidationError;(s) and set this object (collection) as the new response entity which Jersey is
+                able to sent to the client.
+                Four &lit.jaxrs.core.MediaType;s are currently supported when sending &lit.jersey.ext.ValidationError;s to the
+                client:
+
+                <itemizedlist>
+                    <listitem>
+                        <para><literal>text/plain</literal></para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>text/html</literal></para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>application/xml</literal></para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>application/json</literal></para>
+                        <note>
+                            <para>
+                                Note: You need to register one of the JSON (JAXB) providers (e.g.
+                                <link linkend='json.moxy'>MOXy</link>) to marshall validation errors to JSON.
+                            </para>
+                        </note>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                Let's take a look at &jersey.ext.ValidationError; class to see which properties are send to the client:
+
+                <programlisting language="java">@XmlRootElement
+public final class ValidationError {
+
+    private String message;
+
+    private String messageTemplate;
+
+    private String path;
+
+    private String invalidValue;
+
+    ...
+}</programlisting>
+
+                The <literal>message</literal> property is the interpolated error message, <literal>messageTemplate</literal>
+                represents a non-interpolated error message (or key from your constraint definition e.g.
+                <literal>{javax.validation.constraints.NotNull.message}</literal>), <literal>path</literal> contains information
+                about the path in the validated object graph to the property holding invalid value and
+                <literal>invalidValue</literal> is the string representation of the invalid value itself.
+            </para>
+            <para>
+                Here are few examples of &lit.jersey.ext.ValidationError; messages sent to client:
+
+                <example>
+                    <title>&lit.jersey.ext.ValidationError; to <literal>text/plain</literal></title>
+
+                    <screen language="text" linenumbering="unnumbered">HTTP/1.1 500 Internal Server Error
+Content-Length: 114
+Content-Type: text/plain
+Vary: Accept
+Server: Jetty(6.1.24)
+
+Contact with given ID does not exist. (path = ContactCardResource.getContact.&lt;return value&gt;, invalidValue = null)</screen>
+                </example>
+
+                <example>
+                    <title>&lit.jersey.ext.ValidationError; to <literal>text/html</literal></title>
+                    <screen language="xml" linenumbering="unnumbered">HTTP/1.1 500 Internal Server Error
+Content-Length: ...
+Content-Type: text/plain
+Vary: Accept
+Server: Jetty(6.1.24)
+
+<![CDATA[<div class="validation-errors">
+    <div class="validation-error">
+        <span class="message">Contact with given ID does not exist.</span>
+        (
+        <span class="path">
+            <strong>path</strong>
+            = ContactCardResource.getContact.<return value>
+        </span>
+        ,
+        <span class="invalid-value">
+            <strong>invalidValue</strong>
+            = null
+        </span>
+        )
+    </div>
+</div>]]></screen>
+                </example>
+
+                <example>
+                    <title>&lit.jersey.ext.ValidationError; to <literal>application/xml</literal></title>
+                    <screen language="xml" linenumbering="unnumbered">HTTP/1.1 500 Internal Server Error
+Content-Length: ...
+Content-Type: text/plain
+Vary: Accept
+Server: Jetty(6.1.24)
+
+<![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<validationErrors>
+    <validationError>
+        <message>Contact with given ID does not exist.</message>
+        <messageTemplate>{contact.does.not.exist}</messageTemplate>
+        <path>ContactCardResource.getContact.&lt;return value&gt;</path>
+    </validationError>
+</validationErrors>]]></screen>
+                </example>
+
+                <example>
+                    <title>&lit.jersey.ext.ValidationError; to <literal>application/json</literal></title>
+                    <screen language="xml" linenumbering="unnumbered">HTTP/1.1 500 Internal Server Error
+Content-Length: 174
+Content-Type: application/json
+Vary: Accept
+Server: Jetty(6.1.24)
+
+[ {
+   "message" : "Contact with given ID does not exist.",
+   "messageTemplate" : "{contact.does.not.exist}",
+   "path" : "ContactCardResource.getContact.&lt;return value&gt;"
+} ]</screen>
+                </example>
+            </para>
+        </section>
+    </section>
+
+    <section>
+        <title>Example</title>
+
+        <para>To see a complete wroking example of using Bean Validation (JSR-349) with Jersey refer to the
+            &jersey.github.bv.example.path;.</para>
+    </section>
+</chapter>

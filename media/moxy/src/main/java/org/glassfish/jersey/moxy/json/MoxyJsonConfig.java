@@ -59,10 +59,28 @@ public final class MoxyJsonConfig {
     private final Map<String, Object> marshallerProperties = Maps.newHashMap();
     private final Map<String, Object> unmarshallerProperties = Maps.newHashMap();
 
+    /**
+     * Create a new configuration for {@link org.eclipse.persistence.jaxb.rs.MOXyJsonProvider} and initialize default properties.
+     *
+     * @see #MoxyJsonConfig(boolean)
+     */
     public MoxyJsonConfig() {
         this(true);
     }
 
+    /**
+     * Create a new configuration for {@link org.eclipse.persistence.jaxb.rs.MOXyJsonProvider}. If the
+     * {@code initDefaultProperties} is set to {@code true} then the following values are set:
+     * <ul>
+     *     <li>{@link javax.xml.bind.Marshaller#JAXB_FORMATTED_OUTPUT} - {@code false}</li>
+     *     <li>{@link org.eclipse.persistence.jaxb.JAXBContextProperties#JSON_INCLUDE_ROOT} - {@code false}</li>
+     *     <li>{@link org.eclipse.persistence.jaxb.MarshallerProperties#JSON_MARSHAL_EMPTY_COLLECTIONS} - {@code true}</li>
+     *     <li>{@link org.eclipse.persistence.jaxb.JAXBContextProperties#JSON_NAMESPACE_SEPARATOR} - {@link org.eclipse.persistence.oxm.XMLConstants#DOT}</li>
+     * </ul>
+     *
+     * @param initDefaultProperties flag to determine whether the default values of properties mentioned above should be set or
+     * not.
+     */
     public MoxyJsonConfig(final boolean initDefaultProperties) {
         if (initDefaultProperties) {
             // javax.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT
@@ -79,36 +97,79 @@ public final class MoxyJsonConfig {
         }
     }
 
+    /**
+     * Set the value of the property for both {@code Marshaller} / {@code Unmarshaller}.
+     *
+     * @param name name of the property.
+     * @param value value of the property.
+     * @return a {@code MoxyJsonConfig} instance.
+     */
     public MoxyJsonConfig property(final String name, final Object value) {
         marshallerProperty(name, value);
         unmarshallerProperty(name, value);
         return this;
     }
 
+    /**
+     * Set the value of the property for used {@code Marshaller}.
+     *
+     * @param name name of the property.
+     * @param value value of the property.
+     * @return a {@code MoxyJsonConfig} instance.
+     */
     public MoxyJsonConfig marshallerProperty(final String name, final Object value) {
         marshallerProperties.put(name, value);
         return this;
     }
 
+    /**
+     * Set the value of the property for used {@code Unmarshaller}.
+     *
+     * @param name name of the property.
+     * @param value value of the property.
+     * @return a {@code MoxyJsonConfig} instance.
+     */
     public MoxyJsonConfig unmarshallerProperty(final String name, final Object value) {
         unmarshallerProperties.put(name, value);
         return this;
     }
 
+    /**
+     * Add properties from the given map to the existing marshaller properties.
+     *
+     * @param marshallerProperties map of marshaller properties.
+     * @return a {@code MoxyJsonConfig} instance.
+     */
     public MoxyJsonConfig setMarshallerProperties(final Map<String, Object> marshallerProperties) {
         this.marshallerProperties.putAll(marshallerProperties);
         return this;
     }
 
+    /**
+     * Add properties from the given map to the existing unmarshaller properties.
+     *
+     * @param unmarshallerProperties map of unmarshaller properties.
+     * @return a {@code MoxyJsonConfig} instance.
+     */
     public MoxyJsonConfig setUnmarshallerProperties(final Map<String, Object> unmarshallerProperties) {
         this.unmarshallerProperties.putAll(unmarshallerProperties);
         return this;
     }
 
+    /**
+     * Get marshaller properties.
+     *
+     * @return mutable map of marshaller properties.
+     */
     public Map<String, Object> getMarshallerProperties() {
         return marshallerProperties;
     }
 
+    /**
+     * Get unmarshaller properties.
+     *
+     * @return mutable map of unmarshaller properties.
+     */
     public Map<String, Object> getUnmarshallerProperties() {
         return unmarshallerProperties;
     }
