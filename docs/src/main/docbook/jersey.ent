@@ -41,6 +41,8 @@
 
 -->
 <!ENTITY version "$version">
+<!ENTITY docs.version "$docs.version">
+<!ENTITY apidocs.version "$apidocs.version">
 <!ENTITY src.branch "$src.branch">
 <!ENTITY repository "$repository">
 <!ENTITY experimentalrepository "snapshots">
@@ -51,9 +53,9 @@
 <!ENTITY jax-rs.release.path "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
 <!ENTITY jax-rs.javadoc.path "&jax-rs.release.path;/apidocs/javax/ws/rs">
 
-<!ENTITY jersey.docs.root.path "http://jersey.java.net/nonav/documentation/&version;">
-<!ENTITY jersey.docs.index "http://jersey.java.net/nonav/documentation/&version;/index.html">
-<!ENTITY jersey.javadoc.path "http://jersey.java.net/nonav/apidocs/&version;/jersey/org/glassfish/jersey">
+<!ENTITY jersey.docs.root.path "http://jersey.java.net/nonav/documentation/&docs.version;">
+<!ENTITY jersey.docs.index "&jersey.docs.root.path;/index.html">
+<!ENTITY jersey.javadoc.path "http://jersey.java.net/nonav/apidocs/&apidocs.version;/jersey/org/glassfish/jersey">
 <!ENTITY jersey.site.path "https://jersey.java.net/project-info/&version;/jersey/project">
 <!ENTITY jee6.javadoc.path "http://docs.oracle.com/javaee/6/api">
 <!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
@@ -101,6 +103,18 @@
 <!ENTITY jdk6.TrustStore "<link xlink:href='&jdk6.javadoc.path;//java/security/TrustStore.html'>TrustStore</link>">
 <!ENTITY jdk6.SslContext "<link xlink:href='&jdk6.javadoc.path;//javax/net/ssl/SslContext.html'>SslContext</link>">
 <!ENTITY jdk6.HostnameVerifier "<link xlink:href='&jdk6.javadoc.path;//javax/net/ssl/HostnameVerifier.html'>HostnameVerifier</link>">
+<!ENTITY jdk6.String "<link xlink:href='&jdk6.javadoc.path;//java/io/String.html'>String</link>">
+<!ENTITY jdk6.InputStream "<link xlink:href='&jdk6.javadoc.path;//java/io/InputStream.html'>InputStream</link>">
+<!ENTITY jdk6.Reader "<link xlink:href='&jdk6.javadoc.path;//java/io/Reader.html'>Reader</link>">
+<!ENTITY jdk6.File "<link xlink:href='&jdk6.javadoc.path;//java/io/File.html'>File</link>">
+<!ENTITY jdk6.DataSource "<link xlink:href='&jdk6.javadoc.path;//javax/activation/DataSource.html'>DataSource</link>">
+<!ENTITY jdk6.Source "<link xlink:href='&jdk6.javadoc.path;//javax/xml/transform/Source.html'>Source</link>">
+<!ENTITY jdk6.JAXBElement "<link xlink:href='&jdk6.javadoc.path;//javax/xml/bind/JAXBElement.html'>JAXBElement</link>">
+<!ENTITY jdk6.Boolean "<link xlink:href='&jdk6.javadoc.path;//java/lang/Boolean.html'>Boolean</link>">
+<!ENTITY jdk6.Character "<link xlink:href='&jdk6.javadoc.path;//java/lang/Character.html'>Character</link>">
+<!ENTITY jdk6.Number "<link xlink:href='&jdk6.javadoc.path;//java/lang/Number.html'>Number</link>">
+<!ENTITY jdk6.ParameterizedType "<link xlink:href='&jdk6.javadoc.path;//java/lang/reflect/ParameterizedType.html'>ParameterizedType</link>">
+
 
 <!ENTITY jdk7.org.w3c.dom.Document "<link xlink:href='&jdk7.javadoc.path;/org/w3c/dom/Document.html'>Document</link>">
 
@@ -331,6 +345,8 @@
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlFeature.html'>WadlFeature</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
 <!ENTITY jersey.server.WadlGeneratorConfig "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGeneratorConfig.html'>WadlGeneratorConfig</link>">
+<!ENTITY jersey.message.MessageProperties "<link xlink:href='&jersey.javadoc.path;/message/MessageProperties.html'>MessageProperties</link>">
+<!ENTITY jersey.message.MessageBodyWorkers "<link xlink:href='&jersey.javadoc.path;/message/MessageBodyWorkers.html'>MessageBodyWorkers</link>">
 
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
@@ -509,6 +525,9 @@
 <!ENTITY lit.jersey.client.HttpUrlConnector "<literal>HttpUrlConnector</literal>">
 <!ENTITY lit.jersey.client.EncodingFeature "<literal>EncodingFeature</literal>">
 
+<!ENTITY lit.jersey.message.MessageProperties "<literal>MessageProperties</literal>">
+<!ENTITY lit.jersey.message.MessageBodyWorkers "<literal>MessageBodyWorkers</literal>">
+
 <!ENTITY lit.jersey.common.CommonProperties "<literal>CommonProperties</literal>">
 <!ENTITY lit.jersey.common.SslConfigurator "<literal>SslConfigurator</literal>">
 
@@ -557,6 +576,19 @@
 <!ENTITY lit.jdk6.TrustStore "<literal>TrustStore</literal>">
 <!ENTITY lit.jdk6.SslContext "<literal>SslContext</literal>">
 <!ENTITY lit.jdk6.HostnameVerifier "<literal>HostnameVerifier</literal>">
+<!ENTITY lit.jdk6.String "<literal>String</literal>">
+<!ENTITY lit.jdk6.InputStream "<literal>InputStream</literal>">
+<!ENTITY lit.jdk6.Reader "<literal>Reader</literal>">
+<!ENTITY lit.jdk6.File "<literal>File</literal>">
+<!ENTITY lit.jdk6.DataSource "<literal>DataSource</literal>">
+<!ENTITY lit.jdk6.Source "<literal>Source</literal>">
+<!ENTITY lit.jdk6.JAXBElement "<literal>JAXBElement</literal>">
+<!ENTITY lit.jdk6.Boolean "<literal>Boolean</literal>">
+<!ENTITY lit.jdk6.Character "<literal>Character</literal>">
+<!ENTITY lit.jdk6.Number "<literal>Number</literal>">
+<!ENTITY lit.jdk6.ParameterizedType "<literal>ParameterizedType</literal>">
+
+
 
 <!-- JEE literals -->
 <!ENTITY lit.jee6.annotations.RolesAllowed "<literal>@RolesAllowed</literal>">

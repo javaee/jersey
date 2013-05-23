@@ -119,8 +119,8 @@ This line fits the page width.
     <xi:include href="deployment.xml" />
     <xi:include href="client.xml" />
     <xi:include href="representations.xml" />
-    <xi:include href="media.xml" />
     <xi:include href="mbw.xml" />
+    <xi:include href="media.xml" />
     <xi:include href="filters.xml" />
     <xi:include href="async.xml" />
     <xi:include href="uris-and-links.xml" />

@@ -81,24 +81,22 @@
         <para>
             <example>
                 <title>Simple hello world root resource class</title>
-                <programlisting language="java" linenumbering="numbered">
-                    package org.glassfish.jersey.examples.helloworld;
+                <programlisting language="java" linenumbering="numbered">package org.glassfish.jersey.examples.helloworld;
 
-                    import javax.ws.rs.GET;
-                    import javax.ws.rs.Path;
-                    import javax.ws.rs.Produces;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
-                    @Path("helloworld")
-                    public class HelloWorldResource {
-                        public static final String CLICHED_MESSAGE = "Hello World!";
+@Path("helloworld")
+public class HelloWorldResource {
+    public static final String CLICHED_MESSAGE = "Hello World!";
 
-                    @GET
-                    @Produces("text/plain")
-                        public String getHello() {
-                            return CLICHED_MESSAGE;
-                        }
-                    }
-                </programlisting>
+@GET
+@Produces("text/plain")
+    public String getHello() {
+        return CLICHED_MESSAGE;
+    }
+}</programlisting>
             </example>
             Let's look at some of the JAX-RS annotations used in this example.
         </para>
@@ -123,17 +121,15 @@
             <para>To obtain the value of the username variable the &jaxrs.PathParam; may be used on method parameter of a request method, for example:
                 <example>
                     <title>Specifying URI path parameter</title>
-                    <programlisting language="java" linenumbering="numbered">
-                        @Path("/users/{username}")
-                        public class UserResource {
+                    <programlisting language="java" linenumbering="numbered">@Path("/users/{username}")
+public class UserResource {
 
-                        @GET
-                        @Produces("text/xml")
-                        public String getUser(@PathParam("username") String userName) {
-                        ...
-                        }
-                        }
-                    </programlisting>
+    @GET
+    @Produces("text/xml")
+    public String getUser(@PathParam("username") String userName) {
+        ...
+    }
+}</programlisting>
                 </example>
                 If it is required that a user name must only consist of
                 lower and upper case numeric characters then it is possible to declare a
@@ -169,25 +165,23 @@
             <para>
                 <example>
                     <title>PUT method</title>
-                    <programlisting language="java" linenumbering="numbered">
-                        @PUT
-                        public Response putContainer() {
-                            System.out.println("PUT CONTAINER " + container);
+                    <programlisting language="java" linenumbering="numbered">@PUT
+public Response putContainer() {
+    System.out.println("PUT CONTAINER " + container);
 
-                            URI uri = uriInfo.getAbsolutePath();
-                            Container c = new Container(container, uri.toString());
+    URI uri = uriInfo.getAbsolutePath();
+    Container c = new Container(container, uri.toString());
 
-                            Response r;
-                            if (!MemoryStore.MS.hasContainer(c)) {
-                                r = Response.created(uri).build();
-                            } else {
-                                r = Response.noContent().build();
-                            }
+    Response r;
+    if (!MemoryStore.MS.hasContainer(c)) {
+        r = Response.created(uri).build();
+    } else {
+        r = Response.noContent().build();
+    }
 
-                            MemoryStore.MS.createContainer(c);
-                            return r;
-                        }
-                    </programlisting>
+    MemoryStore.MS.createContainer(c);
+    return r;
+}</programlisting>
                 </example>
                 By default the JAX-RS runtime will automatically support the methods HEAD and OPTIONS, if not explicitly
                 implemented. For HEAD the runtime will invoke the implemented GET method (if present) and ignore the
@@ -202,34 +196,37 @@
         <section>
             <title>@Produces</title>
 
-            <para>The &jaxrs.Produces; annotation is used to specify the MIME media types of representations a resource can produce and send back to the client. In this example, the Java method will produce representations identified by the MIME media type "text/plain". &jaxrs.Produces; can be applied at both the class and method levels. Here's an example:
+            <para>
+                The &jaxrs.Produces; annotation is used to specify the MIME media types of representations a resource can
+                produce and send back to the client. In this example, the Java method will produce representations identified
+                by the MIME media type "text/plain". &jaxrs.Produces; can be applied at both the class and method levels.
+                Here's an example:
             </para>
 
             <para>
                 <example>
                     <title>Specifying output MIME type</title>
-                    <programlisting language="java" linenumbering="numbered">
-                        @Path("/myResource")
-                        @Produces("text/plain")
-                        public class SomeResource {
-                            @GET
-                            public String doGetAsPlainText() {
-                                ...
-                            }
+                    <programlisting language="java" linenumbering="numbered">@Path("/myResource")
+@Produces("text/plain")
+public class SomeResource {
+    @GET
+    public String doGetAsPlainText() {
+        ...
+    }
 
-                            @GET
-                            @Produces("text/html")
-                            public String doGetAsHtml() {
-                                ...
-                            }
-                        }
-                    </programlisting>
+    @GET
+    @Produces("text/html")
+    public String doGetAsHtml() {
+        ...
+    }
+}</programlisting>
                 </example>
                 The
                 <literal>doGetAsPlainText</literal>
                 method defaults to the MIME type of the &jaxrs.Produces; annotation at the class level. The
                 <literal>doGetAsHtml</literal>
-                method's &jaxrs.Produces; annotation overrides the class-level &jaxrs.Produces; setting, and specifies that the method can produce HTML rather than plain text.
+                method's &jaxrs.Produces; annotation overrides the class-level &jaxrs.Produces; setting, and specifies that the
+                method can produce HTML rather than plain text.
             </para>
 
             <para>If a resource class is capable of producing more that one MIME
@@ -252,13 +249,11 @@
             <para>
                 <example>
                     <title>Using multiple output MIME types</title>
-                    <programlisting language="java" linenumbering="numbered">
-                        @GET
-                        @Produces({"application/xml", "application/json"})
-                        public String doGetAsXmlOrJson() {
-                            ...
-                        }
-                    </programlisting>
+                    <programlisting language="java" linenumbering="numbered">@GET
+@Produces({"application/xml", "application/json"})
+public String doGetAsXmlOrJson() {
+    ...
+}</programlisting>
                 </example>
                 The
                 <literal>doGetAsXmlOrJson</literal>
@@ -274,13 +269,11 @@
             <para>
                 <example>
                     <title>Server-side content negotiation</title>
-                    <programlisting language="java" linenumbering="numbered">
-                        @GET
-                        @Produces({"application/xml; qs=0.9", "application/json"})
-                        public String doGetAsXmlOrJson() {
-                            ...
-                        }
-                    </programlisting>
+                    <programlisting language="java" linenumbering="numbered">@GET
+@Produces({"application/xml; qs=0.9", "application/json"})
+public String doGetAsXmlOrJson() {
+    ...
+}</programlisting>
                 </example>
                 In the above sample, if client accepts both "application/xml" and "application/json" (equally),
                 then a server always sends "application/json", since "application/xml" has a lower quality factor.
@@ -303,11 +296,10 @@
                 <example>
                     <title>Specifying input MIME type</title>
                     <programlisting language="java" linenumbering="numbered">@POST
-                        @Consumes("text/plain")
-                        public void postClichedMessage(String message) {
-                            // Store the message
-                        }
-                    </programlisting>
+@Consumes("text/plain")
+public void postClichedMessage(String message) {
+    // Store the message
+}</programlisting>
                 </example>
             </para>
 
@@ -337,20 +329,18 @@
 
         <example>
             <title>Query parameters</title>
-            <programlisting language="java" linenumbering="numbered">
-                @Path("smooth")
-                @GET
-                public Response smooth(
-                    @DefaultValue("2") @QueryParam("step") int step,
-                    @DefaultValue("true") @QueryParam("min-m") boolean hasMin,
-                    @DefaultValue("true") @QueryParam("max-m") boolean hasMax,
-                    @DefaultValue("true") @QueryParam("last-m") boolean hasLast,
-                    @DefaultValue("blue") @QueryParam("min-color") ColorParam minColor,
-                    @DefaultValue("green") @QueryParam("max-color") ColorParam maxColor,
-                    @DefaultValue("red") @QueryParam("last-color") ColorParam lastColor) {
-                    ...
-                }
-            </programlisting>
+            <programlisting language="java" linenumbering="numbered">@Path("smooth")
+@GET
+public Response smooth(
+    @DefaultValue("2") @QueryParam("step") int step,
+    @DefaultValue("true") @QueryParam("min-m") boolean hasMin,
+    @DefaultValue("true") @QueryParam("max-m") boolean hasMax,
+    @DefaultValue("true") @QueryParam("last-m") boolean hasLast,
+    @DefaultValue("blue") @QueryParam("min-color") ColorParam minColor,
+    @DefaultValue("green") @QueryParam("max-color") ColorParam maxColor,
+    @DefaultValue("red") @QueryParam("last-color") ColorParam lastColor) {
+    ...
+}</programlisting>
         </example>
 
         <para>If a query parameter "step" exists in the query component of the
@@ -367,32 +357,30 @@
 
         <example>
             <title>Custom Java type for consuming request parameters</title>
-            <programlisting language="java" linenumbering="numbered">
-                public class ColorParam extends Color {
+            <programlisting language="java" linenumbering="numbered">public class ColorParam extends Color {
 
-                    public ColorParam(String s) {
-                        super(getRGB(s));
-                    }
+    public ColorParam(String s) {
+        super(getRGB(s));
+    }
 
-                    private static int getRGB(String s) {
-                        if (s.charAt(0) == '#') {
-                            try {
-                                Color c = Color.decode("0x" + s.substring(1));
-                                return c.getRGB();
-                            } catch (NumberFormatException e) {
-                                throw new WebApplicationException(400);
-                            }
-                        } else {
-                            try {
-                                Field f = Color.class.getField(s);
-                                return ((Color)f.get(null)).getRGB();
-                            } catch (Exception e) {
-                                throw new WebApplicationException(400);
-                            }
-                        }
-                    }
-                }
-            </programlisting>
+    private static int getRGB(String s) {
+        if (s.charAt(0) == '#') {
+            try {
+                Color c = Color.decode("0x" + s.substring(1));
+                return c.getRGB();
+            } catch (NumberFormatException e) {
+                throw new WebApplicationException(400);
+            }
+        } else {
+            try {
+                Field f = Color.class.getField(s);
+                return ((Color)f.get(null)).getRGB();
+            } catch (Exception e) {
+                throw new WebApplicationException(400);
+            }
+        }
+    }
+}</programlisting>
         </example>
 
         <para>In general the Java type of the method parameter may:</para>
@@ -447,13 +435,8 @@
 
         <para>If the &jaxrs.DefaultValue; is not used in conjunction with &jaxrs.QueryParam;
             and the query parameter is not present in the request then value will be
-            an empty collection for<literal>List</literal>,
-            <literal>Set</literal>
-            or
-            <literal>SortedSet</literal>,
-            <literal>null</literal>
-            for other object
-            types, and the Java-defined default for primitive types.
+            an empty collection for<literal>List</literal>, <literal>Set</literal> or <literal>SortedSet</literal>,
+            &lit.null; for other object types, and the Java-defined default for primitive types.
         </para>
 
         <para>The &jaxrs.PathParam; and the other parameter-based annotations, &jaxrs.MatrixParam;,
@@ -475,13 +458,11 @@
         <para>
             <example>
                 <title>Processing POSTed HTML form</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @POST
-                    @Consumes("application/x-www-form-urlencoded")
-                    public void post(@FormParam("name") String name) {
-                        // Store the message
-                    }
-                </programlisting>
+                <programlisting language="java" linenumbering="numbered">@POST
+@Consumes("application/x-www-form-urlencoded")
+public void post(@FormParam("name") String name) {
+    // Store the message
+}</programlisting>
             </example>
         </para>
 
@@ -493,13 +474,11 @@
         <para>
             <example>
                 <title>Obtaining general map of URI path and/or query parameters</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @GET
-                    public String get(@Context UriInfo ui) {
-                        MultivaluedMap&lt;String, String&gt; queryParams = ui.getQueryParameters();
-                        MultivaluedMap&lt;String, String&gt; pathParams = ui.getPathParameters();
-                    }
-                </programlisting>
+                <programlisting language="java" linenumbering="numbered">@GET
+public String get(@Context UriInfo ui) {
+    MultivaluedMap&lt;String, String&gt; queryParams = ui.getQueryParameters();
+    MultivaluedMap&lt;String, String&gt; pathParams = ui.getPathParameters();
+}</programlisting>
             </example>
         </para>
 
@@ -508,13 +487,11 @@
         <para>
             <example>
                 <title>Obtaining general map of header parameters</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @GET
-                    public String get(@Context HttpHeaders hh) {
-                        MultivaluedMap&lt;String, String&gt; headerParams = hh.getRequestHeaders();
-                        Map&lt;String, Cookie&gt; pathParams = hh.getCookies();
-                    }
-                </programlisting>
+                <programlisting language="java" linenumbering="numbered">@GET
+public String get(@Context HttpHeaders hh) {
+    MultivaluedMap&lt;String, String&gt; headerParams = hh.getRequestHeaders();
+    Map&lt;String, Cookie&gt; pathParams = hh.getCookies();
+}</programlisting>
             </example>
         </para>
 
@@ -526,13 +503,11 @@
         <para>
             <example>
                 <title>Obtaining general map of form parameters</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @POST
-                    @Consumes("application/x-www-form-urlencoded")
-                    public void post(MultivaluedMap&lt;String, String&gt; formParams) {
-                        // Store the message
-                    }
-                </programlisting>
+                <programlisting language="java" linenumbering="numbered">@POST
+@Consumes("application/x-www-form-urlencoded")
+public void post(MultivaluedMap&lt;String, String&gt; formParams) {
+    // Store the message
+}</programlisting>
             </example>
 
             I.e. you don't need to use the &jaxrs.core.Context; annotation.
@@ -548,42 +523,38 @@
         <example>
             <title>Example of the bean which will be used as &jaxrs.BeanParam;
             </title>
-            <programlisting language="java" linenumbering="numbered">
-                public class MyBeanParam {
-                    @PathParam("p")
-                    private String pathParam;
+            <programlisting language="java" linenumbering="numbered">public class MyBeanParam {
+    @PathParam("p")
+    private String pathParam;
 
-                    @MatrixParam("m")
-                    @Encoded
-                    @DefaultValue("default")
-                    private String matrixParam;
+    @MatrixParam("m")
+    @Encoded
+    @DefaultValue("default")
+    private String matrixParam;
 
-                    @HeaderParam("header")
-                    private String headerParam;
+    @HeaderParam("header")
+    private String headerParam;
 
-                    private String queryParam;
+    private String queryParam;
 
-                    public MyBeanParam(@QueryParam("q") String queryParam) {
-                        this.queryParam = queryParam;
-                    }
+    public MyBeanParam(@QueryParam("q") String queryParam) {
+        this.queryParam = queryParam;
+    }
 
-                    public String getPathParam() {
-                        return pathParam;
-                    }
-                    ...
-                }
-            </programlisting>
+    public String getPathParam() {
+        return pathParam;
+    }
+    ...
+}</programlisting>
         </example>
         <example>
             <title>Injection of MyBeanParam as a method parameter:</title>
 
-            <programlisting language="java" linenumbering="numbered">
-                @POST
-                public void post(@BeanParam MyBeanParam beanParam, String entity) {
-                    final String pathParam = beanParam.getPathParam(); // contains injected path parameter "p"
-                    ...
-                }
-            </programlisting>
+            <programlisting language="java" linenumbering="numbered">@POST
+public void post(@BeanParam MyBeanParam beanParam, String entity) {
+    final String pathParam = beanParam.getPathParam(); // contains injected path parameter "p"
+    ...
+}</programlisting>
         </example>
         <para>The example shows aggregation of injections &jaxrs.PathParam;, &jaxrs.QueryParam; &jaxrs.MatrixParam;
             and &jaxrs.HeaderParam; into one single bean. The rules for injections inside the bean are the same as described above
@@ -601,14 +572,12 @@
         <example>
             <title>Injection of more beans into one resource methods:</title>
 
-            <programlisting language="java" linenumbering="numbered">
-                @POST
-                public void post(@BeanParam MyBeanParam beanParam, @BeanParam AnotherBean anotherBean, @PathParam("p") pathParam,
-                String entity) {
-                    // beanParam.getPathParam() == pathParam
-                    ...
-                }
-            </programlisting>
+            <programlisting language="java" linenumbering="numbered">@POST
+public void post(@BeanParam MyBeanParam beanParam, @BeanParam AnotherBean anotherBean, @PathParam("p") pathParam,
+String entity) {
+    // beanParam.getPathParam() == pathParam
+    ...
+}</programlisting>
         </example>
 
     </section>
@@ -629,39 +598,37 @@
         <para>
             <example>
                 <title>Sub-resource methods</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @Singleton
-                    @Path("/printers")
-                    public class PrintersResource {
+                <programlisting language="java" linenumbering="numbered">@Singleton
+@Path("/printers")
+public class PrintersResource {
 
-                        @GET
-                        @Produces({"application/json", "application/xml"})
-                        public WebResourceList getMyResources() { ... }
+    @GET
+    @Produces({"application/json", "application/xml"})
+    public WebResourceList getMyResources() { ... }
 
-                        @GET @Path("/list")
-                        @Produces({"application/json", "application/xml"})
-                        public WebResourceList getListOfPrinters() { ... }
+    @GET @Path("/list")
+    @Produces({"application/json", "application/xml"})
+    public WebResourceList getListOfPrinters() { ... }
 
-                        @GET @Path("/jMakiTable")
-                        @Produces("application/json")
-                        public PrinterTableModel getTable() { ... }
+    @GET @Path("/jMakiTable")
+    @Produces("application/json")
+    public PrinterTableModel getTable() { ... }
 
-                        @GET @Path("/jMakiTree")
-                        @Produces("application/json")
-                        public TreeModel getTree() { ... }
+    @GET @Path("/jMakiTree")
+    @Produces("application/json")
+    public TreeModel getTree() { ... }
 
-                        @GET @Path("/ids/{printerid}")
-                        @Produces({"application/json", "application/xml"})
-                        public Printer getPrinter(@PathParam("printerid") String printerId) { ... }
+    @GET @Path("/ids/{printerid}")
+    @Produces({"application/json", "application/xml"})
+    public Printer getPrinter(@PathParam("printerid") String printerId) { ... }
 
-                        @PUT @Path("/ids/{printerid}")
-                        @Consumes({"application/json", "application/xml"})
-                        public void putPrinter(@PathParam("printerid") String printerId, Printer printer) { ... }
+    @PUT @Path("/ids/{printerid}")
+    @Consumes({"application/json", "application/xml"})
+    public void putPrinter(@PathParam("printerid") String printerId, Printer printer) { ... }
 
-                        @DELETE @Path("/ids/{printerid}")
-                        public void deletePrinter(@PathParam("printerid") String printerId) { ... }
-                    }
-                </programlisting>
+    @DELETE @Path("/ids/{printerid}")
+    public void deletePrinter(@PathParam("printerid") String printerId) { ... }
+}</programlisting>
             </example>
         </para>
 
@@ -683,36 +650,34 @@
         <para>
             <example>
                 <title>Sub-resource locators</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @Path("/item")
-                    public class ItemResource {
-                        @Context UriInfo uriInfo;
+                <programlisting language="java" linenumbering="numbered">@Path("/item")
+public class ItemResource {
+    @Context UriInfo uriInfo;
 
-                        @Path("content")
-                        public ItemContentResource getItemContentResource() {
-                            return new ItemContentResource();
-                        }
+    @Path("content")
+    public ItemContentResource getItemContentResource() {
+        return new ItemContentResource();
+    }
 
-                        @GET
-                        @Produces("application/xml")
-                            public Item get() { ... }
-                        }
-                    }
+    @GET
+    @Produces("application/xml")
+        public Item get() { ... }
+    }
+}
 
-                    public class ItemContentResource {
+public class ItemContentResource {
 
-                        @GET
-                        public Response get() { ... }
+    @GET
+    public Response get() { ... }
 
-                        @PUT
-                        @Path("{version}")
-                        public void put(@PathParam("version") int version,
-                                        @Context HttpHeaders headers,
-                                        byte[] in) {
-                            ...
-                        }
-                    }
-                </programlisting>
+    @PUT
+    @Path("{version}")
+    public void put(@PathParam("version") int version,
+                    @Context HttpHeaders headers,
+                    byte[] in) {
+        ...
+    }
+}</programlisting>
             </example>
         </para>
 
@@ -735,16 +700,14 @@
         <para>
             <example>
                 <title>Sub-resource locators with empty path</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @Path("/item")
-                    public class ItemResource {
+                <programlisting language="java" linenumbering="numbered">@Path("/item")
+public class ItemResource {
 
-                        @Path("/")
-                        public ItemContentResource getItemContentResource() {
-                            return new ItemContentResource();
-                        }
-                    }
-                </programlisting>
+    @Path("/")
+    public ItemContentResource getItemContentResource() {
+        return new ItemContentResource();
+    }
+}</programlisting>
             </example>
         </para>
 
@@ -762,16 +725,14 @@
         <para>
             <example>
                 <title>Sub-resource locators returning sub-type</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @Path("/item")
-                    public class ItemResource {
+                <programlisting language="java" linenumbering="numbered">@Path("/item")
+public class ItemResource {
 
-                        @Path("/")
-                        public Object getItemContentResource() {
-                            return new AnyResource();
-                        }
-                    }
-                </programlisting>
+    @Path("/")
+    public Object getItemContentResource() {
+        return new AnyResource();
+    }
+}</programlisting>
             </example>
         </para>
 
@@ -786,23 +747,20 @@
         <para>
             <example>
                 <title>Sub-resource locators created from classes</title>
-                <programlisting language="java" linenumbering="numbered">
-                    import javax.inject.Singleton;
+                <programlisting language="java" linenumbering="numbered">import javax.inject.Singleton;
 
-                    @Path("/item")
-                    public class ItemResource {
-                        @Path("content")
-                        public Class&lt;ItemContentSingletonResource&gt; getItemContentResource() {
-                            return ItemContentSingletonResource.class;
-                        }
-                    }
+@Path("/item")
+public class ItemResource {
+    @Path("content")
+    public Class&lt;ItemContentSingletonResource&gt; getItemContentResource() {
+        return ItemContentSingletonResource.class;
+    }
+}
 
-                        @Singleton
-                        public class ItemContentSingletonResource {
-                            // this class is managed in the singleton life cycle
-                        }
-                    }
-                </programlisting>
+@Singleton
+public class ItemContentSingletonResource {
+    // this class is managed in the singleton life cycle
+}</programlisting>
             </example>
         </para>
 
@@ -827,18 +785,16 @@
         <para>
             <example>
                 <title>Sub-resource locators returning resource model</title>
-                <programlisting language="java" linenumbering="numbered">
-                    import org.glassfish.jersey.server.model.Resource;
+                <programlisting language="java" linenumbering="numbered">import org.glassfish.jersey.server.model.Resource;
 
-                    @Path("/item")
-                    public class ItemResource {
+@Path("/item")
+public class ItemResource {
 
-                        @Path("content")
-                        public Resource getItemContentResource() {
-                            return Resource.from(ItemContentSingletonResource.class);
-                        }
-                    }
-                </programlisting>
+    @Path("content")
+    public Resource getItemContentResource() {
+        return Resource.from(ItemContentSingletonResource.class);
+    }
+}</programlisting>
             </example>
         </para>
         <para>The code above has exactly the same effect as previous example. <literal>Resource</literal> is a resource
@@ -875,34 +831,42 @@
 
         <para>Jersey supports two further life-cycles using Jersey specific annotations.</para>
 
-        <table title="Resource scopes">
-            <thead>
-                <tr>
-                    <td style="width: 150px;">Scope</td>
-                    <td style="width: 150px;">Annotation</td>
-                    <td>Annotation full class name</td>
-                    <td>Description</td>
-                </tr>
-            </thead>
-            <tr><td>Request scope</td><td>@RequestScoped (or none)</td>
-                <td>org.glassfish.jersey.process.internal.RequestScoped</td>
-                <td><emphasis>Default lifecycle </emphasis> (applied when no annotation is present). In this scope
-                the resource instance is created for each new request and used for processing of this request. If the
-                resource is used more than one time in the request processing, always the same instance will be used.
-                This can happen when a resource is a sub resource is returned more times during the matching. In this
-                situation only on instance will server the requests.</td></tr>
-            <tr><td>Per-lookup scope</td><td>@PerLookup</td>
-                <td>org.glassfish.jersey.process.internal.RequestScoped</td>
-                <td>In this scope
-                    the resource instance is created every time it is needed for the processing even it handles
-                    the same request.</td></tr>
-            <tr><td>Singleton</td><td>@Singleton</td>
-                <td>javax.inject.Singleton</td>
-                <td>In this scope there is only one instance per jax-rs application. Singleton resource can be either
-                annotated with @Singleton and its class can be registered using the instance of
-                    &jaxrs.core.Application;. You can also create singletons by registering singleton instances
-                    into &jaxrs.core.Application;.</td></tr>
-
+        <table frame="all">
+            <title>Resource scopes</title>
+            <tgroup cols="4">
+                <colspec colwidth="1*" />
+                <colspec colwidth="1*" />
+                <colspec colwidth="2*" />
+                <colspec colwidth="5*" />
+                <thead>
+                    <row>
+                        <entry>Scope</entry>
+                        <entry>Annotation</entry>
+                        <entry>Annotation full class name</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row><entry>Request scope</entry><entry>@RequestScoped (or none)</entry>
+                        <entry>org.glassfish.jersey.process.internal.RequestScoped</entry>
+                        <entry><emphasis>Default lifecycle </emphasis> (applied when no annotation is present). In this scope
+                            the resource instance is created for each new request and used for processing of this request. If the
+                            resource is used more than one time in the request processing, always the same instance will be used.
+                            This can happen when a resource is a sub resource is returned more times during the matching. In this
+                            situation only on instance will server the requests.</entry></row>
+                    <row><entry>Per-lookup scope</entry><entry>@PerLookup</entry>
+                        <entry>org.glassfish.jersey.process.internal.RequestScoped</entry>
+                        <entry>In this scope
+                            the resource instance is created every time it is needed for the processing even it handles
+                            the same request.</entry></row>
+                    <row><entry>Singleton</entry><entry>@Singleton</entry>
+                        <entry>javax.inject.Singleton</entry>
+                        <entry>In this scope there is only one instance per jax-rs application. Singleton resource can be either
+                            annotated with @Singleton and its class can be registered using the instance of
+                            &jaxrs.core.Application;. You can also create singletons by registering singleton instances
+                            into &jaxrs.core.Application;.</entry></row>
+                </tbody>
+            </tgroup>
         </table>
     </section>
 
@@ -924,34 +888,32 @@
         <para>
             <example>
                 <title>Injection</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @Path("id: \d+")
-                    public class InjectedResource {
-                        // Injection onto field
-                        @DefaultValue("q") @QueryParam("p")
-                        private String p;
+                <programlisting language="java" linenumbering="numbered">@Path("id: \d+")
+public class InjectedResource {
+    // Injection onto field
+    @DefaultValue("q") @QueryParam("p")
+    private String p;
 
-                        // Injection onto constructor parameter
-                        public InjectedResource(@PathParam("id") int id) { ... }
+    // Injection onto constructor parameter
+    public InjectedResource(@PathParam("id") int id) { ... }
 
-                        // Injection onto resource method parameter
-                        @GET
-                        public String get(@Context UriInfo ui) { ... }
+    // Injection onto resource method parameter
+    @GET
+    public String get(@Context UriInfo ui) { ... }
 
-                        // Injection onto sub-resource resource method parameter
-                        @Path("sub-id")
-                        @GET
-                        public String get(@PathParam("sub-id") String id) { ... }
+    // Injection onto sub-resource resource method parameter
+    @Path("sub-id")
+    @GET
+    public String get(@PathParam("sub-id") String id) { ... }
 
-                        // Injection onto sub-resource locator method parameter
-                        @Path("sub-id")
-                        public SubResource getSubResource(@PathParam("sub-id") String id) { ... }
+    // Injection onto sub-resource locator method parameter
+    @Path("sub-id")
+    public SubResource getSubResource(@PathParam("sub-id") String id) { ... }
 
-                        // Injection using bean setter method
-                        @HeaderParam("X-header")
-                        public void setHeader(String header) { ... }
-                    }
-                </programlisting>
+    // Injection using bean setter method
+    @HeaderParam("X-header")
+    public void setHeader(String header) { ... }
+}</programlisting>
             </example>
         </para>
 
@@ -963,21 +925,19 @@
         <para>
             <example>
                 <title>Wrong injection into a singleton scope</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @Path("resource")
-                    @Singleton
-                    public static class MySingletonResource {
+                <programlisting language="java" linenumbering="numbered">@Path("resource")
+@Singleton
+public static class MySingletonResource {
 
-                        @QueryParam("query")
-                        String param; // WRONG: initialization of application will fail as you cannot
-                                      // inject request specific parameters into a singleton resource.
+    @QueryParam("query")
+    String param; // WRONG: initialization of application will fail as you cannot
+                  // inject request specific parameters into a singleton resource.
 
-                        @GET
-                        public String get() {
-                            return "query param: " + param;
-                        }
-                    }
-                </programlisting>
+    @GET
+    public String get() {
+        return "query param: " + param;
+    }
+}</programlisting>
             </example>
         </para>
         <para>
@@ -999,100 +959,127 @@
         <para>
             <example>
                 <title>Injection of proxies into singleton</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @Path("resource")
-                    @Singleton
-                    public static class MySingletonResource {
-                        @Context
-                        Request request; // this is ok: the proxy of Request will be injected into this singleton
+                <programlisting language="java" linenumbering="numbered">@Path("resource")
+@Singleton
+public static class MySingletonResource {
+    @Context
+    Request request; // this is ok: the proxy of Request will be injected into this singleton
 
-                        public MySingletonResource(@Context SecurityContext securityContext) {
-                            // this is ok too: the proxy of SecurityContext will be injected
-                        }
+    public MySingletonResource(@Context SecurityContext securityContext) {
+        // this is ok too: the proxy of SecurityContext will be injected
+    }
 
-                        @GET
-                        public String get() {
-                            return "query param: " + param;
-                        }
-                    }
-                </programlisting>
+    @GET
+    public String get() {
+        return "query param: " + param;
+    }
+}</programlisting>
             </example>
         </para>
 
         <para>
             To summarize the injection can be done into the following constructs:
         </para>
-        <table title="Overview of injection types">
-            <tr><td style="width: 200px; ">Java construct</td><td>Description</td></tr>
-            <tr><td>Class fields</td><td>Inject value directly into the field of the class. The field can be private and must
-            not be final. Cannot be used in Singleton scope except proxiable types mentioned above.</td></tr>
-
-            <tr><td>Constructor parameters</td><td>The constructor will be invoked with injected values. If more
-                constructors exists the one with the most injectable parameters will be invoked.
-                Cannot be used in Singleton scope except proxiable types mentioned above.</td></tr>
-
-            <tr><td>Resource methods</td><td>The resource methods (these annotated with @GET, @POST, ...) can contain
-                parameters that can be injected when the resource method is executed.
-                Can be used in any scope.</td></tr>
-
-            <tr><td>Sub resource locators</td><td>The sub resource locators (methods annotated with @Path but not @GET, @POST, ...)
-                can contain parameters that can be injected when the resource method is executed.
-                Can be used in any scope.</td></tr>
-
-            <tr><td>Setter methods</td><td>Instead of injecting values directly into field the value can be injected into the
-                setter method which will initialize the field. This injection can be used only with &jaxrs.core.Context;
-                annotation. This means
-                it cannot be used for example for injecting of query params but it can be used for injections of
-                request. The setters will be called after the object creation and
-                only once. The name of the method does not necessary have a setter pattern. Cannot be used
-                in Singleton scope except proxiable types mentioned above.</td></tr>
+        <table frame="all">
+            <title>Overview of injection types</title>
+            <tgroup cols="2">
+                <colspec colwidth="1*" />
+                <colspec colwidth="5*" />
+                <thead>
+                    <row>
+                        <entry>Java construct</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Class fields</entry>
+                        <entry>
+                            Inject value directly into the field of the class. The field can be private
+                            and must not be final. Cannot be used in Singleton scope except proxiable types mentioned above.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Constructor parameters</entry>
+                        <entry>
+                            The constructor will be invoked with injected values. If more
+                            constructors exists the one with the most injectable parameters will be invoked.
+                            Cannot be used in Singleton scope except proxiable types mentioned above.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Resource methods</entry>
+                        <entry>
+                            The resource methods (these annotated with @GET, @POST, ...) can contain
+                            parameters that can be injected when the resource method is executed.
+                            Can be used in any scope.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Sub resource locators</entry>
+                        <entry>
+                            The sub resource locators (methods annotated with @Path but not @GET, @POST, ...)
+                            can contain parameters that can be injected when the resource method is executed.
+                            Can be used in any scope.
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>Setter methods</entry>
+                        <entry>
+                            Instead of injecting values directly into field the value can be injected into the
+                            setter method which will initialize the field. This injection can be used only with &jaxrs.core.Context;
+                            annotation. This means
+                            it cannot be used for example for injecting of query params but it can be used for injections of
+                            request. The setters will be called after the object creation and
+                            only once. The name of the method does not necessary have a setter pattern. Cannot be used
+                            in Singleton scope except proxiable types mentioned above.
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
         </table>
 
         <para>
             The following example shows all possible java constructs into which the values can be injected.
-        </para>
 
-        <para>
             <example>
                 <title>Example of possible injections</title>
-                <programlisting language="java" linenumbering="numbered">
-                    @Path("resource")
-                    public static class SummaryOfInjectionsResource {
-                        @QueryParam("query")
-                        String param; // injection into a class field
+                <programlisting language="java" linenumbering="numbered">@Path("resource")
+public static class SummaryOfInjectionsResource {
+    @QueryParam("query")
+    String param; // injection into a class field
 
 
-                        @GET
-                        public String get(@QueryParam("query") String methodQueryParam) {
-                            // injection into a resource method parameter
-                            return "query param: " + param;
-                        }
+    @GET
+    public String get(@QueryParam("query") String methodQueryParam) {
+        // injection into a resource method parameter
+        return "query param: " + param;
+    }
 
-                        @Path("sub-resource-locator")
-                        public Class&lt;SubResource&gt; subResourceLocator(@QueryParam("query") String subResourceQueryParam) {
-                            // injection into a sub resource locator parameter
-                            return SubResource.class;
-                        }
+    @Path("sub-resource-locator")
+    public Class&lt;SubResource&gt; subResourceLocator(@QueryParam("query") String subResourceQueryParam) {
+        // injection into a sub resource locator parameter
+        return SubResource.class;
+    }
 
-                        public SummaryOfInjectionsResource(@QueryParam("query") String constructorQueryParam) {
-                            // injection into a constructor parameter
-                        }
+    public SummaryOfInjectionsResource(@QueryParam("query") String constructorQueryParam) {
+        // injection into a constructor parameter
+    }
 
 
-                        @Context
-                        public void setRequest(Request request) {
-                            // injection into a setter method
-                            System.out.println(request != null);
-                        }
-                    }
+    @Context
+    public void setRequest(Request request) {
+        // injection into a setter method
+        System.out.println(request != null);
+    }
+}
 
-                    public static class SubResource {
-                        @GET
-                        public String get() {
-                            return "sub resource";
-                        }
-                    }
-                </programlisting>
+public static class SubResource {
+    @GET
+    public String get() {
+        return "sub resource";
+    }
+}</programlisting>
             </example>
         </para>
 
