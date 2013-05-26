@@ -73,6 +73,7 @@
                                     <fileset dir="src/main/docbook"/>
                                 </copy>
                                 <replace file="${src.dir}/jersey.ent" token="$version" value="${jersey.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$src.branch" value="${jersey.src.branch}" />
                                 <replace file="${src.dir}/jersey.ent" token="$repository" value="${javanet.repository.id}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="${jaxrs.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.version}" />
@@ -201,6 +202,7 @@
         <src.dir>${basedir}/target/gen-src</src.dir>
         <javanet.repository.id>snapshots</javanet.repository.id>
         <jersey.version>${project.version}</jersey.version>
+        <jersey.src.branch>master</jersey.src.branch>
         <jaxrs.version>${jaxrs.api.version}</jaxrs.version>
     </properties>
 

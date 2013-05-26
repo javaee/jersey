@@ -41,9 +41,8 @@
 
 -->
 <!ENTITY version "$version">
-
+<!ENTITY src.branch "$src.branch">
 <!ENTITY repository "$repository">
-
 <!ENTITY experimentalrepository "snapshots">
 
 <!-- Version & External Link Base Entities -->
@@ -62,11 +61,12 @@
 
 <!ENTITY wadl.project.link "<link xlink:href='http://wadl.java.net/'>WADL</link>">
 <!ENTITY sse.spec.link "<link xlink:href='http://www.w3.org/TR/2009/WD-eventsource-20091029/'>SSE API specification</link>">
-
-
+<!ENTITY grizzly.link "<link xlink:href='http://grizzly.java.net/'>Grizzly</link>">
+<!ENTITY maven.link "<link xlink:href='http://maven.apache.org/'>Apache Maven</link>">
+<!ENTITY maven.central.repo.link "<link xlink:href='http://search.maven.org/'>Central Maven Repository</link>">
 
 <!ENTITY jersey.github.path "https://github.com/jersey/jersey/tree">
-<!ENTITY jersey.github.release.path "&jersey.github.path;/&version;">
+<!ENTITY jersey.github.release.path "&jersey.github.path;/&src.branch;">
 <!ENTITY jersey.github.examples.path "&jersey.github.release.path;/examples">
 
 <!ENTITY jaxb-api-jar.version "$jaxb-api-jar-version">
