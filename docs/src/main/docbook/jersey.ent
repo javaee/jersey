@@ -149,6 +149,8 @@
 <!ENTITY jaxrs.core.Feature "<link xlink:href='&jax-rs.javadoc.path;/core/Feature.html'>Feature</link>">
 <!ENTITY jaxrs.core.GenericEntity "<link xlink:href='&jax-rs.javadoc.path;/core/GenericEntity.html'>GenericEntity&lt;T&gt;</link>">
 <!ENTITY jaxrs.core.GenericType "<link xlink:href='&jax-rs.javadoc.path;/core/GenericType.html'>GenericType&lt;T&gt;</link>">
+<!ENTITY jaxrs.core.Link "<link xlink:href='&jax-rs.javadoc.path;/core/Link.html'>Link</link>">
+<!ENTITY jaxrs.core.Link.Builder "<link xlink:href='&jax-rs.javadoc.path;/core/Link.Builder.html'>Link.Builder</link>">
 <!ENTITY jaxrs.core.MediaType "<link xlink:href='&jax-rs.javadoc.path;/core/MediaType.html'>MediaType</link>">
 <!ENTITY jaxrs.core.NewCookie "<link xlink:href='&jax-rs.javadoc.path;/core/NewCookie.html'>NewCookie</link>">
 <!ENTITY jaxrs.core.Response "<link xlink:href='&jax-rs.javadoc.path;/core/Response.html'>Response</link>">
@@ -418,6 +420,8 @@
 <!ENTITY lit.jaxrs.core.Feature "<literal>Feature</literal>">
 <!ENTITY lit.jaxrs.core.GenericEntity "<literal>GenericEntity&lt;T&gt;</literal>">
 <!ENTITY lit.jaxrs.core.GenericType "<literal>GenericType&lt;T&gt;</literal>">
+<!ENTITY lit.jaxrs.core.Link "<literal>Link</literal>">
+<!ENTITY lit.jaxrs.core.Link.Builder "<literal>Link.Builder</literal>">
 <!ENTITY lit.jaxrs.core.MediaType "<literal>MediaType</literal>">
 <!ENTITY lit.jaxrs.core.NewCookie "<literal>NewCookie</literal>">
 <!ENTITY lit.jaxrs.core.Response "<literal>Response</literal>">
