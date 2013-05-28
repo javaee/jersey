@@ -355,6 +355,10 @@
 <!ENTITY jersey.server.mvc.TemplateProcessor "<link xlink:href='&jersey.javadoc.path;/server/mvc/TemplateProcessor.html'>TemplateProcessor</link>">
 <!ENTITY jersey.server.mvc.Viewable "<link xlink:href='&jersey.javadoc.path;/server/mvc/Viewable.html'>Viewable</link>">
 
+<!ENTITY jersey.test.JerseyTest "<link xlink:href='&jersey.javadoc.path;/org/glassfish/jersey/test/JerseyTest.html'>JerseyTest</link>">
+<!ENTITY jersey.test.JerseyTest "<link xlink:href='&jersey.javadoc.path;/org/glassfish/jersey/test/TestProperties.html'>TestProperties</link>">
+<!ENTITY jersey.test.spi.TestContainerFactory "<link xlink:href='&jersey.javadoc.path;/org/glassfish/jersey/test/spi/TestContainerFactory.html'>TestContainerFactory</link>">
+
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
 <!ENTITY jersey-media-json-processing "<link xlink:href='&jersey.site.path;/jersey-media-json-processing/dependencies.html'>jersey-media-json-processing</link>" >
@@ -587,6 +591,9 @@
 <!ENTITY lit.jersey.server.mvc.Template "<literal>@Template</literal>">
 <!ENTITY lit.jersey.server.mvc.TemplateProcessor "<literal>TemplateProcessor</literal>">
 <!ENTITY lit.jersey.server.mvc.Viewable "<literal>Viewable</literal>">
+<!ENTITY lit.jersey.test.JerseyTest "<literal>JerseyTest</literal>">
+<!ENTITY lit.jersey.test.TestProperties "<literal>TestProperties</literal>">
+<!ENTITY lit.jersey.test.spi.TestContainerFactory "<literal>TestContainerFactory</literal>">
 
 <!--JDK 6 literals -->
 <!ENTITY lit.jdk6.HttpUrlConnection "<literal>HttpUrlConnection</literal>">
