@@ -220,7 +220,7 @@ resourceConfig.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_NOTIFIER, r
                 </orderedlist>
 
                 The <literal>Container</literal> interface introduces two <literal>reload</literal> methods, which you can call
-                to get the application re-loaded. One of these methods allows to pass in a new <literal>ResourceConfig</literal>
+                to get the application re-loaded. One of these methods allows to pass in a new &lit.jersey.server.ResourceConfig;
                 instance.
 
                 You can register your implementation of <literal>ContainerLifecycleListener</literal> the same way as any

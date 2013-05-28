@@ -179,19 +179,19 @@
             <para>
                 Let's now look at how a programmatic resources are deployed.
                 The easiest way to setup your application as well as register any programmatic resources in Jersey
-                is to use a Jersey <literal>ResourceConfig</literal> utility class, an extension of &jaxrs.core.Application;
+                is to use a Jersey &lit.jersey.server.ResourceConfig; utility class, an extension of &jaxrs.core.Application;
                 class.
                 If you deploy your Jersey application into a Servlet container you will need to provide a &jaxrs.core.Application;
                 subclass that will be used for configuration. You may use a <literal>web.xml</literal> where you would define a
                 <literal>org.glassfish.jersey.servlet.ServletContainer</literal> Servlet entry there and specify initial parameter
                 <literal>javax.ws.rs.Application</literal> with the class name of your JAX-RS Application that you
                 wish to deploy. In the example above, this application will be <literal>MyResourceConfig</literal> class. This is
-                the reason why <literal>MyResourceConfig</literal> extends the <literal>ResourceConfig</literal> (which, if you
+                the reason why <literal>MyResourceConfig</literal> extends the &lit.jersey.server.ResourceConfig; (which, if you
                 remember extends the <literal>javax.ws.rs.Application</literal>).
             </para>
             <para>
                 The following example shows a fragment of <literal>web.xml</literal> that can be used to deploy the
-                <literal>ResourceConfig</literal> JAX-RS application.
+                &lit.jersey.server.ResourceConfig; JAX-RS application.
                 <example>
                     <title>A programmatic resource</title>
                     <programlisting language="xml" linenumbering="numbered">
@@ -220,7 +220,7 @@
                 registered resources.
             </para>
             <para>
-                Because Jersey programmatic API is not a standard JAX-RS feature the <literal>ResourceConfig</literal> must be
+                Because Jersey programmatic API is not a standard JAX-RS feature the &lit.jersey.server.ResourceConfig; must be
                 used to register programmatic resources as shown above. See <link linkend="deployment">deployment chapter</link>
                 for more information.
             </para>
