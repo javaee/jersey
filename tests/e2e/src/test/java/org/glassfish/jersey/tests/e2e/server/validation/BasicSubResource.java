@@ -47,6 +47,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ExecutableType;
 import javax.validation.executable.ValidateOnExecution;
@@ -99,7 +100,8 @@ public class BasicSubResource {
     @POST
     @Consumes("application/x-www-form-urlencoded")
     @Produces("application/contactBean")
-    public ContactBean getContactValidationBean() {
+    @Valid
+    public ContactBean postContactValidationBean() {
         final ContactBean contactBean = new ContactBean();
         contactBean.setName(firstName + " " + lastName);
         contactBean.setEmail(getEmail());
