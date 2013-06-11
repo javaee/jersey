@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,50 +38,50 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.beanvalidation.webapp.domain;
+package org.glassfish.jersey.tests.e2e.server.validation.validateonexecution;
 
-import javax.validation.constraints.DecimalMin;
+import java.io.Serializable;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
+import javax.validation.executable.ExecutableType;
+import javax.validation.executable.ValidateOnExecution;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.glassfish.jersey.tests.e2e.server.validation.Extended;
+
 import org.hibernate.validator.constraints.Email;
-import org.hibernate.validator.constraints.Length;
+import org.hibernate.validator.constraints.NotBlank;
+
+import com.google.common.base.Objects;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @XmlRootElement
-public class ContactCard {
+public class AnotherContactBean implements Serializable {
 
-    @DecimalMin(value = "1")
-    private Long id;
-
-    private String fullName;
-
-    @Email(message = "{contact.wrong.email}", regexp = "[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}")
     private String email;
 
     private String phone;
 
-    public Long getId() {
-        return id;
+    @NotBlank
+    private String name;
+
+    @NotNull(groups = {Extended.class})
+    private String city;
+
+    public AnotherContactBean() {
     }
 
-    public void setId(final Long id) {
-        this.id = id;
+    public AnotherContactBean(final String email, final String phone, final String name, final String city) {
+        this.email = email;
+        this.phone = phone;
+        this.name = name;
+        this.city = city;
     }
 
-    @NotNull(message = "{contact.wrong.name}")
-    @Length(min = 2, max = 20)
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(final String fullName) {
-        this.fullName = fullName;
-    }
-
+    @Email(regexp = "[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}")
     public String getEmail() {
         return email;
     }
@@ -90,7 +90,8 @@ public class ContactCard {
         this.email = email;
     }
 
-    @Pattern(message = "{contact.wrong.phone}", regexp = "[0-9]{3,9}")
+    @Pattern(regexp = "[0-9]{3,9}")
+    @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
     public String getPhone() {
         return phone;
     }
@@ -99,21 +100,29 @@ public class ContactCard {
         this.phone = phone;
     }
 
+    public void setName(final String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof ContactCard)) {
+        if (!(o instanceof AnotherContactBean)) {
             return false;
         }
 
-        final ContactCard that = (ContactCard) o;
+        final AnotherContactBean that = (AnotherContactBean) o;
 
         if (email != null ? !email.equals(that.email) : that.email != null) {
             return false;
         }
-        if (fullName != null ? !fullName.equals(that.fullName) : that.fullName != null) {
+        if (name != null ? !name.equals(that.name) : that.name != null) {
             return false;
         }
         if (phone != null ? !phone.equals(that.phone) : that.phone != null) {
@@ -125,9 +134,19 @@ public class ContactCard {
 
     @Override
     public int hashCode() {
-        int result = fullName != null ? fullName.hashCode() : 0;
-        result = 31 * result + (email != null ? email.hashCode() : 0);
+        int result = email != null ? email.hashCode() : 0;
         result = 31 * result + (phone != null ? phone.hashCode() : 0);
+        result = 31 * result + (name != null ? name.hashCode() : 0);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(AnotherContactBean.class).
+                add("email", email).
+                add("phone", phone).
+                add("name", name).
+                omitNullValues().
+                toString();
     }
 }

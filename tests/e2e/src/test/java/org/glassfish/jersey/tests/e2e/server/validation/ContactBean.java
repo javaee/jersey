@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,6 @@ public class ContactBean implements Serializable {
     @Email(regexp = "[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}")
     private String email;
 
-    @Pattern(regexp = "[0-9]{3,9}")
     private String phone;
 
     @NotBlank
@@ -76,6 +75,7 @@ public class ContactBean implements Serializable {
         this.email = email;
     }
 
+    @Pattern(regexp = "[0-9]{3,9}")
     public String getPhone() {
         return phone;
     }

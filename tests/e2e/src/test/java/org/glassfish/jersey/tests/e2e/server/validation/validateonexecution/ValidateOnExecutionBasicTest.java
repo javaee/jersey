@@ -43,10 +43,12 @@ package org.glassfish.jersey.tests.e2e.server.validation.validateonexecution;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -246,6 +248,36 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
         }
     }
 
+    /**
+     * BEANS.
+     */
+
+    @Path("getter-on-beans")
+    public static class ValidateGetterExecutableOnBeans {
+
+        @POST
+        @Valid
+        public AnotherContactBean post(@Valid final AnotherContactBean bean) {
+            return bean;
+        }
+
+        @POST
+        @Path("invalidMail")
+        @Valid
+        public AnotherContactBean invalidMail(@Valid final AnotherContactBean bean) {
+            bean.setEmail("ab");
+            return bean;
+        }
+
+        @POST
+        @Path("invalidPhone")
+        @Valid
+        public AnotherContactBean invalidPhone(@Valid final AnotherContactBean bean) {
+            bean.setPhone("12");
+            return bean;
+        }
+    }
+
     @Override
     protected Application configure() {
         enable(TestProperties.LOG_TRAFFIC);
@@ -263,7 +295,8 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
                 ValidateGetterExecutableOnMethodMatch.class,
                 ValidateGetterExecutableOnTypeDefault.class,
                 ValidateGetterExecutableOnTypeMiss.class,
-                ValidateGetterExecutableOnTypeMatch.class)
+                ValidateGetterExecutableOnTypeMatch.class,
+                ValidateGetterExecutableOnBeans.class)
                 .property(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true);
     }
 
@@ -331,5 +364,59 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
 
         assertThat(target.request().get().getStatus(), equalTo(400));
         assertThat(target.path("sanity").request().get().getStatus(), equalTo(400));
+    }
+
+    @Test
+    public void testBeansPositive() throws Exception {
+        final WebTarget target = target("getter-on-beans");
+        final AnotherContactBean contactBean = new AnotherContactBean("jersey@example.com", null, "Jersey JAX-RS", null);
+
+        final Response response = target.request().post(Entity.xml(contactBean));
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(AnotherContactBean.class), equalTo(contactBean));
+    }
+
+    @Test
+    public void testBeansValidateGetterInvalidEmail() throws Exception {
+        final WebTarget target = target("getter-on-beans");
+        final AnotherContactBean contactBean = new AnotherContactBean("jersey", null, "Jersey JAX-RS", null);
+
+        final Response response = target.request().post(Entity.xml(contactBean));
+
+        assertThat(response.getStatus(), equalTo(400));
+    }
+
+    @Test
+    public void testBeansValidateGetterInvalidPhone() throws Exception {
+        final WebTarget target = target("getter-on-beans");
+        final AnotherContactBean contactBean = new AnotherContactBean("jersey@example.com", "12", "Jersey JAX-RS", null);
+
+        final Response response = target.request().post(Entity.xml(contactBean));
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(AnotherContactBean.class), equalTo(contactBean));
+    }
+
+    @Test
+    public void testBeansValidateGetterInvalidReturnMail() throws Exception {
+        final WebTarget target = target("getter-on-beans").path("invalidMail");
+        final AnotherContactBean contactBean = new AnotherContactBean("jersey@example.com", null, "Jersey JAX-RS", null);
+
+        final Response response = target.request().post(Entity.xml(contactBean));
+
+        assertThat(response.getStatus(), equalTo(500));
+    }
+
+    @Test
+    public void testBeansValidateGetterInvalidReturnPhone() throws Exception {
+        final WebTarget target = target("getter-on-beans").path("invalidPhone");
+        final AnotherContactBean contactBean = new AnotherContactBean("jersey@example.com", null, "Jersey JAX-RS", null);
+
+        final Response response = target.request().post(Entity.xml(contactBean));
+        contactBean.setPhone("12");
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(AnotherContactBean.class), equalTo(contactBean));
     }
 }
