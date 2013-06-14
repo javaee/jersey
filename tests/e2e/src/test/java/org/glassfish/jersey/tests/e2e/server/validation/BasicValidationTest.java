@@ -449,6 +449,8 @@ public class BasicValidationTest extends JerseyTest {
     @Test
     public void testValidBeanParamNegative() throws Exception {
         final ContactBean contactBean = new ContactBean();
+        // Add value to pass @OneContact constraint but fails on @Pattern constraint defined on getter.
+        contactBean.setPhone("12");
         final Response response = testBean("validBeanParam", contactBean);
 
         assertEquals(400, response.getStatus());
