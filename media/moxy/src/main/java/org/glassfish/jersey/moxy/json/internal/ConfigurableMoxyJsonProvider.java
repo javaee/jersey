@@ -71,13 +71,6 @@ import com.google.common.collect.Sets;
 
 /**
  * Jersey specific {@link MOXyJsonProvider} that can be configured via {@code ContextResolver<JsonMoxyConfiguration>} instance.
- * <p/>
- * Note: Pre-configured default values
- * <ul>
- *     <li>Attribute prefix - {@code @}</li>
- *     <li>Value wrapper - {@code $}</li>
- *     <li>Namespace separator - {@code :}</li>
- * </ul>
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
@@ -97,7 +90,6 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
 
         for (final Field field : propertiesClass.getDeclaredFields()) {
             if (String.class == field.getType()
-                    && field.isAccessible()
                     && Modifier.isStatic(field.getModifiers())) {
                 try {
                     propertyNames.add((String) field.get(null));
@@ -121,9 +113,6 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     private MoxyJsonConfig getGlobalConfig() {
         if (globalConfig == null) {
             globalConfig = new MoxyJsonConfig()
-                    .setAttributePrefix("@")
-                    .setValueWrapper("$")
-                    .setNamespaceSeparator(':')
                     .setMarshallerProperties(getConfigProperties(config, MARSHALLER_PROPERTY_NAMES))
                     .setUnmarshallerProperties(getConfigProperties(config, UNMARSHALLER_PROPERTY_NAMES));
         }

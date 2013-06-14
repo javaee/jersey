@@ -1,1 +1,1 @@
-{"objects":[{"@xsi:type":"colorHolder","colors":["RED","BLUE"]},{"@xsi:type":"colorHolder","colors":["GREEN"]}],"offset":0,"total":2}
+{"objects":[{"xsi:type":"colorHolder","colors":["RED","BLUE"]},{"xsi:type":"colorHolder","colors":["GREEN"]}],"offset":0,"total":2}
