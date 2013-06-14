@@ -130,15 +130,12 @@ public class HttpUrlConnector implements Connector {
             private final UnsafeValue<InputStream, IOException> in = Values.lazy(new UnsafeValue<InputStream, IOException>() {
                 @Override
                 public InputStream get() throws IOException {
-                    if (uc.getResponseCode() < 300) {
+                    if (uc.getResponseCode() < 400) {
                         return uc.getInputStream();
-                    } 
-                    InputStream ein = uc.getErrorStream();
-                    if (ein != null) {
-                        return ein;
+                    } else {
+                        InputStream ein = uc.getErrorStream();
+                        return (ein != null) ? ein : new ByteArrayInputStream(new byte[0]);
                     }
-                    InputStream in = uc.getInputStream();
-                    return (in != null) ? in : new ByteArrayInputStream(new byte[0]);                    
                 }
             });
 
