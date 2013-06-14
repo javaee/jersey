@@ -132,10 +132,13 @@ public class HttpUrlConnector implements Connector {
                 public InputStream get() throws IOException {
                     if (uc.getResponseCode() < 300) {
                         return uc.getInputStream();
-                    } else {
-                        InputStream ein = uc.getErrorStream();
-                        return (ein != null) ? ein : new ByteArrayInputStream(new byte[0]);
+                    } 
+                    InputStream ein = uc.getErrorStream();
+                    if (ein != null) {
+                        return ein;
                     }
+                    InputStream in = uc.getInputStream();
+                    return (in != null) ? in : new ByteArrayInputStream(new byte[0]);                    
                 }
             });
 
