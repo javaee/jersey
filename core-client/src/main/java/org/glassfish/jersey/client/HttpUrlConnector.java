@@ -130,7 +130,7 @@ public class HttpUrlConnector implements Connector {
             private final UnsafeValue<InputStream, IOException> in = Values.lazy(new UnsafeValue<InputStream, IOException>() {
                 @Override
                 public InputStream get() throws IOException {
-                    if (uc.getResponseCode() < 300) {
+                    if (uc.getResponseCode() < 400) {
                         return uc.getInputStream();
                     } else {
                         InputStream ein = uc.getErrorStream();
