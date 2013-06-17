@@ -96,7 +96,7 @@ public class ResourcePushingTest {
             final Resource resource = extendedUriInfo.getMatchedModelResource();
             Assert.assertEquals("child", resource.getPath());
             final List<RuntimeResource> runtimeResources = extendedUriInfo.getMatchedRuntimeResources();
-            Assert.assertEquals("root", runtimeResources.get(0).getFirstParentResource(resource).getPath());
+            Assert.assertEquals("root", resource.getParent().getPath());
             Assert.assertEquals(2, runtimeResources.size());
             Assert.assertEquals("/child;/root", convertToString(runtimeResources));
             Assert.assertEquals("/child", runtimeResources.get(0).getRegex());
