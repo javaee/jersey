@@ -53,7 +53,7 @@ import org.junit.After;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public abstract class AbstractSimpleServerTester {
@@ -105,7 +105,15 @@ public abstract class AbstractSimpleServerTester {
 
     public void startServer(ResourceConfig config) {
         final URI baseUri = getBaseUri();
+        config.register(LoggingFilter.class);
         server = SimpleContainerFactory.create(baseUri, config);
+        LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
+    }
+
+    public void startServer(ResourceConfig config, int count, int select) {
+        final URI baseUri = getBaseUri();
+        config.register(LoggingFilter.class);
+        server = SimpleContainerFactory.create(baseUri, config, count, select);
         LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
     }
 
