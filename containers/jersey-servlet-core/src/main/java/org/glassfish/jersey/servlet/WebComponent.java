@@ -83,6 +83,8 @@ import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
+import org.glassfish.jersey.servlet.internal.ServletContainerProviderFactory;
+import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 
@@ -100,6 +102,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class WebComponent {
 
@@ -258,6 +261,9 @@ public class WebComponent {
         if (resourceConfig == null) {
             resourceConfig = createResourceConfig(webConfig);
         }
+        // SPI/extension hook to configure ResourceConfig
+        configure(resourceConfig);
+
         resourceConfig.register(new WebComponentBinder());
         this.appHandler = new ApplicationHandler(resourceConfig);
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
@@ -391,6 +397,19 @@ public class WebComponent {
             }
         } catch (ClassNotFoundException e) {
             throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_LOAD(jaxrsApplicationClassName), e);
+        }
+    }
+
+    /**
+     * SPI/extension hook to configure ResourceConfig.
+     *
+     * @param resourceConfig Jersey application configuration.
+     */
+    private static void configure(ResourceConfig resourceConfig) throws ServletException {
+        final ServletContainerProvider[] allServletContainerProviders = //TODO check if META-INF/services lookup is enabled
+                ServletContainerProviderFactory.getAllServletContainerProviders();
+        for (ServletContainerProvider servletContainerProvider : allServletContainerProviders) {
+            servletContainerProvider.configure(resourceConfig);
         }
     }
 

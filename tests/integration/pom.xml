@@ -55,7 +55,9 @@
     <name>jersey-tests-integration</name>
 
     <modules>
+        <module>cdi-ejb-test-webapp</module>
         <module>cdi-test-webapp</module>
+        <module>ejb-test-webapp</module>
         <module>jersey-780</module>
         <module>jersey-1107</module>
         <module>jersey-1829</module>
@@ -80,6 +82,8 @@
         <module>servlet-3-init-2</module>
         <module>servlet-3-init-3</module>
         <module>servlet-3-init-4</module>
+        <module>servlet-3-init-5</module>
+        <module>servlet-3-init-provider</module>
         <module>servlet-3-params</module>
         <module>servlet-3-sse-1</module>
         <module>servlet-tests</module>
