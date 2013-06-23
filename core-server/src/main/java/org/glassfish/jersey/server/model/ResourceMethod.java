@@ -69,7 +69,7 @@ import com.google.common.collect.Sets;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ResourceMethod implements ResourceModelComponent, Producing, Consuming, Suspendable, NameBound {
+public final class ResourceMethod implements ResourceModelComponent, Producing, Consuming, Suspendable, NameBound {
 
     /**
      * Resource method classification based on the recognized JAX-RS
@@ -120,6 +120,7 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
          * @param pathTemplate method path template.
          * @return method matching path pattern.
          */
+        /* package */
         abstract PathPattern createPatternFor(String pathTemplate);
 
         private static JaxrsType classify(String httpMethod) {
@@ -169,9 +170,10 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
          * {@link org.glassfish.jersey.server.model.Resource.Builder#build()} method
          * invocation.
          * </p>
+         *
          * @param parent parent resource model builder.
          */
-        Builder(final Resource.Builder parent) {
+        /* package */ Builder(final Resource.Builder parent) {
             this.parent = parent;
 
             this.httpMethod = null;
@@ -325,6 +327,11 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
             return this;
         }
 
+        /**
+         * Set the managed async required flag on the method model to {@code true}.
+         *
+         * @return updated builder object.
+         */
         public Builder managedAsync() {
             managedAsync = true;
 
@@ -418,9 +425,7 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
          * @return new resource method model.
          */
         public ResourceMethod build() {
-            final Invocable invocable = createInvocable();
-
-            ResourceMethod method = new ResourceMethod(
+            final Data methodData = new Data(
                     httpMethod,
                     consumedTypes,
                     producedTypes,
@@ -428,12 +433,12 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
                     suspended,
                     suspendTimeout,
                     suspendTimeoutUnit,
-                    invocable,
+                    createInvocable(),
                     nameBindings);
 
-            parent.onBuildMethod(this, method);
+            parent.onBuildMethod(this, methodData);
 
-            return method;
+            return new ResourceMethod(null, methodData);
         }
 
         private Invocable createInvocable() {
@@ -454,45 +459,210 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
         }
     }
 
-    // JAX-RS method type
-    private final JaxrsType type;
-    // HttpMethod
-    private final String httpMethod;
-    // Consuming & Producing
-    private final List<MediaType> consumedTypes;
-    private final List<MediaType> producedTypes;
-    // SuspendableComponent
-    private final boolean managedAsync;
-    private final boolean suspended;
-    private final long suspendTimeout;
-    private final TimeUnit suspendTimeoutUnit;
-    // Invocable
-    private final Invocable invocable;
-    // NameBound
-    private final Collection<Class<? extends Annotation>> nameBindings;
+    /**
+     * Immutable resource method data.
+     */
+    /* package */ static class Data {
+        // JAX-RS method type
+        private final JaxrsType type;
+        // HttpMethod
+        private final String httpMethod;
+        // Consuming & Producing
+        private final List<MediaType> consumedTypes;
+        private final List<MediaType> producedTypes;
+        // SuspendableComponent
+        private final boolean managedAsync;
+        private final boolean suspended;
+        private final long suspendTimeout;
+        private final TimeUnit suspendTimeoutUnit;
+        // Invocable
+        private final Invocable invocable;
+        // NameBound
+        private final Collection<Class<? extends Annotation>> nameBindings;
 
-    private ResourceMethod(final String httpMethod,
-                           final Collection<MediaType> consumedTypes,
-                           final Collection<MediaType> producedTypes,
-                           boolean managedAsync, final boolean suspended,
-                           final long suspendTimeout,
-                           final TimeUnit suspendTimeoutUnit,
-                           final Invocable invocable,
-                           final Collection<Class<? extends Annotation>> nameBindings
-    ) {
-        this.managedAsync = managedAsync;
-        this.type = JaxrsType.classify(httpMethod);
+        private Data(final String httpMethod,
+                     final Collection<MediaType> consumedTypes,
+                     final Collection<MediaType> producedTypes,
+                     boolean managedAsync, final boolean suspended,
+                     final long suspendTimeout,
+                     final TimeUnit suspendTimeoutUnit,
+                     final Invocable invocable,
+                     final Collection<Class<? extends Annotation>> nameBindings) {
+            this.managedAsync = managedAsync;
+            this.type = JaxrsType.classify(httpMethod);
 
-        this.httpMethod = (httpMethod == null) ? httpMethod : httpMethod.toUpperCase();
+            this.httpMethod = (httpMethod == null) ? httpMethod : httpMethod.toUpperCase();
 
-        this.consumedTypes = Collections.unmodifiableList(Lists.newArrayList(consumedTypes));
-        this.producedTypes = Collections.unmodifiableList(Lists.newArrayList(producedTypes));
-        this.invocable = invocable;
-        this.suspended = suspended;
-        this.suspendTimeout = suspendTimeout;
-        this.suspendTimeoutUnit = suspendTimeoutUnit;
+            this.consumedTypes = Collections.unmodifiableList(Lists.newArrayList(consumedTypes));
+            this.producedTypes = Collections.unmodifiableList(Lists.newArrayList(producedTypes));
+            this.invocable = invocable;
+            this.suspended = suspended;
+            this.suspendTimeout = suspendTimeout;
+            this.suspendTimeoutUnit = suspendTimeoutUnit;
 
-        this.nameBindings = Collections.unmodifiableCollection(Lists.newArrayList(nameBindings));
+            this.nameBindings = Collections.unmodifiableCollection(Lists.newArrayList(nameBindings));
+        }
+
+        /**
+         * Get the JAX-RS method type.
+         *
+         * @return the JAX-RS method type.
+         */
+        /* package */ JaxrsType getType() {
+            return type;
+        }
+
+        /**
+         * Get the associated HTTP method.
+         * <p>
+         * May return {@code null} in case the method represents a sub-resource
+         * locator.
+         * </p>
+         *
+         * @return the associated HTTP method, or {@code null} in case this method
+         *         represents a sub-resource locator.
+         */
+        /* package */ String getHttpMethod() {
+            return httpMethod;
+        }
+
+        /**
+         * Get consumable media types.
+         *
+         * @return consumable media types.
+         */
+        /* package */ List<MediaType> getConsumedTypes() {
+            return consumedTypes;
+        }
+
+        /**
+         * Get produced media types.
+         *
+         * @return produced media types.
+         */
+        /* package */ List<MediaType> getProducedTypes() {
+            return producedTypes;
+        }
+
+        /**
+         * Flag indicating whether managed async support declared on the method.
+         *
+         * @return {@code true} if managed async support is declared on the method, {@code false} otherwise.
+         */
+        /* package */ boolean isManagedAsync() {
+            return managedAsync;
+        }
+
+        /**
+         * Flag indicating whether the method requires injection of suspended response context.
+         *
+         * @return {@code true} if the method requires injection of suspended response context, {@code false} otherwise.
+         */
+        /* package */ boolean isSuspended() {
+            return suspended;
+        }
+
+        /**
+         * Get the suspended timeout value for the method.
+         *
+         * @return the suspended timeout value for the method.
+         */
+        /* package */ long getSuspendTimeout() {
+            return suspendTimeout;
+        }
+
+        /**
+         * Get the suspended timeout time unit for the method.
+         *
+         * @return the suspended timeout time unit for the method.
+         */
+        /* package */ TimeUnit getSuspendTimeoutUnit() {
+            return suspendTimeoutUnit;
+        }
+
+        /**
+         * Get the invocable method model.
+         *
+         * @return invocable method model.
+         */
+        /* package */ Invocable getInvocable() {
+            return invocable;
+        }
+
+        /**
+         * Get the collection of name bindings attached to this method.
+         *
+         * @return collection of name binding annotation types attached to the method.
+         */
+        /* package */ Collection<Class<? extends Annotation>> getNameBindings() {
+            return nameBindings;
+        }
+
+        @Override
+        public String toString() {
+            return "httpMethod=" + httpMethod +
+                    ", consumedTypes=" + consumedTypes +
+                    ", producedTypes=" + producedTypes +
+                    ", suspended=" + suspended +
+                    ", suspendTimeout=" + suspendTimeout +
+                    ", suspendTimeoutUnit=" + suspendTimeoutUnit +
+                    ", invocable=" + invocable +
+                    ", nameBindings=" + nameBindings;
+        }
+    }
+
+    /**
+     * Transform a collection of resource method data into resource method models.
+     *
+     * @param parent parent resource model.
+     * @param list   resource method data collection.
+     * @return transformed resource method models.
+     */
+    static List<ResourceMethod> transform(final Resource parent, final List<Data> list) {
+        return Lists.transform(list, new Function<Data, ResourceMethod>() {
+            @Override
+            public ResourceMethod apply(Data data) {
+                return (data == null) ? null : new ResourceMethod(parent, data);
+            }
+        });
+    }
+
+    private final Data data;
+    private final Resource parent;
+
+    /**
+     * Create new resource method model instance.
+     *
+     * @param parent parent resource model.
+     * @param data   resource method model data.
+     */
+    ResourceMethod(final Resource parent, final Data data) {
+        this.parent = parent;
+        this.data = data;
+    }
+
+    /**
+     * Get model data represented by this resource method.
+     *
+     * @return model data represented by this resource method.
+     */
+    /* package */ Data getData() {
+        return data;
+    }
+
+    /**
+     * Get the parent resource for this resource method model.
+     * <p>
+     * May return {@code null} in case the resource method is not bound to an existing resource.
+     * This is typical for resource method models returned directly from the
+     * {@link ResourceMethod.Builder#build() ResourceMethod.Builder.build()} method.
+     * </p>
+     *
+     * @return parent resource, or {@code null} if there is no parent resource associated with the method.
+     * @since 2.1
+     */
+    public Resource getParent() {
+        return parent;
     }
 
     /**
@@ -501,20 +671,21 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
      * @return the JAX-RS method type.
      */
     public JaxrsType getType() {
-        return type;
+        return data.getType();
     }
 
     /**
      * Get the associated HTTP method.
-     * <p/>
+     * <p>
      * May return {@code null} in case the method represents a sub-resource
      * locator.
+     * </p>
      *
      * @return the associated HTTP method, or {@code null} in case this method
      *         represents a sub-resource locator.
      */
     public String getHttpMethod() {
-        return httpMethod;
+        return data.getHttpMethod();
     }
 
     /**
@@ -523,47 +694,47 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
      * @return invocable method model.
      */
     public Invocable getInvocable() {
-        return invocable;
+        return data.getInvocable();
     }
 
 
     // Consuming
     @Override
     public List<MediaType> getConsumedTypes() {
-        return consumedTypes;
+        return data.getConsumedTypes();
     }
 
     // Producing
     @Override
     public List<MediaType> getProducedTypes() {
-        return producedTypes;
+        return data.getProducedTypes();
     }
 
     // Suspendable
     @Override
     public long getSuspendTimeout() {
-        return suspendTimeout;
+        return data.getSuspendTimeout();
     }
 
     @Override
     public TimeUnit getSuspendTimeoutUnit() {
-        return suspendTimeoutUnit;
+        return data.getSuspendTimeoutUnit();
     }
 
     @Override
     public boolean isSuspendDeclared() {
-        return suspended;
+        return data.isSuspended();
     }
 
     @Override
     public boolean isManagedAsyncDeclared() {
-        return managedAsync;
+        return data.isManagedAsync();
     }
 
     // ResourceModelComponent
     @Override
     public List<? extends ResourceModelComponent> getComponents() {
-        return Arrays.asList(invocable);
+        return Arrays.asList(data.getInvocable());
     }
 
     @Override
@@ -574,24 +745,16 @@ public class ResourceMethod implements ResourceModelComponent, Producing, Consum
     // NameBound
     @Override
     public boolean isNameBound() {
-        return !nameBindings.isEmpty();
+        return !data.getNameBindings().isEmpty();
     }
 
     @Override
     public Collection<Class<? extends Annotation>> getNameBindings() {
-        return nameBindings;
+        return data.getNameBindings();
     }
 
     @Override
     public String toString() {
-        return "ResourceMethod{" +
-                "httpMethod=" + httpMethod +
-                ", consumedTypes=" + consumedTypes +
-                ", producedTypes=" + producedTypes +
-                ", suspended=" + suspended +
-                ", suspendTimeout=" + suspendTimeout +
-                ", suspendTimeoutUnit=" + suspendTimeoutUnit +
-                ", invocable=" + invocable +
-                ", nameBindings=" + nameBindings + '}';
+        return "ResourceMethod{" + data.toString() + '}';
     }
 }

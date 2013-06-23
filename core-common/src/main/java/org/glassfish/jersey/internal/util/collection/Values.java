@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -252,6 +252,42 @@ public final class Values {
      */
     public static <T> Value<T> lazy(final Value<T> delegate) {
         return (delegate == null) ? Values.<T>empty() : new LazyValue<T>(delegate);
+    }
+
+    /**
+     * Get a new eagerly initialized {@link Value value provider}.
+     *
+     * The value returned by its {@link Value#get() get()} method is eagerly computed from the supplied
+     * {@code delegate} value provider and is then stored in a final field for a subsequent retrieval.
+     * <p>
+     * The implementation of the returned eager value provider is thread-safe and is guaranteed to
+     * invoke the {@code get()} method on the supplied {@code delegate} value provider instance once
+     * and only once.
+     * </p>
+     * <p>
+     * If the supplied value provider is {@code null}, an {@link #empty() empty} value
+     * provider is returned.
+     * </p>
+     *
+     * @param <T>      value type.
+     * @param delegate value provider delegate that will be used to eagerly initialize the value provider.
+     * @return eagerly initialized, constant value provider.
+     */
+    public static <T> Value<T> eager(final Value<T> delegate) {
+        return (delegate == null) ? Values.<T>empty() : new EagerValue<T>(delegate);
+    }
+
+    private static class EagerValue<T> implements Value<T> {
+        private final T result;
+
+        private EagerValue(Value<T> value) {
+            this.result = value.get();
+        }
+
+        @Override
+        public T get() {
+            return result;
+        }
     }
 
     private static class LazyValue<T> implements Value<T> {

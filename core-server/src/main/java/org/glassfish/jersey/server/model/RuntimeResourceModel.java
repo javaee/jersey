@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import java.util.Collections;
@@ -46,7 +45,6 @@ import java.util.Map;
 
 import org.glassfish.jersey.uri.PathTemplate;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -66,20 +64,18 @@ public class RuntimeResourceModel {
      * @param resources List of all resource that should be base for the model.
      */
     public RuntimeResourceModel(List<Resource> resources) {
-
-        List<RuntimeResource.ResourceWrapper> wrappers = Lists.transform(resources, getWrappingFunction(null));
         this.runtimeResources = Lists.newArrayList();
-        for (RuntimeResource.Builder builder : getRuntimeResources(wrappers)) {
+        for (RuntimeResource.Builder builder : getRuntimeResources(resources)) {
             runtimeResources.add(builder.build(null));
         }
         Collections.sort(runtimeResources, RuntimeResource.COMPARATOR);
     }
 
-    private List<RuntimeResource.Builder> getRuntimeResources(List<RuntimeResource.ResourceWrapper> resources) {
-        Map<String, List<RuntimeResource.ResourceWrapper>> regexMap = Maps.newHashMap();
+    private List<RuntimeResource.Builder> getRuntimeResources(List<Resource> resources) {
+        Map<String, List<Resource>> regexMap = Maps.newHashMap();
 
-        for (RuntimeResource.ResourceWrapper wrapper : resources) {
-            String path = wrapper.getResource().getPath();
+        for (Resource resource : resources) {
+            String path = resource.getPath();
             String regex = null;
             if (path != null) {
                 if (path.endsWith("/")) {
@@ -88,37 +84,27 @@ public class RuntimeResourceModel {
                 regex = new PathTemplate(path).getPattern().getRegex();
             }
 
-            List<RuntimeResource.ResourceWrapper> listFromMap = regexMap.get(regex);
+            List<Resource> listFromMap = regexMap.get(regex);
             if (listFromMap == null) {
                 listFromMap = Lists.newArrayList();
                 regexMap.put(regex, listFromMap);
             }
-            listFromMap.add(wrapper);
+            listFromMap.add(resource);
         }
 
         List<RuntimeResource.Builder> runtimeResources = Lists.newArrayList();
-        for (Map.Entry<String, List<RuntimeResource.ResourceWrapper>> entry : regexMap.entrySet()) {
-            final List<RuntimeResource.ResourceWrapper> resourcesWithSameRegex = entry.getValue();
+        for (Map.Entry<String, List<Resource>> entry : regexMap.entrySet()) {
+            final List<Resource> resourcesWithSameRegex = entry.getValue();
 
-            List<RuntimeResource.ResourceWrapper> childResources = Lists.newArrayList();
-            for (final RuntimeResource.ResourceWrapper res : resourcesWithSameRegex) {
-                childResources.addAll(Lists.transform(res.getResource().getChildResources(),
-                        getWrappingFunction(res.getResource())));
+            List<Resource> childResources = Lists.newArrayList();
+            for (final Resource res : resourcesWithSameRegex) {
+                childResources.addAll(res.getChildResources());
             }
 
             List<RuntimeResource.Builder> childRuntimeResources = getRuntimeResources(childResources);
             runtimeResources.add(new RuntimeResource.Builder(resourcesWithSameRegex, childRuntimeResources, entry.getKey()));
         }
         return runtimeResources;
-    }
-
-    private Function<Resource, RuntimeResource.ResourceWrapper> getWrappingFunction(final Resource parent) {
-        return new Function<Resource, RuntimeResource.ResourceWrapper>() {
-            @Override
-            public RuntimeResource.ResourceWrapper apply(Resource child) {
-                return new RuntimeResource.ResourceWrapper(parent, child);
-            }
-        };
     }
 
     /**
