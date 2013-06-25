@@ -281,7 +281,11 @@ public class EventSource implements EventListener {
     private void addBoundListener(String name, EventListener listener) {
         List<EventListener> listeners = boundListeners.get(name);
         if (listeners == null) {
-            listeners = boundListeners.putIfAbsent(name, new CopyOnWriteArrayList<EventListener>());
+            final CopyOnWriteArrayList<EventListener> emptyListeners = new CopyOnWriteArrayList<EventListener>();
+            listeners = boundListeners.putIfAbsent(name, emptyListeners);
+            if (listeners == null) {
+                listeners = emptyListeners;
+            }
         }
         listeners.add(listener);
     }

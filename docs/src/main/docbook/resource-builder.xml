@@ -133,7 +133,6 @@
                             resourceBuilder.path("helloworld");
 
                             final ResourceMethod.Builder methodBuilder = resourceBuilder.addMethod("GET");
-                            final ResourceMethod.Builder methodBuilder = resourceBuilder.addMethod("GET");
                             methodBuilder.produces(MediaType.TEXT_PLAIN_TYPE)
                                     .handledBy(new Inflector&lt;ContainerRequestContext, String>() {
 
@@ -159,7 +158,7 @@
             useful method is a <literal>addMethod(String path)</literal> which adds a new method to the resource builder and
             returns a resource method builder for the new method. Resource method builder contains methods which
             set consumed and produced media type, define name bindings, timeout for asynchronous executions, etc. It is always
-            necessary to define a resource method handler (i.e. he code of the resource method that will return "Hello World!").
+            necessary to define a resource method handler (i.e. the code of the resource method that will return "Hello World!").
             There are more options how a resource method can be handled. In the example the implementation of
             <literal>Inflector</literal> is used. The Jersey <literal>Inflector</literal> interface defines a simple contract for
             transformation of a request into a response. An inflector can either return a &jaxrs.core.Response; or directly
@@ -178,21 +177,21 @@
             <title>Deployment of programmatic resources</title>
 
             <para>
-                Let's now look at how a programmatic resource are deployed.
+                Let's now look at how a programmatic resources are deployed.
                 The easiest way to setup your application as well as register any programmatic resources in Jersey
-                is to use a Jersey <literal>ResourceConfig</literal> utility class, an extension of &jaxrs.core.Application;
+                is to use a Jersey &lit.jersey.server.ResourceConfig; utility class, an extension of &jaxrs.core.Application;
                 class.
                 If you deploy your Jersey application into a Servlet container you will need to provide a &jaxrs.core.Application;
                 subclass that will be used for configuration. You may use a <literal>web.xml</literal> where you would define a
                 <literal>org.glassfish.jersey.servlet.ServletContainer</literal> Servlet entry there and specify initial parameter
                 <literal>javax.ws.rs.Application</literal> with the class name of your JAX-RS Application that you
                 wish to deploy. In the example above, this application will be <literal>MyResourceConfig</literal> class. This is
-                the reason why <literal>MyResourceConfig</literal> extends the <literal>ResourceConfig</literal> (which, if you
+                the reason why <literal>MyResourceConfig</literal> extends the &lit.jersey.server.ResourceConfig; (which, if you
                 remember extends the <literal>javax.ws.rs.Application</literal>).
             </para>
             <para>
                 The following example shows a fragment of <literal>web.xml</literal> that can be used to deploy the
-                <literal>ResourceConfig</literal> JAX-RS application.
+                &lit.jersey.server.ResourceConfig; JAX-RS application.
                 <example>
                     <title>A programmatic resource</title>
                     <programlisting language="xml" linenumbering="numbered">
@@ -221,7 +220,7 @@
                 registered resources.
             </para>
             <para>
-                Because Jersey programmatic API is not a standard JAX-RS feature the <literal>ResourceConfig</literal> must be
+                Because Jersey programmatic API is not a standard JAX-RS feature the &lit.jersey.server.ResourceConfig; must be
                 used to register programmatic resources as shown above. See <link linkend="deployment">deployment chapter</link>
                 for more information.
             </para>
@@ -384,7 +383,7 @@
             be used successfully.
         </para>
         <para>
-            Also mote that <literal>processSubResource(ResourceModel subResourceModel, Configuration configuration)</literal>
+            Also note that <literal>processSubResource(ResourceModel subResourceModel, Configuration configuration)</literal>
             method is executed for each sub resource returned from the sub resource locator. The example is simplified and does
             not do any manipulation but probably in such a case you would want to enhance all sub resources with
             a new &lit.http.OPTIONS; method handlers too.
@@ -393,7 +392,7 @@
             It is important to remember that any model processor must always return valid resource model. As you might have
             already noticed, in the example above this important rule is not followed. If any of the resources in the original
             resource model would already have an &lit.http.OPTIONS; method handler defined, adding another handler would cause
-            the application fail during the deployment in the resource model validation phase. In order to pertain the consistency
+            the application fail during the deployment in the resource model validation phase. In order to retain the consistency
             of the final model, a model processor implementation would have to be more robust than what is shown in the example.
         </para>
     </section>

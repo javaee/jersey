@@ -50,698 +50,689 @@
          xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
                              http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
          xml:id="client">
+
     <title>Client API</title>
-    <para>This section introduces the JAX-RS Client API, which is a high-level Java based API for interoperating with RESTful Web services.
-        It makes it very easy to interoperate with RESTful Web services and
-        enables a developer to concisely and efficiently implement a reusable client-side solution that leverages existing and well established client-side HTTP implementations.
+
+    <para>
+        This section introduces the JAX-RS Client API, which is a fluent Java based API for communication with RESTful Web
+        services. This standard API that is also part of Java EE 7 is designed to make it very easy to consume a Web service
+        exposed via HTTP protocol and enables developers to concisely and efficiently implement portable client-side solutions
+        that leverage existing and well established client-side HTTP connector implementations.
     </para>
-    <para>The client API can be utilized to interoperate with any RESTful Web service, implemented using one of many frameworks, and is not restricted to services implemented using JAX-RS. However, developers familiar with JAX-RS should find the client API complementary to their services, especially if the client API is utilized by those services themselves, or to test those services.
-    </para>
-    <para>The goals of the client API are threefold:</para>
-    <orderedlist>
-        <listitem>
-            <para>Encapsulate a key constraint of the REST architectural style, namely the Uniform Interface Constraint and associated data elements, as client-side Java artifacts;
-            </para>
-        </listitem>
-        <listitem>
-            <para>Make it as easy to interoperate with RESTful Web services as the JAX-RS server-side API makes it easy to build RESTful Web services; and
-            </para>
-        </listitem>
-        <listitem>
-            <para>Share common concepts of the JAX-RS API between the server and the client side.
-            </para>
-        </listitem>
-    </orderedlist>
-    <para>The Client API supports a pluggable architecture to enable the use of different underlying HTTP client implementations. Several such implementations are supported by Jersey. To name a few we have a client connectors for
-        <literal>Http(s)URLConnection</literal>
-        classes
-        supplied with the JDK; and the Grizzly client.
+    <para>
+        The JAX-RS client API can be utilized to consume any Web service exposed on top of a HTTP protocol or it's
+        extension (e.g. WebDAV), and is not restricted to services implemented using JAX-RS. Yet, developers familiar with JAX-RS
+        should find the client API complementary to their services, especially if the client API is utilized by those services
+        themselves, or to test those services.
+        The JAX-RS client API finds inspiration in the proprietary Jersey 1.x Client API and developers familiar with the Jersey
+        1.x Client API should find it easy to understand all the concepts introduced in the new JAX-RS Client API.
     </para>
 
-    <!-- TODO: REWRITE THE FOLLOWING SECTIONS TO THE NEW JAX-RS 2.0 API -->
+    <para>
+        The goals of the client API are threefold:
+
+        <orderedlist>
+            <listitem>
+                <para>
+                    Encapsulate a key constraint of the REST architectural style, namely the Uniform Interface Constraint and
+                    associated data elements, as client-side Java artifacts;
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Make it as easy to consume RESTful Web services exposed over HTTP, same as the JAX-RS server-side API makes
+                    it easy to develop RESTful Web services; and
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                    Share common concepts and extensibility points of the JAX-RS API between the server and the client side
+                    programming models.
+                </para>
+            </listitem>
+        </orderedlist>
+
+        As an extension to the standard JAX-RS Client API, the  Jersey Client API supports a pluggable architecture to enable the
+        use of different underlying HTTP client &jersey.client.Connector; implementations. Several such implementations are
+        currently provided with Jersey. We have a default client connector using <literal>Http(s)URLConnection</literal> supplied
+        with the JDK as well as connector implementations based on Apache HTTP Client, and Grizzly Asynchronous Client.
+    </para>
 
     <section>
         <title>Uniform Interface Constraint</title>
-        <para>The uniform interface constraint bounds the architecture of RESTful Web services so that a client, such
+
+        <para>
+            The uniform interface constraint bounds the architecture of RESTful Web services so that a client, such
             as a browser, can utilize the same interface to communicate with any service. This is a very powerful concept
             in software engineering that makes Web-based search engines and service mash-ups possible. It induces properties
             such as:
-        </para>
-        <orderedlist>
-            <listitem>
-                <para>simplicity, the architecture is easier to understand and maintain; and</para>
-            </listitem>
-            <listitem>
-                <para>modifiability or loose coupling, clients and services can evolve over time perhaps in new and
-                    unexpected ways, while retaining backwards compatibility.
-                </para>
-            </listitem>
-        </orderedlist>
-        <para>Further constraints are required:</para>
-        <orderedlist>
-            <listitem>
-                <para>every resource is identified by a URI;</para>
-            </listitem>
-            <listitem>
-                <para>a client interacts with the resource via HTTP requests and responses using a fixed set of
-                    HTTP methods;
-                </para>
-            </listitem>
-            <listitem>
-                <para>one or more representations can be retured and are identified by media types; and</para>
-            </listitem>
-            <listitem>
-                <para>the contents of which can link to further resources.</para>
-            </listitem>
-        </orderedlist>
-        <para>The above process repeated over and again should be familiar to anyone who has used a browser to fill
+
+            <orderedlist>
+                <listitem>
+                    <para>simplicity, the architecture is easier to understand and maintain; and</para>
+                </listitem>
+                <listitem>
+                    <para>
+                        evolvability or loose coupling, clients and services can evolve over time perhaps in new and
+                        unexpected ways, while retaining backwards compatibility.
+                    </para>
+                </listitem>
+            </orderedlist>
+
+            Further constraints are required:
+
+            <orderedlist>
+                <listitem>
+                    <para>every resource is identified by a URI;</para>
+                </listitem>
+                <listitem>
+                    <para>
+                        a client interacts with the resource via HTTP requests and responses using a fixed set of
+                        HTTP methods;
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>one or more representations can be returned and are identified by media types; and</para>
+                </listitem>
+                <listitem>
+                    <para>the contents of which can link to further resources.</para>
+                </listitem>
+            </orderedlist>
+
+            The above process repeated over and again should be familiar to anyone who has used a browser to fill
             in HTML forms and follow links. That same process is applicable to non-browser based clients.
         </para>
-        <para>Many existing Java-based client APIs, such as the Apache HTTP client API or
-            <literal>java.net.HttpURLConnection</literal>
+
+        <para>
+            Many existing Java-based client APIs, such as the Apache HTTP client API or &lit.jdk6.HttpUrlConnection;
             supplied with the JDK place too much focus on the Client-Server constraint for the exchanges of request and
             responses rather than a resource, identified by a URI, and the use of a fixed set of HTTP methods.
         </para>
-        <para>A resource in the Jersey client API is an instance of the Java class
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/WebResource.html">WebResource</link>,
-            and encapsulates a URI. The fixed set of HTTP methods are methods on
-            <literal>WebResource</literal>
-            or if using the builder
-            pattern (more on this later) are the last methods to be called when invoking an HTTP method on a resource.
+        <para>A resource in the JAX-RS client API is an instance of the Java class
+            &jaxrs.client.WebTarget;.
+            and encapsulates an URI. The fixed set of HTTP methods can be invoked based on the
+            &lit.jaxrs.client.WebTarget;.
             The representations are Java types, instances of which, may contain links that new instances of
-            <literal>WebResource</literal>
-            may be created from.
+            &lit.jaxrs.client.WebTarget; may be created from.
         </para>
     </section>
 
     <section>
         <title>Ease of use and reusing JAX-RS artifacts</title>
-        <para>Since a resource is represented as a Java type it makes it easy to configure, pass around and inject in
-            ways that is not so intuitive or possible with other client-side APIs.
-        </para>
-        <para>The Jersey Client API reuses many aspects of the JAX-RS and the Jersey implementation such as:</para>
-        <orderedlist>
-            <listitem>
-                <para>URI building using
-                    <link xlink:href="&jax-rs.javadoc.path;/core/UriBuilder.html">UriBuilder</link>
-                    and
-                    <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/uri/UriTemplate.html">UriTemplate</link>
-                    to safely build URIs;
-                </para>
-            </listitem>
-            <listitem>
-                <para>Support for Java types of representations such as
-                    <literal>byte[]</literal>,
-                    <literal>String</literal>,
-                    <literal>InputStream</literal>,
-                    <literal>File</literal>,
-                    <literal>DataSource</literal>
-                    and JAXB beans in addition to Jersey specific features such as
-                    <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/json/package-summary.html">JSON</link>
-                    support and
-                    <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-multipart/index.html">MIME Multipart</link>
-                    support.
-                </para>
-            </listitem>
-            <listitem>
-                <para>Using the builder pattern to make it easier to construct requests.</para>
-            </listitem>
-        </orderedlist>
-        <para>Some APIs, like the Apache HTTP client or
-            <link xlink:href="http://docs.oracle.com/javase/1.5.0/docs/api/java/net/HttpURLConnection.html">java.net.HttpURLConnection</link>,
-            can be rather hard to use and/or require too much code to do something relatively simple.
-        </para>
-        <para>This is why the Jersey Client API provides support for wrapping HttpURLConnection and the Apache
-            HTTP client. Thus it is possible to get the benefits of the established implementations and features
-            while getting the ease of use benefit.
-        </para>
-        <para>It is not intuitive to send a POST request with form parameters and receive a response as a
-            JAXB object with such an API. For example with the Jersey API this is very easy:
-            <example>
-                <title>POST request with form parameters</title>
-                <programlisting language="java" linenumbering="numbered">Form f = new Form();
-                    f.add(&quot;x&quot;, &quot;foo&quot;);
-                    f.add(&quot;y&quot;, &quot;bar&quot;);
 
-                    Client c = Client.create();
-                    WebResource r = c.resource(&quot;http://localhost:8080/form&quot;);
-
-                    JAXBBean bean = r.
-                    type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-                    .accept(MediaType.APPLICATION_JSON_TYPE)
-                    .post(JAXBBean.class, f);
-                </programlisting>
-            </example>
-            In the above code a
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/representation/Form.html">Form</link>
-            is created with two parameters, a new
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/WebResource.html">WebResource</link>
-            instance is created from a
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/Client.html">Client</link>
-            then the
-            <literal>Form</literal>
-            instance is<literal>POST</literal>ed to
-            the resource, identified with the form media type, and the response is requested as an instance of a JAXB bean
-            with an acceptable media type identifying the Java Script Object
-            Notation (JSON) format. The Jersey client API manages the serialization of the
-            <literal>Form</literal>
-            instance to produce the
-            request and de-serialization of the response to consume as an instance of a JAXB bean.
-        </para>
-        <para>If the code above was written using
-            <literal>HttpURLConnection</literal>
-            then the developer would have to write code to serialize the
-            form sent in the POST request and de-serialize the response to the JAXB bean. In addition further code would have to be written
-            to make it easy to reuse the same resource “http://localhost:8080/form” that is encapsulated in the
-            <literal>WebResource</literal>
-            type.
-        </para>
-    </section>
-
-    <section>
-        <title>Getting started with the Jersey client</title>
-        <para>Refer to the
-            <link xlink:href="http://jersey.java.net/nonav/documentation/&version;/chapter_deps.html#chapter_deps">dependencies chapter</link>,
-            and specifically the
-            <link xlink:href="http://jersey.java.net/nonav/documentation/&version;/chapter_deps.html#core_client">Core client</link>
-            section,
-            for details on the dependencies when using the Jersey client with Maven and Ant.
-        </para>
-        <para>Refer to the
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/package-summary.html">Java API documentation</link>
-            for details on the Jersey client API packages and classes.
-        </para>
-        <para>Refer to the
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-apache-client/index.html">Java API Apache HTTP client documentation</link>
-            for details on how to use the Jersey client API with the Apache HTTP client.
-        </para>
-    </section>
-
-    <section>
-        <title>Overview of the API</title>
-        <para>To utilize the client API it is first necessary to create an instance of a
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/Client.html">Client</link>, for example:
-            <programlisting language="java">Client c = Client.create();</programlisting>
-        </para>
-        <section>
-            <title>Configuring a Client and WebResource</title>
-            <para>The client instance can then be configured by setting properties on the map returned from
-                the
-                <literal>getProperties</literal>
-                methods or by calling the specific setter methods,
-                for example the following configures the client to perform automatic redirection for
-                appropriate responses:
-                <programlisting language="java">c.getProperties().put(
-                    ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
-                </programlisting>
-                which is equivalent to the following:
-                <programlisting language="java">c.setFollowRedirects(true);</programlisting>
-                Alternatively it is possible to create a
-                <literal>Client</literal>
-                instance using a
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/config/ClientConfig.html">ClientConfig</link>
-                object for example:
-                <programlisting language="java">ClientConfig cc = new DefaultClientConfig();
-                    cc.getProperties().put(
-                    ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
-                    Client c = Client.create(cc);
-                </programlisting>
-            </para>
-            <para>Once a client instance is created and configured it is then possible to obtain a
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/WebResource.html">WebResource</link>
-                instance, which will inherit the configuration declared on the client instance.
-                For example, the following creates a reference to a Web resource with the URI
-                “http://localhost:8080/xyz”:
-                <programlisting language="java">WebResource r = c.resource(&quot;http://localhost:8080/xyz&quot;);</programlisting>
-                and redirection will be configured for responses to requests invoked on the Web resource.
-            </para>
-            <para>
-                <literal>Client</literal>
-                instances are expensive resources. It is recommended a configured
-                instance is reused for the creation of Web resources. The creation of Web resources, the building
-                of requests and receiving of responses are guaranteed to be thread safe. Thus a
-                <literal>Client</literal>
-                instance and
-                <literal>WebResource</literal>
-                instances may be shared between multiple threads.
-            </para>
-            <para>In the above cases a
-                <literal>WebResource</literal>
-                instance will utilize
-                <literal>HttpUrlConnection</literal>
-                or
-                <literal>HttpsUrlConnection</literal>,
-                if the URI scheme of the
-                <literal>WebResource</literal>
-                is “http” or “https” respectively.
-            </para>
-        </section>
-        <section>
-            <title>Building a request</title>
-            <para>Requests to a Web resource are built using the builder pattern (see
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/RequestBuilder.html">RequestBuilder</link>)
-                where the terminating method corresponds to an HTTP method (see
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/UniformInterface.html">UniformInterface</link>).
-                For example,
-                <programlisting language="java">String response = r.accept(
-                    MediaType.APPLICATION_JSON_TYPE,
-                    MediaType.APPLICATION_XML_TYPE).
-                    header(&quot;X-FOO&quot;, &quot;BAR&quot;).
-                    get(String.class);
-                </programlisting>
-            </para>
-            <para>The above sends a GET request with an
-                <literal>Accept</literal>
-                header of
-                <literal>application/json</literal>,
-                <literal>application/xml</literal>
-                and a
-                non-standard header
-                <literal>X-FOO</literal>
-                of
-                <literal>BAR</literal>.
-            </para>
-            <para>If the request has a request entity (or representation) then an instance
-                of a Java type can be declared in the terminating HTTP method, for
-                <literal>PUT</literal>,
-                <literal>POST</literal>
-                and
-                <literal>DELETE</literal>
-                requests.
-                For example, the following sends a POST request:
-                <programlisting language="java">String request = &quot;content&quot;;
-                    String response = r.accept(
-                    MediaType.APPLICATION_JSON_TYPE,
-                    MediaType.APPLICATION_XML_TYPE).
-                    header(&quot;X-FOO&quot;, &quot;BAR&quot;).
-                    post(String.class, request);
-                </programlisting>
-                where the String &quot;content&quot; will be serialized as the request
-                entity (see the section &quot;Java instances and types for representations&quot;
-                section for further details on the supported Java types). The
-                <literal>Content-Type</literal>
-                of the request entity may be declared
-                using the
-                <literal>type</literal>
-                builder method as follows:
-                <programlisting language="java">String response = r.accept(
-                    MediaType.APPLICATION_JSON_TYPE,
-                    MediaType.APPLICATION_XML_TYPE).
-                    header(&quot;X-FOO&quot;, &quot;BAR&quot;).
-                    type(MediaType.TEXT_PLAIN_TYPE).
-                    post(String.class, request);
-                </programlisting>
-                or alternatively the request entity and type may be declared
-                using the entity method as follows:
-                <programlisting language="java">String response = r.accept(
-                    MediaType.APPLICATION_JSON_TYPE,
-                    MediaType.APPLICATION_XML_TYPE).
-                    header(&quot;X-FOO&quot;, &quot;BAR&quot;).
-                    entity(request, MediaType.TEXT_PLAIN_TYPE).
-                    post(String.class);
-                </programlisting>
-            </para>
-        </section>
-
-        <section>
-            <title>Receiving a response</title>
-            <para>If the response has a entity (or representation) then the
-                Java type of the instance required is declared in the terminating HTTP method.
-                In the above examples a response entity is expected and an instance of
-                <literal>String</literal>
-                is requested. The response entity will be de-serialized to a String
-                instance.
-            </para>
-            <para>If response meta-data is required then the Java type
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/ClientResponse.html">ClientResponse</link>
-                can be declared from which the response status, headers and entity may be obtained.
-                For example, the following gets both the entity tag and response entity from the
-                response:
-                <programlisting language="java">ClientResponse response = r.get(ClientResponse.class);
-                    EntityTag e = response.getEntityTag();
-                    String entity = response.getEntity(String.class);
-                </programlisting>
-            </para>
-            <para>If the
-                <literal>ClientResponse</literal>
-                type is not utilized and the response
-                status is greater than or equal to 300 then the runtime exception
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/UniformInterfaceException.html">UniformInterfaceException</link>
-                is thrown. This exception may be caught and the
-                <literal>ClientResponse</literal>
-                obtained as follows:
-                <programlisting language="java">try {
-                    String entity = r.get(String.class);
-                    } catch (UniformInterfaceException ue) {
-                    ClientResponse response = ue.getResponse();
-                    }
-                </programlisting>
-            </para>
-        </section>
-
-        <section>
-            <title>Creating new WebResources from a WebResource</title>
-            <para>A new
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/WebResource.html">WebResource</link>
-                can be created from an existing
-                <literal>WebResource</literal>
-                by building from the latter's URI.
-                Thus it is possible to build the request URI before building the request. For example, the
-                following appends a new path segment and adds some query parameters:
-                <programlisting language="java">WebResource r = c.resource(&quot;http://localhost:8080/xyz&quot;);
-
-                    MultivaluedMap&lt;String, String&gt; params = MultivaluedMapImpl();
-                    params.add(&quot;foo&quot;, &quot;x&quot;);
-                    params.add(&quot;bar&quot;, &quot;y&quot;);
-
-                    String response = r.path(&quot;abc&quot;).
-                    queryParams(params).
-                    get(String.class);
-                </programlisting>
-                that results in a GET request to the URI &quot;http://localhost:8080/xyz/abc?foo=x&amp;bar=y&quot;.
-            </para>
-        </section>
-
-        <section>
-            <title>Java instances and types for representations</title>
-            <para>All the Java types for representations supported by the Jersey server side for
-                requests and responses are also supported on the client side. This includes the standard
-                Java types as specified by JAX-RS in
-                <link xlink:href="http://jsr311.java.net/nonav/releases/1.0/spec/index.html">section 4.2.4</link>
-                in addition to JSON, Atom and Multipart MIME as supported by Jersey.
-            </para>
-            <para>To process a response entity (or representation) as a stream of bytes use InputStream as follows:
-                <programlisting language="java">InputStream in = r.get(InputStream.class);
-                    // Read from the stream
-                    in.close();
-                </programlisting>
-                Note that it is important to close the stream after processing so that resources are freed up.
-            </para>
-            <para>To
-                <literal>POST</literal>
-                a file use
-                <literal>File</literal>
-                as follows:
-                <programlisting language="java">File f = ...
-                    String response = r.post(String.class, f);
-                </programlisting>
-                Refer to the
-                <link xlink:href="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey.samples&amp;a=jaxb&amp;v=&version;&amp;c=project&amp;e=zip">JAXB sample</link>
-                to see how JAXB with XML and JSON can be utilized with the client API (more specifically, see the unit tests).
-            </para>
-        </section>
-    </section>
-
-    <section>
-        <title>Adding support for new representations</title>
-        <para>The support for new application-defined representations as Java types requires the
-            implementation of the same provider-based interfaces as for the server side JAX-RS API, namely
-            <link xlink:href="http://jsr311.java.net/nonav/javadoc/javax/ws/rs/ext/MessageBodyReader.html">MessageBodyReader</link>
-            and
-            <link xlink:href="http://jsr311.java.net/nonav/javadoc/javax/ws/rs/ext/MessageBodyWriter.html">MessageBodyWriter</link>,
-            respectively, for request and response entities (or inbound and outbound representations). Refer to the
-            <link xlink:href="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey.samples&amp;a=entity-provider&amp;v=&version;&amp;c=project&amp;e=zip">entity provider</link>
-            sample for such implementations utilized on the server side.
-        </para>
-        <para>Classes or implementations of the provider-based interfaces need to be registered with a
-            <literal>ClientConfig</literal>
-            and passed to the
-            <literal>Client</literal>
-            for creation. The following
-            registers a provider class
-            <literal>MyReader</literal>
-            which will be instantiated by Jersey:
-            <programlisting language="java">ClientConfig cc = new DefaultClientConfig();
-                cc.getClasses().add(MyReader.class);
-                Client c = Client.create(cc);
-            </programlisting>
-            The following registers an instance or singleton of MyReader:
-            <programlisting language="java">ClientConfig cc = new DefaultClientConfig();
-                MyReader reader = ...
-                cc.getSingletons().add(reader);
-                Client c = Client.create(cc);
-            </programlisting>
-        </para>
-    </section>
-
-    <section>
-        <title>Using filters</title>
-        <para>Filtering requests and responses can provide useful functionality that is hidden from the
-            application layer of building and sending requests, and processing responses. Filters can
-            read/modify the request URI, headers and entity or read/modify the response status,
-            headers and entity.
-        </para>
         <para>
-            The
-            <literal>Client</literal>
-            and
-            <literal>WebResource</literal>
-            classes extend from
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/filter/Filterable.html">Filterable</link>
-            and that enables the addition of
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/filter/ClientFilter.html">ClientFilter</link>
-            instances. A
-            <literal>WebResource</literal>
-            will inherit filters from its creator, which
-            can be a
-            <literal>Client</literal>
-            or another<literal>WebResource</literal>.
-            Additional filters can be added to a
-            <literal>WebResource</literal>
-            after it has been
-            created. For requests, filters are applied
-            in reverse order, starting with the
-            <literal>WebResource</literal>
-            filters and then
-            moving to the inherited filters.
-            For responses, filters are applied in order, starting with inherited filters
-            and followed by the filters added to the<literal>WebResource</literal>. All filters
-            are applied in the order in which they were added.
-            For instance, in the following example the
-            <literal>Client</literal>
-            has two filters added,
-            <literal>filter1</literal>
-            and<literal>filter2</literal>, in that order, and the
-            <literal>WebResource</literal>
-            has one filter added,<literal>filter3</literal>:
-            <programlisting language="java">ClientFilter filter1 = ...
-                ClientFilter filter2 = ...
-                Client c = Client.create();
-                c.addFilter(filter1);
-                c.addFilter(filter2);
-
-                ClientFilter filter3 = ...
-                WebResource r = c.resource(...);
-                r.addFilter(filter3);
-            </programlisting>
-            After a request has been built the request is filtered by<literal>filter3</literal>,
-            <literal>filter2</literal>
-            and
-            <literal>filter1</literal>
-            in that order. After the response
-            has been received the response is filtered by<literal>filter1</literal>,
-            <literal>filter2</literal>
-            and
-            <literal>filter3</literal>
-            in that order, before the
-            response is returned.
-        </para>
-        <para>Filters are implemented using the “russian doll” stack-based pattern where a
-            filter is responsible for calling the next filter in the ordered list of filters
-            (or the next filter in the “chain” of filters).
-            The basic template for a filter is as follows:
-            <programlisting language="java">class AppClientFilter extends ClientFilter {
-                public ClientResponse handle(ClientRequest cr) {
-                // Modify the request
-                ClientRequest mcr = modifyRequest(cr);
-                // Call the next filter
-                ClientResponse resp = getNext().handle(mcr);
-                // Modify the response
-                return modifyResponse(resp);
-                }
-                }
-            </programlisting>
-        </para>
-        <para>The filter modifies the request (if required) by creating a new
-            <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/ClientRequest.html">ClientRequest</link>
-            or modifying the state of the passed
-            <literal>ClientRequest</literal>
-            before calling the
-            next filter. The call to the next request will return
-            the response, a<literal>ClientResponse</literal>. The filter
-            modifies the response (if required) by creating a new
-            <literal>ClientResponse</literal>
-            or modifying the state of the returned<literal>ClientResponse</literal>.
-            Then the filter returns the modified response.
-            Filters are re-entrant and may be called by multiple threads performing requests
-            and processing responses.
-        </para>
-        <section>
-            <title>Supported filters</title>
-            <para>The Jersey Client API currently supports two filters:</para>
+            Since a JAX-RS component is represented as an annotated Java type, it makes it easy to configure, pass around and
+            inject in ways that are not so intuitive or possible with other client-side APIs.
+            The Jersey Client API reuses many aspects of the JAX-RS and the Jersey implementation such as:
             <orderedlist>
                 <listitem>
-                    <para>A GZIP content encoding filter,
-                        <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/filter/GZIPContentEncodingFilter.html">GZIPContentEncodingFilter</link>.
-                        If this filter is added then a request entity is compressed with the
-                        <literal>Content-Encoding</literal>
-                        of<literal>gzip</literal>, and a response entity if compressed with a
-                        <literal>Content-Encoding</literal>
-                        of
-                        <literal>gzip</literal>
-                        is
-                        decompressed. The filter declares an
-                        <literal>Accept-Encoding</literal>
-                        of<literal>gzip</literal>.
+                    <para>
+                        URI building using &jaxrs.core.UriBuilder; and &jaxrs.core.UriTemplate; to safely build URIs;
                     </para>
                 </listitem>
                 <listitem>
-                    <para>A logging filter,
-                        <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/jersey/com/sun/jersey/api/client/filter/LoggingFilter.html">LoggingFilter</link>.
-                        If this filter is added then the request and response headers as well as the entities are logged
-                        to a declared output stream if present, or to
-                        <literal>System.out</literal>
-                        if not.
-                        Often this filter will be placed at the end of the ordered list of
-                        filters to log the request before it is sent
-                        and the response after it is received.
+                    <para>Built-in support for Java types of representations such as
+                        <literal>byte[]</literal>,
+                        <literal>String</literal>,
+                        <literal>Number</literal>,
+                        <literal>Boolean</literal>,
+                        <literal>Character</literal>,
+                        <literal>InputStream</literal>,
+                        <literal>java.io.Reader</literal>,
+                        <literal>File</literal>,
+                        <literal>DataSource</literal>,
+                        JAXB beans as well as additional Jersey-specific JSON and &jersey.media.multipart; support.
                     </para>
                 </listitem>
+                <listitem>
+                    <para>Using the fluent builder-style API pattern to make it easier to construct requests.</para>
+                </listitem>
             </orderedlist>
-            <para>The filters above are good examples that show how to modify or read
-                request and response entities. Refer to the
-                <link xlink:href="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey&amp;a=jersey-client&amp;v=&version;&amp;e=jar">source code</link>
-                of the Jersey client for more details.
+            Some APIs, like the Apache HTTP Client or &jdk6.HttpUrlConnection;
+            can be rather hard to use and/or require too much code to do something relatively simple, especially when
+            the client needs to understand different payload representations.
+            This is why the Jersey implementation of JAX-RS Client API provides support for wrapping &lit.jdk6.HttpUrlConnection;
+            and the Apache HTTP client. Thus it is possible to get the benefits of the established JAX-RS implementations and
+            features while getting the ease of use benefit of the simple design of the JAX-RS client API.
+            For example, with a low-level HTTP client library, sending a POST request with a bunch of typed HTML form parameters
+            and receiving a response de-serialized into a JAXB bean is not straightforward at all. With the new JAX-RS Client API
+            supported by Jersey this task is very easy:
+
+            <example xml:id="client.ex.formpost">
+                <title>POST request with form parameters</title>
+                <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newClient();
+WebTarget target = client.target("http://localhost:9998").path("resource");
+
+Form form = new Form();
+form.param("x", "foo");
+form.param("y", "bar");
+
+MyJAXBBean bean =
+target.request(MediaType.APPLICATION_JSON_TYPE)
+    .post(Entity.entity(form,MediaType.APPLICATION_FORM_URLENCODED_TYPE),
+        MyJAXBBean.class);</programlisting>
+            </example>
+
+            In the <xref linkend="client.ex.formpost"/> a new &lit.jaxrs.client.WebTarget; instance is created using a new
+            &jaxrs.client.Client; instance first, next a &jaxrs.core.Form; instance is created with two form parameters.
+            Once ready, the &lit.jaxrs.core.Form; instance is &lit.http.POST;ed to the target resource.
+            First, the acceptable media type is specified in the <literal>request(...)</literal> method. Then in the
+            <literal>post(...)</literal> method, a call to a static method on JAX-RS &jaxrs.client.Entity; is made to construct
+            the request entity instance and attach the proper content media type to the form entity that is being sent. The
+            second parameter in the <literal>post(...)</literal> method specifies the Java type of the response entity that should
+            be returned from the method in case of a successful response. In this case an instance of JAXB bean is requested to
+            be returned on success. The Jersey client API takes care of selecting the proper &jaxrs.ext.MessageBodyWriter; for
+            the serialization of the &lit.jaxrs.core.Form; instance, invoking the &lit.http.POST; request and producing and
+            de-serialization of the response message payload into an instance of a JAXB bean using a proper
+            &jaxrs.ext.MessageBodyReader;.
+        </para>
+        <para>If the code above had to be written using &lit.jdk6.HttpUrlConnection;, the developer would have to write custom
+            code to serialize the form data that are sent within the POST request and de-serialize the response input stream
+            into a JAXB bean. Additionally, more code would have to be written to make it easy to reuse the logic when
+            communicating with the same resource <literal>“http://localhost:8080/resource”</literal> that is represented by
+            the JAX-RS &lit.jaxrs.client.WebTarget; instance in our example.
+        </para>
+    </section>
+
+    <section>
+        <title>Overview of the Client API</title>
+
+        <section>
+            <title>Getting started with the client API</title>
+
+            <para>
+                Refer to the <link linkend="dependencies">dependencies</link> for details on the dependencies when using the
+                Jersey JAX-RS Client support.
+            </para>
+            <para>
+                You may also want to use a custom &jersey.client.Connector; implementation. In such case you would need to include
+                additional dependencies on the module(s) containing the custom client connector that you want to use. See section
+                <link xlink:href="#connectors">"Configuring custom Connectors"</link> about how to use and configure a custom
+                Jersey client transport &lit.jersey.client.Connector;.</para>
+        </section>
+
+        <section>
+            <title>
+                Creating and configuring a Client instance
+            </title>
+
+            <para>
+                JAX-RS Client API is a designed to allow fluent programming model. This means, a construction of a
+                &lit.jaxrs.client.Client; instance, from which a &lit.jaxrs.client.WebTarget; is created, from which a
+                request &jaxrs.client.Invocation; is built and invoked can be chained in a single "flow" of invocations.
+                The individual steps of the flow will be shown in the following sections.
+                To utilize the client API it is first necessary to build an instance of a
+                &jaxrs.client.Client; using one of the static &jaxrs.client.ClientBuilder; factory methods. Here's the most
+                simple example:
+
+                <programlisting language="java">Client client = ClientBuilder.newClient();</programlisting>
+
+                The &lit.jaxrs.client.ClientBuilder; is a JAX-RS API used to create new instances of &lit.jaxrs.client.Client;.
+                In a slightly more advanced scenarios, &lit.jaxrs.client.ClientBuilder; can be used to configure additional
+                client instance properties, such as a SSL transport settings, if needed (see <xref linkend="ssl" />
+                below).
+            </para>
+            <para>
+                A &lit.jaxrs.client.Client; instance can be configured during creation by passing a &jersey.client.ClientConfig;
+                to the <literal>newClient(Configurable)</literal> &lit.jaxrs.client.ClientBuilder; factory method.
+                &jersey.client.ClientConfig; implements &jaxrs.core.Configurable; and therefore it offers methods to register
+                providers (e.g. features or individual entity providers, filters or interceptors) and setup properties.
+                The following code shows a registration of custom client filters:
+
+                <programlisting language="java" linenumbering="numbered">ClientConfig clientConfig = new ClientConfig();
+clientConfig.register(MyClientResponseFilter.class);
+clientConfig.register(new AnotherClientFilter());
+Client client = ClientBuilder.newClient(clientConfig);</programlisting>
+
+                In the example, filters are registered using the <literal>ClientConfig.register(...)</literal> method. There are
+                multiple overloaded versions of the method that support registration of feature and provider classes or instances.
+                Once a &lit.jersey.client.ClientConfig; instance is configured, it can be passed to the
+                &lit.jaxrs.client.ClientBuilder; to create a pre-configured &lit.jaxrs.client.Client; instance.
+            </para>
+            <para>
+                Note that the Jersey &lit.jersey.client.ClientConfig; supports the fluent API model of &jaxrs.core.Configurable;.
+                With that the code that configures a new client instance can be also written using a more compact style as shown
+                below.
+
+                <programlisting language="java" linenumbering="numbered">
+Client client = ClientBuilder.newClient(new ClientConfig()
+        .register(MyClientResponseFilter.class)
+        .register(new AnotherClientFilter());</programlisting>
+
+                The ability to leverage this compact pattern is inherent to all JAX-RS and Jersey Client API components.
+            </para>
+            <para>
+                Since &lit.jaxrs.client.Client; implements &jaxrs.core.Configurable; interface too, it can be configured further
+                even after it has been created. Important is to mention that any configuration change done on a
+                &lit.jaxrs.client.Client; instance will not influence the &jersey.client.ClientConfig; instance that was used to
+                provide the initial &lit.jaxrs.client.Client; instance configuration at the instance creation time.
+                The next piece of code shows a configuration of an existing &lit.jaxrs.client.Client; instance.
+
+                <programlisting
+                        language="java" linenumbering="numbered">client.register(ThirdClientFilter.class);</programlisting>
+
+                Similarly to earlier examples, since <literal>Client.register(...)</literal> method supports the fluent API style,
+                multiple client instance configuration calls can be chained:
+                <programlisting language="java" linenumbering="numbered">client.register(FilterA.class)
+      .register(new FilterB())
+      .property("my-property", true);</programlisting>
+
+                To get the current configuration of the &lit.jaxrs.client.Client; instance a <literal>getConfiguration()</literal>
+                method can be used.
+
+                    <programlisting language="java" linenumbering="numbered">ClientConfig clientConfig = new ClientConfig();
+clientConfig.register(MyClientResponseFilter.class);
+clientConfig.register(new AnotherClientFilter());
+Client client = ClientBuilder.newClient(clientConfig);
+client.register(ThirdClientFilter.class);
+Configuration newConfiguration = client.getConfiguration();</programlisting>
+
+                In the code, an additional <literal>MyClientResponseFilter</literal> class and
+                <literal>AnotherClientFilter</literal> instance are registered in the <literal>clientConfig</literal>. The
+                <literal>clientConfig</literal> is then used to construct a new &lit.jaxrs.client.Client; instance. The
+                <literal>ThirdClientFilter</literal> is added separately to the constructed &lit.jaxrs.client.Client; instance.
+                This does not influence the configuration represented by the original <literal>clientConfig</literal>.
+                In the last step a <literal>newConfiguration</literal> is retrieved from the <literal>client</literal>. This
+                configuration contains all three registered filters while the original <literal>clientConfig</literal> instance
+                still contains only two filters. Unlike <literal>clientConfig</literal> created separately, the
+                <literal>newConfiguration</literal> retrieved from the <literal>client</literal> instance represents a live
+                client configuration view. Any additional configuration changes made to the <literal>client</literal> instance
+                are also reflected in the <literal>newConfiguration</literal>. So, <literal>newConfiguration</literal> is really
+                a view of the <literal>client</literal> configuration and not a configuration state copy. These principles are
+                important in the client API and will be used in the following sections too. For example, you can construct a
+                common base configuration for all clients (in our case it would be <literal>clientConfig</literal>) and
+                then reuse this common configuration instance to configure multiple <literal>client</literal> instances that can
+                be further specialized. Similarly, you can use an existing <literal>client</literal> instance configuration to
+                configure another client instance without having to worry about any side effects in the original
+                <literal>client</literal> instance.
+            </para>
+        </section>
+
+        <section>
+            <title>Targeting a web resource</title>
+            <para>
+                Once you have a &lit.jaxrs.client.Client; instance you can create a &lit.jaxrs.client.WebTarget; from it.
+
+                <programlisting linenumbering="numbered"
+                                language="java">WebTarget webTarget = client.target("http://example.com/rest");</programlisting>
+
+                A &lit.jaxrs.client.Client; contains several <literal>target(...)</literal> methods that allow for creation of
+                &lit.jaxrs.client.WebTarget; instance. In this case we're using <literal>target(String uri)</literal> version.
+                The <literal>uri</literal> passed to the method as a <literal>String</literal> is the URI of the targeted
+                web resource. In more complex scenarios it could be the context root URI of the whole RESTful application, from
+                which &lit.jaxrs.client.WebTarget; instances representing individual resource targets can be derived and
+                individually configured. This is possible, because JAX-RS &lit.jaxrs.client.WebTarget; also implements
+                &lit.jaxrs.core.Configurable;:
+
+                <programlisting
+                        language="java" linenumbering="numbered">WebTarget webTarget = client.target("http://example.com/rest");
+webTarget.register(FilterForExampleCom.class);</programlisting>
+
+                The configuration principles used in JAX-RS client API apply to &lit.jaxrs.client.WebTarget; as well. Each
+                &lit.jaxrs.client.WebTarget; instance inherits a configuration from it's parent (either a client or another
+                web target) and can be further custom-configured without affecting the configuration of the parent component.
+                In this case, the <literal>FilterForExampleCom</literal> will be registered only in the
+                <literal>webTarget</literal> and not in <literal>client</literal>. So, the <literal>client</literal>
+                can still be used to create new &lit.jaxrs.client.WebTarget; instances pointing at other URIs using just the
+                common client configuration, which <literal>FilterForExampleCom</literal> filter is not part of.
+            </para>
+        </section>
+
+        <section>
+            <title>Identifying resource on WebTarget</title>
+            <para>
+                Let's assume we have a <literal>webTarget</literal> pointing at <literal>"http://example.com/rest"</literal> URI
+                that represents a context root of a RESTful application and there is a resource exposed on the URI
+                <literal>"http://example.com/rest/resource"</literal>. As already mentioned, a &lit.jaxrs.client.WebTarget;
+                instance can be used to derive other web targets. Use the following code to define a path to the resource.
+                <programlisting linenumbering="numbered"
+                                language="java">WebTarget resourceWebTarget = webTarget.path("resource");</programlisting>
+
+                The <literal>resourceWebTarget</literal> now points to the resource on URI
+                <literal>"http://example.com/rest/resource"</literal>. Again if we configure the
+                <literal>resourceWebTarget</literal> with a filter specific to the <literal>resource</literal>,
+                it will not influence the original <literal>webTarget</literal> instance. However, the filter
+                <literal>FilterForExampleCom</literal> registration will still be inherited by the
+                <literal>resourceWebTarget</literal> as it has been created from <literal>webTarget</literal>. This mechanism
+                allows you to share the common configuration of related resources (typically hosted under the same URI root,
+                in our case represented by the <literal>webTarget</literal> instance), while allowing for further configuration
+                specialization based on the specific requirements of each individual resource. The same configuration principles
+                of inheritance (to allow common config propagation) and decoupling (to allow individual config customization)
+                applies to all components in JAX-RS Client API discussed below.
+            </para>
+            <para>
+                Let's say there is a sub resource on the path <literal>"http://example.com/rest/resource/helloworld"</literal>.
+                You can derive a &lit.jaxrs.client.WebTarget; for this resource simply by:
+
+                <programlisting linenumbering="numbered"
+                                language="java">WebTarget helloworldWebTarget = resourceWebTarget.path("helloworld");</programlisting>
+
+                Let's assume that the <literal>helloworld</literal> resource accepts a query param for <literal>GET</literal>
+                requests which defines the greeting message. The next code snippet shows a code that creates
+                a new &lit.jaxrs.client.WebTarget; with the query param defined.
+
+                <programlisting language="java" linenumbering="numbered">WebTarget helloworldWebTargetWithQueryParam =
+        helloworldWebTarget.queryParam("greeting", "Hi World!");</programlisting>
+
+                Please note that apart from methods that can derive new &lit.jaxrs.client.WebTarget; instance based on a URI path
+                or query parameters, the JAX-RS &lit.jaxrs.client.WebTarget; API contains also methods for working with matrix
+                parameters too.
+            </para>
+        </section>
+
+        <section>
+            <title>Invoking a HTTP request</title>
+            <para>
+                Let's now focus on invoking a &lit.http.GET; HTTP request on the created web targets. To start building a new
+                HTTP request invocation, we need to create a new &jaxrs.client.Invocation.Builder;.
+
+                <programlisting language="java" linenumbering="numbered">Invocation.Builder invocationBuilder =
+        helloworldWebTargetWithQueryParam.request(MediaType.TEXT_PLAIN_TYPE);
+invocationBuilder.header("some-header", "true");</programlisting>
+
+                A new invocation builder instance is created using one of the <literal>request(...)</literal> methods that are
+                available on &lit.jaxrs.client.WebTarget;. A couple of these methods accept parameters that let you define
+                the media type of the representation requested to be returned from the resource. Here we are saying that we
+                request a <literal>"text/plain"</literal> type. This tells Jersey to add a <literal>Accept: text/plain</literal>
+                HTTP header to our request.
+            </para>
+            <para>
+                The <literal>invocationBuilder</literal> is used to setup request specific parameters. Here we can setup headers
+                for the request or for example cookie parameters. In our example we set up a <literal>"some-header"</literal>
+                header to value &lit.true;.
+            </para>
+            <para>
+                Once finished with request customizations, it's time to invoke the request. We have two options now.
+                We can use the &lit.jaxrs.client.Invocation.Builder; to build a generic &jaxrs.client.Invocation; instance
+                that will be invoked some time later. Using &lit.jaxrs.client.Invocation; we will be able to e.g. set additional
+                request properties which are properties in a batch of several requests and use the generic JAX-RS
+                &lit.jaxrs.client.Invocation; API to invoke the batch of requests without actually knowing all the details
+                (such as request HTTP method, configuration etc.). Any properties set on an invocation instance can be read
+                during the request processing. For example, in a custom &jaxrs.client.RequestFilter; you can call
+                <literal>getProperty()</literal> method on the supplied &jaxrs.client.ClientRequestContext; to read a request
+                property. Note that these request properties are different from the configuration properties set on
+                &lit.jaxrs.core.Configurable;. As mentioned earlier, an &lit.jaxrs.client.Invocation; instance provides generic
+                invocation API to invoke the HTTP request it represents either synchronously or asynchronously. See
+                the <xref linkend="async" /> for more information on asynchronous invocations.
+            </para>
+            <para>
+                In case you do not want to do any batch processing on your HTTP request invocations prior to invoking them, there
+                is another, more convenient approach that you can use to invoke your requests directly from an
+                &lit.jaxrs.client.Invocation.Builder; instance. This approach is demonstrated in the next Java code listing.
+                <programlisting language="java"
+                                linenumbering="numbered">Response response = invocationBuilder.get();</programlisting>
+
+                While short, the code in the example performs multiple actions. First, it will build the the request from the
+                <literal>invocationBuilder</literal>. The URI of request will be
+                <literal>http://example.com/rest/resource/helloworld?greeting="Hi%20World!"</literal> and the request will contain
+                <literal>some-header: true</literal> and <literal>Accept: text/plain</literal> headers. The request will then pass
+                trough all configured request filters ( <literal>AnotherClientFilter</literal>,
+                <literal>ThirdClientFilter</literal> and
+                <literal>FilterForExampleCom</literal>). Once processed by the filters, the request will be sent to the remote
+                resource. Let's say the resource then returns an HTTP 200 message with a plain text response content that contains
+                the value sent in the request <literal>greeting</literal> query parameter. Now we can observe the returned
+                response:
+
+                <programlisting language="java" linenumbering="numbered">System.out.println(response.getStatus());
+System.out.println(response.readEntity(String.class));</programlisting>
+
+                which will produce the following output to the console:
+
+                <screen linenumbering="unnumbered">200
+Hi World!</screen>
+
+                As we can see, the request was successfully processed (code 200) and returned an entity (representation) is
+                <literal>"Hi World!"</literal>. Note that since ve have configured a <literal>MyClientResponseFilter</literal>
+                in the resource target, when <literal>response.readEntity(String.class)</literal> gets called, the response
+                returned from the remote endpoint is passed through the response filter chain (including the
+                <literal>MyClientResponseFilter</literal>) and entity interceptor chain and at last a proper
+                &jaxrs.ext.MessageBodyReader; is located to read the response content bytes from the response stream into a
+                Java <literal>String</literal> instance. Check <xref linkend="filters-and-interceptors" /> to lear more about
+                request and response filters and entity interceptors.
+            </para>
+
+            <para>
+                Imagine now that you would like to invoke a &lit.http.POST; request but without any query parameters. You would
+                just use the <literal>helloworldWebTarget</literal> instance created earlier and call the
+                <literal>post()</literal> instead of <literal>get()</literal>.
+                <programlisting language="java" linenumbering="numbered">Response postResponse =
+        helloworldWebTarget.request(MediaType.TEXT_PLAIN_TYPE)
+                .post(Entity.entity("A string entity to be POSTed", MediaType.TEXT_PLAIN));</programlisting>
+            </para>
+        </section>
+
+        <section>
+            <title>Example summary</title>
+            <para>
+                The following code puts together the pieces used in the earlier examples.
+
+                <example>
+                    <title>Using JAX-RS Client API</title>
+                    <programlisting language="java" linenumbering="numbered">ClientConfig clientConfig = new ClientConfig();
+clientConfig.register(MyClientResponseFilter.class);
+clientConfig.register(new AnotherClientFilter());
+
+Client client = ClientBuilder.newClient(clientConfig);
+client.register(ThirdClientFilter.class);
+
+WebTarget webTarget = client.target("http://example.com/rest");
+webTarget.register(FilterForExampleCom.class);
+WebTarget resourceWebTarget = webTarget.path("resource");
+WebTarget helloworldWebTarget = resourceWebTarget.path("helloworld");
+WebTarget helloworldWebTargetWithQueryParam =
+        helloworldWebTarget.queryParam("greeting", "Hi World!");
+
+Invocation.Builder invocationBuilder =
+        helloworldWebTargetWithQueryParam.request(MediaType.TEXT_PLAIN_TYPE);
+invocationBuilder.header("some-header", "true");
+
+Response response = invocationBuilder.get();
+System.out.println(response.getStatus());
+System.out.println(response.readEntity(String.class));</programlisting>
+                </example>
+
+                Now we can try to leverage the fluent API style to write this code in a more compact way.
+
+                <example>
+                    <title>Using JAX-RS Client API fluently</title>
+                    <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newClient(new ClientConfig()
+            .register(MyClientResponseFilter.class)
+            .register(new AnotherClientFilter()));
+
+String entity = client.target("http://example.com/rest")
+            .register(FilterForExampleCom.class)
+            .path("resource/helloworld")
+            .queryParam("greeting", "Hi World!")
+            .request(MediaType.TEXT_PLAIN_TYPE)
+            .header("some-header", "true")
+            .get(String.class);</programlisting>
+                </example>
+
+                The code above does the same thing except it skips the generic &lit.jaxrs.core.Response; processing and directly
+                requests an entity in the last <literal>get(String.class)</literal> method call. This shortcut method let's you
+                specify that (in case the response was returned successfully with a HTTP 2xx status code) the response entity
+                should be returned as Java <literal>String</literal> type. This compact example demonstrates another advantage of
+                the JAX-RS client API. The fluency of JAX-RS Client API is convenient especially with simple use cases.
+                Here is another a very simple GET request returning a String representation (entity):
+
+                <programlisting language="java" linenumbering="numbered">String responseEntity = ClientBuilder.newClient()
+            .target("http://example.com").path("resource/rest")
+                        .request().get(String.class);</programlisting>
+            </para>
+        </section>
+
+    </section>
+
+    <section>
+        <title>Java instances and types for representations</title>
+
+        <para>
+            All the Java types and representations supported by default on the Jersey server side for
+            requests and responses are also supported on the client side.
+            For example, to process a response entity (or representation) as a stream of bytes use InputStream as follows:
+
+            <programlisting language="java">InputStream in = response.readEntity(InputStream.class);
+
+... // Read from the stream
+
+in.close();
+            </programlisting>
+
+            Note that it is important to close the stream after processing so that resources are freed up.
+        </para>
+        <para>
+            To <literal>POST</literal> a file use a <literal>File</literal> instance as follows:
+
+            <programlisting language="java">File f = ...
+
+...
+
+webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
+            </programlisting>
+        </para>
+
+        <section>
+            <title>Adding support for new representations</title>
+
+            <para>
+                The support for new application-defined representations as Java types requires the
+                implementation of the same JAX-RS entity provider extension interfaces as for the server side JAX-RS API, namely
+                &jaxrs.ext.MessageBodyReader; and &jaxrs.ext.MessageBodyWriter;
+                respectively, for request and response entities (or inbound and outbound representations).
+            </para>
+            <para>
+                Classes or implementations of the provider-based interfaces need to be registered as providers within the
+                JAX-RS or Jersey Client API components that implement &lit.jaxrs.core.Configurable; contract
+                (&lit.jaxrs.client.ClientBuilder;, &lit.jaxrs.client.Client;, &lit.jaxrs.client.WebTarget; or
+                &lit.jersey.client.ClientConfig;), as was shown in the earlier sections.
+                Some media types are provided in the form of JAX-RS &jaxrs.core.Feature; a concept that allows the extension
+                providers to group together multiple different extension providers and/or configuration properties in order
+                to simplify the registration and configuration of the provided feature by the end users. For example,
+                &jersey.media.MoxyJsonFeature; can be register to enable and configure JSON binding support via MOXy
+                library.
             </para>
         </section>
     </section>
 
     <section>
-        <title>Testing services</title>
-        <para>The Jersey client API was originally developed to aid the testing of the Jersey server-side,
-            primarily to make it easier to write functional tests in conjunction with the JUnit framework
-            for execution and reporting. It is used extensively and there are currently over 1000 tests.
-        </para>
-        <para>Embedded servers, Grizzly and a special in-memory server, are utilized to deploy the
-            test-based services. Many of the Jersey samples contain tests that utilize the client API to
-            server both for testing and examples of how to use the API. The samples utilize Grizzly or
-            embedded Glassfish to deploy the services.
-        </para>
-        <para>The following code snippets are presented from the single unit test
-            <literal>HelloWorldWebAppTest</literal>
-            of the
-            <link xlink:href="https://maven.java.net/service/local/artifact/maven/redirect?r=&repository;&amp;g=com.sun.jersey.samples&amp;a=helloworld-webapp&amp;v=&version;&amp;c=project&amp;e=zip">helloworld-webapp</link>
-            sample.
-            The
-            <literal>setUp</literal>
-            method, called before a test is executed, creates an instance of
-            the Glassfish server, deploys the application, and a
-            <literal>WebResource</literal>
-            instance
-            that references the base resource:
-            <programlisting language="java">@Override
-                protected void setUp() throws Exception {
-                super.setUp();
+        <title><anchor xml:id="connectors"/>Client Transport Connectors</title>
 
-                // Start Glassfish
-                glassfish = new GlassFish(BASE_URI.getPort());
+        <para>
+            By default, the transport layer in Jersey is provided by &lit.jdk6.HttpUrlConnection;. This transport is implemented
+            in Jersey via &jersey.client.HttpUrlConnector; that implements Jersey-specific &jersey.client.Connector; SPI.
+            You can implement and/or register your own &lit.jersey.client.Connector; instance to the Jersey
+            &lit.jaxrs.client.Client; implementation, that will replace the default &lit.jdk6.HttpUrlConnection;-based
+            transport layer. Jersey provides several alternative client transport connector implementations that are ready-to-use.
+            You can use &jersey.apache.ApacheConnector; (add a maven dependency to
+            <literal>org.glassfish.jersey.connectors:jersey-apache-connector</literal>)
+            or &jersey.grizzly.GrizzlyConnector; (add a maven dependency to
+            <literal>org.glassfish.jersey.connectors:jersey-grizzly-connector</literal>) alternatively. Please, note again, that
+            the &jersey.client.Connector; SPI is not a feature of JAX-RS but is a Jersey-specific extension API that will only
+            work with Jersey. Following example shows how to setup the custom &lit.jersey.client.Connector; to the Jersey client.
 
-                // Deploy Glassfish referencing the web.xml
-                ScatteredWar war = new ScatteredWar(
-                BASE_URI.getRawPath(), new File("src/main/webapp"),
-                new File("src/main/webapp/WEB-INF/web.xml"),
-                Collections.singleton(
-                new File("target/classes").
-                toURI().toURL()));
-                glassfish.deploy(war);
+            <programlisting language="java" linenumbering="numbered">ClientConfig clientConfig = new ClientConfig();
+Connector connector = new GrizzlyConnector(clientConfig);
+clientConfig.connector(connector);
+Client client = ClientBuilder.newClient(clientConfig);</programlisting>
 
-                Client c = Client.create();
-                r = c.resource(BASE_URI);
-                }
-            </programlisting>
-            The
-            <literal>tearDown</literal>
-            method, called after a test is executed,
-            stops the Glassfish server.
-            <programlisting language="java">@Override
-                protected void tearDown() throws Exception {
-                super.tearDown();
-                glassfish.stop();
-                }
-            </programlisting>
-        </para>
-        <para>The
-            <literal>testHelloWorld</literal>
-            method tests that the response
-            to a
-            <literal>GET</literal>
-            request to the Web resource returns “Hello World”:
-            <programlisting language="java">public void testHelloWorld() throws Exception {
-                String responseMsg = r.path("helloworld").
-                get(String.class);
-                assertEquals("Hello World", responseMsg);
-                }
-            </programlisting>
-            Note the use of the
-            <literal>path</literal>
-            method on the
-            <literal>WebResource</literal>
-            to
-            build from the base<literal>WebResource</literal>.
+            &lit.jaxrs.client.Client; accepts as as a constructor argument a &lit.jaxrs.core.Configurable; instance. Jersey
+            implementation of the &lit.jaxrs.core.Configurable; provider for the client is &lit.jersey.client.ClientConfig;.
+            By using the Jersey &lit.jersey.client.ClientConfig; you can configure the custom &lit.jersey.client.Connector;
+            into the &lit.jersey.client.ClientConfig;. The &lit.jersey.grizzly.GrizzlyConnector; is used as a custom connector
+            in the example above. Please note that the connector cannot be registered as a provider
+            using &lit.jaxrs.core.Configurable;<literal>.register(...)</literal> at the moment.
         </para>
     </section>
 
     <section>
-        <title>Security with Http(s)URLConnection</title>
-        <section>
-            <title>With Http(s)URLConnection</title>
-            <para>The support for security, specifically HTTP authentication and/or cookie management
-                with
-                <literal>Http(s)URLConnection</literal>
-                is limited due to constraints in the API.
-                There are currently no specific features or properties on the
-                <literal>Client</literal>
-                class that
-                can be set to support HTTP authentication. However, since the client API, by default, utilizes
-                <literal>HttpURLConnection</literal>
-                or<literal>HttpsURLConnection</literal>,
-                it is possible to configure system-wide
-                security settings (which is obviously not sufficient for multiple client configurations).
-            </para>
-            <para>For HTTP authentication the
-                <literal>java.net.Authenticator</literal>
-                can
-                be extended and statically registered. Refer to the
-                <link xlink:href="http://docs.oracle.com/javase/6/docs/technotes/guides/net/http-auth.html">Http authentication</link>
-                document for more details.
-                For cookie management the
-                <literal>java.net.CookieHandler</literal>
-                can be extended
-                and statically registered. Refer to the
-                <link xlink:href="http://docs.oracle.com/javase/6/docs/technotes/guides/net/http-cookie.html">Cookie Management</link>
-                document for more details.
-            </para>
-            <para>To utilize HTTP with SSL it is necessary to utilize the “https” scheme.
-                For certificate-based authentication see the class
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/client/urlconnection/HTTPSProperties.html">HTTPSProperties</link>
-                for how to set
-                <literal>javax.net.ssl.HostnameVerifier</literal>
-                and
-                <literal>javax.net.ssl.SSLContext</literal>.
-            </para>
-        </section>
-        <section>
-            <title>With Apache HTTP client</title>
-            <para>The support for HTTP authentication and cookies is much better with the Apache HTTP
-                client than with<literal>HttpURLConnection</literal>.
-                See the Java documentation for the package
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-apache-client/com/sun/jersey/client/apache/package-summary.html">com.sun.jersey.client.apache</link>,
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-apache-client/com/sun/jersey/client/apache/config/ApacheHttpClientState.html">ApacheHttpClientState</link>
-                and
-                <link xlink:href="http://jersey.java.net/nonav/apidocs/&version;/contribs/jersey-apache-client/com/sun/jersey/client/apache/config/ApacheHttpClientConfig.html">ApacheHttpClientConfig</link>
-                for more details.
-            </para>
-        </section>
+        <title>Using client request and response filters</title>
+
+        <para>
+            Filtering requests and responses can provide useful lower-level concept focused on a certain independent aspect or
+            domain that is decoupled from the application layer of building and sending requests, and processing responses.
+            Filters can read/modify the request URI, headers and entity or read/modify the response status, headers and entity.
+        </para>
+        <para>
+            Jersey contains the following useful client-side filters that you may want to use in your applications:
+
+            <simplelist>
+                <member>&jersey.client.CsrfProtectionFilter;: Cross-site request forgery protection filter (adds
+                    <literal>X-Requested-By</literal> to each state changing request).</member>
+                <member>&jersey.client.EncodingFeature;: Feature that registers encoding filter which use registered
+                    &jersey.client.ContentEncoder;s to encode and decode the communication. The encoding/decoding is performed
+                    in interceptor (you don't need to register this interceptor). Check the javadoc of the
+                    &jersey.client.EncodingFeature; in order to use it.</member>
+                <member>&jersey.client.HttpBasicAuthFilter;: HTTP Basic Authentication filter (see <xref linkend="ssl" />
+                    below).</member>
+            </simplelist>
+
+            Note that these features are provided by Jersey, but since they use and implement JAX-RS API, the features should
+            be portable and run in any JAX-RS implementation, not just Jersey. See <xref linkend="filters-and-interceptors" />
+            chapter for more information on filters and interceptors.
+        </para>
     </section>
 
+    <section>
+        <title>Securing a Client</title>
+        <para>
+            This section describes how to setup SSL configuration on Jersey client (using JAX-RS API). The SSL configuration is
+            setup in &jaxrs.client.ClientBuilder;. The client builder contains methods for definition of &jdk6.KeyStore;,
+            &jdk6.TrustStore; or entire &jdk6.SslContext;. See the following example:
+
+            <programlisting language="java" linenumbering="numbered">SSLContext ssl = ... your configured SSL context;
+Client client = ClientBuilder.newBuilder().sslContext(ssl).build();
+Response response = client.target("https://example.com/resource").request().get();</programlisting>
+
+            The example above shows how to setup a custom &lit.jdk6.SslContext; to the &lit.jaxrs.client.ClientBuilder;.
+            Creating a &lit.jdk6.SslContext; can be more difficult as you might need to init instance properly with the protocol,
+            &lit.jdk6.KeyStore;, &lit.jdk6.TrustStore;, etc. Jersey offers a utility &jersey.common.SslConfigurator; class that
+            can be used to setup the &lit.jdk6.SslContext;. The &lit.jersey.common.SslConfigurator; can be configured based on
+            standardized system properties for SSL configuration, so for example you can configure the &lit.jdk6.KeyStore; file
+            name using a environment variable <literal>javax.net.ssl.keyStore</literal> and &lit.jersey.common.SslConfigurator;
+            will use such a variable to setup the &lit.jdk6.SslContext;. See javadoc of &jersey.common.SslConfigurator; for more
+            details. The following code shows how a &lit.jersey.common.SslConfigurator; can be used to create a custom SSL
+            context.
+
+            <programlisting language="java" linenumbering="numbered">SslConfigurator sslConfig = SslConfigurator.newInstance()
+        .trustStoreFile("./truststore_client")
+        .trustStorePassword("secret-password-for-truststore")
+        .keyStoreFile("./keystore_client")
+        .keyPassword("secret-password-for-keystore");
+
+SSLContext sslContext = sslConfig.createSSLContext();
+Client client = ClientBuilder.newBuilder().sslContext(sslContext).build();</programlisting>
+        </para>
+
+        <para>
+            Note that you can also setup &lit.jdk6.KeyStore; and &lit.jdk6.TrustStore; directly on a
+            &lit.jaxrs.client.ClientBuilder; instance without wrapping them into the &lit.jdk6.SslContext;. However, if you setup
+            a &lit.jdk6.SslContext; it will override any previously defined &lit.jdk6.KeyStore; and &lit.jdk6.TrustStore;
+            settings.
+            &lit.jaxrs.client.ClientBuilder; also offers a method for defining a custom &jdk6.HostnameVerifier; implementation.
+            &lit.jdk6.HostnameVerifier; implementations are invoked when default host URL verification fails.
+        </para>
+
+        <important>
+            <para>
+                Note that to utilize HTTP with SSL it is necessary to utilize the <literal>“https”</literal> scheme.
+            </para>
+        </important>
+
+        <para>
+            Currently the default connector &lit.jersey.client.HttpUrlConnector; based on &lit.jdk6.HttpUrlConnection; implements
+            support for SSL defined by JAX-RS configuration discussed in this sample.
+        </para>
+
+        <section>
+            <title>HTTP Basic Authentication Support</title>
+            <para>
+                Jersey contains a filter that allows client to authenticate to servers which requires HTTP Basic Authentication.
+                Use &jersey.client.HttpBasicAuthFilter; to add authentication header to requests initiated from from the client.
+                See the example of how to configure and register the filter:
+                <programlisting linenumbering="numbered"
+                            language="java">client.register(new HttpBasicAuthFilter("Homer", "SecretPassword"));</programlisting>
+            </para>
+        </section>
+
+    </section>
 </chapter>

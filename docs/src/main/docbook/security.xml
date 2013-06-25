@@ -52,24 +52,212 @@
          xml:id="security">
     <title>Security</title>
 
-    <para>Security information is available by obtaining the &jaxrs.core.SecurityContext; using &jaxrs.core.Context;,
-        which is essentially the equivalent functionality available on the
-        <link xlink:href="http://docs.oracle.com/javaee/5/api/javax/servlet/http/HttpServletRequest.html">HttpServletRequest</link>.
-    </para>
+    <section>
+        <title>Securing server</title>
+        <section>
+            <title>SecurityContext</title>
+            <para>
+                Security information is available by injecting a &jaxrs.core.SecurityContext; instance using &jaxrs.core.Context;
+                annotation, that provides essentially the equivalent of the functionality available on
+                <link xlink:href="http://docs.oracle.com/javaee/5/api/javax/servlet/http/HttpServletRequest.html">HttpServletRequest</link>
+                API. The injected security context depends on the actual Jersey application deployment. For example, if a
+                Jersey application is deployed in a Servlet container, the Jersey &lit.jaxrs.core.SecurityContext; will return
+                information of the security context retrieved from Servlet request. For Jersey applications
+                deployed on a Grizzly server, the &lit.jaxrs.core.SecurityContext; will return information retrieved from the
+                Grizzly request.
+            </para>
 
-    <para>&jaxrs.core.SecurityContext; can be used in conjunction with sub-resource locators to return different
-        resources if the user principle is included in a certain role. For example, a sub-resource locator could return
-        a different resource if a user is a preferred customer:
-    </para>
+            <para>
+                &lit.jaxrs.core.SecurityContext; can be used in conjunction with sub-resource locators to return different
+                resources if the user principle is included in a certain role. For example, a sub-resource locator could return
+                a different resource if a user is a preferred customer:
 
-    <para><example>
-    <title>Accessing <code>SecurityContext</code></title>
-        <programlisting language="java" linenumbering="numbered">@Path("basket")
+                <example>
+                    <title>Accessing <code>SecurityContext</code></title>
+                    <programlisting language="java" linenumbering="numbered">@Path("basket")
 public ShoppingBasketResource get(@Context SecurityContext sc) {
     if (sc.isUserInRole("PreferredCustomer") {
-       return new PreferredCustomerShoppingBaskestResource();
+        return new PreferredCustomerShoppingBasketResource();
     } else {
-       return new ShoppingBasketResource();
+        return new ShoppingBasketResource();
     }
-}</programlisting></example></para>
+}</programlisting>
+                </example>
+            </para>
+            <para>
+                &lit.jaxrs.core.SecurityContext; can be injected also to singleton resources and
+                providers as a class field. In such case the proxy of the request-scoped &lit.jaxrs.core.SecurityContext;
+                will be injected.
+
+                <example>
+                    <title>Injecting <code>SecurityContext</code> into a singleton resource</title>
+                    <programlisting language="java" linenumbering="numbered">@Path("resource")
+@Singleton
+public static class MyResource {
+    @Context
+    // Jersey will inject proxy of Security Context
+    SecurityContext securityContext;
+
+    @GET
+    public String getUserPrincipal() {
+        return securityContext.getUserPrincipal().getName();
+    }
+}</programlisting>
+                </example>
+            </para>
+
+            <section>
+                <title>Initialize SecurityContext with Servlets</title>
+                <para>
+                    As described above, the &lit.jaxrs.core.SecurityContext; by default (if not overwritten by filters)
+                    only offers information from an underlying container. In the case you deploy a Jersey application
+                    in a Servlet container, you need to setup the <literal>&lt;security-constraint&gt;</literal>,
+                    <literal>&lt;auth-constraint&gt;</literal> and user to roles mappings in order to pass correct information
+                    to the &lit.jaxrs.core.SecurityContext;.
+                </para>
+            </section>
+
+            <section>
+                <title>SecurityContext in ContainerRequestContext</title>
+                <para>
+                    The &lit.jaxrs.core.SecurityContext; can be retrieved also from &jaxrs.ContainerRequestContext; via
+                    <literal>getSecurityContext()</literal> method. You can also set the &lit.jaxrs.core.SecurityContext; into
+                    the request using method <literal>setSecurityContext(SecurityContext)</literal>. If you set a
+                    new &lit.jaxrs.core.SecurityContext; in the &jaxrs.container.ContainerRequestFilter; into the
+                    &lit.jaxrs.ContainerRequestContext;, then this security context will be used for injections in resource
+                    classes (wrapped into the proxy). This way you can implement a custom authentication filter that
+                    may setup your own &lit.jaxrs.core.SecurityContext; to be used. To ensure the early execution of your custom
+                    authentication request filter, set the filter priority to <literal>AUTHENTICATION</literal> using
+                    constants from &jaxrs.Priorities;. An early execution of you authentication filter will ensure that all
+                    other filters, resources, resource methods and sub-resource locators will execute with your custom
+                    &lit.jaxrs.core.SecurityContext; instance.
+                </para>
+            </section>
+        </section>
+
+        <section>
+            <title>Authorization - securing resources</title>
+            <section>
+                <title>Security resources with <literal>web.xml</literal></title>
+                <para>
+                    In cases where a Jersey application is deployed in a Servlet container you can rely only on
+                    the standard Java EE Web application security mechanisms offered by the Servlet container and
+                    configurable via application's <literal>web.xml</literal> descriptor.
+                    You need to define the <literal>&lt;security-constraint&gt;</literal> elements in the
+                    <literal>web.xml</literal> and assign roles which are able to access these resources. You can also
+                    define HTTP methods that are allowed to be executed. See the following example.
+
+                    <example>
+                        <title>Injecting <code>SecurityContext</code> into singletons</title>
+                        <programlisting language="java" linenumbering="numbered">&lt;security-constraint&gt;
+    &lt;web-resource-collection&gt;
+        &lt;url-pattern&gt;/rest/admin/*&lt;/url-pattern&gt;
+    &lt;/web-resource-collection&gt;
+    &lt;auth-constraint&gt;
+        &lt;role-name&gt;admin&lt;/role-name&gt;
+    &lt;/auth-constraint&gt;
+&lt;/security-constraint&gt;
+&lt;security-constraint&gt;
+    &lt;web-resource-collection&gt;
+        &lt;url-pattern&gt;/rest/orders/*&lt;/url-pattern&gt;
+    &lt;/web-resource-collection&gt;
+    &lt;auth-constraint&gt;
+        &lt;role-name&gt;customer&lt;/role-name&gt;
+    &lt;/auth-constraint&gt;
+&lt;/security-constraint&gt;
+&lt;login-config&gt;
+    &lt;auth-method&gt;BASIC&lt;/auth-method&gt;
+    &lt;realm-name&gt;my-defaul-realm&lt;/realm-name&gt;
+&lt;/login-config&gt;</programlisting>
+                    </example>
+
+                    The example secures two kinds of URI namespaces using the HTTP Basic Authentication.
+                    <literal>rest/admin/*</literal> will be accessible only for user group "admin" and
+                    <literal>rest/orders/*</literal> will be accessible for "customer" user group. This security configuration
+                    does not use JAX-RS or Jersey features at all as it is enforced by the Servlet container even before
+                    a request reaches the Jersey application. Keeping this security constrains up to date with your JAX-RS
+                    application might not be easy as whenever you change the &jaxrs.Path; annotations on your resource classes
+                    you may need to update also the <literal>web.xml</literal> security configurations to reflect the changed
+                    JAX-RS resource paths. Therefore Jersey offers a
+                    <link linkend="annotation-based-security">more flexible solution</link> based on placing standard Java EE
+                    security annotations directly on JAX-RS resource classes and methods.
+                </para>
+
+            </section>
+            <section xml:id="annotation-based-security">
+                <title>Securing JAX-RS resources with annotations</title>
+
+                <para>
+                    With Jersey you can define the access to resources based on the user group using annotations. You can for
+                    example define that only a user group "admin" can execute specific resource method. To do that you firstly
+                    need to register &jersey.server.RolesAllowedDynamicFeature; as a provider. The following example shows how
+                    to register the feature if your deployment is based on a &jersey.server.ResourceConfig;.
+
+                    <example>
+                        <title>Registering RolesAllowedDynamicFeature using ResourceConfig</title>
+                        <programlisting language="java" linenumbering="numbered">final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
+resourceConfig.register(RolesAllowedDynamicFeature.class);</programlisting>
+                    </example>
+                </para>
+                <para>
+                    Then you can use annotations from package <literal>javax.annotation.security</literal> defined by JSR-250.
+                    See the following example.
+
+                    <example>
+                        <title>Injecting <code>SecurityContext</code> into singletons</title>
+                        <programlisting language="java" linenumbering="numbered">@Path("/")
+@PermitAll
+public class Resource {
+    @RolesAllowed("user")
+    @GET
+    public String get() { return "GET"; }
+
+    @RolesAllowed("admin")
+    @POST
+    public String post(String content) { return content; }
+
+    @Path("sub")
+    public SubResource getSubResource() {
+        return new SubResource();
+    }
+}</programlisting>
+                    </example>
+
+                    The resource class <literal>Resource</literal> defined in the example is annotated with a
+                    &jee6.annotations.PermitAll; annotation. This means that all methods in the class which do not this
+                    annotation will be permitted for all user groups (no restrictions are defined). In our example, the
+                    annotation will only apply to the <literal>getSubResource()</literal> method as it is the only method
+                    that does not override the annotation by defining custom role-based security settings using the
+                    &jee6.annotations.RolesAllowed; annotation.
+                    &lit.jee6.annotations.RolesAllowed; annotation present on other methods defines a role or a set of roles
+                    that are allowed to execute a particular method.
+                </para>
+                <para>
+                    These Java EE security annotations are processed internally in the request filter registered using the
+                    Jersey &lit.jersey.server.RolesAllowedDynamicFeature;. The roles defined in the annotations are tested against
+                    current roles set in the &lit.jaxrs.core.SecurityContext; using
+                    the &lit.jaxrs.core.SecurityContext;<literal>.isUserInRole(String role)</literal> method. In case the caller
+                    is not in the role specified by the annotation, the HTTP <literal>404</literal> error response is returned.
+                </para>
+            </section>
+        </section>
+    </section>
+
+    <section>
+        <title>Client Security</title>
+        <para>
+            For details about client security please see the <link linkend="client">Client chapter</link>. Jersey
+            client allows to define parameters of SSL communication using <literal>HTTPS</literal> protocol.
+            You can also use jersey built-in authentication filter which performs <emphasis>HTTP Basic Authentication</emphasis>.
+            See the client chapter for more details.
+        </para>
+    </section>
+
+    <section>
+        <title>OAuth</title>
+        <para>
+            OAuth 1.x support has not been migrated from Jersey 1.x to Jersey 2.x yet. The documentation will be updated
+            once the OAuth support feature will be released in Jersey 2.
+        </para>
+    </section>
 </chapter>

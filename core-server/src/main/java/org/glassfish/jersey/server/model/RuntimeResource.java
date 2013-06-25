@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import java.util.Collections;
@@ -111,39 +110,39 @@ import com.google.common.collect.Lists;
  * </table>
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class RuntimeResource implements ResourceModelComponent {
     /**
      * Runtime Resource builder.
      */
     static class Builder {
-        private final List<ResourceWrapper> resourceWrappers;
+        private final List<Resource> resources;
         private final String regex;
         private final List<RuntimeResource.Builder> childRuntimeResourceBuilders;
 
 
         /**
          * Create new {@link RuntimeResource runtime resource} builder instance.
-         * @param resourceWrappers List of wrappers of resources with same regex that creates a RuntimeResource.
+         *
+         * @param resources                    List of resources with same regex that creates a RuntimeResource.
          * @param childRuntimeResourceBuilders List of builders of child runtime resources that belong runtime resource.
-         * @param regex Path regular expression.
+         * @param regex                        Path regular expression.
          */
-        public Builder(List<ResourceWrapper> resourceWrappers, List<Builder> childRuntimeResourceBuilders,
-                       String regex) {
+        public Builder(List<Resource> resources, List<Builder> childRuntimeResourceBuilders, String regex) {
             this.childRuntimeResourceBuilders = childRuntimeResourceBuilders;
-            this.resourceWrappers = resourceWrappers;
+            this.resources = resources;
             this.regex = regex;
         }
 
 
         /**
          * Build new RuntimeResource from this builder.
+         *
          * @param parent Parent runtime resource.
          * @return New RuntimeResource instance.
          */
         public RuntimeResource build(RuntimeResource parent) {
-            return new RuntimeResource(resourceWrappers, childRuntimeResourceBuilders, parent, regex);
+            return new RuntimeResource(resources, childRuntimeResourceBuilders, parent, regex);
         }
     }
 
@@ -162,25 +161,20 @@ public class RuntimeResource implements ResourceModelComponent {
     private final List<ResourceMethod> resourceMethods;
     private final List<ResourceMethod> resourceLocators;
     private final List<RuntimeResource> childRuntimeResources;
-    private final List<ResourceWrapper> resourceWrappers;
     private final List<Resource> resources;
 
     private final RuntimeResource parent;
     private final PathPattern pathPattern;
 
 
-    private RuntimeResource(List<ResourceWrapper> resourceWrappers, List<Builder> childRuntimeResourceBuilders,
-                            RuntimeResource parent, String regex) {
+    private RuntimeResource(List<Resource> resources,
+                            List<Builder> childRuntimeResourceBuilders,
+                            RuntimeResource parent,
+                            String regex) {
         this.parent = parent;
-        this.pathPattern = resourceWrappers.get(0).getResource().getPathPattern();
+        this.pathPattern = resources.get(0).getPathPattern();
 
-        this.resourceWrappers = Lists.newArrayList(resourceWrappers);
-        this.resources = Lists.transform(resourceWrappers, new Function<ResourceWrapper, Resource>() {
-            @Override
-            public Resource apply(ResourceWrapper input) {
-                return input.getResource();
-            }
-        });
+        this.resources = Lists.newArrayList(resources);
 
         this.regex = regex;
         this.resourceMethods = Lists.newArrayList();
@@ -191,49 +185,13 @@ public class RuntimeResource implements ResourceModelComponent {
         }
         Collections.sort(this.childRuntimeResources, COMPARATOR);
 
-        for (ResourceWrapper hierarchyAwareResource : resourceWrappers) {
-            for (ResourceMethod resourceMethod : hierarchyAwareResource.getResource().getResourceMethods()) {
-                this.resourceMethods.add(resourceMethod);
-            }
+        for (final Resource res : this.resources) {
+            this.resourceMethods.addAll(res.getResourceMethods());
 
-            final ResourceMethod resourceLocator = hierarchyAwareResource.getResource().getResourceLocator();
+            final ResourceMethod resourceLocator = res.getResourceLocator();
             if (resourceLocator != null) {
                 this.resourceLocators.add(resourceLocator);
             }
-        }
-    }
-
-    /**
-     * {@link Resource Resource} wrapper that contains link to resource's parent.
-     */
-    static class ResourceWrapper {
-        private final Resource resource;
-        private final Resource parentResource;
-
-        /**
-         * Get the parent of the {@link #getResource() resource}.
-         * @return Non null resource if {@link #getResource() resource} is a child resource, null otherwise.
-         */
-        public Resource getParentResource() {
-            return parentResource;
-        }
-
-        /**
-         * Get the resource.
-         * @return Resource.
-         */
-        public Resource getResource() {
-            return resource;
-        }
-
-        /**
-         * Create new instance from resource and it's parent.
-         * @param parentResource Parent of the {@code resource}. Can be null if the resource is not a child resource.
-         * @param resource Child or parent resource.
-         */
-        public ResourceWrapper(Resource parentResource, Resource resource) {
-            this.parentResource = parentResource;
-            this.resource = resource;
         }
     }
 
@@ -277,6 +235,7 @@ public class RuntimeResource implements ResourceModelComponent {
 
     /**
      * Return the resource locator of this resource.
+     *
      * @return Resource locator of this runtime resource.
      */
     public ResourceMethod getResourceLocator() {
@@ -289,6 +248,7 @@ public class RuntimeResource implements ResourceModelComponent {
 
     /**
      * Get parent of this runtime resource.
+     *
      * @return Parent runtime resource if this runtime resource is a child resource, null otherwise.
      */
     public RuntimeResource getParent() {
@@ -297,6 +257,7 @@ public class RuntimeResource implements ResourceModelComponent {
 
     /**
      * Get path pattern for matching purposes.
+     *
      * @return Path pattern.
      */
     public PathPattern getPathPattern() {
@@ -305,6 +266,7 @@ public class RuntimeResource implements ResourceModelComponent {
 
     /**
      * Get full regular expression of this runtime resource prefixed by regular expression of parent if present.
+     *
      * @return Full resource regular expression.
      */
     public String getFullPathRegex() {
@@ -319,17 +281,17 @@ public class RuntimeResource implements ResourceModelComponent {
      * Return parent {@link Resource resources} of {@link Resource resources} from this runtime resource. The returned list
      * is ordered so that the position of the parent resource in the returned list is the same as position of its child resource
      * in list returned by {@link #getResources()}. Simply said the order of lists returned
-     * from {@link #getParentResources()} and {@link #getResources()} from parent-child point of view is the same. If the resource
+     * from {@code getParentResources()} and {@link #getResources()} from parent-child point of view is the same. If the resource
      * has no parent then the element {@code null} is in the list.
      *
      * @return Parent resource list with resources if this runtime resource is child resource or {@code null} elements if
-     * this runtime resource is the parent resource.
+     *         this runtime resource is the parent resource.
      */
     public List<Resource> getParentResources() {
-        return Lists.transform(resourceWrappers, new Function<ResourceWrapper, Resource>() {
+        return Lists.transform(resources, new Function<Resource, Resource>() {
             @Override
-            public Resource apply(ResourceWrapper input) {
-                return input.getParentResource();
+            public Resource apply(Resource child) {
+                return (child == null) ? null : child.getParent();
             }
         });
     }
@@ -342,20 +304,22 @@ public class RuntimeResource implements ResourceModelComponent {
      * @param resource Resource whose parent should be returned.
      * @return Parent resource or null if the resource has no parent.
      * @throws IllegalArgumentException when resource is not in this RuntimeResource.
+     * @deprecated Please use {@link Resource#getParent()} directly instead.
      */
+    @Deprecated
     public Resource getFirstParentResource(Resource resource) {
-        for (ResourceWrapper resourceWrapper : resourceWrappers) {
-            if (resourceWrapper.getResource() == resource) {
-                return resourceWrapper.getParentResource();
+        for (Resource res : resources) {
+            if (res == resource) {
+                return res.getParent();
             }
         }
 
         throw new IllegalArgumentException("RuntimeResource does not contain the resource.");
     }
 
-
     /**
      * Get resources creating this runtime resource.
+     *
      * @return List of resources with same path regular expression which this resource is based on.
      */
     public List<Resource> getResources() {

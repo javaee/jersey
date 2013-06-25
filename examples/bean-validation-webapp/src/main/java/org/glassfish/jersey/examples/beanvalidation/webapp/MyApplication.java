@@ -92,10 +92,9 @@ public class MyApplication extends ResourceConfig {
 
         @Override
         public ValidationConfig getContext(final Class<?> type) {
-            final ValidationConfig config = new ValidationConfig();
-            config.setConstraintValidatorFactory(resourceContext.getResource(InjectingConstraintValidatorFactory.class));
-            config.setParameterNameProvider(new CustomParameterNameProvider());
-            return config;
+            return new ValidationConfig()
+                    .constraintValidatorFactory(resourceContext.getResource(InjectingConstraintValidatorFactory.class))
+                    .parameterNameProvider(new CustomParameterNameProvider());
         }
 
         /**

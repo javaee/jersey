@@ -57,6 +57,7 @@ public class CdiRequestScopedResource {
 
     @EJB EjbSingletonTimer ejbInjectedTimer;
     @Inject EjbSingletonTimer jsr330InjectedTimer;
+    @Inject CdiAppScopedTimer cdiTimer;
 
     @GET
     @Path("ejb-injected-timer")

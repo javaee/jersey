@@ -43,7 +43,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 
 /**
@@ -52,7 +52,7 @@ import javax.inject.Inject;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationScoped
+@RequestScoped
 @Path("reverse")
 public class ReversingEchoResource {
 

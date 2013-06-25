@@ -242,7 +242,7 @@ public class GrizzlyHttpServerFactory {
      * @throws ProcessingException
      * @see GrizzlyHttpContainer
      */
-    private static HttpServer createHttpServer(final URI uri,
+    public static HttpServer createHttpServer(final URI uri,
                                                final GrizzlyHttpContainer handler,
                                                final boolean secure,
                                                final SSLEngineConfigurator sslEngineConfigurator,

@@ -40,23 +40,24 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.glassfish.jersey</groupId>
         <artifactId>project</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>2.1-SNAPSHOT</version>
     </parent>
     <artifactId>jersey-documentation</artifactId>
     <packaging>pom</packaging>
     <name>jersey-documentation</name>
     <profiles>
-      <profile>
-        <id>release</id>
-        <properties>
-          <javanet.repository.id>releases</javanet.repository.id>
-        </properties>
-     </profile>
+        <profile>
+            <id>release</id>
+            <properties>
+                <javanet.repository.id>releases</javanet.repository.id>
+            </properties>
+        </profile>
     </profiles>
     <build>
         <plugins>
@@ -66,15 +67,20 @@
                     <execution>
                         <configuration>
                             <tasks>
-                                <echo message="Preparing char entities" />
-                                <mkdir dir="${src.dir}" />
+                                <echo message="Preparing char entities"/>
+                                <mkdir dir="${src.dir}"/>
                                 <copy todir="${src.dir}">
-                                    <fileset dir="src/main/docbook" />
+                                    <fileset dir="src/main/docbook"/>
                                 </copy>
-                                <replace file="${src.dir}/jersey.ent" token="$version" value="${project.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$version" value="${jersey.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$docs.version" value="${jersey.docs.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$apidocs.version" value="${jersey.apidocs.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$src.branch" value="${jersey.src.branch}" />
                                 <replace file="${src.dir}/jersey.ent" token="$repository" value="${javanet.repository.id}" />
-                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="${jaxrs.api.version}" />
-                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.api.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="${jaxrs.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$jaxb-api-jar-version" value="${jaxb.api.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$jackson-version" value="${jackson.version}" />
                             </tasks>
                         </configuration>
                         <id>process-entities</id>
@@ -116,7 +122,7 @@
                     <calloutsExtension>true</calloutsExtension>
                     <calloutGraphics>false</calloutGraphics>
                     <highlightSource>true</highlightSource>
-                    <highlightDefaultLanguage />
+                    <highlightDefaultLanguage/>
                     <!--calloutGraphicsExtension>1</calloutGraphicsExtension-->
                 </configuration>
                 <executions>
@@ -196,7 +202,12 @@
     <properties>
         <assembly.directory>${project.build.directory}/assembly</assembly.directory>
         <src.dir>${basedir}/target/gen-src</src.dir>
-          <javanet.repository.id>snapshots</javanet.repository.id>
+        <javanet.repository.id>snapshots</javanet.repository.id>
+        <jersey.version>${project.version}</jersey.version>
+        <jersey.docs.version>snapshot</jersey.docs.version>
+        <jersey.apidocs.version>snapshot</jersey.apidocs.version>
+        <jersey.src.branch>master</jersey.src.branch>
+        <jaxrs.version>${jaxrs.api.version}</jaxrs.version>
     </properties>
 
 </project>

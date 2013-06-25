@@ -1,0 +1,446 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE appendix [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<appendix xmlns="http://docbook.org/ns/docbook"
+        version="5.0"
+        xml:lang="en"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+        xml:id="appendix-properties">
+
+    <title>Configuration Properties</title>
+
+    <section xml:id="appendix-properties-common">
+        <title>Common (client/server) configuration properties</title>
+
+        <para>
+            List of common configuration properties that can be found in &jersey.common.CommonProperties; class. All of these properties
+            can be overridden by their server/client counterparts.
+        </para>
+
+        <table>
+            <title>List of common configuration properties</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Constant</entry>
+                        <entry>Value</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>&jersey.common.CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableAutoDiscovery</literal></entry>
+                        <entry>
+                            <para>
+                                Disables feature auto discovery globally on client/server. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.common.CommonProperties.JSON_PROCESSING_FEATURE_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableJsonProcessing</literal></entry>
+                        <entry>
+                            <para>
+                                Disables configuration of Json Processing (JSR-353) feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableMoxyJson</literal></entry>
+                        <entry>
+                            <para>
+                                Disables configuration of MOXy Json feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.common.CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER;</entry>
+                        <entry><literal>jersey.config.contentLength.buffer</literal></entry>
+                        <entry>
+                            <para>
+                                An integer value that defines the buffer size used to buffer the outbound message entity in order to
+                                determine its size and set the value of HTTP <literal>Content-Length</literal> header. Default
+                                value is <literal>8192</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+
+    <section xml:id="appendix-properties-server">
+        <title>Server configuration properties</title>
+
+        <para>
+            List of server configuration properties that can be found in &jersey.server.ServerProperties; class.
+        </para>
+
+        <table>
+            <title>List of server configuration properties</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Constant</entry>
+                        <entry>Value</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry/>
+                        <entry><literal>jersey.config.contentLength.buffer.server</literal></entry>
+                        <entry>
+                            <para>
+                                An integer value that defines the buffer size used to buffer the outbound message entity in order to
+                                determine its size and set the value of HTTP <literal>Content-Length</literal> header. Default
+                                value is <literal>8192</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.BV_FEATURE_DISABLE;</entry>
+                        <entry><literal>jersey.config.beanValidation.disable.server</literal></entry>
+                        <entry>
+                            <para>
+                                Disables Bean Validation support. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK;</entry>
+                        <entry><literal>jersey.config.beanValidation.disable.validateOnExecutableCheck.server</literal></entry>
+                        <entry>
+                            <para>
+                                Disables &lit.bv.ValidateOnExecution; check. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.BV_SEND_ERROR_IN_RESPONSE;</entry>
+                        <entry><literal>jersey.config.beanValidation.enableOutputValidationErrorEntity.server</literal></entry>
+                        <entry>
+                            <para>
+                                Enables sending validation error information to the client. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableAutoDiscovery.server</literal></entry>
+                        <entry>
+                            <para>
+                                Disables feature auto discovery on server. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.HTTP_METHOD_OVERRIDE;</entry>
+                        <entry><literal>jersey.config.server.httpMethodOverride</literal></entry>
+                        <entry>
+                            <para>
+                                Defines configuration of HTTP method overriding.
+                                This property is used by &jersey.server.HttpMethodOverrideFilter; to determine
+                                where it should look for method override information (e.g. request header or query parameters).
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.JSON_PROCESSING_FEATURE_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableJsonProcessing.server</literal></entry>
+                        <entry>
+                            <para>
+                                Disables configuration of Json Processing (JSR-353) feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.LANGUAGE_MAPPINGS;</entry>
+                        <entry><literal>jersey.config.server.languageMappings</literal></entry>
+                        <entry>
+                            <para>
+                                Defines mapping of URI extensions to languages. The property is used by &jersey.server.UriConnegFilter;.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.MEDIA_TYPE_MAPPINGS;</entry>
+                        <entry><literal>jersey.config.server.mediaTypeMappings</literal></entry>
+                        <entry>
+                            <para>
+                                Defines mapping of URI extensions to media types. The property is used by &jersey.server.UriConnegFilter;.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.MOXY_JSON_FEATURE_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableMoxyJson.server</literal></entry>
+                        <entry>
+                            <para>
+                                Disables configuration of MOXy Json feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.PROVIDER_CLASSNAMES;</entry>
+                        <entry><literal>jersey.config.server.provider.classnames</literal></entry>
+                        <entry>
+                            <para>
+                                Defines one or more class names that implement application-specific resources
+                                and providers. If the property is set, the specified classes will be instantiated
+                                and registered as either application JAX-RS root resources or providers.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.PROVIDER_CLASSPATH;</entry>
+                        <entry><literal>jersey.config.server.provider.classpath</literal></entry>
+                        <entry>
+                            <para>
+                                Defines class-path that contains application-specific resources and
+                                providers. If the property is set, the specified packages will be scanned for
+                                JAX-RS root resources and providers.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.PROVIDER_PACKAGES;</entry>
+                        <entry><literal>jersey.config.server.provider.packages</literal></entry>
+                        <entry>
+                            <para>
+                                Defines one or more packages that contain application-specific resources and
+                                providers. If the property is set, the specified packages will be scanned for
+                                JAX-RS root resources and providers.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.PROVIDER_SCANNING_RECURSIVE;</entry>
+                        <entry><literal>jersey.config.server.provider.scanning.recursive</literal></entry>
+                        <entry>
+                            <para>
+                                Sets the recursion strategy for package scanning. Default value is <literal>true</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.RESOURCE_VALIDATION_DISABLE;</entry>
+                        <entry><literal>jersey.config.server.resource.validation.disable</literal></entry>
+                        <entry>
+                            <para>
+                                Disables <literal>Resource</literal> validation. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS;</entry>
+                        <entry><literal>jersey.config.server.resource.validation.ignoreErrors</literal></entry>
+                        <entry>
+                            <para>
+                                Determines whether validation of application resource models should fail even in case of a fatal
+                                validation errors. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.WADL_FEATURE_DISABLE;</entry>
+                        <entry><literal>jersey.config.server.wadl.disableWadl</literal></entry>
+                        <entry>
+                            <para>
+                                Disables WADL generation. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.WADL_GENERATOR_CONFIG;</entry>
+                        <entry><literal>jersey.config.server.wadl.generatorConfig</literal></entry>
+                        <entry>
+                            <para>
+                                Defines the wadl generator configuration that provides a &jersey.server.WadlGenerator;.
+                            </para>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+
+    <section xml:id="appendix-properties-client">
+        <title>Client configuration properties</title>
+
+        <para>
+            List of client configuration properties that can be found in &jersey.client.ClientProperties; class.
+        </para>
+
+        <table>
+            <title>List of client configuration properties</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Constant</entry>
+                        <entry>Value</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry/>
+                        <entry><literal>jersey.config.contentLength.buffer.client</literal></entry>
+                        <entry>
+                            <para>
+                                An integer value that defines the buffer size used to buffer the outbound message entity in order to
+                                determine its size and set the value of HTTP <literal>Content-Length</literal> header. Default
+                                value is <literal>8192</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.ASYNC_THREADPOOL_SIZE;</entry>
+                        <entry><literal>jersey.config.client.async.threadPoolSize</literal></entry>
+                        <entry>
+                            <para>
+                                Asynchronous thread pool size. Default value is not set. <emphasis>NOT SUPPORTED</emphasis>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION;</entry>
+                        <entry><literal>jersey.config.client.bufferResponseEntityOnException</literal></entry>
+                        <entry>
+                            <para>
+                                Automatic response buffering in case of an exception. Default value is <literal>true</literal>. <emphasis>NOT SUPPORTED</emphasis>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE;</entry>
+                        <entry><literal>jersey.config.client.chunkedEncodingSize</literal></entry>
+                        <entry>
+                            <para>
+                                Chunked encoding size. Default value is not set. <emphasis>NOT SUPPORTED</emphasis>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.CONNECT_TIMEOUT;</entry>
+                        <entry><literal>jersey.config.client.connectTimeout</literal></entry>
+                        <entry>
+                            <para>
+                                Read timeout interval, in milliseconds. Default value is <literal>0</literal> (infinity).
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableAutoDiscovery.client</literal></entry>
+                        <entry>
+                            <para>
+                                Disables feature auto discovery on client. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.FOLLOW_REDIRECTS;</entry>
+                        <entry><literal>jersey.config.client.followRedirects</literal></entry>
+                        <entry>
+                            <para>
+                                Declares that the client will automatically redirect to the URI declared in 3xx responses. Default value is <literal>true</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND;</entry>
+                        <entry><literal>jersey.config.client.httpUrlConnection.setMethodWorkaround</literal></entry>
+                        <entry>
+                            <para>
+                                Declares that the client will try to set unsupported HTTP method to <literal>HttpURLConnection</literal> via reflection. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableJsonProcessing.client</literal></entry>
+                        <entry>
+                            <para>
+                                Disables configuration of Json Processing (JSR-353) feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.MOXY_JSON_FEATURE_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableMoxyJson.client</literal></entry>
+                        <entry>
+                            <para>
+                                Disables configuration of MOXy Json feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.READ_TIMEOUT;</entry>
+                        <entry><literal>jersey.config.client.readTimeout</literal></entry>
+                        <entry>
+                            <para>
+                                Read timeout interval, in milliseconds. Default value is <literal>0</literal> (infinity).
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.USE_ENCODING;</entry>
+                        <entry><literal>jersey.config.client.useEncoding</literal></entry>
+                        <entry>
+                            <para>
+                                Indicates the value of <literal>Content-Encoding</literal> property the
+                                &jersey.client.EncodingFilter; should be adding. Default value is not set.
+                            </para>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+</appendix>

@@ -44,7 +44,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * An immutable configuration of JSON notation and options. {@code JsonConfiguration}
+ * An immutable configuration of JSON notation and options. {@code JettisonConfig}
  * instance can be used for configuring the JSON notation on {@link JettisonJaxbContext}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -141,11 +141,11 @@ public class JettisonConfig {
      *
      * @param c original instance of {@link JettisonConfig}, can't be null
      * @return copy of provided {@link JettisonConfig} with humanReadableFormatting set to formatted.
-     * @throws IllegalArgumentException when provided JsonConfiguration is null.
+     * @throws IllegalArgumentException when provided {@code JettisonConfig} is null.
      */
     public static JettisonConfig createJSONConfiguration(JettisonConfig c) throws IllegalArgumentException {
         if (c == null) {
-            throw new IllegalArgumentException("JSONConfiguration can't be null");
+            throw new IllegalArgumentException("JettisonConfig can't be null");
         }
 
         Builder b = copyBuilder(c);
@@ -154,17 +154,17 @@ public class JettisonConfig {
     }
 
     /**
-     * The default JsonConfiguration uses {@link JettisonConfig.Notation#MAPPED_JETTISON}
+     * The default {@code JettisonConfig} uses {@link JettisonConfig.Notation#MAPPED_JETTISON}
      * notation with root unwrapping option set to true.
      */
     public static final JettisonConfig DEFAULT = mappedJettison().build();
 
     /**
      * A static method for obtaining a builder of {@link JettisonConfig} instance, which will use {@link JettisonConfig.Notation#MAPPED_JETTISON} JSON notation.
-     * After getting the builder, you can set configuration options on it and finally get an immutable  JsonConfiguration
+     * After getting the builder, you can set configuration options on it and finally get an immutable {@code JettisonConfig}
      * instance using the {@link JettisonConfig.Builder#build() } method.
      *
-     * @return a builder for JsonConfiguration instance
+     * @return a builder for {@code JettisonConfig} instance
      */
     public static MappedJettisonBuilder mappedJettison() {
         return new MappedJettisonBuilder(Notation.MAPPED_JETTISON);
@@ -172,10 +172,10 @@ public class JettisonConfig {
 
     /**
      * A static method for obtaining a builder of {@link JettisonConfig} instance, which will use {@link JettisonConfig.Notation#BADGERFISH} JSON notation.
-     * After getting the builder, you can set configuration options on it and finally get an immutable  JsonConfiguration
+     * After getting the builder, you can set configuration options on it and finally get an immutable {@code JettisonConfig}
      * instance using the {@link JettisonConfig.Builder#build() } method.
      *
-     * @return a builder for JsonConfiguration instance
+     * @return a builder for {@code JettisonConfig} instance
      */
     public static Builder badgerFish() {
         return new Builder(Notation.BADGERFISH);

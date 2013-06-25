@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,14 +57,11 @@ public class ContactCard {
     @DecimalMin(value = "1")
     private Long id;
 
-    @NotNull(message = "{contact.wrong.name}")
-    @Length(min = 2, max = 20)
     private String fullName;
 
     @Email(message = "{contact.wrong.email}", regexp = "[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,4}")
     private String email;
 
-    @Pattern(message = "{contact.wrong.phone}", regexp = "[0-9]{3,9}")
     private String phone;
 
     public Long getId() {
@@ -75,6 +72,8 @@ public class ContactCard {
         this.id = id;
     }
 
+    @NotNull(message = "{contact.wrong.name}")
+    @Length(min = 2, max = 20)
     public String getFullName() {
         return fullName;
     }
@@ -91,6 +90,7 @@ public class ContactCard {
         this.email = email;
     }
 
+    @Pattern(message = "{contact.wrong.phone}", regexp = "[0-9]{3,9}")
     public String getPhone() {
         return phone;
     }

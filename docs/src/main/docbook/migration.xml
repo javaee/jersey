@@ -40,7 +40,7 @@
     holder.
 
 -->
-<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents;]>
 <chapter xmlns="http://docbook.org/ns/docbook"
          version="5.0"
          xml:lang="en"
@@ -77,87 +77,87 @@
 
             <para>Jersey 1.x Singleton:
                 <programlisting language="java" linenumbering="unnumbered">ResourceConfig resourceConfig = new DefaultResourceConfig();
-                    resourceConfig.getSingletons().add(
-                    new SingletonTypeInjectableProvider&lt;Context, SingletonType&gt;(
-                    SingletonType.class, new SingletonType()) {});
+resourceConfig.getSingletons().add(
+        new SingletonTypeInjectableProvider&lt;Context, SingletonType&gt;(
+                SingletonType.class, new SingletonType()) {});
                 </programlisting>
             </para>
 
             <para>Jersey 1.x PerRequest:
                 <programlisting language="java" linenumbering="unnumbered">ResourceConfig resourceConfig = new DefaultResourceConfig();
-                    resourceConfig.getSingletons().add(
-                    new PerRequestTypeInjectableProvider&lt;Context, PerRequestType&gt;() {
-                    @Override
-                    public Injectable&lt;PerRequestType&gt; getInjectable(ComponentContext ic, Context context) {
-                    //...
-                    }
-                    });
-                </programlisting>
+resourceConfig.getSingletons().add(
+        new PerRequestTypeInjectableProvider&lt;Context, PerRequestType&gt;() {
+            @Override
+            public Injectable&lt;PerRequestType&gt; getInjectable(ComponentContext ic, Context context) {
+                //...
+            }
+        });</programlisting>
             </para>
 
             <para>Jersey 2.0 HK2 Module:
                 <programlisting language="java" linenumbering="unnumbered">public static class MyBinder extends AbstractBinder {
 
-                    @Override
-                    protected void configure() {
-                    // request scope binding
-                    bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
-                    // singleton binding
-                    bind(MyInjectableSingleton.class).in(Singleton.class);
-                    // singleton instance binding
-                    bind(new MyInjectableSingleton()).to(MyInjectableSingleton.class);
-                    }
+    @Override
+    protected void configure() {
+        // request scope binding
+        bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+        // singleton binding
+        bind(MyInjectableSingleton.class).in(Singleton.class);
+        // singleton instance binding
+        bind(new MyInjectableSingleton()).to(MyInjectableSingleton.class);
+    }
 
-                    }
+}
 
-                    // register module to ResourceConfig (can be done also in constructor)
-                    ResourceConfig rc = new ResourceConfig();
-                    rc.addClasses(/* ... */);
-                    rc.addBinders(new MyBinder());
-                </programlisting>
+// register module to ResourceConfig (can be done also in constructor)
+ResourceConfig rc = new ResourceConfig();
+rc.addClasses(/* ... */);
+rc.addBinders(new MyBinder());</programlisting>
             </para>
 
             <para>Jersey 2.0 dynamic binding:
                 <programlisting language="java" linenumbering="unnumbered">public static class MyApplication extends Application {
 
-                    @Inject
-                    public MyApplication(ServiceLocator serviceLocator) {
-                    System.out.println("Registering injectables...");
+    @Inject
+    public MyApplication(ServiceLocator serviceLocator) {
+        System.out.println("Registering injectables...");
 
-                    DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
+        DynamicConfiguration dc = Injections.getConfiguration(serviceLocator);
 
-                    // request scope binding
-                    Injections.addBinding(
-                    Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScoped.class),
-                    dc);
+        // request scope binding
+        Injections.addBinding(
+        Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScoped.class),
+                dc);
 
-                    // singleton binding
-                    Injections.addBinding(
-                    Injections.newBinder(MyInjectableSingleton.class).to(MyInjectableSingleton.class).in(Singleton.class),
-                    dc);
+        // singleton binding
+        Injections.addBinding(
+                Injections.newBinder(MyInjectableSingleton.class)
+                        .to(MyInjectableSingleton.class)
+                        .in(Singleton.class),
+                dc);
 
-                    // singleton instance binding
-                    Injections.addBinding(
-                    Injections.newBinder(new MyInjectableSingleton()).to(MyInjectableSingleton.class),
-                    dc);
+        // singleton instance binding
+        Injections.addBinding(
+                Injections.newBinder(new MyInjectableSingleton())
+                        .to(MyInjectableSingleton.class),
+                dc);
 
-                    // request scope binding with specified custom annotation
-                    Injections.addBinding(
-                    Injections.newBinder(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class)
-                    .qualifiedBy(new MyAnnotationImpl())
-                    .in(RequestScoped.class),
-                    dc);
+        // request scope binding with specified custom annotation
+        Injections.addBinding(
+                Injections.newBinder(MyInjectablePerRequest.class)
+                        .to(MyInjectablePerRequest.class)
+                        .qualifiedBy(new MyAnnotationImpl())
+                        .in(RequestScoped.class),
+                dc);
 
-                    // commits changes
-                    dc.commit();
-                    }
+        // commits changes
+        dc.commit();
+    }
 
-                    @Override
-                    public Set&lt;Class&lt;?&gt;&gt; getClasses() {
-                    return ...
-                    }
-                    }
-                </programlisting>
+    @Override
+    public Set&lt;Class&lt;?&gt;&gt; getClasses() {
+        return ...
+    }}</programlisting>
             </para>
         </section>
 
@@ -176,42 +176,36 @@
                     </listitem>
                 </orderedlist>
 
-                Containers, which support the reload functionality implement the
-                <literal>ContainerListener</literal>
-                interface,
-                so that once you get access to the actual container instance, you could call it's
-                <literal>onReload</literal>
-                method
-                and get the container re-load the config. The second interface helps you to obtain the actual container instance reference.
-                An example on how things are wired together follows.
+                Containers, which support the reload functionality implement the <literal>ContainerListener</literal>
+                interface, so that once you get access to the actual container instance, you could call it's
+                <literal>onReload</literal> method and get the container re-load the config. The second interface helps you to
+                obtain the actual container instance reference. An example on how things are wired together follows.
 
                 <example>
                     <title>Jersey 1 reloader implementation</title>
                     <programlisting language="java" linenumbering="numbered">public class Reloader implements ContainerNotifier {
-                        List&lt;ContainerListener&gt; ls;
+    List&lt;ContainerListener&gt; ls;
 
-                        public Reloader() {
-                        ls = new ArrayList&lt;ContainerListener&gt;();
-                        }
+    public Reloader() {
+        ls = new ArrayList&lt;ContainerListener&gt;();
+    }
 
-                        public void addListener(ContainerListener l) {
-                        ls.add(l);
-                        }
+    public void addListener(ContainerListener l) {
+        ls.add(l);
+    }
 
-                        public void reload() {
-                        for (ContainerListener l : ls) {
-                        l.onReload();
-                        }
-                        }
-                        }
-                    </programlisting>
+    public void reload() {
+        for (ContainerListener l : ls) {
+            l.onReload();
+        }
+    }
+}</programlisting>
                 </example>
 
                 <example>
                     <title>Jersey 1 reloader registration</title>
                     <programlisting language="java" linenumbering="numbered">Reloader reloader = new Reloader();
-                        resourceConfig.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_NOTIFIER, reloader);
-                    </programlisting>
+resourceConfig.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_NOTIFIER, reloader);</programlisting>
                 </example>
 
                 In Jersey 2, two interfaces are involved again, but these have been re-designed.
@@ -225,57 +219,54 @@
                     </listitem>
                 </orderedlist>
 
-                The
-                <literal>Container</literal>
-                interface introduces two
-                <literal>reload</literal>
-                methods, which you can call
-                to get the application re-loaded. One of these methods allows to pass in a new
-                <literal>ResourceConfig</literal>
+                The <literal>Container</literal> interface introduces two <literal>reload</literal> methods, which you can call
+                to get the application re-loaded. One of these methods allows to pass in a new &lit.jersey.server.ResourceConfig;
                 instance.
 
-                You can register your implementation of ContainerLifecycleListener the same way as any other provider (i.e. either
-                by annotating it by @Provider annotation or adding it to the ResourceConfig directly either using the class (using ResourceConfig.addClasses())
-                or registering a particular instance using ResourceConfig.addSingletons() method.
+                You can register your implementation of <literal>ContainerLifecycleListener</literal> the same way as any
+                other provider (i.e. either by annotating it by &jaxrs.ext.Provider; annotation or adding it to the
+                Jersey &jersey.server.ResourceConfig; directly either using the class (using
+                <literal>ResourceConfig.addClasses()</literal>) or registering a particular instance using
+                <literal>ResourceConfig.addSingletons()</literal> method.
+            </para>
 
-
+            <para>
                 An example on how things work in Jersey 2 follows.
 
                 <example>
                     <title>Jersey 2 reloader implementation</title>
                     <programlisting language="java" linenumbering="numbered">public class Reloader implements ContainerLifecycleListener {
 
-                        Container container;
+    Container container;
 
-                        public void reload(ResourceConfig newConfig) {
-                        container.reload(newConfig);
-                        }
+    public void reload(ResourceConfig newConfig) {
+        container.reload(newConfig);
+    }
 
-                        public void reload() {
-                        container.reload();
-                        }
+    public void reload() {
+        container.reload();
+    }
 
-                        @Override
-                        public void onStartup(Container container) {
-                        this.container = container;
-                        }
+    @Override
+    public void onStartup(Container container) {
+        this.container = container;
+    }
 
-                        @Override
-                        public void onReload(Container container) {
-                        // ignore or do whatever you want after reload has been done
-                        }
+    @Override
+    public void onReload(Container container) {
+        // ignore or do whatever you want after reload has been done
+    }
 
-                        @Override
-                        public void onShutdown(Container container) {
-                        // ignore or do something after the container has been shutdown
-                        }
-                        }
-                    </programlisting>
+    @Override
+    public void onShutdown(Container container) {
+        // ignore or do something after the container has been shutdown
+    }
+}</programlisting>
                 </example>
                 <example>
                     <title>Jersey 2 reloader registration</title>
                     <programlisting language="java" linenumbering="numbered">Reloader reloader = new Reloader();
-                        resourceConfig.addSingletons(reloader);
+resourceConfig.addSingletons(reloader);
                     </programlisting>
                 </example>
             </para>
@@ -285,15 +276,20 @@
             <title>MessageBodyReaders and MessageBodyWriters ordering</title>
             <para>JAX-RS 2.0 defines new order of MessageBodyWorkers - whole set is sorted by declaration distance,
                 media type and source (custom providers have smaller priority than Jersey provided). JAX-RS 1.x ordering
-                can still be forced by setting parameter MessageProperties.LEGACY_WORKERS_ORDERING
-                ("jersey.config.workers.legacyOrdering") to true in ResourceConfig or ClientConfig properties.
+                can still be forced by setting parameter <literal>MessageProperties.LEGACY_WORKERS_ORDERING</literal>
+                (<literal>"jersey.config.workers.legacyOrdering"</literal>) to &lit.true; in &lit.jersey.server.ResourceConfig;
+                or &lit.jersey.client.ClientConfig; properties.
             </para>
         </section>
     </section>
 
     <section xml:id="mig-client-api">
-        <title>Client API</title>
-        <para>JAX-RS 2.0 provides functionality that is equivalent to the Jersey 1.x proprietary client API. Here is a rough mapping between the Jersey 1.x and JAX-RS 2.0 Client API classes:</para>
+        <title>Migrating Jersey Client API</title>
+
+        <para>
+            JAX-RS 2.0 provides functionality that is equivalent to the Jersey 1.x proprietary client API. Here is a rough
+            mapping between the Jersey 1.x and JAX-RS 2.0 Client API classes:
+        </para>
         <table frame='all'>
             <title>Mapping of Jersey 1.x to JAX-RS 2.0 client classes</title>
             <tgroup cols='3' align='left' colsep='1' rowsep='1'>
@@ -310,37 +306,39 @@
                 <tbody>
                     <row>
                         <entry>
-                            <link xlink:href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/Client.html">com.sun.jersey.api.client.Client</link>
+                            <link xlink:href="http://jersey.java.net/nonav/apidocs/1.17/jersey/com/sun/jersey/api/client/Client.html">com.sun.jersey.api.client.Client</link>
                         </entry>
                         <entry>
-                            <link xlink:href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/ClientBuilder.html">javax.ws.rs.client.ClientBuilder</link>
+                            &jaxrs.client.ClientBuilder;
                         </entry>
                         <entry>For the static factory methods and constructors.</entry>
                     </row>
                     <row>
                         <entry></entry>
                         <entry>
-                            <link xlink:href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/Client.html">javax.ws.rs.client.Client</link>
+                            &jaxrs.client.Client;
                         </entry>
                         <entry>For the instance methods.</entry>
                     </row>
                     <row>
                         <entry>
-                            <link xlink:href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/WebResource.html">com.sun.jersey.api.client.WebResource</link>
+                            <link xlink:href="http://jersey.java.net/nonav/apidocs/1.17/jersey/com/sun/jersey/api/client/WebResource.html">com.sun.jersey.api.client.WebResource</link>
                         </entry>
                         <entry>
-                            <link xlink:href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/WebTarget.html">javax.ws.rs.client.WebTarget</link>
+                            &jaxrs.client.WebTarget;
                         </entry>
                         <entry></entry>
                     </row>
                     <row>
                         <entry>
-                            <link xlink:href="http://jersey.java.net/nonav/apidocs/latest/jersey/com/sun/jersey/api/client/AsyncWebResource.html">com.sun.jersey.api.client.AsyncWebResource</link>
+                            <link xlink:href="http://jersey.java.net/nonav/apidocs/1.17/jersey/com/sun/jersey/api/client/AsyncWebResource.html">com.sun.jersey.api.client.AsyncWebResource</link>
                         </entry>
                         <entry>
-                            <link xlink:href="http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs/javax/ws/rs/client/WebTarget.html">javax.ws.rs.client.WebTarget</link>
+                            &jaxrs.client.WebTarget;
                         </entry>
-                        <entry>You can access async versions of the async methods by calling WebTarget.request().async()</entry>
+                        <entry>You can access async versions of the async methods by calling
+                            <literal >WebTarget.request().async()</literal>
+                        </entry>
                     </row>
                 </tbody>
             </tgroup>
@@ -348,85 +346,103 @@
 
         <para>The following sub-sections show code examples.</para>
 
-        <!-- TODO: s/Target/WebTarget (when JAX-RS API is ready) -->
-
         <section xml:id="mig-client-simple-request">
             <title>Making a simple client request</title>
-            <para>Jersey 1.x way:
+            <para>
+                Jersey 1.x way:
+
                 <programlisting language="java" linenumbering="unnumbered">Client client = Client.create();
-                    WebResource webResource = client.resource(restURL).path("myresource/{param}");
-                    String result = webResource.pathParam("param", "value").get(String.class);
-                </programlisting>
+WebResource webResource = client.resource(restURL).path("myresource/{param}");
+String result = webResource.pathParam("param", "value").get(String.class);</programlisting>
             </para>
-            <para>JAX-RS 2.0 way:
+
+            <para>
+                JAX-RS 2.0 way:
+
                 <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-                    WebTarget target = client.target(restURL).path("myresource/{param}");
-                    String result = target.pathParam("param", "value").get(String.class);
-                </programlisting>
+WebTarget target = client.target(restURL).path("myresource/{param}");
+String result = target.pathParam("param", "value").get(String.class);</programlisting>
             </para>
         </section>
 
         <section xml:id="mig-client-filter-register">
             <title>Registering filters</title>
-            <para>Jersey 1.x way:
+
+            <para>
+                Jersey 1.x way:
+
                 <programlisting language="java" linenumbering="unnumbered">Client client = Client.create();
-                    WebResource webResource = client.resource(restURL);
-                    webResource.addFilter(new HTTPBasicAuthFilter(username, password));
-                </programlisting>
+WebResource webResource = client.resource(restURL);
+webResource.addFilter(new HTTPBasicAuthFilter(username, password));</programlisting>
             </para>
-            <para>JAX-RS 2.0 way:
+
+            <para>
+                JAX-RS 2.0 way:
+
                 <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-                    WebTarget target = client.target(restURL);
-                    target.configuration().register(new HttpBasicAuthFilter(username, password));
-                </programlisting>
+WebTarget target = client.target(restURL);
+target.register(new HttpBasicAuthFilter(username, password));</programlisting>
             </para>
         </section>
 
         <section xml:id="mig-client-accept-header">
             <title>Setting "Accept" header</title>
-            <para>Jersey 1.x way:
+
+            <para>
+                Jersey 1.x way:
+
                 <programlisting language="java" linenumbering="unnumbered">Client client = Client.create();
-                    WebResource webResource = client.resource(restURL).accept("text/plain");
-                    ClientResponse response = webResource.get(ClientResponse.class);
-                </programlisting>
+WebResource webResource = client.resource(restURL).accept("text/plain");
+ClientResponse response = webResource.get(ClientResponse.class);</programlisting>
             </para>
-            <para>JAX-RS 2.0 way:
+
+            <para>
+                JAX-RS 2.0 way:
+
                 <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-                    WebTarget target = client.target(restURL);
-                    Response response = target.request("text/plain").get(Response.class);
-                </programlisting>
+WebTarget target = client.target(restURL);
+Response response = target.request("text/plain").get();</programlisting>
             </para>
         </section>
 
         <section xml:id="mig-client-add-entity">
             <title>Attaching entity to request</title>
-            <para>Jersey 1.x way:
+            <para>
+                Jersey 1.x way:
+
                 <programlisting language="java" linenumbering="unnumbered">Client client = Client.create();
-                    WebResource webResource = client.resource(restURL);
-                    ClientResponse response = webResource.post(ClientResponse.class, "payload");
-                </programlisting>
+WebResource webResource = client.resource(restURL);
+ClientResponse response = webResource.post(ClientResponse.class, "payload");</programlisting>
             </para>
-            <para>JAX-RS 2.0 way:
+
+            <para>
+                JAX-RS 2.0 way:
+
                 <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-                    WebTarget target = client.target(restURL);
-                    Response response = target.request().post(Entity.text("payload"), Response.class);
-                </programlisting>
+WebTarget target = client.target(restURL);
+Response response = target.request().post(Entity.text("payload"));</programlisting>
             </para>
         </section>
 
         <section xml:id="mig-client-ssl">
             <title>Setting SSLContext and/or HostnameVerifier</title>
-            <para>Jersey 1.x way:
+
+            <para>
+                Jersey 1.x way:
+
                 <programlisting language="java" linenumbering="unnumbered">HTTPSProperties prop = new HTTPSProperties(hostnameVerifier, sslContext);
-                    DefaultClientConfig dcc = new DefaultClientConfig();
-                    dcc.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, prop);
-                    Client client = Client.create(dcc);
-                </programlisting>
+DefaultClientConfig dcc = new DefaultClientConfig();
+dcc.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, prop);
+Client client = Client.create(dcc);</programlisting>
             </para>
-            <para>Jersey 2.0 way:
-                <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
-                    client.configuration().setProperty(ClientProperties.SSL_CONTEXT, sslContext);
-                    client.configuration().setProperty(ClientProperties.HOSTNAME_VERIFIER, hostnameVerifier);
+
+            <para>
+                Jersey 2.0 way:
+
+                <programlisting language="java" linenumbering="unnumbered">Client client = ClientBuilder.newBuilder()
+        .sslContext(sslContext)
+        .hostnameVerifier(hostnameVerifier)
+        .build();
                 </programlisting>
             </para>
         </section>

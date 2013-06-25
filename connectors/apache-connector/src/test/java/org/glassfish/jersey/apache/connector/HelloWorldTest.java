@@ -54,6 +54,8 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -110,12 +112,17 @@ public class HelloWorldTest extends JerseyTest {
 
     @Test
     public void testAsyncClientRequests() throws InterruptedException {
+        ClientConnectionManager connectionManager = new PoolingClientConnectionManager();
+        ClientConfig cc = new ClientConfig();
+        cc.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
+        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        WebTarget target = client.target(getBaseUri());
         final int REQUESTS = 20;
         final CountDownLatch latch = new CountDownLatch(REQUESTS);
         final long tic = System.currentTimeMillis();
         for (int i = 0; i < REQUESTS; i++) {
             final int id = i;
-            target().path(ROOT_PATH).request().async().get(new InvocationCallback<Response>() {
+            target.path(ROOT_PATH).request().async().get(new InvocationCallback<Response>() {
                 @Override
                 public void completed(Response response) {
                     try {
