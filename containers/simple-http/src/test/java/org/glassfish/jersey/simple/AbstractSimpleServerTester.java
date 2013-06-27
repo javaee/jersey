@@ -41,12 +41,14 @@ package org.glassfish.jersey.simple;
 
 import java.io.Closeable;
 import java.net.URI;
+import java.security.AccessController;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.After;
@@ -69,7 +71,8 @@ public abstract class AbstractSimpleServerTester {
      * @return The HTTP port of the URI
      */
     protected final int getPort() {
-        final String value = System.getProperty("jersey.config.test.container.port");
+        final String value =
+                AccessController.doPrivileged(PropertiesHelper.getSystemProperty("jersey.config.test.container.port"));
         if (value != null) {
 
             try {

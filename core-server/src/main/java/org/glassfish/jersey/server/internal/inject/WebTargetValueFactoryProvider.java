@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.net.URI;
+import java.security.AccessController;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -396,7 +397,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
         if (_cc != null) {
             Class<?> cc;
             if (_cc instanceof String) {
-                cc = ReflectionHelper.classForName((String) _cc);
+                cc = AccessController.doPrivileged(ReflectionHelper.classForNamePA((String) _cc));
             } else if (_cc instanceof Class) {
                 cc = (Class<?>) _cc;
             } else {

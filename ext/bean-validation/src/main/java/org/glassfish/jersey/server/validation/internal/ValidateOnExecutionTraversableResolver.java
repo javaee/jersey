@@ -151,13 +151,13 @@ class ValidateOnExecutionTraversableResolver implements TraversableResolver {
         final String isGetter = "is" + getterPropertyName;
         final String getGetter = "get" + getterPropertyName;
 
-        for (final Method method : clazz.getDeclaredMethods()) {
+        for (final Method method : AccessController.doPrivileged(ReflectionHelper.getDeclaredMethodsPA(clazz))) {
             final String methodName = method.getName();
 
             if ((methodName.equals(isGetter) || methodName.equals(getGetter))
                     && ReflectionHelper.isGetter(method)
                     && (propertyType == null || propertyType.isAssignableFrom(method.getReturnType()))) {
-                return ReflectionHelper.findMethodOnClass(clazz, method);
+                return AccessController.doPrivileged(ReflectionHelper.findMethodOnClassPA(clazz, method));
             }
         }
 

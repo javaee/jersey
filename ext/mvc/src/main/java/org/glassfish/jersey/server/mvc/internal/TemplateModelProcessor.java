@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.mvc.internal;
 
+import java.security.AccessController;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -266,7 +267,7 @@ class TemplateModelProcessor implements ModelProcessor {
             // Names - if there are no handler classes / instances.
             if (resource.getHandlerClasses().isEmpty() && resource.getHandlerInstances().isEmpty()) {
                 for (String resourceName : resource.getNames()) {
-                    final Class<Object> resourceClass = ReflectionHelper.classForName(resourceName);
+                    final Class<Object> resourceClass = AccessController.doPrivileged(ReflectionHelper.classForNamePA(resourceName));
                     if (resourceClass != null) {
                         createEnhancingMethods(resourceClass, null, newMethods);
                     }

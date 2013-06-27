@@ -41,6 +41,7 @@
 package org.glassfish.jersey.server.wadl.internal;
 
 import java.net.URI;
+import java.security.AccessController;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,14 +107,14 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
             // see JERSEY-1818
             // see JSR222-46
 
-            final ClassLoader contextClassLoader = ReflectionHelper.getContextClassLoader();
+            final ClassLoader contextClassLoader = AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA());
             final ClassLoader jerseyModuleClassLoader = wadlGenerator.getClass().getClassLoader();
-            ReflectionHelper.setContextClassLoader(jerseyModuleClassLoader);
+            ReflectionHelper.setContextClassLoaderPA(jerseyModuleClassLoader);
 
             jaxb = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath(),
                     jerseyModuleClassLoader);
 
-            ReflectionHelper.setContextClassLoader(contextClassLoader);
+            ReflectionHelper.setContextClassLoaderPA(contextClassLoader);
         } catch (JAXBException ex) {
             try {
                 // fallback for glassfish

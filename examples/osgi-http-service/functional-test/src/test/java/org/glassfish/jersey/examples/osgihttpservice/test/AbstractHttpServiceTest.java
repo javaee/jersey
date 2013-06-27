@@ -40,6 +40,7 @@
 package org.glassfish.jersey.examples.osgihttpservice.test;
 
 import java.net.URI;
+import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -52,6 +53,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
@@ -66,7 +69,6 @@ import static org.ops4j.pax.exam.CoreOptions.felix;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 /**
@@ -135,7 +137,7 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").versionAsInProject()
         ));
 
-        final String localRepository = System.getProperty("localRepository");
+        final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
         if (localRepository != null) {
             options = new ArrayList<Option>(options);
             options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
@@ -211,7 +213,8 @@ public abstract class AbstractHttpServiceTest {
     }
 
     public void defaultHttpServiceTestMethod() throws Exception {
-        bundleContext.installBundle(System.getProperty(BundleLocationProperty)).start();
+        bundleContext.installBundle(AccessController.doPrivileged(PropertiesHelper.getSystemProperty(BundleLocationProperty)))
+                .start();
 
         semaphore.acquire();  // wait till the servlet gets really registered
 
@@ -231,7 +234,7 @@ public abstract class AbstractHttpServiceTest {
         if (null == varName) {
             return defaultValue;
         }
-        String varValue = System.getProperty(varName);
+        String varValue = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(varName));
         if (null != varValue) {
             try {
                 return Integer.parseInt(varValue);

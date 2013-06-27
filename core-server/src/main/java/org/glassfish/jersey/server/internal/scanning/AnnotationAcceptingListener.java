@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,8 @@ package org.glassfish.jersey.server.internal.scanning;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -120,7 +122,7 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
      *        files.
      */
     public AnnotationAcceptingListener(Class<? extends Annotation>... annotations) {
-        this(ReflectionHelper.getContextClassLoader(), annotations);
+        this(AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA()), annotations);
     }
 
     /**
@@ -252,13 +254,25 @@ public final class AnnotationAcceptingListener implements ResourceProcessor {
                 if (osgiRegistry != null) {
                     return osgiRegistry.classForNameWithException(className);
                 } else {
-                    return ReflectionHelper.classForNameWithException(className, classloader);
+                    return AccessController.doPrivileged(ReflectionHelper.classForNameWithExceptionPEA(className, classloader));
                 }
             } catch (ClassNotFoundException ex) {
                 String s = "A class file of the class name, " +
                         className +
                         "is identified but the class could not be found";
                 throw new RuntimeException(s, ex);
+            } catch (PrivilegedActionException pae) {
+                final Throwable cause = pae.getCause();
+                if (cause instanceof ClassNotFoundException) {
+                    String s = "A class file of the class name, " +
+                        className +
+                        "is identified but the class could not be found";
+                    throw new RuntimeException(s, cause);
+                } else if (cause instanceof RuntimeException) {
+                    throw (RuntimeException) cause;
+                }else {
+                    throw new RuntimeException(cause);
+                }
             }
         }
 

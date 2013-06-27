@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,10 +40,12 @@
 package org.glassfish.jersey.test.external;
 
 import java.net.URI;
+import java.security.AccessController;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -61,13 +63,24 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
  */
 public class ExternalTestContainerFactory implements TestContainerFactory {
 
+    /**
+     * Specifies the active test container host address where application is deployed.
+     * The value of the property must be a valid host name or IP address.
+     * <p />
+     * There is no default value.
+     * <p />
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    // TODO rename to jersey.config.test.external.container.host
+    public static final String JERSEY_TEST_HOST = "jersey.test.host";
+
     @Override
     public TestContainer create(URI baseUri, ApplicationHandler application) throws IllegalArgumentException {
         return new ExternalTestContainer(getBaseURI(baseUri));
     }
 
     private URI getBaseURI(URI baseUri) {
-        String stagingHostName = System.getProperty("jersey.test.host");
+        String stagingHostName = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(JERSEY_TEST_HOST));
         if (stagingHostName != null) {
             return UriBuilder.fromUri(baseUri)
                 .host(stagingHostName).build();

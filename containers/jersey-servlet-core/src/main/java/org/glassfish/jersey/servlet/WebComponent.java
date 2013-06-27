@@ -41,7 +41,9 @@ package org.glassfish.jersey.servlet;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.AccessController;
 import java.security.Principal;
+import java.security.PrivilegedActionException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -386,8 +388,8 @@ public class WebComponent {
         }
 
         try {
-            Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = ReflectionHelper.classForNameWithException
-                    (jaxrsApplicationClassName);
+            Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass =
+                    AccessController.doPrivileged(ReflectionHelper.<javax.ws.rs.core.Application>classForNameWithExceptionPEA(jaxrsApplicationClassName));
             if (javax.ws.rs.core.Application.class.isAssignableFrom(jaxrsApplicationClass)) {
                 return ResourceConfig.forApplicationClass(jaxrsApplicationClass)
                         .addProperties(initParams).addProperties(contextParams);
@@ -395,6 +397,9 @@ public class WebComponent {
                 throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_PARENT_CLASS_INVALID(
                         jaxrsApplicationClassName, javax.ws.rs.core.Application.class));
             }
+        } catch (PrivilegedActionException e) {
+            throw new ServletException(
+                    LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_LOAD(jaxrsApplicationClassName), e.getCause());
         } catch (ClassNotFoundException e) {
             throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_LOAD(jaxrsApplicationClassName), e);
         }

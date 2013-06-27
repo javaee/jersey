@@ -40,6 +40,7 @@
 package org.glassfish.jersey.test;
 
 import java.net.URI;
+import java.security.AccessController;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,8 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
@@ -307,9 +310,9 @@ public abstract class JerseyTest {
             return forcedPropertyMap.get(propertyName);
         }
 
-        final Properties sysprops = System.getProperties();
-        if (sysprops.containsKey(propertyName)) {
-            return sysprops.getProperty(propertyName);
+        final Properties systemProperties = AccessController.doPrivileged(PropertiesHelper.getSystemProperties());
+        if (systemProperties.containsKey(propertyName)) {
+            return systemProperties.getProperty(propertyName);
         }
 
         if (propertyMap.containsKey(propertyName)) {
@@ -394,13 +397,16 @@ public abstract class JerseyTest {
 
                     }
                 } else {
-                    try {
-                        testContainerFactoryClass = Class.forName(tcfClassName).asSubclass(TestContainerFactory.class);
-                    } catch (ClassNotFoundException ex) {
+                    final Class<Object> tfClass = AccessController.doPrivileged(ReflectionHelper.classForNamePA(tcfClassName, null));
+                    if (tfClass == null) {
                         throw new TestContainerException(
                                 "The default test container factory class name, "
                                         + tcfClassName
-                                        + ", cannot be loaded", ex);
+                                        + ", cannot be loaded");
+                    }
+                    try {
+                        testContainerFactoryClass =
+                                tfClass.asSubclass(TestContainerFactory.class);
                     } catch (ClassCastException ex) {
                         throw new TestContainerException(
                                 "The default test container factory class, "
@@ -553,7 +559,7 @@ public abstract class JerseyTest {
      * @return The HTTP port of the URI
      */
     protected final int getPort() {
-        final String value = System.getProperty(TestProperties.CONTAINER_PORT);
+        final String value = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(TestProperties.CONTAINER_PORT));
         if (value != null) {
 
             try {

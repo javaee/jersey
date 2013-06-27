@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,36 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal;
+// we do not care about java lib itself
+grant codebase "file:${java.home}/-" {
+  permission java.security.AllPermission;
+};
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+// we do not care about our dependencies
+grant codebase "file:${local.repo}/-" {
+  permission java.security.AllPermission;
+};
 
-/**
- * Simple ServiceFinder injection binder.
- *
- * Looks for all implementations of a given contract using {@link ServiceFinder}
- * and registers found instances to {@link org.glassfish.hk2.api.ServiceLocator}.
- *
- * @param <T> contract type.
- * @author Pavel Bucek (pavel.bucek at oracle.com)
- */
-public class ServiceFinderBinder<T> extends AbstractBinder {
+// this is to be able to set runtime delegate instance in jax-rs from the tests
+grant codebase "file:${build.dir}/test-classes/-" {
+  permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+};
 
-    private final Class<T> contract;
-
-    /**
-     * Create a new service finder injection binder.
-     *
-     * @param contract contract of the service providers bound by this binder.
-     */
-    public ServiceFinderBinder(Class<T> contract) {
-        this.contract = contract;
-    }
-
-    @Override
-    protected void configure() {
-        for (T t : ServiceFinder.find(contract, true)) {
-            bind(t).to(contract);
-        }
-    }
-}
+grant codebase "file:${build.dir}/classes/-" {
+  permission java.lang.RuntimePermission "accessDeclaredMembers";
+  permission java.lang.RuntimePermission "getClassLoader";
+  permission java.util.PropertyPermission "*", "read";
+  permission java.io.FilePermission "<<ALL FILES>>", "read";
+};

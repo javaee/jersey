@@ -41,7 +41,10 @@ package org.glassfish.jersey.internal.util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.ws.rs.RuntimeType;
 
@@ -54,14 +57,70 @@ import javax.ws.rs.RuntimeType;
 public class PropertiesHelper {
 
     /**
+     * Get system properties.
+     *
+     * This method delegates to {@link System#getProperties()} while running it in a privileged
+     * code block.
+     *
+     * @return privileged action to obtain system properties.
+     */
+    public static PrivilegedAction<Properties> getSystemProperties() {
+        return new PrivilegedAction<Properties>() {
+            @Override
+            public Properties run() {
+                return System.getProperties();
+            }
+        };
+    }
+
+    /**
+     * Get system property.
+     *
+     * This method delegates to {@link System#getProperty(String)} while running it in a privileged
+     * code block.
+     *
+     * @param name system property name.
+     * @return privileged action to obtain system property value that will return {@code null}
+     *         if there's no such system property.
+     */
+    public static PrivilegedAction<String> getSystemProperty(final String name) {
+        return new PrivilegedAction<String>() {
+            @Override
+            public String run() {
+                return System.getProperty(name);
+            }
+        };
+    }
+
+    /**
+     * Get system property.
+     *
+     * This method delegates to {@link System#getProperty(String)} while running it in a privileged
+     * code block.
+     *
+     * @param name system property name.
+     * @param def  default property value.
+     * @return privileged action to obtain system property value that will return the default value
+     *         if there's no such system property.
+     */
+    public static PrivilegedAction<String> getSystemProperty(final String name, final String def) {
+        return new PrivilegedAction<String>() {
+            @Override
+            public String run() {
+                return System.getProperty(name, def);
+            }
+        };
+    }
+
+    /**
      * Return value of a specified property. If the property is not set or the real value type is not compatible with
      * defaultValue type, the specified defaultValue is returned. Calling this method is equivalent to calling
      * {@code PropertyHelper.getValue(properties, key, defaultValue, (Class<T>) defaultValue.getClass())}
      *
-     * @param properties Map of properties to get the property value from.
-     * @param key Name of the property.
+     * @param properties   Map of properties to get the property value from.
+     * @param key          Name of the property.
      * @param defaultValue Default value to be returned if the specified property is not set or cannot be read.
-     * @param <T> Type of the property value.
+     * @param <T>          Type of the property value.
      * @return Value of the property or defaultValue.
      */
     public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue) {
@@ -74,15 +133,16 @@ public class PropertiesHelper {
      * defaultValue type, the specified defaultValue is returned. Calling this method is equivalent to calling
      * {@code PropertyHelper.getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass())}
      *
-     * @param properties Map of properties to get the property value from.
-     * @param runtimeType Runtime type which is used to check whether there is a property with the same
-     *                    <code>key</code> but post-fixed by runtime type (<code>.server</code>
-     *                    or <code>.client</code>) which would override the <code>key</code> property.
-     * @param key Name of the property.
+     * @param properties   Map of properties to get the property value from.
+     * @param runtimeType  Runtime type which is used to check whether there is a property with the same
+     *                     {@code key} but post-fixed by runtime type (<tt>.server</tt>
+     *                     or {@code .client}) which would override the {@code key} property.
+     * @param key          Name of the property.
      * @param defaultValue Default value to be returned if the specified property is not set or cannot be read.
-     * @param <T> Type of the property value.
+     * @param <T>          Type of the property value.
      * @return Value of the property or defaultValue.
      */
+    @SuppressWarnings("unchecked")
     public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, T defaultValue) {
         return getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass());
     }
@@ -91,11 +151,11 @@ public class PropertiesHelper {
      * Returns value of a specified property. If the property is not set or the real value type is not compatible with
      * the specified value type, returns defaultValue.
      *
-     * @param properties Map of properties to get the property value from.
-     * @param key Name of the property.
+     * @param properties   Map of properties to get the property value from.
+     * @param key          Name of the property.
      * @param defaultValue Default value of the property.
-     * @param type Type to retrieve the value as.
-     * @param <T> Type of the property value.
+     * @param type         Type to retrieve the value as.
+     * @param <T>          Type of the property value.
      * @return Value of the property or null.
      */
     public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type) {
@@ -107,14 +167,14 @@ public class PropertiesHelper {
      * Returns value of a specified property. If the property is not set or the real value type is not compatible with
      * the specified value type, returns defaultValue.
      *
-     * @param properties Map of properties to get the property value from.
-     * @param runtimeType Runtime type which is used to check whether there is a property with the same
-     *                    <code>key</code> but post-fixed by runtime type (<code>.server</code>
-     *                    or <code>.client</code>) which would override the <code>key</code> property.
-     * @param key Name of the property.
+     * @param properties   Map of properties to get the property value from.
+     * @param runtimeType  Runtime type which is used to check whether there is a property with the same
+     *                     {@code key} but post-fixed by runtime type (<tt>.server</tt>
+     *                     or {@code .client}) which would override the {@code key} property.
+     * @param key          Name of the property.
      * @param defaultValue Default value of the property.
-     * @param type Type to retrieve the value as.
-     * @param <T> Type of the property value.
+     * @param type         Type to retrieve the value as.
+     * @param <T>          Type of the property value.
      * @return Value of the property or null.
      */
     public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key,
@@ -132,9 +192,9 @@ public class PropertiesHelper {
      * the specified value type, returns null.
      *
      * @param properties Map of properties to get the property value from.
-     * @param key Name of the property.
-     * @param type Type to retrieve the value as.
-     * @param <T> Type of the property value.
+     * @param key        Name of the property.
+     * @param type       Type to retrieve the value as.
+     * @param <T>        Type of the property value.
      * @return Value of the property or null.
      */
     public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
@@ -146,13 +206,13 @@ public class PropertiesHelper {
      * Returns value of a specified property. If the property is not set or the real value type is not compatible with
      * the specified value type, returns null.
      *
-     * @param properties Map of properties to get the property value from.
+     * @param properties  Map of properties to get the property value from.
      * @param runtimeType Runtime type which is used to check whether there is a property with the same
-     *                    <code>key</code> but post-fixed by runtime type (<code>.server</code>
-     *                    or <code>.client</code>) which would override the <code>key</code> property.
-     * @param key Name of the property.
-     * @param type Type to retrieve the value as.
-     * @param <T> Type of the property value.
+     *                    {@code key} but post-fixed by runtime type (<tt>.server</tt>
+     *                    or {@code .client}) which would override the {@code key} property.
+     * @param key         Name of the property.
+     * @param type        Type to retrieve the value as.
+     * @param <T>         Type of the property value.
      * @return Value of the property or null.
      */
     public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, Class<T> type) {
@@ -169,7 +229,7 @@ public class PropertiesHelper {
 
         if (!type.isInstance(value)) {
             // TODO: Move string value readers from server to common and utilize them here
-            final Constructor constructor = ReflectionHelper.getStringConstructor(type);
+            final Constructor constructor = AccessController.doPrivileged(ReflectionHelper.getStringConstructorPA(type));
             if (constructor != null) {
                 try {
                     return type.cast(constructor.newInstance(value));
@@ -178,7 +238,7 @@ public class PropertiesHelper {
                 }
             }
 
-            final Method valueOf = ReflectionHelper.getValueOfStringMethod(type);
+            final Method valueOf = AccessController.doPrivileged(ReflectionHelper.getValueOfStringMethodPA(type));
             if (valueOf != null) {
                 try {
                     return type.cast(valueOf.invoke(null, value));
@@ -200,7 +260,7 @@ public class PropertiesHelper {
      * not convertible.
      *
      * @param properties key-value map of properties.
-     * @param name property name.
+     * @param name       property name.
      * @return {@code boolean} property value or {@code false} if the property is not convertible.
      */
     public static boolean isProperty(final Map<String, Object> properties, final String name) {

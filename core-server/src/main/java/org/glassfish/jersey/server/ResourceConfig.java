@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
+import java.security.AccessController;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -105,7 +106,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         public State() {
             super(RuntimeType.SERVER, ComponentBag.INCLUDE_ALL);
-            this.classLoader = ReflectionHelper.getContextClassLoader();
+            this.classLoader = AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA());
 
             this.resourceFinders = Sets.newHashSet();
 

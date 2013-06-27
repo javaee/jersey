@@ -45,6 +45,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -127,7 +129,7 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> Constructor<T> getConstructor(Class<T> clazz) throws MultiException, NoSuchMethodException {
+    public <T> Constructor<T> getConstructor(final Class<T> clazz) throws MultiException, NoSuchMethodException {
         if (clazz.isLocalClass()) {
             throw new NoSuchMethodException(LocalizationMessages.INJECTION_ERROR_LOCAL_CLASS_NOT_SUPPORTED(clazz.getName()));
         }
@@ -160,7 +162,12 @@ public final class JerseyClassAnalyzer implements ClassAnalyzer {
         }
 
         // At this point, we simply need to find the constructor with the largest number of parameters
-        Constructor<?> constructors[] = clazz.getDeclaredConstructors();
+        Constructor<?> constructors[] = AccessController.doPrivileged(new PrivilegedAction<Constructor<?>[]>() {
+            @Override
+            public Constructor<?>[] run() {
+                return clazz.getDeclaredConstructors();
+            }
+        });
         Constructor<?> selected = null;
         int selectedSize = 0;
         int maxParams = -1;

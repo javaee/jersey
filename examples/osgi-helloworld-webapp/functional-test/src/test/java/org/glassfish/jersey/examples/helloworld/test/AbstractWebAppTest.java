@@ -41,6 +41,7 @@
 package org.glassfish.jersey.examples.helloworld.test;
 
 import java.net.URI;
+import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
@@ -53,6 +54,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
@@ -145,7 +148,7 @@ public abstract class AbstractWebAppTest {
                 // vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" )
         ));
 
-        final String localRepository = System.getProperty("localRepository");
+        final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
         if (localRepository != null) {
             options = new ArrayList<Option>(options);
             options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
@@ -217,7 +220,8 @@ public abstract class AbstractWebAppTest {
 
     public void defaultWebAppTestMethod() throws Exception {
 
-        final Bundle warBundle = bundleContext.installBundle(System.getProperty(BundleLocationProperty));
+        final Bundle warBundle = bundleContext.installBundle(
+                AccessController.doPrivileged(PropertiesHelper.getSystemProperty(BundleLocationProperty)));
         warBundle.start();
 
         semaphore.acquire();
@@ -243,7 +247,7 @@ public abstract class AbstractWebAppTest {
         if (null == varName) {
             return defaultValue;
         }
-        String varValue = System.getProperty(varName);
+        String varValue = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(varName));
         if (null != varValue) {
             try {
                 return Integer.parseInt(varValue);
