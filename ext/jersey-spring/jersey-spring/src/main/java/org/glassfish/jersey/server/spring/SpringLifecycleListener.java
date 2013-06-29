@@ -1,10 +1,5 @@
 package org.glassfish.jersey.server.spring;
 
-import java.util.logging.Logger;
-
-import javax.inject.Inject;
-import javax.ws.rs.ext.Provider;
-
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.ServiceLocator;
@@ -14,12 +9,18 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import javax.inject.Inject;
+import javax.ws.rs.ext.Provider;
+import java.lang.annotation.Annotation;
+import java.util.logging.Logger;
 
 /**
 * JAX-RS Provider class for bootstrapping Jersey 2 Spring integration.
 *
-* @author Marko Asplund (marko.asplund at gmail.com)
+* @author Marko Asplund (marko.asplund at yahoo.com)
 */
 @Provider
 public class SpringLifecycleListener implements ContainerLifecycleListener {
@@ -35,7 +36,8 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
     @Override
     public void onStartup(Container container) {
         LOGGER.fine("onStartup: "+container);
-        
+
+        // initialize Spring context
         ApplicationContext ctx = null;
         if(container instanceof ServletContainer) {
             ServletContainer sc = (ServletContainer)container;
@@ -48,20 +50,37 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
             ctx = new ClassPathXmlApplicationContext(new String[] {"applicationContext.xml"});
         }
 
+        // register @Autowired annotation handler and Spring context with HK2 ServiceLocator.
         if(ctx != null) {
             LOGGER.fine("registering Spring injection resolver");
             DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
             DynamicConfiguration c = dcs.createDynamicConfiguration();
             AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
-            
+
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(ctx, null, ApplicationContext.class));
             c.commit();
-            
+
             LOGGER.info("jersey-spring initialized");
         } else {
             LOGGER.info("not a ServletContainer, jersey-spring init skipped: "+container);
         }
+
+        // detect JAX-RS resource classes that are also Spring @Components.
+        // register these with HK2 ServiceLocator to manage their lifecycle using Spring.
+        // TODO: add support for request scope.
+        for(Class<?> cl : container.getConfiguration().getClasses()) {
+            DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+            DynamicConfiguration c = dcs.createDynamicConfiguration();
+
+            if(cl.isAnnotationPresent(Component.class)) {
+                Object o = locator.createAndInitialize(cl);
+                locator.inject(o);
+                c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(o, null, o.getClass()));
+                c.commit();
+            }
+        }
+
     }
 
     @Override

@@ -44,21 +44,30 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import java.util.logging.Logger;
 
 /**
  *
  * @author Marko Asplund (marko.asplund at gmail.com)
  */
 @Path("helloworld")
+@Component
 public class HelloWorldResource {
+    private static final Logger LOGGER = Logger.getLogger(HelloWorldResource.class.getName());
     
     @Autowired
     private GreetingService greetingService;
+
+    public HelloWorldResource() {
+        LOGGER.fine("HelloWorldResource()");
+    }
     
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String getHello() {
-        System.out.println("getHello: "+greetingService);
+        LOGGER.fine(String.format("getHello: this: %s; greetingService: %s", this, greetingService));
         return greetingService.greet("world");
     }
 
