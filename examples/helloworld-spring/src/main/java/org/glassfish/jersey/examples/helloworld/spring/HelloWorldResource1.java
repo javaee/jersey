@@ -61,6 +61,9 @@ public class HelloWorldResource1 {
     @Autowired
     private GreetingService greetingService;
 
+    @Autowired
+    private DateTimeService dateTimeService;
+
     public HelloWorldResource1() {
         LOGGER.fine("HelloWorldResource()");
     }
@@ -68,7 +71,8 @@ public class HelloWorldResource1 {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String getHello() {
-        LOGGER.fine(String.format("getHello: this: %s; greetingService: %s", this, greetingService));
+        LOGGER.fine(String.format("getHello: this: %s; greetingService: %s; dateTimeService: %s", this, greetingService,
+                dateTimeService));
         return greetingService.greet("world");
     }
 

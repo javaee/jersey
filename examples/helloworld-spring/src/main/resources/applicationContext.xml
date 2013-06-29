@@ -10,6 +10,8 @@
 
     <bean id="greetingService" class="org.glassfish.jersey.examples.helloworld.spring.GreetingServiceImpl"/>
 
+    <bean class="org.glassfish.jersey.examples.helloworld.spring.DateTimeService" scope="request"/>
+
     <bean class="org.glassfish.jersey.examples.helloworld.spring.HelloWorldResource2"/>
 
 </beans>

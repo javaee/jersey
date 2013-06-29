@@ -6,11 +6,11 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
 /**
-* Spring WebApplicationInitializer implementation initializes Spring context by
-* adding a Spring ContextLoaderListener to the ServletContext.
-*
-* @author Marko Asplund (marko.asplund at yahoo.com)
-*/
+ * Spring WebApplicationInitializer implementation initializes Spring context by
+ * adding a Spring ContextLoaderListener to the ServletContext.
+ *
+ * @author Marko Asplund (marko.asplund at yahoo.com)
+ */
 public class SpringWebApplicationInitializer implements WebApplicationInitializer {
 
     @Override
@@ -19,6 +19,7 @@ public class SpringWebApplicationInitializer implements WebApplicationInitialize
         // TODO: enable configuring contextConfigLocation?
         sc.setInitParameter("contextConfigLocation", "classpath:applicationContext.xml");
         sc.addListener("org.springframework.web.context.ContextLoaderListener");
+        sc.addListener("org.springframework.web.context.request.RequestContextListener");
     }
 
 }
