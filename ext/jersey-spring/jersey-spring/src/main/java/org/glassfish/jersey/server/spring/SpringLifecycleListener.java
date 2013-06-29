@@ -1,9 +1,10 @@
 package org.glassfish.jersey.server.spring;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -14,7 +15,9 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.inject.Inject;
 import javax.ws.rs.ext.Provider;
+import java.util.Map;
 import java.util.logging.Logger;
+import org.glassfish.hk2.api.Factory;
 
 /**
 * JAX-RS Provider class for bootstrapping Jersey 2 Spring integration.
@@ -52,8 +55,7 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
         // register @Autowired annotation handler and Spring context with HK2 ServiceLocator.
         if(ctx != null) {
             LOGGER.fine("registering Spring injection resolver");
-            DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-            DynamicConfiguration c = dcs.createDynamicConfiguration();
+            DynamicConfiguration c = Injections.getConfiguration(locator);
             AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
 
@@ -67,23 +69,56 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
 
         // detect JAX-RS resource classes that are also Spring @Components.
         // register these with HK2 ServiceLocator to manage their lifecycle using Spring.
-        // TODO: add support for request scope.
         for(Class<?> cl : container.getConfiguration().getClasses()) {
-            DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-            DynamicConfiguration c = dcs.createDynamicConfiguration();
+            if(!cl.isAnnotationPresent(Component.class)) {
+                continue;
+            }
+            DynamicConfiguration c = Injections.getConfiguration(locator);
+            Map<String, ?> beans = ctx.getBeansOfType(cl);
+            if(beans.size() != 1) {
+                LOGGER.severe("none or multiple beans found of type: "+cl);
+                continue;
+            }
+            String beanName = beans.keySet().iterator().next();
 
-            if(cl.isAnnotationPresent(Component.class)) {
-                Object o = ctx.getBean(cl);
-                if(o == null) {
-                    LOGGER.severe("unable to get bean from Spring context: "+cl);
-                    continue;
-                }
-                locator.inject(o);
-                c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(o, null, o.getClass()));
-                c.commit();
+            ServiceBindingBuilder bb = Injections.newFactoryBinder(new SpringManagedBeanFactory(ctx, locator, beanName));
+            bb.to(cl);
+            Injections.addBinding(bb, c);
+            c.commit();
+        }
+    }
+
+    private static class SpringManagedBeanFactory implements Factory {
+        private ApplicationContext ctx;
+        private ServiceLocator locator;
+        private String beanName;
+        private boolean isSingleton;
+
+        private SpringManagedBeanFactory(ApplicationContext ctx, ServiceLocator locator, String beanName) {
+            LOGGER.fine("SpringManagedBeanFactory()");
+            this.ctx = ctx;
+            this.locator = locator;
+            this.beanName = beanName;
+            isSingleton = ctx.isSingleton(beanName);
+            if(isSingleton) {
+                locator.inject(ctx.getBean(beanName));
             }
         }
 
+        @Override
+        public Object provide() {
+            LOGGER.fine("provide()");
+            Object bean = ctx.getBean(beanName);
+            if(!isSingleton) {
+                locator.inject(bean);
+            }
+            return bean;
+        }
+
+        @Override
+        public void dispose(Object instance) {
+            LOGGER.fine("dispose(): "+instance);
+        }
     }
 
     @Override

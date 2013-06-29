@@ -14,4 +14,6 @@
 
     <bean class="org.glassfish.jersey.examples.helloworld.spring.HelloWorldResource2"/>
 
+    <bean class="org.glassfish.jersey.examples.helloworld.spring.HelloWorldResource3" scope="request"/>
+
 </beans>

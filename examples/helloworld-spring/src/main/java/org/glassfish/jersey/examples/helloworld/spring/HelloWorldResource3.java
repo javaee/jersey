@@ -50,19 +50,19 @@ import java.util.logging.Logger;
 
 /**
  * Jersey2 Spring integration example.
- * Demonstrate how to use Spring managed JAX-RS resource class with singleton scope (+ Spring bean DI).
+ * Demonstrate how to use Spring managed JAX-RS resource class with request scope (+ Spring bean DI).
  *
  * @author Marko Asplund (marko.asplund at gmail.com)
  */
-@Path("helloworld2")
+@Path("helloworld3")
 @Component
-public class HelloWorldResource2 {
-    private static final Logger LOGGER = Logger.getLogger(HelloWorldResource2.class.getName());
+public class HelloWorldResource3 {
+    private static final Logger LOGGER = Logger.getLogger(HelloWorldResource3.class.getName());
 
     @Autowired
     private GreetingService greetingService;
 
-    public HelloWorldResource2() {
+    public HelloWorldResource3() {
         LOGGER.fine("HelloWorldResource()");
     }
     

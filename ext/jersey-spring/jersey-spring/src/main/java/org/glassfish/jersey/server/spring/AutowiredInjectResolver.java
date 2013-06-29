@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- *InjectionResolver class for Spring framework Autowired annotation injection.
+ * InjectionResolver class for Spring framework Autowired annotation injection.
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
  */
