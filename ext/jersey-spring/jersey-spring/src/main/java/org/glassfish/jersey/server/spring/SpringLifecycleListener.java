@@ -40,35 +40,36 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
         LOGGER.fine("onStartup: "+container);
 
         // initialize Spring context
+        LOGGER.fine("initializing Spring context");
         ApplicationContext ctx = null;
         if(container instanceof ServletContainer) {
             ServletContainer sc = (ServletContainer)container;
             ctx = WebApplicationContextUtils.getWebApplicationContext(sc.getServletContext());
-            if(ctx == null) {
-                LOGGER.info("failed to get Spring context, jersey-spring init skipped");
-            }
         } else {
-            LOGGER.fine("initializing Spring context");
             ctx = new ClassPathXmlApplicationContext(new String[] {"applicationContext.xml"});
+        }
+        if(ctx == null) {
+            LOGGER.severe("failed to get Spring context, jersey-spring init skipped");
+            return;
         }
 
         // register @Autowired annotation handler and Spring context with HK2 ServiceLocator.
+        LOGGER.fine("registering Spring injection resolver");
         if(ctx != null) {
-            LOGGER.fine("registering Spring injection resolver");
             DynamicConfiguration c = Injections.getConfiguration(locator);
             AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
 
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(ctx, null, ApplicationContext.class));
             c.commit();
-
-            LOGGER.info("jersey-spring initialized");
         } else {
-            LOGGER.info("not a ServletContainer, jersey-spring init skipped: "+container);
+            LOGGER.severe("not a ServletContainer, jersey-spring init aborted: "+container);
+            return;
         }
 
         // detect JAX-RS resource classes that are also Spring @Components.
         // register these with HK2 ServiceLocator to manage their lifecycle using Spring.
+        LOGGER.fine("registering Spring managed JAX-RS resources");
         for(Class<?> cl : container.getConfiguration().getClasses()) {
             if(!cl.isAnnotationPresent(Component.class)) {
                 continue;
@@ -76,7 +77,7 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
             DynamicConfiguration c = Injections.getConfiguration(locator);
             Map<String, ?> beans = ctx.getBeansOfType(cl);
             if(beans.size() != 1) {
-                LOGGER.severe("none or multiple beans found of type: "+cl);
+                LOGGER.severe("none or multiple beans found in Spring context of type: "+cl);
                 continue;
             }
             String beanName = beans.keySet().iterator().next();
@@ -85,7 +86,9 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
             bb.to(cl);
             Injections.addBinding(bb, c);
             c.commit();
+            LOGGER.fine(String.format("- bean '%s' registered: ", beanName));
         }
+        LOGGER.info("jersey-spring initialized");
     }
 
     private static class SpringManagedBeanFactory implements Factory {
@@ -107,17 +110,17 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
 
         @Override
         public Object provide() {
-            LOGGER.fine("provide()");
             Object bean = ctx.getBean(beanName);
             if(!isSingleton) {
                 locator.inject(bean);
             }
+            LOGGER.finer("provide(): "+bean);
             return bean;
         }
 
         @Override
         public void dispose(Object instance) {
-            LOGGER.fine("dispose(): "+instance);
+            LOGGER.finer("dispose(): "+instance);
         }
     }
 
