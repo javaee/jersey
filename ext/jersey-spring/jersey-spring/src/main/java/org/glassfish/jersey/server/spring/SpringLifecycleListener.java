@@ -14,7 +14,6 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.inject.Inject;
 import javax.ws.rs.ext.Provider;
-import java.lang.annotation.Annotation;
 import java.util.logging.Logger;
 
 /**
@@ -74,7 +73,11 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
             DynamicConfiguration c = dcs.createDynamicConfiguration();
 
             if(cl.isAnnotationPresent(Component.class)) {
-                Object o = locator.createAndInitialize(cl);
+                Object o = ctx.getBean(cl);
+                if(o == null) {
+                    LOGGER.severe("unable to get bean from Spring context: "+cl);
+                    continue;
+                }
                 locator.inject(o);
                 c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(o, null, o.getClass()));
                 c.commit();

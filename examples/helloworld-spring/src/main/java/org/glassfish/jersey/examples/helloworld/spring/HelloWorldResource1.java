@@ -49,18 +49,19 @@ import org.springframework.stereotype.Component;
 import java.util.logging.Logger;
 
 /**
+ * Jersey2 Spring integration example.
+ * Demonstrate how to inject a Spring bean into a Jersey managed JAX-RS resource class.
  *
  * @author Marko Asplund (marko.asplund at gmail.com)
  */
-@Path("helloworld")
-@Component
-public class HelloWorldResource {
-    private static final Logger LOGGER = Logger.getLogger(HelloWorldResource.class.getName());
-    
+@Path("helloworld1")
+public class HelloWorldResource1 {
+    private static final Logger LOGGER = Logger.getLogger(HelloWorldResource1.class.getName());
+
     @Autowired
     private GreetingService greetingService;
 
-    public HelloWorldResource() {
+    public HelloWorldResource1() {
         LOGGER.fine("HelloWorldResource()");
     }
     
