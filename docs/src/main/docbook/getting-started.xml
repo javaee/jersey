@@ -242,7 +242,7 @@ Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
             Now that we have verified that the project compiles and that the unit test passes, we can execute the application
             in a standalone mode. To do this, run the following maven command:
 
-            <programlisting language="bash" linenumbering="unnumbered">mvn clean exec:java</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">mvn clean compile exec:java</programlisting>
 
             The application starts and you should soon see the following notification in your console:
 
