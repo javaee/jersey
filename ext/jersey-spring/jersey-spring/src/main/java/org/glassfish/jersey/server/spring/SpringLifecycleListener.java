@@ -1,6 +1,8 @@
 package org.glassfish.jersey.server.spring;
 
+import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
@@ -17,18 +19,17 @@ import javax.inject.Inject;
 import javax.ws.rs.ext.Provider;
 import java.util.Map;
 import java.util.logging.Logger;
-import org.glassfish.hk2.api.Factory;
 
 /**
-* JAX-RS Provider class for bootstrapping Jersey 2 Spring integration.
-*
-* @author Marko Asplund (marko.asplund at yahoo.com)
-*/
+ * JAX-RS Provider class for bootstrapping Jersey 2 Spring integration.
+ *
+ * @author Marko Asplund (marko.asplund at yahoo.com)
+ */
 @Provider
 public class SpringLifecycleListener implements ContainerLifecycleListener {
     private static final Logger LOGGER = Logger.getLogger(SpringLifecycleListener.class.getName());
     private ServiceLocator locator;
-    
+
     @Inject
     public SpringLifecycleListener(ServiceLocator loc) {
         LOGGER.fine("SpringLifecycleListener: "+loc);
@@ -53,15 +54,25 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
             return;
         }
 
-        // register @Autowired annotation handler and Spring context with HK2 ServiceLocator.
-        LOGGER.fine("registering Spring injection resolver");
+        LOGGER.fine("registering Spring injection resolvers");
         if(ctx != null) {
             DynamicConfiguration c = Injections.getConfiguration(locator);
+
+            // register Spring @Autowired annotation handler with HK2 ServiceLocator
             AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
 
-            c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(ctx, null, ApplicationContext.class));
+            // register custom JSR 330 annotation handler
+            SpringJsr330Resolver sr = new SpringJsr330Resolver(ctx);
+            locator.inject(sr);
+            ActiveDescriptor ad = BuilderHelper.createConstantDescriptor(sr);
+            ad.setRanking(1);
+            c.addActiveDescriptor(ad);
+
+            // register Spring context
+            c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(ctx, "SpringContext", ApplicationContext.class));
             c.commit();
+
         } else {
             LOGGER.severe("not a ServletContainer, jersey-spring init aborted: "+container);
             return;
