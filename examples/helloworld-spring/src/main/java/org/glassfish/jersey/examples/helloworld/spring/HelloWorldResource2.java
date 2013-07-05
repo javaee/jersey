@@ -39,12 +39,17 @@
  */
 package org.glassfish.jersey.examples.helloworld.spring;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.util.logging.Logger;
 
@@ -62,14 +67,21 @@ public class HelloWorldResource2 {
     @Autowired
     private GreetingService greetingService;
 
+    @Inject
+    private ServiceLocator serviceLocator;
+
     public HelloWorldResource2() {
         LOGGER.fine("HelloWorldResource()");
     }
     
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String getHello() {
-        LOGGER.fine(String.format("getHello: this: %s; greetingService: %s", this, greetingService));
+    public String getHello(@Context HttpHeaders headers, @QueryParam("p1") String p1) {
+        LOGGER.fine(String.format("getHello: this: %s; greetingService: %s; sl: %s", this, greetingService, serviceLocator));
+        LOGGER.fine("headers: "+headers.getRequestHeaders());
+        if("foobar".equals(p1)) {
+            throw new IllegalArgumentException("foobar is illegal");
+        }
         return greetingService.greet("world");
     }
 

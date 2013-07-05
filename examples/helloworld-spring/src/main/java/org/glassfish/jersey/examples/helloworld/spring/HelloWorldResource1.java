@@ -39,13 +39,13 @@
  */
 package org.glassfish.jersey.examples.helloworld.spring;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.util.logging.Logger;
 
 /**
@@ -62,7 +62,10 @@ public class HelloWorldResource1 {
     private GreetingService greetingService;
 
     @Autowired
-    private DateTimeService dateTimeService;
+    private DateTimeService ds1;
+
+    @Inject
+    private DateTimeService ds2;
 
     public HelloWorldResource1() {
         LOGGER.fine("HelloWorldResource()");
@@ -71,8 +74,8 @@ public class HelloWorldResource1 {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String getHello() {
-        LOGGER.fine(String.format("getHello: this: %s; greetingService: %s; dateTimeService: %s", this, greetingService,
-                dateTimeService));
+        LOGGER.fine(String.format("getHello: this: %s; greetingService: %s; ds1: %s; ds2: %s", this, greetingService,
+                ds1, ds2));
         return greetingService.greet("world");
     }
 
