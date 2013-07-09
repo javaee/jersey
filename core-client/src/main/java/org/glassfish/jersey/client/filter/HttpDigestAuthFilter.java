@@ -197,14 +197,11 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
 				// send request
 				Response serverResponse2 = null;
-				switch (method) {
-					case "GET":
+				if (method.equals("GET")) {
 						serverResponse2 = builder.get();
-						break;
-					case "POST":
-						serverResponse2 = builder.post((Entity) requestContext.getEntity()); //@todo check
-						break;
-					default:
+				} else if (method.equals("POST")) {
+						serverResponse2 = builder.post((Entity) requestContext.getEntity());
+				} else {
 						throw new IOException("Method not implemented: " + method);
 				}
 				if (serverResponse2 == null) {
@@ -390,7 +387,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 			}
 
 			Matcher match = KEY_VALUE_PAIR_PATTERN.matcher(parts[1]);
-			HashMap<String, String> result = new HashMap<>();
+			HashMap<String, String> result = new HashMap<String, String>();
 			while (match.find()) {
 				// expect 4 groups (key)=("(val)" | (val))
 				int nbGroups = match.groupCount();
