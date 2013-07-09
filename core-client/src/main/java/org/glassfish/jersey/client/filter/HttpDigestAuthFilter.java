@@ -239,7 +239,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		append(sb, "algorithm", digest_algorithm.toString(), false);
 		append(sb, "qop", digest_qop.toString(), false);
 
-		String uri = requestContext.getUri().getPath();
+		String uri = requestContext.getUri().getRawPath();
 		append(sb, "uri", uri);
 
 		String ha1;
