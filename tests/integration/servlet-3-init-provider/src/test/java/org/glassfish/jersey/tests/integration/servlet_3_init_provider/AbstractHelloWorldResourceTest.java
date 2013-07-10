@@ -39,39 +39,54 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import javax.ws.rs.client.WebTarget;
+import org.junit.Test;
+import org.junit.Assert;
+
+import javax.ws.rs.NotFoundException;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class HelloWorld1ResourceITCase extends AbstractHelloWorldResourceITCase {
+public abstract class AbstractHelloWorldResourceTest extends JerseyTest {
 
-    protected Class<?> getResourceClass() {
-        return HelloWorld1Resource.class;
+    @Override
+    protected ResourceConfig configure() {
+        return new ResourceConfig(getResourceClass());
     }
 
-    protected int getIndex() {
-        return 1;
+    @Override
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
     }
 
     @Test
-    public void testRegisteredServletNames() throws Exception {
-        WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("servlets");
-        Assert.assertEquals(5, (int)target.request().get(Integer.TYPE));
-
-        target = target.path("{name}");
-        testRegisteredServletNames(target, "org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application1");
-        testRegisteredServletNames(target, "application2");
-        testRegisteredServletNames(target, "application3");
-        testRegisteredServletNames(target, "org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application4");
-        testRegisteredServletNames(target, "javax.ws.rs.core.Application");
+    public void testHelloWorld() throws Exception {
+        for (int i = 1; i <= 5; i++) {
+            try {
+                String actual = target("application" + getIndex()).path("helloworld" + i).request().get(String.class);
+                if (i == getIndex()) {
+                    Assert.assertEquals("Hello World #" + getIndex() + "!", actual);
+                } else {
+                    Assert.fail("i: " + i + " | [" + actual + "]");
+                }
+            } catch (NotFoundException ex) {
+                if (i != getIndex()) {
+                    Assert.assertEquals(404, ex.getResponse().getStatus());
+                } else {
+                    Assert.fail("!!! i: " + i);
+                }
+            }
+        }
     }
 
-    private void testRegisteredServletNames(WebTarget target, String servletName) throws Exception {
-        Assert.assertTrue(target.resolveTemplate("name", servletName).request().get(Boolean.TYPE));
-    }
+    protected abstract Class<?> getResourceClass();
+
+    protected abstract int getIndex();
 
 }

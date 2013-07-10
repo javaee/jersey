@@ -39,26 +39,17 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class HelloWorld3ResourceITCase extends AbstractHelloWorldResourceITCase {
+public class HelloWorld5ResourceTest extends AbstractHelloWorldResourceTest {
 
     protected Class<?> getResourceClass() {
-        return HelloWorld3Resource.class;
+        return HelloWorld5Resource.class;
     }
 
     protected int getIndex() {
-        return 3;
-    }
-
-    @Test
-    public void testStartupContainers() throws Exception {
-        String actual = target("application" + getIndex()).path("helloworld" + getIndex()).path("filter").request().get(String.class);
-        Assert.assertEquals("TestFilter", actual);
+        return 5;
     }
 
 }
