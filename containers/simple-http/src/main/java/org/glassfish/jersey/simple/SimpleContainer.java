@@ -135,11 +135,9 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
     private final static class Writer implements ContainerResponseWriter {
         private final Response response;
-        private final Request request;
 
-        Writer(Request request, Response response) {
+        Writer(final Response response) {
             this.response = response;
-            this.request = request;
         }
 
         @Override
@@ -149,14 +147,9 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
             final int code = statusInfo.getStatusCode();
             final String reason = statusInfo.getReasonPhrase() == null ? Status.getDescription(code)
                     : statusInfo.getReasonPhrase();
-            String method = request.getMethod();
-
             response.setCode(code);
             response.setDescription(reason);
-
-            if (!method.equalsIgnoreCase("HEAD") && contentLength != -1 && contentLength < Integer.MAX_VALUE) {
-                response.setContentLength((int) contentLength);
-            }
+            response.setContentLength(contentLength);
             for (final Map.Entry<String, List<String>> e : context.getStringHeaders().entrySet()) {
                 for (final String value : e.getValue()) {
                     response.addValue(e.getKey(), value);
@@ -227,7 +220,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     }
 
     public void handle(final Request request, final Response response) {
-        final Writer responseWriter = new Writer(request, response);
+        final Writer responseWriter = new Writer(response);
         final URI baseUri = getBaseUri(request);
         final URI requestUri = baseUri.resolve(request.getTarget());
 
