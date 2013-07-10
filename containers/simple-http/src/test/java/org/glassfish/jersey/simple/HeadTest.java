@@ -46,12 +46,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
+import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -88,6 +91,9 @@ public class HeadTest extends AbstractSimpleServerTester {
 
         Response cr = r.path("string").request("text/plain").head();
         assertEquals(200, cr.getStatus());
+        String lengthStr = cr.getHeaderString(HttpHeaders.CONTENT_LENGTH);
+        assertNotNull(lengthStr);
+        assertEquals(3, Integer.parseInt(lengthStr));
         assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
         assertFalse(cr.hasEntity());
 
@@ -95,9 +101,7 @@ public class HeadTest extends AbstractSimpleServerTester {
         assertEquals(200, cr.getStatus());
         int length = cr.getLength();
         assertNotNull(length);
-// org.glassfish.jersey.server.model.HeadTest
-// TODO Uncomment once we implement outbound message payload buffering for determining proper Content-Length value.
-//        assertEquals(3, length);
+        assertEquals(3, length);
         assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, cr.getMediaType());
         assertFalse(cr.hasEntity());
 
@@ -105,7 +109,7 @@ public class HeadTest extends AbstractSimpleServerTester {
         assertEquals(200, cr.getStatus());
         length = cr.getLength();
         assertNotNull(length);
-//        assertEquals(3, length);
+        assertEquals(3, length);
         assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, cr.getMediaType());
         assertFalse(cr.hasEntity());
     }

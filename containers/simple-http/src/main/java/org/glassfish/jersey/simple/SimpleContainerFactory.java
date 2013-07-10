@@ -69,7 +69,7 @@ import org.simpleframework.transport.connect.SocketConnection;
  * connected TCP socket channel.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public final class SimpleContainerFactory {
 
@@ -111,6 +111,33 @@ public final class SimpleContainerFactory {
      * for creating an Container that manages the root resources.
      *
      * @param address the URI to create the http server. The URI scheme must be
+     *                equal to "http". The URI user information and host
+     *                are ignored If the URI port is not present then port 80 will be
+     *                used. The URI path, query and fragment components are ignored.
+     * @param config  the resource configuration.
+     * @param count   this is the number of threads to be used
+     * @param select  this is the number of selector threads to use
+     * @return the closeable connection, with the endpoint started
+     * @throws ProcessingException      Thrown when problems during server creation
+     * @throws IllegalArgumentException if <code>address</code> is null
+     */
+    public static Closeable create(URI address, ResourceConfig config, int count, int select)
+            throws ProcessingException {
+
+        final SimpleContainer container = ContainerFactory.createContainer(SimpleContainer.class, config);
+        return create(address, null, container, count, select);
+    }
+
+    /**
+     * Create a {@link Closeable} that registers an {@link Container} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
+     * <p/>
+     * This implementation defers to the
+     * {@link ContainerFactory#createContainer(Class, javax.ws.rs.core.Application)} method
+     * for creating an Container that manages the root resources.
+     *
+     * @param address the URI to create the http server. The URI scheme must be
      *                equal to "https". The URI user information and host
      *                are ignored If the URI port is not present then port 143 will be
      *                used. The URI path, query and fragment components are ignored.
@@ -124,6 +151,33 @@ public final class SimpleContainerFactory {
             throws ProcessingException {
         final SimpleContainer container = ContainerFactory.createContainer(SimpleContainer.class, config);
         return create(address, context, container);
+    }
+
+    /**
+     * Create a {@link Closeable} that registers an {@link Container} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
+     * <p/>
+     * This implementation defers to the
+     * {@link ContainerFactory#createContainer(Class, javax.ws.rs.core.Application)} method
+     * for creating an Container that manages the root resources.
+     *
+     * @param address the URI to create the http server. The URI scheme must be
+     *                equal to "https". The URI user information and host
+     *                are ignored If the URI port is not present then port 143 will be
+     *                used. The URI path, query and fragment components are ignored.
+     * @param context this is the SSL context used for SSL connections
+     * @param config  the resource configuration.
+     * @param count   this is the number of threads to be used
+     * @param select  this is the number of selector threads to use
+     * @return the closeable connection, with the endpoint started
+     * @throws ProcessingException      Thrown when problems during server creation
+     * @throws IllegalArgumentException if <code>address</code> is null
+     */
+    public static Closeable create(URI address, SSLContext context, ResourceConfig config, int count, int select)
+            throws ProcessingException {
+        final SimpleContainer container = ContainerFactory.createContainer(SimpleContainer.class, config);
+        return create(address, context, container, count, select);
     }
 
     /**
@@ -142,6 +196,20 @@ public final class SimpleContainerFactory {
      * Creates HttpServer instance.
      *
      * @param uri        URI on which the Jersey web application will be deployed.
+     * @param appHandler web application handler.
+     * @param count      this is the number of threads to be used
+     * @param select     this is the number of selector threads to use
+     * @return the closeable connection, with the endpoint started
+     * @throws ProcessingException Thrown when problems during server creation
+     */
+    public static Closeable create(final URI uri, final ApplicationHandler appHandler, int count, int select) throws ProcessingException {
+        return create(uri, null, new SimpleContainer(appHandler), count, select);
+    }
+
+    /**
+     * Creates HttpServer instance.
+     *
+     * @param uri        URI on which the Jersey web application will be deployed.
      * @param context    this is the SSL context used for SSL connections
      * @param appHandler web application handler.
      * @return the closeable connection, with the endpoint started
@@ -149,6 +217,21 @@ public final class SimpleContainerFactory {
      */
     public static Closeable create(final URI uri, SSLContext context, final ApplicationHandler appHandler) throws ProcessingException {
         return create(uri, context, new SimpleContainer(appHandler));
+    }
+
+    /**
+     * Creates HttpServer instance.
+     *
+     * @param uri        URI on which the Jersey web application will be deployed.
+     * @param context    this is the SSL context used for SSL connections
+     * @param appHandler web application handler.
+     * @param count      this is the number of threads to be used
+     * @param select     this is the number of selector threads to use
+     * @return the closeable connection, with the endpoint started
+     * @throws ProcessingException Thrown when problems during server creation
+     */
+    public static Closeable create(final URI uri, SSLContext context, final ApplicationHandler appHandler, int count, int select) throws ProcessingException {
+        return create(uri, context, new SimpleContainer(appHandler), count, select);
     }
 
     /**
@@ -192,6 +275,59 @@ public final class SimpleContainerFactory {
         Connection connection;
         try {
             Server server = new ContainerServer(container);
+            connection = new SocketConnection(server);
+
+            connection.connect(listen, context);
+            container.onServerStart();
+        } catch (IOException ex) {
+            throw new ProcessingException("IOException thrown when trying to create simple server", ex);
+        }
+        return connection;
+    }
+
+    /**
+     * Create a {@link Closeable} that registers an {@link Container} that
+     * in turn manages all root resource and provder classes found by searching the
+     * classes referenced in the java classpath.
+     *
+     * @param address   the URI to create the http server. The URI scheme must be
+     *                  equal to "https". The URI user information and host
+     *                  are ignored If the URI port is not present then port 143 will be
+     *                  used. The URI path, query and fragment components are ignored.
+     * @param context   this is the SSL context used for SSL connections
+     * @param container the container that handles all HTTP requests
+     * @param count     this is the number of threads to be used
+     * @param select    this is the number of selector threads to use
+     * @return the closeable connection, with the endpoint started
+     * @throws ProcessingException Thrown when problems during server creation
+     */
+    public static Closeable create(final URI address, final SSLContext context, final SimpleContainer container, int count, int select)
+            throws ProcessingException {
+        if (address == null) {
+            throw new IllegalArgumentException("The URI must not be null");
+        }
+        String scheme = address.getScheme();
+        int defaultPort = 80;
+
+        if (context == null) {
+            if (!scheme.equalsIgnoreCase("http")) {
+                throw new IllegalArgumentException("The URI scheme should be 'http' when not using SSL");
+            }
+        } else {
+            if (!scheme.equalsIgnoreCase("https")) {
+                throw new IllegalArgumentException("The URI scheme should be 'https' when using SSL");
+            }
+            defaultPort = 143; // default HTTPS port
+        }
+        int port = address.getPort();
+
+        if (port == -1) {
+            port = defaultPort;
+        }
+        SocketAddress listen = new InetSocketAddress(port);
+        Connection connection;
+        try {
+            Server server = new ContainerServer(container, count, select);
             connection = new SocketConnection(server);
 
             connection.connect(listen, context);
