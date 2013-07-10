@@ -191,7 +191,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
 
         private Form getFormParameters(ContainerRequest requestContext) {
-            if (requestContext.getMediaType().equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
+            if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, requestContext.getMediaType())) {
                 requestContext.bufferEntity();
                 Form form;
                 if (decode) {
