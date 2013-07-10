@@ -47,20 +47,31 @@ import javax.ws.rs.client.WebTarget;
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class HelloWorld2ResourceITCase extends AbstractHelloWorldResourceITCase {
+public class HelloWorld1ResourceTest extends AbstractHelloWorldResourceTest {
 
     protected Class<?> getResourceClass() {
-        return HelloWorld2Resource.class;
+        return HelloWorld1Resource.class;
     }
 
     protected int getIndex() {
-        return 2;
+        return 1;
     }
 
     @Test
-    public void testStartupContainers() throws Exception {
-        WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("containers");
-        Assert.assertEquals(5, (int) target.request().get(Integer.TYPE));
+    public void testRegisteredServletNames() throws Exception {
+        WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("servlets");
+        Assert.assertEquals(5, (int)target.request().get(Integer.TYPE));
+
+        target = target.path("{name}");
+        testRegisteredServletNames(target, "org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application1");
+        testRegisteredServletNames(target, "application2");
+        testRegisteredServletNames(target, "application3");
+        testRegisteredServletNames(target, "org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application4");
+        testRegisteredServletNames(target, "javax.ws.rs.core.Application");
+    }
+
+    private void testRegisteredServletNames(WebTarget target, String servletName) throws Exception {
+        Assert.assertTrue(target.resolveTemplate("name", servletName).request().get(Boolean.TYPE));
     }
 
 }

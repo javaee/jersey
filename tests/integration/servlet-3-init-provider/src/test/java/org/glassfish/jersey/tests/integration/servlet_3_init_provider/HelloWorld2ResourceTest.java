@@ -42,25 +42,25 @@ package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class HelloWorld4ResourceITCase extends AbstractHelloWorldResourceITCase {
+public class HelloWorld2ResourceTest extends AbstractHelloWorldResourceTest {
 
     protected Class<?> getResourceClass() {
-        return HelloWorld4Resource.class;
+        return HelloWorld2Resource.class;
     }
 
     protected int getIndex() {
-        return 4;
+        return 2;
     }
 
     @Test
     public void testStartupContainers() throws Exception {
-        Response response = target("application" + getIndex()).path("helloworld" + getIndex()).path("filter").request().get();
-        Assert.assertEquals(404, response.getStatus());
+        WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("containers");
+        Assert.assertEquals(5, (int) target.request().get(Integer.TYPE));
     }
 
 }

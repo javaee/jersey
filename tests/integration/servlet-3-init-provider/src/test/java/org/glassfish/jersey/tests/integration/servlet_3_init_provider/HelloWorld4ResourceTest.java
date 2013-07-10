@@ -39,54 +39,28 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-
-import org.junit.Test;
 import org.junit.Assert;
+import org.junit.Test;
 
-import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public abstract class AbstractHelloWorldResourceITCase extends JerseyTest {
+public class HelloWorld4ResourceTest extends AbstractHelloWorldResourceTest {
 
-    @Override
-    protected ResourceConfig configure() {
-        return new ResourceConfig(getResourceClass());
+    protected Class<?> getResourceClass() {
+        return HelloWorld4Resource.class;
     }
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
-        return new ExternalTestContainerFactory();
+    protected int getIndex() {
+        return 4;
     }
 
     @Test
-    public void testHelloWorld() throws Exception {
-        for (int i = 1; i <= 5; i++) {
-            try {
-                String actual = target("application" + getIndex()).path("helloworld" + i).request().get(String.class);
-                if (i == getIndex()) {
-                    Assert.assertEquals("Hello World #" + getIndex() + "!", actual);
-                } else {
-                    Assert.fail("i: " + i + " | [" + actual + "]");
-                }
-            } catch (NotFoundException ex) {
-                if (i != getIndex()) {
-                    Assert.assertEquals(404, ex.getResponse().getStatus());
-                } else {
-                    Assert.fail("!!! i: " + i);
-                }
-            }
-        }
+    public void testStartupContainers() throws Exception {
+        Response response = target("application" + getIndex()).path("helloworld" + getIndex()).path("filter").request().get();
+        Assert.assertEquals(404, response.getStatus());
     }
-
-    protected abstract Class<?> getResourceClass();
-
-    protected abstract int getIndex();
 
 }
