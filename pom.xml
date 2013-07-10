@@ -972,7 +972,7 @@
             <dependency>
                 <groupId>org.eclipse.persistence</groupId>
                 <artifactId>org.eclipse.persistence.antlr</artifactId>
-                <version>2.3.2</version>
+                <version>${moxy.version}</version>
             </dependency>
 
             <dependency>
