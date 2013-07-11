@@ -5,11 +5,14 @@ import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.jvnet.hk2.spring.bridge.api.SpringBridge;
+import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Component;
@@ -56,18 +59,16 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
 
         LOGGER.fine("registering Spring injection resolvers");
         if(ctx != null) {
+            // initialize HK2 spring-bridge
+            SpringBridge.getSpringBridge().initializeSpringBridge(locator);
+            SpringIntoHK2Bridge springBridge = locator.getService(SpringIntoHK2Bridge.class);
+            springBridge.bridgeSpringBeanFactory(ctx);
+
             DynamicConfiguration c = Injections.getConfiguration(locator);
 
             // register Spring @Autowired annotation handler with HK2 ServiceLocator
             AutowiredInjectResolver r = new AutowiredInjectResolver(ctx);
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(r));
-
-            // register custom JSR 330 annotation handler
-            SpringJsr330Resolver sr = new SpringJsr330Resolver(ctx);
-            locator.inject(sr);
-            ActiveDescriptor ad = BuilderHelper.createConstantDescriptor(sr);
-            ad.setRanking(1);
-            c.addActiveDescriptor(ad);
 
             // register Spring context
             c.addActiveDescriptor(BuilderHelper.createConstantDescriptor(ctx, "SpringContext", ApplicationContext.class));
@@ -97,7 +98,7 @@ public class SpringLifecycleListener implements ContainerLifecycleListener {
             bb.to(cl);
             Injections.addBinding(bb, c);
             c.commit();
-            LOGGER.fine(String.format("- bean '%s' registered: ", beanName));
+            LOGGER.fine(String.format("- bean '%s' registered", beanName));
         }
         LOGGER.info("jersey-spring initialized");
     }
