@@ -99,7 +99,10 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         // TODO perhaps this should be done another way for the moment
         // create a temporary generator just to do this one task
         final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
-        JAXBContext jaxb;
+
+        JAXBContext jaxbContextCandidate;
+
+        final ClassLoader contextClassLoader = AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA());
         try {
             // Nasty ClassLoader magic. JAXB-API has some strange limitation about what classloader can
             // be used in OSGi environment - it must be same as context ClassLoader. Following code just
@@ -107,24 +110,26 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
             // see JERSEY-1818
             // see JSR222-46
 
-            final ClassLoader contextClassLoader = AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA());
-            final ClassLoader jerseyModuleClassLoader = wadlGenerator.getClass().getClassLoader();
-            ReflectionHelper.setContextClassLoaderPA(jerseyModuleClassLoader);
+            final ClassLoader jerseyModuleClassLoader =
+                    AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(wadlGenerator.getClass()));
 
-            jaxb = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath(),
-                    jerseyModuleClassLoader);
+            AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(jerseyModuleClassLoader));
 
-            ReflectionHelper.setContextClassLoaderPA(contextClassLoader);
+            jaxbContextCandidate = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath(), jerseyModuleClassLoader);
+
         } catch (JAXBException ex) {
             try {
                 // fallback for glassfish
                 LOGGER.log(Level.FINE, LocalizationMessages.WADL_JAXB_CONTEXT_FALLBACK(), ex);
-                jaxb = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath());
+                jaxbContextCandidate = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath());
             } catch (JAXBException innerEx) {
                 throw new ProcessingException(LocalizationMessages.ERROR_WADL_JAXB_CONTEXT(), ex);
             }
+        } finally {
+            AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(contextClassLoader));
         }
-        jaxbContext = jaxb;
+        
+        jaxbContext = jaxbContextCandidate;
     }
 
     @Override
