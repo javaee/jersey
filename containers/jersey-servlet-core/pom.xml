@@ -103,6 +103,7 @@
                             javax.annotation.*;version=!,
                             *
                         </Import-Package>
+                        <Export-Package>org.glassfish.jersey.servlet.*</Export-Package>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                 </configuration>
