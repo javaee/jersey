@@ -203,7 +203,7 @@ public class WebComponent {
                 }).to(ServletConfig.class).in(Singleton.class);
 
                 // @PersistenceUnit
-                for (final Enumeration initParams = servletConfig.getInitParameterNames(); initParams.hasMoreElements();) {
+                for (final Enumeration initParams = servletConfig.getInitParameterNames(); initParams.hasMoreElements(); ) {
                     final String initParamName = (String) initParams.nextElement();
 
                     if (initParamName.startsWith(PersistenceUnitBinder.PERSISTENCE_UNIT_PREFIX)) {
@@ -245,7 +245,7 @@ public class WebComponent {
      */
     final ApplicationHandler appHandler;
     /**
-     * Jersey background task scheduler - used for scheduling request timeout event handling tasks
+     * Jersey background task scheduler - used for scheduling request timeout event handling tasks.
      */
     final ScheduledExecutorService backgroundTaskScheduler;
     /**
@@ -350,7 +350,6 @@ public class WebComponent {
                 }
             });
         } catch (Exception e) {
-            // TODO: proper error handling.
             throw new ServletException(e);
         }
 
@@ -469,51 +468,6 @@ public class WebComponent {
         }
         return props;
     }
-
-// TODO remove the getPaths() method if really not needed.
-//    private String[] getPaths(String classpath, ServletContext context) throws ServletException {
-//        if (classpath == null) {
-//            String[] paths = {
-//                    context.getRealPath("/WEB-INF/lib"),
-//                    context.getRealPath("/WEB-INF/classes")
-//            };
-//            if (paths[0] == null && paths[1] == null) {
-////                String message = "The default deployment configuration that scans for " +
-////                        "classes in /WEB-INF/lib and /WEB-INF/classes is not supported " +
-////                        "for the application server." +
-////                        "Try using the package scanning configuration, see the JavaDoc for " +
-////                        PackagesResourceConfig.class.getName() + " and the property " +
-////                        PackagesResourceConfig.PROVIDER_PACKAGES + ".";
-////                throw new ServletException(message);
-//            }
-//            return paths;
-//        } else {
-//            String[] virtualPaths = classpath.split(";");
-//            List<String> resourcePaths = new ArrayList<String>();
-//            for (String virtualPath : virtualPaths) {
-//                virtualPath = virtualPath.trim();
-//                if (virtualPath.length() == 0) {
-//                    continue;
-//                }
-//                String path = context.getRealPath(virtualPath);
-//                if (path != null) {
-//                    resourcePaths.add(path);
-//                }
-//            }
-//            if (resourcePaths.isEmpty()) {
-////                String message = "None of the declared classpath locations, " +
-////                        classpath +
-////                        ", could be resolved. " +
-////                        "This could be because the default deployment configuration that scans for " +
-////                        "classes in classpath locations is not supported. " +
-////                        "Try using the package scanning configuration, see the JavaDoc for " +
-////                        PackagesResourceConfig.class.getName() + " and the property " +
-////                        PackagesResourceConfig.PROVIDER_PACKAGES + ".";
-////                throw new ServletException(message);
-//            }
-//            return resourcePaths.toArray(new String[resourcePaths.size()]);
-//        }
-//    }
 
     private void filterFormParameters(HttpServletRequest hsr, ContainerRequest request) throws IOException {
         if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())

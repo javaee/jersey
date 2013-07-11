@@ -769,8 +769,8 @@ public final class ServiceFinder<T> implements Iterable<T> {
         private void handleClassNotFoundException() throws ServiceConfigurationError {
             if (ignoreOnClassNotFound) {
                 // Provider implementation not found
-                if (LOGGER.isLoggable(Level.WARNING)) {
-                    LOGGER.log(Level.WARNING,
+                if (LOGGER.isLoggable(Level.CONFIG)) {
+                    LOGGER.log(Level.CONFIG,
                             LocalizationMessages.PROVIDER_NOT_FOUND(nextName, service));
                 }
                 nextName = null;

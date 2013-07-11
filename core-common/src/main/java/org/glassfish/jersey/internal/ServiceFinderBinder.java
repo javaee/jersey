@@ -43,9 +43,10 @@ import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Simple ServiceFinder injection binder.
@@ -69,6 +70,8 @@ public class ServiceFinderBinder<T> extends AbstractBinder {
      * Create a new service finder injection binder.
      *
      * @param contract contract of the service providers bound by this binder.
+     * @param applicationProperties map containing application properties. May be {@code null}.
+     * @param runtimeType runtime (client or server) where the service finder binder is used.
      */
     public ServiceFinderBinder(Class<T> contract, Map<String, Object> applicationProperties, RuntimeType runtimeType) {
         this.contract = contract;
@@ -79,12 +82,12 @@ public class ServiceFinderBinder<T> extends AbstractBinder {
     @Override
     protected void configure() {
         final boolean METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT = false;
-        boolean enableMetainfServicesLookup = ! METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT;
+        boolean disableMetainfServicesLookup = METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT;
         if (applicationProperties != null) {
-            enableMetainfServicesLookup = ! PropertiesHelper.getValue(applicationProperties, runtimeType,
+            disableMetainfServicesLookup = PropertiesHelper.getValue(applicationProperties, runtimeType,
                     CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT, Boolean.class);
         }
-        if (enableMetainfServicesLookup) {
+        if (!disableMetainfServicesLookup) {
             for (T t : ServiceFinder.find(contract, true)) {
                 bind(t).to(contract);
             }

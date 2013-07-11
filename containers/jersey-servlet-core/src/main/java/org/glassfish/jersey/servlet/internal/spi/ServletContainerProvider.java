@@ -47,7 +47,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 
 /**
  * This is internal Jersey SPI to hook to Jersey servlet initialization process driven by
- * {@link org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer Jersey's ServletContainerInitializer}.
+ * {@code org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer}.
  *
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  * @since 2.1
@@ -58,7 +58,8 @@ public interface ServletContainerProvider {
      * Do your initialization job before Jersey starts its servlet initialization.
      *
      * @param servletContext the {@link ServletContext} of the web application that is being started
-     * @throws ServletException if an error has occurred. {@link javax.servlet.ServletContainerInitializer#onStartup} is interrupted.
+     * @throws ServletException if an error has occurred. {@code javax.servlet.ServletContainerInitializer.onStartup}
+     *                          is interrupted.
      */
     public void init(ServletContext servletContext) throws ServletException;
 
@@ -69,7 +70,7 @@ public interface ServletContainerProvider {
      * methods invocation.
      *
      * It does not matter servlet container is configured in {@code web.xml} or by
-     * {@link org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer}.
+     * {@code org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer}.
      *
      * @param resourceConfig Jersey application configuration.
      * @throws ServletException if an error has occurred.
@@ -79,12 +80,14 @@ public interface ServletContainerProvider {
     /**
      * Notifies the provider about all registered Jersey servlets by its names.
      * Currently it provides names of registered {@link ServletContainer} or
-     * {@link org.glassfish.jersey.servlet.portability.PortableServletContainer} servlets.
+     * {@code org.glassfish.jersey.servlet.portability.PortableServletContainer} servlets.
      *
      * It does not matter servlet container is configured in {@code web.xml} or by
-     * {@link org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer}.
+     * {@code org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer}.
      *
-     * @param servletNames Jersey's ServletContainer names. May be empty.
+     * @param servletContext the {@code ServletContext} of the JAX-RS/Jersey web application that
+     *                       is being started.
+     * @param servletNames   Jersey's ServletContainer names. May be empty.
      * @throws ServletException if an error has occurred.
      */
     public void onRegister(ServletContext servletContext, String... servletNames) throws ServletException;

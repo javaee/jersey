@@ -65,12 +65,11 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.glassfish.jersey.servlet.WebComponent;
 import org.glassfish.jersey.servlet.init.internal.LocalizationMessages;
+import org.glassfish.jersey.servlet.internal.ServletContainerProviderFactory;
+import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.glassfish.jersey.servlet.internal.ServletContainerProviderFactory;
-import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 
 /*
  It is RECOMMENDED that implementations support the Servlet 3 framework
@@ -115,6 +114,7 @@ import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
  application-supplied subclass of Application SHOULD be identified using an
  init-param with a param-name of javax.ws.rs.Application.
  */
+
 /**
  * {@link ServletContainerInitializer} implementation used for Servlet 3.x deployment.
  *
@@ -188,8 +188,9 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
 
     /**
      * Adds all Jersey servlets configured in {@code web.xml} to the set of servlet names ({@code servletNames}).
+     *
      * @param servletContext the {@link ServletContext} of the web application that is being started
-     * @param servletNames set of programmatically registered Jersey servlet names, that will be enhanced
+     * @param servletNames   set of programmatically registered Jersey servlet names, that will be enhanced
      */
     private static void collectJerseyServletNames(ServletContext servletContext, Set<String> servletNames) {
         for (ServletRegistration servletRegistration : servletContext.getServletRegistrations().values()) {
@@ -200,7 +201,9 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
     }
 
     /**
-     * Is {@code className} Jersey's servlet?
+     * Check if the {@code className} is an implementation of a Jersey Servlet container.
+     *
+     * @return {@code true} if the class is a Jersey servlet container class, {@code false} otherwise.
      */
     private static boolean isJerseyServlet(String className) {
         return ServletContainer.class.getName().equals(className) ||
@@ -215,7 +218,7 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
     }
 
     private void collectJaxRsRegistrations(Map<String, ? extends Registration> registrations,
-            List<Registration> collected, Class<? extends Application> a) {
+                                           List<Registration> collected, Class<? extends Application> a) {
         for (Registration sr : registrations.values()) {
             Map<String, String> ips = sr.getInitParameters();
             if (ips.containsKey(ServletProperties.JAXRS_APPLICATION_CLASS)) {
@@ -321,7 +324,7 @@ public class JerseyServletContainerInitializer implements ServletContainerInitia
                 } else {
                     // Error
                     LOGGER.log(Level.SEVERE, LocalizationMessages.JERSEY_APP_NO_MAPPING_OR_ANNOTATION(
-                                    a.getName(), ApplicationPath.class.getSimpleName()));
+                            a.getName(), ApplicationPath.class.getSimpleName()));
                 }
             } else {
                 LOGGER.log(Level.INFO, LocalizationMessages.JERSEY_APP_REGISTERED_APPLICATION(a.getName()));
