@@ -165,10 +165,9 @@ public class ServerBinder extends AbstractBinder {
         bindAsContract(ReferencesInitializer.class);
 
         // JAX-RS proxiable request scoped injections
-        bind(UriInfoInjectee.class).to(UriInfoInjectee.class).to(UriInfo.class).proxy(true).in(RequestScoped.class);
-        bind(HttpHeadersInjectee.class).to(HttpHeadersInjectee.class).to(HttpHeaders.class).proxy(true).in(RequestScoped.class);
-        bind(RequestInjectee.class).to(RequestInjectee.class).to(Request.class).proxy(true).in(RequestScoped.class);
-        bind(SecurityContextInjectee.class).to(SecurityContextInjectee.class).to(SecurityContext.class).proxy(true).in(RequestScoped.class);
-
+        bindAsContract(UriInfoInjectee.class).to(UriInfo.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindAsContract(HttpHeadersInjectee.class).to(HttpHeaders.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindAsContract(RequestInjectee.class).to(Request.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindAsContract(SecurityContextInjectee.class).to(SecurityContext.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
     }
 }
