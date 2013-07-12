@@ -41,6 +41,7 @@ package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -48,7 +49,9 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Test;
 import org.junit.Assert;
 
+import java.net.URI;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.UriBuilder;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
@@ -56,7 +59,14 @@ import javax.ws.rs.NotFoundException;
 public abstract class AbstractHelloWorldResourceTest extends JerseyTest {
 
     @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path(AbstractHelloWorldResource.CONTEXT_ROOT).build();
+    }
+
+    @Override
     protected ResourceConfig configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+
         return new ResourceConfig(getResourceClass());
     }
 

@@ -48,6 +48,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 /**
  * This is internal Jersey SPI to hook to Jersey servlet initialization process driven by
  * {@code org.glassfish.jersey.servlet.init.JerseyServletContainerInitializer}.
+ * The provider implementation class is registered via {@code META-INF/services}.
  *
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  * @since 2.1

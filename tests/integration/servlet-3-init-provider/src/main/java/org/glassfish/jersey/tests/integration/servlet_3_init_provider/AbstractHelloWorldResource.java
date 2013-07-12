@@ -40,13 +40,14 @@
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public abstract class AbstractHelloWorldResource {
+
+    public static final String CONTEXT_ROOT = "/servlet-3-init-provider";
 
     @GET
     @Produces("text/plain")

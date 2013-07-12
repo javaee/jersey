@@ -39,11 +39,6 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import javax.ws.rs.client.WebTarget;
-
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
@@ -55,12 +50,6 @@ public class HelloWorld2ResourceTest extends AbstractHelloWorldResourceTest {
 
     protected int getIndex() {
         return 2;
-    }
-
-    @Test
-    public void testStartupContainers() throws Exception {
-        WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("containers");
-        Assert.assertEquals(5, (int) target.request().get(Integer.TYPE));
     }
 
 }

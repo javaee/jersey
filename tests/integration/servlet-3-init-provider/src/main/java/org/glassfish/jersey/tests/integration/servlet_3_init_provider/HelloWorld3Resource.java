@@ -39,10 +39,7 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Context;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
@@ -50,18 +47,9 @@ import javax.ws.rs.core.Context;
 @Path("helloworld3")
 public class HelloWorld3Resource extends AbstractHelloWorldResource {
 
-    @Context
-    private HttpServletRequest request;
-
     @Override
     protected String createName() {
         return "World #3";
-    }
-
-    @GET
-    @Path("filter")
-    public String getFilter() {
-        return (String) request.getAttribute("FILTER");
     }
 
 }

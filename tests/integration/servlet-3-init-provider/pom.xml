@@ -59,6 +59,7 @@
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
@@ -79,11 +80,8 @@
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-            </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>

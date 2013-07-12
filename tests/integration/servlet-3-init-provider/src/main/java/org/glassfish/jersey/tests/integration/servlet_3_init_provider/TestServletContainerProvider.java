@@ -52,13 +52,14 @@ import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 
 /**
  * This is just test purpose implementation of Jersey internal SPI {@link ServletContainerProvider}.
- * The provider class is registered via {@code META-INF/services}.
  *
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class TestServletContainerProvider implements ServletContainerProvider {
 
-    private static Set<String> servletNames;
+    public static final String TEST_FILTER = "TestFilter";
+
+    private static Set<String> SERVLET_NAMES;
 
     @Override
     public void init(ServletContext servletContext) throws ServletException {
@@ -73,14 +74,14 @@ public class TestServletContainerProvider implements ServletContainerProvider {
 
     @Override
     public void onRegister(ServletContext servletContext, String... servletNames) throws ServletException {
-        this.servletNames = new HashSet<String>(Arrays.asList(servletNames));
+        this.SERVLET_NAMES = new HashSet<String>(Arrays.asList(servletNames));
 
         servletContext.addFilter("TestFilter", TestFilter.class).
                 addMappingForServletNames(EnumSet.allOf(DispatcherType.class), false, servletNames);
     }
 
     public static Set<String> getServletNames() {
-        return servletNames;
+        return SERVLET_NAMES;
     }
 
 }

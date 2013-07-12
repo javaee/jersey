@@ -58,7 +58,7 @@ public class HelloWorld4ResourceTest extends AbstractHelloWorldResourceTest {
     }
 
     @Test
-    public void testStartupContainers() throws Exception {
+    public void testRegisterFilter() throws Exception {
         Response response = target("application" + getIndex()).path("helloworld" + getIndex()).path("filter").request().get();
         Assert.assertEquals(404, response.getStatus());
     }

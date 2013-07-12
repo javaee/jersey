@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
@@ -50,6 +53,12 @@ public class HelloWorld5ResourceTest extends AbstractHelloWorldResourceTest {
 
     protected int getIndex() {
         return 5;
+    }
+
+    @Test
+    public void testRegisterFilter() throws Exception {
+        String actual = target("application" + getIndex()).path("helloworld" + getIndex()).path("filter").request().get(String.class);
+        Assert.assertEquals(TestServletContainerProvider.TEST_FILTER, actual);
     }
 
 }

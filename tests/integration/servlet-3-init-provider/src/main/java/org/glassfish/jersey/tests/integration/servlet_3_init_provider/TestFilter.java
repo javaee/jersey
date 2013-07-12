@@ -61,8 +61,8 @@ public class TestFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (((HttpServletRequest)request).getRequestURI().startsWith("/application3")) {
-            request.setAttribute("FILTER", "TestFilter");
+        if (((HttpServletRequest)request).getRequestURI().startsWith(AbstractHelloWorldResource.CONTEXT_ROOT + "/application5")) {
+            request.setAttribute("FILTER", TestServletContainerProvider.TEST_FILTER);
         }
 
         chain.doFilter(request, response);
