@@ -11,7 +11,7 @@ import java.lang.annotation.Annotation;
 import java.util.logging.Logger;
 
 /**
- * JAX-RS Provider class for bootstrapping Jersey 2 Spring integration.
+ * JAX-RS Provider class for processing Jersey 2 Spring integration container lifecycle events.
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
  */

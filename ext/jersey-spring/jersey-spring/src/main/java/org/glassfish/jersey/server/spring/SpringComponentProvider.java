@@ -21,8 +21,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 /**
- * Custom ComponentProvider class for making Jersey skip JAX-RS Spring component
- * lifecycle management and leave it to us.
+ * Custom ComponentProvider class.
+ * Responsible for 1) bootstrapping Jersey 2 Spring integration and
+ * 2) making Jersey skip JAX-RS Spring component lifecycle management and leave it to us.
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
  */
