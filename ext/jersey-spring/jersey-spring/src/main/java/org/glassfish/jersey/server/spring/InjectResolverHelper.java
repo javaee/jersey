@@ -7,6 +7,11 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.logging.Logger;
 
+/**
+ * Helper class for injection resolvers.
+ *
+ * @author Marko Asplund (marko.asplund at yahoo.com)
+ */
 public class InjectResolverHelper {
     private static final Logger LOGGER = Logger.getLogger(InjectResolverHelper.class.getName());
     private ApplicationContext ctx;
