@@ -77,7 +77,7 @@ public abstract class AbstractHelloWorldResourceTest extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= AbstractHelloWorldResource.NUMBER_OF_APPLICATIONS; i++) {
             try {
                 String actual = target("application" + getIndex()).path("helloworld" + i).request().get(String.class);
                 if (i == getIndex()) {

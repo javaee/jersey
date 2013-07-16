@@ -55,7 +55,7 @@ public class HelloWorld3Resource extends AbstractHelloWorldResource {
 
     @GET
     @Path("containers")
-    public int getContainersCount() {
+    public int getContainersCount() throws InterruptedException {
         return TestContainerLifecycleListener.getStartupCount();
     }
 

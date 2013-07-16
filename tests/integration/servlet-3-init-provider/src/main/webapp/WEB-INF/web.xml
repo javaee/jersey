@@ -54,6 +54,7 @@
             <param-name>javax.ws.rs.Application</param-name>
             <param-value>org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application2</param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>application3</servlet-name>
@@ -62,6 +63,7 @@
             <param-name>jersey2#javax.ws.rs.Application</param-name>
             <param-value>org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application3</param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>javax.ws.rs.core.Application</servlet-name>
@@ -71,6 +73,7 @@
                 org.glassfish.jersey.tests.integration.servlet_3_init_provider.HelloWriter
             </param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet-mapping>

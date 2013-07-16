@@ -60,7 +60,7 @@ public class HelloWorld1ResourceTest extends AbstractHelloWorldResourceTest {
     @Test
     public void testRegisteredServletNames() throws Exception {
         WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("servlets");
-        Assert.assertEquals(5, (int)target.request().get(Integer.TYPE));
+        Assert.assertEquals(AbstractHelloWorldResource.NUMBER_OF_APPLICATIONS, (int)target.request().get(Integer.TYPE));
 
         target = target.path("{name}");
         testRegisteredServletNames(target, "org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application1");

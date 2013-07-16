@@ -60,7 +60,7 @@ public class HelloWorld3ResourceTest extends AbstractHelloWorldResourceTest {
     @Test
     public void testStartupContainers() throws Exception {
         WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("containers");
-        Assert.assertEquals(5, (int) target.request().get(Integer.TYPE));
+        Assert.assertEquals(AbstractHelloWorldResource.NUMBER_OF_APPLICATIONS, (int) target.request().get(Integer.TYPE));
     }
 
 }
