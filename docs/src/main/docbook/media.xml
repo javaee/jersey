@@ -477,7 +477,7 @@ final Application application = new ResourceConfig()
 
                     <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
-    &lt;artifactId&gt;jersey-media-processing&lt;/artifactId&gt;
+    &lt;artifactId&gt;jersey-media-json-processing&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
