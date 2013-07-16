@@ -80,14 +80,14 @@ class ParamConverters {
                 return _fromString(value);
             } catch (InvocationTargetException ex) {
                 // if the value is an empty string, return null
-                if (value.length() == 0) {
+                if (value.isEmpty()) {
                     return null;
                 }
-                Throwable target = ex.getTargetException();
-                if (target instanceof WebApplicationException) {
-                    throw (WebApplicationException) target;
+                Throwable cause = ex.getCause();
+                if (cause instanceof WebApplicationException) {
+                    throw (WebApplicationException) cause;
                 } else {
-                    throw new ExtractorException(target);
+                    throw new ExtractorException(cause);
                 }
             } catch (Exception ex) {
                 throw new ProcessingException(ex);
@@ -102,7 +102,6 @@ class ParamConverters {
         }
 
     }
-
 
     /**
      * Provider of {@link ParamConverter param converter} that produce the target Java type instance
@@ -228,12 +227,14 @@ class ParamConverters {
          */
         public AggregatedProvider(@Context ServiceLocator locator) {
             providers = new ParamConverterProvider[]{
+                    // ordering is important (e.g. Date provider must be executed before String Constructor
+                    // as Date has a deprecated String constructor
+                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class),
+                    locator.createAndInitialize(DateProvider.class),
                     locator.createAndInitialize(TypeFromStringEnum.class),
                     locator.createAndInitialize(TypeValueOf.class),
                     locator.createAndInitialize(TypeFromString.class),
-                    locator.createAndInitialize(StringConstructor.class),
-                    locator.createAndInitialize(DateProvider.class),
-                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class)
+                    locator.createAndInitialize(StringConstructor.class)
             };
         }
 
