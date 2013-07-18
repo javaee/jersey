@@ -177,8 +177,10 @@
         </section>
 
         <section xml:id="server-jdk">
-            <title>Served side application on supported container</title>
-            <para>Jersey provides support for programmatic deployment on some containers: Grizzly 2 (http, servlet),
+            <title>Server-side application on supported containers</title>
+            <para>Apart for a standard JAX-RS Servlet-based deployment that works with any Servlet container that
+                supports Servlet 2.5 and higher,
+                Jersey provides support for programmatic deployment to the following containers: Grizzly 2 (HTTP and Servlet),
                 JDK Http server and Simple Http server. This chapter presents only required maven dependencies,
                 more information can be found in <xref linkend="deployment"/>.
             </para>
