@@ -179,6 +179,26 @@ public final class ClientProperties {
     public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE + ".client";
 
     /**
+     * An integer value that defines the buffer size used to buffer client-side request entity in order to
+     * determine its size and set the value of HTTP <tt>{@value javax.ws.rs.core.HttpHeaders#CONTENT_LENGTH}</tt> header.
+     * <p>
+     * If the entity size exceeds the configured buffer size, the buffering would be cancelled and the entity size
+     * would not be determined. Value less or equal to zero disable the buffering of the entity at all.
+     * </p>
+     * This property can be used on the client side to override the outbound message buffer size value - default or the global
+     * custom value set using the {@value org.glassfish.jersey.CommonProperties#OUTBOUND_CONTENT_LENGTH_BUFFER} global property.
+     * <p>
+     * The default value is <tt>{@value org.glassfish.jersey.message.internal.CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt>.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.2
+     */
+    public static final String OUTBOUND_CONTENT_LENGTH_BUFFER = CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".client";
+
+    /**
      * If {@code true} then disable configuration of Json Processing (JSR-353) feature on client.
      * <p>
      * By default Json Processing on client is automatically enabled if global property

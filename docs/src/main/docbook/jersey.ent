@@ -267,6 +267,7 @@
 <!ENTITY jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#JSON_PROCESSING_FEATURE_DISABLE'>ClientProperties.JSON_PROCESSING_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.client.ClientProperties.METAINF_SERVICES_LOOKUP_DISABLE "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#METAINF_SERVICES_LOOKUP_DISABLE'>ClientProperties.METAINF_SERVICES_LOOKUP_DISABLE</link>" >
 <!ENTITY jersey.client.ClientProperties.MOXY_JSON_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#MOXY_JSON_FEATURE_DISABLE'>ClientProperties.MOXY_JSON_FEATURE_DISABLE</link>" >
+<!ENTITY jersey.client.ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#OUTBOUND_CONTENT_LENGTH_BUFFER'>ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</link>" >
 <!ENTITY jersey.client.ClientProperties.READ_TIMEOUT "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#READ_TIMEOUT'>ClientProperties.READ_TIMEOUT</link>" >
 <!ENTITY jersey.client.ClientProperties.USE_ENCODING "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#USE_ENCODING'>ClientProperties.USE_ENCODING</link>" >
 <!ENTITY jersey.client.ContentEncoder "<link xlink:href='&jersey.javadoc.path;/common/spi/ContentEncoder.html'>ContentEncoder</link>">
@@ -337,6 +338,7 @@
 <!ENTITY jersey.server.ServerProperties.MEDIA_TYPE_MAPPINGS "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MEDIA_TYPE_MAPPINGS'>ServerProperties.MEDIA_TYPE_MAPPINGS</link>" >
 <!ENTITY jersey.server.ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#METAINF_SERVICES_LOOKUP_DISABLE'>ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE</link>" >
 <!ENTITY jersey.server.ServerProperties.MOXY_JSON_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MOXY_JSON_FEATURE_DISABLE'>ServerProperties.MOXY_JSON_FEATURE_DISABLE</link>" >
+<!ENTITY jersey.server.ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#OUTBOUND_CONTENT_LENGTH_BUFFER'>ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</link>" >
 <!ENTITY jersey.server.ServerProperties.PROVIDER_CLASSNAMES "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#PROVIDER_CLASSNAMES'>ServerProperties.PROVIDER_CLASSNAMES</link>" >
 <!ENTITY jersey.server.ServerProperties.PROVIDER_CLASSPATH "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#PROVIDER_CLASSPATH'>ServerProperties.PROVIDER_CLASSPATH</link>" >
 <!ENTITY jersey.server.ServerProperties.PROVIDER_PACKAGES "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#PROVIDER_PACKAGES'>ServerProperties.PROVIDER_PACKAGES</link>" >

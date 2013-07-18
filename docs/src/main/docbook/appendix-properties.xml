@@ -142,17 +142,6 @@
                 </thead>
                 <tbody>
                     <row>
-                        <entry/>
-                        <entry><literal>jersey.config.contentLength.buffer.server</literal></entry>
-                        <entry>
-                            <para>
-                                An integer value that defines the buffer size used to buffer the outbound message entity in order to
-                                determine its size and set the value of HTTP <literal>Content-Length</literal> header. Default
-                                value is <literal>8192</literal>.
-                            </para>
-                        </entry>
-                    </row>
-                    <row>
                         <entry>&jersey.server.ServerProperties.BV_FEATURE_DISABLE;</entry>
                         <entry><literal>jersey.config.beanValidation.disable.server</literal></entry>
                         <entry>
@@ -162,8 +151,10 @@
                         </entry>
                     </row>
                     <row>
-                        <entry>&jersey.server.ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK;</entry>
-                        <entry><literal>jersey.config.beanValidation.disable.validateOnExecutableCheck.server</literal></entry>
+                        <entry><link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK'>ServerProperties
+                            .BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK</link></entry>
+                        <entry><literal>jersey.config.beanValidation
+                            .disable.validateOnExecutableCheck.server</literal></entry>
                         <entry>
                             <para>
                                 Disables &lit.bv.ValidateOnExecution; check. Default value is <literal>false</literal>.
@@ -172,7 +163,8 @@
                     </row>
                     <row>
                         <entry>&jersey.server.ServerProperties.BV_SEND_ERROR_IN_RESPONSE;</entry>
-                        <entry><literal>jersey.config.beanValidation.enableOutputValidationErrorEntity.server</literal></entry>
+                        <entry><literal>jersey.config.beanValidation
+                            .enableOutputValidationErrorEntity.server</literal></entry>
                         <entry>
                             <para>
                                 Enables sending validation error information to the client. Default value is <literal>false</literal>.
@@ -228,7 +220,8 @@
                     </row>
                     <row>
                         <entry>&jersey.server.ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE;</entry>
-                        <entry><literal>jersey.config.disableMetainfServicesLookup.server</literal></entry>
+                        <entry><literal>jersey.config
+                            .disableMetainfServicesLookup.server</literal></entry>
                         <entry>
                             <para>
                                 Disables META-INF/services lookup on server. Default value is <literal>false</literal>.
@@ -241,6 +234,18 @@
                         <entry>
                             <para>
                                 Disables configuration of MOXy Json feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER;
+                            (Jersey 2.2 or later)</entry>
+                        <entry><literal>jersey.config.contentLength.buffer.server</literal></entry>
+                        <entry>
+                            <para>
+                                An integer value that defines the buffer size used to buffer the outbound message entity in order to
+                                determine its size and set the value of HTTP <literal>Content-Length</literal> header. Default
+                                value is <literal>8192</literal>.
                             </para>
                         </entry>
                     </row>
@@ -279,7 +284,8 @@
                     </row>
                     <row>
                         <entry>&jersey.server.ServerProperties.PROVIDER_SCANNING_RECURSIVE;</entry>
-                        <entry><literal>jersey.config.server.provider.scanning.recursive</literal></entry>
+                        <entry><literal>jersey.config.server
+                            .provider.scanning.recursive</literal></entry>
                         <entry>
                             <para>
                                 Sets the recursion strategy for package scanning. Default value is <literal>true</literal>.
@@ -288,7 +294,8 @@
                     </row>
                     <row>
                         <entry>&jersey.server.ServerProperties.RESOURCE_VALIDATION_DISABLE;</entry>
-                        <entry><literal>jersey.config.server.resource.validation.disable</literal></entry>
+                        <entry><literal>jersey.config.server
+                            .resource.validation.disable</literal></entry>
                         <entry>
                             <para>
                                 Disables <literal>Resource</literal> validation. Default value is <literal>false</literal>.
@@ -297,7 +304,8 @@
                     </row>
                     <row>
                         <entry>&jersey.server.ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS;</entry>
-                        <entry><literal>jersey.config.server.resource.validation.ignoreErrors</literal></entry>
+                        <entry><literal>jersey.config.server
+                            .resource.validation.ignoreErrors</literal></entry>
                         <entry>
                             <para>
                                 Determines whether validation of application resource models should fail even in case of a fatal
@@ -346,17 +354,6 @@
                     </row>
                 </thead>
                 <tbody>
-                    <row>
-                        <entry/>
-                        <entry><literal>jersey.config.contentLength.buffer.client</literal></entry>
-                        <entry>
-                            <para>
-                                An integer value that defines the buffer size used to buffer the outbound message entity in order to
-                                determine its size and set the value of HTTP <literal>Content-Length</literal> header. Default
-                                value is <literal>8192</literal>.
-                            </para>
-                        </entry>
-                    </row>
                     <row>
                         <entry>&jersey.client.ClientProperties.ASYNC_THREADPOOL_SIZE;</entry>
                         <entry><literal>jersey.config.client.async.threadPoolSize</literal></entry>
@@ -412,11 +409,14 @@
                         </entry>
                     </row>
                     <row>
-                        <entry>&jersey.client.ClientProperties.HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND;</entry>
-                        <entry><literal>jersey.config.client.httpUrlConnection.setMethodWorkaround</literal></entry>
+                        <entry><link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND'>ClientProperties
+                            .HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND</link></entry>
+                        <entry><literal>jersey.config.client
+                            .httpUrlConnection.setMethodWorkaround</literal></entry>
                         <entry>
                             <para>
-                                Declares that the client will try to set unsupported HTTP method to <literal>HttpURLConnection</literal> via reflection. Default value is <literal>false</literal>.
+                                Declares that the client will try to set unsupported HTTP method to <literal>HttpURLConnection</literal>
+                                via reflection. Default value is <literal>false</literal>.
                             </para>
                         </entry>
                     </row>
@@ -444,6 +444,18 @@
                         <entry>
                             <para>
                                 Disables configuration of MOXy Json feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER;
+                            (Jersey 2.2 or later)</entry>
+                        <entry><literal>jersey.config.contentLength.buffer.client</literal></entry>
+                        <entry>
+                            <para>
+                                An integer value that defines the buffer size used to buffer the outbound message entity in order to
+                                determine its size and set the value of HTTP <literal>Content-Length</literal> header. Default
+                                value is <literal>8192</literal>.
                             </para>
                         </entry>
                     </row>
