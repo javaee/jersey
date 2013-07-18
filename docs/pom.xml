@@ -110,7 +110,7 @@
                     <sourceDirectory>${src.dir}</sourceDirectory>
                     <targetDirectory>${project.build.directory}/docbook</targetDirectory>
                     <htmlStylesheet>/documentation.css</htmlStylesheet>
-                    <!--htmlStylesheet>http://jersey.java.net/documentation.css</htmlStylesheet-->
+                    <!--<htmlStylesheet>https://jersey.java.net/documentation.css</htmlStylesheet>-->
                     <partAutolabel>true</partAutolabel>
                     <sectionAutolabel>true</sectionAutolabel>
                     <sectionLabelIncludesComponentLabel>true</sectionLabelIncludesComponentLabel>

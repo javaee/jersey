@@ -167,7 +167,7 @@
             <orderedlist>
                 <listitem>
                     <para>
-                        URI building using &jaxrs.core.UriBuilder; and &jaxrs.core.UriTemplate; to safely build URIs;
+                        URI building using &jaxrs.core.UriBuilder; and &jersey.common.uri.UriTemplate; to safely build URIs;
                     </para>
                 </listitem>
                 <listitem>

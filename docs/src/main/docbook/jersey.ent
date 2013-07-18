@@ -55,7 +55,7 @@
 
 <!ENTITY jersey.docs.root.path "http://jersey.java.net/nonav/documentation/&docs.version;">
 <!ENTITY jersey.docs.index "&jersey.docs.root.path;/index.html">
-<!ENTITY jersey.javadoc.path "http://jersey.java.net/nonav/apidocs/&apidocs.version;/jersey/org/glassfish/jersey">
+<!ENTITY jersey.javadoc.path "http://jersey.java.net/apidocs/&apidocs.version;/jersey/org/glassfish/jersey">
 <!ENTITY jersey.site.path "https://jersey.java.net/project-info/&version;/jersey/project">
 <!ENTITY jee6.javadoc.path "http://docs.oracle.com/javaee/6/api">
 <!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
@@ -76,7 +76,7 @@
 <!ENTITY jaxb.javadoc.path "&jaxb.release.path;/docs/api/javax/xml/bind">
 
 <!ENTITY bv.project.link "<link xlink:href='http://beanvalidation.org/'>Bean Validation</link>">
-<!ENTITY bv11.javadoc.path "http://docs.jboss.org/hibernate/beanvalidation/spec/1.1/api/">
+<!ENTITY bv11.javadoc.path "http://docs.jboss.org/hibernate/beanvalidation/spec/1.1/api">
 
 <!ENTITY jackson.javadoc.version "$jackson-version">
 
@@ -97,23 +97,23 @@
 <!ENTITY lit.http.header.Accept "<literal>Accept</literal>">
 
 <!-- JDK links -->
-<!ENTITY jdk6.HttpUrlConnection "<link xlink:href='&jdk6.javadoc.path;//java/net/HttpURLConnection.html'>HttpURLConnection</link>">
-<!ENTITY jdk6.URI "<link xlink:href='&jdk6.javadoc.path;//java/net/URI.html'>URI</link>">
-<!ENTITY jdk6.KeyStore "<link xlink:href='&jdk6.javadoc.path;//java/security/KeyStore.html'>KeyStore</link>">
-<!ENTITY jdk6.TrustStore "<link xlink:href='&jdk6.javadoc.path;//java/security/TrustStore.html'>TrustStore</link>">
-<!ENTITY jdk6.SslContext "<link xlink:href='&jdk6.javadoc.path;//javax/net/ssl/SslContext.html'>SslContext</link>">
-<!ENTITY jdk6.HostnameVerifier "<link xlink:href='&jdk6.javadoc.path;//javax/net/ssl/HostnameVerifier.html'>HostnameVerifier</link>">
-<!ENTITY jdk6.String "<link xlink:href='&jdk6.javadoc.path;//java/io/String.html'>String</link>">
-<!ENTITY jdk6.InputStream "<link xlink:href='&jdk6.javadoc.path;//java/io/InputStream.html'>InputStream</link>">
-<!ENTITY jdk6.Reader "<link xlink:href='&jdk6.javadoc.path;//java/io/Reader.html'>Reader</link>">
-<!ENTITY jdk6.File "<link xlink:href='&jdk6.javadoc.path;//java/io/File.html'>File</link>">
-<!ENTITY jdk6.DataSource "<link xlink:href='&jdk6.javadoc.path;//javax/activation/DataSource.html'>DataSource</link>">
-<!ENTITY jdk6.Source "<link xlink:href='&jdk6.javadoc.path;//javax/xml/transform/Source.html'>Source</link>">
-<!ENTITY jdk6.JAXBElement "<link xlink:href='&jdk6.javadoc.path;//javax/xml/bind/JAXBElement.html'>JAXBElement</link>">
-<!ENTITY jdk6.Boolean "<link xlink:href='&jdk6.javadoc.path;//java/lang/Boolean.html'>Boolean</link>">
-<!ENTITY jdk6.Character "<link xlink:href='&jdk6.javadoc.path;//java/lang/Character.html'>Character</link>">
-<!ENTITY jdk6.Number "<link xlink:href='&jdk6.javadoc.path;//java/lang/Number.html'>Number</link>">
-<!ENTITY jdk6.ParameterizedType "<link xlink:href='&jdk6.javadoc.path;//java/lang/reflect/ParameterizedType.html'>ParameterizedType</link>">
+<!ENTITY jdk6.HttpUrlConnection "<link xlink:href='&jdk6.javadoc.path;/java/net/HttpURLConnection.html'>HttpURLConnection</link>">
+<!ENTITY jdk6.URI "<link xlink:href='&jdk6.javadoc.path;/java/net/URI.html'>URI</link>">
+<!ENTITY jdk6.KeyStore "<link xlink:href='&jdk6.javadoc.path;/java/security/KeyStore.html'>KeyStore</link>">
+<!ENTITY jdk6.TrustStore "<link xlink:href='&jdk6.javadoc.path;/java/security/TrustStore.html'>TrustStore</link>">
+<!ENTITY jdk6.SslContext "<link xlink:href='&jdk6.javadoc.path;/javax/net/ssl/SslContext.html'>SslContext</link>">
+<!ENTITY jdk6.HostnameVerifier "<link xlink:href='&jdk6.javadoc.path;/javax/net/ssl/HostnameVerifier.html'>HostnameVerifier</link>">
+<!ENTITY jdk6.String "<link xlink:href='&jdk6.javadoc.path;/java/io/String.html'>String</link>">
+<!ENTITY jdk6.InputStream "<link xlink:href='&jdk6.javadoc.path;/java/io/InputStream.html'>InputStream</link>">
+<!ENTITY jdk6.Reader "<link xlink:href='&jdk6.javadoc.path;/java/io/Reader.html'>Reader</link>">
+<!ENTITY jdk6.File "<link xlink:href='&jdk6.javadoc.path;/java/io/File.html'>File</link>">
+<!ENTITY jdk6.DataSource "<link xlink:href='&jdk6.javadoc.path;/javax/activation/DataSource.html'>DataSource</link>">
+<!ENTITY jdk6.Source "<link xlink:href='&jdk6.javadoc.path;/javax/xml/transform/Source.html'>Source</link>">
+<!ENTITY jdk6.JAXBElement "<link xlink:href='&jdk6.javadoc.path;/javax/xml/bind/JAXBElement.html'>JAXBElement</link>">
+<!ENTITY jdk6.Boolean "<link xlink:href='&jdk6.javadoc.path;/java/lang/Boolean.html'>Boolean</link>">
+<!ENTITY jdk6.Character "<link xlink:href='&jdk6.javadoc.path;/java/lang/Character.html'>Character</link>">
+<!ENTITY jdk6.Number "<link xlink:href='&jdk6.javadoc.path;/java/lang/Number.html'>Number</link>">
+<!ENTITY jdk6.ParameterizedType "<link xlink:href='&jdk6.javadoc.path;/java/lang/reflect/ParameterizedType.html'>ParameterizedType</link>">
 
 
 <!ENTITY jdk7.org.w3c.dom.Document "<link xlink:href='&jdk7.javadoc.path;/org/w3c/dom/Document.html'>Document</link>">
@@ -170,7 +170,6 @@
 <!ENTITY jaxrs.core.Response "<link xlink:href='&jax-rs.javadoc.path;/core/Response.html'>Response</link>">
 <!ENTITY jaxrs.core.Response.ResponseBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/Response.ResponseBuilder.html'>Response.ResponseBuilder</link>">
 <!ENTITY jaxrs.core.UriBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/UriBuilder.html'>UriBuilder</link>">
-<!ENTITY jaxrs.core.UriTemplate "<link xlink:href='&jax-rs.javadoc.path;/core/UriTemplate.html'>UriTemplate</link>">
 <!ENTITY jaxrs.core.Variant "<link xlink:href='&jax-rs.javadoc.path;/core/Variant.html'>Variant</link>">
 <!ENTITY jaxrs.core.Variant.VariantListBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/Variant.VariantListBuilder.html'>Variant.VariantListBuilder</link>">
 <!ENTITY jaxrs.core.Feature "<link xlink:href='&jax-rs.javadoc.path;/core/Feature.html'>Feature</link>">
@@ -293,6 +292,8 @@
 <!ENTITY jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html#MOXY_JSON_FEATURE_DISABLE'>CommonProperties.MOXY_JSON_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.common.CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html#OUTBOUND_CONTENT_LENGTH_BUFFER'>CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</link>" >
 <!ENTITY jersey.common.SslConfigurator "<link xlink:href='&jersey.javadoc.path;/SslConfigurator.html'>ClientConfig</link>">
+<!ENTITY jersey.common.uri.UriTemplate "<link xlink:href='&jersey.javadoc.path;/uri/UriTemplate.html'>UriTemplate</link>">
+
 
 <!ENTITY jersey.ext.ValidationFeature "<link xlink:href='&jersey.javadoc.path;/server/validation/ValidationFeature.html'>ValidationFeature</link>">
 <!ENTITY jersey.ext.ValidationConfig "<link xlink:href='&jersey.javadoc.path;/server/validation/ValidationConfig.html'>ValidationConfig</link>">
@@ -461,7 +462,6 @@
 <!ENTITY lit.jaxrs.core.Response "<literal>Response</literal>">
 <!ENTITY lit.jaxrs.core.Response.ResponseBuilder "<literal>Response.ResponseBuilder</literal>">
 <!ENTITY lit.jaxrs.core.UriBuilder "<literal>UriBuilder</literal>">
-<!ENTITY lit.jaxrs.core.UriTemplate "<literal>UriTemplate</literal>">
 <!ENTITY lit.jaxrs.core.Variant "<literal>Variant</literal>">
 <!ENTITY lit.jaxrs.core.Variant.VariantListBuilder "<literal>Variant.VariantListBuilder</literal>">
 
@@ -523,6 +523,7 @@
 <!ENTITY lit.jaxrs.client.ClientRequestContext "<literal>ClientRequestContext</literal>">
 
 <!-- Jersey literals -->
+<!ENTITY lit.jersey.common.uri.UriTemplate "<literal>UriTemplate</literal>">
 <!ENTITY lit.jersey.server.ChunkedOutput "<literal>ChunkedOutput</literal>">
 <!ENTITY lit.jersey.client.ChunkedInput "<literal>ChunkedInput</literal>">
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">

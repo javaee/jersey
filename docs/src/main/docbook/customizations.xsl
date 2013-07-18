@@ -54,7 +54,7 @@
             <xsl:element name="a">
                 <xsl:attribute name="href">http://jersey.java.net</xsl:attribute>
                 <xsl:element name="img">
-                    <xsl:attribute name="src">http://jersey.java.net/images/Jersey_yellow.png</xsl:attribute>
+                    <xsl:attribute name="src">http://jersey.java.net/images/jersey_logo.png</xsl:attribute>
                 </xsl:element>
             </xsl:element>
         </xsl:element>

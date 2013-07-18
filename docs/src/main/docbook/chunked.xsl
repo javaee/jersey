@@ -48,7 +48,7 @@
     <xsl:import href="highlight.xsl"/>
 
     <xsl:template name="user.header.content">
-    <img src="/images/Jersey_yellow.png">
+    <img src="/images/jersey_logo.png">
     </xsl:template>
 
     <xsl:template name="user.head.content">
