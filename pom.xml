@@ -522,15 +522,6 @@
 
     <profiles>
         <profile>
-            <id>incubator</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <modules>
-                <module>incubator</module>
-            </modules>
-        </profile>
-        <profile>
             <id>attach-src</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -808,6 +799,7 @@
 
         <module>examples</module>
         <module>ext</module>
+        <module>incubator</module>
         <module>media</module>
         <module>security</module>
         <module>test-framework</module>
