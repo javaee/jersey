@@ -68,12 +68,12 @@ public class SpringComponentProvider implements ComponentProvider {
     public boolean bind(Class<?> component, Set<Class<?>> providerContracts) {
         if(component.isAnnotationPresent(Component.class)) {
             DynamicConfiguration c = Injections.getConfiguration(locator);
-            Map<String, ?> beans = ctx.getBeansOfType(component);
-            if(beans.size() != 1) {
+            String[] beanNames = ctx.getBeanNamesForType(component);
+            if(beanNames == null || beanNames.length != 1) {
                 LOGGER.severe(String.format("none or multiple beans found in Spring context of type %s, skipping", component));
                 return false;
             }
-            String beanName = beans.keySet().iterator().next();
+            String beanName = beanNames[0];
 
             ServiceBindingBuilder bb = Injections.newFactoryBinder(new SpringComponentProvider.SpringManagedBeanFactory(ctx, locator, beanName));
             bb.to(component);
