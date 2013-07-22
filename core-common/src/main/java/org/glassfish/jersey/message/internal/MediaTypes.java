@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -386,7 +386,6 @@ public class MediaTypes {
     }
 
 
-
     /**
      * Returns MediaType with wildcard in subtype.
      *
@@ -401,5 +400,31 @@ public class MediaTypes {
         }
 
         return mt;
+    }
+
+    /**
+     * Convert media types into {@link java.lang.String}. The result string contains
+     * media types in the same order, separated by comma ',' and enclosed into quotes.
+     * For example for input media types
+     * {@link MediaType#TEXT_PLAIN_TYPE}, {@link MediaType#TEXT_PLAIN_TYPE} and
+     * {@link MediaType#APPLICATION_JSON_TYPE} the result will be
+     * "text/plain", "application/json", "text/html".
+     *
+     * @param mediaTypes {@link Iterable iterable} with {@link MediaType media types}.
+     * @return Media types converted into String.
+     */
+    public static String convertToString(Iterable<MediaType> mediaTypes) {
+        StringBuilder sb = new StringBuilder();
+        boolean isFirst = true;
+        for (MediaType mediaType : mediaTypes) {
+            if (!isFirst) {
+                sb.append(", ");
+            } else {
+                isFirst = false;
+            }
+            sb.append("\"").append(mediaType.toString()).append("\"");
+        }
+        return sb.toString();
+
     }
 }

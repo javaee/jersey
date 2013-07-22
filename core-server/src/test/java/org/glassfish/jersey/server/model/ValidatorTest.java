@@ -59,6 +59,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -101,7 +102,7 @@ public class ValidatorTest {
 
 
     private ServiceLocator createLocator() {
-        return Injections.createLocator(new ServerBinder());
+        return Injections.createLocator(new ServerBinder(null, RuntimeType.SERVER));
     }
 
     @Path("rootNonAmbigCtors")

@@ -51,6 +51,9 @@ import org.glassfish.jersey.server.validation.internal.ValidationErrorMessageBod
 
 /**
  * {@code ValidationFeature} used to add Bean Validation (JSR-349) support to the server.
+
+ * This Feature is automatically registered just in case ValidationAutoDiscoverable is used, i.e. \
+ *          AutoDiscoverable is NOT disabled by CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE properties!!!
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */

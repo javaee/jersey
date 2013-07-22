@@ -73,6 +73,10 @@ import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
 import org.glassfish.jersey.message.internal.VariantSelector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.monitoring.EmptyRequestEventBuilder;
+import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
+import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
+import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.uri.UriComponent;
@@ -83,7 +87,7 @@ import com.google.common.collect.Lists;
 
 /**
  * Jersey container request context.
- *
+ * <p/>
  * An instance of the request context is passed by the container to the
  * {@link ApplicationHandler} for each incoming client request.
  *
@@ -124,6 +128,9 @@ public class ContainerRequest extends InboundMessageContext
     private ContainerResponseWriter responseWriter;
     // True if the request is used in the response processing phase (for example in ContainerResponseFilter)
     private boolean inResponseProcessingPhase;
+    // Event listener registered to this request.
+    private RequestEventListener requestEventListener = null;
+    private RequestEventBuilder requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
 
 
     /**
@@ -156,7 +163,7 @@ public class ContainerRequest extends InboundMessageContext
 
     /**
      * Get a custom container extensions initializer for the current request.
-     *
+     * <p/>
      * The initializer is guaranteed to be run from within the request scope of
      * the current request.
      *
@@ -169,7 +176,7 @@ public class ContainerRequest extends InboundMessageContext
 
     /**
      * Set a custom container extensions initializer for the current request.
-     *
+     * <p/>
      * The initializer is guaranteed to be run from within the request scope of
      * the current request.
      *
@@ -419,6 +426,43 @@ public class ContainerRequest extends InboundMessageContext
         this.httpMethod = method;
     }
 
+    /**
+     * Set {@link RequestEventListener request event listener} that will listen to events of this request and
+     * {@link RequestEventBuilder request event builder} that will be used to build these events.
+     *
+     * <p>
+     * Do not use this method to set empty mock event listener which has no internal functionality in order to
+     * disable event listener and set {@code requestEventListener} to null instead. Request event listeners are usually created from
+     * {@link org.glassfish.jersey.server.monitoring.ApplicationEventListener#onRequest(org.glassfish.jersey.server.monitoring.RequestEvent)}.
+     * If this method is never called on the request the default no functionality event listener
+     * and event builder will be used.
+     * <p/>
+     *
+     *
+     * @param requestEventListener Request event listener or null if the listening to events should be disabled.
+     * @param requestEventBuilder Request event builder.
+     */
+    public void setRequestEventListener(RequestEventListener requestEventListener,
+                                        RequestEventBuilder requestEventBuilder) {
+        if (requestEventListener != null) {
+            this.requestEventListener = requestEventListener;
+            this.requestEventBuilder = requestEventBuilder;
+        } else {
+            // use mock builder
+            this.requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
+        }
+    }
+
+    public RequestEventBuilder getRequestEventBuilder() {
+        return requestEventBuilder;
+    }
+
+
+    public void triggerEvent(RequestEventImpl.Type requestEventType) {
+        if (requestEventListener != null) {
+            requestEventListener.onEvent(requestEventBuilder.build(requestEventType));
+        }
+    }
 
     /**
      * Like {@link #setMethod(String)} but does not throw {@link IllegalStateException} if the method is invoked in other than

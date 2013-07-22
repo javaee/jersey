@@ -42,6 +42,7 @@ package org.glassfish.jersey.jdkhttp;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import javax.ws.rs.ProcessingException;
@@ -51,6 +52,8 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsServer;
 
@@ -116,7 +119,7 @@ public class JdkHttpServerFactory {
         }
 
         final int port = (uri.getPort() == -1) ? 80 : uri.getPort();
-        HttpServer server;
+        final HttpServer server;
         try {
             server = (scheme.equalsIgnoreCase("http"))
                     ? HttpServer.create(new InetSocketAddress(port), 0)
@@ -127,10 +130,65 @@ public class JdkHttpServerFactory {
 
         server.setExecutor(Executors.newCachedThreadPool());
         server.createContext(path, handler);
-        server.start();
-        handler.onServerStart();
 
-        return server;
+        final HttpServer wrapper = new HttpServer() {
+
+            @Override
+            public void bind(InetSocketAddress inetSocketAddress, int i) throws IOException {
+                server.bind(inetSocketAddress, i);
+            }
+
+            @Override
+            public void start() {
+                server.start();
+                handler.onServerStart();
+            }
+
+            @Override
+            public void setExecutor(Executor executor) {
+                server.setExecutor(executor);
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return server.getExecutor();
+            }
+
+            @Override
+            public void stop(int i) {
+                handler.onServerStop();
+                server.stop(i);
+            }
+
+            @Override
+            public HttpContext createContext(String s, HttpHandler httpHandler) {
+                return server.createContext(s, httpHandler);
+            }
+
+            @Override
+            public HttpContext createContext(String s) {
+                return server.createContext(s);
+            }
+
+            @Override
+            public void removeContext(String s) throws IllegalArgumentException {
+                server.removeContext(s);
+            }
+
+            @Override
+            public void removeContext(HttpContext httpContext) {
+                server.removeContext(httpContext);
+            }
+
+            @Override
+            public InetSocketAddress getAddress() {
+                return server.getAddress();
+            }
+        };
+
+        wrapper.start();
+
+        return wrapper;
     }
 
     /**

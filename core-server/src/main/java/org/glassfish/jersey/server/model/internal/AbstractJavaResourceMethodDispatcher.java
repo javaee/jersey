@@ -50,9 +50,11 @@ import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
+import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 /**
@@ -66,6 +68,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
 
     @Inject
     private javax.inject.Provider<ConfiguredValidator> validatorProvider;
+
 
     private final Method method;
     private final InvocationHandler methodHandler;
@@ -86,7 +89,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
     }
 
     @Override
-    public final Response dispatch(Object resource, Request request) throws ProcessingException {
+    public final Response dispatch(Object resource, ContainerRequest request) throws ProcessingException {
         // TODO measure time spent in invocation
         return doDispatch(resource, request);
     }

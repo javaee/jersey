@@ -45,6 +45,7 @@ package org.glassfish.jersey.server.wadl.config;
 
 import java.util.List;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.internal.inject.Injections;
@@ -307,7 +308,7 @@ public class WadlGeneratorConfigTest {
 
 
     private ServiceLocator getServiceLocator() {
-        return Injections.createLocator(new ServerBinder());
+        return Injections.createLocator(new ServerBinder(null, RuntimeType.SERVER));
     }
 
 }

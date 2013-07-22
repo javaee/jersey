@@ -39,6 +39,12 @@
  */
 package org.glassfish.jersey.server;
 
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
@@ -46,10 +52,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -76,6 +78,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
+import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
@@ -88,8 +91,14 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * Server injection binder.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @todo Move this class to the internal package???
  */
 public class ServerBinder extends AbstractBinder {
+
+    private final RuntimeType runtimeType;
+
+    private final Map<String, Object> applicationProperties;
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
         @Inject
@@ -104,6 +113,11 @@ public class ServerBinder extends AbstractBinder {
         }
     }
 
+    public ServerBinder(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+        this.applicationProperties = applicationProperties;
+        this.runtimeType = runtimeType;
+    }
+
     @Override
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
@@ -112,7 +126,7 @@ public class ServerBinder extends AbstractBinder {
                 new ContextInjectionResolver.Binder(),
                 new ParameterInjectionBinder(),
                 new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(),
+                new MessagingBinders.MessageBodyProviders(applicationProperties, runtimeType),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),
                 new ContextResolverFactory.Binder(),
@@ -122,11 +136,12 @@ public class ServerBinder extends AbstractBinder {
                 new ResourceModelBinder(),
                 new RuntimeExecutorsBinder(),
                 new RouterBinder(),
-                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
+                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class, applicationProperties, runtimeType),
                 new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class),
-                new MappableExceptionWrapperInterceptor.Binder());
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, runtimeType),
+                new MappableExceptionWrapperInterceptor.Binder(),
+                new MonitoringContainerListener.Binder());
 
         // Request/Response injection interfaces
         bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
@@ -150,10 +165,9 @@ public class ServerBinder extends AbstractBinder {
         bindAsContract(ReferencesInitializer.class);
 
         // JAX-RS proxiable request scoped injections
-        bind(UriInfoInjectee.class).to(UriInfoInjectee.class).to(UriInfo.class).proxy(true).in(RequestScoped.class);
-        bind(HttpHeadersInjectee.class).to(HttpHeadersInjectee.class).to(HttpHeaders.class).proxy(true).in(RequestScoped.class);
-        bind(RequestInjectee.class).to(RequestInjectee.class).to(Request.class).proxy(true).in(RequestScoped.class);
-        bind(SecurityContextInjectee.class).to(SecurityContextInjectee.class).to(SecurityContext.class).proxy(true).in(RequestScoped.class);
-
+        bindAsContract(UriInfoInjectee.class).to(UriInfo.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindAsContract(HttpHeadersInjectee.class).to(HttpHeaders.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindAsContract(RequestInjectee.class).to(Request.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindAsContract(SecurityContextInjectee.class).to(SecurityContext.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
     }
 }

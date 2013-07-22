@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.validation.internal;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.security.AccessController;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -171,7 +172,8 @@ class ValidateOnExecutionHandler {
         // Overridden methods.
         while(!hierarchy.isEmpty()) {
             final Class<?> overriddenClass = hierarchy.removeFirst();
-            final Method overriddenMethod = ReflectionHelper.findMethodOnClass(overriddenClass, method);
+            final Method overriddenMethod =
+                    AccessController.doPrivileged(ReflectionHelper.findMethodOnClassPA(overriddenClass, method));
 
             if (overriddenMethod != null) {
                 // Method.

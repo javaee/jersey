@@ -1,2 +1,3 @@
 org.glassfish.jersey.server.filter.internal.ServerFiltersAutoDiscoverable
 org.glassfish.jersey.server.wadl.internal.WadlAutoDiscoverable
+org.glassfish.jersey.server.internal.monitoring.MonitoringAutodiscoverable

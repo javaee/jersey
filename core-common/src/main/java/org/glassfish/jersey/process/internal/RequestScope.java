@@ -60,6 +60,10 @@ import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import com.google.common.base.Objects;
+import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
+import org.glassfish.jersey.internal.inject.RequestInjectee;
+import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
+import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -150,6 +154,7 @@ public class RequestScope implements Context<RequestScoped> {
 
     @Override
     public <U> U findOrCreate(ActiveDescriptor<U> activeDescriptor, ServiceHandle<?> root) {
+
         final Instance instance = current();
 
         U retVal = instance.get(activeDescriptor);

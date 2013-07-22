@@ -42,6 +42,7 @@ package org.glassfish.jersey.internal;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.Callable;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Providers;
@@ -87,7 +88,7 @@ public class JaxrsProvidersTest {
     @Test
     public void testProviders() throws Exception {
         final ServiceLocator locator = Injections.createLocator(new ContextInjectionResolver.Binder(), new TestBinder(),
-                new MessagingBinders.MessageBodyProviders(), new Binder());
+                new MessagingBinders.MessageBodyProviders(null, RuntimeType.SERVER), new Binder());
 
         TestBinder.initProviders(locator);
         RequestScope scope = locator.getService(RequestScope.class);

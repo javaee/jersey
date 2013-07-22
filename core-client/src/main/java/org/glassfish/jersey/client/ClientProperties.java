@@ -45,6 +45,7 @@ import org.glassfish.jersey.CommonProperties;
  * Jersey client implementation configuration properties.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public final class ClientProperties {
     /**
@@ -195,6 +196,23 @@ public final class ClientProperties {
     public static final String JSON_PROCESSING_FEATURE_DISABLE = CommonProperties.JSON_PROCESSING_FEATURE_DISABLE + ".client";
 
     /**
+     * If {@code true} then disable META-INF/services lookup on client.
+     * <p>
+     * By default Jersey lookups SPI implementations described by META-INF/services/* files.
+     * Then you can register appropriate provider classes by {@link javax.ws.rs.core.Application}.
+     * </p>
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @see org.glassfish.jersey.CommonProperties#METAINF_SERVICES_LOOKUP_DISABLE
+     */
+    public static final String METAINF_SERVICES_LOOKUP_DISABLE = CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE + ".client";
+
+    /**
      * If {@code true} then disable configuration of MOXy Json feature on client.
      * <p>
      * By default MOXy Json on client is automatically enabled if global property
@@ -208,6 +226,7 @@ public final class ClientProperties {
      * </p>
      *
      * @see org.glassfish.jersey.CommonProperties#MOXY_JSON_FEATURE_DISABLE
+     * @since 2.1
      */
     public static final String MOXY_JSON_FEATURE_DISABLE = CommonProperties.MOXY_JSON_FEATURE_DISABLE + ".client";
 

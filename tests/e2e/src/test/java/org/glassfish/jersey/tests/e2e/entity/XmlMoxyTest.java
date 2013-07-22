@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,6 +69,7 @@ import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -76,6 +77,10 @@ import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -231,13 +236,13 @@ public class XmlMoxyTest extends AbstractTypeTester {
 
     @Override
     protected Application configure() {
-        return ((ResourceConfig) super.configure()).register(new MoxyXmlFeature());
+        return ((ResourceConfig) super.configure()).register(new MoxyXmlFeature(SimpleBean.class));
     }
 
     @Override
     protected void configureClient(ClientConfig clientConfig) {
         super.configureClient(clientConfig);
-        clientConfig.register(new MoxyXmlFeature());
+        clientConfig.register(new MoxyXmlFeature(SimpleBean.class));
     }
 
     @Test
@@ -280,6 +285,7 @@ public class XmlMoxyTest extends AbstractTypeTester {
                 try {
                     return JAXBContext.newInstance(JaxbBean.class);
                 } catch (JAXBException ex) {
+                    // NOOP.
                 }
             }
             return null;
@@ -442,14 +448,14 @@ public class XmlMoxyTest extends AbstractTypeTester {
         });
         assertEquals(a, b);
 
-        a = new LinkedList(a);
-        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue) a) {
+        a = new LinkedList<JaxbBean>(a);
+        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue<JaxbBean>) a) {
         }, "application/foo+xml"), new GenericType<Queue<JaxbBean>>() {
         });
         assertEquals(a, b);
 
-        a = new HashSet(a);
-        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set) a) {
+        a = new HashSet<JaxbBean>(a);
+        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set<JaxbBean>) a) {
         }, "application/foo+xml"), new GenericType<Set<JaxbBean>>() {
         });
         Comparator<JaxbBean> c = new Comparator<JaxbBean>() {
@@ -458,25 +464,24 @@ public class XmlMoxyTest extends AbstractTypeTester {
                 return t.value.compareTo(t1.value);
             }
         };
-        TreeSet t1 = new TreeSet(c), t2 = new TreeSet(c);
+        TreeSet<JaxbBean> t1 = new TreeSet<JaxbBean>(c), t2 = new TreeSet<JaxbBean>(c);
         t1.addAll(a);
         t2.addAll(b);
         assertEquals(t1, t2);
 
-        Stack s = new Stack();
+        Stack<JaxbBean> s = new Stack<JaxbBean>();
         s.addAll(a);
         b = target.path("stack").request().post(Entity.entity(new GenericEntity<Stack<JaxbBean>>(s) {
         }, "application/foo+xml"), new GenericType<Stack<JaxbBean>>() {
         });
         assertEquals(s, b);
 
-        a = new MyArrayList(a);
-        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList) a) {
+        a = new MyArrayList<JaxbBean>(a);
+        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {
         }, "application/foo+xml"), new GenericType<MyArrayList<JaxbBean>>() {
         });
         assertEquals(a, b);
     }
-
 
     @Test
     public void testJAXBListRepresentationError() {
@@ -485,5 +490,69 @@ public class XmlMoxyTest extends AbstractTypeTester {
         String xml = "<root><value>foo";
         Response cr = target.request().post(Entity.entity(xml, "application/xml"));
         assertEquals(400, cr.getStatus());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public static class SimpleBean {
+
+        private String value;
+
+        public SimpleBean() {
+        }
+
+        public SimpleBean(final String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(final String value) {
+            this.value = value;
+        }
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    @XmlRootElement
+    public static class ComplexJaxbBean {
+
+        private Object simpleBean;
+
+        public ComplexJaxbBean() {
+        }
+
+        public ComplexJaxbBean(final Object simpleBean) {
+            this.simpleBean = simpleBean;
+        }
+
+        public Object getSimpleBean() {
+            return simpleBean;
+        }
+
+        public void setSimpleBean(final Object simpleBean) {
+            this.simpleBean = simpleBean;
+        }
+    }
+
+    @Path("AdditionalClassesResource")
+    @Produces("application/xml")
+    @Consumes("application/xml")
+    public static class AdditionalClassesResource {
+
+        @GET
+        public ComplexJaxbBean get() {
+            return new ComplexJaxbBean(new SimpleBean("foo"));
+        }
+    }
+
+    @Test
+    public void testAdditionalClasses() throws Exception {
+        final ComplexJaxbBean nonJaxbBean = target("AdditionalClassesResource").request().get(ComplexJaxbBean.class);
+        final Object simpleBean = nonJaxbBean.getSimpleBean();
+
+        assertThat(simpleBean, notNullValue());
+        assertThat(simpleBean, instanceOf(SimpleBean.class));
+        assertThat("foo", equalTo(((SimpleBean) simpleBean).getValue()));
     }
 }

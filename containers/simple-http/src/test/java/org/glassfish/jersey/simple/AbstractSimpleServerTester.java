@@ -41,19 +41,23 @@ package org.glassfish.jersey.simple;
 
 import java.io.Closeable;
 import java.net.URI;
+import java.security.AccessController;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.After;
 
 /**
+ * Abstract Simple HTTP Server unit tester.
+ *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public abstract class AbstractSimpleServerTester {
@@ -69,7 +73,8 @@ public abstract class AbstractSimpleServerTester {
      * @return The HTTP port of the URI
      */
     protected final int getPort() {
-        final String value = System.getProperty("jersey.config.test.container.port");
+        final String value =
+                AccessController.doPrivileged(PropertiesHelper.getSystemProperty("jersey.config.test.container.port"));
         if (value != null) {
 
             try {
@@ -105,7 +110,15 @@ public abstract class AbstractSimpleServerTester {
 
     public void startServer(ResourceConfig config) {
         final URI baseUri = getBaseUri();
+        config.register(LoggingFilter.class);
         server = SimpleContainerFactory.create(baseUri, config);
+        LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
+    }
+
+    public void startServer(ResourceConfig config, int count, int select) {
+        final URI baseUri = getBaseUri();
+        config.register(LoggingFilter.class);
+        server = SimpleContainerFactory.create(baseUri, config, count, select);
         LOGGER.log(Level.INFO, "Simple-http server started on base uri: " + baseUri);
     }
 
@@ -125,6 +138,8 @@ public abstract class AbstractSimpleServerTester {
 
     @After
     public void tearDown() {
-        stopServer();
+        if (server != null) {
+            stopServer();
+        }
     }
 }

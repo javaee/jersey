@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,6 +63,15 @@ public class MoxyXmlFeature implements Feature {
      */
     public MoxyXmlFeature() {
         this(Collections.<String, Object>emptyMap(), Thread.currentThread().getContextClassLoader(), false);
+    }
+
+    /**
+     * Constructor which allows MOXy {@link org.eclipse.persistence.jaxb.JAXBContext} customization.
+     *
+     * @param classes additional classes used for creating {@link org.eclipse.persistence.jaxb.JAXBContext}.
+     */
+    public MoxyXmlFeature(Class<?>... classes) {
+        this(Collections.<String, Object>emptyMap(), Thread.currentThread().getContextClassLoader(), false, classes);
     }
 
     /**

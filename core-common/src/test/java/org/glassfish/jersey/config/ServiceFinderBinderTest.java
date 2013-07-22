@@ -56,6 +56,8 @@ import org.junit.Test;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 
+import javax.ws.rs.RuntimeType;
+
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
@@ -78,7 +80,7 @@ public class ServiceFinderBinderTest {
             protected void configure() {
                 bind(TestServiceB.class).to(TestContract.class);
                 bind(TestServiceD.class).to(TestContract.class);
-                new ServiceFinderBinder<TestContract>(TestContract.class).bind(this);
+                new ServiceFinderBinder<TestContract>(TestContract.class, null, RuntimeType.SERVER).bind(this);
             }
         });
     }

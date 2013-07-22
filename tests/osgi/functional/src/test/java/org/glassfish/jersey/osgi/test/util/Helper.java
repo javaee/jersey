@@ -40,10 +40,12 @@
 
 package org.glassfish.jersey.osgi.test.util;
 
+import java.security.AccessController;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.ops4j.pax.exam.Option;
@@ -82,7 +84,7 @@ public class Helper {
         if (null == varName) {
             return defaultValue;
         }
-        String varValue = System.getProperty(varName);
+        String varValue = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(varName));
         if (null != varValue) {
             try {
                 return Integer.parseInt(varValue);
@@ -102,7 +104,7 @@ public class Helper {
      *         previous condition is not met.
      */
     public static List<Option> addPaxExamMavenLocalRepositoryProperty(List<Option> options) {
-        final String localRepository = System.getProperty("localRepository");
+        final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
 
         if (localRepository != null) {
             options.addAll(expandedList(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository)));

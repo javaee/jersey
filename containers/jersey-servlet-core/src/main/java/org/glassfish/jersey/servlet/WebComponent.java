@@ -41,7 +41,9 @@ package org.glassfish.jersey.servlet;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.AccessController;
 import java.security.Principal;
+import java.security.PrivilegedActionException;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -51,6 +53,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
@@ -83,6 +86,8 @@ import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
+import org.glassfish.jersey.servlet.internal.ServletContainerProviderFactory;
+import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 
@@ -100,6 +105,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class WebComponent {
 
@@ -149,6 +155,16 @@ public class WebComponent {
     }
 
     private class WebComponentBinder extends AbstractBinder {
+
+        private final Map<String, Object> applicationProperties;
+
+        private final RuntimeType runtimeType;
+
+        private WebComponentBinder(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+            this.applicationProperties = applicationProperties;
+            this.runtimeType = runtimeType;
+        }
+
         @Override
         protected void configure() {
             bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class).in(PerLookup.class);
@@ -187,7 +203,7 @@ public class WebComponent {
                 }).to(ServletConfig.class).in(Singleton.class);
 
                 // @PersistenceUnit
-                for (final Enumeration initParams = servletConfig.getInitParameterNames(); initParams.hasMoreElements();) {
+                for (final Enumeration initParams = servletConfig.getInitParameterNames(); initParams.hasMoreElements(); ) {
                     final String initParamName = (String) initParams.nextElement();
 
                     if (initParamName.startsWith(PersistenceUnitBinder.PERSISTENCE_UNIT_PREFIX)) {
@@ -220,7 +236,7 @@ public class WebComponent {
                     //not used
                 }
             }).to(WebConfig.class).in(Singleton.class);
-            install(new ServiceFinderBinder<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class));
+            install(new ServiceFinderBinder<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class, applicationProperties, runtimeType));
         }
     }
 
@@ -229,7 +245,7 @@ public class WebComponent {
      */
     final ApplicationHandler appHandler;
     /**
-     * Jersey background task scheduler - used for scheduling request timeout event handling tasks
+     * Jersey background task scheduler - used for scheduling request timeout event handling tasks.
      */
     final ScheduledExecutorService backgroundTaskScheduler;
     /**
@@ -258,7 +274,12 @@ public class WebComponent {
         if (resourceConfig == null) {
             resourceConfig = createResourceConfig(webConfig);
         }
-        resourceConfig.register(new WebComponentBinder());
+
+        // SPI/extension hook to configure ResourceConfig
+        configure(resourceConfig);
+
+        resourceConfig.register(new WebComponentBinder(resourceConfig.getProperties(), RuntimeType.SERVER));
+
         this.appHandler = new ApplicationHandler(resourceConfig);
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&
@@ -329,7 +350,6 @@ public class WebComponent {
                 }
             });
         } catch (Exception e) {
-            // TODO: proper error handling.
             throw new ServletException(e);
         }
 
@@ -380,8 +400,8 @@ public class WebComponent {
         }
 
         try {
-            Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = ReflectionHelper.classForNameWithException
-                    (jaxrsApplicationClassName);
+            Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass =
+                    AccessController.doPrivileged(ReflectionHelper.<javax.ws.rs.core.Application>classForNameWithExceptionPEA(jaxrsApplicationClassName));
             if (javax.ws.rs.core.Application.class.isAssignableFrom(jaxrsApplicationClass)) {
                 return ResourceConfig.forApplicationClass(jaxrsApplicationClass)
                         .addProperties(initParams).addProperties(contextParams);
@@ -389,8 +409,24 @@ public class WebComponent {
                 throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_PARENT_CLASS_INVALID(
                         jaxrsApplicationClassName, javax.ws.rs.core.Application.class));
             }
+        } catch (PrivilegedActionException e) {
+            throw new ServletException(
+                    LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_LOAD(jaxrsApplicationClassName), e.getCause());
         } catch (ClassNotFoundException e) {
             throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_LOAD(jaxrsApplicationClassName), e);
+        }
+    }
+
+    /**
+     * SPI/extension hook to configure ResourceConfig.
+     *
+     * @param resourceConfig Jersey application configuration.
+     */
+    private static void configure(ResourceConfig resourceConfig) throws ServletException {
+        final ServletContainerProvider[] allServletContainerProviders = //TODO check if META-INF/services lookup is enabled
+                ServletContainerProviderFactory.getAllServletContainerProviders();
+        for (ServletContainerProvider servletContainerProvider : allServletContainerProviders) {
+            servletContainerProvider.configure(resourceConfig);
         }
     }
 
@@ -432,51 +468,6 @@ public class WebComponent {
         }
         return props;
     }
-
-// TODO remove the getPaths() method if really not needed.
-//    private String[] getPaths(String classpath, ServletContext context) throws ServletException {
-//        if (classpath == null) {
-//            String[] paths = {
-//                    context.getRealPath("/WEB-INF/lib"),
-//                    context.getRealPath("/WEB-INF/classes")
-//            };
-//            if (paths[0] == null && paths[1] == null) {
-////                String message = "The default deployment configuration that scans for " +
-////                        "classes in /WEB-INF/lib and /WEB-INF/classes is not supported " +
-////                        "for the application server." +
-////                        "Try using the package scanning configuration, see the JavaDoc for " +
-////                        PackagesResourceConfig.class.getName() + " and the property " +
-////                        PackagesResourceConfig.PROVIDER_PACKAGES + ".";
-////                throw new ServletException(message);
-//            }
-//            return paths;
-//        } else {
-//            String[] virtualPaths = classpath.split(";");
-//            List<String> resourcePaths = new ArrayList<String>();
-//            for (String virtualPath : virtualPaths) {
-//                virtualPath = virtualPath.trim();
-//                if (virtualPath.length() == 0) {
-//                    continue;
-//                }
-//                String path = context.getRealPath(virtualPath);
-//                if (path != null) {
-//                    resourcePaths.add(path);
-//                }
-//            }
-//            if (resourcePaths.isEmpty()) {
-////                String message = "None of the declared classpath locations, " +
-////                        classpath +
-////                        ", could be resolved. " +
-////                        "This could be because the default deployment configuration that scans for " +
-////                        "classes in classpath locations is not supported. " +
-////                        "Try using the package scanning configuration, see the JavaDoc for " +
-////                        PackagesResourceConfig.class.getName() + " and the property " +
-////                        PackagesResourceConfig.PROVIDER_PACKAGES + ".";
-////                throw new ServletException(message);
-//            }
-//            return resourcePaths.toArray(new String[resourcePaths.size()]);
-//        }
-//    }
 
     private void filterFormParameters(HttpServletRequest hsr, ContainerRequest request) throws IOException {
         if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())

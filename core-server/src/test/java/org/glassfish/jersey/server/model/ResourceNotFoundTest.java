@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,8 @@
  */
 
 package org.glassfish.jersey.server.model;
+
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -91,6 +93,13 @@ public class ResourceNotFoundTest {
         public String getBar() {
             return "bar";
         }
+
+        @Path("content-type")
+        @GET
+        public Response getSpecialContentType() {
+            return Response.status(Response.Status.NOT_FOUND).type("application/something").build();
+        }
+
     }
 
     @Test
@@ -192,5 +201,14 @@ public class ResourceNotFoundTest {
 
         response = app.apply(RequestContextBuilder.from("/foo/dynamic/baz", "GET").accept("text/plain").build()).get();
         assertEquals(404, response.getStatus());
+    }
+
+    @Test
+    public void testCustomContentTypeAndNoEntity() throws ExecutionException, InterruptedException {
+        ApplicationHandler app = createApplication(FooResource.class);
+        final ContainerResponse response = app.apply(RequestContextBuilder.from("/foo/content-type", "GET")
+                .build()).get();
+        assertEquals(404, response.getStatus());
+        assertEquals("application/something", response.getMediaType().toString());
     }
 }

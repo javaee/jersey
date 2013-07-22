@@ -40,8 +40,10 @@
 package org.glassfish.jersey.message.internal;
 
 
+import java.util.Map;
 import javax.inject.Singleton;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -60,6 +62,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * writers, header delegates).
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class MessagingBinders {
 
@@ -67,6 +70,15 @@ public class MessagingBinders {
      * Message body providers injection binder.
      */
     public static class MessageBodyProviders extends AbstractBinder {
+
+        private final Map<String, Object> applicationProperties;
+
+        private final RuntimeType runtimeType;
+
+        public MessageBodyProviders(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+            this.applicationProperties = applicationProperties;
+            this.runtimeType = runtimeType;
+        }
 
         @Override
         protected void configure() {
@@ -107,15 +119,12 @@ public class MessagingBinders {
              * TODO: com.sun.jersey.core.impl.provider.entity.EntityHolderReader
              */
 
-            install(new ServiceFinderBinder<MessageBodyReader>(MessageBodyReader.class));
-
+            install(new ServiceFinderBinder<MessageBodyReader>(MessageBodyReader.class, applicationProperties, runtimeType));
             // Message body writers
             bind(StreamingOutputProvider.class).to(MessageBodyWriter.class).in(Singleton.class);
             bind(SourceProvider.SourceWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
-
-            install(new ServiceFinderBinder<MessageBodyWriter>(MessageBodyWriter.class));
-
-            install(new ServiceFinderBinder<HeaderDelegateProvider>(HeaderDelegateProvider.class));
+            install(new ServiceFinderBinder<MessageBodyWriter>(MessageBodyWriter.class, applicationProperties, runtimeType));
+            install(new ServiceFinderBinder<HeaderDelegateProvider>(HeaderDelegateProvider.class, applicationProperties, runtimeType));
 
             // XML factory injection points
             bindFactory(DocumentBuilderFactoryInjectionProvider.class).to(DocumentBuilderFactory.class).in(PerThread.class);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.internal.util;
 
+import java.security.AccessController;
+import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -72,5 +74,29 @@ public class ReflectionHelperTest {
         dcip = ReflectionHelper.getClass(TestInterface.class, I.class);
         arguments = ReflectionHelper.getParameterizedClassArguments(dcip);
         assertEquals(aClass, arguments[0]);
+    }
+
+    @Test
+    public void securityMangerTest() throws Exception {
+
+        final ClassLoader aClassLoader = ReflectionHelper.class.getClassLoader();
+
+        try {
+            Thread.currentThread().setContextClassLoader(aClassLoader);
+            Assert.fail("It should not be possible to set context class loader from unprivileged block");
+        } catch (java.security.AccessControlException ignoredExpectedException) {
+        }
+
+        try {
+            ReflectionHelper.setContextClassLoaderPA(aClassLoader).run();
+            Assert.fail("It should not be possible to set context class loader from unprivileged block even via Jersey ReflectionHelper");
+        } catch (java.security.AccessControlException ignoredExpectedException) {
+        }
+
+        try {
+            AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(aClassLoader));
+            Assert.fail("It should not be possible to set context class loader even from privileged block via Jersey ReflectionHelper utility");
+        } catch (java.security.AccessControlException ignoredExpectedException) {
+        }
     }
 }

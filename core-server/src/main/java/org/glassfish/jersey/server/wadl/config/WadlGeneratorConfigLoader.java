@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server.wadl.config;
 
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +98,7 @@ public class WadlGeneratorConfigLoader {
                     configClazz = ((Class<?>) wadlGeneratorConfigProperty).
                             asSubclass(WadlGeneratorConfig.class);
                 } else if (wadlGeneratorConfigProperty instanceof String) {
-                    configClazz = ReflectionHelper.classForNameWithException((String) wadlGeneratorConfigProperty).
+                    configClazz = AccessController.doPrivileged(ReflectionHelper.classForNameWithExceptionPEA((String) wadlGeneratorConfigProperty)).
                             asSubclass(WadlGeneratorConfig.class);
                 } else {
                     throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER_PROPERTY(
@@ -105,6 +107,9 @@ public class WadlGeneratorConfigLoader {
                 }
                 return configClazz.newInstance();
 
+            } catch (PrivilegedActionException pae) {
+                throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER(
+                        ServerProperties.WADL_GENERATOR_CONFIG), pae.getCause());
             } catch (Exception e) {
                 throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER(
                         ServerProperties.WADL_GENERATOR_CONFIG), e);

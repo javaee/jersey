@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Singleton;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.RuntimeType;
@@ -73,8 +74,6 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
-
-import javax.inject.Singleton;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.Errors;
@@ -101,6 +100,9 @@ import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
+import org.glassfish.jersey.server.internal.monitoring.ApplicationEventImpl;
+import org.glassfish.jersey.server.internal.monitoring.CompositeApplicationEventListener;
+import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
@@ -111,6 +113,8 @@ import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
+import org.glassfish.jersey.server.monitoring.ApplicationEvent;
+import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 
@@ -149,6 +153,7 @@ import com.google.common.util.concurrent.AbstractFuture;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  * @see ResourceConfig
  * @see javax.ws.rs.core.Configuration
  * @see org.glassfish.jersey.server.spi.ContainerProvider
@@ -156,6 +161,7 @@ import com.google.common.util.concurrent.AbstractFuture;
 public final class ApplicationHandler {
 
     private static final Logger LOGGER = Logger.getLogger(ApplicationHandler.class.getName());
+
     /**
      * Default dummy security context.
      */
@@ -223,6 +229,7 @@ public final class ApplicationHandler {
     private final ServiceLocator locator;
     private ServerRuntime runtime;
 
+
     /**
      * Create a new Jersey application handler using a default configuration.
      */
@@ -239,7 +246,7 @@ public final class ApplicationHandler {
      *                              application handler.
      */
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
-        this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
+        this.locator = Injections.createLocator(new ServerBinder(null, RuntimeType.SERVER), new ApplicationBinder());
         locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
         this.application = createApplication(jaxrsApplicationClass);
@@ -261,7 +268,7 @@ public final class ApplicationHandler {
      *                    will be used to configure the new Jersey application handler.
      */
     public ApplicationHandler(Application application) {
-        this.locator = Injections.createLocator(new ServerBinder(), new ApplicationBinder());
+        this.locator = Injections.createLocator(new ServerBinder(application.getProperties(), RuntimeType.SERVER), new ApplicationBinder());
         locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
         this.application = application;
@@ -327,6 +334,8 @@ public final class ApplicationHandler {
         final List<ComponentProvider> componentProviders;
         final ComponentBag componentBag;
         ResourceModel resourceModel;
+        CompositeApplicationEventListener compositeListener = null;
+
 
         Errors.mark(); // mark begin of validation phase
         try {
@@ -388,6 +397,14 @@ public final class ApplicationHandler {
             for (ComponentProvider componentProvider : componentProviders) {
                 componentProvider.done();
             }
+            final List<ApplicationEventListener> appEventListeners = locator.getAllServices(ApplicationEventListener.class);
+            if (appEventListeners.size() > 0) {
+                compositeListener = new CompositeApplicationEventListener(
+                        appEventListeners);
+                compositeListener.onEvent(new ApplicationEventImpl(ApplicationEvent.Type.INITIALIZATION_START,
+                        this.runtimeConfig, componentBag.getRegistrations(), resourceBag.classes, resourceBag.instances,
+                        null));
+            }
 
             processingProviders = getProcessingProviders(componentBag);
 
@@ -420,8 +437,13 @@ public final class ApplicationHandler {
 
         bindEnhancingResourceClasses(resourceModel, resourceBag, componentProviders);
 
+        // initiate resource model into JerseyResourceContext
+        JerseyResourceContext jerseyResourceContext = locator.getService(JerseyResourceContext.class);
+        jerseyResourceContext.setResourceModel(resourceModel);
+
         final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
         runtimeModelBuilder.setProcessingProviders(processingProviders);
+
 
         // assembly request processing chain
         /**
@@ -459,11 +481,7 @@ public final class ApplicationHandler {
             locator.inject(instance);
         }
 
-        // initiate resource model into JerseyResourceContext
-        JerseyResourceContext jerseyResourceContext = locator.getService(JerseyResourceContext.class);
-        jerseyResourceContext.setResourceModel(resourceModel);
-
-        this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class).build(rootStage);
+        this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class).build(rootStage, compositeListener);
 
         // inject self
         locator.inject(this);
@@ -509,6 +527,17 @@ public final class ApplicationHandler {
             printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_WRITERS(), Collections2.transform(messageBodyWriters, new WorkersToStringTransform<MessageBodyWriter>()), sb);
             LOGGER.log(Level.CONFIG, sb.toString());
         }
+
+        if (compositeListener != null) {
+            final ApplicationEventImpl initFinishedEvent = new ApplicationEventImpl(
+                    ApplicationEvent.Type.INITIALIZATION_FINISHED, runtimeConfig,
+                    componentBag.getRegistrations(), resourceBag.classes, resourceBag.instances, resourceModel);
+            compositeListener.onEvent(initFinishedEvent);
+
+            final MonitoringContainerListener containerListener
+                    = locator.getService(MonitoringContainerListener.class);
+            containerListener.init(compositeListener, initFinishedEvent);
+        }
     }
 
     private class WorkersToStringTransform<T> implements Function<T, String> {
@@ -549,10 +578,15 @@ public final class ApplicationHandler {
 
     private List<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
         final List<RankedProvider<ComponentProvider>> result = new LinkedList<RankedProvider<ComponentProvider>>();
-        for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-            result.add(new RankedProvider<ComponentProvider>(provider));
+
+        final boolean enableMetainfServicesLookup = ! PropertiesHelper.getValue(application.getProperties(), RuntimeType.SERVER,
+                    CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
+        if (enableMetainfServicesLookup) {
+            for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
+                result.add(new RankedProvider<ComponentProvider>(provider));
+            }
+            Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
         }
-        Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
         return result;
     }
 

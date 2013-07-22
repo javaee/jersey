@@ -90,6 +90,15 @@
                         </entry>
                     </row>
                     <row>
+                        <entry>&jersey.common.CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableMetainfServicesLookup</literal></entry>
+                        <entry>
+                            <para>
+                                Disables META-INF/services lookup globally on client/server. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
                         <entry>&jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE;</entry>
                         <entry><literal>jersey.config.disableMoxyJson</literal></entry>
                         <entry>
@@ -214,6 +223,15 @@
                         <entry>
                             <para>
                                 Defines mapping of URI extensions to media types. The property is used by &jersey.server.UriConnegFilter;.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableMetainfServicesLookup.server</literal></entry>
+                        <entry>
+                            <para>
+                                Disables META-INF/services lookup on server. Default value is <literal>false</literal>.
                             </para>
                         </entry>
                     </row>
@@ -408,6 +426,15 @@
                         <entry>
                             <para>
                                 Disables configuration of Json Processing (JSR-353) feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.METAINF_SERVICES_LOOKUP_DISABLE;</entry>
+                        <entry><literal>jersey.config.disableMetainfServicesLookup.client</literal></entry>
+                        <entry>
+                            <para>
+                                Disables META-INF/services lookup on client. Default value is <literal>false</literal>.
                             </para>
                         </entry>
                     </row>

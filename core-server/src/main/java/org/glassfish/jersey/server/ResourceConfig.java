@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
+import java.security.AccessController;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -100,12 +101,13 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         private final Set<Resource> resources;
         private final Set<Resource> resourcesView;
+        private volatile String applicationName;
 
         private volatile ClassLoader classLoader = null;
 
         public State() {
             super(RuntimeType.SERVER, ComponentBag.INCLUDE_ALL);
-            this.classLoader = ReflectionHelper.getContextClassLoader();
+            this.classLoader = AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA());
 
             this.resourceFinders = Sets.newHashSet();
 
@@ -116,6 +118,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         public State(State original) {
             super(original);
             this.classLoader = original.classLoader;
+            this.applicationName = original.applicationName;
 
             this.resources = Sets.newHashSet(original.resources);
             this.resourcesView = Collections.unmodifiableSet(this.resources);
@@ -125,6 +128,11 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         public void setClassLoader(ClassLoader classLoader) {
             this.classLoader = classLoader;
+        }
+
+
+        public void setApplicationName(String applicationName) {
+            this.applicationName = applicationName;
         }
 
         public void registerResources(Set<Resource> resources) {
@@ -199,6 +207,10 @@ public class ResourceConfig extends Application implements Configurable<Resource
          */
         public ClassLoader getClassLoader() {
             return classLoader;
+        }
+
+        private String getApplicationName() {
+            return applicationName;
         }
     }
 
@@ -290,7 +302,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Returns a {@code ResourceConfig} instance for the supplied application.
-     *
+     * <p/>
      * If the application is an instance of {@code ResourceConfig} the method returns defensive copy of the resource config.
      * Otherwise it creates a new {@code ResourceConfig} from the application.
      *
@@ -314,7 +326,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Returns a {@code ResourceConfig} instance wrapping the application of the supplied class.
-     *
+     * <p/>
      * This method provides an option of supplying the set of classes that should be returned from {@link #getClasses()}
      * method if the application defined by the supplied application class returns empty sets from {@link javax.ws.rs.core
      * .Application#getClasses()}
@@ -370,7 +382,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Add properties to {@code ResourceConfig}.
-     *
+     * <p/>
      * If any of the added properties exists already, he values of the existing
      * properties will be replaced with new values.
      *
@@ -600,6 +612,19 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
+     * Set the name of the application. The name is an arbitrary user defined name
+     * which is used to distinguish between Jersey applications in the case that more applications
+     * are deployed on the same runtime (container). The name can be used for example for purposes
+     * of monitoring by JMX when name identifies to which application deployed MBeans belong to.
+     * The name should be unique in the runtime.
+     *
+     * @param applicationName Unique application name.
+     */
+    public final void setApplicationName(String applicationName) {
+        state.setApplicationName(applicationName);
+    }
+
+    /**
      * Set {@link ClassLoader} which will be used for resource discovery.
      *
      * @param classLoader provided {@link ClassLoader}.
@@ -612,7 +637,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Adds array of package names which will be used to scan for components.
-     *
+     * <p/>
      * Packages will be scanned recursively, including all nested packages.
      *
      * @param packages array of package names.
@@ -642,7 +667,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Adds array of file and directory names to scan for components.
-     *
+     * <p/>
      * Any directories in the list will be scanned recursively, including their sub-directories.
      *
      * @param files array of file and directory names.
@@ -680,14 +705,18 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Switches the ResourceConfig to read-only state.
-     *
+     * <p/>
      * Called by the WrappingResourceConfig if this ResourceConfig is set as the application.
      * Also called by ApplicationHandler on WrappingResourceConfig at the point when it is going
      * to build the resource model.
+     * <p/>
+     * The method also sets the application name from properties if the name is not defined yer
+     * and the property {@link ServerProperties#APPLICATION_NAME} is defined.
      */
     final void lock() {
         final State current = state;
         if (!(current instanceof ImmutableState)) {
+            setupApplicationName();
             state = new ImmutableState(current);
         }
     }
@@ -927,6 +956,16 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     /**
+     * Get the name of the Jersey application.
+     *
+     * @return Name of the application.
+     * @see #setApplicationName(String)
+     */
+    public String getApplicationName() {
+        return state.getApplicationName();
+    }
+
+    /**
      * Method used by ApplicationHandler to retrieve application class
      * (this method is overridden by WrappingResourceConfig).
      *
@@ -980,7 +1019,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         /**
          * Set the {@link javax.ws.rs.core.Application JAX-RS Application instance}
          * in the {@code ResourceConfig}.
-         *
+         * <p/>
          * This method is used by the {@link org.glassfish.jersey.server.ApplicationHandler} in case this resource
          * configuration instance was created with application class rather than application instance.
          *
@@ -1211,5 +1250,13 @@ public class ResourceConfig extends Application implements Configurable<Resource
             }
         }
         return app;
+    }
+
+    private void setupApplicationName() {
+        final String appName = PropertiesHelper.getValue(getProperties(),
+                ServerProperties.APPLICATION_NAME, null, String.class);
+        if (appName != null && getApplicationName() == null) {
+            setApplicationName(appName);
+        }
     }
 }

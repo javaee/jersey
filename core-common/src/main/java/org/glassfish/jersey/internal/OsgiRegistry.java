@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -107,7 +108,8 @@ public final class OsgiRegistry implements SynchronousBundleListener {
      */
     public static synchronized OsgiRegistry getInstance() {
         if (instance == null) {
-            final ClassLoader classLoader = ReflectionHelper.class.getClassLoader();
+
+            final ClassLoader classLoader = AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(ReflectionHelper.class));
             if (classLoader instanceof BundleReference) {
                 BundleContext context = FrameworkUtil.getBundle(OsgiRegistry.class).getBundleContext();
                 if (context != null) { // context could be still null if the current bundle has not been started
@@ -123,7 +125,9 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         final ServiceFinder.ServiceIteratorProvider defaultIterator = new ServiceFinder.DefaultServiceIteratorProvider();
 
         @Override
-        public <T> Iterator<T> createIterator(final Class<T> serviceClass, final String serviceName, ClassLoader loader, boolean ignoreOnClassNotFound) {
+        public <T> Iterator<T> createIterator(
+                final Class<T> serviceClass, final String serviceName, ClassLoader loader, boolean ignoreOnClassNotFound) {
+
             final List<Class<?>> providerClasses = locateAllProviders(serviceName);
             if (!providerClasses.isEmpty()) {
                 return new Iterator<T>() {
@@ -135,6 +139,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
                         return it.hasNext();
                     }
 
+                    @SuppressWarnings("unchecked")
                     @Override
                     public T next() {
                         Class<T> nextClass = (Class<T>) it.next();
@@ -142,7 +147,8 @@ public final class OsgiRegistry implements SynchronousBundleListener {
                             return nextClass.newInstance();
                         } catch (Exception ex) {
                             ServiceConfigurationError sce = new ServiceConfigurationError(serviceName + ": "
-                                    + LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextClass.getName(), serviceClass, ex.getLocalizedMessage()));
+                                    + LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(
+                                    nextClass.getName(), serviceClass, ex.getLocalizedMessage()));
                             sce.initCause(ex);
                             throw sce;
                         }
@@ -158,7 +164,8 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         }
 
         @Override
-        public <T> Iterator<Class<T>> createClassIterator(Class<T> service, String serviceName, ClassLoader loader, boolean ignoreOnClassNotFound) {
+        public <T> Iterator<Class<T>> createClassIterator(
+                Class<T> service, String serviceName, ClassLoader loader, boolean ignoreOnClassNotFound) {
             final List<Class<?>> providerClasses = locateAllProviders(serviceName);
             if (!providerClasses.isEmpty()) {
                 return new Iterator<Class<T>>() {
