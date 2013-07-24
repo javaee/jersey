@@ -39,8 +39,11 @@
  */
 package org.glassfish.jersey.jettison;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -73,6 +76,7 @@ public class JettisonConfig {
 
     private final Notation notation;
     private final Map<String, String> jsonXml2JsonNs;
+    private final List<String> serializeAsArray;
 
     /**
      * Builder class for constructing {@link JettisonConfig} options
@@ -81,6 +85,7 @@ public class JettisonConfig {
 
         private final Notation notation;
         protected Map<String, String> jsonXml2JsonNs = new HashMap<String, String>(0);
+        protected List<String> serializeAsArray = new LinkedList<String>();
 
         private Builder(Notation notation) {
             this.notation = notation;
@@ -97,6 +102,7 @@ public class JettisonConfig {
 
         private void copyAttributes(JettisonConfig jc) {
             jsonXml2JsonNs.putAll(jc.getXml2JsonNs());
+            serializeAsArray.addAll(jc.getArrayElements());
         }
     }
 
@@ -128,11 +134,47 @@ public class JettisonConfig {
             this.jsonXml2JsonNs = jsonXml2JsonNs;
             return this;
         }
+
+        /**
+         * Add element names to be treated as arrays.
+         * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
+         * notation only.
+         * <p>
+         * Property value is a list of element names that should be treated
+         * as arrays even if only a single item is present.
+         * <p>
+         * The default value is an empty list.
+         *
+         * @param element names to be serialized as arrays.
+         * @return updated builder instance.
+         */
+        public MappedJettisonBuilder serializeAsArray(final String... arrays) {
+            return serializeAsArray(Arrays.asList(arrays));
+        }
+
+        /**
+         * Add element names to be treated as arrays.
+         * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
+         * notation only.
+         * <p>
+         * Property value is a list of element names that should be treated
+         * as arrays even if only a single item is present.
+         * <p>
+         * The default value is an empty list.
+         *
+         * @param list of element names to be serialized as arrays.
+         * @return updated builder instance.
+         */
+        public MappedJettisonBuilder serializeAsArray(final List<String> arrays) {
+            this.serializeAsArray.addAll(arrays);
+            return this;
+        }
     }
 
     private JettisonConfig(Builder b) {
         notation = b.notation;
         jsonXml2JsonNs = b.jsonXml2JsonNs;
+        serializeAsArray = b.serializeAsArray;
     }
 
     /**
@@ -216,6 +258,18 @@ public class JettisonConfig {
      */
     public Map<String, String> getXml2JsonNs() {
         return (jsonXml2JsonNs != null) ? Collections.unmodifiableMap(jsonXml2JsonNs) : null;
+    }
+
+    /**
+     * Returns a list of elements to be treated as arrays. I.e. these elements will be serialized
+     * as arrays even if only a single element is included.
+     * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
+     * notation only.
+     * @return a list of elements representing arrays.
+     * @see JettisonConfig.MappedJettisonBuilder#serializeAsArray(java.util.List)
+     */
+    public List<String> getArrayElements() {
+        return Collections.unmodifiableList(serializeAsArray);
     }
 
     @Override
