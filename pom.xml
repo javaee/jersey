@@ -272,7 +272,8 @@
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>2.9</version>
                     <configuration>
-                        <doctitle>Jersey ${project.version} API Documentation</doctitle>
+                        <doctitle>Jersey ${jersey.version} API Documentation</doctitle>
+                        <windowtitle>Jersey ${jersey.version} API</windowtitle>
                         <bottom>
                             <![CDATA[Copyright &#169; 2007-2013,
                                 <a href="http://www.oracle.com">Oracle</a>
@@ -280,7 +281,7 @@
                                 All Rights Reserved. Use is subject to license terms.]]>
                         </bottom>
                         <links>
-                            <link>http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs</link>
+                            <link>http://jax-rs-spec.java.net/nonav/2.0/apidocs</link>
                             <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
                         </links>
                     </configuration>
@@ -707,19 +708,22 @@
                 <!-- Run this plugin report sets only in the main Jersey pom -->
                 <inherited>false</inherited>
                 <configuration>
-                    <doctitle>Jersey ${project.version} API Documentation</doctitle>
+                    <doctitle>Jersey ${jersey.version} API Documentation</doctitle>
+                    <windowtitle>Jersey ${jersey.version} API</windowtitle>
                     <bottom>
                         <![CDATA[Copyright &#169; 2007-2013,
                             <a href="http://www.oracle.com">Oracle</a>
                             and/or its affiliates.
                             All Rights Reserved. Use is subject to license terms.]]>
                     </bottom>
+                    <!-- TODO: add 'javax.ws.rs*' to excludePackageNames whenever links works. -->
                     <excludePackageNames>
                         com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
                     </excludePackageNames>
                     <stylesheetfile>${javadoc.stylesheet}</stylesheetfile>
+                    <!-- TODO: links still not working :-( -->
                     <links>
-                        <link>http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs</link>
+                        <link>http://jax-rs-spec.java.net/nonav/2.0/apidocs</link>
                         <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
                     </links>
                 </configuration>
@@ -1134,6 +1138,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <xdk.absolute.path />
 
+        <jersey.version>${project.version}</jersey.version>
         <!-- Dependency versions -->
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>

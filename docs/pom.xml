@@ -55,6 +55,9 @@
             <id>release</id>
             <properties>
                 <javanet.repository.id>releases</javanet.repository.id>
+                <jersey.docs.version>${jersey.version}</jersey.docs.version>
+                <jersey.apidocs.version>${jersey.version}</jersey.apidocs.version>
+                <jersey.src.branch>${jersey.version}</jersey.src.branch>
             </properties>
         </profile>
     </profiles>
@@ -202,7 +205,6 @@
         <assembly.directory>${project.build.directory}/assembly</assembly.directory>
         <src.dir>${basedir}/target/gen-src</src.dir>
         <javanet.repository.id>snapshots</javanet.repository.id>
-        <jersey.version>${project.version}</jersey.version>
         <jersey.docs.version>snapshot</jersey.docs.version>
         <jersey.apidocs.version>snapshot</jersey.apidocs.version>
         <jersey.src.branch>master</jersey.src.branch>
