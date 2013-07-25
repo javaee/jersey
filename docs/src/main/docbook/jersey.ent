@@ -53,9 +53,9 @@
 <!ENTITY jax-rs.release.path "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
 <!ENTITY jax-rs.javadoc.path "&jax-rs.release.path;/apidocs/javax/ws/rs">
 
-<!ENTITY jersey.docs.root.path "http://jersey.java.net/nonav/documentation/&docs.version;">
+<!ENTITY jersey.docs.root.path "https://jersey.java.net/documentation/&docs.version;">
 <!ENTITY jersey.docs.index "&jersey.docs.root.path;/index.html">
-<!ENTITY jersey.javadoc.path "http://jersey.java.net/apidocs/&apidocs.version;/jersey/org/glassfish/jersey">
+<!ENTITY jersey.javadoc.path "https://jersey.java.net/apidocs/&apidocs.version;/jersey/org/glassfish/jersey">
 <!ENTITY jersey.site.path "https://jersey.java.net/project-info/&version;/jersey/project">
 <!ENTITY jee6.javadoc.path "http://docs.oracle.com/javaee/6/api">
 <!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
