@@ -20,15 +20,19 @@ public class InjectResolverHelper {
         this.ctx = ctx;
     }
 
-    Object getBeanFromSpringContext(Type beanType) {
-        Map<String, ?> beans = ctx.getBeansOfType(getClassFromType(beanType));
-        if(!beans.values().isEmpty()) {
-            Object o = beans.values().iterator().next();
-            LOGGER.finer("resolve: "+o);
-            return o;
+    Object getBeanFromSpringContext(String beanName, Type beanType) {
+        Class<?> bt = getClassFromType(beanType);
+        if(beanName != null) {
+            return ctx.getBean(beanName, bt);
         }
-        LOGGER.info("no beans found, resolve failed for type "+beanType);
-        return null;
+        Map<String, ?> beans = ctx.getBeansOfType(bt);
+        if(beans == null || beans.size() != 1) {
+            LOGGER.warning("no beans found, resolve failed for type "+beanType);
+            return null;
+        }
+        Object o = beans.values().iterator().next();
+        LOGGER.finer("resolve: "+o);
+        return o;
     }
 
     private Class<?> getClassFromType(Type type) {

@@ -4,9 +4,12 @@ import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 
 import javax.inject.Singleton;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.util.logging.Logger;
 
 /**
@@ -27,7 +30,15 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> root) {
         LOGGER.finer("resolve: "+injectee);
-        return injectResolverHelper.getBeanFromSpringContext(injectee.getRequiredType());
+        AnnotatedElement parent = injectee.getParent();
+        String beanName = null;
+        if(parent != null) {
+            Qualifier an = parent.getAnnotation(Qualifier.class);
+            if(an != null) {
+                beanName = an.value();
+            }
+        }
+        return injectResolverHelper.getBeanFromSpringContext(beanName, injectee.getRequiredType());
     }
 
     @Override
