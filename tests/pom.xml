@@ -65,6 +65,19 @@
         <module>osgi</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <!-- Use it with release-prepare goal to build all modules but skip test run. -->
+            <id>release</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <skip.release.tests>true</skip.release.tests>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencyManagement>
         <dependencies>
             <dependency>

@@ -63,6 +63,16 @@
 
     <profiles>
         <profile>
+            <id>release</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>apidocs</module>
+                <module>examples</module>
+            </modules>
+        </profile>
+        <profile>
             <id>attach-src-and-docs</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
