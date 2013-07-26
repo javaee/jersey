@@ -161,6 +161,22 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+          <id>moxy</id>
+          <activation>
+                <property>
+                    <name>moxy</name>
+                </property>
+          </activation>
+          <dependencies>
+                <dependency>
+                    <groupId>org.eclipse.persistence</groupId>
+                    <artifactId>org.eclipse.persistence.moxy</artifactId>
+                    <version>${moxy.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+         </profile>
     </profiles>
 
 </project>
