@@ -321,13 +321,20 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.4</version>
+                    <!--
+                        mvn release:prepare -DreleaseVersion=<release-version> -DdevelopmentVersion=<next-dev-version> -Dtag=<release-version> \
+                            -Prelease,all-tests
+
+                        mvn release:perform -DconnectionUrl="scm:git:file://<path-to-local-repo>" \
+                            -Prelease,skip-tests,attach-src-and-docs,examples-source-zip
+                    -->
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <preparationGoals>clean install</preparationGoals>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <arguments>${release.arguments}</arguments>
+                        <arguments>-Dmaven.test.skip=${skip.release.tests} ${release.arguments}</arguments>
                     </configuration>
                 </plugin>
 
@@ -563,6 +570,16 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <!-- Use it with release-perform goal to skip another test run. -->
+            <id>skip-tests</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <skip.release.tests>true</skip.release.tests>
+            </properties>
         </profile>
         <profile>
             <id>all-tests</id>
@@ -1147,6 +1164,7 @@
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <xdk.absolute.path />
+        <skip.release.tests>false</skip.release.tests>
 
         <jersey.version>${project.version}</jersey.version>
         <!-- Dependency versions -->
