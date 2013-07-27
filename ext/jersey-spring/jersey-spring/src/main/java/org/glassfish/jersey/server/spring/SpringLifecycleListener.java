@@ -4,10 +4,10 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import javax.inject.Inject;
 import javax.ws.rs.ext.Provider;
-import java.lang.annotation.Annotation;
 import java.util.logging.Logger;
 
 /**
@@ -19,28 +19,35 @@ import java.util.logging.Logger;
 public class SpringLifecycleListener implements ContainerLifecycleListener {
     private static final Logger LOGGER = Logger.getLogger(SpringLifecycleListener.class.getName());
     private ServiceLocator locator;
+
+    @Inject
     private ApplicationContext ctx;
 
     @Inject
     public SpringLifecycleListener(ServiceLocator loc) {
         LOGGER.fine("SpringLifecycleListener: "+loc);
         locator = loc;
-        ctx = locator.getService(ApplicationContext.class, new Annotation[] {});
     }
 
     @Override
     public void onStartup(Container container) {
-        LOGGER.fine("onStartup: "+container);
+        LOGGER.fine("onStartup: " + container);
     }
 
     @Override
     public void onReload(Container container) {
         LOGGER.fine("onReload: "+container);
+        if(ctx instanceof ConfigurableApplicationContext) {
+            ((ConfigurableApplicationContext)ctx).refresh();
+        }
     }
 
     @Override
     public void onShutdown(Container container) {
-        LOGGER.fine("onShutdown: "+container);
+        LOGGER.fine("onShutdown: " + container);
+        if(ctx instanceof ConfigurableApplicationContext) {
+            ((ConfigurableApplicationContext)ctx).close();
+        }
     }
 
 }
