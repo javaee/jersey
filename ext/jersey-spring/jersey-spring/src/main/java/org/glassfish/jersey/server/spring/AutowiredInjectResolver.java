@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 
 import javax.inject.Singleton;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.util.logging.Logger;
 
@@ -29,7 +28,7 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
 
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> root) {
-        LOGGER.finer("resolve: "+injectee);
+        LOGGER.finer("resolve: " + injectee);
         AnnotatedElement parent = injectee.getParent();
         String beanName = null;
         if(parent != null) {

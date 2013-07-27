@@ -6,6 +6,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.jvnet.hk2.spring.bridge.api.SpringBridge;
 import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
@@ -15,8 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.servlet.ServletContext;
-import java.lang.annotation.Annotation;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -29,6 +28,8 @@ import java.util.logging.Logger;
  */
 public class SpringComponentProvider implements ComponentProvider {
     private static final Logger LOGGER = Logger.getLogger(SpringComponentProvider.class.getName());
+    private static final String DEFAULT_CONTEXT_CONFIG_LOCATION = "applicationContext.xml";
+    private static final String PARAM_CONTEXT_CONFIG_LOCATION = "contextConfigLocation";
     private ServiceLocator locator;
     private ApplicationContext ctx;
 
@@ -38,11 +39,18 @@ public class SpringComponentProvider implements ComponentProvider {
         this.locator = locator;
 
         LOGGER.fine("initializing Spring context");
-        ServletContext sc = locator.getService(ServletContext.class, new Annotation[] {});
+        ServletContext sc = locator.getService(ServletContext.class);
         if(sc != null) {
+            // servlet container
             ctx = WebApplicationContextUtils.getWebApplicationContext(sc);
         } else {
-            ctx = new ClassPathXmlApplicationContext(new String[] {"applicationContext.xml"});
+            // non-servlet container
+            ApplicationHandler applicationHandler = locator.getService(ApplicationHandler.class);
+            String contextConfigLocation = (String)applicationHandler.getConfiguration().getProperty(PARAM_CONTEXT_CONFIG_LOCATION);
+            if(contextConfigLocation == null) {
+                contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
+            }
+            ctx = new ClassPathXmlApplicationContext(contextConfigLocation, "jersey-spring-applicationContext.xml");
         }
         if(ctx == null) {
             LOGGER.severe("failed to get Spring context, jersey-spring init skipped");
