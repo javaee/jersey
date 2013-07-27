@@ -46,8 +46,8 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -57,8 +57,7 @@ import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.client.ClientResponseFilter;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -68,7 +67,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
 /**
- * Client filter providing HTTP Digest Authentication
+ * Client filter providing HTTP Digest Authentication with preemptive
+ * authentication support.
  *
  * @author raphael.jolivet@gmail.com
  * @author Stefan Katerkamp (stefan@katerkamp.de)
@@ -78,9 +78,9 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
 	private static final Logger logger = Logger.getLogger(HttpDigestAuthFilter.class.getName());
 	private static final Charset CHARACTER_SET = Charset.forName("iso-8859-1");
-	static private final int CLIENT_NONCE_BYTE_COUNT = 4;
+	private static final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+	private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s*=\\s*(\"([^\"]+)\"|(\\w+))\\s*,?\\s*");
 	static private final SecureRandom randomGenerator;
-
 	static {
 		try {
 			randomGenerator = SecureRandom.getInstance("SHA1PRNG");
@@ -88,23 +88,18 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 			throw new Error(e);
 		}
 	}
-	private final String digest_username;
-	private final byte[] digest_password;
-	private String digest_nonce;
-	private String digest_realm;
-	private String digest_opaque;
-	private ALGORITHM digest_algorithm;
-	private QOP digest_qop = QOP.UNSPECIFIED;
-	private int digest_nc = 1;
-	boolean authorizationPhase = false;
-	MultivaluedMap<String, Object> origHeaderMap = null;
+	private static final int CLIENT_NONCE_BYTE_COUNT = 4;
+	private String username;
+	private byte[] password;
+	ConcurrentHashMap<String, MultivaluedMap<String, Object>> requestHeaderMapMap = new ConcurrentHashMap<String, MultivaluedMap<String, Object>>();
+	ConcurrentHashMap<String, DigestScheme> digestMap = new ConcurrentHashMap<String, DigestScheme>();
 
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
 	 * and password credentials.
 	 *
-	 * @param username
-	 * @param password
+	 * @param username user name
+	 * @param password password
 	 */
 	public HttpDigestAuthFilter(String username, String password) {
 		this(username, (password != null) ? password.getBytes(CHARACTER_SET) : new byte[0]);
@@ -115,8 +110,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	 * and password credentials. This constructor allows to avoid storing plain
 	 * password value in a String variable.
 	 *
-	 * @param username
-	 * @param password
+	 * @param username user name
+	 * @param password password
 	 */
 	public HttpDigestAuthFilter(String username, byte[] password) {
 		if (username == null) {
@@ -125,25 +120,19 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		if (password == null) {
 			password = new byte[0];
 		}
-		this.digest_username = username;
-		this.digest_password = password;
+		this.username = username;
+		this.password = password;
 	}
 
-	/**
-	 * Filter, which gets called before request is sent over the wire
-	 *
-	 * @param requestContext
-	 * @throws IOException
-	 */
 	@Override
 	public void filter(ClientRequestContext requestContext) throws IOException {
 
-		origHeaderMap = requestContext.getHeaders();
+		String requestKey = getRequestKey(requestContext);
+		requestHeaderMapMap.put(requestContext.getUri().toString(), requestContext.getHeaders());
 
-		if (parseHeaders(requestContext.getHeaders().get(HttpHeaders.AUTHORIZATION)) != null) {
-			authorizationPhase = true;
-		} else if (this.digest_nonce != null) {
-			String authLine = nextDigestAuthenticationToken(requestContext);
+		DigestScheme digestScheme = digestMap.get(requestKey);
+		if (digestScheme != null && digestScheme.getNonce() != null) {
+			String authLine = createNextAuthToken(digestScheme, requestContext);
 			requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, authLine);
 		}
 
@@ -154,9 +143,6 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		}
 	}
 
-	/**
-	 * Filter, which gets called when response comes back from wire
-	 */
 	@Override
 	public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
 
@@ -167,90 +153,147 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 			}
 		}
 
-		if (Response.Status.fromStatusCode(responseContext.getStatus()) == Status.UNAUTHORIZED && !authorizationPhase) {
+		if (Response.Status.fromStatusCode(responseContext.getStatus()) == Status.UNAUTHORIZED) {
 
-			HashMap<String, String> map = parseHeaders(responseContext.getHeaders().get(HttpHeaders.WWW_AUTHENTICATE));
-			if (map == null) {
+			DigestScheme digestScheme = parseAuthHeaders(responseContext.getHeaders().get(HttpHeaders.WWW_AUTHENTICATE));
+			if (digestScheme == null) {
 				return;
 			}
-			digest_realm = map.get("realm");
-			digest_nonce = map.get("nonce");
-			digest_opaque = map.get("opaque");
-			digest_algorithm = ALGORITHM.parse(map.get("algorithm"));
-			digest_qop = QOP.parse(map.get("qop"));
 
-			String staleStr = map.get("stale");
-			boolean stale = (staleStr != null) && staleStr.toLowerCase().equals("true");
+			String requestKey = getRequestKey(requestContext);
 
-			if (stale || !authorizationPhase) {
+			if (digestScheme.isStale() || !digestMap.containsKey(requestKey)) {
 
-				authorizationPhase = true;
+				digestMap.put(requestKey, digestScheme);
 
-				// assemble athentication request
+				// assemble authentication request and resend it
 				Client client = requestContext.getClient();
 				String method = requestContext.getMethod();
 				MediaType mediaType = requestContext.getMediaType();
 				URI luri = requestContext.getUri();
-				WebTarget wt = client.target(luri);
-				Builder builder = wt.request(mediaType);
-				builder.headers(origHeaderMap);
 
-				// send request
-				Response serverResponse2 = null;
-				if (method.equals("GET")) {
-						serverResponse2 = builder.get();
-				} else if (method.equals("POST")) {
-						serverResponse2 = builder.post((Entity) requestContext.getEntity());
-				} else {
-						throw new IOException("Method not implemented: " + method);
-				}
-				if (serverResponse2 == null) {
+				WebTarget resourceTarget = client.target(luri);
+
+				Invocation.Builder builder = resourceTarget.request(mediaType);
+				builder.headers(requestHeaderMapMap.get(requestContext.getUri().toString()));
+				Invocation invocation = builder.build(method);
+
+				Response nextResponse = invocation.invoke();
+
+				if (nextResponse == null) {
 					return;
 				}
-
-				// merge response 2 into original response
-				if (serverResponse2.hasEntity()) {
-					String entity = serverResponse2.readEntity(String.class);
+				if (nextResponse.hasEntity()) {
+					String entity = nextResponse.readEntity(String.class);
 					responseContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(CHARACTER_SET)));
 				}
 				MultivaluedMap<String, String> headers = responseContext.getHeaders();
 				headers.clear();
-				headers.putAll(serverResponse2.getStringHeaders());
-				responseContext.setStatus(serverResponse2.getStatus());
+				headers.putAll(nextResponse.getStringHeaders());
+				responseContext.setStatus(nextResponse.getStatus());
 			}
 		}
 	}
 
 	/**
+	 * Assemble request key
+	 * 
+	 * @param requestContext
+	 * @return request key string
+	 */
+	String getRequestKey(ClientRequestContext requestContext) {
+		URI uri = requestContext.getUri();
+		return requestContext.getMethod() + uri.getScheme() + uri.getAuthority() + uri.getPath();
+	}
+
+	/**
+	 * Parse digest header.
+	 *
+	 * @param headers List of header strings
+	 * @return DigestScheme or null if no digest header exists
+	 */
+	DigestScheme parseAuthHeaders(List<?> headers) throws IOException {
+
+		if (headers == null) {
+			return null;
+		}
+		for (Object lineObject : headers) {
+
+			if (!(lineObject instanceof String)) {
+				continue;
+			}
+			String line = (String) lineObject;
+			String[] parts = line.trim().split("\\s+", 2);
+
+			if (parts.length != 2) {
+				continue;
+			}
+			if (!parts[0].toLowerCase().equals("digest")) {
+				continue;
+			}
+
+			DigestScheme ds = new DigestScheme();
+			Matcher match = KEY_VALUE_PAIR_PATTERN.matcher(parts[1]);
+			while (match.find()) {
+				// expect 4 groups (key)=("(val)" | (val))
+				int nbGroups = match.groupCount();
+				if (nbGroups != 4) {
+					continue;
+				}
+				String key = match.group(1);
+				String valNoQuotes = match.group(3);
+				String valQuotes = match.group(4);
+				String val = (valNoQuotes == null) ? valQuotes : valNoQuotes;
+				if (key.equals("qop")) {
+					ds.setQop(QOP.parse(val));
+				} else if (key.equals("realm")) {
+					ds.setRealm(val);
+				} else if (key.equals("nonce")) {
+					ds.setNonce(val);
+				} else if (key.equals("opaque")) {
+					ds.setOpaque(val);
+				} else if (key.equals("stale")) {
+					ds.setStale(Boolean.parseBoolean(val));
+				} else if (key.equals("algorithm")) {
+					ds.setAlgorithm(ALGORITHM.parse(val));
+				}
+			}
+			return ds;
+		}
+		return null;
+	}
+
+	/**
 	 * Creates digest string including counter.
 	 *
-	 * @param requestContext
-	 * @return
+	 * @param ds DigestScheme instance
+	 * @param requestContext client request context
+	 * @return digest authentication token string
 	 * @throws IOException
 	 */
-	private String nextDigestAuthenticationToken(ClientRequestContext requestContext) throws IOException {
+	String createNextAuthToken(DigestScheme ds, ClientRequestContext requestContext) throws IOException {
 
 		StringBuilder sb = new StringBuilder(100);
 		sb.append("Digest ");
-		append(sb, "username", digest_username);
-		append(sb, "realm", digest_realm);
-		append(sb, "nonce", digest_nonce);
-		append(sb, "opaque", digest_opaque);
-		append(sb, "algorithm", digest_algorithm.toString(), false);
-		append(sb, "qop", digest_qop.toString(), false);
+		append(sb, "username", username);
+		append(sb, "realm", ds.getRealm());
+		append(sb, "nonce", ds.getNonce());
+		append(sb, "opaque", ds.getOpaque());
+		append(sb, "algorithm", ds.getAlgorithm().toString(), false);
+		append(sb, "qop", ds.getQop().toString(), false);
 
 		String uri = requestContext.getUri().getRawPath();
 		append(sb, "uri", uri);
 
 		String ha1;
-		if (digest_algorithm.equals(ALGORITHM.MD5_SESS)) {
-			ha1 = md5(md5(digest_username, digest_realm, new String(digest_password)));
+		if (ds.getAlgorithm().equals(ALGORITHM.MD5_SESS)) {
+			ha1 = md5(md5(username, ds.getRealm(), new String(password)));
 		} else {
-			ha1 = md5(digest_username, digest_realm, new String(digest_password));
+			ha1 = md5(username, ds.getRealm(), new String(password));
 		}
 
 		String ha2;
-		if (digest_qop == QOP.AUTH_INT && requestContext.hasEntity()) {
+		if (ds.getQop() == QOP.AUTH_INT && requestContext.hasEntity()) {
 			Object entity = requestContext.getEntity();
 			if (entity instanceof String) {
 				ha2 = md5(
@@ -265,15 +308,15 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		}
 
 		String response;
-		if (digest_qop.equals(QOP.UNSPECIFIED)) {
-			response = md5(ha1, digest_nonce, ha2);
+		if (ds.getQop().equals(QOP.UNSPECIFIED)) {
+			response = md5(ha1, ds.getNonce(), ha2);
 		} else {
 			String cnonce = randomBytes(CLIENT_NONCE_BYTE_COUNT); // client nonce
 			append(sb, "cnonce", cnonce);
-			String nc = String.format("%08x", this.digest_nc); // counter
-			this.digest_nc++;
+			ds.setNc(ds.getNc() + 1);
+			String nc = String.format("%08x", ds.getNc()); // counter
 			append(sb, "nc", nc, false);
-			response = md5(ha1, digest_nonce, nc, cnonce, digest_qop.toString(), ha2);
+			response = md5(ha1, ds.getNonce(), nc, cnonce, ds.getQop().toString(), ha2);
 		}
 		append(sb, "response", response);
 
@@ -281,7 +324,12 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	}
 
 	/**
-	 * Append comma plus key=value token
+	 * Append comma separated key=value token
+	 *
+	 * @param sb string builder instance
+	 * @param key key string
+	 * @param value value string
+	 * @param useQuote true if value needs to be enclosed in quotes
 	 */
 	static private void append(StringBuilder sb, String key, String value, boolean useQuote) {
 
@@ -304,14 +352,22 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		}
 	}
 
+	/**
+	 * Append comma separated key=value token. The value gets enclosed in quotes.
+	 *
+	 * @param sb string builder instance
+	 * @param key key string
+	 * @param value value string
+	 */
 	static private void append(StringBuilder sb, String key, String value) {
 		append(sb, key, value, true);
 	}
-	final protected static char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
 	/**
-	 * @see
-	 * http://stackoverflow.com/questions/9655181/convert-from-byte-array-to-hex-string-in-java
+	 * Convert bytes array to hex string.
+	 *
+	 * @param bytes array of bytes
+	 * @return hex string
 	 */
 	private static String bytesToHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];
@@ -327,8 +383,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	/**
 	 * Colon separated value MD5 hash.
 	 *
-	 * @param tokens
-	 * @return M5hash
+	 * @param tokens one or more strings
+	 * @return M5 hash string
 	 * @throws IOException
 	 */
 	private static String md5(String... tokens) throws IOException {
@@ -353,56 +409,13 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
 	/**
 	 * Generate a random sequence of bytes and return its hex representation
+	 * @param nbBytes number of bytes to generate
+	 * @return hex string
 	 */
 	private static String randomBytes(int nbBytes) {
 		byte[] bytes = new byte[nbBytes];
 		randomGenerator.nextBytes(bytes);
 		return bytesToHex(bytes);
-	}
-	static protected final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s*=\\s*(\"([^\"]+)\"|(\\w+))\\s*,?\\s*");
-
-	/**
-	 * Parse digest header.
-	 * @param lines
-	 * @return  null if no digest header exists
-	 */
-	static public HashMap<String, String> parseHeaders(Collection<?> lines) {
-
-		if (lines == null) {
-			return null;
-		}
-		for (Object lineObject : lines) {
-
-			if (!(lineObject instanceof String)) {
-				continue;
-			}
-			String line = (String) lineObject;
-			String[] parts = line.trim().split("\\s+", 2);
-
-			if (parts.length != 2) {
-				continue;
-			}
-			if (!parts[0].toLowerCase().equals("digest")) {
-				continue;
-			}
-
-			Matcher match = KEY_VALUE_PAIR_PATTERN.matcher(parts[1]);
-			HashMap<String, String> result = new HashMap<String, String>();
-			while (match.find()) {
-				// expect 4 groups (key)=("(val)" | (val))
-				int nbGroups = match.groupCount();
-				if (nbGroups != 4) {
-					continue;
-				}
-				String key = match.group(1);
-				String valNoQuotes = match.group(3);
-				String valQuotes = match.group(4);
-
-				result.put(key, (valNoQuotes == null) ? valQuotes : valNoQuotes);
-			}
-			return result;
-		}
-		return null;
 	}
 
 	private enum QOP {
@@ -457,6 +470,82 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 				return MD5_SESS;
 			}
 			return MD5;
+		}
+	}
+
+	/**
+	 * Digest scheme POJO
+	 */
+	final class DigestScheme {
+
+		private String nonce;
+		private String realm;
+		private String opaque;
+		private ALGORITHM algorithm;
+		private QOP qop;
+		private boolean stale;
+		private int nc;
+
+		public DigestScheme() {
+			stale = false;
+			qop = QOP.UNSPECIFIED;
+			algorithm = ALGORITHM.UNSPECIFIED;
+		}
+
+		public String getNonce() {
+			return nonce;
+		}
+
+		public void setNonce(String nonce) {
+			this.nonce = nonce;
+		}
+
+		public String getRealm() {
+			return realm;
+		}
+
+		public void setRealm(String realm) {
+			this.realm = realm;
+		}
+
+		public String getOpaque() {
+			return opaque;
+		}
+
+		public void setOpaque(String opaque) {
+			this.opaque = opaque;
+		}
+
+		public ALGORITHM getAlgorithm() {
+			return algorithm;
+		}
+
+		public void setAlgorithm(ALGORITHM algorithm) {
+			this.algorithm = algorithm;
+		}
+
+		public QOP getQop() {
+			return qop;
+		}
+
+		public void setQop(QOP qop) {
+			this.qop = qop;
+		}
+
+		public boolean isStale() {
+			return stale;
+		}
+
+		public void setStale(boolean stale) {
+			this.stale = stale;
+		}
+
+		public int getNc() {
+			return nc;
+		}
+
+		public void setNc(int nc) {
+			this.nc = nc;
 		}
 	}
 }

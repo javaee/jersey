@@ -39,78 +39,83 @@
  */
 package org.glassfish.jersey.client.filter;
 
-import junit.framework.TestCase;
+import java.io.IOException;
 
 import java.util.Arrays;
-import java.util.HashMap;
+import org.glassfish.jersey.client.filter.HttpDigestAuthFilter.DigestScheme;
+
+import org.junit.Test;
+import org.junit.Assert;
 
 /**
  * @author raphael.jolivet@gmail.com
  * @author Stefan Katerkamp (stefan@katerkamp.de
  */
-public class HttpDigestAuthFilterTest extends TestCase {
+public class HttpDigestAuthFilterTest {
 
-    public void testParseHeaders1()
+	@Test
+	public void testParseHeaders1() throws IOException // No "digest" scheme
+	{
+		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+		DigestScheme ds = f.parseAuthHeaders(Arrays.asList(new String[]{
+			"basic toto=tutu",
+			"basic toto=\"tutu\""
+		}));
 
-    // No "digest" scheme
-    {
-        HashMap<String, String> map = HttpDigestAuthFilter.parseHeaders(Arrays.asList(new String[]{
-                "basic toto=tutu",
-                "basic toto=\"tutu\""
-        }));
+		Assert.assertNull(ds);
+	}
 
-        assertNull(map);
-    }
+	@Test
+	public void testParseHeaders2() throws IOException // Two concurrent schemes
+	{
+		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+		DigestScheme ds = f.parseAuthHeaders(Arrays.asList(new String[]{
+			"Digest realm=\"tata\"",
+			"basic  toto=\"tutu\""
+		}));
+		Assert.assertNotNull(ds);
 
-    public void testParseHeaders2()
+		Assert.assertEquals("tata", ds.getRealm());
+	}
 
-    // Two concurrent schemes
-    {
-        HashMap<String, String> map = HttpDigestAuthFilter.parseHeaders(Arrays.asList(new String[]{
-                "digest toto=\"tata\"",
-                "basic  toto=\"tutu\""
-        }));
+	@Test
+	public void testParseHeaders3() throws IOException // Complex case, with comma inside value
+	{
+		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+		DigestScheme ds = f.parseAuthHeaders(Arrays.asList(new String[]{
+			"digest realm=\"tata\",nonce=\"foo, bar\""
+		}));
 
-        assertEquals("tata", map.get("toto"));
-    }
+		Assert.assertNotNull(ds);
+		Assert.assertEquals("tata", ds.getRealm());
+		Assert.assertEquals("foo, bar", ds.getNonce());
+	}
 
-    public void testParseHeaders3()
+	@Test
+	public void testParseHeaders4() throws IOException // Spaces
+	{
+		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+		DigestScheme ds = f.parseAuthHeaders(Arrays.asList(new String[]{
+			"    digest realm =   \"tata\"  ,  opaque=\"bar\" ,nonce=\"foo, bar\""
+		}));
 
-    // Complex case, with comma inside value
-    {
-        HashMap<String, String> map = HttpDigestAuthFilter.parseHeaders(Arrays.asList(new String[]{
-                "digest toto=\"tata\",foo=\"bar\",foobar=\"foo, bar\""
-        }));
+		Assert.assertNotNull(ds);
+		Assert.assertEquals("tata", ds.getRealm());
+		Assert.assertEquals("foo, bar", ds.getNonce());
+		Assert.assertEquals("bar", ds.getOpaque());
+	}
 
-        assertEquals("foo, bar", map.get("foobar"));
-        assertEquals("tata", map.get("toto"));
-        assertEquals("bar", map.get("foo"));
-    }
+	@Test
+	public void testParseHeaders5() throws IOException // Mix of quotes and  non-quotes
+	{
+		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+		DigestScheme ds = f.parseAuthHeaders(Arrays.asList(new String[]{
+			"    digest realm =   \"tata\"  ,  opaque =bar ,nonce=\"foo, bar\""
+		}));
 
-    public void testParseHeaders4()
-
-    // Spaces
-    {
-        HashMap<String, String> map = HttpDigestAuthFilter.parseHeaders(Arrays.asList(new String[]{
-                "    digest toto =   \"tata\"  ,  foo =\"bar\" ,foobar=\"foo, bar\""
-        }));
-
-        assertEquals("foo, bar", map.get("foobar"));
-        assertEquals("tata", map.get("toto"));
-        assertEquals("bar", map.get("foo"));
-    }
-
-    public void testParseHeaders5()
-
-    // Mix of quotes and  non-quotes
-    {
-        HashMap<String, String> map = HttpDigestAuthFilter.parseHeaders(Arrays.asList(new String[]{
-                "    digest toto =   \"tata\"  ,  foo =bar ,foobar=\"foo, bar\""
-        }));
-
-        assertEquals("foo, bar", map.get("foobar"));
-        assertEquals("tata", map.get("toto"));
-        assertEquals("bar", map.get("foo"));
-    }
+		Assert.assertNotNull(ds);
+		Assert.assertEquals("tata", ds.getRealm());
+		Assert.assertEquals("foo, bar", ds.getNonce());
+		Assert.assertEquals("bar", ds.getOpaque());
+	}
 }
-
