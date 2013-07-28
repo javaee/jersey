@@ -184,9 +184,7 @@
     
     <modules>
       <module>jersey-spring</module>
-<!--
-      <module>jersey-spring-it</module>
--->
+      <module>jersey-spring-test</module>
     </modules>
 
 </project>
