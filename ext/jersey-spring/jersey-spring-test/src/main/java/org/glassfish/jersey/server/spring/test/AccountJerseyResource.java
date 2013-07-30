@@ -65,8 +65,9 @@ public class AccountJerseyResource {
     @PUT
     @Path("message")
     @Consumes(MediaType.TEXT_PLAIN)
-    public void setMessage(String message) {
+    public String setMessage(String message) {
         this.message = message;
+        return message;
     }
 
     // resource methods for testing singleton scoped beans
