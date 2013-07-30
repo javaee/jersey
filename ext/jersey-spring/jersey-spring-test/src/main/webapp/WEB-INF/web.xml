@@ -5,15 +5,20 @@
 
   <module-name>jersey-spring-test</module-name>
 
+    <!-- use this to explicitly configure Spring -->
     <!--
-    <servlet>
-        <servlet-name>javax.ws.rs.core.Application</servlet-name>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>javax.ws.rs.core.Application</servlet-name>
-        <url-pattern>/myapp/*</url-pattern>
-    </servlet-mapping>
+    <listener>
+        <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+    </listener>
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:/applicationContext.xml</param-value>
+    </context-param>
     -->
+
     <servlet>
         <servlet-name>org.glassfish.jersey.server.spring.test.MyApplication</servlet-name>
     </servlet>

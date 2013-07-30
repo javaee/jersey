@@ -8,14 +8,19 @@
   http://www.springframework.org/schema/context/spring-context.xsd"
         >
 
-    <bean name="AccountService-1" class="org.glassfish.jersey.server.spring.test.AccountServiceSpring" scope="singleton"/>
+    <bean name="AccountService-singleton" class="org.glassfish.jersey.server.spring.test.AccountServiceImpl" scope="singleton"/>
 
-    <bean name="AccountService-2" class="org.glassfish.jersey.server.spring.test.AccountServiceSpring" scope="singleton"/>
+    <bean name="AccountService-request-1" class="org.glassfish.jersey.server.spring.test.AccountServiceImpl" scope="request"/>
 
-    <bean name="AccountService-3" class="org.glassfish.jersey.server.spring.test.AccountServiceJersey" scope="prototype"/>
+    <bean name="AccountService-request-2" class="org.glassfish.jersey.server.spring.test.AccountServiceImpl" scope="request"/>
 
-    <bean name="AccountService-4" class="org.glassfish.jersey.server.spring.test.AccountServiceJersey" scope="request"/>
+    <bean name="AccountService-prototype-1" class="org.glassfish.jersey.server.spring.test.AccountServiceImpl" scope="prototype">
+        <property name="defaultAccountBalance" value="987.65"/>
+    </bean>
 
-    <bean class="org.glassfish.jersey.server.spring.test.AccountResource"/>
+    <bean name="AccountService-prototype-2" class="org.glassfish.jersey.server.spring.test.AccountServiceImpl" scope="prototype"/>
+
+    <!-- Spring managed JAX-RS resource -->
+    <bean class="org.glassfish.jersey.server.spring.test.AccountSpringResource"/>
 
 </beans>

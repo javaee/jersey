@@ -119,11 +119,12 @@
 
 
     <profiles>
+
         <profile>
             <id>it</id>
+
             <build>
                 <plugins>
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
@@ -141,6 +142,18 @@
                                 <property>
                                     <name>java.util.logging.config.file</name>
                                     <value>../logging.properties</value>
+                                </property>
+                                <property>
+                                    <name>jersey.test.host</name>
+                                    <value>localhost</value>
+                                </property>
+                                <property>
+                                    <name>jersey.config.test.container.port</name>
+                                    <value>8080</value>
+                                </property>
+                                <property>
+                                    <name>jersey.config.test.container.factory</name>
+                                    <value>org.glassfish.jersey.test.external.ExternalTestContainerFactory</value>
                                 </property>
                             </systemProperties>
                         </configuration>
@@ -160,48 +173,43 @@
                         </executions>
                     </plugin>
 
-                    <plugin>
-                        <groupId>org.eclipse.jetty</groupId>
-                        <artifactId>jetty-maven-plugin</artifactId>
-                        <version>${jetty.version}</version>
-                        <configuration>
-                            <scanIntervalSeconds>10</scanIntervalSeconds>
-                            <stopPort>8005</stopPort>
-                            <stopKey>STOP</stopKey>
-                            <contextPath>/</contextPath>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>start-jetty</id>
-                                <phase>pre-integration-test</phase>
-                                <goals>
-                                    <goal>run-exploded</goal>
-                                </goals>
-                                <configuration>
-                                    <scanIntervalSeconds>0</scanIntervalSeconds>
-                                    <daemon>true</daemon>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>stop-jetty</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>stop</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
                 </plugins>
+
             </build>
 
             <dependencies>
-
                 <dependency>
                     <groupId>org.glassfish.jersey.test-framework.providers</groupId>
                     <artifactId>jersey-test-framework-provider-external</artifactId>
                     <version>${project.version}</version>
                     <scope>test</scope>
                 </dependency>
+            </dependencies>
+
+        </profile>
+
+        <profile>
+            <id>jetty</id>
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.eclipse.jetty</groupId>
+                        <artifactId>jetty-maven-plugin</artifactId>
+                        <version>${jetty.version}</version>
+                        <configuration>
+                            <scanIntervalSeconds>0</scanIntervalSeconds>
+                            <stopPort>8005</stopPort>
+                            <stopKey>STOP</stopKey>
+                            <webApp>
+                                <contextPath>/${project.build.finalName}</contextPath>
+                            </webApp>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+
+            <dependencies>
 
                 <dependency>
                     <groupId>org.eclipse.jetty</groupId>
