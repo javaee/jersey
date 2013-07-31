@@ -29,12 +29,12 @@ public class AccountSpringResource {
     @Qualifier("AccountService-singleton")
     private AccountService accountServiceAutowired;
 
-//    @Autowired
-//    @Qualifier("AccountService-request-1")
+    @Inject
+    @Named("AccountService-request-1")
     private AccountService accountServiceRequest1;
 
-//    @Autowired
-//    @Qualifier("AccountService-request-1")
+    @Autowired
+    @Qualifier("AccountService-request-1")
     private AccountService accountServiceRequest2;
 
     @Autowired
@@ -48,7 +48,7 @@ public class AccountSpringResource {
     @Inject
     private HK2ServiceSingleton hk2Singleton;
 
-//    @Inject
+    @Inject
     private HK2ServiceRequestScoped hk2RequestScoped;
 
     @Inject

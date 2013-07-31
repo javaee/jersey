@@ -38,8 +38,4 @@ public class SpringManagedTest extends AccountResourceTestBase {
         assertEquals(message, msg);
     }
 
-    @Test
-    public void testRequestScopedSpringService() {
-    }
-
 }

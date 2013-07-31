@@ -104,25 +104,18 @@ public class SpringComponentProvider implements ComponentProvider {
         private ApplicationContext ctx;
         private ServiceLocator locator;
         private String beanName;
-        private boolean isSingleton;
 
         private SpringManagedBeanFactory(ApplicationContext ctx, ServiceLocator locator, String beanName) {
             LOGGER.fine("SpringManagedBeanFactory()");
             this.ctx = ctx;
             this.locator = locator;
             this.beanName = beanName;
-            isSingleton = ctx.isSingleton(beanName);
-            if(isSingleton) {
-                locator.inject(ctx.getBean(beanName));
-            }
         }
 
         @Override
         public Object provide() {
             Object bean = ctx.getBean(beanName);
-            if(!isSingleton) {
-                locator.inject(bean);
-            }
+            locator.inject(bean);
             LOGGER.finer("provide(): "+bean);
             return bean;
         }

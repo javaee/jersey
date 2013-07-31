@@ -27,8 +27,8 @@ public class AccountJerseyResource {
     @Qualifier("AccountService-singleton")
     private AccountService accountServiceAutowired;
 
-    @Autowired
-    @Qualifier("AccountService-request-1")
+    @Inject
+    @Named("AccountService-request-1")
     private AccountService accountServiceRequest1;
 
     @Autowired
