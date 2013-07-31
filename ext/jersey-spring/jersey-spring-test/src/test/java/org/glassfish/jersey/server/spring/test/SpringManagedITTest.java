@@ -15,8 +15,8 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
  */
-public class SpringManagedTest extends AccountResourceTestBase {
-    private static final Logger LOGGER = Logger.getLogger(SpringManagedTest.class.getName());
+public class SpringManagedITTest extends AccountResourceTestBase {
+    private static final Logger LOGGER = Logger.getLogger(SpringManagedITTest.class.getName());
 
     @Override
     protected ResourceConfig configure(ResourceConfig rc) {
@@ -24,13 +24,13 @@ public class SpringManagedTest extends AccountResourceTestBase {
     }
 
     @Override
-    protected String getResourceBase() {
+    protected String getResourcePath() {
         return "/spring/account";
     }
 
     @Test
     public void testResourceScope() {
-        WebTarget t = target("/spring/account");
+        WebTarget t = target(getResourceFullPath());
         String message = "hello, world";
         String echo = t.path("message").request().put(Entity.text(message), String.class);
         assertEquals(message, echo);

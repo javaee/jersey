@@ -15,8 +15,8 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
  */
-public class JerseyManagedTest extends AccountResourceTestBase {
-    private static final Logger LOGGER = Logger.getLogger(JerseyManagedTest.class.getName());
+public class JerseyManagedITTest extends AccountResourceTestBase {
+    private static final Logger LOGGER = Logger.getLogger(JerseyManagedITTest.class.getName());
 
     @Override
     protected ResourceConfig configure(ResourceConfig rc) {
@@ -24,13 +24,13 @@ public class JerseyManagedTest extends AccountResourceTestBase {
     }
 
     @Override
-    protected String getResourceBase() {
+    protected String getResourcePath() {
         return "/jersey/account";
     }
 
     @Test
     public void testResourceScope() {
-        WebTarget t = target("/jersey/account");
+        WebTarget t = target(getResourceFullPath());
         String message = "hello, world";
         String echo = t.path("message").request().put(Entity.text(message), String.class);
         assertEquals(message, echo);

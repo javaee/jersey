@@ -138,6 +138,10 @@
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <version>2.15</version>
                         <configuration>
+                            <includes>
+                                <include>**/*ITTest.java</include>
+                                <include>**/*IT.java</include>
+                            </includes>
                             <systemProperties>
                                 <property>
                                     <name>java.util.logging.config.file</name>
@@ -154,6 +158,10 @@
                                 <property>
                                     <name>jersey.config.test.container.factory</name>
                                     <value>org.glassfish.jersey.test.external.ExternalTestContainerFactory</value>
+                                </property>
+                                <property>
+                                    <name>jersey.spring.test.contextPath</name>
+                                    <value>/${project.build.finalName}</value>
                                 </property>
                             </systemProperties>
                         </configuration>

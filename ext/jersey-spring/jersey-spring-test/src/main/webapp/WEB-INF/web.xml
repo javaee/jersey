@@ -24,7 +24,7 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>org.glassfish.jersey.server.spring.test.MyApplication</servlet-name>
-        <url-pattern>/myapp/*</url-pattern>
+        <url-pattern>/*</url-pattern>
     </servlet-mapping>
 
   
