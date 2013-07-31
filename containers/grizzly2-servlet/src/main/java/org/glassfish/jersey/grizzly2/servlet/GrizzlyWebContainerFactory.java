@@ -230,6 +230,12 @@ public final class GrizzlyWebContainerFactory {
      */
     public static HttpServer create(URI u, Class<? extends Servlet> c,
                                     Map<String, String> initParams) throws IOException {
+        return create(u, c, null, initParams, null);
+    }
+
+    private static HttpServer create(URI u, Class<? extends Servlet> c, Servlet servlet,
+                                    Map<String, String> initParams, Map<String, String> contextInitParams)
+            throws IOException {
         if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
         }
@@ -246,8 +252,20 @@ public final class GrizzlyWebContainerFactory {
         path = String.format("/%s", UriComponent.decodePath(u.getPath(), true).get(1).toString());
 
         WebappContext context = new WebappContext("GrizzlyContext", path);
-        ServletRegistration registration = context.addServlet(c.getName(), c);
+        ServletRegistration registration = null;
+        if(c != null) {
+            registration = context.addServlet(c.getName(), c);
+        } else {
+            registration = context.addServlet(servlet.getClass().getName(), servlet);
+        }
         registration.addMapping("");
+
+        if(contextInitParams != null) {
+            for(Map.Entry<String, String> e : contextInitParams.entrySet()) {
+                context.setInitParameter(e.getKey(), e.getValue());
+            }
+        }
+
         if (initParams == null) {
 //            registration.setInitParameter(ClassPathResourceConfig.PROPERTY_CLASSPATH,
 //                    System.getProperty("java.class.path").replace(File.pathSeparatorChar, ';'));
@@ -258,5 +276,29 @@ public final class GrizzlyWebContainerFactory {
         HttpServer server = GrizzlyHttpServerFactory.createHttpServer(u);
         context.deploy(server);
         return server;
+    }
+
+    /**
+     * Create a {@link HttpServer} that registers the declared
+     * servlet instance.
+     *
+     * @param u          the URI to create the http server. The URI scheme must be
+     *                   equal to "http". The URI user information and host
+     *                   are ignored If the URI port is not present then port 80 will be
+     *                   used. The URI query and fragment components are ignored. Only first path segment will be used
+     *                   as context path, the rest will be ignored.
+     * @param servlet    the servlet instance
+     * @param initParams the servlet initialization parameters
+     * @param contextInitParams the servlet context initialization parameters.
+     * @return the http server, with the endpoint started
+     * @throws IOException              if an error occurs creating the container.
+     * @throws IllegalArgumentException if <code>u</code> is null
+     */
+    public static HttpServer create(URI u, Servlet servlet, Map<String, String> initParams, Map<String, String> contextInitParams)
+            throws IOException {
+        if (servlet == null) {
+            throw new IllegalArgumentException("The servlet must not be null");
+        }
+        return create(u, null, servlet, initParams, contextInitParams);
     }
 }
