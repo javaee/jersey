@@ -769,11 +769,14 @@ public final class ApplicationHandler {
 
         // Bind classes.
         for (Class<?> componentClass : classes) {
+
             ContractProvider model = componentBag.getModel(componentClass);
+
+            if (bindWithComponentProvider(componentClass, model, componentProviders)) {
+                continue;
+            }
+
             if (resourceClasses.contains(componentClass)) {
-                if (bindWithComponentProvider(componentClass, model, componentProviders)) {
-                    continue;
-                }
 
                 if (!Resource.isAcceptable(componentClass)) {
                     LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_COMPONENT(componentClass));

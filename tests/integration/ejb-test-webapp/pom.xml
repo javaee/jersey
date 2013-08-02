@@ -81,6 +81,17 @@
             <artifactId>jersey-test-framework-provider-bundle</artifactId>
             <type>pom</type>
             <scope>test</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest-core</artifactId>
+              </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+          <groupId>org.hamcrest</groupId>
+          <artifactId>hamcrest-library</artifactId>
+          <scope>test</scope>
         </dependency>
    </dependencies>
     <build>

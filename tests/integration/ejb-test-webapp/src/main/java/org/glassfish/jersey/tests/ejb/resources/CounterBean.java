@@ -39,26 +39,20 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.ejb.Singleton;
 
 /**
- * JAX-RS application to configure resources.
+ * EJB singleton utilized as request counter in this test application.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/rest")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-            add(CounterFilter.class);
-        }};
+@Singleton
+public class CounterBean {
+
+    AtomicInteger counter = new AtomicInteger();
+
+    public int incrementAndGet() {
+        return counter.incrementAndGet();
     }
 }

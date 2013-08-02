@@ -39,26 +39,32 @@
  */
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.IOException;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.ext.Provider;
 
 /**
- * JAX-RS application to configure resources.
+ * Response filter implemented as EJB bean. The filter adds Request-Count response header to each response.
+ * Another EJB singleton bean, CounterBean, is injected that holds the actual request count.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/rest")
-public class MyApplication extends Application {
+@Provider
+@Stateless
+public class CounterFilter implements ContainerResponseFilter{
+
+    public static final String RequestCountHEADER = "Request-Count";
+
+    @EJB CounterBean counter;
+
     @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-            add(CounterFilter.class);
-        }};
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+        responseContext.getHeaders().add(RequestCountHEADER, counter.incrementAndGet());
     }
 }
