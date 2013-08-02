@@ -217,15 +217,17 @@
             on a module name to get complete set of downloadable dependencies).
         </para>
 
-        <table frame='all' xml:id="dependencies-table-core">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-core">
             <title>Jersey Core</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Core</entry>
                     </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/jersey-client/dependencies.html">
@@ -254,15 +256,17 @@
             </tgroup>
         </table>
 
-        <table frame='all' xml:id="dependencies-table-containers">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-containers">
             <title>Jersey Containers</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Containers</entry>
                     </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-container-grizzly2-http/dependencies.html">
@@ -316,15 +320,17 @@
         </table>
 
 
-        <table frame='all' xml:id="dependencies-table-connectors">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-connectors">
             <title>Jersey Connectors</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Connectors</entry>
                     </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-grizzly-connector/dependencies.html">
@@ -346,15 +352,17 @@
         </table>
 
 
-        <table frame='all' xml:id="dependencies-table-media">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-media">
             <title>Jersey Media</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Media</entry>
                     </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-json-jackson/dependencies.html">
@@ -408,15 +416,17 @@
         </table>
 
 
-        <table frame='all' xml:id="dependencies-table-extensions">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-extensions">
             <title>Jersey Extensions</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Extensions</entry>
                     </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-bean-validation/dependencies.html">
@@ -478,21 +488,22 @@
                             documentation.
                         </entry>
                     </row>
-
                 </tbody>
             </tgroup>
         </table>
 
 
-        <table frame='all' xml:id="dependencies-table-test-framework">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-test-framework">
             <title>Jersey Test Framework</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Test Framework</entry>
                     </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-test-framework-core/dependencies.html">
@@ -557,22 +568,22 @@
                         </entry>
                         <entry>Jersey Test Framework - Simple HTTP container.</entry>
                     </row>
-
                 </tbody>
             </tgroup>
         </table>
 
 
-        <table frame='all' xml:id="dependencies-table-gf-bundles">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-gf-bundles">
             <title>Jersey Glassfish Bundles</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
-
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Glassfish Bundles</entry>
                     </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-gf-cdi/dependencies.html">
@@ -589,21 +600,22 @@
                         </entry>
                         <entry>Jersey EJB for GlassFish integration.</entry>
                     </row>
-
                 </tbody>
             </tgroup>
         </table>
 
 
-        <table frame='all' xml:id="dependencies-table-examples">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-examples">
             <title>Jersey Examples</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Examples</entry>
                     </row>
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/clipboard/dependencies.html">
@@ -844,16 +856,17 @@
         </table>
 
 
-        <table frame='all' xml:id="dependencies-table-examples-webapp">
+        <table pgwide="1" frame='all' xml:id="dependencies-table-examples-webapp">
             <title>Jersey Examples - WebApps</title>
             <tgroup cols='2' align='left' colsep='1' rowsep='1'>
                 <colspec colname='c1' colwidth="2*"/>
                 <colspec colname='c3' colwidth="7*"/>
-                <tbody>
+                <thead>
                     <row>
                         <entry namest="c1" nameend="c3" align="center">Examples - WAR</entry>
                     </row>
-
+                </thead>
+                <tbody>
                     <row>
                         <entry>
                             <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/bean-validation-webapp/dependencies.html">
