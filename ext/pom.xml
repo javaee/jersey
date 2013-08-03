@@ -70,6 +70,7 @@
         <module>proxy-client</module>
         <module>servlet-portability</module>
         <module>wadl-doclet</module>
+	<module>jersey-spring</module>
     </modules>
 
     <dependencies>
