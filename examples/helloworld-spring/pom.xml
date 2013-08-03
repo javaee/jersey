@@ -53,62 +53,56 @@
     <packaging>war</packaging>
     <name>jersey-examples-helloworld-spring</name>
 
-    <description>Example using only the standard JAX-RS API's and the lightweight HTTP server bundled in JDK.</description>
+    <description>Jersey Spring integration example webapp</description>
 
     <dependencies>
-<!--
+
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-jdk-http</artifactId>
-        </dependency>
--->
-
-    <dependency>
-      <groupId>org.glassfish.jersey.containers</groupId>
-      <artifactId>jersey-container-servlet</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.glassfish.jersey.core</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-web</artifactId>
-      <version>3.2.3.RELEASE</version>
-      <scope>compile</scope>
-    </dependency>
-    
-  <dependency>
-  <groupId>commons-logging</groupId>
-  <artifactId>commons-logging</artifactId>
-  <version>1.1</version>
-  <exclusions>
-    <exclusion>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-    </exclusion>
-  </exclusions>
-  </dependency>
-
-
-        <dependency>
-          <groupId>org.glassfish.jersey.ext</groupId>
-          <artifactId>jersey-spring</artifactId>
-          <version>${project.version}</version>
+            <artifactId>jersey-container-servlet</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
-<!-- 
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-            <scope>test</scope>
+            <version>${project.version}</version>
+            <scope>compile</scope>
         </dependency>
- -->
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>3.2.3.RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-spring</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!--
+                <dependency>
+                    <groupId>org.glassfish.jersey.core</groupId>
+                    <artifactId>jersey-client</artifactId>
+                    <scope>test</scope>
+                </dependency>
+         -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
