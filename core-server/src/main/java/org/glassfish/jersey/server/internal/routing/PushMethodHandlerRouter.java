@@ -63,8 +63,6 @@ class PushMethodHandlerRouter implements Router {
         @Inject
         private Provider<RoutingContext> routingContextFactory;
         @Inject
-        private ServiceLocator injector;
-        @Inject
         private ServiceLocator locator;
 
         /**
