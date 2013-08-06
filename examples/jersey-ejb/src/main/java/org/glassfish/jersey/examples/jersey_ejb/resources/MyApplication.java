@@ -43,6 +43,7 @@ package org.glassfish.jersey.examples.jersey_ejb.resources;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.examples.jersey_ejb.entities.Message;
@@ -55,12 +56,14 @@ import org.glassfish.jersey.examples.jersey_ejb.exceptions.NotFoundExceptionMapp
  *
  * @author Jonathan Benoit
  */
+@ApplicationPath("/app/*")
 public class MyApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         final Set<Class<?>> classes = new HashSet<Class<?>>();
         // register root resources/providers
         classes.add(MessageBoardRootResource.class);
+        classes.add(MessageBoardResourceBean.class);
         classes.add(MessageHolderSingletonBean.class);
         classes.add(NotFoundExceptionMapper.class);
         classes.add(MessageWriter.class);
