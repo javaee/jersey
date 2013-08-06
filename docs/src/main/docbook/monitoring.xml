@@ -1,0 +1,637 @@
+<?xml version="1.0"?>
+<!--
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  ~
+  ~ Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+  ~
+  ~ The contents of this file are subject to the terms of either the GNU
+  ~ General Public License Version 2 only ("GPL") or the Common Development
+  ~ and Distribution License("CDDL") (collectively, the "License").  You
+  ~ may not use this file except in compliance with the License.  You can
+  ~ obtain a copy of the License at
+  ~ http://glassfish.java.net/public/CDDL+GPL_1_1.html
+  ~ or packager/legal/LICENSE.txt.  See the License for the specific
+  ~ language governing permissions and limitations under the License.
+  ~
+  ~ When distributing the software, include this License Header Notice in each
+  ~ file and include the License file at packager/legal/LICENSE.txt.
+  ~
+  ~ GPL Classpath Exception:
+  ~ Oracle designates this particular file as subject to the "Classpath"
+  ~ exception as provided by Oracle in the GPL Version 2 section of the License
+  ~ file that accompanied this code.
+  ~
+  ~ Modifications:
+  ~ If applicable, add the following below the License Header, with the fields
+  ~ enclosed by brackets [] replaced by your own identifying information:
+  ~ "Portions Copyright [year] [name of copyright owner]"
+  ~
+  ~ Contributor(s):
+  ~ If you wish your version of this file to be governed by only the CDDL or
+  ~ only the GPL Version 2, indicate your decision by adding "[Contributor]
+  ~ elects to include this software in this distribution under the [CDDL or GPL
+  ~ Version 2] license."  If you don't indicate a single choice of license, a
+  ~ recipient has the option to distribute your version of this file under
+  ~ either the CDDL, the GPL Version 2 or to extend the choice of license to
+  ~ its licensees as provided above.  However, if you add GPL Version 2 code
+  ~ and therefore, elected the GPL Version 2 license, then the option applies
+  ~ only if the new code is made subject to such option by the copyright
+  ~ holder.
+  -->
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents;]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="monitoring">
+    <title>Monitoring and diagnostics</title>
+    <section>
+        <title>Introduction</title>
+        <important>
+            <para>
+                Jersey monitoring support has been released as a <emphasis>beta release</emphasis> in Jersey 2.1 version.
+                As such, the exposed monitoring public APIs and functionality described in this section may change in the
+                future Jersey releases.
+            </para>
+        </important>
+        <para>
+            Jersey provides functionality for monitoring JAX-RS/Jersey applications. Application monitoring is useful in cases
+            when you need to identify the performance hot-spots in your JAX-RS application, observe
+            execution statistics of particular resources or listen to application
+            or request lifecycle events. Note that this functionality is Jersey-specific extension to JAX-RS API.
+        </para>
+        <para>
+            Jersey monitoring support is divided into three functional areas:
+
+            <variablelist>
+                <varlistentry>
+                    <term>Event Listeners</term>
+                    <listitem>
+                        <para>
+                            Event listeners allow users to receive and process a predefined set of events that occur during
+                            a application lifecycle (such as application initialization, application destroy) as well as
+                            request processing lifecycle events (request started, resource method finished, exception thrown,
+                            etc.). This feature is always enabled in Jersey server runtime and is leveraged by the other
+                            monitoring features.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>Monitoring Statistics</term>
+                    <listitem>
+                        <para>
+                            Jersey can be configured to process lifecycle events in order to expose a wide range of
+                            runtime monitoring statistics to the end user. The statistics are accessible trough an injectable
+                            &jersey.server.monitoring.MonitoringStatistics; interface. The statistics provide general information
+                            about the application as well as fine-grained execution statistics on particular resources and sub
+                            resources and exposed URIs. For performance reasons, this functionality must be explicitly enabled
+                            prior using.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>JMX MBeans with statistics</term>
+                    <listitem>
+                        <para>
+                            In addition to the injectable &lit.jersey.server.monitoring.MonitoringStatistics; data, Jersey
+                            is able to expose the statistics as JMX MBeans (for example
+                            &jersey.server.monitoring.ApplicationMXBean;).
+                            Jersey monitoring MXBeans can be accessed programmatically using JMX APIs or browsed via JMX-enabled
+                            tool (<literal>JConsole</literal> for example). This functionality is, too,  by default disabled for
+                            performance reasons and must be enabled if needed.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+
+            All monitoring related APIs (beta!) can be found in the <literal>jersey-server</literal> module in
+            <literal>org.glassfish.jersey.server.monitoring</literal> package. Monitoring in Jersey is currently supported on
+            the server side.
+        </para>
+    </section>
+    <section>
+        <title>Event Listeners</title>
+        <para>
+            Jersey defines two types of event listeners that you can implement and register with your application:
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jersey.server.monitoring.ApplicationEventListener; for listening to application events, and</para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.server.monitoring.RequestEventListener; for listening to events of request processing.</para>
+                </listitem>
+            </itemizedlist>
+
+            Only the first type, &lit.jersey.server.monitoring.ApplicationEventListener;
+            can be directly registered as an application-wide provider. The &lit.jersey.server.monitoring.RequestEventListener;
+            is designed to be specific to every request and can be only returned from the
+            &lit.jersey.server.monitoring.ApplicationEventListener; as such.
+        </para>
+        <para>
+            Let's start with an example. The following examples show simple implementations of Jersey event listeners as well
+            as a test JAX-RS resource that will be monitored.
+
+            <example>
+                <title>Application event listener</title>
+                <programlisting language="java" linenumbering="numbered"><![CDATA[public class MyApplicationEventListener
+            implements ApplicationEventListener {
+    private volatile int requestCnt = 0;
+
+    @Override
+    public void onEvent(ApplicationEvent event) {
+        switch (event.getType()) {
+            case INITIALIZATION_FINISHED:
+                System.out.println("Application "
+                        + event.getResourceConfig().getApplicationName()
+                        + " was initialized.");
+                break;
+            case DESTROY_FINISHED:
+                System.out.println("Application "
+                    + event.getResourceConfig().getApplicationName() destroyed.");
+                break;
+        }
+    }
+
+    @Override
+    public RequestEventListener onRequest(RequestEvent requestEvent) {
+        requestCnt++;
+        System.out.println("Request " + requestCnt + " started.");
+        // return the listener instance that will handle this request.
+        return new MyRequestEventListener(requestCnt);
+    }
+}]]></programlisting>
+            </example>
+
+            <example>
+                <title>Request event listener</title>
+                <programlisting language="java" linenumbering="numbered"><![CDATA[public class MyRequestEventListener implements RequestEventListener {
+    private final int requestNumber;
+    private final long startTime;
+
+    public MyRequestEventListener(int requestNumber) {
+        this.requestNumber = requestNumber;
+        startTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public void onEvent(RequestEvent event) {
+        switch (event.getType()) {
+            case RESOURCE_METHOD_START:
+                System.out.println("Resource method "
+                    + event.getUriInfo().getMatchedResourceMethod()
+                        .getHttpMethod()
+                    + " started for request " + requestNumber);
+                break;
+            case FINISHED:
+                System.out.println("Request " + requestNumber
+                    + " finished. Processing time "
+                    + (System.currentTimeMillis() - startTime) + " ms.");
+                break;
+        }
+    }
+}]]></programlisting>
+            </example>
+
+            <example>
+                <title>Event listener test resource</title>
+                <programlisting language="java" linenumbering="numbered"><![CDATA[@Path("resource")
+public class TestResource {
+    @GET
+    public String getSomething() {
+        return "get";
+    }
+
+    @POST
+    public String postSomething(String entity) {
+        return "post";
+    }
+}]]></programlisting>
+            </example>
+        </para>
+
+        <para>
+            Once the listeners and the monitored resource is defined, it's time to initialize our application. The following
+            piece of code shows a &jersey.server.ResourceConfig; that is used to initialize the application (please
+            note that only &lit.jersey.server.monitoring.ApplicationEventListener; is registered as provider).
+
+            <programlisting language="java" linenumbering="numbered"><![CDATA[ResourceConfig resourceConfig =
+            new ResourceConfig(TestResource.class, MyApplicationEventListener.class)
+            .setApplicationName("my-monitored-application");]]></programlisting>
+
+            Our example application now contains a simple resource <literal>TestResource</literal> that defines resource methods
+            for &lit.http.GET; and &lit.http.POST; and a custom <literal>MyApplicationEventListener</literal> event listener.
+        </para>
+        <para>
+            The registered <literal>MyApplicationEventListener</literal> implements two methods defined by the
+            &lit.jersey.server.monitoring.ApplicationEventListener; interface. A method <literal>onEvent()</literal> handles
+            all application lifecycle events. In our case the method handles only 2 application events - initialization
+            and destroy. Other event types are ignored. All application event types are defined
+            in &jersey.server.monitoring.ApplicationEvent;<literal>.Type</literal>. The second method <literal>onRequest</literal>
+            is invoked by Jersey runtime every time a new request is received. The request event type passed to the method
+            is always <literal>START</literal>. If you want to listen to any other request lifecycle events for the new request,
+            you are expected to return an instance of &lit.jersey.server.monitoring.RequestEventListener; that will handle the
+            request. It is important to understand, that the instance will handle only the request for which it has been returned
+            from an <literal>ApplicationEventListener.onRequest</literal> method and not any other requests. In our case the
+            returned request event listener keeps information about the request number of the current request and a start time of
+            the request which is later used to print out the request processing times statistics. This demonstrates the principle
+            of listening to request events: for one request there is a one instance which can be used to hold all the information
+            about the particular request. In other words, &lit.jersey.server.monitoring.RequestEventListener; is designed to be
+            implicitly request-scoped.
+        </para>
+        <para>
+            Jersey represents lifecycle events via &jersey.server.monitoring.RequestEvent; and
+            &jersey.server.monitoring.ApplicationEvent; types. Instances of these classes contain information
+            about respective events. The most important information is the event type <literal>Type</literal> retrievable via
+            <literal>getType()</literal> method,
+            which identifies the type of the event. Events contain also additional information that is dependent on a particular
+            event type. This information can be retrieved via event getters. Again, some getters return valid information for all
+            event types, some are specific to a sub-set of event types. For example, in the
+            &lit.jersey.server.monitoring.RequestEvent;, the <literal>getExceptionCause()</literal> method returns valid
+            information only when event type is <literal>ON_EXCEPTION</literal>. On the other hand,
+            a <literal>getContainerRequest()</literal> can be used to return current request context for any request event type.
+            See javadoc of events and event types to get familiar with event types and information valid for each event type.
+        </para>
+        <para>
+            Our <literal>MyRequestEventListener</literal> implementation is focused on processing 2 request events. First,
+            it listens for an event that is triggered before a resource method is executed. Also, it hooks to a "request finished"
+            event. As mentioned earlier, the request event <literal>START</literal> is handled only in the
+            <literal>MyApplicationEventListener</literal>. The <literal>START</literal> event type will never be invoked on
+            <literal>RequestEventListener</literal>. Therefore the logic for measuring the <literal>startTime</literal> is in the
+            constructor which is invoked from <literal>MyApplicationEventListener.onRequest()</literal>. An attempt to handling
+            the request <literal>START</literal> event in a <literal>RequestEventListener.onEvent()</literal> method would be a
+            mistake.
+        </para>
+        <para>
+            Let's deploy the application and use a simple test client code to produce some activity in order to spawn new events:
+
+            <programlisting language="java" linenumbering="numbered"><![CDATA[target.path("resource").request()
+        .post(Entity.entity("post", MediaType.TEXT_PLAIN_TYPE));
+    target.path("resource").request().get();]]></programlisting>
+
+            In the code above, the <literal>target</literal> is a &jaxrs.client.WebTarget; instance pointing to the application
+            context root path. Using the <xref linkend="client" />, we invoke &lit.http.GET; and &lit.http.POST; methods
+            on the <literal>MyResource</literal> JAX-RS resource class that we implemented earlier.
+        </para>
+        <para>
+            When we start the application, run the test client and then stop the application, the console output for the
+            deployed server-side application would contain the following output:
+
+            <programlisting language="text" linenumbering="unnumbered">Application my-monitored-application was initialized.
+Request 1 started.
+Resource method POST started for request 1
+Request 1 finished. Processing time 330 ms.
+Request 2 started.
+Resource method GET started for request 2
+Request 2 finished. Processing time 4 ms.
+Application my-monitored-application destroyed.</programlisting>
+        </para>
+        <section>
+            <title>Guidelines for implementing Jersey event listeners</title>
+            <itemizedlist>
+                <listitem><para>
+                    Implement event listeners as thread safe. While individual events will be arriving serially,
+                    individual listener invocations may occur from different threads. Thus make sure that your listeners
+                    are processing data safely with respect to their &wiki.JavaMemoryModel; visibility (in the example above
+                    the fields <literal>requestNumber</literal>, <literal>startTime</literal> of
+                    <literal>MyRequestEventListener</literal> are final and therefore the same value is
+                    visible for all threads executing the <literal>onEvent()</literal> method).
+                </para></listitem>
+                <listitem><para>
+                    Do not block the thread executing the event listeners by performing long-running tasks. Execution of event
+                    listeners is a part of the standard application and request processing and as such needs to finish as quickly
+                    as possible to avoid negative impact on overall application performance.
+                </para></listitem>
+                <listitem><para>
+                    Do not try to modify mutable objects returned from &lit.jersey.server.monitoring.ApplicationEvent; and
+                    &lit.jersey.server.monitoring.RequestEvent; getters to avoid experiencing undefined behavior.
+                    Events listeners should use the information for read only purposes only. Use different techniques like
+                    filters, interceptors or other providers to modify the processing of requests and applications. Even though
+                    modification might be possible and might work as desired now, your code is in risk of producing intermittent
+                    failures or unexpected behaviour (for example after migrating to new Jersey version).
+                </para></listitem>
+                <listitem><para>
+                    If you do not want to listen to request events, do not return an empty listener in the
+                    <literal>onRequest()</literal> method. Return <literal>null</literal> instead. Returning empty listener
+                    might have a negative performance impact. Do not rely on JIT optimizing out the empty listener invocation
+                    code.
+                </para></listitem>
+                <listitem><para>
+                    If you miss any event type or any detail in the events, let us know via Jersey user mailing list.
+                </para></listitem>
+            </itemizedlist>
+        </section>
+        <section>
+            <title>Monitoring Statistics</title>
+            <para>
+                Event listeners described in the previous section are all-purpose facility. For example, you may decide to
+                use them to measure various execution statistics of your application. While this might be an easy task for simple
+                statistics like "how much time was spent on execution of each Java method?", nevertheless, if you want to measure
+                statistics based on URIs and individual resources, the implementation might get rather complex soon, especially
+                when considering sub-resources and sub-resource locators. To save you the trouble, Jersey provides feature for
+                collecting events and calculating a pre-defined set of monitoring and execution statistics, including
+                application configuration, exception mappers execution, minimum/maximum/average execution times for individual
+                resource methods as well as entire request processing etc.
+            </para>
+            <para>
+                Calculating the monitoring statistics has obviously a performance impact, therefore this feature is
+                disabled by default. To enable the feature, set the following configuration property to &lit.true;:
+            </para>
+            <programlisting language="java" linenumbering="unnumbered">jersey.config.server.monitoring.statistics.enabled=true</programlisting>
+            <para>
+                The property description can be found in &jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED;
+                This will calculate the statistics. The easiest way how to get statistics is to let Jersey
+                to inject them. See the following example:
+            </para>
+            <example>
+                <title>Injecting MonitoringStatistics</title>
+                <programlisting language="java" linenumbering="numbered"><![CDATA[@Path("resource")
+public static class StatisticsResource {
+    @Inject
+    Provider<MonitoringStatistics> monitoringStatisticsProvider;
+
+    @GET
+    public String getSomething() {
+        final MonitoringStatistics snapshot
+            = monitoringStatisticsProvider.get().snapshot();
+
+        final TimeWindowStatistics timeWindowStatistics
+            = snapshot.getRequestStatistics()
+              .getTimeWindowStatistics().get(0l);
+
+        return "request count: " + timeWindowStatistics.getRequestCount()
+            + ", average request processing [ms]: "
+            + timeWindowStatistics.getAverageDuration();
+    }
+}}]]></programlisting>
+            </example>
+            <para>
+                &jersey.server.monitoring.MonitoringStatistics; are
+                injected into the resource using an &jee6.javax.inject.Inject; annotation.
+                Please note the usage of the &jee6.javax.inject.Provider; for injection (it will be discussed later).
+                Firstly, the snapshot of statistics is retrieved by the <literal>snapshot()</literal> method.
+                The snapshot of statistics is an immutable copy of statistics which does not change over the time.
+                Additionally, data in a snapshot are consistent. It's recommended to create snapshots before working with
+                the statistics data and then process the snapshot data.
+                Working with original non-snapshot data makes sense when data consistency is not important and
+                performance is of highest concern. While it is currently not the case, the injected non-snapshot data may
+                be implemented as mutable for performance reasons in a future release of Jersey.
+            </para>
+            <para>
+                The injected monitoring statistics represent the root of the collected statistics hierarchy. The hierarchy
+                can be traversed to retrieve any partial statistics data. In the example, we retrieve certain request
+                &jersey.server.monitoring.TimeWindowStatistics; data. In our case, those are the request execution statistics
+                for a time window defined by long value 0 which means unlimited time window. This means we are retrieving
+                the global request execution statistics measured since a start of the application.
+                Finally, request count and average duration from the statistics are used to produce the String response.
+                When we invoke few &lit.http.GET; requests on the <literal>StatisticsResource</literal>, we get the
+                following console output:
+                <programlisting language="text" linenumbering="unnumbered">request count: 1, average request processing [ms]: 260
+request count: 2, average request processing [ms]: 135
+request count: 3, average request processing [ms]: 93
+request count: 4, average request processing [ms]: 73</programlisting>
+            </para>
+            <para>
+                Let's look closer at &jersey.server.monitoring.MonitoringStatistics; interface.
+                &lit.jersey.server.monitoring.MonitoringStatistics; interface defines getters by which other nested
+                statistics can be retrieved. All statistics are in the same package and ends with
+                <literal>Statistics</literal> postfix. Statistics interfaces are the following:
+                <variablelist>
+                    <varlistentry>
+                        <term>&jersey.server.monitoring.MonitoringStatistics;</term>
+                        <listitem>
+                            <para>main top level statistics</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>&jersey.server.monitoring.ApplicationStatistics;</term>
+                        <listitem>
+                            <para>mostly configuration of the application</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>&lit.jersey.server.monitoring.ResponseStatistics;</term>
+                        <listitem>
+                            <para>response statistics (eg. response status codes and their count)</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>&jersey.server.monitoring.ResourceStatistics;</term>
+                        <listitem>
+                            <para>statistics of execution of resources (resource classes or resource URIs)</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>&jersey.server.monitoring.ResourceMethodStatistics;</term>
+                        <listitem>
+                            <para>statistics of execution of resource methods</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>&jersey.server.monitoring.ExecutionStatistics;</term>
+                        <listitem>
+                            <para>statistic of execution of a target (resource, request, resource method)</para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>&jersey.server.monitoring.TimeWindowStatistics;</term>
+                        <listitem>
+                            <para>statistics of execution time in specific interval (eg. executions in last 5 minutes)</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </para>
+
+            <para>
+                Each time-monitored target contains &lit.jersey.server.monitoring.ExecutionStatistics;. So, for example
+                resource method contains execution statistics of its execution. Each
+                &lit.jersey.server.monitoring.ExecutionStatistics; contains multiple
+                &lit.jersey.server.monitoring.TimeWindowStatistics;. Currently, each
+                &lit.jersey.server.monitoring.ExecutionStatistics; contains
+                &lit.jersey.server.monitoring.TimeWindowStatistics; for these time windows:
+
+                <itemizedlist>
+                    <listitem><para>0: unlimited=> all execution since start of the application</para></listitem>
+                    <listitem><para>1000: 1s => stats measured in last 1 second</para></listitem>
+                    <listitem><para>15000: 15s => stats measured in last 15 seconds</para></listitem>
+                    <listitem><para>60000: 1min => stats measured in last 1 minute</para></listitem>
+                    <listitem><para>900000: 15min => stats measured in last 15 minutes</para></listitem>
+                    <listitem><para>3600000: 1hour => stats measured in last hour minutes</para></listitem>
+                </itemizedlist>
+
+                All the time window statistics can be retrieved from a <literal>Map&lt;Long, TimeWindowStatistics&gt;</literal>
+                map returned from <literal>ExecutionStatistics.getTimeWindowStatistics()</literal>. Key of the map
+                is the number of milliseconds of interval (so, for example key 60000 points
+                to statistics for last one minute).
+            </para>
+            <para>
+                Note, that <literal>snapshot()</literal> method was called in the example only on the top level
+                &lit.jersey.server.monitoring.MonitoringStatistics;. This produced a snapshot of the entire
+                tree of statistics and therefore we do not need to call <literal>snapshot()</literal>
+                on &lit.jersey.server.monitoring.TimeWindowStatistics; again.
+            </para>
+            <para>
+                Statistics are injected using the &jee6.javax.inject.Provider;. This is preferred way of
+                injecting statistics. The reason is simple. Statistics might change over time and contract
+                of &lit.jersey.server.monitoring.MonitoringStatistics; does not make any assumptions about mutability of
+                monitoring statistics instances (to allow future optimizations and changes in implementation strategy). In
+                order to get always latest statistics, we recommend injecting a &jee6.javax.inject.Provider; rather than a
+                direct reference and use it's <literal>get()</literal> method to retrieve the latest statistics. For example,
+                in singleton resources the use of the technique is very important otherwise statistics might correspond
+                to the time when singleton was firstly created and might not update since that time.
+            </para>
+            <section>
+                <title>Listening to statistics changes</title>
+                <para>
+                    Statistics are not calculated for each request or each change. Statistics are calculated only
+                    from the collected data in regular intervals for performance reasons (for example once per second).
+                    If you want to be notified about new statistics, register an implementation of
+                    &jersey.server.monitoring.MonitoringStatisticsListener; as one of your custom application providers.
+                    Your listener will be called every time the new statistics are calculated and the updated statistics
+                    data will be passed to the listener method. This is another way of receiving statistics.
+                    See the linked listener API documentation for more information.
+                </para>
+            </section>
+        </section>
+        <section>
+            <title>Monitoring Statistics as MBeans</title>
+            <para>
+                Jersey provides feature to expose monitoring statistics as JMX MXBeans.
+                In order to enable monitoring statistics MXBeans exposure, the
+                &jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED; must be set to &lit.true;.
+            </para>
+            <programlisting language="java" linenumbering="unnumbered">jersey.config.server.monitoring.statistics.mbeans.enabled=true</programlisting>
+            <para>
+                Note that enabling exposure of monitoring MXBeans causes that also the calculation of
+                &lit.jersey.server.monitoring.MonitoringStatistics; is automatically enabled as the exposed
+                MXBean statistics are extracted from &lit.jersey.server.monitoring.MonitoringStatistics;.
+            </para>
+            <para>
+                The easiest way is to browse the MXBeans in the JConsole. Open the JConsole
+                (<literal>$JAVA_HOME/bin/jconsole</literal>). Then connect to the process where JAX-RS application is running
+                (server on which the application is running). Switch to a MBean tab and in the MBean tree on the left side
+                find a group <literal>org.glassfish.jersey</literal>. All deployed Jersey applications are located under this
+                group. If you don't see such this group, then MBeans are not exposed (check the configuration property and
+                logs if they not contain any exceptions or errors). The following figure is an example of an output from the
+                JConsole:
+            </para>
+
+            <mediaobject>
+                <imageobject>
+                    <imagedata fileref="images/monitoring-jsconsole.png" format="PNG" width="100%" scalefit="1" align="center"/>
+                </imageobject>
+            </mediaobject>
+
+            <para>
+                Under the root <literal>org.glassfish.jersey</literal> Jersey MBean group you can find your application.
+                If the server contains more Jersey application, all will be present under the root Jersey the group. In the
+                screen-shot, the deployed JAX-RS application is named <literal>myApplication</literal> (the name can be defined
+                via &jersey.server.ResourceConfig; directly or by setting the &jersey.server.ServerProperties.APPLICATION_NAME;
+                property).
+                Each application contains <literal>Global</literal>, <literal>Resource</literal> and
+                <literal>Uris</literal> sub-groups. The <literal>Global</literal> group contains all global
+                statistics like overall requests statistics of the entire application (<literal>AllRequestTimes</literal>),
+                configuration of the JAX-RS application (<literal>Configuration</literal>), statistics about
+                &jaxrs.ext.ExceptionMapper; execution (<literal>ExceptionMapper</literal>) and statistics about
+                produced responses (<literal>Responses</literal>).
+            </para>
+            <para>
+                <literal>Resources</literal> and <literal>Uris</literal> groups contains monitoring statistics specific to
+                individual resources.
+                Statistics in <literal>Resources</literal> are bound to the JAX-RS resource Java classes loaded by the
+                application. <literal>Uris</literal> contains statistics of resources based on the matched application Uris
+                (one URI entry represents all methods bound to the particula URI, e.g. <literal>/resource/exception</literal>).
+                As Jersey provides programmatic resource builders (described in the chapter
+                <link linkend="resource-builder">"Programmatic API for Building Resources"</link>), one Java resource class
+                can be an endpoint for resource methods on many different URIs. And also one URI can be served by method from
+                many different Java classes. Therefore both views are not to be compared 1:1. Instead they provide
+                different loggical views on your JAX-RS application. This monitoring feature can also help when designing
+                the JAX-RS APIs as it provides nice view on available root application URIs.
+            </para>
+            <para>
+                Both logical views on the resources exposed by application share few common principles. A single resource entry
+                is always a set of resource methods which are available under the <literal>methods</literal> sub-group. Statistics
+                can be found in MBeans <literal>MethodTimes</literal> and <literal>RequestTimes</literal>.
+                <literal>MethodTimes</literal> contains statistics measured on on resource methods (duration of execution of a
+                code of the a resource method), whereas <literal>RequestTimes</literal> contains statistics of an entire request
+                execution (not only a time of the execution of the resource method but the overall time of the execution of whole
+                request by Jersey runtime). Another useful information is that statistics directly under resource (not under
+                the <literal>methods</literal> sub-group) contains summary of statistics for all resource methods grouped in the
+                resource entry.
+            </para>
+            <para>Additional useful details that about statistics</para>
+            <itemizedlist>
+                <listitem><para><literal>Global->Configuration->Registered(Claases/Instances)</literal>:
+                    registered resource classes and instances by the user (i.e., not added by &jersey.server.ModelProcessor;
+                    during deployment for example).
+                </para></listitem>
+                <listitem><para><literal>Global->ExceptionMapper->ExceptionMapperCount</literal>:
+                    map that contains exception mapper classes as keys and number of their execution as values.
+                </para></listitem>
+                <listitem><para>
+                    <literal>Global->Responses-?ResponseCodesToCountMap</literal>:
+                    map that contains response codes as keys and their total occurrence in responses as values.
+                </para></listitem>
+                <listitem><para>
+                    Resource groups contain also entries for resources that were added by Jersey at deployment time using
+                    &lit.jersey.server.ModelProcessor; (for example all &lit.http.OPTIONS; methods, <literal>WADL</literal>).
+                    &lit.http.HEAD; methods are not present in the MXBeans view (even HEAD methods are in resources).
+                </para></listitem>
+                <listitem><para>
+                    Execution statistics for different time windows have different update intervals. The shorter the time window,
+                    the shorter the update interval. This causes that immediately after the application start, the shorter time
+                    windows (such as 15 seconds) may contain higher values than longer ones (e.g. 1 hour time window). The reason
+                    is that 1 hour interval will show information that is not up to date and therefore has smaller value. This
+                    inconsistency is not so much significant when application is running longer time. Total unlimited time windows
+                    contains always up-to-date data. This inconsistency will get fixed in a future Jersey release.
+                </para></listitem>
+            </itemizedlist>
+            <para>
+                MXBeans can be also accessed using JMX. To do so, you would need to use the interfaces of MXBeans.
+                These interfaces are even useful when working with MXBeans only trough <literal>JConsole</literal> as
+                they contain Javadocs for each MXBean and attribute. Monitoring MBeans are defined by following interfaces:
+
+                <itemizedlist>
+                    <listitem><para>
+                        &jersey.server.monitoring.ApplicationMXBean;: contains configuration statistics
+                    </para></listitem>
+                    <listitem><para>
+                        &jersey.server.monitoring.ExceptionMapperMXBean;: contains statistics of exception mappers
+                    </para></listitem>
+                    <listitem><para>
+                        &jersey.server.monitoring.ResourceMethodMXBean;: contains statistics of resource method
+                    </para></listitem>
+                    <listitem><para>
+                        &jersey.server.monitoring.ResourceMXBean;: contains statistics of resource
+                    </para></listitem>
+                    <listitem><para>
+                        &jersey.server.monitoring.ResponseMXBean;: contains statistics of responses
+                    </para></listitem>
+                </itemizedlist>
+
+                The list does not contain MXBean for the execution and time window statistics. The reason is that
+                this bean is defined as a &jdk6.DynamicMBean;. Attributes of this dynamic MBean contains
+                statistics for all time windows available.
+            </para>
+            <para>
+                MXBeans do not reference each other but can be retrieved by their &jdk6.ObjectName;s which
+                are designed in the way, that final MBean tree looks nicely organized in <emphasis>JConsole</emphasis>.
+                Each MXBean is uniquely identified by its &lit.jdk6.ObjectName; and properties of
+                &lit.jdk6.ObjectName; are structured hierarchically, so that each MXBean can be identified to which
+                parent it belong to (e.g. execution statistics dynamic MXBean belongs to resource method MXBean, which
+                belongs to resource and which belongs to application). Check the &lit.jdk6.ObjectName;s of
+                exposed MXBeans to investigate the structure (for example through JConsole).
+            </para>
+            <para>
+                To reiterate, exposing Jersey MXBeans and the calculating monitoring statistics may have an performance impact
+                on your application and therefore should be enabled only when needed. Also, please note, that it Jersey
+                monitoring is exposing quite a lot of information about the monitored application which might be viewed as
+                problematic in some cases (e.g. in production server deployments).
+            </para>
+        </section>
+    </section>
+</chapter>

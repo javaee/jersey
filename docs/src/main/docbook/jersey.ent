@@ -114,6 +114,10 @@
 <!ENTITY jdk6.Character "<link xlink:href='&jdk6.javadoc.path;/java/lang/Character.html'>Character</link>">
 <!ENTITY jdk6.Number "<link xlink:href='&jdk6.javadoc.path;/java/lang/Number.html'>Number</link>">
 <!ENTITY jdk6.ParameterizedType "<link xlink:href='&jdk6.javadoc.path;/java/lang/reflect/ParameterizedType.html'>ParameterizedType</link>">
+<!ENTITY jdk6.DynamicMBean "<link xlink:href='&jdk6.javadoc.path;/javax/management/DynamicMBean.html'>DynamicMBean</link>">
+<!ENTITY jdk6.ObjectName "<link xlink:href='&jdk6.javadoc.path;/javax/management/ObjectName.html'>ObjectName</link>">
+
+
 
 
 <!ENTITY jdk7.org.w3c.dom.Document "<link xlink:href='&jdk7.javadoc.path;/org/w3c/dom/Document.html'>Document</link>">
@@ -234,6 +238,9 @@
 <!ENTITY jaxrs.client.Entity "<link xlink:href='&jax-rs.javadoc.path;/client/Entity.html'>Entity</link>">
 
 
+
+
+
 <!-- Jersey Javadoc Links -->
 <!ENTITY jersey.apache.ApacheConnector "<link xlink:href='&jersey.javadoc.path;/apache/ApacheConnector.html'>ApacheConnector</link>">
 
@@ -347,6 +354,9 @@
 <!ENTITY jersey.server.ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#RESOURCE_VALIDATION_IGNORE_ERRORS'>ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS</link>" >
 <!ENTITY jersey.server.ServerProperties.WADL_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#WADL_FEATURE_DISABLE'>ServerProperties.WADL_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.server.ServerProperties.WADL_GENERATOR_CONFIG "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#WADL_GENERATOR_CONFIG'>ServerProperties.WADL_GENERATOR_CONFIG</link>" >
+<!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MONITORING_STATISTICS_ENABLED'>ServerProperties.MONITORING_STATISTICS_ENABLED</link>" >
+<!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MONITORING_STATISTICS_MBEANS_ENABLED'>ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED</link>" >
+<!ENTITY jersey.server.ServerProperties.APPLICATION_NAME "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#APPLICATION_NAME'>ServerProperties.APPLICATION_NAME</link>" >
 <!ENTITY jersey.server.UriConnegFilter "<link xlink:href='&jersey.javadoc.path;/server/filter/UriConnegFilter.html'>UriConnegFilter</link>">
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlFeature.html'>WadlFeature</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
@@ -364,6 +374,28 @@
 <!ENTITY jersey.test.JerseyTest "<link xlink:href='&jersey.javadoc.path;/org/glassfish/jersey/test/JerseyTest.html'>JerseyTest</link>">
 <!ENTITY jersey.test.JerseyTest "<link xlink:href='&jersey.javadoc.path;/org/glassfish/jersey/test/TestProperties.html'>TestProperties</link>">
 <!ENTITY jersey.test.spi.TestContainerFactory "<link xlink:href='&jersey.javadoc.path;/org/glassfish/jersey/test/spi/TestContainerFactory.html'>TestContainerFactory</link>">
+
+<!ENTITY jersey.server.monitoring.MonitoringStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/MonitoringStatistics.html'>MonitoringStatistics</link>">
+<!ENTITY jersey.server.monitoring.ApplicationMXBean "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ApplicationMXBean.html'>ApplicationMXBean</link>">
+<!ENTITY jersey.server.monitoring.ApplicationEvent "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ApplicationEvent.html'>ApplicationEvent</link>">
+<!ENTITY jersey.server.monitoring.ApplicationEventListener "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ApplicationEventListener.html'>ApplicationEventListener</link>">
+<!ENTITY jersey.server.monitoring.ApplicationStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ApplicationStatistics.html'>ApplicationStatistics</link>">
+<!ENTITY jersey.server.monitoring.ExceptionMapperMXBean "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ExceptionMapperMXBean.html'>ExceptionMapperMXBean</link>">
+<!ENTITY jersey.server.monitoring.ExceptionMapperStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ExceptionMapperStatistics.html'>ExceptionMapperStatistics</link>">
+<!ENTITY jersey.server.monitoring.ExecutionStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ExecutionStatistics.html'>ExecutionStatistics</link>">
+<!ENTITY jersey.server.monitoring.MonitoringStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/MonitoringStatistics.html'>MonitoringStatistics</link>">
+<!ENTITY jersey.server.monitoring.MonitoringStatisticsListener "<link xlink:href='&jersey.javadoc.path;/server/monitoring/MonitoringStatisticsListener.html'>MonitoringStatisticsListener</link>">
+<!ENTITY jersey.server.monitoring.RequestEvent "<link xlink:href='&jersey.javadoc.path;/server/monitoring/RequestEvent.html'>RequestEvent</link>">
+<!ENTITY jersey.server.monitoring.RequestEventListener "<link xlink:href='&jersey.javadoc.path;/server/monitoring/RequestEventListener.html'>RequestEventListener</link>">
+<!ENTITY jersey.server.monitoring.ResourceMethodMXBean "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ResourceMethodMXBean.html'>ResourceMethodMXBean</link>">
+<!ENTITY jersey.server.monitoring.ResourceMethodStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ResourceMethodStatistics.html'>ResourceMethodStatistics</link>">
+<!ENTITY jersey.server.monitoring.ResourceMXBean "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ResourceMXBean.html'>ResourceMXBean</link>">
+<!ENTITY jersey.server.monitoring.ResourceStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ResourceStatistics.html'>ResourceStatistics</link>">
+<!ENTITY jersey.server.monitoring.ResponseMXBean "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ResponseMXBean.html'>ResponseMXBean</link>">
+<!ENTITY jersey.server.monitoring.ResponseStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/ResponseStatistics.html'>ResponseStatistics</link>">
+<!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
+<!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
+
 
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
@@ -393,6 +425,9 @@
 <!ENTITY jee6.annotations.PermitAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/PermitAll.html'>@PermitAll</link>">
 <!ENTITY jee6.servlet.HttpServletRequest "<link xlink:href='&jee6.javadoc.path;/javax/servlet/http/HttpServletRequest.html'>HttpServletRequest</link>">
 <!ENTITY jee6.inject.Singleton "<link xlink:href='&jee6.javadoc.path;/javax/inject/Singleton.html'>@Singleton</link>">
+<!ENTITY jee6.javax.inject.Inject "<link xlink:href='&jee6.javadoc.path;/javax/inject/Inject.html'>@Inject</link>">
+<!ENTITY jee6.javax.inject.Provider "<link xlink:href='&jee6.javadoc.path;/javax/inject/Provider.html'>Provider</link>">
+
 
 <!-- JAXB links -->
 <!ENTITY jaxb.annotation.XmlRootElement "<link xlink:href='&jaxb.javadoc.path;/annotation/XmlRootElement.html'>@XmlRootElement</link>">
@@ -417,6 +452,7 @@
 <!ENTITY wiki.JSONP "<link xlink:href='&wikipedia.path;/JSONP'>JSONP</link>">
 <!ENTITY wiki.Multipart "<link xlink:href='&wikipedia.path;/MIME#Multipart_messages'>MIME multipart message</link>">
 <!ENTITY wiki.MultipartMixed "<link xlink:href='&wikipedia.path;/MIME#Mixed'>multipart/mixed</link>">
+<!ENTITY wiki.JavaMemoryModel "<link xlink:href='&wikipedia.path;/Java_Memory_Model'>Java Memory Model</link>">
 
 <!-- API Literals -->
 <!ENTITY lit.jaxrs.ApplicationPath "<literal>@ApplicationPath</literal>">
@@ -600,6 +636,28 @@
 <!ENTITY lit.jersey.test.JerseyTest "<literal>JerseyTest</literal>">
 <!ENTITY lit.jersey.test.TestProperties "<literal>TestProperties</literal>">
 <!ENTITY lit.jersey.test.spi.TestContainerFactory "<literal>TestContainerFactory</literal>">
+<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
+
+<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.ApplicationMXBean "<literal>ApplicationMXBean</literal>">
+<!ENTITY lit.jersey.server.monitoring.ApplicationEvent "<literal>ApplicationEvent</literal>">
+<!ENTITY lit.jersey.server.monitoring.ApplicationEventListener "<literal>ApplicationEventListener</literal>">
+<!ENTITY lit.jersey.server.monitoring.ApplicationStatistics "<literal>ApplicationStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.ExceptionMapperMXBean "<literal>ExceptionMapperMXBean</literal>">
+<!ENTITY lit.jersey.server.monitoring.ExceptionMapperStatistics "<literal>ExceptionMapperStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.ExecutionStatistics "<literal>ExecutionStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.MonitoringStatisticsListener "<literal>MonitoringStatisticsListener</literal>">
+<!ENTITY lit.jersey.server.monitoring.RequestEvent "<literal>RequestEvent</literal>">
+<!ENTITY lit.jersey.server.monitoring.RequestEventListener "<literal>RequestEventListener</literal>">
+<!ENTITY lit.jersey.server.monitoring.ResourceMethodMXBean "<literal>ResourceMethodMXBean</literal>">
+<!ENTITY lit.jersey.server.monitoring.ResourceMethodStatistics "<literal>ResourceMethodStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.ResourceMXBean "<literal>ResourceMXBean</literal>">
+<!ENTITY lit.jersey.server.monitoring.ResourceStatistics "<literal>ResourceStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.ResponseMXBean "<literal>ResponseMXBean</literal>">
+<!ENTITY lit.jersey.server.monitoring.ResponseStatistics "<literal>ResponseStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.TimeWindowStatistics "<literal>TimeWindowStatistics</literal>">
+
 
 <!--JDK 6 literals -->
 <!ENTITY lit.jdk6.HttpUrlConnection "<literal>HttpUrlConnection</literal>">
@@ -619,6 +677,8 @@
 <!ENTITY lit.jdk6.Character "<literal>Character</literal>">
 <!ENTITY lit.jdk6.Number "<literal>Number</literal>">
 <!ENTITY lit.jdk6.ParameterizedType "<literal>ParameterizedType</literal>">
+<!ENTITY lit.jdk6.DynamicMBean "<literal>DynamicMBean</literal>">
+<!ENTITY lit.jdk6.ObjectName "<literal>ObjectName</literal>">
 
 
 
@@ -629,6 +689,8 @@
 <!ENTITY lit.jee6.inject.Singleton "<literal>@Singleton</literal>">
 <!ENTITY lit.jaxb.JAXBElement "<literal>JAXBElement</literal>">
 <!ENTITY lit.jaxb.JAXBContext "<literal>JAXBContext</literal>">
+<!ENTITY lit.jee6.javax.inject.Inject "<literal>@Inject</literal>">
+<!ENTITY lit.jee6.javax.inject.Provider "<literal>Provider</literal>">
 
 <!-- Jersey Module Literals -->
 <!ENTITY lit.jersey-bean-validation "<literal>jersey-bean-validation</literal>" >

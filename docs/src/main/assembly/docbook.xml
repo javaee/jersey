@@ -41,18 +41,18 @@
 
 -->
 <assembly>
-  <id>docbook</id>
-  <includeBaseDirectory>false</includeBaseDirectory>
-  <formats>
-    <format>zip</format>
-  </formats>
-  <fileSets>
-   <fileSet>
-      <directory>${project.build.directory}/docbook</directory>
-      <excludes>
-        <exclude>user-guide.fo</exclude>
-      </excludes>
-      <outputDirectory></outputDirectory>
-    </fileSet>
-   </fileSets>
+    <id>docbook</id>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.directory}/docbook/index</directory>
+            <excludes>
+                <exclude>user-guide.fo</exclude>
+            </excludes>
+            <outputDirectory></outputDirectory>
+        </fileSet>
+    </fileSets>
 </assembly>

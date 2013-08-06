@@ -109,23 +109,27 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <xincludeSupported>true</xincludeSupported>
-                    <sourceDirectory>${src.dir}</sourceDirectory>
-                    <targetDirectory>${project.build.directory}/docbook</targetDirectory>
+                    <calloutGraphics>false</calloutGraphics>
+                    <!--calloutGraphicsExtension>1</calloutGraphicsExtension-->
+                    <calloutsExtension>true</calloutsExtension>
+                    <highlightDefaultLanguage />
+                    <highlightSource>true</highlightSource>
                     <htmlStylesheet>/documentation.css</htmlStylesheet>
                     <!--<htmlStylesheet>https://jersey.java.net/documentation.css</htmlStylesheet>-->
-                    <partAutolabel>true</partAutolabel>
-                    <sectionAutolabel>true</sectionAutolabel>
-                    <sectionLabelIncludesComponentLabel>true</sectionLabelIncludesComponentLabel>
-                    <useExtensions>true</useExtensions>
-                    <tablecolumnsExtension>true</tablecolumnsExtension>
                     <linenumberingExtension>true</linenumberingExtension>
                     <linenumberingEveryNth>1</linenumberingEveryNth>
-                    <calloutsExtension>true</calloutsExtension>
-                    <calloutGraphics>false</calloutGraphics>
-                    <highlightSource>true</highlightSource>
-                    <highlightDefaultLanguage />
-                    <!--calloutGraphicsExtension>1</calloutGraphicsExtension-->
+                    <partAutolabel>true</partAutolabel>
+                    <preProcess>
+                        <copy todir="${project.build.directory}/docbook/index/images">
+                            <fileset dir="${src.dir}/images/" />
+                        </copy>
+                    </preProcess>
+                    <sectionAutolabel>true</sectionAutolabel>
+                    <sectionLabelIncludesComponentLabel>true</sectionLabelIncludesComponentLabel>
+                    <sourceDirectory>${src.dir}</sourceDirectory>
+                    <tablecolumnsExtension>true</tablecolumnsExtension>
+                    <useExtensions>true</useExtensions>
+                    <xincludeSupported>true</xincludeSupported>
                 </configuration>
                 <executions>
                     <execution>
@@ -135,8 +139,9 @@
                             <goal>generate-pdf</goal>
                         </goals>
                         <configuration>
-                            <includes>user-guide.xml</includes>
                             <htmlCustomization>${src.dir}/cust-single.xsl</htmlCustomization>
+                            <includes>user-guide.xml</includes>
+                            <targetDirectory>${project.build.directory}/docbook/index</targetDirectory>
                         </configuration>
                         <phase>package</phase>
                     </execution>
@@ -146,10 +151,11 @@
                             <goal>generate-html</goal>
                         </goals>
                         <configuration>
-                            <includes>index.xml</includes>
                             <htmlCustomization>${src.dir}/cust-chunked.xsl</htmlCustomization>
+                            <includes>index.xml</includes>
                             <chunkedOutput>true</chunkedOutput>
                             <chunkSectionDepth>0</chunkSectionDepth>
+                            <targetDirectory>${project.build.directory}/docbook</targetDirectory>
                             <useIdAsFilename>true</useIdAsFilename>
                         </configuration>
                         <phase>package</phase>
@@ -186,7 +192,7 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>${project.build.directory}/docbook/user-guide.pdf</file>
+                                    <file>${project.build.directory}/docbook/index/user-guide.pdf</file>
                                     <type>pdf</type>
                                     <classifier>user-guide</classifier>
                                 </artifact>
