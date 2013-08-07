@@ -1080,7 +1080,7 @@
             <dependency>
                 <groupId>org.glassfish</groupId>
                 <artifactId>jsonp-jaxrs</artifactId>
-                <version>${jsonp.ri.version}</version>
+                <version>${jsonp.jaxrs.version}</version>
             </dependency>
 
             <!-- Test scope -->
@@ -1190,7 +1190,8 @@
         <jetty-version>6.1.22</jetty-version>
         <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
         <jsonp.api.version>1.0</jsonp.api.version>
-        <jsonp.ri.version>1.0</jsonp.ri.version>
+        <jsonp.ri.version>1.0.2</jsonp.ri.version>
+        <jsonp.jaxrs.version>1.0</jsonp.jaxrs.version>
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
         <mimepull.version>1.8</mimepull.version>
