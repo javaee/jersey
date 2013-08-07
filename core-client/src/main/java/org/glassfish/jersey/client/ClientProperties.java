@@ -238,6 +238,7 @@ public final class ClientProperties {
      * By default MOXy Json on client is automatically enabled if global property
      * {@value org.glassfish.jersey.CommonProperties#MOXY_JSON_FEATURE_DISABLE} is not disabled. If set then the client
      * property value overrides the global property value.
+     * </p>
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -249,6 +250,37 @@ public final class ClientProperties {
      * @since 2.1
      */
     public static final String MOXY_JSON_FEATURE_DISABLE = CommonProperties.MOXY_JSON_FEATURE_DISABLE + ".client";
+
+    /**
+     * If {@code true}, the strict validation of HTTP specification compliance will be suppressed.
+     * <p>
+     * By default, Jersey client runtime performs certain HTTP compliance checks (such as which HTTP methods
+     * can facilitate non-empty request entities etc.) in order to fail fast with an exception when user tries
+     * to establish  a communication non-compliant with HTTP specification. Users who need to override these
+     * compliance checks and avoid the exceptions being thrown by Jersey client runtime for some reason,
+     * can set this property to {@code true}. As a result, the compliance issues will be merely reported in
+     * a log and no exceptions will be thrown.
+     * </p>
+     * <p>
+     * Note that the property suppresses the Jersey layer exceptions. Chances are that the non-compliant
+     * behavior will cause different set of exceptions being raised in the underlying I/O connector layer.
+     * </p>
+     * <p>
+     * This property can be configured in a client runtime configuration or directly on an individual request.
+     * In case of conflict, request-specific property value takes precedence over value configured in the
+     * runtime configuration.
+     * </p>
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.2
+     */
+    public static final String SUPPRESS_HTTP_COMPLIANCE_VALIDATION =
+            "jersey.config.client.suppressHttpComplianceValidation";
 
     private ClientProperties() {
         // prevents instantiation

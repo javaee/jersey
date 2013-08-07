@@ -512,6 +512,19 @@
                         </entry>
                     </row>
                     <row>
+                        <entry>&jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION;
+                            (Jersey 2.2 or later)</entry>
+                        <entry><literal>jersey.config.client.suppressHttpComplianceValidation</literal></entry>
+                        <entry>
+                            <para>
+                                If &lit.true;, the strict validation of HTTP specification compliance for client-side
+                                requests will be suppressed. When compliance checks are suppressed, any violations will
+                                be merely logged as warnings, rather than causing exceptions being raised in Jersey
+                                runtime. Default value is &lit.false;.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
                         <entry>&jersey.client.ClientProperties.USE_ENCODING;</entry>
                         <entry><literal>jersey.config.client.useEncoding</literal></entry>
                         <entry>

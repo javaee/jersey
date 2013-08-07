@@ -276,6 +276,7 @@
 <!ENTITY jersey.client.ClientProperties.MOXY_JSON_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#MOXY_JSON_FEATURE_DISABLE'>ClientProperties.MOXY_JSON_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.client.ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#OUTBOUND_CONTENT_LENGTH_BUFFER'>ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</link>" >
 <!ENTITY jersey.client.ClientProperties.READ_TIMEOUT "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#READ_TIMEOUT'>ClientProperties.READ_TIMEOUT</link>" >
+<!ENTITY jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#SUPPRESS_HTTP_COMPLIANCE_VALIDATION'>ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION</link>" >
 <!ENTITY jersey.client.ClientProperties.USE_ENCODING "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#USE_ENCODING'>ClientProperties.USE_ENCODING</link>" >
 <!ENTITY jersey.client.ContentEncoder "<link xlink:href='&jersey.javadoc.path;/common/spi/ContentEncoder.html'>ContentEncoder</link>">
 <!ENTITY jersey.client.CsrfProtectionFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/CsrfProtectionFilter.html'>CsrfProtectionFilter</link>">
