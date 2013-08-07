@@ -56,9 +56,11 @@
             match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
             or pom:groupId='org.glassfish.jersey.containers'
             or pom:groupId='org.glassfish.jersey.media'
+            or pom:artifactId='jersey-wadl-doclet'
             or pom:artifactId='jersey-mvc-jsp'
             or pom:artifactId='jersey-bean-validation'
             or pom:groupId='com.sun.xml.bind'
+            or pom:groupId='org.codehaus.jettison'
             or pom:groupId='javax.servlet']/pom:scope[text()!=test]">
         <scope>provided</scope>
     </xsl:template>
@@ -67,10 +69,12 @@
             match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
             or pom:groupId='org.glassfish.jersey.containers'
             or pom:groupId='org.glassfish.jersey.media'
+            or pom:artifactId='jersey-wadl-doclet'
             or pom:artifactId='jersey-mvc-jsp'
             or pom:artifactId='jersey-bean-validation'
             or pom:groupId='com.sun.xml.bind'
             or pom:groupId='javax.validation'
+            or pom:groupId='org.codehaus.jettison'
             or pom:groupId='javax.servlet']">
         <xsl:copy>
             <xsl:apply-templates />
