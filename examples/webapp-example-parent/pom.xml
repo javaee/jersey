@@ -96,6 +96,25 @@
                                 </transformationSets>
                             </configuration>
                         </execution>
+                        <execution>
+                            <id>assemble-wls-src-zip</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>transform</goal>
+                            </goals>
+                            <configuration>
+                                <transformationSets>
+                                    <transformationSet>
+                                        <dir>${project.basedir}</dir>
+                                        <includes>
+                                            <include>pom.xml</include>
+                                        </includes>
+                                        <stylesheet>../etc/wls-project-src-pom.xsl</stylesheet>
+                                        <outputDir>${project.build.directory}/wls-pom-file</outputDir>
+                                    </transformationSet>
+                                </transformationSets>
+                            </configuration>
+                        </execution>
                     </executions>
                 </plugin>
                 <plugin>
@@ -111,6 +130,18 @@
                             <configuration>
                                 <descriptors>
                                     <descriptor>../etc/gf-project-src-assembly.xml</descriptor>
+                                </descriptors>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>assemble-wls-src-zip</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>attached</goal>
+                            </goals>
+                            <configuration>
+                                <descriptors>
+                                    <descriptor>../etc/wls-project-src-assembly.xml</descriptor>
                                 </descriptors>
                             </configuration>
                         </execution>
