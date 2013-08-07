@@ -40,32 +40,24 @@
     holder.
 
 -->
-<assembly>
-    <!--
-     An assembly that produces an example project source zip bundle with
-     the jersey dependencies in the original project pom.xml file transformed
-     to the "provided" scope.
-     The resulting zipped example project sources are thus able to build example
-     binaries that are suitable for a deployment on containers which host Jersey
-     runtime by default (e.g. GlassFish).
-    -->
-    <id>project-src</id>
-    <formats>
-        <format>zip</format>
-    </formats>
-    <fileSets>
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <outputDirectory>/</outputDirectory>
-            <useDefaultExcludes>true</useDefaultExcludes>
-            <excludes>
-                <exclude>**/target/**</exclude>
-                <exclude>**/*.iml</exclude>
-                <exclude>**/weblogic.xml</exclude>
-                <exclude>**/glassfish-web.xml</exclude>
-                <exclude>**/sun-web.xml</exclude>
-            </excludes>
-        </fileSet>
-    </fileSets>
-</assembly>
 
+<wls:weblogic-web-app xmlns:wls="http://xmlns.oracle.com/weblogic/weblogic-web-app"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://xmlns.oracle.com/weblogic/weblogic-web-app http://xmlns.oracle.com/weblogic/weblogic-web-app/1.0/weblogic-web-app.xsd">
+
+    <wls:container-descriptor>
+        <wls:prefer-application-packages>
+            <!-- APIs -->
+            <wls:package-name>javax.validation.*</wls:package-name>
+
+            <!-- Hibernate Validator -->
+            <wls:package-name>org.hibernate.validator.*</wls:package-name>
+        </wls:prefer-application-packages>
+    </wls:container-descriptor>
+
+    <wls:library-ref>
+        <wls:library-name>jax-rs</wls:library-name>
+        <wls:specification-version>2.0</wls:specification-version>
+        <wls:exact-match>true</wls:exact-match>
+    </wls:library-ref>
+</wls:weblogic-web-app>

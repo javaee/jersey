@@ -49,7 +49,7 @@
      binaries that are suitable for a deployment on containers which host Jersey
      runtime by default (e.g. GlassFish).
     -->
-    <id>project-src</id>
+    <id>wls-project-src</id>
     <formats>
         <format>zip</format>
     </formats>
@@ -59,13 +59,20 @@
             <outputDirectory>/</outputDirectory>
             <useDefaultExcludes>true</useDefaultExcludes>
             <excludes>
+                <exclude>pom.xml</exclude>
                 <exclude>**/target/**</exclude>
                 <exclude>**/*.iml</exclude>
-                <exclude>**/weblogic.xml</exclude>
                 <exclude>**/glassfish-web.xml</exclude>
                 <exclude>**/sun-web.xml</exclude>
             </excludes>
         </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/target/wls-pom-file</directory>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/../etc/wls</directory>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
     </fileSets>
 </assembly>
-
