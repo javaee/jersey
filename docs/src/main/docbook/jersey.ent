@@ -408,6 +408,7 @@
 <!ENTITY jersey-mvc "<link xlink:href='&jersey.site.path;/jersey-mvc/dependencies.html'>jersey-mvc</link>" >
 <!ENTITY jersey-mvc-freemarker "<link xlink:href='&jersey.site.path;/jersey-mvc-freemarker/dependencies.html'>jersey-mvc-freemarker</link>" >
 <!ENTITY jersey-mvc-jsp "<link xlink:href='&jersey.site.path;/jersey-mvc-jsp/dependencies.html'>jersey-mvc-jsp</link>" >
+<!ENTITY jersey-spring3 "<link xlink:href='&jersey.site.path;/jersey-spring3/dependencies.html'>jersey-spring3</link>" >
 
 <!-- Jersey GitHub links -->
 <!ENTITY jersey.github.bv.example.path "<link xlink:href='&jersey.github.examples.path;/bean-validation-webapp'>Bean Validation example</link>">
@@ -420,6 +421,7 @@
 <!ENTITY jersey.github.moxy.json.example.path "<link xlink:href='&jersey.github.examples.path;/json-moxy'>JSON MOXy example</link>">
 <!ENTITY jersey.github.multipart.example.path "<link xlink:href='&jersey.github.examples.path;/multipart-webapp'>multipart-webapp example</link>">
 <!ENTITY jersey.github.mvc.example.path "<link xlink:href='&jersey.github.examples.path;/bookstore-webapp'>MVC (Bookstore) example</link>">
+<!ENTITY jersey.github.spring.example.path "<link xlink:href='&jersey.github.examples.path;/helloworld-spring-webapp'>Spring DI example</link>">
 
 <!-- JEE links -->
 <!ENTITY jee6.annotations.RolesAllowed "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/RolesAllowed.html'>@RolesAllowed</link>">

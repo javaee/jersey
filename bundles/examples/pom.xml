@@ -209,6 +209,20 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>helloworld-spring-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
+            <artifactId>helloworld-spring-webapp</artifactId>
+            <version>${project.version}</version>
+            <classifier>gf-project-src</classifier>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>http-trace</artifactId>
             <version>${project.version}</version>
             <classifier>project-src</classifier>

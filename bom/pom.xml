@@ -172,6 +172,12 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-spring3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.glassfish.jersey.ext</groupId>
                 <artifactId>jersey-wadl-doclet</artifactId>
                 <version>${project.version}</version>
             </dependency>
