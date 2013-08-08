@@ -1203,7 +1203,7 @@
         <jsonp.jaxrs.version>1.0</jsonp.jaxrs.version>
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
-        <mimepull.version>1.8</mimepull.version>
+        <mimepull.version>1.9.3</mimepull.version>
         <moxy.version>2.5.0</moxy.version>
         <osgi.version>4.2.0</osgi.version>
         <pax-exam-version>1.2.3</pax-exam-version>
