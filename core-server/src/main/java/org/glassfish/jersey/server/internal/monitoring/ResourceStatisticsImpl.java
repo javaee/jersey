@@ -65,6 +65,7 @@ class ResourceStatisticsImpl implements ResourceStatistics {
         private final ExecutionStatisticsImpl.Builder resourceExecutionStatisticsBuilder;
         private final ExecutionStatisticsImpl.Builder requestExecutionStatisticsBuilder;
         private final Map<ResourceMethod, ResourceMethodStatisticsImpl.Builder> methodsBuilders = Maps.newHashMap();
+        private final Map<String, ResourceMethodStatisticsImpl.Builder> stringToMethodsBuilders = Maps.newHashMap();
 
         /**
          * Create a new builder.
@@ -74,7 +75,7 @@ class ResourceStatisticsImpl implements ResourceStatistics {
         Builder(Resource resource) {
             this();
             for (ResourceMethod method : resource.getResourceMethods()) {
-                methodsBuilders.put(method, new ResourceMethodStatisticsImpl.Builder(method));
+                getOrCreate(method);
             }
         }
 
@@ -118,7 +119,7 @@ class ResourceStatisticsImpl implements ResourceStatistics {
             requestExecutionStatisticsBuilder.addExecution(requestStartTime, requestDuration);
 
 
-            final ResourceMethodStatisticsImpl.Builder builder = addOrGetBuilder(resourceMethod);
+            final ResourceMethodStatisticsImpl.Builder builder = getOrCreate(resourceMethod);
             builder.addResourceMethodExecution(methodStartTime, methodDuration, requestStartTime, requestDuration);
         }
 
@@ -128,18 +129,23 @@ class ResourceStatisticsImpl implements ResourceStatistics {
          * @param resourceMethod Resource method.
          */
         void addMethod(ResourceMethod resourceMethod) {
-            addOrGetBuilder(resourceMethod);
+            getOrCreate(resourceMethod);
 
         }
 
-        private ResourceMethodStatisticsImpl.Builder addOrGetBuilder(ResourceMethod resourceMethod) {
-            ResourceMethodStatisticsImpl.Builder methodBuilder = methodsBuilders.get(resourceMethod);
+        private ResourceMethodStatisticsImpl.Builder getOrCreate(ResourceMethod resourceMethod) {
+            final String methodUniqueId = MonitoringUtils.getMethodUniqueId(resourceMethod);
+            ResourceMethodStatisticsImpl.Builder methodBuilder = stringToMethodsBuilders.get(methodUniqueId);
+
             if (methodBuilder == null) {
                 methodBuilder = new ResourceMethodStatisticsImpl.Builder(resourceMethod);
                 methodsBuilders.put(resourceMethod, methodBuilder);
+                stringToMethodsBuilders.put(methodUniqueId, methodBuilder);
             }
             return methodBuilder;
         }
+
+
     }
 
     private final Map<ResourceMethod, ResourceMethodStatistics> resourceMethods;
@@ -148,7 +154,7 @@ class ResourceStatisticsImpl implements ResourceStatistics {
 
 
     private ResourceStatisticsImpl(Map<ResourceMethod, ResourceMethodStatistics> resourceMethods,
-                                  ExecutionStatistics resourceExecutionStatistics, ExecutionStatistics requestExecutionStatistics) {
+                                   ExecutionStatistics resourceExecutionStatistics, ExecutionStatistics requestExecutionStatistics) {
         this.resourceMethods = resourceMethods;
         this.resourceExecutionStatistics = resourceExecutionStatistics;
         this.requestExecutionStatistics = requestExecutionStatistics;
