@@ -323,10 +323,10 @@
                     <version>2.4</version>
                     <!--
                         mvn release:prepare -DreleaseVersion=<release-version> -DdevelopmentVersion=<next-dev-version> -Dtag=<release-version> \
-                            -Prelease,all-tests
+                            -Prelease,examples-source-zip,all-tests
 
                         mvn release:perform -DconnectionUrl="scm:git:file://<path-to-local-repo>" \
-                            -Prelease,skip-tests,attach-src-and-docs,examples-source-zip
+                            -Prelease,examples-source-zip,skip-tests
                     -->
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
@@ -334,7 +334,7 @@
                         <preparationGoals>clean install</preparationGoals>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <arguments>-Dmaven.test.skip=${skip.release.tests} ${release.arguments}</arguments>
+                        <arguments>${skip.release.tests} ${release.arguments}</arguments>
                     </configuration>
                 </plugin>
 
@@ -578,7 +578,7 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <skip.release.tests>true</skip.release.tests>
+                <skip.release.tests>-Dmaven.test.skip=true</skip.release.tests>
             </properties>
         </profile>
         <profile>
@@ -1172,7 +1172,7 @@
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <xdk.absolute.path />
-        <skip.release.tests>false</skip.release.tests>
+        <skip.release.tests />
 
         <jersey.version>${project.version}</jersey.version>
         <!-- Dependency versions -->
