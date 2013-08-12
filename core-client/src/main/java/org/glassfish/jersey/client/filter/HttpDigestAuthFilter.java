@@ -99,7 +99,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
-	 * and password credentials.
+	 * and password credentials. The default digest cache size of 500 is used.
 	 *
 	 * @param username user name
 	 * @param password password
@@ -110,7 +110,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
-	 * and password credentials.
+	 * and password credentials. MaxCacheSize must be greater or equal than 1.
 	 *
 	 * @param username user name
 	 * @param password password
@@ -122,7 +122,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
-	 * and password credentials.
+	 * and password credentials. The default digest cache size of 500 is used.
 	 *
 	 * @param username user name
 	 * @param password password byte array
@@ -134,7 +134,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
 	 * and password credentials. This constructor allows to avoid storing plain
-	 * password value in a String variable.
+	 * password value in a String variable. 
+	 * MaxCacheSize must be greater or equal than 1.
 	 *
 	 * @param username user name
 	 * @param password password byte array
@@ -150,8 +151,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		this.username = username;
 		this.password = password;
 
-		if (maxCacheSize < 0) {
-			maxCacheSize = 0;
+		if (maxCacheSize < 1) {
+			maxCacheSize = 1;
 		}
 		final int cacheSize = maxCacheSize;
 		digestCache = Collections.synchronizedMap(

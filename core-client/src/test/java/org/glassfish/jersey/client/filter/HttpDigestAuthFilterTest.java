@@ -151,7 +151,7 @@ public class HttpDigestAuthFilterTest {
 	}
 
 	/*
-	 Test max cache size of 0  (should always auth)
+	 Test max cache size of 0 
 	  
 	 @Test
 	 public void testGet() {
@@ -206,5 +206,76 @@ public class HttpDigestAuthFilterTest {
 	 return null;
 	 }
 	 }
+	 * 
+	 
++ * Test of validation of resources as an end-to-end test.
++ *
++public class AmbigousResourceMethodTest extends JerseyTest {
++
++    @Override
++    protected Application configure() {
++        return new ResourceConfig(TestResource.class);
++    }
++
++    @Test
++    public void testRequestToAmbiguousResourceClass() {
++        final String simpleName = TestResource.class.getSimpleName();
++
++        Response response = 
+target().path("test").request(MediaType.TEXT_PLAIN).get();
++        assertEquals(200, response.getStatus());
++        assertEquals(simpleName + simpleName, 
+response.readEntity(String.class));
++
++        response = 
+target().path("test").request(MediaType.TEXT_HTML_TYPE).get();
++        assertEquals(200, response.getStatus());
++        assertEquals(simpleName, response.readEntity(String.class));
++
++        response = 
+target().path("test").request(MediaType.TEXT_HTML_TYPE).post(Entity.entity("aaaa",
+ MediaType.TEXT_PLAIN_TYPE));
++        assertEquals(200, response.getStatus());
++        assertEquals(simpleName + simpleName, 
+response.readEntity(String.class));
++
++        response = 
+target().path("test").request(MediaType.TEXT_HTML_TYPE).post(Entity.entity("aaaa",
+ MediaType.TEXT_HTML_TYPE));
++        assertEquals(200, response.getStatus());
++        assertEquals(simpleName, response.readEntity(String.class));
++    }
++
++     * Test ambiguous resource class.
++    @Path("test")
++    public static class TestResource {
++        @POST
++        public String sub() {
++            return getClass().getSimpleName();
++        }
++
++        @POST
++        @Consumes(MediaType.TEXT_PLAIN)
++        public String subsub() {
++            return sub() + sub();
++        }
++
++        @GET
++        public String get() {
++            return sub();
++        }
++
++        @GET
++        @Produces(MediaType.TEXT_PLAIN)
++        public String getget() {
++            return subsub();
++        }
++    }
++}
+	 * 
+	 * 
+	 * siehe 
+	 * /tests/e2e/src/test/java/org/glassfish/jersey/tests/e2e/client
+
 	 */
 }
