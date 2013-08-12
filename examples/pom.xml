@@ -58,6 +58,7 @@
     <description>Jersey examples</description>
 
     <modules>
+        <module>assemblies</module>
         <module>bean-validation-webapp</module>
         <module>bookmark</module>
         <module>bookmark-em</module>
@@ -122,17 +123,26 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
+                    <dependencies>
+                        <!-- Contains shared Jersey example assembly descriptors-->
+                        <dependency>
+                            <groupId>org.glassfish.jersey.examples</groupId>
+                            <artifactId>assemblies</artifactId>
+                            <version>${project.version}</version>
+                        </dependency>
+                    </dependencies>
                     <executions>
                         <execution>
                             <id>assemble-src-zip</id>
                             <phase>package</phase>
                             <goals>
-                                <goal>attached</goal>
+                                <goal>single</goal>
                             </goals>
                             <configuration>
-                                <descriptors>
-                                    <descriptor>../etc/project-src-assembly.xml</descriptor>
-                                </descriptors>
+                                <descriptorRefs>
+                                    <!-- Reference to a descriptor in org.glassfish.jersey.examples:assemblies module -->
+                                    <descriptorRef>src-zip</descriptorRef>
+                                </descriptorRefs>
                             </configuration>
                         </execution>
                     </executions>
@@ -151,4 +161,5 @@
             </plugins>
         </pluginManagement>
     </build>
+
 </project>

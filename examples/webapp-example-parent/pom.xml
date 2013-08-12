@@ -125,24 +125,26 @@
                             <id>assemble-gf-src-zip</id>
                             <phase>package</phase>
                             <goals>
-                                <goal>attached</goal>
+                                <goal>single</goal>
                             </goals>
                             <configuration>
-                                <descriptors>
-                                    <descriptor>../etc/gf-project-src-assembly.xml</descriptor>
-                                </descriptors>
+                                <descriptorRefs>
+                                    <!-- Reference to a descriptor in org.glassfish.jersey.examples:assemblies module -->
+                                    <descriptorRef>glassfish-src-zip</descriptorRef>
+                                </descriptorRefs>
                             </configuration>
                         </execution>
                         <execution>
                             <id>assemble-wls-src-zip</id>
                             <phase>package</phase>
                             <goals>
-                                <goal>attached</goal>
+                                <goal>single</goal>
                             </goals>
                             <configuration>
-                                <descriptors>
-                                    <descriptor>../etc/wls-project-src-assembly.xml</descriptor>
-                                </descriptors>
+                                <descriptorRefs>
+                                    <!-- Reference to a descriptor in org.glassfish.jersey.examples:assemblies module -->
+                                    <descriptorRef>weblogic-src-zip</descriptorRef>
+                                </descriptorRefs>
                             </configuration>
                         </execution>
                     </executions>
@@ -158,4 +160,5 @@
             </plugins>
         </pluginManagement>
     </build>
+
 </project>
