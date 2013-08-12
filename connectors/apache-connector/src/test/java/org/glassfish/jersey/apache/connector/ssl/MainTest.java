@@ -40,13 +40,11 @@
 package org.glassfish.jersey.apache.connector.ssl;
 
 import com.google.common.io.ByteStreams;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnector;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.junit.*;
 
@@ -90,17 +88,11 @@ public class MainTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.SSL_CONFIG, sslConfig);
-        CredentialsProvider credentialsProvider = new org.apache.http.impl.client.BasicCredentialsProvider();
-        credentialsProvider.setCredentials(
-                AuthScope.ANY,
-                new UsernamePasswordCredentials("user", "password")
-        );
-
-
-        cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
         cc.connector(new ApacheConnector(cc));
 
         Client client = ClientBuilder.newClient(cc);
+        // client basic auth demonstration
+        client.register(new HttpBasicAuthFilter("user", "password"));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
