@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.internal.monitoring.jmx;
 
 import java.util.Map;
 
+import org.glassfish.jersey.server.internal.monitoring.MonitoringUtils;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ResourceMXBean;
 import org.glassfish.jersey.server.monitoring.ResourceMethodStatistics;
@@ -103,7 +104,7 @@ public class ResourceMxBeanImpl implements ResourceMXBean {
             final ResourceMethodStatistics methodStats = entry.getValue();
             final ResourceMethod method = entry.getKey();
 
-            final String methodId = getMethodUniqueId(method);
+            final String methodId = MonitoringUtils.getMethodUniqueId(method);
 
             ResourceMethodMXBeanImpl methodMXBean = this.resourceMethods.get(methodId);
             if (methodMXBean == null) {
@@ -113,14 +114,6 @@ public class ResourceMxBeanImpl implements ResourceMXBean {
             }
             methodMXBean.updateResourceMethodStatistics(methodStats);
         }
-    }
-
-
-    private String getMethodUniqueId(ResourceMethod method) {
-        final String path = method.getParent().getParent() == null ? method.getParent().getPath() : "";
-        return (new StringBuilder().append(method.getProducedTypes().toString()).append("|")
-                .append(method.getConsumedTypes().toString()).append("|").append(method.getHttpMethod())
-                .append("|").append(path).toString());
     }
 
     @Override
