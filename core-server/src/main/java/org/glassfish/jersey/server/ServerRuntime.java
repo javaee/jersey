@@ -466,7 +466,7 @@ class ServerRuntime {
                     }
                 }
 
-                if (mappingNotFound) {
+                if (!inMappable || mappingNotFound) {
                     // user failures (thrown from Resource methods or provider methods)
 
                     // spec: Unchecked exceptions and errors that have not been mapped MUST be re-thrown and allowed to

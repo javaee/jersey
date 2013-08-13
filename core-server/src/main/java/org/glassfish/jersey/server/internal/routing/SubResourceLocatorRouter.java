@@ -251,9 +251,7 @@ class SubResourceLocatorRouter implements Router {
         if (throwable instanceof WebApplicationException) {
             return (WebApplicationException) throwable;
         }
-        if (throwable instanceof Exception) { // handle all exceptions as potentially mappable (incl. ProcessingException)
-            return new MappableException(throwable);
-        }
-        return new ProcessingException(throwable);
+        // handle all exceptions as potentially mappable (incl. ProcessingException)
+        return new MappableException(throwable);
     }
 }

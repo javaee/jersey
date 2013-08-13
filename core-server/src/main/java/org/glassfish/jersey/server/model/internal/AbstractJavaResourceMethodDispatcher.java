@@ -173,10 +173,8 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
         if (throwable instanceof WebApplicationException) {
             return (WebApplicationException) throwable;
         }
-        if (throwable instanceof Exception) { // handle all exceptions as potentially mappable (incl. ProcessingException)
-            return new MappableException(throwable);
-        }
-        return new ProcessingException(throwable);
+        // handle all exceptions as potentially mappable (incl. ProcessingException)
+        return new MappableException(throwable);
     }
 
     @Override
