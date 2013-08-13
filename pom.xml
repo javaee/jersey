@@ -1182,7 +1182,7 @@
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
         <grizzly2.version>2.3.3</grizzly2.version>
         <hamcrest.version>1.2.1</hamcrest.version>
-        <hk2.version>2.2.0-b10</hk2.version>
+        <hk2.version>2.2.0-b14</hk2.version>
         <jackson.version>1.9.11</jackson.version>
         <javax.annotation.version>1.2</javax.annotation.version>
         <javax.annotation.bundle.version>1.2</javax.annotation.bundle.version>

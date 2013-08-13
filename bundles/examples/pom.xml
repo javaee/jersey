@@ -214,6 +214,7 @@
             <classifier>project-src</classifier>
             <type>zip</type>
         </dependency>
+        <!-- There is problem to run Spring example on GF - https://java.net/jira/browse/JERSEY-2032
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>helloworld-spring-webapp</artifactId>
@@ -221,6 +222,7 @@
             <classifier>gf-project-src</classifier>
             <type>zip</type>
         </dependency>
+        -->
         <dependency>
             <groupId>org.glassfish.jersey.examples</groupId>
             <artifactId>http-trace</artifactId>

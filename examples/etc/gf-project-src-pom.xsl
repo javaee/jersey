@@ -101,6 +101,7 @@
         </xsl:copy>
     </xsl:template>
 
+    <!-- There is problem to run Spring example on GF - https://java.net/jira/browse/JERSEY-2032
     <xsl:template
             match="pom:dependencies/pom:dependency[pom:artifactId='jersey-spring3']">
         <xsl:copy>
@@ -132,12 +133,9 @@
                     <artifactId>javax.servlet-api</artifactId>
                 </exclusion>
             </exclusions>
-
-
-
         </xsl:copy>
     </xsl:template>
-
+    -->
 
     <xsl:template match="pom:dependencies">
       <xsl:copy>
