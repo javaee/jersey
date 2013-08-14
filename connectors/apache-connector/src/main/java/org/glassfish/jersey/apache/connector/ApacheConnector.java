@@ -59,6 +59,9 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
@@ -120,6 +123,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  * <li>{@link ApacheClientProperties#PROXY_USERNAME}</li>
  * <li>{@link ApacheClientProperties#PROXY_PASSWORD}</li>
  * <li>{@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
+ * <li>{@link ApacheClientProperties#SSL_CONFIG}</li>
  * </ul>
  * <p/>
  * By default a request entity is buffered and repeatable such that
@@ -208,8 +212,17 @@ public class ApacheConnector implements Connector {
             }
         }
 
-        this.client = new DefaultHttpClient((ClientConnectionManager) connectionManager, (HttpParams) httpParams);
+        SslConfigurator sslConfig = null;
+        if (config != null) {
+            sslConfig = PropertiesHelper.getValue(config.getProperties(), ApacheClientProperties.SSL_CONFIG, SslConfigurator.class);
+        }
 
+        this.client = new DefaultHttpClient((ClientConnectionManager) connectionManager, (HttpParams) httpParams);
+        if (sslConfig != null) {
+            SSLSocketFactory socketFactory = new SSLSocketFactory(sslConfig.createSSLContext());
+            Scheme https = new Scheme("https", 443, socketFactory);
+            client.getConnectionManager().getSchemeRegistry().register(https);
+        }
         if (config != null) {
             client.getParams().setIntParameter(CoreConnectionPNames.CONNECTION_TIMEOUT,
                     PropertiesHelper.getValue(config.getProperties(), ClientProperties.CONNECT_TIMEOUT, 0));
