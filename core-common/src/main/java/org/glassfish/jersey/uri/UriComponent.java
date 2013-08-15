@@ -500,7 +500,6 @@ public class UriComponent {
      * Query parameter names in the returned map are always decoded. Decoding of query parameter
      * values can be controlled using the {@code decode} parameter flag.
      * </p>
-     * s     *
      *
      * @param u      the URI.
      * @param decode {@code true} if the returned query parameter values of the query component
