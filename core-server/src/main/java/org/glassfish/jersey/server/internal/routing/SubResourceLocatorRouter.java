@@ -62,7 +62,6 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.SubjectSecurityContext;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.ComponentModelValidator;
 import org.glassfish.jersey.server.model.ModelProcessor;
@@ -71,6 +70,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 
 import org.glassfish.hk2.api.Factory;
@@ -163,7 +163,7 @@ class SubResourceLocatorRouter implements Router {
 
         subResource = resourceModel.getResources().get(0);
         routingCtx.pushLocatorSubResource(subResource);
-        request.triggerEvent(RequestEventImpl.Type.SUBRESOURCE_LOCATED);
+        request.triggerEvent(RequestEvent.Type.SUBRESOURCE_LOCATED);
 
 
         for (Class<?> handlerClass : subResource.getHandlerClasses()) {
@@ -218,7 +218,7 @@ class SubResourceLocatorRouter implements Router {
         final Method handlingMethod = locatorModel.getInvocable().getHandlingMethod();
         final Object[] parameterValues = ParameterValueHelper.getParameterValues(valueProviders);
 
-        request.triggerEvent(RequestEventImpl.Type.LOCATOR_MATCHED);
+        request.triggerEvent(RequestEvent.Type.LOCATOR_MATCHED);
 
         final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
             @Override

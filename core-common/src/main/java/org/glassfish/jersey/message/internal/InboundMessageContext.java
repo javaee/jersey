@@ -131,6 +131,7 @@ public class InboundMessageContext {
             return buffered;
         }
 
+        @Override
         public void close() {
             try {
                 super.close();

@@ -76,13 +76,13 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
-import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.model.internal.ResourceMethodDispatcherFactory;
 import org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
@@ -348,11 +348,11 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     private Response invoke(ContainerRequest requestContext, Object resource) {
 
         Response jaxrsResponse;
-        requestContext.triggerEvent(RequestEventImpl.Type.RESOURCE_METHOD_START);
+        requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_START);
         try {
             jaxrsResponse = dispatcher.dispatch(resource, requestContext);
         } finally {
-            requestContext.triggerEvent(RequestEventImpl.Type.RESOURCE_METHOD_FINISHED);
+            requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_FINISHED);
         }
 
         if (jaxrsResponse == null) {

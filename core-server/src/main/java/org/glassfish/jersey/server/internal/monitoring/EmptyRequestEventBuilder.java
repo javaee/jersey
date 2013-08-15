@@ -46,6 +46,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 
 /**
  * Empty mock implementation of {@link RequestEventBuilder}.
@@ -84,7 +85,7 @@ public class EmptyRequestEventBuilder implements RequestEventBuilder {
     }
 
     @Override
-    public RequestEventBuilder setException(Throwable throwable, RequestEventImpl.ExceptionCause exceptionCause) {
+    public RequestEventBuilder setException(Throwable throwable, RequestEvent.ExceptionCause exceptionCause) {
         return this;
     }
 
@@ -109,7 +110,7 @@ public class EmptyRequestEventBuilder implements RequestEventBuilder {
     }
 
     @Override
-    public RequestEventImpl build(RequestEventImpl.Type eventType) {
+    public RequestEvent build(RequestEvent.Type eventType) {
         return null;
     }
 }

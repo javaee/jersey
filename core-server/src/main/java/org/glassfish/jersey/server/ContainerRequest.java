@@ -75,7 +75,8 @@ import org.glassfish.jersey.message.internal.VariantSelector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.monitoring.EmptyRequestEventBuilder;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
-import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
+import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
@@ -121,7 +122,7 @@ public class ContainerRequest extends InboundMessageContext
     // Vary header value to be set in the response
     private String varyValue;
     // UriInfo reference
-    private UriInfo uriInfo;
+    private UriRoutingContext uriRoutingContext;
     // Custom Jersey container request scoped initializer
     private RequestScopedInitializer requestScopedInitializer;
     // Request-scoped response writer of the invoking container
@@ -283,16 +284,16 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public UriInfo getUriInfo() {
-        return uriInfo;
+        return uriRoutingContext;
     }
 
     /**
-     * Set the request scoped {@link UriInfo} instance.
+     * Set the request scoped {@link UriRoutingContext} instance.
      *
-     * @param uriInfo request scoped {@code UriInfo} instance.
+     * @param uriRoutingContext request scoped {@code UriRoutingContext} instance.
      */
-    public void setUriInfo(UriInfo uriInfo) {
-        this.uriInfo = uriInfo;
+    void setUriRoutingContext(UriRoutingContext uriRoutingContext) {
+        this.uriRoutingContext = uriRoutingContext;
     }
 
     /**
@@ -315,20 +316,26 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void setRequestUri(URI requestUri) throws IllegalStateException {
-        if (!uriInfo.getMatchedURIs().isEmpty()) {
+        if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
 
         this.encodedRelativePath = null;
         this.decodedRelativePath = null;
+        this.uriRoutingContext.invalidateUriComponentViews();
+
         this.requestUri = requestUri;
     }
 
     @Override
     public void setRequestUri(URI baseUri, URI requestUri) throws IllegalStateException {
-        if (!uriInfo.getMatchedURIs().isEmpty()) {
+        if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
+
+        this.encodedRelativePath = null;
+        this.decodedRelativePath = null;
+        this.uriRoutingContext.invalidateUriComponentViews();
 
         this.baseUri = baseUri;
         this.requestUri = requestUri;
@@ -420,7 +427,7 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void setMethod(String method) throws IllegalStateException {
-        if (!uriInfo.getMatchedURIs().isEmpty()) {
+        if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
         this.httpMethod = method;
@@ -442,7 +449,7 @@ public class ContainerRequest extends InboundMessageContext
      * @param requestEventListener Request event listener or null if the listening to events should be disabled.
      * @param requestEventBuilder Request event builder.
      */
-    public void setRequestEventListener(RequestEventListener requestEventListener,
+    void setRequestEventListener(RequestEventListener requestEventListener,
                                         RequestEventBuilder requestEventBuilder) {
         if (requestEventListener != null) {
             this.requestEventListener = requestEventListener;
@@ -453,12 +460,22 @@ public class ContainerRequest extends InboundMessageContext
         }
     }
 
-    public RequestEventBuilder getRequestEventBuilder() {
+    /**
+     * Get an event builder bound to the current container request.
+     *
+     * @return event builder bound to the current container request.
+     */
+    RequestEventBuilder getRequestEventBuilder() {
         return requestEventBuilder;
     }
 
 
-    public void triggerEvent(RequestEventImpl.Type requestEventType) {
+    /**
+     * Trigger a new monitoring event for the current request.
+     *
+     * @param requestEventType request event type.
+     */
+    public void triggerEvent(RequestEvent.Type requestEventType) {
         if (requestEventListener != null) {
             requestEventListener.onEvent(requestEventBuilder.build(requestEventType));
         }
@@ -663,7 +680,7 @@ public class ContainerRequest extends InboundMessageContext
 
     // Private methods
     private Response.ResponseBuilder evaluateIfMatch(EntityTag eTag) {
-        Set<? super MatchingEntityTag> matchingTags = getIfMatch();
+        Set<? extends EntityTag> matchingTags = getIfMatch();
         if (matchingTags == null) {
             return null;
         }
@@ -693,7 +710,7 @@ public class ContainerRequest extends InboundMessageContext
         return evaluateIfNoneMatch(eTag, matchingTags, httpMethod.equals("GET") || httpMethod.equals("HEAD"));
     }
 
-    private Response.ResponseBuilder evaluateIfNoneMatch(EntityTag eTag, Set<? super MatchingEntityTag> matchingTags,
+    private Response.ResponseBuilder evaluateIfNoneMatch(EntityTag eTag, Set<? extends EntityTag> matchingTags,
                                                          boolean isGetOrHead) {
         if (isGetOrHead) {
             if (matchingTags == MatchingEntityTag.ANY_MATCH) {

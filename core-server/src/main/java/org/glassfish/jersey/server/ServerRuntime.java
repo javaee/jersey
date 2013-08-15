@@ -94,6 +94,7 @@ import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
@@ -247,7 +248,7 @@ class ServerRuntime {
                 }
             });
         } finally {
-            request.triggerEvent(RequestEventImpl.Type.FINISHED);
+            request.triggerEvent(RequestEvent.Type.FINISHED);
         }
     }
 
@@ -255,7 +256,7 @@ class ServerRuntime {
         if (applicationEventListener != null) {
         final RequestEventBuilder requestEventBuilder = new RequestEventImpl.Builder().setContainerRequest(request);
         final RequestEventListener requestEventEventListener =
-                applicationEventListener.onRequest(requestEventBuilder.build(RequestEventImpl.Type.START));
+                applicationEventListener.onRequest(requestEventBuilder.build(RequestEvent.Type.START));
 
             if (requestEventEventListener != null) {
                 request.setRequestEventListener(requestEventEventListener, requestEventBuilder);
@@ -369,8 +370,8 @@ class ServerRuntime {
 
         public void process(Throwable throwable) {
 
-            request.getRequestEventBuilder().setException(throwable, RequestEventImpl.ExceptionCause.ORIGINAL);
-            request.triggerEvent(RequestEventImpl.Type.ON_EXCEPTION);
+            request.getRequestEventBuilder().setException(throwable, RequestEvent.ExceptionCause.ORIGINAL);
+            request.triggerEvent(RequestEvent.Type.ON_EXCEPTION);
 
             ContainerResponse response = null;
             try {
@@ -380,14 +381,14 @@ class ServerRuntime {
                         response = convertResponse(exceptionResponse);
                         request.getRequestEventBuilder().setContainerResponse(response).setResponseSuccessfullyMapped(true);
                     } finally {
-                        request.triggerEvent(RequestEventImpl.Type.EXCEPTION_MAPPING_FINISHED);
+                        request.triggerEvent(RequestEvent.Type.EXCEPTION_MAPPING_FINISHED);
                     }
 
                     processResponse(response);
                 } catch (Throwable respError) {
                     LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_PROCESSING_RESPONSE_FROM_ALREADY_MAPPED_EXCEPTION());
-                    request.getRequestEventBuilder().setException(respError, RequestEventImpl.ExceptionCause.MAPPED_RESPONSE);
-                    request.triggerEvent(RequestEventImpl.Type.ON_EXCEPTION);
+                    request.getRequestEventBuilder().setException(respError, RequestEvent.ExceptionCause.MAPPED_RESPONSE);
+                    request.triggerEvent(RequestEvent.Type.ON_EXCEPTION);
                     throw respError;
                 }
             } catch (Throwable responseError) {
@@ -434,7 +435,7 @@ class ServerRuntime {
                     ExceptionMapper mapper = exceptionMappers.findMapping(throwable);
                     if (mapper != null) {
                         request.getRequestEventBuilder().setExceptionMapper(mapper);
-                        request.triggerEvent(RequestEventImpl.Type.EXCEPTION_MAPPER_FOUND);
+                        request.triggerEvent(RequestEvent.Type.EXCEPTION_MAPPER_FOUND);
                         try {
                             final Response mappedResponse = mapper.toResponse(throwable);
                             if (mappedResponse != null) {

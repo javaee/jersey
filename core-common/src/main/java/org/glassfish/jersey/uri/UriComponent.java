@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,6 +61,7 @@ import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
  * of a URI.
  *
  * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class UriComponent {
 
@@ -129,7 +130,7 @@ public class UriComponent {
      * represents a URI component type.
      *
      * @param s the encoded string.
-     * @param t the URI compontent type identifying the legal characters.
+     * @param t the URI component type identifying the legal characters.
      * @throws IllegalArgumentException if the encoded string contains illegal
      *                                  characters.
      */
@@ -142,7 +143,7 @@ public class UriComponent {
      * represents a URI component type.
      *
      * @param s        the encoded string.
-     * @param t        the URI compontent type identifying the legal characters.
+     * @param t        the URI component type identifying the legal characters.
      * @param template true if the encoded string contains URI template variables
      * @throws IllegalArgumentException if the encoded string contains illegal
      *                                  characters.
@@ -160,7 +161,7 @@ public class UriComponent {
      * represents a URI component type.
      *
      * @param s the encoded string.
-     * @param t the URI compontent type identifying the legal characters.
+     * @param t the URI component type identifying the legal characters.
      * @return true if the encoded string is valid, otherwise false.
      */
     public static boolean valid(String s, Type t) {
@@ -172,7 +173,7 @@ public class UriComponent {
      * represents a URI component type.
      *
      * @param s        the encoded string.
-     * @param t        the URI compontent type identifying the legal characters.
+     * @param t        the URI component type identifying the legal characters.
      * @param template true if the encoded string contains URI template variables
      * @return true if the encoded string is valid, otherwise false.
      */
@@ -201,7 +202,7 @@ public class UriComponent {
      * double encoded.
      *
      * @param s the string to be encoded.
-     * @param t the URI compontent type identifying the ASCII characters that
+     * @param t the URI component type identifying the ASCII characters that
      *          must be percent-encoded.
      * @return the encoded string.
      */
@@ -216,7 +217,7 @@ public class UriComponent {
      * double encoded.
      *
      * @param s        the string to be encoded.
-     * @param t        the URI compontent type identifying the ASCII characters that
+     * @param t        the URI component type identifying the ASCII characters that
      *                 must be percent-encoded.
      * @param template true if the encoded string contains URI template variables
      * @return the encoded string.
@@ -231,7 +232,7 @@ public class UriComponent {
      * UTF-8 encoding.
      *
      * @param s the string to be encoded.
-     * @param t the URI compontent type identifying the ASCII characters that
+     * @param t the URI component type identifying the ASCII characters that
      *          must be percent-encoded.
      * @return the encoded string.
      */
@@ -245,7 +246,7 @@ public class UriComponent {
      * UTF-8 encoding.
      *
      * @param s        the string to be encoded.
-     * @param t        the URI compontent type identifying the ASCII characters that
+     * @param t        the URI component type identifying the ASCII characters that
      *                 must be percent-encoded.
      * @param template true if the encoded string contains URI template variables
      * @return the encoded string.
@@ -495,9 +496,14 @@ public class UriComponent {
 
     /**
      * Decode the query component of a URI.
+     * <p>
+     * Query parameter names in the returned map are always decoded. Decoding of query parameter
+     * values can be controlled using the {@code decode} parameter flag.
+     * </p>
+     * s     *
      *
      * @param u      the URI.
-     * @param decode true if the query parameters of the query component
+     * @param decode {@code true} if the returned query parameter values of the query component
      *               should be in decoded form.
      * @return the multivalued map of query parameters.
      */
@@ -507,13 +513,35 @@ public class UriComponent {
 
     /**
      * Decode the query component of a URI.
+     * <p>
+     * Query parameter names in the returned map are always decoded. Decoding of query parameter
+     * values can be controlled using the {@code decode} parameter flag.
+     * </p>
      *
      * @param q      the query component in encoded form.
-     * @param decode true of the query parameters of the query component
+     * @param decode {@code true} if the returned query parameter values of the query component
      *               should be in decoded form.
      * @return the multivalued map of query parameters.
      */
     public static MultivaluedMap<String, String> decodeQuery(String q, boolean decode) {
+        return decodeQuery(q, true, decode);
+    }
+
+    /**
+     * Decode the query component of a URI.
+     * <p>
+     * Decoding of query parameter names and values can be controlled using the {@code decodeNames}
+     * and {@code decodeValues} parameter flags.
+     * </p>
+     *
+     * @param q            the query component in encoded form.
+     * @param decodeNames  {@code true} if the returned query parameter names of the query component
+     *                     should be in decoded form.
+     * @param decodeValues {@code true} if the returned query parameter values of the query component
+     *                     should be in decoded form.
+     * @return the multivalued map of query parameters.
+     */
+    public static MultivaluedMap<String, String> decodeQuery(String q, boolean decodeNames, boolean decodeValues) {
         MultivaluedMap<String, String> queryParameters = new MultivaluedStringMap();
 
         if (q == null || q.length() == 0) {
@@ -525,9 +553,9 @@ public class UriComponent {
             int e = q.indexOf('&', s);
 
             if (e == -1) {
-                decodeQueryParam(queryParameters, q.substring(s), decode);
+                decodeQueryParam(queryParameters, q.substring(s), decodeNames, decodeValues);
             } else if (e > s) {
-                decodeQueryParam(queryParameters, q.substring(s, e), decode);
+                decodeQueryParam(queryParameters, q.substring(s, e), decodeNames, decodeValues);
             }
             s = e + 1;
         } while (s > 0 && s < q.length());
@@ -535,14 +563,15 @@ public class UriComponent {
         return queryParameters;
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     private static void decodeQueryParam(MultivaluedMap<String, String> params,
-                                         String param, boolean decode) {
+                                         String param, boolean decodeNames, boolean decodeValues) {
         try {
             int equals = param.indexOf('=');
             if (equals > 0) {
                 params.add(
-                        URLDecoder.decode(param.substring(0, equals), "UTF-8"),
-                        (decode) ? URLDecoder.decode(param.substring(equals + 1), "UTF-8") : param.substring(equals + 1));
+                        (decodeNames) ? URLDecoder.decode(param.substring(0, equals), "UTF-8") : param.substring(0, equals),
+                        (decodeValues) ? URLDecoder.decode(param.substring(equals + 1), "UTF-8") : param.substring(equals + 1));
             } else if (equals == 0) {
                 // no key declared, ignore
             } else if (param.length() > 0) {
@@ -614,6 +643,7 @@ public class UriComponent {
      * the path segment list will contain three empty path segments. If the path
      * is "/a/" the path segment list will consist of the following path
      * segments in order: "", "a" and "".
+     * </p>
      *
      * @param path   the path component in encoded form.
      * @param decode true if the path segments of the path component
@@ -627,7 +657,7 @@ public class UriComponent {
             return segments;
         }
 
-        int s = 0;
+        int s;
         int e = -1;
         do {
             s = e + 1;
@@ -647,6 +677,13 @@ public class UriComponent {
         return segments;
     }
 
+    /**
+     * Decode the path segment and add it to the list of path segments.
+     *
+     * @param segments mutable list of path segments.
+     * @param segment  path segment to be decoded.
+     * @param decode   {@code true} if the path segment should be in a decoded form.
+     */
     public static void decodePathSegment(List<PathSegment> segments, String segment, boolean decode) {
         int colon = segment.indexOf(';');
         if (colon != -1) {
@@ -692,6 +729,7 @@ public class UriComponent {
         return matrixMap;
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
     private static void decodeMatrixParam(MultivaluedMap<String, String> params,
                                           String param, boolean decode) {
         int equals = param.indexOf('=');
@@ -772,7 +810,7 @@ public class UriComponent {
     }
 
     /**
-     * Decode a contigious sequence of percent encoded octets.
+     * Decode a continuous sequence of percent encoded octets.
      * <p>
      * Assumes the index, i, starts that the first hex digit of the first
      * percent-encoded octet.
@@ -867,6 +905,7 @@ public class UriComponent {
 
     /**
      * Checks whether the character {@code c} is hexadecimal character.
+     *
      * @param c Any character
      * @return The is {@code c} is a hexadecimal character (e.g. 0, 5, a, A, f, ...)
      */

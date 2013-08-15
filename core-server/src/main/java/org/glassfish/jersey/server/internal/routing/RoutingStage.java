@@ -47,7 +47,7 @@ import org.glassfish.jersey.process.internal.Inflecting;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 
 /**
  * Request pre-processing stage that encapsulates hierarchical resource matching
@@ -100,7 +100,7 @@ public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
      */
     @Override
     public Continuation<ContainerRequest> apply(ContainerRequest request) {
-        request.triggerEvent(RequestEventImpl.Type.MATCHING_START);
+        request.triggerEvent(RequestEvent.Type.MATCHING_START);
         final TransformableData<ContainerRequest, ContainerResponse> result =
                 _apply(request, routingRoot);
 

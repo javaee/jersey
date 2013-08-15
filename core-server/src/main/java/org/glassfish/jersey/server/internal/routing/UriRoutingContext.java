@@ -392,7 +392,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public MultivaluedMap<String, String> getQueryParameters() {
-        return getQueryParameters(false);
+        return getQueryParameters(true);
     }
 
     @Override
@@ -417,6 +417,17 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             return encodedQueryParamsView;
 
         }
+    }
+
+    /**
+     * Invalidate internal URI component cache views.
+     * <p>
+     * This method needs to be called if request URI information changes.
+     * </p>
+     */
+    public void invalidateUriComponentViews() {
+        this.decodedQueryParamsView = null;
+        this.encodedQueryParamsView = null;
     }
 
     @Override
