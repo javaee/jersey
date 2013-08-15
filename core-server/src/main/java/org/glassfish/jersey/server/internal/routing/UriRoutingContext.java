@@ -60,7 +60,6 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -116,7 +115,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
      * @param processingProviders processing providers.
      */
     @Inject
-    UriRoutingContext(Ref<ContainerRequest> requestContext, ProcessingProviders processingProviders) {
+    UriRoutingContext(ContainerRequest requestContext, ProcessingProviders processingProviders) {
         this.requestContext = requestContext;
         this.processingProviders = processingProviders;
     }
@@ -267,7 +266,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     // UriInfo
-    private Ref<ContainerRequest> requestContext;
+    private ContainerRequest requestContext;
 
     private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
         return iterable == null ? Collections.<T>emptyList() : iterable;
@@ -285,7 +284,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI getBaseUri() {
-        return requestContext.get().getBaseUri();
+        return requestContext.getBaseUri();
     }
 
     @Override
@@ -324,12 +323,12 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public String getPath() {
-        return requestContext.get().getPath(true);
+        return requestContext.getPath(true);
     }
 
     @Override
     public String getPath(boolean decode) {
-        return requestContext.get().getPath(decode);
+        return requestContext.getPath(decode);
     }
 
     @Override
@@ -432,7 +431,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI getRequestUri() {
-        return requestContext.get().getRequestUri();
+        return requestContext.getRequestUri();
     }
 
     @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,43 +37,29 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
-package org.glassfish.jersey.server.internal.inject;
-
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ExtendedUriInfo;
+package org.glassfish.jersey.server.internal;
 
 /**
- * A HttpContext makes it possible for a web resource implementation class to
- * access and manipulate HTTP request and response information directly. Typically
- * a HttpContext is injected on to a resource class using the
- * annotation {@link javax.ws.rs.core.Context}.
+ * Jersey internal server-side configuration properties.
  *
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface HttpContext /*TODO keep or remove: extends Traceable*/ {
-    /**
-     * Used internally for storing {@link javax.ws.rs.core.Form} instance with original (not url-decoded) values in {@link
-     * HttpContext} properties.
-     */
-    String FORM_PROPERTY = "jersey.config.server.representation.form";
+public final class InternalServerProperties {
+
 
     /**
-     * Used internally for storing {@link javax.ws.rs.core.Form} instance with url-decoded values in {@link HttpContext}
-     * properties.
+     * Used internally for storing {@link javax.ws.rs.core.Form} instance with original (not url-decoded) values in
+     * {@link org.glassfish.jersey.server.ContainerRequest} properties.
      */
-    String FORM_DECODED_PROPERTY = "jersey.config.server.representation.decoded.form";
+    public static final String FORM_PROPERTY = "jersey.config.server.representation.form";
 
     /**
-     * Get the extended URI information.
-     * @return the extended URI information.
+     * Used internally for storing {@link javax.ws.rs.core.Form} instance with url-decoded values in
+     * {@link org.glassfish.jersey.server.ContainerRequest} properties.
      */
-    ExtendedUriInfo getUriInfo();
+    public static final String FORM_DECODED_PROPERTY = "jersey.config.server.representation.decoded.form";
 
-    /**
-     * Get the HTTP request information.
-     * @return the HTTP request information
-     */
-    ContainerRequest getRequestContext();
+    private InternalServerProperties() {
+        // prevents instantiation
+    }
 }

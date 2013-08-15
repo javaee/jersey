@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,7 +72,7 @@ final class QueryParamValueFactoryProvider extends AbstractValueFactoryProvider 
         }
     }
 
-    private static final class QueryParamValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private static final class QueryParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
@@ -83,9 +83,9 @@ final class QueryParamValueFactoryProvider extends AbstractValueFactoryProvider 
         }
 
         @Override
-        protected Object get(HttpContext context) {
+        public Object provide() {
             try {
-                return extractor.extract(context.getUriInfo().getQueryParameters(decode));
+                return extractor.extract(getContainerRequest().getUriInfo().getQueryParameters(decode));
             } catch (ExtractorException e) {
                 throw new ParamException.QueryParamException(e.getCause(),
                         extractor.getName(), extractor.getDefaultValueString());
@@ -105,7 +105,7 @@ final class QueryParamValueFactoryProvider extends AbstractValueFactoryProvider 
     }
 
     @Override
-    public AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid query parameter name

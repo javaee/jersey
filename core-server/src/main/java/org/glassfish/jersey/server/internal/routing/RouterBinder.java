@@ -41,8 +41,6 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
-
 import javax.ws.rs.container.ResourceInfo;
 
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -92,17 +90,11 @@ public class RouterBinder extends AbstractBinder {
         bind(PatternRouteBuilder.class).to(new TypeLiteral<RootRouteBuilder<Pattern>>() {});
         bind(PathPatternRouteBuilder.class).to(new TypeLiteral<RootRouteBuilder<PathPattern>>() {});
 
-        /**
-         * Note: Bellow bindings work because UriRoutingContextFactory is bound via class,
-         * which causes HK2 to instantiate and inject it properly whenever it needs to be
-         * used (typically once per run-time request scope instance).
-         */
-        bindAsContract(UriRoutingContext.class).in(RequestScoped.class);
-        bindFactory(UriRoutingContextFactory.class).
-                to(RoutingContext.class).
-                to(ResourceInfo.class).
-                to(ExtendedUriInfo.class).
-                in(RequestScoped.class);
+        bindAsContract(UriRoutingContext.class)
+                .to(RoutingContext.class)
+                .to(ResourceInfo.class)
+                .to(ExtendedUriInfo.class)
+                .in(RequestScoped.class);
 
         // "Assisted" bindings
         bindAsContract(MatchResultInitializerRouter.Builder.class);
@@ -117,20 +109,4 @@ public class RouterBinder extends AbstractBinder {
         bindAsContract(RoutedInflectorExtractorStage.class);
     }
 
-    private static class UriRoutingContextFactory implements Factory<UriRoutingContext> {
-
-        @Inject
-        private UriRoutingContext ctx;
-
-        @Override
-        @RequestScoped
-        public UriRoutingContext provide() {
-            return ctx;
-        }
-
-        @Override
-        public void dispose(UriRoutingContext instance) {
-            //not used
-        }
-    }
 }

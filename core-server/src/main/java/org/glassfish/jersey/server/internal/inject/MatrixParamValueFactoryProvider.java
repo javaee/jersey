@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,7 +75,7 @@ final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
     }
 
-    private static final class MatrixParamValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private static final class MatrixParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
@@ -86,8 +86,8 @@ final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
 
         @Override
-        public Object get(HttpContext context) {
-            List<PathSegment> l = context.getUriInfo().getPathSegments(decode);
+        public Object provide() {
+            List<PathSegment> l = getContainerRequest().getUriInfo().getPathSegments(decode);
             PathSegment p = l.get(l.size() - 1);
             try {
                 return extractor.extract(p.getMatrixParameters());
@@ -110,7 +110,7 @@ final class MatrixParamValueFactoryProvider extends AbstractValueFactoryProvider
     }
 
     @Override
-    public AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid header parameter name

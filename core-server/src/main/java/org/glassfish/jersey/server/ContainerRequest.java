@@ -60,7 +60,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
@@ -283,7 +282,7 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public UriInfo getUriInfo() {
+    public ExtendedUriInfo getUriInfo() {
         return uriRoutingContext;
     }
 

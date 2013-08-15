@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,69 +39,35 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import javax.ws.rs.BeanParam;
-
 import javax.inject.Inject;
-import javax.inject.Singleton;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.server.ContainerRequest;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.Factory;
 
 /**
- * Value factory provider for {@link BeanParam bean parameters}.
+ * An abstract value factory that provides access to the current {@link ContainerRequest} instance.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @param <T> the type of the injectable value.
+ * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Singleton
-final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
-
+public abstract class AbstractContainerRequestValueFactory<T> implements Factory<T> {
     @Inject
-    private ServiceLocator locator;
-
-    /**
-     * {@link InjectionResolver Injection resolver} for {@link BeanParam bean parameters}.
-     */
-    @Singleton
-    static final class InjectionResolver extends ParamInjectionResolver<BeanParam> {
-
-        /**
-         * Creates new resolver.
-         */
-        public InjectionResolver() {
-            super(BeanParamValueFactoryProvider.class);
-        }
-    }
-
-    private static final class BeanParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
-        private final Parameter parameter;
-        private final ServiceLocator locator;
-
-        private BeanParamValueFactory(ServiceLocator locator, Parameter parameter) {
-            this.locator = locator;
-            this.parameter = parameter;
-        }
-
-        @Override
-        public Object provide() {
-            return Injections.getOrCreate(locator, parameter.getRawType());
-        }
-    }
-
-
-    /**
-     * Creates new instance initialized from parameters injected by HK2.
-     * @param mpep Multivalued parameter extractor provider.
-     * @param injector HK2 Service locator.
-     */
-    @Inject
-    public BeanParamValueFactoryProvider(MultivaluedParameterExtractorProvider mpep, ServiceLocator injector) {
-        super(mpep, injector, Parameter.Source.BEAN_PARAM);
-    }
+    private Provider<ContainerRequest> request;
 
     @Override
-    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
-        return new BeanParamValueFactory(locator, parameter);
+    public void dispose(T instance) {
+        //not used
+    }
+
+    /**
+     * Get the container request.
+     *
+     * @return the container request.
+     */
+    protected final ContainerRequest getContainerRequest() {
+        return request.get();
     }
 }

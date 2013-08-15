@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,56 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.inject;
+package org.glassfish.jersey.server;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import java.util.Map;
 
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.internal.inject.Injections;
 
-import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- * A value factory that provides an injectable value from the {@link HttpContext}.
+ * Utility class to create initialized server-side HK2 service locator.
  *
- * @param <T> the type of the injectable value.
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public abstract class AbstractHttpContextValueFactory<T> implements Factory<T> {
-
-    @Inject
-    private Provider<ExtendedUriInfo> uriInfo;
-    @Inject
-    private Provider<ContainerRequest> request;
-
-    @Override
-    public T provide() {
-        return get(new HttpContext() {
-
-            @Override
-            public ExtendedUriInfo getUriInfo() {
-                return uriInfo.get();
-            }
-
-            @Override
-            public ContainerRequest getRequestContext() {
-                return request.get();
-            }
-        });
-    }
-
-    @Override
-    public void dispose(T instance) {
-        //not used
+public final class ServerLocatorFactory {
+    private ServerLocatorFactory() {
+        // prevents instantiation
     }
 
     /**
-     * Get the injectable value given the {@link HttpContext}.
+     * Create new initialized server runtime locator.
      *
-     * @param context the context.
-     * @return the value.
+     * @return new initialized server runtime locator.
      */
-    protected abstract T get(HttpContext context);
+    public static ServiceLocator createLocator() {
+        return Injections.createLocator(new ServerBinder(null));
+    }
+
+    /**
+     * Create new initialized server runtime locator.
+     *
+     * @param applicationProperties map of application-specific properties.
+     * @return new initialized server runtime locator.
+     */
+    public static ServiceLocator createLocator(Map<String, Object> applicationProperties) {
+        return Injections.createLocator(new ServerBinder(applicationProperties));
+    }
 }

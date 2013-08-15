@@ -246,7 +246,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static final class WebTargetValueFactory extends AbstractHttpContextValueFactory<WebTarget> {
+    private static final class WebTargetValueFactory extends AbstractContainerRequestValueFactory<WebTarget> {
 
         private final String uri;
         private final Value<ManagedClient> client;
@@ -258,10 +258,10 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
 
 
         @Override
-        protected WebTarget get(HttpContext context) {
+        public WebTarget provide() {
             // no need for try-catch - unlike for @*Param annotations, any issues with @Uri would usually be caused
             // by incorrect server code, so the default runtime exception mapping to 500 is appropriate
-            final ExtendedUriInfo uriInfo = context.getUriInfo();
+            final ExtendedUriInfo uriInfo = getContainerRequest().getUriInfo();
             URI uri = UriBuilder.fromUri(this.uri).buildFromEncodedMap(Maps.transformValues(
                     uriInfo.getPathParameters(),
                     new Function<List<String>, Object>() {
@@ -325,11 +325,11 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
     @Override
-    protected AbstractHttpContextValueFactory<?> createValueFactory(final Parameter parameter) {
-        return Errors.processWithException(new Producer<AbstractHttpContextValueFactory<?>>() {
+    protected AbstractContainerRequestValueFactory<?> createValueFactory(final Parameter parameter) {
+        return Errors.processWithException(new Producer<AbstractContainerRequestValueFactory<?>>() {
 
             @Override
-            public AbstractHttpContextValueFactory<?> call() {
+            public AbstractContainerRequestValueFactory<?> call() {
                 String targetUriTemplate = parameter.getSourceName();
                 if (targetUriTemplate == null || targetUriTemplate.length() == 0) {
                     // Invalid URI parameter name

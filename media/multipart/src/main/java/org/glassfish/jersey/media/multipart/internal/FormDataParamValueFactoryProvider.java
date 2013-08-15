@@ -65,10 +65,9 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
-import org.glassfish.jersey.server.internal.inject.AbstractHttpContextValueFactory;
+import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
 import org.glassfish.jersey.server.internal.inject.AbstractValueFactoryProvider;
 import org.glassfish.jersey.server.internal.inject.ExtractorException;
-import org.glassfish.jersey.server.internal.inject.HttpContext;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractor;
 import org.glassfish.jersey.server.internal.inject.MultivaluedParameterExtractorProvider;
 import org.glassfish.jersey.server.internal.inject.ParamInjectionResolver;
@@ -107,7 +106,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
     }
 
-    private final class ListFormDataBodyPartValueFactory extends AbstractHttpContextValueFactory<List<FormDataBodyPart>> {
+    private final class ListFormDataBodyPartValueFactory extends AbstractContainerRequestValueFactory<List<FormDataBodyPart>> {
 
         private final String name;
 
@@ -116,14 +115,14 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         }
 
         @Override
-        protected List<FormDataBodyPart> get(HttpContext context) {
-            return getEntity(context).getFields(name);
+        public List<FormDataBodyPart> provide() {
+            return getEntity(getContainerRequest()).getFields(name);
         }
 
     }
 
     private final class ListFormDataContentDispositionValueFactory
-            extends AbstractHttpContextValueFactory<List<FormDataContentDisposition>> {
+            extends AbstractContainerRequestValueFactory<List<FormDataContentDisposition>> {
 
         private final String name;
 
@@ -132,8 +131,8 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         }
 
         @Override
-        protected List<FormDataContentDisposition> get(HttpContext context) {
-            FormDataMultiPart formDataMultiPart = getEntity(context);
+        public List<FormDataContentDisposition> provide() {
+            FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
 
             List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(name);
             if (formDataBodyParts == null)
@@ -149,7 +148,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
     }
 
     private final class FormDataBodyPartValueFactory
-            extends AbstractHttpContextValueFactory<FormDataBodyPart> {
+            extends AbstractContainerRequestValueFactory<FormDataBodyPart> {
 
         private final String name;
 
@@ -158,13 +157,13 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         }
 
         @Override
-        protected FormDataBodyPart get(HttpContext context) {
-            return getEntity(context).getField(name);
+        public FormDataBodyPart provide() {
+            return getEntity(getContainerRequest()).getField(name);
         }
     }
 
     private final class FormDataContentDispositionMultiPartInjectable
-            extends AbstractHttpContextValueFactory<FormDataContentDisposition> {
+            extends AbstractContainerRequestValueFactory<FormDataContentDisposition> {
 
         private final String name;
 
@@ -173,8 +172,8 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         }
 
         @Override
-        protected FormDataContentDisposition get(HttpContext context) {
-            FormDataMultiPart formDataMultiPart = getEntity(context);
+        public FormDataContentDisposition provide() {
+            FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
 
             FormDataBodyPart formDataBodyPart = formDataMultiPart.getField(name);
             if (formDataBodyPart == null) {
@@ -185,7 +184,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         }
     }
 
-    private final class FormDataParamValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private final class FormDataParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final Parameter parameter;
@@ -196,16 +195,17 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         }
 
         @Override
-        protected Object get(HttpContext context) {
+        public Object provide() {
             // Return the field value for the field specified by the sourceName property.
-            final FormDataMultiPart formDataMultiPart = getEntity(context);
+            final ContainerRequest request = getContainerRequest();
+            final FormDataMultiPart formDataMultiPart = getEntity(request);
 
             List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(parameter.getSourceName());
             FormDataBodyPart formDataBodyPart = (formDataBodyParts != null) ? formDataBodyParts.get(0) : null;
 
             MediaType mediaType = (formDataBodyPart != null) ? formDataBodyPart.getMediaType() : MediaType.TEXT_PLAIN_TYPE;
 
-            MessageBodyWorkers messageBodyWorkers = context.getRequestContext().getWorkers();
+            MessageBodyWorkers messageBodyWorkers = request.getWorkers();
 
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(
                     parameter.getRawType(),
@@ -234,7 +234,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                             parameter.getType(),
                             parameter.getAnnotations(),
                             mediaType,
-                            context.getRequestContext().getHeaders(),
+                            request.getHeaders(),
                             in);
                 } catch (IOException e) {
                     throw new FormDataParamException(e, extractor.getName(), extractor.getDefaultValueString());
@@ -257,7 +257,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                                     String.class,
                                     parameter.getAnnotations(),
                                     mediaType,
-                                    context.getRequestContext().getHeaders(),
+                                    request.getHeaders(),
                                     ((BodyPartEntity) p.getEntity()).getInputStream());
 
                             map.add(parameter.getSourceName(), value);
@@ -302,11 +302,11 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         return types.contains(type);
     }
 
-    private final class FormDataMultiPartValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private final class FormDataMultiPartValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         @Override
-        protected Object get(HttpContext context) {
-            return getEntity(context);
+        public Object provide() {
+            return getEntity(getContainerRequest());
         }
 
     }
@@ -361,17 +361,16 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
     /**
      * Returns a {@code FormDataMultiPart} entity from the request and stores it in the context properties.
      *
-     * @param context http context to retrieve an entity from.
+     * @param request container request.
      * @return a form data multi part entity.
      */
-    private FormDataMultiPart getEntity(final HttpContext context) {
-        final ContainerRequest requestContext = context.getRequestContext();
-        if (requestContext.getProperty(FormDataMultiPart.class.getName()) == null) {
-            FormDataMultiPart formDataMultiPart = requestContext.readEntity(FormDataMultiPart.class);
-            requestContext.setProperty(FormDataMultiPart.class.getName(), formDataMultiPart);
+    private FormDataMultiPart getEntity(final ContainerRequest request) {
+        if (request.getProperty(FormDataMultiPart.class.getName()) == null) {
+            FormDataMultiPart formDataMultiPart = request.readEntity(FormDataMultiPart.class);
+            request.setProperty(FormDataMultiPart.class.getName(), formDataMultiPart);
         }
 
-        return (FormDataMultiPart) requestContext.getProperty(FormDataMultiPart.class.getName());
+        return (FormDataMultiPart) request.getProperty(FormDataMultiPart.class.getName());
     }
 
     @Override

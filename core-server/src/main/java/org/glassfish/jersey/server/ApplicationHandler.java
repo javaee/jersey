@@ -55,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Singleton;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.RuntimeType;
@@ -74,6 +73,8 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
+
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.Errors;
@@ -246,7 +247,7 @@ public final class ApplicationHandler {
      *                              application handler.
      */
     public ApplicationHandler(Class<? extends Application> jaxrsApplicationClass) {
-        this.locator = Injections.createLocator(new ServerBinder(null, RuntimeType.SERVER), new ApplicationBinder());
+        this.locator = Injections.createLocator(new ServerBinder(null), new ApplicationBinder());
         locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
         this.application = createApplication(jaxrsApplicationClass);
@@ -268,7 +269,7 @@ public final class ApplicationHandler {
      *                    will be used to configure the new Jersey application handler.
      */
     public ApplicationHandler(Application application) {
-        this.locator = Injections.createLocator(new ServerBinder(application.getProperties(), RuntimeType.SERVER), new ApplicationBinder());
+        this.locator = Injections.createLocator(new ServerBinder(application.getProperties()), new ApplicationBinder());
         locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
         this.application = application;

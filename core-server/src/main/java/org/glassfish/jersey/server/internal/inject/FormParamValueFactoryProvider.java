@@ -61,6 +61,7 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
+import org.glassfish.jersey.server.internal.InternalServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 
@@ -90,7 +91,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
 
-    private static final class FormParamValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private static final class FormParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
@@ -101,18 +102,19 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
 
         @Override
-        public Object get(HttpContext context) {
+        public Object provide() {
+            ContainerRequest request = getContainerRequest();
 
-            Form form = getCachedForm(context, decode);
+            Form form = getCachedForm(request, decode);
 
             if (form == null) {
-                Form otherForm = getCachedForm(context, !decode);
+                Form otherForm = getCachedForm(request, !decode);
                 if (otherForm != null) {
-                    form = switchUrlEncoding(context, otherForm, decode);
-                    cacheForm(context, form);
+                    form = switchUrlEncoding(request, otherForm);
+                    cacheForm(request, form);
                 } else {
-                    form = getForm(context);
-                    cacheForm(context, form);
+                    form = getForm(request);
+                    cacheForm(request, form);
                 }
             }
 
@@ -124,12 +126,12 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
             }
         }
 
-        private Form switchUrlEncoding(final HttpContext context, final Form otherForm, final boolean decode) {
+        private Form switchUrlEncoding(final ContainerRequest request, final Form otherForm) {
             final Set<Map.Entry<String, List<String>>> entries = otherForm.asMap().entrySet();
             Form newForm = new Form();
             for (Map.Entry<String, List<String>> entry : entries) {
-                final String charsetName = ReaderWriter.getCharset(MediaType.valueOf(context.getRequestContext()
-                        .getHeaderString(HttpHeaders.CONTENT_TYPE))).name();
+                final String charsetName = ReaderWriter.getCharset(MediaType.valueOf(
+                        request.getHeaderString(HttpHeaders.CONTENT_TYPE))).name();
 
                 String key;
                 try {
@@ -150,32 +152,31 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
 
 
-        private void cacheForm(final HttpContext context, final Form form) {
-            context.getRequestContext().setProperty(decode ? HttpContext
-                    .FORM_DECODED_PROPERTY : HttpContext.FORM_PROPERTY, form);
+        private void cacheForm(final ContainerRequest request, final Form form) {
+            request.setProperty(decode ? InternalServerProperties
+                    .FORM_DECODED_PROPERTY : InternalServerProperties.FORM_PROPERTY, form);
         }
 
-        private Form getForm(HttpContext context) {
-            return getFormParameters(ensureValidRequest(context.getRequestContext()));
+        private Form getForm(final ContainerRequest request) {
+            return getFormParameters(ensureValidRequest(request));
         }
 
-        private Form getCachedForm(final HttpContext context, boolean decode) {
-            return (Form) context.getRequestContext().getProperty(decode ? HttpContext
-                    .FORM_DECODED_PROPERTY : HttpContext.FORM_PROPERTY);
+        private static Form getCachedForm(final ContainerRequest request, boolean decode) {
+            return (Form) request.getProperty(decode ? InternalServerProperties
+                    .FORM_DECODED_PROPERTY : InternalServerProperties.FORM_PROPERTY);
         }
 
-        private ContainerRequest ensureValidRequest(
-                final ContainerRequest requestContext) throws IllegalStateException {
-            if (requestContext.getMethod().equals("GET")) {
+        private static ContainerRequest ensureValidRequest(final ContainerRequest request) throws IllegalStateException {
+            if (request.getMethod().equals("GET")) {
                 throw new IllegalStateException(
                         LocalizationMessages.FORM_PARAM_METHOD_ERROR());
             }
 
-            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, requestContext.getMediaType())) {
+            if (!MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())) {
                 throw new IllegalStateException(
                         LocalizationMessages.FORM_PARAM_CONTENT_TYPE_ERROR());
             }
-            return requestContext;
+            return request;
         }
 
         private final static Annotation encodedAnnotation = getEncodedAnnotation();
@@ -190,16 +191,16 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
             return EncodedAnnotationTemp.class.getAnnotation(Encoded.class);
         }
 
-        private Form getFormParameters(ContainerRequest requestContext) {
-            if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, requestContext.getMediaType())) {
-                requestContext.bufferEntity();
+        private Form getFormParameters(ContainerRequest request) {
+            if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, request.getMediaType())) {
+                request.bufferEntity();
                 Form form;
                 if (decode) {
-                    form = requestContext.readEntity(Form.class);
+                    form = request.readEntity(Form.class);
                 } else {
                     Annotation[] annotations = new Annotation[1];
                     annotations[0] = encodedAnnotation;
-                    form = requestContext.readEntity(Form.class, annotations);
+                    form = request.readEntity(Form.class, annotations);
                 }
 
                 return (form == null ? new Form() : form);
@@ -221,7 +222,7 @@ final class FormParamValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
     @Override
-    public AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
         String parameterName = parameter.getSourceName();
 
         if (parameterName == null || parameterName.isEmpty()) {
