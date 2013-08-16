@@ -110,7 +110,9 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
-	 * and password credentials. MaxCacheSize must be greater or equal than 1.
+	 * and password credentials. MaxCacheSize must be greater or equal than 1
+	 * and it must be greater than the maximum number of parallel requests
+	 * using this filter.
 	 *
 	 * @param username user name
 	 * @param password password
@@ -135,7 +137,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	 * Creates a new HTTP Basic Authentication filter using provided username
 	 * and password credentials. This constructor allows to avoid storing plain
 	 * password value in a String variable. 
-	 * MaxCacheSize must be greater or equal than 1.
+	 * MaxCacheSize must be greater or equal than 1 and it must be greater
+	 * than the maximum number of parallel requests using this filter.
 	 *
 	 * @param username user name
 	 * @param password password byte array
