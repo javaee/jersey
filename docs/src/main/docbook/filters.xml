@@ -410,7 +410,8 @@ public class PreMatchingFilter implements ContainerRequestFilter {
             and response.
             <orderedlist>
                 <listitem>Client request invoked: The POST request with attached entity is built on the client and invoked.</listitem>
-                <listitem>ClientRequestFilters: The ClientResponseFilters are executed on the client and they manipulate the request headers.</listitem>
+                <listitem>ClientRequestFilters: client request filters are executed on the client and they
+                    manipulate the request headers.</listitem>
                 <listitem>Client &lit.jaxrs.WriterInterceptor;: As the request contains an entity, writer interceptor registered on the client is executed before
                     a MessageBodyWriter is executed. It wraps the entity output stream with the GZipOutputStream.</listitem>
                 <listitem>Client MessageBodyWriter: message body writer is executed on the client which serializes the entity
