@@ -41,6 +41,7 @@ package org.glassfish.jersey.server;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,6 +67,7 @@ import javax.ws.rs.container.ConnectionCallback;
 import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -459,10 +461,40 @@ class ServerRuntime {
             throw originalThrowable;
         }
 
+        /**
+         * Converts the relative URI to absolute in the Location response header
+         *
+         * Checks the response headers for presence of the Location header.
+         * If the Location header is present and contains a relative URI,
+         * it must be converted to the absolute one.
+         * For this purpose, the baseUri from the request is used.
+         *
+         * Changes the content of a mutable multivalued map returned by
+         * {@link org.glassfish.jersey.message.internal.OutboundMessageContext#getHeaders() OutboundMessageContext.getHeaders()}
+         *
+         * @param response ContainerResponse object ready to be streamed
+         */
+        private void absolutizeLocationHeaderUri(ContainerResponse response) {
+            if (response == null || response.getRequestContext() == null || response.getRequestContext().getBaseUri() == null) {
+                return;
+            }
+            URI responseLocation = response.getLocation();
+            if (responseLocation != null && !responseLocation.isAbsolute()) {
+                URI baseUri = response.getRequestContext().getBaseUri();
+                URI absoluteUri = baseUri.resolve(responseLocation);
+                // Get the mutable message headers multivalued map
+                MultivaluedMap<String, ? extends Object > headers = response.getWrappedMessageContext().getHeaders();
+                List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
+                // according to RFC2616 (HTTP/1.1), this field can contain one single URI
+                locations.set(0, absoluteUri);
+            }
+        }
+
         private ContainerResponse writeResponse(final ContainerResponse response) {
             final ContainerResponseWriter writer = request.getResponseWriter();
 
             if (!response.hasEntity()) {
+                absolutizeLocationHeaderUri(response);
                 writer.writeResponseStatusAndHeaders(0, response);
                 setWrittenResponse(response);
                 return response;
@@ -479,6 +511,7 @@ class ServerRuntime {
                 response.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                     @Override
                     public OutputStream getOutputStream(int contentLength) throws IOException {
+                        absolutizeLocationHeaderUri(response);
                         final OutputStream outputStream = writer.writeResponseStatusAndHeaders(contentLength, response);
                         return isHead ? null : outputStream;
                     }
