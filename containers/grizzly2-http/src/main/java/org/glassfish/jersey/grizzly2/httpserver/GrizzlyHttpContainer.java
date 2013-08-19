@@ -308,7 +308,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     public void service(final Request request, final Response response) {
         final ResponseWriter responseWriter = new ResponseWriter(response);
         try {
-            logger.debugLog("GrizzlyHttpContaner.service(...) started");
+            logger.debugLog("GrizzlyHttpContainer.service(...) started");
             URI baseUri = getBaseUri(request);
             ContainerRequest requestContext = new ContainerRequest(baseUri,
                     getRequestUri(baseUri, request), request.getMethod().getMethodString(),
@@ -330,7 +330,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             appHandler.handle(requestContext);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
-            logger.debugLog("GrizzlyHttpContaner.service(...) finished");
+            logger.debugLog("GrizzlyHttpContainer.service(...) finished");
         }
     }
 
