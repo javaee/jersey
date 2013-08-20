@@ -161,8 +161,6 @@ public class ProxyInjectablesTest extends AbstractTest {
     }
 
     @Test
-    // TODO: this needs JERSEY-1967 fix
-    @Ignore
     public void testPerRequestContextInjected() throws Exception {
         initiateWebApplication(PerRequestContextInjectedResource.class);
 
@@ -177,8 +175,6 @@ public class ProxyInjectablesTest extends AbstractTest {
     }
 
     @Test
-    // TODO: this needs JERSEY-1967 fix
-    @Ignore
     public void testPerRequestMethodParameterInjected() throws Exception {
         initiateWebApplication(PerRequestContextMethodParameterResource.class);
 

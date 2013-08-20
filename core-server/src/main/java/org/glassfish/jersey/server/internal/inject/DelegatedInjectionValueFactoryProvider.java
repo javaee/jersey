@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,22 +41,27 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.Injectee;
+import org.glassfish.hk2.api.InjectionResolver;
+import org.glassfish.hk2.api.ProxyCtl;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.InjecteeImpl;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
-
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.Injectee;
-import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.InjecteeImpl;
-
 
 /**
  * Value factory provider that delegates the injection target lookup to
@@ -86,11 +91,32 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
         resolver = result;
     }
 
+
+    private static final Set<Class<?>> PROXIABLE_TYPES = new HashSet<Class<?>>() {{
+        add(UriInfo.class);
+        add(HttpHeaders.class);
+        add(Request.class);
+        add(SecurityContext.class);
+    }};
+
     @Override
     public Factory<?> getValueFactory(final Parameter parameter) {
         final Source paramSource = parameter.getSource();
         if (paramSource == Parameter.Source.CONTEXT) {
-            return new Factory<Object>() {
+
+            return PROXIABLE_TYPES.contains(parameter.getRawType())
+                    ? new Factory<Object>() {
+                @Override
+                public Object provide() {
+                    return ((ProxyCtl) resolver.resolve(getInjectee(parameter), null)).__make();
+                }
+
+                @Override
+                public void dispose(Object instance) {
+                    //not used
+                }
+            }
+                    : new Factory<Object>() {
                 @Override
                 public Object provide() {
                     return resolver.resolve(getInjectee(parameter), null);
