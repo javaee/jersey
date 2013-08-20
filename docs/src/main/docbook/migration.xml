@@ -360,7 +360,7 @@ String result = webResource.pathParam("param", "value").get(String.class);</prog
             <para>
                 JAX-RS 2.0 way:
 
-                <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+                <programlisting language="java" linenumbering="unnumbered">Client client = ClientBuilder.newClient();
 WebTarget target = client.target(restURL).path("myresource/{param}");
 String result = target.pathParam("param", "value").get(String.class);</programlisting>
             </para>
@@ -380,7 +380,7 @@ webResource.addFilter(new HTTPBasicAuthFilter(username, password));</programlist
             <para>
                 JAX-RS 2.0 way:
 
-                <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+                <programlisting language="java" linenumbering="unnumbered">Client client = ClientBuilder.newClient();
 WebTarget target = client.target(restURL);
 target.register(new HttpBasicAuthFilter(username, password));</programlisting>
             </para>
@@ -400,7 +400,7 @@ ClientResponse response = webResource.get(ClientResponse.class);</programlisting
             <para>
                 JAX-RS 2.0 way:
 
-                <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+                <programlisting language="java" linenumbering="unnumbered">Client client = ClientBuilder.newClient();
 WebTarget target = client.target(restURL);
 Response response = target.request("text/plain").get();</programlisting>
             </para>
@@ -419,7 +419,7 @@ ClientResponse response = webResource.post(ClientResponse.class, "payload");</pr
             <para>
                 JAX-RS 2.0 way:
 
-                <programlisting language="java" linenumbering="unnumbered">Client client = ClientFactory.newClient();
+                <programlisting language="java" linenumbering="unnumbered">Client client = ClientBuilder.newClient();
 WebTarget target = client.target(restURL);
 Response response = target.request().post(Entity.text("payload"));</programlisting>
             </para>
