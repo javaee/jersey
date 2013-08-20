@@ -176,7 +176,6 @@
 <!ENTITY jaxrs.core.UriBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/UriBuilder.html'>UriBuilder</link>">
 <!ENTITY jaxrs.core.Variant "<link xlink:href='&jax-rs.javadoc.path;/core/Variant.html'>Variant</link>">
 <!ENTITY jaxrs.core.Variant.VariantListBuilder "<link xlink:href='&jax-rs.javadoc.path;/core/Variant.VariantListBuilder.html'>Variant.VariantListBuilder</link>">
-<!ENTITY jaxrs.core.Feature "<link xlink:href='&jax-rs.javadoc.path;/core/Feature.html'>Feature</link>">
 <!ENTITY jaxrs.core.Response.Status "<link xlink:href='&jax-rs.javadoc.path;/core/Response.Status.html'>Response.Status</link>">
 <!ENTITY jaxrs.core.Response.Status.Family "<link xlink:href='&jax-rs.javadoc.path;/core/Response.Status.Family.html'>Response.Status.Family</link>">
 
@@ -288,7 +287,7 @@
 <!ENTITY jersey.sse.InboundEvent "<link xlink:href='&jersey.javadoc.path;/media/sse/InboundEvent.html'>InboundEvent</link>">
 <!ENTITY jersey.sse.InboundEventReader "<link xlink:href='&jersey.javadoc.path;/media/sse/InboundEventReader.html'>InboundEventReader</link>">
 <!ENTITY jersey.sse.OutboundEvent "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEvent.html'>OutboundEvent</link>">
-<!ENTITY jersey.sse.OutboundEventWriter "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEventWriter.html'>OutboundEvent</link>">
+<!ENTITY jersey.sse.OutboundEventWriter "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEventWriter.html'>OutboundEventWriter</link>">
 <!ENTITY jersey.sse.SseBroadcaster "<link xlink:href='&jersey.javadoc.path;/media/sse/SseBroadcaster.html'>SseBroadcaster</link>">
 <!ENTITY jersey.sse.SseFeature "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html'>SseFeature</link>">
 
@@ -298,7 +297,7 @@
 <!ENTITY jersey.common.CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html#METAINF_SERVICES_LOOKUP_DISABLE'>CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE</link>" >
 <!ENTITY jersey.common.CommonProperties.MOXY_JSON_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html#MOXY_JSON_FEATURE_DISABLE'>CommonProperties.MOXY_JSON_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.common.CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html#OUTBOUND_CONTENT_LENGTH_BUFFER'>CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER</link>" >
-<!ENTITY jersey.common.SslConfigurator "<link xlink:href='&jersey.javadoc.path;/SslConfigurator.html'>ClientConfig</link>">
+<!ENTITY jersey.common.SslConfigurator "<link xlink:href='&jersey.javadoc.path;/SslConfigurator.html'>SslConfigurator</link>">
 <!ENTITY jersey.common.uri.UriTemplate "<link xlink:href='&jersey.javadoc.path;/uri/UriTemplate.html'>UriTemplate</link>">
 
 
@@ -512,7 +511,6 @@
 <!ENTITY lit.jaxrs.core.Context "<literal>@Context</literal>">
 <!ENTITY lit.jaxrs.core.Form "<literal>Form</literal>">
 <!ENTITY lit.jaxrs.core.Configurable "<literal>Configurable</literal>">
-<!ENTITY lit.jaxrs.core.Feature "<link xlink:href='&jax-rs.javadoc.path;/core/Feature.html'>Feature</link>">
 
 <!ENTITY lit.jaxrs.client.WebTarget "<literal>WebTarget</literal>">
 
