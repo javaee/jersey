@@ -213,8 +213,8 @@ public class InjectedClientBodyWorker extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig
+    protected void configureClient(ClientConfig config) {
+        config
                 .register(ProvidersInjectedWriter.class)
                 .register(ConfigurationInjectedWriter.class)
                 .register(ProvidersInjectedReader.class)

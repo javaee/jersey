@@ -252,10 +252,10 @@ public class HttpUrlConnector implements Connector {
                 ClientProperties.FOLLOW_REDIRECTS, true));
 
         uc.setConnectTimeout(PropertiesHelper.getValue(configurationProperties,
-                ClientProperties.CONNECT_TIMEOUT, 0));
+                ClientProperties.CONNECT_TIMEOUT, uc.getConnectTimeout()));
 
         uc.setReadTimeout(PropertiesHelper.getValue(configurationProperties,
-                ClientProperties.READ_TIMEOUT, 0));
+                ClientProperties.READ_TIMEOUT, uc.getReadTimeout()));
 
         if (uc instanceof HttpsURLConnection) {
             HttpsURLConnection suc = (HttpsURLConnection) uc;
@@ -283,14 +283,14 @@ public class HttpUrlConnector implements Connector {
 
                 @Override
                 public OutputStream getOutputStream(int contentLength) throws IOException {
-                    writeOutBoundHeaders(request.getStringHeaders(), uc);
+                    setOutboundHeaders(request.getStringHeaders(), uc);
                     return uc.getOutputStream();
                 }
             });
             request.writeEntity();
 
         } else {
-            writeOutBoundHeaders(request.getStringHeaders(), uc);
+            setOutboundHeaders(request.getStringHeaders(), uc);
         }
 
         final int code = uc.getResponseCode();
@@ -305,7 +305,7 @@ public class HttpUrlConnector implements Connector {
         return responseContext;
     }
 
-    private void writeOutBoundHeaders(MultivaluedMap<String, String> headers, HttpURLConnection uc) {
+    private void setOutboundHeaders(MultivaluedMap<String, String> headers, HttpURLConnection uc) {
         for (Map.Entry<String, List<String>> header : headers.entrySet()) {
             List<String> headerValues = header.getValue();
             if (headerValues.size() == 1) {

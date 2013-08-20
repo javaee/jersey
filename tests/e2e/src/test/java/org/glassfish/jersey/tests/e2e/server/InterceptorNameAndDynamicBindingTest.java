@@ -81,8 +81,8 @@ public class InterceptorNameAndDynamicBindingTest extends JerseyTest {
     final static String ENTITY = "ENTITY";
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        super.configureClient(clientConfig);
+    protected void configureClient(ClientConfig config) {
+        super.configureClient(config);
     }
 
     static abstract class PrefixAddingReaderInterceptor implements ReaderInterceptor {

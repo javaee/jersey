@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.sse;
 
 import java.io.IOException;
@@ -47,9 +46,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -143,21 +141,21 @@ public class EventSourceWithNamedEventsTest extends JerseyTest {
 
     @Test
     public void testWithEventSource() throws IOException, NoSuchAlgorithmException, InterruptedException {
-        final WebTarget target = target().register(SseFeature.class).path("events");
-        EventSource eventSource = new EventSource(target, false);
+        final WebTarget endpoint = target().register(SseFeature.class).path("events");
+        EventSource eventSource = EventSource.target(endpoint).build();
         final CountDownLatch count = new CountDownLatch(MSG_COUNT);
 
         final EventListener listener = new EventListener() {
             @Override
             public void onEvent(InboundEvent inboundEvent) {
                 try {
-                    final Integer data = inboundEvent.getData(Integer.class);
+                    final Integer data = inboundEvent.readData(Integer.class);
                     System.out.println(inboundEvent.getName() + "; " + data);
                     Assert.assertEquals(SSE_NAME, inboundEvent.getName());
                     Assert.assertEquals(MSG_COUNT - count.getCount(), data.intValue());
                     count.countDown();
-                } catch (IOException e) {
-                    throw new RuntimeException("Error when deserializing of data.");
+                } catch (ProcessingException ex) {
+                    throw new RuntimeException("Error when deserializing of data.", ex);
                 }
             }
         };

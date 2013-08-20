@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.media.sse;
 
 import java.io.ByteArrayOutputStream;
@@ -46,6 +45,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
@@ -66,6 +67,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  */
 @ConstrainedTo(RuntimeType.CLIENT)
 class InboundEventReader implements MessageBodyReader<InboundEvent> {
+    private static final Logger LOGGER = Logger.getLogger(InboundEventReader.class.getName());
     private static final byte[] EOL_DATA = new byte[]{'\n'};
 
     @Inject
@@ -178,25 +180,22 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
     }
 
     private void processField(InboundEvent.Builder inboundEventBuilder, String name, byte[] value) {
+        final String valueString = new String(value);
         if ("event".equals(name)) {
-            inboundEventBuilder.name(new String(value));
+            inboundEventBuilder.name(valueString);
         } else if ("data".equals(name)) {
-            inboundEventBuilder.data(value);
-            inboundEventBuilder.data(EOL_DATA);
+            inboundEventBuilder.write(value);
+            inboundEventBuilder.write(EOL_DATA);
         } else if ("id".equals(name)) {
-            String s = new String(value);
-            try {
-                // TODO: check the value [0-9]*
-                Integer.parseInt(new String(value));
-            } catch (NumberFormatException nfe) {
-                // TODO log warning
-                s = "";
-            }
-            inboundEventBuilder.id(s);
+            inboundEventBuilder.id(valueString);
         } else if ("retry".equals(name)) {
-            // TODO SSE retry support
+            try {
+                inboundEventBuilder.reconnectDelay(Long.parseLong(valueString));
+            } catch (NumberFormatException ex) {
+                LOGGER.log(Level.FINE, LocalizationMessages.IN_EVENT_RETRY_PARSE_ERROR(valueString), ex);
+            }
         } else {
-            // TODO support extensions, ignore for now
+            LOGGER.fine(LocalizationMessages.IN_EVENT_FIELD_NOT_RECOGNIZED(name, valueString));
         }
     }
 }

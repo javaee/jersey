@@ -302,8 +302,14 @@ public abstract class JerseyTest {
         forcedPropertyMap.put(propertyName, value);
     }
 
-    protected boolean isEnabled(String featureName) {
-        return Boolean.valueOf(getProperty(featureName));
+    /**
+     * Check if the Jersey test boolean property (flag) has been set to {@code true}.
+     *
+     * @param propertyName name of the Jersey test boolean property.
+     * @return {@code true} if the test property has been enabled, {@code false} otherwise.
+     */
+    protected final boolean isEnabled(String propertyName) {
+        return Boolean.valueOf(getProperty(propertyName));
     }
 
     private String getProperty(String propertyName) {
@@ -539,9 +545,11 @@ public abstract class JerseyTest {
      * Can be overridden by subclasses to conveniently configure the client instance
      * used by the test.
      *
-     * @param clientConfig Client configuration that can be modified to configure the client.
+     * Default implementation of the method is "no-op".
+     *
+     * @param config Jersey test client configuration that can be modified before the client is created.
      */
-    protected void configureClient(ClientConfig clientConfig) {
+    protected void configureClient(ClientConfig config) {
         // nothing
     }
 

@@ -135,10 +135,10 @@ public class CharsetTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        super.configureClient(clientConfig);
-        clientConfig.register(new JettisonFeature());
-        clientConfig.register(MyJaxbContextResolver.class);
+    protected void configureClient(ClientConfig config) {
+        super.configureClient(config);
+        config.register(new JettisonFeature());
+        config.register(MyJaxbContextResolver.class);
     }
 
     @Test

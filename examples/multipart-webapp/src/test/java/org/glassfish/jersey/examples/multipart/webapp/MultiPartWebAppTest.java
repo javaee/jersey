@@ -89,8 +89,8 @@ public class MultiPartWebAppTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(MultiPartFeature.class);
+    protected void configureClient(ClientConfig config) {
+        config.register(MultiPartFeature.class);
     }
 
     @Test

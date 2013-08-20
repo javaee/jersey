@@ -37,10 +37,8 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.integration.servlet_3_sse_1;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,6 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -90,8 +89,8 @@ public class ItemStoreResourceITCase extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(SseFeature.class);
+    protected void configureClient(ClientConfig config) {
+        config.register(SseFeature.class);
     }
 
     @Override
@@ -117,7 +116,7 @@ public class ItemStoreResourceITCase extends JerseyTest {
         final AtomicInteger sizeEventsCount = new AtomicInteger(0);
 
         for (int i = 0; i < MAX_LISTENERS; i++) {
-            final EventSource es = new EventSource(itemsTarget.path("events"), false);
+            final EventSource es = EventSource.target(itemsTarget.path("events")).build();
             sources[i] = es;
 
             final Queue<Integer> indexes = new ConcurrentLinkedQueue<Integer>();
@@ -128,13 +127,13 @@ public class ItemStoreResourceITCase extends JerseyTest {
                 public void onEvent(InboundEvent inboundEvent) {
                     try {
                         if (inboundEvent.getName() == null) {
-                            final String data = inboundEvent.getData();
+                            final String data = inboundEvent.readData();
                             LOGGER.info("Received event: " + data);
                             indexes.add(items.indexOf(data));
                         } else if ("size".equals(inboundEvent.getName())) {
                             sizeEventsCount.incrementAndGet();
                         }
-                    } catch (IOException e) {
+                    } catch (ProcessingException e) {
                         LOGGER.log(Level.SEVERE, "Error getting event data", e);
                         indexes.add(-999);
                     } finally {

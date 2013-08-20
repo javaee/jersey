@@ -68,6 +68,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.GenericType;
+
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
@@ -852,6 +855,29 @@ public class ReflectionHelper {
             }
         }
         return false;
+    }
+
+    /**
+     * Create a {@link javax.ws.rs.core.GenericType generic type} information for a given
+     * Java {@code instance}.
+     * <p>
+     * If the supplied instance is an instance of {@link javax.ws.rs.core.GenericEntity}, the generic type
+     * information will be computed using the {@link javax.ws.rs.core.GenericEntity#getType()}
+     * information. Otherwise the {@code instance.getClass()} will be used.
+     * </p>
+     *
+     *
+     * @param instance Java instance for which the {@code GenericType} description should be created.
+     * @return {@code GenericType} describing the Java {@code instance}.
+     */
+    public static GenericType genericTypeFor(Object instance) {
+        GenericType genericType;
+        if (instance instanceof GenericEntity) {
+            genericType = new GenericType(((GenericEntity) instance).getType());
+        } else {
+            genericType = (instance == null) ? null : new GenericType(instance.getClass());
+        }
+        return genericType;
     }
 
     /**

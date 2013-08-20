@@ -85,9 +85,9 @@ public class TimeoutTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.property(ClientProperties.READ_TIMEOUT, 1000);
-        clientConfig.connector(new GrizzlyConnector(clientConfig));
+    protected void configureClient(ClientConfig config) {
+        config.property(ClientProperties.READ_TIMEOUT, 1000);
+        config.connector(new GrizzlyConnector(config));
     }
 
     @Test

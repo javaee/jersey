@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,15 +40,16 @@
 package org.glassfish.jersey.media.sse;
 
 /**
- * InboundEvent listener.
+ * {@link EventSource} listener that can be registered to listen for
+ * newly received {@link InboundEvent} notifications.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public interface EventListener {
     /**
-     * Called when {@link InboundEvent} is received.
+     * Called when a new {@link InboundEvent} is received by an event source.
      *
-     * @param inboundEvent received inboundEvent.
+     * @param inboundEvent received inbound event.
      */
     void onEvent(InboundEvent inboundEvent);
 }

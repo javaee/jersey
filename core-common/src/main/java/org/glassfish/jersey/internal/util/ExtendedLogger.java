@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,12 @@ public final class ExtendedLogger {
     private final Logger logger;
     private final Level debugLevel;
 
+    /**
+     * Create new logger extension.
+     *
+     * @param logger     wrapped logger.
+     * @param debugLevel debug message logging level.
+     */
     public ExtendedLogger(final Logger logger, final Level debugLevel) {
         this.logger = logger;
         this.debugLevel = debugLevel;
@@ -66,7 +72,7 @@ public final class ExtendedLogger {
      * Check if the debug level is loggable.
      *
      * @return {@code true} if the debug level is loggable, {@code false}
-     *     otherwise.
+     *         otherwise.
      */
     public boolean isDebugLoggable() {
         return logger.isLoggable(debugLevel);
@@ -86,8 +92,19 @@ public final class ExtendedLogger {
      *
      * This method appends thread name information to the end of the logged message.
      *
-     * @param messageTemplate
-     * @param args
+     * @param message debug message.
+     */
+    public void debugLog(final String message) {
+        debugLog(message, (Object[]) null);
+    }
+
+    /**
+     * Log a debug message using the configured debug level.
+     *
+     * This method appends thread name information to the end of the logged message.
+     *
+     * @param messageTemplate debug message template.
+     * @param args            message template parameters.
      */
     public void debugLog(final String messageTemplate, final Object... args) {
 
@@ -100,8 +117,10 @@ public final class ExtendedLogger {
             }
             messageArguments[messageArguments.length - 1] = Thread.currentThread().getName();
 
-            final StringBuilder messageBuilder = new StringBuilder(messageTemplate.length() + 15);
-            messageBuilder.append(messageTemplate)
+            final StringBuilder messageBuilder = new StringBuilder(messageTemplate.length() + 25);
+            messageBuilder
+                    .append("[DEBUG] ")
+                    .append(messageTemplate)
                     .append(" on thread {").append(messageArguments.length - 1).append('}');
 
             logger.log(debugLevel, messageBuilder.toString(), messageArguments);

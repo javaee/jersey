@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,9 +40,9 @@
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,27 +52,16 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
  * Used for broadcasting response chunks to multiple {@link ChunkedOutput} instances.
  *
  * @param <T> broadcast type.
- *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class Broadcaster<T> implements BroadcasterListener<T> {
+    // We do not expect large amounts of broadcaster listeners additions/removals, but large amounts of traversals.
+    private final CopyOnWriteArrayList<BroadcasterListener<T>> listeners =
+            new CopyOnWriteArrayList<BroadcasterListener<T>>();
 
-    private final ConcurrentSkipListSet<BroadcasterListener<T>> listeners =
-            new ConcurrentSkipListSet<BroadcasterListener<T>> (new Comparator<BroadcasterListener<T>>() {
-                @Override
-                public int compare(final BroadcasterListener<T> listener1, final BroadcasterListener<T> listener2) {
-                    return listener1.hashCode() - listener2.hashCode();
-                }
-            });
-
-    private final ConcurrentSkipListSet<ChunkedOutput<T>> chunkedOutputs =
-            new ConcurrentSkipListSet<ChunkedOutput<T>> (new Comparator<ChunkedOutput<T>>() {
-        @Override
-        public int compare(final ChunkedOutput<T> chunkedOutput1, final ChunkedOutput<T> chunkedOutput2) {
-            return chunkedOutput1.hashCode() - chunkedOutput2.hashCode();
-        }
-    });
+    private final ConcurrentLinkedQueue<ChunkedOutput<T>> chunkedOutputs =
+            new ConcurrentLinkedQueue<ChunkedOutput<T>>();
 
     /**
      * Creates a new instance.
@@ -101,49 +90,54 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
     }
 
     /**
-     * Register {@link ChunkedOutput} to this {@link Broadcaster} instance.
+     * Register {@link ChunkedOutput} to this {@code Broadcaster} instance.
      *
      * @param chunkedOutput {@link ChunkedOutput} to register.
-     * @return {@code true} if the instance was successfully registered, {@code false} if this instance was already in
-     * the list of registered chunked responses.
+     * @return {@code true} if the instance was successfully registered, {@code false} otherwise.
      */
-    public final boolean add(final ChunkedOutput<T> chunkedOutput) {
-        return chunkedOutputs.add(chunkedOutput);
+    public <OUT extends ChunkedOutput<T>> boolean add(final OUT chunkedOutput) {
+        return chunkedOutputs.offer(chunkedOutput);
     }
 
     /**
-     * Un-register {@link ChunkedOutput} from this {@link Broadcaster} instance.
+     * Un-register {@link ChunkedOutput} from this {@code Broadcaster} instance.
      *
      * This method does not close the {@link ChunkedOutput} being unregistered.
      *
      * @param chunkedOutput {@link ChunkedOutput} instance to un-register from this broadcaster.
-     * @return {@code true} if the instance was unregistered, {@code false} if the instance wasn't found in the list
-     * of registered chunked responses.
+     * @return {@code true} if the instance was unregistered, {@code false} otherwise.
      */
-    public final boolean remove(final ChunkedOutput<T> chunkedOutput) {
+    public <OUT extends ChunkedOutput<T>> boolean remove(final OUT chunkedOutput) {
         return chunkedOutputs.remove(chunkedOutput);
     }
 
     /**
-     * Register {@link BroadcasterListener} for {@link Broadcaster} events listening.
+     * Register {@link BroadcasterListener} for {@code Broadcaster} events listening.
+     * <p>
+     * This operation is potentially slow, especially if large number of listeners get registered in the broadcaster.
+     * The {@code Broadcaster} implementation is optimized to efficiently handle small amounts of
+     * concurrent listener registrations and removals and large amounts of registered listener notifications.
+     * </p>
      *
-     * @param listener listener to be registered
-     * @return {@code true} if registered, {@code false} if the listener was already in the list
-     * TODO rename
+     * @param listener listener to be registered.
+     * @return {@code true} if registered, {@code false} otherwise.
      */
-    public final boolean addBroadcasterListener(final BroadcasterListener<T> listener) {
+    public boolean add(final BroadcasterListener<T> listener) {
         return listeners.add(listener);
     }
 
     /**
      * Un-register {@link BroadcasterListener}.
+     * <p>
+     * This operation is potentially slow, especially if large number of listeners get registered in the broadcaster.
+     * The {@code Broadcaster} implementation is optimized to efficiently handle small amounts of
+     * concurrent listener registrations and removals and large amounts of registered listener notifications.
+     * </p>
      *
-     * @param listener listener to be unregistered
-     * @return {@code true} if unregistered, {@code false} if the listener was not found in the list of registered
-     * listeners
-     * TODO rename
+     * @param listener listener to be unregistered.
+     * @return {@code true} if unregistered, {@code false} otherwise.
      */
-    public final boolean removeBroadcasterListener(final BroadcasterListener<T> listener) {
+    public boolean remove(final BroadcasterListener<T> listener) {
         return listeners.remove(listener);
     }
 
@@ -153,7 +147,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
      * @param chunk chunk to be sent.
      */
     public void broadcast(final T chunk) {
-        forEachChunkedResponse(new Task<ChunkedOutput<T>>() {
+        forEachOutput(new Task<ChunkedOutput<T>>() {
             @Override
             public void run(final ChunkedOutput<T> cr) throws IOException {
                 cr.write(chunk);
@@ -165,7 +159,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
      * Close all registered {@link ChunkedOutput} instances.
      */
     public void closeAll() {
-        forEachChunkedResponse(new Task<ChunkedOutput<T>>() {
+        forEachOutput(new Task<ChunkedOutput<T>>() {
             @Override
             public void run(final ChunkedOutput<T> cr) throws IOException {
                 cr.close();
@@ -180,7 +174,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
      * instance when trying to write to it or close it.
      *
      * @param chunkedOutput instance that threw exception.
-     * @param exception exception that was thrown.
+     * @param exception     exception that was thrown.
      */
     @Override
     public void onException(final ChunkedOutput<T> chunkedOutput, final Exception exception) {
@@ -189,7 +183,7 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
     /**
      * {@inheritDoc}
      *
-     * Can be implemented by subclasses to hadnle the event of {@link ChunkedOutput} being closed.
+     * Can be implemented by subclasses to handle the event of {@link ChunkedOutput} being closed.
      *
      * @param chunkedOutput instance that was closed.
      */
@@ -201,8 +195,8 @@ public class Broadcaster<T> implements BroadcasterListener<T> {
         void run(T parameter) throws IOException;
     }
 
-    private void forEachChunkedResponse(final Task<ChunkedOutput<T>> t) {
-        for (Iterator<ChunkedOutput<T>> iterator = chunkedOutputs.iterator(); iterator.hasNext();) {
+    private void forEachOutput(final Task<ChunkedOutput<T>> t) {
+        for (Iterator<ChunkedOutput<T>> iterator = chunkedOutputs.iterator(); iterator.hasNext(); ) {
             ChunkedOutput<T> chunkedOutput = iterator.next();
             if (!chunkedOutput.isClosed()) {
                 try {

@@ -81,8 +81,8 @@ public class EjbTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(LoggingFilter.class);
+    protected void configureClient(ClientConfig config) {
+        config.register(LoggingFilter.class);
     }
 
     @Test

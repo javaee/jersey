@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -138,9 +139,9 @@ public class SseTest {
             @Override
             public void onEvent(InboundEvent event) {
                 try {
-                    data.add(event.getData());
+                    data.add(event.readData());
                     latch.countDown();
-                } catch (IOException e) {
+                } catch (ProcessingException e) {
                     // ignore
                 }
             }

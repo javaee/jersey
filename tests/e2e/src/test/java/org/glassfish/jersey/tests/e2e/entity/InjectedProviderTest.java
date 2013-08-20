@@ -151,8 +151,8 @@ public class InjectedProviderTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(BeanReader.class);
+    protected void configureClient(ClientConfig config) {
+        config.register(BeanReader.class);
     }
 
     @Test

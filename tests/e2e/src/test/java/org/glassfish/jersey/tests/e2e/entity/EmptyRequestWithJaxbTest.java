@@ -120,8 +120,8 @@ public class EmptyRequestWithJaxbTest {
         }
 
         @Override
-        protected void configureClient(ClientConfig clientConfig) {
-            clientConfig.register(JettisonFeature.class);
+        protected void configureClient(ClientConfig config) {
+            config.register(JettisonFeature.class);
         }
 
         @Test
@@ -185,8 +185,8 @@ public class EmptyRequestWithJaxbTest {
         }
 
         @Override
-        protected void configureClient(ClientConfig clientConfig) {
-            clientConfig.register(JettisonFeature.class);
+        protected void configureClient(ClientConfig config) {
+            config.register(JettisonFeature.class);
         }
 
         public static class MappedJettisonCR extends CR {
@@ -210,8 +210,8 @@ public class EmptyRequestWithJaxbTest {
         }
 
         @Override
-        protected void configureClient(ClientConfig clientConfig) {
-            clientConfig.register(JettisonFeature.class);
+        protected void configureClient(ClientConfig config) {
+            config.register(JettisonFeature.class);
         }
 
         public static class BadgerFishCR extends CR {

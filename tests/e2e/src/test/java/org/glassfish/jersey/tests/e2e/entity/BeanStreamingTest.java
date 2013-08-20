@@ -84,10 +84,10 @@ public class BeanStreamingTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
+    protected void configureClient(ClientConfig config) {
         for (Class<?> c : getClass().getDeclaredClasses()) {
             if (c.getAnnotation(Provider.class) != null) {
-                clientConfig.register(c);
+                config.register(c);
             }
         }
     }

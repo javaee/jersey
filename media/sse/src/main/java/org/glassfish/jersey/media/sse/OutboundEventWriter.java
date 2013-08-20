@@ -93,21 +93,24 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
         }
 
         if (outboundEvent.getType() != null) {
-            final MediaType eventMediaType =
-                    outboundEvent.getMediaType() == null ? MediaType.TEXT_PLAIN_TYPE : outboundEvent.getMediaType();
-            final MessageBodyWriter messageBodyWriter = workersProvider.get().getMessageBodyWriter(outboundEvent.getType(),
-                    outboundEvent.getType(), annotations, eventMediaType);
             if (outboundEvent.getName() != null) {
                 entityStream.write(String.format("event: %s\n", outboundEvent.getName()).getBytes());
             }
             if (outboundEvent.getId() != null) {
                 entityStream.write(String.format("id: %s\n", outboundEvent.getId()).getBytes());
             }
+            if (outboundEvent.getReconnectDelay() > SseFeature.RECONNECT_NOT_SET) {
+                entityStream.write(String.format("retry: %s\n", outboundEvent.getReconnectDelay()).getBytes());
+            }
 
+            final MediaType eventMediaType =
+                    outboundEvent.getMediaType() == null ? MediaType.TEXT_PLAIN_TYPE : outboundEvent.getMediaType();
+            final MessageBodyWriter messageBodyWriter = workersProvider.get().getMessageBodyWriter(outboundEvent.getType(),
+                    outboundEvent.getGenericType(), annotations, eventMediaType);
             messageBodyWriter.writeTo(
                     outboundEvent.getData(),
                     outboundEvent.getType(),
-                    outboundEvent.getType(),
+                    outboundEvent.getGenericType(),
                     annotations,
                     eventMediaType,
                     httpHeaders,

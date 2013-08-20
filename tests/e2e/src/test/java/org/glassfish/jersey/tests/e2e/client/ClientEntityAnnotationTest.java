@@ -73,8 +73,8 @@ public class ClientEntityAnnotationTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(ClientFilter.class);
+    protected void configureClient(ClientConfig config) {
+        config.register(ClientFilter.class);
     }
 
     @Test

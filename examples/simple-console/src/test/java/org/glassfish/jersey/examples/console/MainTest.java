@@ -75,8 +75,8 @@ public class MainTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(new JettisonFeature());
+    protected void configureClient(ClientConfig config) {
+        config.register(new JettisonFeature());
     }
 
     /**

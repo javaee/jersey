@@ -156,9 +156,9 @@ public class JsonMoxyTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        super.configureClient(clientConfig);
-        clientConfig.register(new MoxyJsonConfigurationContextResolver());
+    protected void configureClient(ClientConfig config) {
+        super.configureClient(config);
+        config.register(new MoxyJsonConfigurationContextResolver());
     }
 
     @Path("JAXBElementBeanJSONResource")

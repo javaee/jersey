@@ -117,9 +117,9 @@ public class HttpHeadersTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.property(ClientProperties.READ_TIMEOUT, 1000);
-        clientConfig.connector(new ApacheConnector(clientConfig));
+    protected void configureClient(ClientConfig config) {
+        config.property(ClientProperties.READ_TIMEOUT, 1000);
+        config.connector(new ApacheConnector(config));
     }
 
     @Test

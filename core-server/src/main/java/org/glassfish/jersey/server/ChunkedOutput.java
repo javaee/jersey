@@ -161,7 +161,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                 if (t == null) {
                     synchronized (this) {
                         // queue seems empty
-                        // check again in the synchronized block before unsetting the flushing flag
+                        // check again in the synchronized block before clearing the flushing flag
                         // first remember the closed flag (this has to be before polling the queue,
                         // otherwise we could miss the last chunk)
                         shouldClose = closed;
@@ -236,7 +236,9 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
 
     @Override
     public int hashCode() {
-        return queue.hashCode();
+        int result = super.hashCode();
+        result = 31 * result + queue.hashCode();
+        return result;
     }
 
     @Override

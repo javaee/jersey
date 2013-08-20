@@ -323,9 +323,9 @@ public class EntityTypesTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        super.configureClient(clientConfig);
-        clientConfig.register(new JettisonFeature());
+    protected void configureClient(ClientConfig config) {
+        super.configureClient(config);
+        config.register(new JettisonFeature());
     }
 
     @Test

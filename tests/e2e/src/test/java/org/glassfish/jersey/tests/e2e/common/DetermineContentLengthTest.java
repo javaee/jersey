@@ -175,9 +175,9 @@ public class DetermineContentLengthTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.property(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, BUFFER_SIZE);
-        clientConfig.register(DoubleInterceptor.class);
+    protected void configureClient(ClientConfig config) {
+        config.property(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, BUFFER_SIZE);
+        config.register(DoubleInterceptor.class);
     }
 
     @Test

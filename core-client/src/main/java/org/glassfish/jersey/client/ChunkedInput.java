@@ -259,7 +259,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
 
     @Override
     public void close() {
-        if (!closed.compareAndSet(false, true)) {
+        if (closed.compareAndSet(false, true)) {
             if (inputStream != null) {
                 try {
                     inputStream.close();

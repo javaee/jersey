@@ -150,6 +150,7 @@
 <!ENTITY jaxrs.QueryParam "<link xlink:href='&jax-rs.javadoc.path;/QueryParam.html'>@QueryParam</link>">
 <!ENTITY jaxrs.core.Form "<link xlink:href='&jax-rs.javadoc.path;/core/Form.html'>Form</link>">
 <!ENTITY jaxrs.WebApplicationException "<link xlink:href='&jax-rs.javadoc.path;/WebApplicationException.html'>WebApplicationException</link>">
+<!ENTITY jaxrs.ProcessingException "<link xlink:href='&jax-rs.javadoc.path;/ProcessingException.html'>ProcessingException</link>">
 
 <!ENTITY jaxrs.core.HttpHeaders "<link xlink:href='&jax-rs.javadoc.path;/core/HttpHeaders.html'>HttpHeaders</link>">
 <!ENTITY jaxrs.core.MultivaluedMap "<link xlink:href='&jax-rs.javadoc.path;/core/MultivaluedMap.html'>MultivaluedMap&lt;K,V&gt;</link>">
@@ -245,6 +246,7 @@
 <!ENTITY jersey.client.ChunkedInput "<link xlink:href='&jersey.javadoc.path;/client/ChunkedInput.html'>ChunkedInput</link>">
 <!ENTITY jersey.client.ChunkParser "<link xlink:href='&jersey.javadoc.path;/client/ChunkParser.html'>ChunkParser</link>">
 <!ENTITY jersey.server.Broadcaster "<link xlink:href='&jersey.javadoc.path;/server/Broadcaster.html'>Broadcaster</link>">
+<!ENTITY jersey.server.BroadcasterListener "<link xlink:href='&jersey.javadoc.path;/server/BroadcasterListener.html'>BroadcasterListener</link>">
 <!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.path;/server/model/ModelProcessor.html'>ModelProcessor</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
 <!ENTITY jersey.server.WadlGeneratorConfig "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGeneratorConfig.html'>WadlGeneratorConfig</link>">
@@ -284,6 +286,7 @@
 <!ENTITY jersey.sse.EventInputReader "<link xlink:href='&jersey.javadoc.path;/media/sse/EventInputReader.html'>EventInputReader</link>">
 <!ENTITY jersey.sse.EventListener "<link xlink:href='&jersey.javadoc.path;/media/sse/EventListener.html'>EventListener</link>">
 <!ENTITY jersey.sse.EventSource "<link xlink:href='&jersey.javadoc.path;/media/sse/EventSource.html'>EventSource</link>">
+<!ENTITY jersey.sse.EventSource.Builder "<link xlink:href='&jersey.javadoc.path;/media/sse/EventSource.Builder.html'>EventSource.Builder</link>">
 <!ENTITY jersey.sse.InboundEvent "<link xlink:href='&jersey.javadoc.path;/media/sse/InboundEvent.html'>InboundEvent</link>">
 <!ENTITY jersey.sse.InboundEventReader "<link xlink:href='&jersey.javadoc.path;/media/sse/InboundEventReader.html'>InboundEventReader</link>">
 <!ENTITY jersey.sse.OutboundEvent "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEvent.html'>OutboundEvent</link>">
@@ -476,6 +479,7 @@
 <!ENTITY lit.jaxrs.PUT "<literal>@PUT</literal>">
 <!ENTITY lit.jaxrs.QueryParam "<literal>@QueryParam</literal>">
 <!ENTITY lit.jaxrs.WebApplicationException "<literal>WebApplicationException</literal>">
+<!ENTITY lit.jaxrs.ProcessingException "<literal>ProcessingException</literal>">
 
 <!ENTITY lit.jaxrs.core.HttpHeaders "<literal>HttpHeaders</literal>">
 <!ENTITY lit.jaxrs.core.MultivaluedMap "<literal>MultivaluedMap&lt;K,V&gt;</literal>">
@@ -565,6 +569,7 @@
 <!ENTITY lit.jersey.client.ChunkedInput "<literal>ChunkedInput</literal>">
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
 <!ENTITY lit.jersey.server.Broadcaster "<literal>Broadcaster</literal>">
+<!ENTITY lit.jersey.server.BroadcasterListener "<literal>BroadcasterListener</literal>">
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
 <!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
 <!ENTITY lit.jersey.server.WadlGenerator "<literal>WadlGenerator</literal>">
@@ -619,6 +624,7 @@
 <!ENTITY lit.jersey.sse.EventInputReader "<literal>EventInputReader</literal>">
 <!ENTITY lit.jersey.sse.EventListener "<literal>EventListener</literal>">
 <!ENTITY lit.jersey.sse.EventSource "<literal>EventSource</literal>">
+<!ENTITY lit.jersey.sse.EventSource.Builder "<literal>EventSource.Builder</literal>">
 <!ENTITY lit.jersey.sse.InboundEvent "<literal>InboundEvent</literal>">
 <!ENTITY lit.jersey.sse.InboundEventReader "<literal>InboundEventReader</literal>">
 <!ENTITY lit.jersey.sse.OutboundEvent "<literal>OutboundEvent</literal>">

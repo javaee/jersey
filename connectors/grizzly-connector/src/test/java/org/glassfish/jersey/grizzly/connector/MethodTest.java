@@ -95,8 +95,8 @@ public class MethodTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.connector(new GrizzlyConnector(clientConfig));
+    protected void configureClient(ClientConfig config) {
+        config.connector(new GrizzlyConnector(config));
     }
 
     @Test

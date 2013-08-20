@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.lang.annotation.Annotation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.jersey.client.ChunkParser;
 import org.glassfish.jersey.client.ChunkedInput;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -57,6 +58,11 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class EventInput extends ChunkedInput<InboundEvent> {
+    /**
+     * SSE event chunk parser - SSE chunks are delimited with a fixed "\n\n" delimiter in the response stream.
+     */
+    private static final ChunkParser SSE_EVENT_PARSER = ChunkedInput.createParser("\n\n");
+
     /**
      * Package-private constructor used by the {@link org.glassfish.jersey.client.ChunkedInputReader}.
      *
@@ -75,6 +81,6 @@ public class EventInput extends ChunkedInput<InboundEvent> {
                PropertiesDelegate propertiesDelegate) {
         super(InboundEvent.class, inputStream, annotations, mediaType, headers, messageBodyWorkers, propertiesDelegate);
 
-        super.setParser(ChunkedInput.createParser("\n\n"));
+        super.setParser(SSE_EVENT_PARSER);
     }
 }

@@ -39,13 +39,13 @@
  */
 package org.glassfish.jersey.examples.sse;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -84,11 +84,11 @@ public class ServerSentEventsTest extends JerseyTest {
             public void onEvent(InboundEvent inboundEvent) {
                 try {
                     System.out.println("# Received: " + inboundEvent);
-                    System.out.println(inboundEvent.getData(String.class));
+                    System.out.println(inboundEvent.readData(String.class));
 
-                    assertEquals("message", inboundEvent.getData());
+                    assertEquals("message", inboundEvent.readData());
                     latch.countDown();
-                } catch (IOException e) {
+                } catch (ProcessingException e) {
                     e.printStackTrace();
                 }
             }
@@ -122,12 +122,12 @@ public class ServerSentEventsTest extends JerseyTest {
                     do {
                         InboundEvent event = eventInput.read();
                         System.out.println("# Received: " + event);
-                        System.out.println(event.getData(String.class));
+                        System.out.println(event.readData(String.class));
 
-                        assertEquals("message " + (5 - stopLatch.getCount()), event.getData());
+                        assertEquals("message " + (5 - stopLatch.getCount()), event.readData());
                         stopLatch.countDown();
                     } while (stopLatch.getCount() > 0);
-                } catch (IOException e) {
+                } catch (ProcessingException e) {
                     e.printStackTrace();
                 } finally {
                     if (eventInput != null) {
@@ -162,7 +162,7 @@ public class ServerSentEventsTest extends JerseyTest {
         final String processUriString = target().getUri().relativize(locationUri).toString();
 
         for (int i = 0; i < MAX_COUNT; i++) {
-            sources[i] = new EventSource(target().path(processUriString).queryParam("testSource", "true"), false);
+            sources[i] = EventSource.target(target().path(processUriString).queryParam("testSource", "true")).build();
             sources[i].register(new EventListener() {
 
                 private volatile int messageCount = 0;
@@ -174,12 +174,12 @@ public class ServerSentEventsTest extends JerseyTest {
 
                         System.out.println("# Received: " + inboundEvent);
 
-                        if (inboundEvent.getData(String.class).equals("done")) {
+                        if (inboundEvent.readData(String.class).equals("done")) {
                             assertEquals(6, messageCount);
                             doneCount.incrementAndGet();
                             doneLatch.countDown();
                         }
-                    } catch (IOException e) {
+                    } catch (ProcessingException e) {
                         e.printStackTrace();
                     }
                 }

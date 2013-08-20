@@ -103,10 +103,10 @@ public class BasicValidationTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(final ClientConfig clientConfig) {
-        super.configureClient(clientConfig);
-        clientConfig.register(ContactBeanProvider.class);
-        clientConfig.register(MoxyXmlFeature.class);
+    protected void configureClient(final ClientConfig config) {
+        super.configureClient(config);
+        config.register(ContactBeanProvider.class);
+        config.register(MoxyXmlFeature.class);
     }
 
     @Consumes("application/contactBean")

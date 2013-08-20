@@ -94,8 +94,8 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.connector(new ApacheConnector(clientConfig));
+    protected void configureClient(ClientConfig config) {
+        config.connector(new ApacheConnector(config));
     }
 
     @Test

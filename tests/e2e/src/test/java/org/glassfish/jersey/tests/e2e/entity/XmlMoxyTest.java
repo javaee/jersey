@@ -240,9 +240,9 @@ public class XmlMoxyTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        super.configureClient(clientConfig);
-        clientConfig.register(new MoxyXmlFeature(SimpleBean.class));
+    protected void configureClient(ClientConfig config) {
+        super.configureClient(config);
+        config.register(new MoxyXmlFeature(SimpleBean.class));
     }
 
     @Test
