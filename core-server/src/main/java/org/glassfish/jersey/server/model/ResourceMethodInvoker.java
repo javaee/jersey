@@ -203,7 +203,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             });
 
             for (final Class<?> providerClass : providerClasses) {
-                providers.add(locator.create(providerClass));
+                providers.add(locator.createAndInitialize(providerClass));
             }
         }
 

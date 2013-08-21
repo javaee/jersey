@@ -48,9 +48,6 @@ contribs/jersey-non-blocking-client/src/test/java/com/sun/jersey/client/non/bloc
 contribs/jersey-non-blocking-client/src/test/java/com/sun/jersey/client/non/blocking/impl/HttpMethodTest.java
 contribs/jersey-non-blocking-client/src/test/java/com/sun/jersey/client/non/blocking/impl/HttpMethodWithClientFilterTest.java
 contribs/jersey-non-blocking-client/src/test/java/com/sun/jersey/client/non/blocking/impl/NoEntityTest.java
-contribs/jersey-oauth/oauth-signature/src/test/java/com/sun/jersey/oauth/signature/OAuthSignatureTest.java
-contribs/jersey-oauth/oauth-signature/src/test/java/com/sun/jersey/oauth/signature/SignatureTest.java
-contribs/jersey-oauth/oauth-tests/src/test/java/com/sun/jersey/oauth/tests/IntegrationTest.java
 contribs/jersey-oauth/oauth-tests/src/test/java/com/sun/jersey/oauth/tests/OsgiIntegrationTest.java
 contribs/jersey-simple-server/src/test/java/com/sun/jersey/server/simple/impl/container/CanonicalizationFeatureTest.java
 contribs/jersey-simple-server/src/test/java/com/sun/jersey/server/simple/impl/container/EscapedURITest.java

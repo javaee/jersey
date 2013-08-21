@@ -94,6 +94,8 @@
         <module>multipart-webapp</module>
         <module>osgi-helloworld-webapp</module>
         <module>osgi-http-service</module>
+        <module>oauth-client-twitter</module>
+        <module>oauth2-client-google-webapp</module>
         <module>reload</module>
         <module>server-async</module>
         <module>server-async-managed</module>

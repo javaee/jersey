@@ -148,7 +148,7 @@ public static class MyResource {
                     define HTTP methods that are allowed to be executed. See the following example.
 
                     <example>
-                        <title>Injecting <code>SecurityContext</code> into singletons</title>
+                        <title>Securing resources using <literal>web.xml</literal></title>
                         <programlisting language="java" linenumbering="numbered">&lt;security-constraint&gt;
     &lt;web-resource-collection&gt;
         &lt;url-pattern&gt;/rest/admin/*&lt;/url-pattern&gt;
@@ -167,7 +167,7 @@ public static class MyResource {
 &lt;/security-constraint&gt;
 &lt;login-config&gt;
     &lt;auth-method&gt;BASIC&lt;/auth-method&gt;
-    &lt;realm-name&gt;my-defaul-realm&lt;/realm-name&gt;
+    &lt;realm-name&gt;my-default-realm&lt;/realm-name&gt;
 &lt;/login-config&gt;</programlisting>
                     </example>
 
