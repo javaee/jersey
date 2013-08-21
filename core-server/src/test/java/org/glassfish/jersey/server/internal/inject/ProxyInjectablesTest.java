@@ -60,7 +60,6 @@ import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 

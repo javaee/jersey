@@ -41,8 +41,8 @@ package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -51,14 +51,17 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
-import org.glassfish.hk2.api.ProxyCtl;
+import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.InjecteeImpl;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Parameter.Source;
 import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
@@ -68,6 +71,7 @@ import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
  * the underlying injection provider (HK2).
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @Singleton
 class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
@@ -91,35 +95,25 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
         resolver = result;
     }
 
-
-    private static final Set<Class<?>> PROXIABLE_TYPES = new HashSet<Class<?>>() {{
-        add(UriInfo.class);
-        add(HttpHeaders.class);
-        add(Request.class);
-        add(SecurityContext.class);
-    }};
+    private static final Map<Class<?>, ActiveDescriptor> PROXIABLE_TYPE_DESC = Collections.unmodifiableMap(new HashMap<Class<?>, ActiveDescriptor>() {{
+        put(UriInfo.class, createDescriptor(UriInfo.class));
+        put(HttpHeaders.class, createDescriptor(HttpHeaders.class));
+        put(Request.class, createDescriptor(Request.class));
+        put(SecurityContext.class, createDescriptor(SecurityContext.class));
+    }});
 
     @Override
     public Factory<?> getValueFactory(final Parameter parameter) {
         final Source paramSource = parameter.getSource();
         if (paramSource == Parameter.Source.CONTEXT) {
 
-            return PROXIABLE_TYPES.contains(parameter.getRawType())
-                    ? new Factory<Object>() {
-                @Override
-                public Object provide() {
-                    return ((ProxyCtl) resolver.resolve(getInjectee(parameter), null)).__make();
-                }
+            final Injectee effectiveInjectee = getInjectee(parameter);
+
+            return new Factory<Object>() {
 
                 @Override
-                public void dispose(Object instance) {
-                    //not used
-                }
-            }
-                    : new Factory<Object>() {
-                @Override
                 public Object provide() {
-                    return resolver.resolve(getInjectee(parameter), null);
+                    return resolver.resolve(effectiveInjectee, null);
                 }
 
                 @Override
@@ -138,14 +132,45 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
 
     private static Injectee getInjectee(final Parameter parameter) {
         return new InjecteeImpl() {
+
+            private Class<?> rawType = parameter.getRawType();
+
             {
                 setRequiredType(parameter.getType());
                 setRequiredQualifiers(Collections.<Annotation>emptySet());
+                final ActiveDescriptor proxyDescriptor = PROXIABLE_TYPE_DESC.get(rawType);
+                if (proxyDescriptor != null) {
+                    setInjecteeDescriptor(proxyDescriptor);
+                }
             }
 
             @Override
             public Class<?> getInjecteeClass() {
-                return parameter.getRawType();
+                return rawType;
+            }
+        };
+    }
+
+    private static <T> AbstractActiveDescriptor<T> createDescriptor(final Class<T> clazz) {
+        return new AbstractActiveDescriptor<T>() {
+            @Override
+            public Class<T> getImplementationClass() {
+                return clazz;
+            }
+
+            @Override
+            public Object create(ServiceHandle sh) {
+                return null;
+            }
+
+            @Override
+            public Boolean isProxyForSameScope() {
+                return false;
+            }
+
+            @Override
+            public synchronized String getScope() {
+                return RequestScoped.class.getName();
             }
         };
     }
