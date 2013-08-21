@@ -39,14 +39,22 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.net.URI;
+import java.util.concurrent.Executors;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -78,6 +86,31 @@ public class InjectionTest extends JerseyTest {
         @Path("delete-path-param-async/{id}")
         public void deletePathParam(String body, @PathParam("id") String id, @Suspended AsyncResponse ar) {
             ar.resume("deleted: " + id + "-" + body);
+        }
+
+        @GET
+        @Path("async")
+        public void asyncGet(@Context final UriInfo uriInfo,
+                              @Context final Request request,
+                              @Context final HttpHeaders headers,
+                              @Context final SecurityContext securityContext,
+                              @Suspended final AsyncResponse response) {
+
+            // now suspend and resume later on with
+            Executors.newSingleThreadExecutor().submit(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        response.resume(String.format("base uri: %s\nheaders: %s\nmethod: %s\nprincipal: %s",
+                                uriInfo.getBaseUriBuilder().build(),
+                                headers.getRequestHeaders(),
+                                request.getMethod(),
+                                securityContext.getUserPrincipal()));
+                    } catch (Throwable e) {
+                        response.resume(e);
+                    }
+                }
+            });
         }
     }
 
@@ -113,5 +146,18 @@ public class InjectionTest extends JerseyTest {
         assertNotNull("Response is null.", response);
         assertEquals("Unexpected response status.", 200, response.getStatus());
         assertEquals("Unexpected response entity.", "deleted: test-body", response.readEntity(String.class));
+    }
+
+    /**
+     * JERSEY-1761 reproducer.
+     *
+     * This is to make sure no proxy gets injected into async method parameters.
+     */
+    @Test
+    public void testAsyncMethodParamInjection() {
+
+        Response response = target("injection").path("async").request().get();
+        assertEquals("Unexpected response status.", 200, response.getStatus());
+        assertNotNull("Response is null.", response);
     }
 }
