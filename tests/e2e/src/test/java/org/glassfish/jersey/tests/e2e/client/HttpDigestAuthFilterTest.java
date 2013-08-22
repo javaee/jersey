@@ -193,7 +193,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 		ClientConfig jerseyConfig = new ClientConfig();
 
 		Client client = ClientBuilder.newClient(jerseyConfig);
-		client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS, 1));
+		client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
 
 		WebTarget resource = client.target(getBaseUri()).path("auth-digest");
 
@@ -207,7 +207,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 		ClientConfig jerseyConfig = new ClientConfig();
 
 		Client client = ClientBuilder.newClient(jerseyConfig);
-		client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS, 1));
+		client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
 
 		WebTarget resource = client.target(getBaseUri()).path("auth-digest");
 
@@ -230,7 +230,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 		ClientConfig jerseyConfig = new ClientConfig();
 
 		Client client = ClientBuilder.newClient(jerseyConfig);
-		client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_INVALIDPASS, 1));
+		client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_INVALIDPASS));
 
 		WebTarget resource = client.target(getBaseUri()).path("auth-digest");
 
