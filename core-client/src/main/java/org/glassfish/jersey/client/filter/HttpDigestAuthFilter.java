@@ -94,19 +94,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	private static final int CLIENT_NONCE_BYTE_COUNT = 4;
 	private final String username;
 	private final byte[] password;
-	private static final int defaultMaxCacheSize = 500;
+	private static final int MAXIMUM_DIGEST_CACHE_SIZE = Integer.getInteger("MAXIMUM_DIGEST_CACHE_SIZE", 1000);
 	private final Map<URI, DigestScheme> digestCache;
-
-	/**
-	 * Creates a new HTTP Basic Authentication filter using provided username
-	 * and password credentials. The default digest cache size of 500 is used.
-	 *
-	 * @param username user name
-	 * @param password password
-	 */
-	public HttpDigestAuthFilter(String username, String password) {
-		this(username, password, defaultMaxCacheSize);
-	}
 
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
@@ -116,21 +105,9 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	 *
 	 * @param username user name
 	 * @param password password
-	 * @param maxCacheSize maximum number of entries in digest cache
 	 */
-	public HttpDigestAuthFilter(String username, String password, int maxCacheSize) {
-		this(username, (password != null) ? password.getBytes(CHARACTER_SET) : new byte[0], maxCacheSize);
-	}
-
-	/**
-	 * Creates a new HTTP Basic Authentication filter using provided username
-	 * and password credentials. The default digest cache size of 500 is used.
-	 *
-	 * @param username user name
-	 * @param password password byte array
-	 */
-	public HttpDigestAuthFilter(String username, byte[] password) {
-		this(username, password, defaultMaxCacheSize);
+	public HttpDigestAuthFilter(String username, String password) {
+		this(username, (password != null) ? password.getBytes(CHARACTER_SET) : new byte[0]);
 	}
 
 	/**
@@ -142,9 +119,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	 *
 	 * @param username user name
 	 * @param password password byte array
-	 * @param maxCacheSize maximum number of entries in digest cache
 	 */
-	public HttpDigestAuthFilter(String username, byte[] password, int maxCacheSize) {
+	public HttpDigestAuthFilter(String username, byte[] password) {
 		if (username == null) {
 			username = "";
 		}
@@ -154,18 +130,14 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		this.username = username;
 		this.password = password;
 
-		if (maxCacheSize < 1) {
-			maxCacheSize = 1;
-		}
-		final int cacheSize = maxCacheSize;
 		digestCache = Collections.synchronizedMap(
-				new LinkedHashMap<URI, DigestScheme>(cacheSize) {
+				new LinkedHashMap<URI, DigestScheme>(MAXIMUM_DIGEST_CACHE_SIZE) {
 			// use id as it is an anonymous inner class with changed behaviour
 			private static final long serialVersionUID = 2546245625L;
 
 			@Override
 			protected boolean removeEldestEntry(Map.Entry eldest) {
-				return size() > cacheSize;
+				return size() > MAXIMUM_DIGEST_CACHE_SIZE;
 			}
 		});
 
