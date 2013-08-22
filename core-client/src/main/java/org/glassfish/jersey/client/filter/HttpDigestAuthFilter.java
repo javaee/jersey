@@ -100,8 +100,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
 	 * and password credentials. MaxCacheSize must be greater or equal than 1
-	 * and it must be greater than the maximum number of parallel requests
-	 * using this filter.
+	 * and it must be greater than the maximum number of parallel requests using
+	 * this filter.
 	 *
 	 * @param username user name
 	 * @param password password
@@ -113,9 +113,9 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	/**
 	 * Creates a new HTTP Basic Authentication filter using provided username
 	 * and password credentials. This constructor allows to avoid storing plain
-	 * password value in a String variable. 
-	 * MaxCacheSize must be greater or equal than 1 and it must be greater
-	 * than the maximum number of parallel requests using this filter.
+	 * password value in a String variable. MaxCacheSize must be greater or
+	 * equal than 1 and it must be greater than the maximum number of parallel
+	 * requests using this filter.
 	 *
 	 * @param username user name
 	 * @param password password byte array
@@ -146,15 +146,17 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	@Override
 	public void filter(ClientRequestContext requestContext) throws IOException {
 
-		DigestScheme digestScheme = digestCache.get(requestContext.getUri());
-		if (digestScheme != null && digestScheme.getNonce() != null) {
-			String authLine = createNextAuthToken(digestScheme, requestContext);
-			requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, authLine);
-		}
+		synchronized (this) {
+			DigestScheme digestScheme = digestCache.get(requestContext.getUri());
+			if (digestScheme != null && digestScheme.getNonce() != null) {
+				String authLine = createNextAuthToken(digestScheme, requestContext); // increments nc
+				requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, authLine);
+			}
 
-		if (logger.isLoggable(Level.FINEST)) {
-			if (requestContext.getHeaderString(HttpHeaders.AUTHORIZATION) != null) {
-				logger.log(Level.FINEST, "Client Request: {0}", requestContext.getHeaderString(HttpHeaders.AUTHORIZATION));
+			if (logger.isLoggable(Level.FINEST)) {
+				if (requestContext.getHeaderString(HttpHeaders.AUTHORIZATION) != null) {
+					logger.log(Level.FINEST, "Client Request: {0}", requestContext.getHeaderString(HttpHeaders.AUTHORIZATION));
+				}
 			}
 		}
 	}
