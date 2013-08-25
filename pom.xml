@@ -52,7 +52,7 @@
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <version>2.2-SNAPSHOT</version>
+    <version>2.3-SNAPSHOT</version>
     <name>jersey</name>
     <description>
         Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
@@ -251,13 +251,13 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.13</version>
                     <configuration>
-                      <argLine>-Xmx1024m</argLine>
+                        <argLine>-Xmx1024m</argLine>
                     </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.3</version>
+                    <version>2.4</version>
                     <configuration>
                         <tarLongFileMode>gnu</tarLongFileMode>
                     </configuration>
@@ -323,10 +323,10 @@
                     <version>2.4</version>
                     <!--
                         mvn release:prepare -DreleaseVersion=<release-version> -DdevelopmentVersion=<next-dev-version> -Dtag=<release-version> \
-                            -Prelease,all-tests
+                            -Prelease,examples-source-zip,all-tests
 
                         mvn release:perform -DconnectionUrl="scm:git:file://<path-to-local-repo>" \
-                            -Prelease,skip-tests,attach-src-and-docs,examples-source-zip
+                            -Prelease,examples-source-zip,skip-tests
                     -->
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
@@ -334,7 +334,7 @@
                         <preparationGoals>clean install</preparationGoals>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <arguments>-Dmaven.test.skip=${skip.release.tests} ${release.arguments}</arguments>
+                        <arguments>${skip.release.tests} ${release.arguments}</arguments>
                     </configuration>
                 </plugin>
 
@@ -411,22 +411,31 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>findbugs-maven-plugin</artifactId>
-                    <version>2.5.2</version>
+                    <version>${findbugs.version}</version>
                     <configuration>
                         <skip>${findbugs.skip}</skip>
                         <threshold>${findbugs.threshold}</threshold>
-                        <excludeFilterFile>${findbugs.exclude}</excludeFilterFile>
+                        <excludeFilterFile>
+                            ${findbugs.common},${findbugs.exclude}
+                        </excludeFilterFile>
                         <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
                         <!-- findbugs detector configuration -->
-                        <jvmArgs>-Dfindbugs.glassfish.logging.validLoggerPrefixes=javax.enterprise</jvmArgs>
+                        <jvmArgs>-Dfindbugs.glassfish.logging.validLoggerPrefixes=${findbugs.glassfish.logging.validLoggerPrefixes}</jvmArgs>
                         <plugins>
                             <plugin>
                                 <groupId>org.glassfish.findbugs</groupId>
                                 <artifactId>findbugs-logging-detectors</artifactId>
-                                <version>1.1</version>
+                                <version>${findbugs.glassfish.version}</version>
                             </plugin>
                         </plugins>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.glassfish.findbugs</groupId>
+                            <artifactId>findbugs</artifactId>
+                            <version>${findbugs.glassfish.version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -444,7 +453,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.3</version>
+                    <version>2.4</version>
                     <configuration>
                         <failOnMissingWebXml>false</failOnMissingWebXml>
                     </configuration>
@@ -578,7 +587,7 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <skip.release.tests>true</skip.release.tests>
+                <skip.release.tests>-Dmaven.test.skip=true</skip.release.tests>
             </properties>
         </profile>
         <profile>
@@ -714,13 +723,25 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
-                <version>2.5.2</version>
+                <version>${findbugs.version}</version>
                 <reportSets>
                     <reportSet>
                         <configuration>
                             <skip>${findbugs.skip}</skip>
                             <threshold>${findbugs.threshold}</threshold>
-                            <excludeFilterFile>${findbugs.exclude}</excludeFilterFile>
+                            <excludeFilterFile>
+                                ${findbugs.common},${findbugs.exclude}
+                            </excludeFilterFile>
+                            <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+                            <!-- findbugs detector configuration -->
+                            <jvmArgs>-Dfindbugs.glassfish.logging.validLoggerPrefixes=${findbugs.glassfish.logging.validLoggerPrefixes}</jvmArgs>
+                            <plugins>
+                                <plugin>
+                                    <groupId>org.glassfish.findbugs</groupId>
+                                    <artifactId>findbugs-logging-detectors</artifactId>
+                                    <version>${findbugs.glassfish.version}</version>
+                                </plugin>
+                            </plugins>
                         </configuration>
                         <reports>
                             <report>findbugs</report>
@@ -1080,7 +1101,7 @@
             <dependency>
                 <groupId>org.glassfish</groupId>
                 <artifactId>jsonp-jaxrs</artifactId>
-                <version>${jsonp.ri.version}</version>
+                <version>${jsonp.jaxrs.version}</version>
             </dependency>
 
             <!-- Test scope -->
@@ -1153,18 +1174,30 @@
                 <version>4.11</version>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest-library</artifactId>
+                <version>${hamcrest.version}</version>
+                <scope>test</scope>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
     <properties>
         <findbugs.skip>false</findbugs.skip>
         <findbugs.threshold>Low</findbugs.threshold>
-        <findbugs.exclude>exclude-common.xml</findbugs.exclude>
+        <findbugs.common>exclude-common.xml</findbugs.common>
+        <findbugs.exclude />
+        <findbugs.glassfish.logging.validLoggerPrefixes>
+            javax.enterprise
+        </findbugs.glassfish.logging.validLoggerPrefixes>
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <xdk.absolute.path />
-        <skip.release.tests>false</skip.release.tests>
+        <skip.release.tests />
 
         <jersey.version>${project.version}</jersey.version>
         <!-- Dependency versions -->
@@ -1172,8 +1205,11 @@
         <cdi.api.version>1.1</cdi.api.version>
         <ejb.version>3.2</ejb.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
+        <findbugs.glassfish.version>1.3</findbugs.glassfish.version>
+        <findbugs.version>2.5.2</findbugs.version>
         <grizzly2.version>2.3.3</grizzly2.version>
-        <hk2.version>2.2.0-b10</hk2.version>
+        <hamcrest.version>1.2.1</hamcrest.version>
+        <hk2.version>2.2.0-b14</hk2.version>
         <jackson.version>1.9.11</jackson.version>
         <javax.annotation.version>1.2</javax.annotation.version>
         <javax.annotation.bundle.version>1.2</javax.annotation.bundle.version>
@@ -1190,10 +1226,11 @@
         <jetty-version>6.1.22</jetty-version>
         <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
         <jsonp.api.version>1.0</jsonp.api.version>
-        <jsonp.ri.version>1.0</jsonp.ri.version>
+        <jsonp.ri.version>1.0.2</jsonp.ri.version>
+        <jsonp.jaxrs.version>1.0</jsonp.jaxrs.version>
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
-        <mimepull.version>1.8</mimepull.version>
+        <mimepull.version>1.9.3</mimepull.version>
         <moxy.version>2.5.0</moxy.version>
         <osgi.version>4.2.0</osgi.version>
         <pax-exam-version>1.2.3</pax-exam-version>
@@ -1201,6 +1238,7 @@
         <servlet2.version>2.4</servlet2.version>
         <servlet3.version>3.0.1</servlet3.version>
         <simple.version>5.1.4</simple.version>
+        <spring3.version>3.2.3.RELEASE</spring3.version>
         <httpclient.version>4.2.5</httpclient.version>
         <validation.api.version>1.1.0.Final</validation.api.version>
         <weld.version>2.0.0.Final</weld.version>

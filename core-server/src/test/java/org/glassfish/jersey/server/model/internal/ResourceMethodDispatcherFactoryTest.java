@@ -43,12 +43,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.ExecutionException;
 
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.ServerBinder;
+import org.glassfish.jersey.server.ServerLocatorFactory;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -70,7 +68,7 @@ public class ResourceMethodDispatcherFactoryTest {
 
     @Before
     public void setupApplication() {
-        ServiceLocator locator = Injections.createLocator(new ServerBinder(null, RuntimeType.SERVER));
+        ServiceLocator locator = ServerLocatorFactory.createLocator();
 
         rmdf = locator.getService(ResourceMethodDispatcherFactory.class);
         rmihf = locator.getService(ResourceMethodInvocationHandlerFactory.class);

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,7 +76,7 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static final class PathParamValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private static final class PathParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final boolean decode;
@@ -87,16 +87,16 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
 
         @Override
-        protected Object get(HttpContext context) {
+        public Object provide() {
             try {
-                return extractor.extract(context.getUriInfo().getPathParameters(decode));
+                return extractor.extract(getContainerRequest().getUriInfo().getPathParameters(decode));
             } catch (ExtractorException e) {
                 throw new PathParamException(e.getCause(), extractor.getName(), extractor.getDefaultValueString());
             }
         }
     }
 
-    private static final class PathParamPathSegmentValueFactory extends AbstractHttpContextValueFactory<PathSegment> {
+    private static final class PathParamPathSegmentValueFactory extends AbstractContainerRequestValueFactory<PathSegment> {
 
         private final String name;
         private final boolean decode;
@@ -107,8 +107,8 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
 
         @Override
-        protected PathSegment get(HttpContext context) {
-            List<PathSegment> ps = context.getUriInfo().getPathSegments(name, decode);
+        public PathSegment provide() {
+            List<PathSegment> ps = getContainerRequest().getUriInfo().getPathSegments(name, decode);
             if (ps.isEmpty()) {
                 return null;
             }
@@ -116,7 +116,7 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static final class PathParamListPathSegmentValueFactory extends AbstractHttpContextValueFactory<List<PathSegment>> {
+    private static final class PathParamListPathSegmentValueFactory extends AbstractContainerRequestValueFactory<List<PathSegment>> {
 
         private final String name;
         private final boolean decode;
@@ -127,8 +127,8 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
 
         @Override
-        protected List<PathSegment> get(HttpContext context) {
-            return context.getUriInfo().getPathSegments(name, decode);
+        public List<PathSegment> provide() {
+            return getContainerRequest().getUriInfo().getPathSegments(name, decode);
         }
     }
 
@@ -144,7 +144,7 @@ final class PathParamValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
     @Override
-    public AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid URI parameter name

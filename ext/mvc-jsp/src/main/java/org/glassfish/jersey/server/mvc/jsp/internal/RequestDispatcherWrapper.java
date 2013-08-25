@@ -47,7 +47,6 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.glassfish.jersey.server.internal.inject.HttpContext;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 /**
@@ -59,7 +58,6 @@ import org.glassfish.jersey.server.mvc.Viewable;
 public final class RequestDispatcherWrapper implements RequestDispatcher {
 
     private final static String BASE_PATH_ATTRIBUTE_NAME = "_basePath";
-    private final static String HTTP_CONTEXT_ATTRIBUTE_NAME = "httpContext";
     private final static String MODEL_ATTRIBUTE_NAME = "it";
     private final static String RESOLVING_CLASS_ATTRIBUTE_NAME = "resolvingClass";
     private final static String REQUEST_ATTRIBUTE_NAME = "_request";
@@ -69,8 +67,6 @@ public final class RequestDispatcherWrapper implements RequestDispatcher {
 
     private final String basePath;
 
-    private final HttpContext httpContext;
-
     private final Viewable viewable;
 
     /**
@@ -79,14 +75,12 @@ public final class RequestDispatcherWrapper implements RequestDispatcher {
      *
      * @param dispatcher dispatcher processing the request after all the request attributes were set.
      * @param basePath base path of all JSP set to {@value #BASE_PATH_ATTRIBUTE_NAME} request attribute.
-     * @param httpContext http context set to {@value #HTTP_CONTEXT_ATTRIBUTE_NAME} request attribute.
      * @param viewable viewable to obtain model and resolving class from.
      */
     public RequestDispatcherWrapper(
-            final RequestDispatcher dispatcher, final String basePath, final HttpContext httpContext, final Viewable viewable) {
+            final RequestDispatcher dispatcher, final String basePath, final Viewable viewable) {
         this.dispatcher = dispatcher;
         this.basePath = basePath;
-        this.httpContext = httpContext;
         this.viewable = viewable;
     }
 
@@ -97,7 +91,6 @@ public final class RequestDispatcherWrapper implements RequestDispatcher {
 
         request.setAttribute(RESOLVING_CLASS_ATTRIBUTE_NAME, viewable.getResolvingClass());
         request.setAttribute(MODEL_ATTRIBUTE_NAME, viewable.getModel());
-        request.setAttribute(HTTP_CONTEXT_ATTRIBUTE_NAME, httpContext);
 
         request.setAttribute(BASE_PATH_ATTRIBUTE_NAME, basePath);
         request.setAttribute(REQUEST_ATTRIBUTE_NAME, request);

@@ -101,11 +101,11 @@ public interface RequestEventBuilder {
     /**
      * Set exception thrown.
      *
-     * @param throwable Exception.
+     * @param throwable      Exception.
      * @param exceptionCause Cause of the {@code throwable}
      * @return Builder instance.
      */
-    public RequestEventBuilder setException(Throwable throwable, RequestEventImpl.ExceptionCause exceptionCause);
+    public RequestEventBuilder setException(Throwable throwable, RequestEvent.ExceptionCause exceptionCause);
 
     /**
      * Set uri info.
@@ -133,16 +133,17 @@ public interface RequestEventBuilder {
 
     /**
      * Set the flag indicating whether the response has been successfully mapped by an exception mapper.
+     *
      * @param responseSuccessfullyMapped {@code true} if the response has been successfully mapped.
      * @return Builder instance.
      */
     public RequestEventBuilder setResponseSuccessfullyMapped(boolean responseSuccessfullyMapped);
 
-
     /**
      * Build the instance of {@link RequestEvent request event}.
+     *
      * @param eventType Type of the event to be built.
      * @return Request event instance.
      */
-    public RequestEventImpl build(RequestEvent.Type eventType);
+    public RequestEvent build(RequestEvent.Type eventType);
 }

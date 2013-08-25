@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,7 +72,7 @@ final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
     }
 
-    private static final class HeaderParamValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private static final class HeaderParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private MultivaluedParameterExtractor<?> extractor;
 
@@ -81,9 +81,9 @@ final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
 
         @Override
-        public Object get(HttpContext context) {
+        public Object provide() {
             try {
-                return extractor.extract(context.getRequestContext().getHeaders());
+                return extractor.extract(getContainerRequest().getHeaders());
             } catch (ExtractorException e) {
                 throw new ParamException.HeaderParamException(e.getCause(),
                         extractor.getName(), extractor.getDefaultValueString());
@@ -103,7 +103,7 @@ final class HeaderParamValueFactoryProvider extends AbstractValueFactoryProvider
     }
 
     @Override
-    public AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid header parameter name

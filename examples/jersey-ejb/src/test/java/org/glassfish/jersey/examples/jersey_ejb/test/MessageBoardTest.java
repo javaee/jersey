@@ -42,10 +42,10 @@ package org.glassfish.jersey.examples.jersey_ejb.test;
 import java.net.URI;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.examples.jersey_ejb.resources.MyApplication;
 
 import org.glassfish.jersey.test.JerseyTest;
@@ -69,18 +69,20 @@ import static org.junit.Assert.fail;
  */
 public class MessageBoardTest extends JerseyTest {
 
-    final String BaseUri = "http://localhost:8080/jersey-ejb/";
-
     @Override
     protected Application configure() {
         return new MyApplication();
     }
 
+    @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path("jersey-ejb").build();
+    }
+
     @Test
     public void testAddMessage() {
-        final WebTarget webTarget = client().target(BaseUri);
 
-        Response response = webTarget.path("app/messages").request(MediaType.TEXT_PLAIN)
+        Response response = target().path("app/messages").request(MediaType.TEXT_PLAIN)
                                     .post(Entity.entity("hello world!", MediaType.TEXT_PLAIN));
 
         assertEquals("Response status should be CREATED. Current value is \"" + response.getStatus() + "\"",
@@ -94,11 +96,9 @@ public class MessageBoardTest extends JerseyTest {
     @Test
     public void testDeleteMessage() {
 
-        final WebTarget webTarget = client().target(BaseUri);
-
         URI u = null;
 
-        Response response = webTarget.path("app/messages").request().post(Entity.entity("toDelete", MediaType.TEXT_PLAIN));
+        Response response = target().path("app/messages").request().post(Entity.entity("toDelete", MediaType.TEXT_PLAIN));
         if(response.getStatus() == Response.Status.CREATED.getStatusCode()) {
             u = response.getLocation();
         } else {

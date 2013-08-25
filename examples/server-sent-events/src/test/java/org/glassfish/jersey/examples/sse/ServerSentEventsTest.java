@@ -40,6 +40,7 @@
 package org.glassfish.jersey.examples.sse;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -157,9 +158,11 @@ public class ServerSentEventsTest extends JerseyTest {
         final AtomicInteger doneCount = new AtomicInteger(0);
         final CountDownLatch doneLatch = new CountDownLatch(MAX_COUNT);
         final EventSource[] sources = new EventSource[MAX_COUNT];
-        final String processUrl = response.getLocation().toString();
+        final URI locationUri = response.getLocation();
+        final String processUriString = target().getUri().relativize(locationUri).toString();
+
         for (int i = 0; i < MAX_COUNT; i++) {
-            sources[i] = new EventSource(target().path(processUrl).queryParam("testSource", "true"), false);
+            sources[i] = new EventSource(target().path(processUriString).queryParam("testSource", "true"), false);
             sources[i].register(new EventListener() {
 
                 private volatile int messageCount = 0;

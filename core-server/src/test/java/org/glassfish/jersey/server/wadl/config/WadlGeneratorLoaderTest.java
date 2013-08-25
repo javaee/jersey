@@ -41,7 +41,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package org.glassfish.jersey.server.wadl.config;
 
 import java.io.File;
@@ -53,11 +52,9 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.ServerBinder;
+import org.glassfish.jersey.server.ServerLocatorFactory;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
@@ -77,7 +74,6 @@ import com.sun.research.ws.wadl.Resource;
 import com.sun.research.ws.wadl.Resources;
 import com.sun.research.ws.wadl.Response;
 
-
 /**
  * Test the {@link WadlGeneratorLoader}.
  *
@@ -88,7 +84,7 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromClasspathRelative() throws Exception {
-        final ServiceLocator serviceLocator = getServiceLocator();
+        final ServiceLocator serviceLocator = ServerLocatorFactory.createLocator();
         final Properties props = new Properties();
         props.put("testFile", "classpath:testfile.xml");
         final WadlGeneratorDescription description = new WadlGeneratorDescription(MyWadlGenerator2.class, props);
@@ -104,7 +100,7 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromClasspathAbsolute() throws Exception {
-        final ServiceLocator serviceLocator = getServiceLocator();
+        final ServiceLocator serviceLocator = ServerLocatorFactory.createLocator();
         final Properties props = new Properties();
         final String path = "classpath:/" + getClass().getPackage().getName().replaceAll("\\.", "/") + "/testfile.xml";
         props.put("testFile", path);
@@ -121,7 +117,7 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadFileFromAbsolutePath() throws Exception {
-        final ServiceLocator serviceLocator = getServiceLocator();
+        final ServiceLocator serviceLocator = ServerLocatorFactory.createLocator();
         final URL resource = getClass().getResource("testfile.xml");
 
         final Properties props = new Properties();
@@ -138,7 +134,7 @@ public class WadlGeneratorLoaderTest {
 
     @Test
     public void testLoadStream() throws Exception {
-        final ServiceLocator serviceLocator = getServiceLocator();
+        final ServiceLocator serviceLocator = ServerLocatorFactory.createLocator();
         final Properties props = new Properties();
         final String path = getClass().getPackage().getName().replaceAll("\\.", "/") + "/testfile.xml";
         props.put("testStream", path);
@@ -277,10 +273,4 @@ public class WadlGeneratorLoaderTest {
             _delegate.attachTypes(egd);
         }
     }
-
-    private ServiceLocator getServiceLocator() {
-        return Injections.createLocator(new ServerBinder(null, RuntimeType.SERVER));
-    }
-
-
 }

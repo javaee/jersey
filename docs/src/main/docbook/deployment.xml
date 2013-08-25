@@ -93,7 +93,7 @@
         interface in the Servlet 3.0 container. For simple deployments, no
         <literal>web.xml</literal>
         is needed at all. Instead, an &jaxrs.ApplicationPath; annotation can be used to annotate the
-        user defined application class and specify the the base resource URI of all application resources:
+        user defined application class and specify the base resource URI of all application resources:
     </para>
     <para>
         <example>
@@ -138,7 +138,7 @@ public class MyApplication extends ResourceConfig {
 &lt;/plugins&gt;</programlisting>
         </example>
     </para>
-    <para>Another deployment option is to declare JAX-RS application details in the<literal>web.xml</literal>.
+    <para>Another deployment option is to declare JAX-RS application details in the <literal>web.xml</literal>.
         This is usually suitable in case of more complex deployments, e.g. when security model needs to be properly defined
         or when additional initialization parameters have to be passed to Jersey runtime.
         JAX-RS 1.1 specifies that a fully qualified name of the class that
@@ -312,4 +312,68 @@ public class MyApplication extends ResourceConfig {
         </section>
 
     </section>
+
+    <section xml:id="deployment.classpath-scanning">
+        <title>Turn off classpath scanning</title>
+
+        <para>
+            Jersey uses common Service Loader or Lookup design pattern to obtain all service implementations. It means it lookups
+            whole class path to find appropriate files in <literal>META-INF/services/</literal>. The class path lookup may be time
+            consuming. The more jar or war files on class path the lookup is longer. If you count any ms of application bootstrap
+            you can generally disable services lookup.
+        </para>
+
+        <para>
+            <itemizedlist>
+                <title>Jersey is looking for implementation of following SPIs</title>
+                <listitem>
+                    <para><literal>AutoDiscoverable</literal> (server, client) -
+                    it means if you disable service loading the AutoDiscoverable feature is automatically disabled too</para>
+                </listitem>
+                <listitem>
+                    <para><literal>MessageBodyReader</literal> (server, client)</para>
+                </listitem>
+                <listitem>
+                    <para><literal>MessageBodyWriter</literal> (server, client)</para>
+                </listitem>
+                <listitem>
+                    <para><literal>HeaderDelegateProvider</literal> (server, client)</para>
+                </listitem>
+                <listitem>
+                    <para><literal>ComponentProvider</literal> (server)</para>
+                </listitem>
+                <listitem>
+                    <para><literal>ContainerProvider</literal> (server)</para>
+                </listitem>
+                <listitem>
+                    <para><literal>AsyncContextDelegateProvider</literal> (server/servlet)</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            In all cases it is possible to register an SPI implementation class or instance programmatically. Therefore you can
+            disable services lookup in Jersey and save dozens of ms during application initialization. The services lookup in
+            Jersey that is enabled by default can be disabled by using special property
+            &jersey.common.CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE;.
+            There is a client/server counter-part that only disables the feature on the client or server respectively:
+            &jersey.client.ClientProperties.METAINF_SERVICES_LOOKUP_DISABLE;/&jersey.server.ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE;.
+            The client/server specific property overrides the value of the related common property (if set).
+        </para>
+
+        <para>
+            For example, following code snippet registers different types of implementations: &lit.jaxrs.container.ContainerRequestFilter;,
+            &lit.jaxrs.core.Feature;, <literal>ComponentProvider</literal> and <literal>ContainerProvider</literal>:
+            <example>
+                <title>Registering SPI implementations using ResourceConfig</title>
+                <programlisting language="java" linenumbering="numbered">final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
+resourceConfig.register(org.glassfish.jersey.server.filter.UriConnegFilter.class);
+resourceConfig.register(org.glassfish.jersey.server.validation.ValidationFeature.class);
+resourceConfig.register(org.glassfish.jersey.server.spring.SpringComponentProvider.class);
+resourceConfig.register(org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainerProvider.class);
+resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);</programlisting>
+            </example>
+        </para>
+    </section>
+
 </chapter>

@@ -50,6 +50,19 @@ package org.glassfish.jersey.apache.connector;
 public final class ApacheClientProperties {
 
     /**
+     * Support for specifying SSL configuration for HTTPS connections.
+     * Used only when making HTTPS requests.
+     *
+     * <p>The value MUST be an instance of {@link org.glassfish.jersey.SslConfigurator}.</p>
+     *
+     * <p>A default value is not set.</p>
+     *
+     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
+     */
+    public static final String SSL_CONFIG =
+            "jersey.config.apache.client.ssl.sslConfig";
+
+    /**
      * The credential provider that should be used to retrieve
      * credentials from a user. Credentials needed for proxy authentication
      * are stored here as well.

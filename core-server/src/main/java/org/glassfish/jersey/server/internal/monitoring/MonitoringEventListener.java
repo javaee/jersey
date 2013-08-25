@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.List;
 import java.util.Queue;
 
 import javax.inject.Inject;
@@ -53,6 +54,7 @@ import org.glassfish.jersey.uri.UriTemplate;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 
 /**
@@ -228,7 +230,9 @@ public class MonitoringEventListener implements ApplicationEventListener {
                         responseStatuses.add(event.getContainerResponse().getStatus());
                     }
                     StringBuilder sb = new StringBuilder();
-                    for (UriTemplate uriTemplate : event.getUriInfo().getMatchedTemplates()) {
+                    List<UriTemplate> orderedTemplates = Lists.reverse(event.getUriInfo().getMatchedTemplates());
+
+                    for (UriTemplate uriTemplate : orderedTemplates) {
                         sb.append(uriTemplate.getTemplate());
                         if (!uriTemplate.endsWithSlash()) {
                             sb.append("/");

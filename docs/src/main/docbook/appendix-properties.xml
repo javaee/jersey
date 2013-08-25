@@ -142,6 +142,19 @@
                 </thead>
                 <tbody>
                     <row>
+                        <entry>&jersey.server.ServerProperties.APPLICATION_NAME;</entry>
+                        <entry><literal>jersey.config.server.application.name</literal></entry>
+                        <entry>
+                            <para>
+                                Defines the application name. The name is an arbitrary user defined name which is used to
+                                distinguish between Jersey applications in the case that more applications are deployed on
+                                the same runtime (container). The name can be used for example for purposes of monitoring
+                                by JMX when name identifies to which application deployed MBeans belong to. The name should
+                                be unique in the runtime. The property does not have a default value.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
                         <entry>&jersey.server.ServerProperties.BV_FEATURE_DISABLE;</entry>
                         <entry><literal>jersey.config.beanValidation.disable.server</literal></entry>
                         <entry>
@@ -234,6 +247,36 @@
                         <entry>
                             <para>
                                 Disables configuration of MOXy Json feature. Default value is <literal>false</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED;</entry>
+                        <entry><literal>jersey.config.server
+                            .monitoring.statistics.enabled</literal></entry>
+                        <entry>
+                            <para>
+                                If &lit.true;, the calculation of monitoring statistics will be enabled. This will enable the
+                                possibility of injecting &jersey.server.monitoring.MonitoringStatistics; into resource and
+                                providers and also the registered listeners implementing
+                                &jersey.server.monitoring.MonitoringStatisticsListener; will be called when statistics are
+                                available for processing. Note that enabling statistics may have a negative performance impact
+                                and therefore should be enabled only when needed. Default value is &lit.false;.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED;</entry>
+                        <entry><literal>jersey.config.server
+                            .monitoring.statistics.mbeans.enabled</literal></entry>
+                        <entry>
+                            <para>
+                                If &lit.true; then Jersey will expose MBeans for the collected monitoring statistics. Exposed
+                                JMX MBeans are based on &jersey.server.monitoring.MonitoringStatistics; data and therefore when
+                                enabled, the calculation of monitoring statistics gets automatically enabled too (the same result
+                                as setting the property &jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED; to
+                                &lit.true;). Note that enabling MBeans for monitoring statistics may have a negative performance
+                                impact and therefore should be enabled only when needed. Default value is &lit.false;.
                             </para>
                         </entry>
                     </row>
@@ -465,6 +508,19 @@
                         <entry>
                             <para>
                                 Read timeout interval, in milliseconds. Default value is <literal>0</literal> (infinity).
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION;
+                            (Jersey 2.2 or later)</entry>
+                        <entry><literal>jersey.config.client.suppressHttpComplianceValidation</literal></entry>
+                        <entry>
+                            <para>
+                                If &lit.true;, the strict validation of HTTP specification compliance for client-side
+                                requests will be suppressed. When compliance checks are suppressed, any violations will
+                                be merely logged as warnings, rather than causing exceptions being raised in Jersey
+                                runtime. Default value is &lit.false;.
                             </para>
                         </entry>
                     </row>

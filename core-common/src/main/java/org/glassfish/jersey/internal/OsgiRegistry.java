@@ -45,6 +45,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -63,6 +66,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -221,7 +226,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
                     if (LOGGER.isLoggable(Level.FINEST)) {
                         LOGGER.log(Level.FINEST, "SPI provider: {0}", providerClassName);
                     }
-                    providerClasses.add(bundle.loadClass(providerClassName));
+                    providerClasses.add(loadClass(bundle, providerClassName));
                 }
                 br.close();
                 return providerClasses;
@@ -254,7 +259,6 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         }
     }
 
-
     @Override
     public void bundleChanged(BundleEvent event) {
 
@@ -278,6 +282,13 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         }
     }
 
+    /**
+     * Get URLs of resources from a given package.
+     *
+     * @param packagePath package.
+     * @param classLoader resource class loader.
+     * @return URLs of the located resources.
+     */
     @SuppressWarnings("unchecked")
     public Enumeration<URL> getPackageResources(final String packagePath, final ClassLoader classLoader) {
         List<URL> result = new LinkedList<URL>();
@@ -286,7 +297,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         for (Bundle bundle : bundleContext.getBundles()) {
             // Look for resources at the given <packagePath> and at WEB-INF/classes/<packagePath> in case a WAR is being examined.
             for (String bundlePackagePath : new String[]{packagePath, "WEB-INF/classes/" + packagePath}) {
-                final Enumeration<URL> enumeration = (Enumeration<URL>) bundle.findEntries(bundlePackagePath, "*", false);
+                final Enumeration<URL> enumeration = findEntries(bundle, bundlePackagePath, "*", false);
 
                 if (enumeration != null) {
                     while (enumeration.hasMoreElements()) {
@@ -303,7 +314,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             }
 
             // Now interested only in .jar provided by current bundle.
-            final Enumeration<URL> jars = bundle.findEntries("/", "*.jar", true);
+            final Enumeration<URL> jars = findEntries(bundle, "/", "*.jar", true);
             if (jars != null) {
                 while (jars.hasMoreElements()) {
                     final URL jar = jars.nextElement();
@@ -368,7 +379,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         if (bundle == null) {
             throw new ClassNotFoundException(className);
         }
-        return bundle.loadClass(className);
+        return loadClass(bundle, className);
     }
 
     /**
@@ -383,9 +394,9 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         final String path = bundleName.substring(0, lastDotIndex).replace('.', '/');
         final String propertiesName = bundleName.substring(lastDotIndex + 1, bundleName.length()) + ".properties";
         for (Bundle bundle : bundleContext.getBundles()) {
-            final Enumeration entries = bundle.findEntries(path, propertiesName, false);
+            final Enumeration<URL> entries = findEntries(bundle, path, propertiesName, false);
             if (entries != null && entries.hasMoreElements()) {
-                final URL entryUrl = (URL) entries.nextElement();
+                final URL entryUrl = entries.nextElement();
                 try {
                     return new PropertyResourceBundle(entryUrl.openStream());
                 } catch (IOException ex) {
@@ -451,10 +462,10 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             lock.writeLock().unlock();
         }
 
-        Enumeration e = bundle.findEntries("META-INF/services/", "*", false);
+        Enumeration<URL> e = findEntries(bundle, "META-INF/services/", "*", false);
         if (e != null) {
             while (e.hasMoreElements()) {
-                final URL u = (URL) e.nextElement();
+                final URL u = e.nextElement();
                 final String url = u.toString();
                 if (url.endsWith("/")) {
                     continue;
@@ -482,5 +493,35 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    private static Class<?> loadClass(final Bundle bundle, final String className) throws ClassNotFoundException {
+        try {
+            return AccessController.doPrivileged(new PrivilegedExceptionAction<Class<?>>() {
+                @Override
+                public Class<?> run() throws ClassNotFoundException {
+                    return bundle.loadClass(className);
+                }
+            });
+        } catch (PrivilegedActionException ex) {
+            final Exception originalException = ex.getException();
+            if (originalException instanceof ClassNotFoundException) {
+                throw (ClassNotFoundException) originalException;
+            } else if (originalException instanceof RuntimeException) {
+                throw (RuntimeException) originalException;
+            } else {
+                throw new ProcessingException(originalException);
+            }
+        }
+    }
+
+    private static Enumeration<URL> findEntries(final Bundle bundle, final String path, final String fileNamePattern, final boolean recursive) {
+        return AccessController.doPrivileged(new PrivilegedAction<Enumeration<URL>>() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public Enumeration<URL> run() {
+                return bundle.findEntries(path, fileNamePattern, recursive);
+            }
+        });
     }
 }

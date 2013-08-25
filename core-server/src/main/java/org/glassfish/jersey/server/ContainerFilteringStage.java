@@ -39,23 +39,24 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -141,7 +142,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
                     rc.getBoundRequestFilters());
 
             requestContext.getRequestEventBuilder().setContainerRequestFilters(sortedRequestFilters);
-            requestContext.triggerEvent(RequestEventImpl.Type.REQUEST_MATCHED);
+            requestContext.triggerEvent(RequestEvent.Type.REQUEST_MATCHED);
 
         } else {
             // pre-matching (response filter stage is pushed in pre-matching phase, so that if pre-matching filter
@@ -175,7 +176,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
             }
         } finally {
             if (postMatching) {
-                requestContext.triggerEvent(RequestEventImpl.Type.REQUEST_FILTERED);
+                requestContext.triggerEvent(RequestEvent.Type.REQUEST_FILTERED);
             }
 
         }
@@ -204,7 +205,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
             final ContainerRequest request = responseContext.getRequestContext();
             request.getRequestEventBuilder().setContainerResponseFilters(sortedResponseFilters);
-            request.triggerEvent(RequestEventImpl.Type.RESP_FILTERS_START);
+            request.triggerEvent(RequestEvent.Type.RESP_FILTERS_START);
             try {
                 for (ContainerResponseFilter filter : sortedResponseFilters) {
                     try {
@@ -216,7 +217,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
                     }
                 }
             } finally {
-                request.triggerEvent(RequestEventImpl.Type.RESP_FILTERS_FINISHED);
+                request.triggerEvent(RequestEvent.Type.RESP_FILTERS_FINISHED);
             }
 
             return Continuation.of(responseContext, getDefaultNext());

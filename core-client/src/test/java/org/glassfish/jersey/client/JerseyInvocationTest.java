@@ -40,6 +40,7 @@
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
+import java.net.ProtocolException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -98,6 +99,82 @@ public class JerseyInvocationTest {
         return (JerseyInvocation) builder
                 .header("unexpected-header", "unexpected-header").headers(headers)
                 .buildGet();
+    }
+
+    /**
+     * Checks that presence of request entity fo HTTP DELETE method does not fail in Jersey.
+     * Instead, the request is propagated up to HttpURLConnection, where it fails with
+     * {@code ProtocolException}.
+     *
+     * See also JERSEY-1711.
+     *
+     * @see #overrideHttpMethodBasedComplianceCheckNegativeTest()
+     */
+    @Test
+    public void overrideHttpMethodBasedComplianceCheckTest() {
+        Client c1 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
+        try {
+            c1.target("http://localhost:8080/myPath").request().method("DELETE", Entity.text("body"));
+            fail("ProcessingException expected.");
+        } catch (ProcessingException ex) {
+            assertEquals(ProtocolException.class, ex.getCause().getClass());
+        }
+
+        Client c2 = ClientBuilder.newClient();
+        try {
+            c2.target("http://localhost:8080/myPath").request()
+                    .property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true).method("DELETE", Entity.text("body"));
+            fail("ProcessingException expected.");
+        } catch (ProcessingException ex) {
+            assertEquals(ProtocolException.class, ex.getCause().getClass());
+        }
+
+        Client c3 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, false);
+        try {
+            c3.target("http://localhost:8080/myPath").request()
+                    .property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true).method("DELETE", Entity.text("body"));
+            fail("ProcessingException expected.");
+        } catch (ProcessingException ex) {
+            assertEquals(ProtocolException.class, ex.getCause().getClass());
+        }
+    }
+
+    /**
+     * Checks that presence of request entity fo HTTP DELETE method fails in Jersey with {@code IllegalStateException}
+     * if HTTP spec compliance is not suppressed by {@link ClientProperties#SUPPRESS_HTTP_COMPLIANCE_VALIDATION} property.
+     *
+     * See also JERSEY-1711.
+     *
+     * @see #overrideHttpMethodBasedComplianceCheckTest()
+     */
+    @Test
+    public void overrideHttpMethodBasedComplianceCheckNegativeTest() {
+        Client c1 = ClientBuilder.newClient();
+        try {
+            c1.target("http://localhost:8080/myPath").request().method("DELETE", Entity.text("body"));
+            fail("IllegalStateException expected.");
+        } catch (IllegalStateException expected) {
+            // pass
+        }
+
+        Client c2 = ClientBuilder.newClient();
+        try {
+            c2.target("http://localhost:8080/myPath").request()
+                    .property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, false)
+                    .method("DELETE", Entity.text("body"));
+            fail("IllegalStateException expected.");
+        } catch (IllegalStateException expected) {
+            // pass
+        }
+
+        Client c3 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, true);
+        try {
+            c3.target("http://localhost:8080/myPath").request()
+                    .property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, false).method("DELETE", Entity.text("body"));
+            fail("IllegalStateException expected.");
+        } catch (IllegalStateException expected) {
+            // pass
+        }
     }
 
     @Test

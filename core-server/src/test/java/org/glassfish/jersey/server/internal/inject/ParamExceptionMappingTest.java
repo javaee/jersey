@@ -78,7 +78,6 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings("unchecked")
 public class ParamExceptionMappingTest extends AbstractTest {
 
-
     public static abstract class BaseExceptionMapper<T extends ParamException> implements ExceptionMapper<T> {
         public Response toResponse(T exception, String entity) {
             assertEquals("x", exception.getParameterName());

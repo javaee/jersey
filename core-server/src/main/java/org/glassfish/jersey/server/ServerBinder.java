@@ -41,9 +41,6 @@ package org.glassfish.jersey.server;
 
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.HttpHeaders;
@@ -52,6 +49,10 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ContextResolverFactory;
 import org.glassfish.jersey.internal.ExceptionMapperFactory;
@@ -92,11 +93,8 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
- * @todo Move this class to the internal package???
  */
-public class ServerBinder extends AbstractBinder {
-
-    private final RuntimeType runtimeType;
+class ServerBinder extends AbstractBinder {
 
     private final Map<String, Object> applicationProperties;
 
@@ -113,9 +111,13 @@ public class ServerBinder extends AbstractBinder {
         }
     }
 
-    public ServerBinder(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+    /**
+     * Create new {@code ServerBinder} instance.
+     *
+     * @param applicationProperties map of application-specific properties.
+     */
+    public ServerBinder(final Map<String, Object> applicationProperties) {
         this.applicationProperties = applicationProperties;
-        this.runtimeType = runtimeType;
     }
 
     @Override
@@ -126,7 +128,7 @@ public class ServerBinder extends AbstractBinder {
                 new ContextInjectionResolver.Binder(),
                 new ParameterInjectionBinder(),
                 new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(applicationProperties, runtimeType),
+                new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),
                 new ContextResolverFactory.Binder(),
@@ -136,10 +138,10 @@ public class ServerBinder extends AbstractBinder {
                 new ResourceModelBinder(),
                 new RuntimeExecutorsBinder(),
                 new RouterBinder(),
-                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class, applicationProperties, runtimeType),
+                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
                 new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, runtimeType),
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
                 new MappableExceptionWrapperInterceptor.Binder(),
                 new MonitoringContainerListener.Binder());
 

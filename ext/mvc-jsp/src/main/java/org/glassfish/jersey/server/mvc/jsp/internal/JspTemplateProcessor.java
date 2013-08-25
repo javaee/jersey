@@ -65,7 +65,6 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ContainerException;
-import org.glassfish.jersey.server.internal.inject.HttpContext;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.internal.DefaultTemplateProcessor;
 import org.glassfish.jersey.server.mvc.jsp.JspProperties;
@@ -84,8 +83,6 @@ public class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(JspTemplateProcessor.class.getName()), Level.FINEST);
 
-    @Context
-    private HttpContext httpContext;
     @Context
     private ServletContext servletContext;
 
@@ -131,18 +128,14 @@ public class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
 
     @Override
     public void writeTo(String templateReference, Viewable viewable, MediaType mediaType, final OutputStream out) throws IOException {
-        // TODO uncomment when HttpContext inherits from Traceable
-        /*if (httpContext.isTracingEnabled()) {
-            httpContext.trace(String.format("forwarding view to JSP page: \"%s\", it = %s", resolvedPath,
-                    ReflectionHelper.objectToString(viewable.getModel())));
-        }*/
+        // TODO add trace information about forward to JSP page when tracing is enabled
 
         RequestDispatcher dispatcher = servletContext.getRequestDispatcher(templateReference);
         if (dispatcher == null) {
             throw new ContainerException(LocalizationMessages.NO_REQUEST_DISPATCHER_FOR_RESOLVED_PATH(templateReference));
         }
 
-        dispatcher = new RequestDispatcherWrapper(dispatcher, getBasePath(), httpContext, viewable);
+        dispatcher = new RequestDispatcherWrapper(dispatcher, getBasePath(), viewable);
 
         // OutputStream and Writer for HttpServletResponseWrapper.
         final ServletOutputStream responseStream = new ServletOutputStream() {

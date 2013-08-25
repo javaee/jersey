@@ -47,7 +47,7 @@
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>webapp-example-parent</artifactId>
         <relativePath>../webapp-example-parent/pom.xml</relativePath>
-        <version>2.2-SNAPSHOT</version>
+        <version>2.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>extended-wadl-webapp</artifactId>
@@ -72,11 +72,6 @@
             <artifactId>validation-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-grizzly2-servlet</artifactId>
         </dependency>
@@ -84,14 +79,6 @@
         <dependency>
             <groupId>org.codehaus.jettison</groupId>
             <artifactId>jettison</artifactId>
-        </dependency>
-
-        <!-- TODO: this dependency should not be here. Temporary fix for NoClassDefFound (also in other samples). -->
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.servlet</artifactId>
-            <version>3.0</version>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -109,10 +96,6 @@
                     <artifactId>commons-logging</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
         </dependency>
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>

@@ -74,7 +74,7 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static final class BeanParamValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private static final class BeanParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
         private final Parameter parameter;
         private final ServiceLocator locator;
 
@@ -84,7 +84,7 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
 
         @Override
-        protected Object get(HttpContext context) {
+        public Object provide() {
             return Injections.getOrCreate(locator, parameter.getRawType());
         }
     }
@@ -101,7 +101,7 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
     @Override
-    public AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
         return new BeanParamValueFactory(locator, parameter);
     }
 }

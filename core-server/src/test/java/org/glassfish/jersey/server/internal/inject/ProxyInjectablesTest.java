@@ -37,14 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -53,6 +49,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
 import org.glassfish.jersey.internal.inject.RequestInjectee;
@@ -63,7 +62,6 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -163,8 +161,6 @@ public class ProxyInjectablesTest extends AbstractTest {
     }
 
     @Test
-    // TODO: this needs JERSEY-1967 fix
-    @Ignore
     public void testPerRequestContextInjected() throws Exception {
         initiateWebApplication(PerRequestContextInjectedResource.class);
 
@@ -179,8 +175,6 @@ public class ProxyInjectablesTest extends AbstractTest {
     }
 
     @Test
-    // TODO: this needs JERSEY-1967 fix
-    @Ignore
     public void testPerRequestMethodParameterInjected() throws Exception {
         initiateWebApplication(PerRequestContextMethodParameterResource.class);
 

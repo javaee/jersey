@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
@@ -74,6 +75,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.process.internal.RequestScope;
 
@@ -86,6 +88,8 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyInvocation implements javax.ws.rs.client.Invocation {
+
+    private static final Logger LOGGER = Logger.getLogger(JerseyInvocation.class.getName());
 
     private final ClientRequest requestContext;
 
@@ -116,13 +120,30 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     }
 
     private void validateHttpMethodAndEntity(ClientRequest request) {
+        boolean suppressExceptions;
+        suppressExceptions = PropertiesHelper.isProperty(
+                request.getConfiguration().getProperty(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION));
+
+        final Object shcvProperty = request.getProperty(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION);
+        if (shcvProperty != null) { // override global configuration with request-specific
+            suppressExceptions = PropertiesHelper.isProperty(shcvProperty);
+        }
+
         final String method = request.getMethod();
 
         final EntityPresence entityPresence = METHODS.get(method.toUpperCase());
         if (entityPresence == EntityPresence.MUST_BE_NULL && request.hasEntity()) {
-            throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NOT_NULL(method));
+            if (suppressExceptions) {
+                LOGGER.warning(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NOT_NULL(method));
+            } else {
+                throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NOT_NULL(method));
+            }
         } else if (entityPresence == EntityPresence.MUST_BE_PRESENT && !request.hasEntity()) {
-            throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NULL(method));
+            if (suppressExceptions) {
+                LOGGER.warning(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NULL(method));
+            } else {
+                throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NULL(method));
+            }
         }
     }
 

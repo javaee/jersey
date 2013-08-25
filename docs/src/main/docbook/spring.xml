@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+
+The contents of this file are subject to the terms of either the GNU
+General Public License Version 2 only ("GPL") or the Common Development
+and Distribution License("CDDL") (collectively, the "License").  You
+may not use this file except in compliance with the License.  You can
+obtain a copy of the License at
+http://glassfish.java.net/public/CDDL+GPL_1_1.html
+or packager/legal/LICENSE.txt.  See the License for the specific
+language governing permissions and limitations under the License.
+
+When distributing the software, include this License Header Notice in each
+file and include the License file at packager/legal/LICENSE.txt.
+
+GPL Classpath Exception:
+Oracle designates this particular file as subject to the "Classpath"
+exception as provided by Oracle in the GPL Version 2 section of the License
+file that accompanied this code.
+
+Modifications:
+If applicable, add the following below the License Header, with the fields
+enclosed by brackets [] replaced by your own identifying information:
+"Portions Copyright [year] [name of copyright owner]"
+
+Contributor(s):
+If you wish your version of this file to be governed by only the CDDL or
+only the GPL Version 2, indicate your decision by adding "[Contributor]
+elects to include this software in this distribution under the [CDDL or GPL
+Version 2] license."  If you don't indicate a single choice of license, a
+recipient has the option to distribute your version of this file under
+either the CDDL, the GPL Version 2 or to extend the choice of license to
+its licensees as provided above.  However, if you add GPL Version 2 code
+and therefore, elected the GPL Version 2 license, then the option applies
+only if the new code is made subject to such option by the copyright
+holder.
+-->
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents;]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="spring">
+    <title>Spring DI</title>
+
+    <para>
+        Jersey provides an extension to support Spring DI.
+        This enables Jersey to use Spring beans as JAX-RS components and also allows Spring to inject into Jersey managed components.
+    </para>
+
+    <section>
+        <title>Dependencies</title>
+
+        <para>
+            If you want to use Jersey Spring DI support
+            you will need to add the &jersey-spring3; module into the list of your dependencies:
+
+            <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-spring3&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+        </para>
+
+        <para>
+            The above module does not add any transitive dependency to Spring modules, so you will need to add
+            Spring 3 dependencies explicitly into your dependency list.
+        </para>
+
+    </section>
+
+    <section>
+        <title>Registration and Configuration</title>
+
+        <para>
+            To use capabilities of Jersey Spring 3 DI support in your JAX-RS/Jersey application you need to have
+            the above mentioned module on your class-path.
+        </para>
+
+    </section>
+
+    <section>
+        <title>Example</title>
+
+        <para>To see an example of Spring DI support in Jersey refer to the &jersey.github.spring.example.path;.</para>
+    </section>
+</chapter>

@@ -82,8 +82,8 @@ import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.InternalServerProperties;
 import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
-import org.glassfish.jersey.server.internal.inject.HttpContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
@@ -518,7 +518,7 @@ public class WebComponent {
 
     /**
      * Extract parameters contained in {@link HttpServletRequest servlet request} and put them into
-     * {@link ContainerRequest container request} under {@value HttpContext#FORM_DECODED_PROPERTY} property (as {@link Form}
+     * {@link ContainerRequest container request} under {@value org.glassfish.jersey.server.internal.InternalServerProperties#FORM_DECODED_PROPERTY} property (as {@link Form}
      * instance).
      *
      * @param servletRequest http servlet request to extract params from.
@@ -538,7 +538,7 @@ public class WebComponent {
             }
 
             if (!form.asMap().isEmpty()) {
-                containerRequest.setProperty(HttpContext.FORM_DECODED_PROPERTY, form);
+                containerRequest.setProperty(InternalServerProperties.FORM_DECODED_PROPERTY, form);
 
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.log(Level.WARNING, LocalizationMessages.FORM_PARAM_CONSUMED(containerRequest.getRequestUri()));
