@@ -52,7 +52,23 @@ holder.
 
     <para>
         Jersey provides an extension to support Spring DI.
-        This enables Jersey to use Spring beans as JAX-RS components and also allows Spring to inject into Jersey managed components.
+        This enables Jersey to use Spring beans as JAX-RS components (e.g. resources and providers) and also allows
+        Spring to inject into Jersey managed components.
+    </para>
+
+    <para>
+        The Spring extension module configuration is based on annotations.
+        Spring beans are injected and JAX-RS classes are made Spring managed using annotations.
+        Injected Spring beans can have further dependencies injected using Spring XML configuration.
+        Spring singleton and request scopes are supported.
+    </para>
+
+    <para>
+        Limitations:
+
+        <itemizedlist>
+            <listitem><para>Spring beans can't be injected directly into JAX-RS classes by using Spring XML configuration</para></listitem>
+        </itemizedlist>
     </para>
 
     <section>
