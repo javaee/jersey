@@ -103,7 +103,6 @@
         <module>system-properties-example</module>
         <module>webapp-example-parent</module>
         <module>xml-moxy</module>
-	<module>helloworld-spring</module>
     </modules>
 
     <dependencyManagement>

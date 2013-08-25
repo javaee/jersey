@@ -71,7 +71,6 @@
         <module>servlet-portability</module>
         <module>spring3</module>
         <module>wadl-doclet</module>
-	<module>jersey-spring</module>
     </modules>
 
     <dependencies>
