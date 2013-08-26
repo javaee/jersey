@@ -54,6 +54,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.inject.Inject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -61,12 +62,15 @@ import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Client filter providing HTTP Digest Authentication with preemptive
@@ -78,6 +82,8 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponseFilter {
 
+	@Inject
+	private Configuration config;
 	private static final Logger logger = Logger.getLogger(HttpDigestAuthFilter.class.getName());
 	private static final Charset CHARACTER_SET = Charset.forName("iso-8859-1");
 	private static final char[] hexArray = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
@@ -92,9 +98,9 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		}
 	}
 	private static final int CLIENT_NONCE_BYTE_COUNT = 4;
-	private final String username;
-	private final byte[] password;
-	private static final int MAXIMUM_DIGEST_CACHE_SIZE = Integer.getInteger("MAXIMUM_DIGEST_CACHE_SIZE", 1000);
+	private String username;
+	private byte[] password;
+	private static final int MAXIMUM_DIGEST_CACHE_SIZE = 1000;
 	private final Map<URI, DigestScheme> digestCache;
 
 	/**
@@ -121,6 +127,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 	 * @param password password byte array
 	 */
 	public HttpDigestAuthFilter(String username, byte[] password) {
+		this();
+
 		if (username == null) {
 			username = "";
 		}
@@ -129,34 +137,42 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		}
 		this.username = username;
 		this.password = password;
+	}
 
+	private HttpDigestAuthFilter() {
+		int limit = MAXIMUM_DIGEST_CACHE_SIZE;
+		if (config != null) {
+			limit = PropertiesHelper.getValue(config.getProperties(),
+					ClientProperties.DIGESTAUTH_URI_CACHE_SIZELIMIT, MAXIMUM_DIGEST_CACHE_SIZE);
+			if (limit < 1) {
+				limit = 1;
+			}
+		}
+
+		final int mapSize = limit;
 		digestCache = Collections.synchronizedMap(
-				new LinkedHashMap<URI, DigestScheme>(MAXIMUM_DIGEST_CACHE_SIZE) {
+				new LinkedHashMap<URI, DigestScheme>(mapSize) {
 			// use id as it is an anonymous inner class with changed behaviour
 			private static final long serialVersionUID = 2546245625L;
 
 			@Override
 			protected boolean removeEldestEntry(Map.Entry eldest) {
-				return size() > MAXIMUM_DIGEST_CACHE_SIZE;
+				return size() > mapSize;
 			}
 		});
-
 	}
 
 	@Override
 	public void filter(ClientRequestContext requestContext) throws IOException {
+		DigestScheme digestScheme = digestCache.get(requestContext.getUri());
+		if (digestScheme != null && digestScheme.getNonce() != null) {
+			String authLine = createNextAuthToken(digestScheme, requestContext); // increments nc
+			requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, authLine);
+		}
 
-		synchronized (this) {
-			DigestScheme digestScheme = digestCache.get(requestContext.getUri());
-			if (digestScheme != null && digestScheme.getNonce() != null) {
-				String authLine = createNextAuthToken(digestScheme, requestContext); // increments nc
-				requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, authLine);
-			}
-
-			if (logger.isLoggable(Level.FINEST)) {
-				if (requestContext.getHeaderString(HttpHeaders.AUTHORIZATION) != null) {
-					logger.log(Level.FINEST, "Client Request: {0}", requestContext.getHeaderString(HttpHeaders.AUTHORIZATION));
-				}
+		if (logger.isLoggable(Level.FINEST)) {
+			if (requestContext.getHeaderString(HttpHeaders.AUTHORIZATION) != null) {
+				logger.log(Level.FINEST, "Client Request: {0}", requestContext.getHeaderString(HttpHeaders.AUTHORIZATION));
 			}
 		}
 	}

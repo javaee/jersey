@@ -39,10 +39,15 @@
  */
 package org.glassfish.jersey.client.filter;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 
 import java.util.Arrays;
 import java.util.List;
+import javax.ws.rs.core.Configuration;
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.filter.HttpDigestAuthFilter.DigestScheme;
 
 import org.junit.Test;
