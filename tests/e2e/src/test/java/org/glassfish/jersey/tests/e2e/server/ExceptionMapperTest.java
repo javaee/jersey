@@ -75,6 +75,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.Providers;
 
+import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -106,7 +107,9 @@ public class ExceptionMapperTest extends JerseyTest {
                 ExceptionThrowingFilter.class,
                 IOExceptionMapper.class,
                 IOExceptionMessageReader.class,
-                IOExceptionResource.class
+                IOExceptionResource.class,
+                MessageBodyProviderNotFoundResource.class,
+                ProviderNotFoundExceptionMapper.class
         );
     }
 
@@ -520,6 +523,39 @@ public class ExceptionMapperTest extends JerseyTest {
         Response res = target().path("test/throwable").request().get();
         assertEquals(200, res.getStatus());
         assertEquals("mapped-throwable-throwable", res.readEntity(String.class));
+    }
+
+    @Path("not-found")
+    public static class MessageBodyProviderNotFoundResource {
+        @GET
+        @Produces("aa/bbb")
+        public UnknownType get() {
+            return new UnknownType();
+        }
+    }
+    public static class UnknownType {
+
+    }
+
+    public static class ProviderNotFoundExceptionMapper implements ExceptionMapper<MessageBodyProviderNotFoundException>{
+
+
+        @Override
+        public Response toResponse(MessageBodyProviderNotFoundException exception) {
+            return Response.ok("mapped-by-ProviderNotFoundExceptionMapper").build();
+        }
+    }
+
+    /**
+     * This test tests that {@link MessageBodyProviderNotFoundException} cannot be mapped by
+     * an {@link ExceptionMapper}. Spec defines that exception mappers should process
+     * exceptions thrown from user resources and providers. So, we currently limit exception
+     * mappers only to these exceptions.
+     */
+    @Test
+    public void testNotFoundResource() {
+        final Response response = target().path("not-found").request().get();
+        Assert.assertEquals(500, response.getStatus());
     }
 
 }
