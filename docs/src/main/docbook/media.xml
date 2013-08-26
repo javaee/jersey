@@ -477,7 +477,7 @@ final Application application = new ResourceConfig()
 
                     <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
-    &lt;artifactId&gt;jersey-media-processing&lt;/artifactId&gt;
+    &lt;artifactId&gt;jersey-media-json-processing&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
@@ -801,7 +801,7 @@ context = new JettisonJaxbContext(
                             <title>JSON expression with XML namespaces mapped into JSON</title>
                             <programlisting language="xml" linenumbering="numbered">{
    "contact":{
-      "exampleid":2,
+      "example.id":2,
       "name":"Bob",
       "addresses":{
          "street":"Long Street 1",
@@ -814,6 +814,35 @@ context = new JettisonJaxbContext(
                         Please note, that <code>id</code> item became <code>example.id</code> based on the XML namespace mapping.
                         If you have more XML namespaces in your XML, you will need to configure appropriate mapping for all of
                         them.
+                    </para>
+                    <para>
+                        Another configurable option introduced in Jersey version 2.2 is related to serialization of JSON arrays with Jettison's
+                        mapped notation. When serializing elements representing single item lists/arrays, you might want to utilise
+                        the following Jersey configuration method to explicitly name which elements to treat as arrays no matter what the actual content is.
+
+                        <example xml:id="json.jaxb.jettison.mapped.array.def">
+                            <title>
+                                JSON Array configuration for Jettison based <literal>mapped</literal> notation
+                            </title>
+
+                            <programlisting language="java" linenumbering="numbered">context = new JettisonJaxbContext(
+    JettisonConfig.mappedJettison().serializeAsArray("name").build(),
+    types);</programlisting>
+                        </example>
+
+                        Resulting JSON will look like in the example bellow, unimportant lines removed for sanity.
+
+                        <example>
+                            <title>JSON expression with JSON arrays explicitly configured via Jersey</title>
+                            <programlisting language="xml" linenumbering="numbered">{
+   "contact":{
+      ...
+      "name":["Bob"],
+      ...
+   }
+}</programlisting>
+                        </example>
+
                     </para>
                 </section>
 

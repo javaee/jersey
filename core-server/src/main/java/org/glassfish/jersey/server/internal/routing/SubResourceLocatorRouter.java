@@ -42,12 +42,14 @@ package org.glassfish.jersey.server.internal.routing;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.security.PrivilegedAction;
 import java.util.List;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.SecurityContext;
 
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.Injections;
@@ -57,6 +59,7 @@ import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.SubjectSecurityContext;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.process.MappableException;
@@ -67,6 +70,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 
 import org.glassfish.hk2.api.Factory;
@@ -125,7 +129,8 @@ class SubResourceLocatorRouter implements Router {
     public Continuation apply(final ContainerRequest request) {
         final RoutingContext routingCtx = Injections.getOrCreate(locator, RoutingContext.class);
 
-        Object subResourceInstance = getResource(routingCtx);
+        Object subResourceInstance = getResource(routingCtx, request);
+
         if (subResourceInstance == null) {
             throw new NotFoundException();
         }
@@ -157,6 +162,9 @@ class SubResourceLocatorRouter implements Router {
         }
 
         subResource = resourceModel.getResources().get(0);
+        routingCtx.pushLocatorSubResource(subResource);
+        request.triggerEvent(RequestEvent.Type.SUBRESOURCE_LOCATED);
+
 
         for (Class<?> handlerClass : subResource.getHandlerClasses()) {
             resourceContext.bindResource(handlerClass);
@@ -177,12 +185,12 @@ class SubResourceLocatorRouter implements Router {
 
         for (ModelProcessor modelProcessor : modelProcessors) {
             subResourceModel = modelProcessor.processSubResource(subResourceModel, configuration);
-            validateEnhancedModel(subResourceModel, modelProcessor);
+            validateEnhancedModel(subResourceModel);
         }
         return subResourceModel;
     }
 
-    private void validateEnhancedModel(final ResourceModel subResourceModel, final ModelProcessor modelProcessor) {
+    private void validateEnhancedModel(final ResourceModel subResourceModel) {
         if (subResourceModel.getResources().size() != 1) {
             throw new ProcessingException(LocalizationMessages.ERROR_SUB_RESOURCE_LOCATOR_MORE_RESOURCES(
                     subResourceModel.getResources().size()));
@@ -205,29 +213,45 @@ class SubResourceLocatorRouter implements Router {
         });
     }
 
-    private Object getResource(RoutingContext routingCtx) {
+    private Object getResource(RoutingContext routingCtx, ContainerRequest request) {
         final Object resource = routingCtx.peekMatchedResource();
-        try {
-            Method handlingMethod = locatorModel.getInvocable().getHandlingMethod();
-            return handlingMethod.invoke(resource, ParameterValueHelper.getParameterValues(valueProviders));
-        } catch (IllegalAccessException ex) {
-            throw new ProcessingException("Resource Java method invocation error.", ex);
-        } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
-            if (cause instanceof WebApplicationException) {
-                throw (WebApplicationException) cause;
+        final Method handlingMethod = locatorModel.getInvocable().getHandlingMethod();
+        final Object[] parameterValues = ParameterValueHelper.getParameterValues(valueProviders);
+
+        request.triggerEvent(RequestEvent.Type.LOCATOR_MATCHED);
+
+        final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
+            @Override
+            public Object run() {
+                try {
+
+                    return handlingMethod.invoke(resource, parameterValues);
+
+                } catch (IllegalAccessException ex) {
+                    throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+                } catch (IllegalArgumentException ex) {
+                    throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+                } catch (UndeclaredThrowableException ex) {
+                    throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+                } catch (InvocationTargetException ex) {
+                    throw mapTargetToRuntimeEx(ex.getCause());
+                } catch (Throwable t) {
+                    throw new ProcessingException(t);
+                }
             }
-            // exception cause potentially mappable
-            throw new MappableException(cause);
-        } catch (UndeclaredThrowableException ex) {
-            throw new ProcessingException("Resource Java method invocation error.", ex);
-        } catch (ProcessingException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            // exception potentially mappable
-            throw new MappableException(ex);
-        } catch (Throwable t) {
-            throw new ProcessingException(t);
+        };
+
+        final SecurityContext securityContext = request.getSecurityContext();
+        return (securityContext instanceof SubjectSecurityContext)
+                ? ((SubjectSecurityContext) securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
+
+    }
+
+    private static RuntimeException mapTargetToRuntimeEx(Throwable throwable) {
+        if (throwable instanceof WebApplicationException) {
+            return (WebApplicationException) throwable;
         }
+        // handle all exceptions as potentially mappable (incl. ProcessingException)
+        return new MappableException(throwable);
     }
 }

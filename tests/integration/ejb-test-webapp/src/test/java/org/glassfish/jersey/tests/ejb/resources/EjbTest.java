@@ -53,6 +53,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.CoreMatchers.endsWith;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.Test;
@@ -132,6 +133,21 @@ public class EjbTest extends JerseyTest {
 
         assertThat(responseMessage, startsWith(EchoBean.PREFIX));
         assertThat(responseMessage, endsWith(message));
+    }
+
+    @Test
+    public void testRequestCountGetsIncremented() {
+
+        final Response response1 = target().path("rest/echo").queryParam("message", "whatever").request().get();
+        assertThat(response1.getStatus(), is(200));
+        final String counterHeader1 = response1.getHeaderString(CounterFilter.RequestCountHEADER);
+        final int requestCount1 = Integer.parseInt(counterHeader1);
+
+        final Response response2 = target().path("rest/echo").queryParam("message", requestCount1).request().get();
+        assertThat(response2.getStatus(), is(200));
+        final int requestCount2 = Integer.parseInt(response2.getHeaderString(CounterFilter.RequestCountHEADER));
+
+        assertThat(requestCount2, is(greaterThan(requestCount1)));
     }
 
     private void _check500Response(final Response response, final String expectedSubstring) {

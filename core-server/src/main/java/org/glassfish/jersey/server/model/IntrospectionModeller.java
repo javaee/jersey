@@ -201,7 +201,7 @@ final class IntrospectionModeller {
     }
 
     private void checkResourceClassFields(final boolean encodedFlag, boolean isInSingleton) {
-        for (Field field : handlerClass.getDeclaredFields()) {
+        for (Field field : AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(handlerClass))) {
             if (field.getDeclaredAnnotations().length > 0) {
                 Parameter p = Parameter.create(
                         handlerClass,
@@ -217,7 +217,6 @@ final class IntrospectionModeller {
             }
         }
     }
-
 
     private List<Method> getAllDeclaredMethods(final Class<?> clazz) {
         final List<Method> result = new LinkedList<Method>();

@@ -55,24 +55,22 @@ import java.util.logging.Logger;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.annotation.Priority;
-
 import javax.ejb.Local;
 import javax.ejb.Remote;
-
 import javax.inject.Singleton;
-
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.glassfish.hk2.api.DynamicConfiguration;
-import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
+
+import org.glassfish.hk2.api.DynamicConfiguration;
+import org.glassfish.hk2.api.Factory;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 
 /**
  * EJB component provider.
@@ -157,7 +155,8 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             try {
 
                 // create an interceptor instance via reflection
-                final Class<?> interceptorClass = Class.forName(EjbComponentProvider.class.getPackage().getName() + ".EjbComponentInterceptor");
+                final Class<?> interceptorClass =
+                        Class.forName(EjbComponentProvider.class.getPackage().getName() + ".EjbComponentInterceptor");
                 final Object interceptor = interceptorClass.getConstructor(ServiceLocator.class).newInstance(locator);
 
                 interceptorBinderMethod.invoke(interceptorBinder, interceptor);

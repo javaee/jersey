@@ -63,7 +63,6 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -98,6 +97,22 @@ public class FormParamTest extends AbstractTest {
         assertEquals("foo", responseContext.getEntity());
     }
 
+
+    @Test
+    public void testSimpleFormResourceWithCharset() throws ExecutionException, InterruptedException {
+        initiateWebApplication(SimpleFormResource.class);
+
+        Form form = new Form();
+        form.param("a", "foo");
+
+        final ContainerResponse responseContext = apply(RequestContextBuilder.from("/", "POST")
+                .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE.withCharset("UTF-8"))
+                .entity(form)
+                .build()
+        );
+
+        assertEquals("foo", responseContext.getEntity());
+    }
 
     @Path("/")
     public static class FormResourceNoConsumes {
@@ -154,7 +169,8 @@ public class FormParamTest extends AbstractTest {
 
         public String value;
 
-        public JAXBBean() {}
+        public JAXBBean() {
+        }
 
         public boolean equals(Object o) {
             if (!(o instanceof JAXBBean))
@@ -163,7 +179,7 @@ public class FormParamTest extends AbstractTest {
         }
 
         public String toString() {
-            return "JAXBClass: "+value;
+            return "JAXBClass: " + value;
         }
     }
 
@@ -230,8 +246,7 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Path("/")
-    public static class FormParamTypes
-    {
+    public static class FormParamTypes {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String createSubscription(
@@ -260,8 +275,7 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Path("/")
-    public static class FormDefaultValueParamTypes
-    {
+    public static class FormDefaultValueParamTypes {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String createSubscription(
@@ -300,8 +314,7 @@ public class FormParamTest extends AbstractTest {
     }
 
     @Path("/")
-    public static class FormConstructorValueParamTypes
-    {
+    public static class FormConstructorValueParamTypes {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String createSubscription(
@@ -349,8 +362,11 @@ public class FormParamTest extends AbstractTest {
         form.param("b", "<jaxbBean><value>b2</value></jaxbBean>");
 
 
-        final ContainerResponse responseContext = apply(
-                RequestContextBuilder.from("/", "POST").accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
+        final ContainerResponse responseContext = apply(RequestContextBuilder.from("/", "POST")
+                .accept(MediaType.APPLICATION_XML)
+                .type(MediaType.APPLICATION_FORM_URLENCODED)
+                .entity(form)
+                .build()
         );
 
         JAXBBean b = (JAXBBean) responseContext.getEntity();

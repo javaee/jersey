@@ -58,6 +58,7 @@ public class MyApplication extends Application {
             add(ExceptionEjbResource.class);
             add(EchoResource.class);
             add(RawEchoResource.class);
+            add(CounterFilter.class);
         }};
     }
 }

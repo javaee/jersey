@@ -60,7 +60,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
@@ -73,6 +72,11 @@ import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
 import org.glassfish.jersey.message.internal.VariantSelector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.monitoring.EmptyRequestEventBuilder;
+import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
+import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
+import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.uri.UriComponent;
@@ -83,7 +87,7 @@ import com.google.common.collect.Lists;
 
 /**
  * Jersey container request context.
- *
+ * <p/>
  * An instance of the request context is passed by the container to the
  * {@link ApplicationHandler} for each incoming client request.
  *
@@ -117,13 +121,16 @@ public class ContainerRequest extends InboundMessageContext
     // Vary header value to be set in the response
     private String varyValue;
     // UriInfo reference
-    private UriInfo uriInfo;
+    private UriRoutingContext uriRoutingContext;
     // Custom Jersey container request scoped initializer
     private RequestScopedInitializer requestScopedInitializer;
     // Request-scoped response writer of the invoking container
     private ContainerResponseWriter responseWriter;
     // True if the request is used in the response processing phase (for example in ContainerResponseFilter)
     private boolean inResponseProcessingPhase;
+    // Event listener registered to this request.
+    private RequestEventListener requestEventListener = null;
+    private RequestEventBuilder requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
 
 
     /**
@@ -156,7 +163,7 @@ public class ContainerRequest extends InboundMessageContext
 
     /**
      * Get a custom container extensions initializer for the current request.
-     *
+     * <p/>
      * The initializer is guaranteed to be run from within the request scope of
      * the current request.
      *
@@ -169,7 +176,7 @@ public class ContainerRequest extends InboundMessageContext
 
     /**
      * Set a custom container extensions initializer for the current request.
-     *
+     * <p/>
      * The initializer is guaranteed to be run from within the request scope of
      * the current request.
      *
@@ -275,17 +282,17 @@ public class ContainerRequest extends InboundMessageContext
     }
 
     @Override
-    public UriInfo getUriInfo() {
-        return uriInfo;
+    public ExtendedUriInfo getUriInfo() {
+        return uriRoutingContext;
     }
 
     /**
-     * Set the request scoped {@link UriInfo} instance.
+     * Set the request scoped {@link UriRoutingContext} instance.
      *
-     * @param uriInfo request scoped {@code UriInfo} instance.
+     * @param uriRoutingContext request scoped {@code UriRoutingContext} instance.
      */
-    public void setUriInfo(UriInfo uriInfo) {
-        this.uriInfo = uriInfo;
+    void setUriRoutingContext(UriRoutingContext uriRoutingContext) {
+        this.uriRoutingContext = uriRoutingContext;
     }
 
     /**
@@ -308,20 +315,26 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void setRequestUri(URI requestUri) throws IllegalStateException {
-        if (!uriInfo.getMatchedURIs().isEmpty()) {
+        if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
 
         this.encodedRelativePath = null;
         this.decodedRelativePath = null;
+        this.uriRoutingContext.invalidateUriComponentViews();
+
         this.requestUri = requestUri;
     }
 
     @Override
     public void setRequestUri(URI baseUri, URI requestUri) throws IllegalStateException {
-        if (!uriInfo.getMatchedURIs().isEmpty()) {
+        if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
+
+        this.encodedRelativePath = null;
+        this.decodedRelativePath = null;
+        this.uriRoutingContext.invalidateUriComponentViews();
 
         this.baseUri = baseUri;
         this.requestUri = requestUri;
@@ -413,12 +426,59 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void setMethod(String method) throws IllegalStateException {
-        if (!uriInfo.getMatchedURIs().isEmpty()) {
+        if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
         this.httpMethod = method;
     }
 
+    /**
+     * Set {@link RequestEventListener request event listener} that will listen to events of this request and
+     * {@link RequestEventBuilder request event builder} that will be used to build these events.
+     *
+     * <p>
+     * Do not use this method to set empty mock event listener which has no internal functionality in order to
+     * disable event listener and set {@code requestEventListener} to null instead. Request event listeners are usually created from
+     * {@link org.glassfish.jersey.server.monitoring.ApplicationEventListener#onRequest(org.glassfish.jersey.server.monitoring.RequestEvent)}.
+     * If this method is never called on the request the default no functionality event listener
+     * and event builder will be used.
+     * <p/>
+     *
+     *
+     * @param requestEventListener Request event listener or null if the listening to events should be disabled.
+     * @param requestEventBuilder Request event builder.
+     */
+    void setRequestEventListener(RequestEventListener requestEventListener,
+                                        RequestEventBuilder requestEventBuilder) {
+        if (requestEventListener != null) {
+            this.requestEventListener = requestEventListener;
+            this.requestEventBuilder = requestEventBuilder;
+        } else {
+            // use mock builder
+            this.requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
+        }
+    }
+
+    /**
+     * Get an event builder bound to the current container request.
+     *
+     * @return event builder bound to the current container request.
+     */
+    RequestEventBuilder getRequestEventBuilder() {
+        return requestEventBuilder;
+    }
+
+
+    /**
+     * Trigger a new monitoring event for the current request.
+     *
+     * @param requestEventType request event type.
+     */
+    public void triggerEvent(RequestEvent.Type requestEventType) {
+        if (requestEventListener != null) {
+            requestEventListener.onEvent(requestEventBuilder.build(requestEventType));
+        }
+    }
 
     /**
      * Like {@link #setMethod(String)} but does not throw {@link IllegalStateException} if the method is invoked in other than
@@ -619,7 +679,7 @@ public class ContainerRequest extends InboundMessageContext
 
     // Private methods
     private Response.ResponseBuilder evaluateIfMatch(EntityTag eTag) {
-        Set<? super MatchingEntityTag> matchingTags = getIfMatch();
+        Set<? extends EntityTag> matchingTags = getIfMatch();
         if (matchingTags == null) {
             return null;
         }
@@ -649,7 +709,7 @@ public class ContainerRequest extends InboundMessageContext
         return evaluateIfNoneMatch(eTag, matchingTags, httpMethod.equals("GET") || httpMethod.equals("HEAD"));
     }
 
-    private Response.ResponseBuilder evaluateIfNoneMatch(EntityTag eTag, Set<? super MatchingEntityTag> matchingTags,
+    private Response.ResponseBuilder evaluateIfNoneMatch(EntityTag eTag, Set<? extends EntityTag> matchingTags,
                                                          boolean isGetOrHead) {
         if (isGetOrHead) {
             if (matchingTags == MatchingEntityTag.ANY_MATCH) {

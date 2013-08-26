@@ -123,11 +123,12 @@ import static junit.framework.Assert.assertTrue;
  * @author mh124079
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({WadlResourceTest.Wadl1Test.class, WadlResourceTest.Wadl2Test.class, WadlResourceTest.Wadl3Test.class,
-        WadlResourceTest.Wadl5Test.class, WadlResourceTest.Wadl7Test.class, WadlResourceTest.Wadl8Test.class})
+        WadlResourceTest.Wadl5Test.class, WadlResourceTest.Wadl7Test.class, WadlResourceTest.Wadl8Test.class,
+        WadlResourceTest.Wadl9Test.class})
 public class WadlResourceTest {
     private static Document extractWadlAsDocument(Response response) throws ParserConfigurationException, SAXException,
             IOException {
@@ -1349,4 +1350,37 @@ public class WadlResourceTest {
             Assert.assertEquals("postTemplateB", result);
         }
     }
+
+
+    /**
+     * Tests usage of property {@link ServerProperties#METAINF_SERVICES_LOOKUP_DISABLE}.
+     */
+    public static class Wadl9Test extends JerseyTest {
+
+        @Path("wadl9test")
+        public static class Resource {
+
+            @GET
+            public String foo() {
+                return "foo";
+            }
+
+        } // class Resource
+
+        @Override
+        protected Application configure() {
+            ResourceConfig resourceConfig = new ResourceConfig(Resource.class);
+            resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
+
+            return resourceConfig;
+        }
+
+        @Test
+        public void testEmptyWadlResult() throws Exception {
+            Response response = target("/application.wadl").request().get();
+            assertTrue(response.getStatus() == 404);
+        }
+
+    } // class Wadl9Test
+
 }

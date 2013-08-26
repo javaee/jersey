@@ -40,13 +40,12 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.glassfish.jersey</groupId>
         <artifactId>project</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.3-SNAPSHOT</version>
     </parent>
     <artifactId>jersey-documentation</artifactId>
     <packaging>pom</packaging>
@@ -56,6 +55,9 @@
             <id>release</id>
             <properties>
                 <javanet.repository.id>releases</javanet.repository.id>
+                <jersey.docs.version>${jersey.version}</jersey.docs.version>
+                <jersey.apidocs.version>${jersey.version}</jersey.apidocs.version>
+                <jersey.src.branch>${jersey.version}</jersey.src.branch>
             </properties>
         </profile>
     </profiles>
@@ -67,10 +69,10 @@
                     <execution>
                         <configuration>
                             <tasks>
-                                <echo message="Preparing char entities"/>
-                                <mkdir dir="${src.dir}"/>
+                                <echo message="Preparing char entities" />
+                                <mkdir dir="${src.dir}" />
                                 <copy todir="${src.dir}">
-                                    <fileset dir="src/main/docbook"/>
+                                    <fileset dir="src/main/docbook" />
                                 </copy>
                                 <replace file="${src.dir}/jersey.ent" token="$version" value="${jersey.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$docs.version" value="${jersey.docs.version}" />
@@ -107,23 +109,27 @@
                     </dependency>
                 </dependencies>
                 <configuration>
-                    <xincludeSupported>true</xincludeSupported>
-                    <sourceDirectory>${src.dir}</sourceDirectory>
-                    <targetDirectory>${project.build.directory}/docbook</targetDirectory>
+                    <calloutGraphics>false</calloutGraphics>
+                    <!--calloutGraphicsExtension>1</calloutGraphicsExtension-->
+                    <calloutsExtension>true</calloutsExtension>
+                    <highlightDefaultLanguage />
+                    <highlightSource>true</highlightSource>
                     <htmlStylesheet>/documentation.css</htmlStylesheet>
-                    <!--htmlStylesheet>http://jersey.java.net/documentation.css</htmlStylesheet-->
-                    <partAutolabel>true</partAutolabel>
-                    <sectionAutolabel>true</sectionAutolabel>
-                    <sectionLabelIncludesComponentLabel>true</sectionLabelIncludesComponentLabel>
-                    <useExtensions>true</useExtensions>
-                    <tablecolumnsExtension>true</tablecolumnsExtension>
+                    <!--<htmlStylesheet>https://jersey.java.net/documentation.css</htmlStylesheet>-->
                     <linenumberingExtension>true</linenumberingExtension>
                     <linenumberingEveryNth>1</linenumberingEveryNth>
-                    <calloutsExtension>true</calloutsExtension>
-                    <calloutGraphics>false</calloutGraphics>
-                    <highlightSource>true</highlightSource>
-                    <highlightDefaultLanguage/>
-                    <!--calloutGraphicsExtension>1</calloutGraphicsExtension-->
+                    <partAutolabel>true</partAutolabel>
+                    <preProcess>
+                        <copy todir="${project.build.directory}/docbook/index/images">
+                            <fileset dir="${src.dir}/images/" />
+                        </copy>
+                    </preProcess>
+                    <sectionAutolabel>true</sectionAutolabel>
+                    <sectionLabelIncludesComponentLabel>true</sectionLabelIncludesComponentLabel>
+                    <sourceDirectory>${src.dir}</sourceDirectory>
+                    <tablecolumnsExtension>true</tablecolumnsExtension>
+                    <useExtensions>true</useExtensions>
+                    <xincludeSupported>true</xincludeSupported>
                 </configuration>
                 <executions>
                     <execution>
@@ -133,8 +139,9 @@
                             <goal>generate-pdf</goal>
                         </goals>
                         <configuration>
-                            <includes>user-guide.xml</includes>
                             <htmlCustomization>${src.dir}/cust-single.xsl</htmlCustomization>
+                            <includes>user-guide.xml</includes>
+                            <targetDirectory>${project.build.directory}/docbook/index</targetDirectory>
                         </configuration>
                         <phase>package</phase>
                     </execution>
@@ -144,10 +151,11 @@
                             <goal>generate-html</goal>
                         </goals>
                         <configuration>
-                            <includes>index.xml</includes>
                             <htmlCustomization>${src.dir}/cust-chunked.xsl</htmlCustomization>
+                            <includes>index.xml</includes>
                             <chunkedOutput>true</chunkedOutput>
                             <chunkSectionDepth>0</chunkSectionDepth>
+                            <targetDirectory>${project.build.directory}/docbook</targetDirectory>
                             <useIdAsFilename>true</useIdAsFilename>
                         </configuration>
                         <phase>package</phase>
@@ -184,7 +192,7 @@
                         <configuration>
                             <artifacts>
                                 <artifact>
-                                    <file>${project.build.directory}/docbook/user-guide.pdf</file>
+                                    <file>${project.build.directory}/docbook/index/user-guide.pdf</file>
                                     <type>pdf</type>
                                     <classifier>user-guide</classifier>
                                 </artifact>
@@ -203,7 +211,6 @@
         <assembly.directory>${project.build.directory}/assembly</assembly.directory>
         <src.dir>${basedir}/target/gen-src</src.dir>
         <javanet.repository.id>snapshots</javanet.repository.id>
-        <jersey.version>${project.version}</jersey.version>
         <jersey.docs.version>snapshot</jersey.docs.version>
         <jersey.apidocs.version>snapshot</jersey.apidocs.version>
         <jersey.src.branch>master</jersey.src.branch>

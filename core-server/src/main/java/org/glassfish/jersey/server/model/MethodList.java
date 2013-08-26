@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,11 +42,14 @@ package org.glassfish.jersey.server.model;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 /**
  * Iterable list of methods on a single class with convenience getters for
@@ -96,7 +99,7 @@ final class MethodList implements Iterable<AnnotatedMethod> {
     private static List<Method> getAllDeclaredMethods(Class c) {
         List<Method> l = new ArrayList<Method>();
         while (c != null && c != Object.class) {
-            l.addAll(Arrays.asList(c.getDeclaredMethods()));
+            l.addAll(Arrays.asList(AccessController.doPrivileged(ReflectionHelper.getDeclaredMethodsPA(c))));
             c = c.getSuperclass();
         }
         return l;

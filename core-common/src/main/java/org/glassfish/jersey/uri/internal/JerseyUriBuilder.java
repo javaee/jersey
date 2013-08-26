@@ -43,6 +43,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.AccessController;
 import java.util.List;
 import java.util.Map;
 
@@ -52,6 +53,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -370,7 +372,7 @@ public class JerseyUriBuilder extends UriBuilder {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("methodName"));
         }
 
-        Method[] methods = resource.getMethods();
+        Method[] methods = AccessController.doPrivileged(ReflectionHelper.getMethodsPA(resource));
         Method found = null;
         for (Method m : methods) {
             if (methodName.equals(m.getName())) {
@@ -569,7 +571,7 @@ public class JerseyUriBuilder extends UriBuilder {
         checkSsp();
 
         if (queryParams == null) {
-            queryParams = UriComponent.decodeQuery(query.toString(), false);
+            queryParams = UriComponent.decodeQuery(query.toString(), false, false);
             query.setLength(0);
         }
 

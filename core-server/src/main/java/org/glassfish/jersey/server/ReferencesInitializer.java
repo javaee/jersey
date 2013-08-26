@@ -103,7 +103,8 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
 
         final UriRoutingContext uriRoutingCtx = uriRoutingCtxProvider.get();
 
-        containerRequest.setUriInfo(uriRoutingCtx);
+        containerRequest.setUriRoutingContext(uriRoutingCtx);
+        containerRequest.getRequestEventBuilder().setExtendedUriInfo(uriRoutingCtx);
 
         containerRequest.setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
             @Override
@@ -113,9 +114,9 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
         });
 
         // JAX-RS proxies initialization
+        requestInjectee.set(containerRequest);
         uriInfoInjectee.set(uriRoutingCtx);
         httpHeadersInjectee.set(containerRequest);
-        requestInjectee.set(containerRequest);
         securityContextInjectee.setRequest(containerRequest);
 
 

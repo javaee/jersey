@@ -60,10 +60,6 @@ import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import com.google.common.base.Objects;
-import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
-import org.glassfish.jersey.internal.inject.RequestInjectee;
-import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
-import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -152,42 +148,17 @@ public class RequestScope implements Context<RequestScoped> {
         return RequestScoped.class;
     }
 
-    private static final Map<Class<?>, Object> IllegalStateProxiablesMAP = new HashMap<Class<?>, Object>() {
-        {
-            // TODO: if John avoids wrapping ISE with MultiException in HK2, the following would not be needed
-            //       i am awaiting John's confirmation on the matter before making better mock ups here
-            put(UriInfoInjectee.class, new UriInfoInjectee());
-            put(HttpHeadersInjectee.class, new HttpHeadersInjectee());
-            put(RequestInjectee.class, new RequestInjectee());
-            put(SecurityContextInjectee.class, new SecurityContextInjectee());
-            // ENDTODO.
-        }
-    };
-
     @Override
     public <U> U findOrCreate(ActiveDescriptor<U> activeDescriptor, ServiceHandle<?> root) {
 
-        try {
-            final Instance instance = current();
+        final Instance instance = current();
 
-            U retVal = instance.get(activeDescriptor);
-            if (retVal == null) {
-                retVal = activeDescriptor.create(root);
-                instance.put(activeDescriptor, retVal);
-            }
-            return retVal;
-
-        } catch (IllegalStateException ise) {
-            // TODO: if John avoids wrapping ISE with MultiException in HK2, the following would not be needed
-            if (activeDescriptor.isProxiable()) {
-                U result = (U) IllegalStateProxiablesMAP.get(activeDescriptor.getImplementationClass());
-                if (result != null) {
-                    return result;
-                }
-            }
-            throw ise;
-            // ENDTODO.
+        U retVal = instance.get(activeDescriptor);
+        if (retVal == null) {
+            retVal = activeDescriptor.create(root);
+            instance.put(activeDescriptor, retVal);
         }
+        return retVal;
     }
 
     @Override

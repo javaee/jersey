@@ -47,6 +47,9 @@ import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -336,17 +339,28 @@ public class HttpUrlConnector implements Connector {
         } catch (final ProtocolException pe) {
             try {
                 final Class<?> httpURLConnectionClass = httpURLConnection.getClass();
-                final Field methodField = httpURLConnectionClass.getSuperclass().getDeclaredField("method");
-                methodField.setAccessible(true);
-                methodField.set(httpURLConnection, method);
-            } catch (final Exception e) {
-                throw new RuntimeException(e);
+                AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
+                    @Override
+                    public Object run() throws NoSuchFieldException, IllegalAccessException {
+                        final Field methodField = httpURLConnectionClass.getSuperclass().getDeclaredField("method");
+                        methodField.setAccessible(true);
+                        methodField.set(httpURLConnection, method);
+                        return null;
+                    }
+                });
+            } catch (final PrivilegedActionException e) {
+                final Throwable cause = e.getCause();
+                if (cause instanceof RuntimeException) {
+                    throw (RuntimeException) cause;
+                } else {
+                    throw new RuntimeException(cause);
+                }
             }
         }
     }
 
     @Override
     public String getName() {
-        return "HttpUrlConnection " + System.getProperty("java.version");
+        return "HttpUrlConnection " + AccessController.doPrivileged(PropertiesHelper.getSystemProperty("java.version"));
     }
 }

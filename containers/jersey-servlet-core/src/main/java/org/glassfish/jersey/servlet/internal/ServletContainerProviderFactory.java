@@ -58,11 +58,11 @@ public final class ServletContainerProviderFactory {
      * Returns array of all "registered" implementations of {@link ServletContainerProvider}.
      *
      * @return Array of registered providers. Never returns {@code null}.
-     *      If there is no implementation registered empty array is returned.
-     * @todo Instances of ServletContainerProvider could be cached, maybe. ???
-     * @todo Check if META-INF/services lookup is enabled. ???
+     *         If there is no implementation registered empty array is returned.
      */
     public static ServletContainerProvider[] getAllServletContainerProviders() {
+        // TODO Instances of ServletContainerProvider could be cached, maybe. ???
+        // TODO Check if META-INF/services lookup is enabled. ???
         return ServiceFinder.find(ServletContainerProvider.class).toArray();
     }
 

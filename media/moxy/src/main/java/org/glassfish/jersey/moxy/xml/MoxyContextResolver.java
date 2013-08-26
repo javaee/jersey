@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,7 +63,8 @@ import org.eclipse.persistence.jaxb.JAXBContextProperties;
  */
 class MoxyContextResolver implements ContextResolver<JAXBContext> {
 
-    private final static String MOXY_OXM_MAPPING_FILE_NAME = "eclipselink-oxm.xml";
+    private static final Logger LOGGER = Logger.getLogger(MoxyContextResolver.class.getName());
+    private static final String MOXY_OXM_MAPPING_FILE_NAME = "eclipselink-oxm.xml";
 
     private final boolean oxmMappingLookup;
     private final Map<String, Object> properties;
@@ -110,21 +111,22 @@ class MoxyContextResolver implements ContextResolver<JAXBContext> {
             }
         }
 
-        Class[] typeArray = new Class[]{type};
+        final Class[] typeArray;
         if (classes != null && classes.length > 0) {
-            typeArray = new Class[typeArray.length + classes.length];
+            typeArray = new Class[1 + classes.length];
             System.arraycopy(classes, 0, typeArray, 0, classes.length);
             typeArray[typeArray.length - 1] = type;
+        } else {
+            typeArray = new Class[]{type};
         }
 
         try {
-            final JAXBContext context = JAXBContextFactory.createContext(new Class[]{type}, propertiesCopy, classLoader);
-            Logger.getLogger(MoxyContextResolver.class.getName()).log(Level.FINE, "using context " + context);
+            final JAXBContext context = JAXBContextFactory.createContext(typeArray, propertiesCopy, classLoader);
+            LOGGER.log(Level.FINE, "Using JAXB context " + context);
             return context;
         } catch (JAXBException e) {
-            // TODO: log error
+            LOGGER.fine("Unable to create JAXB context.");
             return null;
         }
     }
-
 }

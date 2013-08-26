@@ -41,6 +41,7 @@
 package org.glassfish.jersey.tests.e2e.server.validation;
 
 import java.net.URI;
+import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -64,6 +65,7 @@ import static junit.framework.Assert.assertEquals;
  * Test various combinations of enabling/disabling: auto-discovery, bean validation, validation feature.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class PropertyValidationTest {
 
@@ -72,7 +74,7 @@ public class PropertyValidationTest {
 
         @POST
         @NotNull
-        public String post(@NotNull final String value) {
+        public String post(final String value) {
             return value.isEmpty() ? null : value;
         }
     }
@@ -169,6 +171,21 @@ public class PropertyValidationTest {
 
     private void _test(final int responseStatus, final Boolean disableValidation,
                        final Boolean disableAutoDiscovery, final boolean registerFeature) throws Exception {
+        final URI uri = URI.create("/");
+
+        assertApply(responseStatus, initResourceConfig(disableValidation, disableAutoDiscovery, registerFeature), uri);
+
+        if ( responseStatus == 500) {
+            // validation works - environment is validation friendly -> let's try to disable META-INF/services lookup
+            final ResourceConfig resourceConfig = initResourceConfig(disableValidation, disableAutoDiscovery, true);
+            resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
+
+            assertApply(500, resourceConfig, uri);
+        }
+    }
+
+    private ResourceConfig initResourceConfig(final Boolean disableValidation,
+                                              final Boolean disableAutoDiscovery, final boolean registerFeature) {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class).register(LoggingFilter.class);
 
         if (registerFeature) {
@@ -180,15 +197,15 @@ public class PropertyValidationTest {
         if (disableValidation != null) {
             resourceConfig.property(ServerProperties.BV_FEATURE_DISABLE, disableValidation);
         }
+        return resourceConfig;
+    }
 
+    private void assertApply(int responseStatus, ResourceConfig resourceConfig, URI uri) throws InterruptedException, ExecutionException {
         final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
-
-        final URI uri = URI.create("/");
         final ContainerRequest requestContext = new ContainerRequest(uri, uri, "POST", null, new MapPropertiesDelegate());
-
-        final ContainerResponse containerResponse = applicationHandler
-                .apply(requestContext).get();
+        final ContainerResponse containerResponse = applicationHandler.apply(requestContext).get();
 
         assertEquals(responseStatus, containerResponse.getStatus());
     }
+
 }

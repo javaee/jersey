@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.tests.api;
 
+import java.security.AccessController;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,6 +57,7 @@ import javax.ws.rs.core.Variant;
 
 import javax.annotation.Nullable;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.HeadersFactory;
 
 import org.junit.Test;
@@ -279,7 +281,7 @@ public class ResponseTest {
 
 
     private static final String indent = "    ";
-    private static final String newline = System.getProperty("line.separator");
+    private static final String newline = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("line.separator"));
 
     private String verifyResponse(Response resp, String content, int status,
                                   List<String> encoding, List<String> language, List<String> type,

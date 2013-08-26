@@ -49,6 +49,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.NameBinding;
@@ -74,6 +75,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.Providers;
 
+import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -93,7 +95,9 @@ public class ExceptionMapperTest extends JerseyTest {
                 Resource.class,
                 MyMessageBodyWritter.class,
                 MyMessageBodyReader.class,
+                ClientErrorExceptionMapper.class,
                 MyExceptionMapper.class,
+                ThrowableMapper.class,
                 MyExceptionMapperCauseAnotherException.class,
                 // JERSEY-1515
                 TestResource.class,
@@ -101,10 +105,11 @@ public class ExceptionMapperTest extends JerseyTest {
                 // JERSEY-1525
                 ExceptionTestResource.class,
                 ExceptionThrowingFilter.class,
-                ThrowableMapper.class,
                 IOExceptionMapper.class,
                 IOExceptionMessageReader.class,
-                IOExceptionResource.class
+                IOExceptionResource.class,
+                MessageBodyProviderNotFoundResource.class,
+                ProviderNotFoundExceptionMapper.class
         );
     }
 
@@ -179,6 +184,22 @@ public class ExceptionMapperTest extends JerseyTest {
             throw new MyAnotherException("resource");
         }
 
+        @Path("throwable")
+        @GET
+        public String throwsThrowable() throws Throwable {
+            throw new Throwable("throwable",
+                    new RuntimeException("runtime-exception",
+                            new ClientErrorException("client-error", 499)));
+        }
+    }
+
+    public static class ClientErrorExceptionMapper implements ExceptionMapper<ClientErrorException> {
+
+        @Override
+        public Response toResponse(ClientErrorException exception) {
+            return Response.status(Response.Status.OK).entity("mapped-client-error-" +
+                    exception.getResponse().getStatus() + "-" + exception.getMessage()).build();
+        }
     }
 
     public static class MyExceptionMapper implements ExceptionMapper<MyException> {
@@ -189,6 +210,15 @@ public class ExceptionMapperTest extends JerseyTest {
         }
     }
 
+    public static class ThrowableMapper implements ExceptionMapper<Throwable> {
+
+        @Override
+        public Response toResponse(Throwable throwable) {
+            throwable.printStackTrace();
+            return Response.status(Response.Status.OK).entity("mapped-throwable-" + throwable.getMessage()).build();
+        }
+
+    }
 
     public static class MyExceptionMapperCauseAnotherException implements ExceptionMapper<MyAnotherException> {
 
@@ -406,34 +436,21 @@ public class ExceptionMapperTest extends JerseyTest {
             // Not doing so would result in a second exception being thrown
             // which would not be mapped again; instead, it would be propagated
             // to the hosting container directly.
-            if (!"mapped-response-filter-exception".equals(responseContext.getEntity())) {
+            if (!"mapped-throwable-response-filter-exception".equals(responseContext.getEntity())) {
                 throw new NullPointerException("response-filter-exception");
             }
         }
-    }
-
-    @Provider
-    public static class ThrowableMapper implements ExceptionMapper<Throwable> {
-
-        @Override
-        public Response toResponse(Throwable throwable) {
-            throwable.printStackTrace();
-            return Response.status(Response.Status.OK).entity("mapped-" + throwable.getMessage()).build();
-        }
-
     }
 
     @Test
     public void testJersey1525() {
         Response res = target().path("test/responseFilter").request().get();
         assertEquals(200, res.getStatus());
-        assertEquals("mapped-response-filter-exception", res.readEntity(String.class));
+        assertEquals("mapped-throwable-response-filter-exception", res.readEntity(String.class));
     }
-
     /**
      * END: JERSEY-1525 reproducer code
      */
-
 
     @Provider
     public static class IOExceptionMessageReader implements MessageBodyReader<IOBean>, MessageBodyWriter<IOBean> {
@@ -500,4 +517,45 @@ public class ExceptionMapperTest extends JerseyTest {
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("passed", response.readEntity(String.class));
     }
+
+    @Test
+    public void testThrowableFromResourceMethod() {
+        Response res = target().path("test/throwable").request().get();
+        assertEquals(200, res.getStatus());
+        assertEquals("mapped-throwable-throwable", res.readEntity(String.class));
+    }
+
+    @Path("not-found")
+    public static class MessageBodyProviderNotFoundResource {
+        @GET
+        @Produces("aa/bbb")
+        public UnknownType get() {
+            return new UnknownType();
+        }
+    }
+    public static class UnknownType {
+
+    }
+
+    public static class ProviderNotFoundExceptionMapper implements ExceptionMapper<MessageBodyProviderNotFoundException>{
+
+
+        @Override
+        public Response toResponse(MessageBodyProviderNotFoundException exception) {
+            return Response.ok("mapped-by-ProviderNotFoundExceptionMapper").build();
+        }
+    }
+
+    /**
+     * This test tests that {@link MessageBodyProviderNotFoundException} cannot be mapped by
+     * an {@link ExceptionMapper}. Spec defines that exception mappers should process
+     * exceptions thrown from user resources and providers. So, we currently limit exception
+     * mappers only to these exceptions.
+     */
+    @Test
+    public void testNotFoundResource() {
+        final Response response = target().path("not-found").request().get();
+        Assert.assertEquals(500, response.getStatus());
+    }
+
 }

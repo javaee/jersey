@@ -52,11 +52,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
@@ -309,7 +308,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     public void service(final Request request, final Response response) {
         final ResponseWriter responseWriter = new ResponseWriter(response);
         try {
-            logger.debugLog("GrizzlyHttpContaner.service(...) started");
+            logger.debugLog("GrizzlyHttpContainer.service(...) started");
             URI baseUri = getBaseUri(request);
             ContainerRequest requestContext = new ContainerRequest(baseUri,
                     getRequestUri(baseUri, request), request.getMethod().getMethodString(),
@@ -331,7 +330,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             appHandler.handle(requestContext);
         } finally {
             // TODO if writer not closed or suspended yet, suspend.
-            logger.debugLog("GrizzlyHttpContaner.service(...) finished");
+            logger.debugLog("GrizzlyHttpContainer.service(...) finished");
         }
     }
 
@@ -347,9 +346,12 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     @Override
     public void reload(ResourceConfig configuration) {
-        appHandler = new ApplicationHandler(configuration.register(new GrizzlyBinder()));
-        containerListener.onReload(this);
+        appHandler = new ApplicationHandler(configuration);
+        appHandler.registerAdditionalBinders(new HashSet<Binder>() {{
+            add(new GrizzlyBinder());
+        }});
         this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
+        containerListener.onReload(this);
     }
 
     @Override

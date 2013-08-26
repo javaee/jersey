@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -216,6 +215,20 @@ public class ParamConverterInternalTest extends AbstractTest {
         ApplicationHandler application = new ApplicationHandler(new ResourceConfig(MyLazyParamProvider.class, Resource.class));
         ContainerResponse response = application.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
         assertEquals(400, response.getStatus());
+    }
+
+    /**
+     * This test verifies that the DateProvider is used for date string conversion instead of
+     * string constructor that would be invoking deprecated Date(String) constructor.
+     */
+    @Test
+    public void testDateParamConverterIsChosenForDateString() {
+        initiateWebApplication();
+        final ParamConverter<Date> converter =
+                new ParamConverters.AggregatedProvider(app().getServiceLocator()).getConverter(Date.class, Date.class, null);
+
+        assertEquals("Unexpected date converter provider class",
+                ParamConverters.DateProvider.class, converter.getClass().getEnclosingClass());
     }
 
     @Path("resource")

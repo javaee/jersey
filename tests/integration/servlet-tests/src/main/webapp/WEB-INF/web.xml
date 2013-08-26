@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -148,5 +148,23 @@
     <filter-mapping>
         <filter-name>FormConsumptionFilter</filter-name>
         <url-pattern>/form-consumption/*</url-pattern>
+    </filter-mapping>
+
+    <!-- 404 -->
+    <filter>
+        <filter-name>custom404</filter-name>
+        <filter-class>org.glassfish.jersey.servlet.ServletContainer</filter-class>
+        <init-param>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>org.glassfish.jersey.tests.integration.servlettests.CustomMediaTypeAnd404Resource</param-value>
+        </init-param>
+        <init-param>
+            <param-name>jersey.config.servlet.filter.contextPath</param-name>
+            <param-value>/custom404/</param-value>
+        </init-param>
+    </filter>
+    <filter-mapping>
+        <filter-name>custom404</filter-name>
+        <url-pattern>/custom404/*</url-pattern>
     </filter-mapping>
 </web-app>

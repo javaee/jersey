@@ -47,7 +47,9 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.EntityTag;
@@ -272,6 +274,12 @@ public class ResponseE2ETest extends JerseyTest {
         public String internal() {
             return "internal";
         }
+
+        @PUT
+        @Path("not-modified-put")
+        public Response notModifiedPut(String data) {
+            return Response.notModified().entity("not-modified-" + data).build();
+        }
     }
 
     @Override
@@ -334,5 +342,22 @@ public class ResponseE2ETest extends JerseyTest {
         assertNotNull("Response is null.", response);
         assertEquals("Unexpected response status.", 200, response.getStatus());
         assertEquals("Unexpected response entity.", "internal", response.readEntity(String.class));
+    }
+
+    /**
+     * JERSEY-845 reproducer.
+     *
+     * Verifies consistent behavior over time ("works as designed").
+     */
+    @Test
+    public void testEntityInNotModifiedPutResposne() {
+        final WebTarget target = target("response").path("not-modified-put");
+        Response response;
+
+        response = target.request().put(Entity.text("put-data"));
+        assertNotNull("Response is null.", response);
+        assertEquals("Unexpected response status.", Response.Status.NOT_MODIFIED.getStatusCode(), response.getStatus());
+        // response entity is dropped by server container in compliance with HTTP 1.1 spec
+        assertFalse("Unexpected response entity.", response.hasEntity());
     }
 }

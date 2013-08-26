@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -53,8 +56,11 @@ public class TestContainerLifecycleListener implements ContainerLifecycleListene
 
     private static int startupCount = 0;
 
+    private static CountDownLatch latch = new CountDownLatch(AbstractHelloWorldResource.NUMBER_OF_APPLICATIONS);
+
     @Override
     public void onStartup(Container container) {
+        latch.countDown();
         startupCount++;
     }
 
@@ -66,7 +72,8 @@ public class TestContainerLifecycleListener implements ContainerLifecycleListene
     public void onShutdown(Container container) {
     }
 
-    public static int getStartupCount() {
+    public static int getStartupCount() throws InterruptedException {
+        latch.await(5, TimeUnit.SECONDS);
         return startupCount;
     }
 

@@ -82,6 +82,7 @@ import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.model.internal.ResourceMethodDispatcherFactory;
 import org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
@@ -165,7 +166,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             Provider<RespondingContext> respondingContextProvider,
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
-            ResourceMethod method,
+            final ResourceMethod method,
             ProcessingProviders processingProviders,
             ServiceLocator locator,
             Configuration globalConfig) {
@@ -176,7 +177,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
         this.method = method;
         final Invocable invocable = method.getInvocable();
-        this.dispatcher = dispatcherProvider.create(invocable, invocationHandlerProvider.create(invocable));
+        this.dispatcher =  dispatcherProvider.create(invocable,
+                invocationHandlerProvider.create(invocable));
 
         this.resourceMethod = invocable.getHandlingMethod();
         this.resourceClass = invocable.getHandler().getHandlerClass();
@@ -342,8 +344,17 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
     }
 
+
     private Response invoke(ContainerRequest requestContext, Object resource) {
-        Response jaxrsResponse = dispatcher.dispatch(resource, requestContext);
+
+        Response jaxrsResponse;
+        requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_START);
+        try {
+            jaxrsResponse = dispatcher.dispatch(resource, requestContext);
+        } finally {
+            requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_FINISHED);
+        }
+
         if (jaxrsResponse == null) {
             jaxrsResponse = Response.noContent().build();
         }

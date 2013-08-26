@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,10 +41,12 @@ package org.glassfish.jersey.examples.httpsclientservergrizzly;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.AccessController;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -66,7 +68,8 @@ public class Server {
     }
 
     private static int getPort(int defaultPort) {
-        final String port = System.getProperty("jersey.config.test.container.port");
+        final String port =
+                AccessController.doPrivileged(PropertiesHelper.getSystemProperty("jersey.config.test.container.port"));
         if (null != port) {
             try {
                 return Integer.parseInt(port);

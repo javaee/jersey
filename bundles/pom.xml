@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey</groupId>
         <artifactId>project</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.3-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.bundles</groupId>
@@ -62,6 +62,16 @@
     </modules>
 
     <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <modules>
+                <module>apidocs</module>
+                <module>examples</module>
+            </modules>
+        </profile>
         <profile>
             <id>attach-src-and-docs</id>
             <activation>

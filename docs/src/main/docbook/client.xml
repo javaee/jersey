@@ -167,7 +167,7 @@
             <orderedlist>
                 <listitem>
                     <para>
-                        URI building using &jaxrs.core.UriBuilder; and &jaxrs.core.UriTemplate; to safely build URIs;
+                        URI building using &jaxrs.core.UriBuilder; and &jersey.common.uri.UriTemplate; to safely build URIs;
                     </para>
                 </listitem>
                 <listitem>
@@ -670,6 +670,31 @@ Client client = ClientBuilder.newClient(clientConfig);</programlisting>
             Note that these features are provided by Jersey, but since they use and implement JAX-RS API, the features should
             be portable and run in any JAX-RS implementation, not just Jersey. See <xref linkend="filters-and-interceptors" />
             chapter for more information on filters and interceptors.
+        </para>
+    </section>
+
+    <section>
+        <title>Closing connections</title>
+
+        <para>
+            The underlying connections are opened for each request
+            and closed after the response is received and entity is processed (entity is read). See the
+            following example:
+        </para>
+        <example>
+            <title>Closing connections</title>
+            <programlisting language="java" linenumbering="numbered">final WebTarget target = ... some web target
+Response response = target.path("resource").request().get();
+System.out.println("Connection is still open.");
+System.out.println("string response: " + response.readEntity(String.class));
+System.out.println("Now the connection is closed.");</programlisting>
+            </example>
+        <para>
+            If you don't read the entity, then you need to close the response manually by
+            <literal>response.close()</literal>. Also if the entity is read into an &jdk6.InputStream;
+            (by <literal>response.readEntity(InputStream.class)</literal>), the connection stays open until
+            you finish reading from the &lit.jdk6.InputStream;. In that case, the InputStream
+            or the Response should be closed manually at the end of reading from InputStream.
         </para>
     </section>
 

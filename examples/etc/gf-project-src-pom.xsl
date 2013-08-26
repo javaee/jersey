@@ -56,9 +56,11 @@
             match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
             or pom:groupId='org.glassfish.jersey.containers'
             or pom:groupId='org.glassfish.jersey.media'
+            or pom:artifactId='jersey-wadl-doclet'
             or pom:artifactId='jersey-mvc-jsp'
             or pom:artifactId='jersey-bean-validation'
             or pom:groupId='com.sun.xml.bind'
+            or pom:groupId='org.codehaus.jettison'
             or pom:groupId='javax.servlet']/pom:scope[text()!=test]">
         <scope>provided</scope>
     </xsl:template>
@@ -67,10 +69,12 @@
             match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
             or pom:groupId='org.glassfish.jersey.containers'
             or pom:groupId='org.glassfish.jersey.media'
+            or pom:artifactId='jersey-wadl-doclet'
             or pom:artifactId='jersey-mvc-jsp'
             or pom:artifactId='jersey-bean-validation'
             or pom:groupId='com.sun.xml.bind'
             or pom:groupId='javax.validation'
+            or pom:groupId='org.codehaus.jettison'
             or pom:groupId='javax.servlet']">
         <xsl:copy>
             <xsl:apply-templates />
@@ -96,6 +100,42 @@
             </exclusions>
         </xsl:copy>
     </xsl:template>
+
+    <!-- There is problem to run Spring example on GF - https://java.net/jira/browse/JERSEY-2032
+    <xsl:template
+            match="pom:dependencies/pom:dependency[pom:artifactId='jersey-spring3']">
+        <xsl:copy>
+            <xsl:apply-templates />
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>javax.ws.rs-api</artifactId>
+                </exclusion>
+
+
+                <exclusion>
+                    <groupId>org.glassfish.jersey.core</groupId>
+                    <artifactId>jersey-server</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.glassfish.jersey.containers</groupId>
+                    <artifactId>jersey-container-servlet-core</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>org.glassfish.hk2</groupId>
+                    <artifactId>hk2</artifactId>
+                </exclusion>
+
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </xsl:copy>
+    </xsl:template>
+    -->
 
     <xsl:template match="pom:dependencies">
       <xsl:copy>

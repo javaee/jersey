@@ -77,7 +77,7 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
     }
 
-    private static final class CookieParamValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private static final class CookieParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
 
@@ -86,11 +86,11 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
 
         @Override
-        public Object get(HttpContext context) {
+        public Object provide() {
             // TODO: cache?
             MultivaluedMap<String, String> cookies = new MultivaluedStringMap();
 
-            for (Map.Entry<String, Cookie> e : context.getRequestContext().getCookies().entrySet()) {
+            for (Map.Entry<String, Cookie> e : getContainerRequest().getCookies().entrySet()) {
                 cookies.putSingle(e.getKey(), e.getValue().getValue());
             }
 
@@ -103,7 +103,7 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
     }
 
-    private static final class CookieTypeParamValueFactory extends AbstractHttpContextValueFactory<Cookie> {
+    private static final class CookieTypeParamValueFactory extends AbstractContainerRequestValueFactory<Cookie> {
 
         private final String name;
 
@@ -112,8 +112,8 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
         }
 
         @Override
-        public Cookie get(HttpContext context) {
-            return context.getRequestContext().getCookies().get(name);
+        public Cookie provide() {
+            return getContainerRequest().getCookies().get(name);
         }
     }
 
@@ -129,7 +129,7 @@ final class CookieParamValueFactoryProvider extends AbstractValueFactoryProvider
     }
 
     @Override
-    public AbstractHttpContextValueFactory<?> createValueFactory(Parameter parameter) {
+    public AbstractContainerRequestValueFactory<?> createValueFactory(Parameter parameter) {
         String parameterName = parameter.getSourceName();
         if (parameterName == null || parameterName.length() == 0) {
             // Invalid cookie parameter name

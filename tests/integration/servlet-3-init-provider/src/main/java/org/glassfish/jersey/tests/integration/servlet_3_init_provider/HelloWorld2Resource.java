@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 /**
@@ -51,12 +50,6 @@ public class HelloWorld2Resource extends AbstractHelloWorldResource {
     @Override
     protected String createName() {
         return "World #2";
-    }
-
-    @GET
-    @Path("containers")
-    public int getContainersCount() {
-        return TestContainerLifecycleListener.getStartupCount();
     }
 
 }
