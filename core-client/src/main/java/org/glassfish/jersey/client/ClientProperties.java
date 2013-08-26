@@ -211,6 +211,19 @@ public final class ClientProperties {
      */
     public static final String MOXY_JSON_FEATURE_DISABLE = CommonProperties.MOXY_JSON_FEATURE_DISABLE + ".client";
 
+    /**
+     * Digest authentication URI cache size limit.
+     *
+     * The value MUST be an instance of {@link java.lang.Integer} and it must be
+	 * higher or equal to 1. The limit should be bigger than the amount 
+	 * of simultaneous requests to the server.
+     * <p />
+     * If the property is absent then a predefined size limit will be used.
+     * <p />
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String DIGESTAUTH_URI_CACHE_SIZELIMIT = "jersey.config.client.digestAuthUriCacheSizeLimit";
+	
     private ClientProperties() {
         // prevents instantiation
     }
