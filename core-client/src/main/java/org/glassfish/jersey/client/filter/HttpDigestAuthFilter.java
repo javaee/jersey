@@ -139,6 +139,11 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 		this.password = password;
 	}
 
+	/**
+	 * @todo Clean up null check of field config. This is a workaround for a bug
+	 * which leaves filter instances without injection.
+	 * See issue https://java.net/jira/browse/JERSEY-2067
+	 */
 	private HttpDigestAuthFilter() {
 		int limit = MAXIMUM_DIGEST_CACHE_SIZE;
 		if (config != null) {
