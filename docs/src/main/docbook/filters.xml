@@ -184,14 +184,14 @@ public class AuthorizationRequestFilter implements ContainerRequestFilter {
                 All the request filters shown above was implemented as post-matching filters. It means that the filters
                 would be applied only after a suitable resource method has been selected to process the actual request
                 i.e. after request matching happens. Request matching is the process of finding a resource method that
-                should be executed based on the request path and other request parameters. Since post-matching request 
+                should be executed based on the request path and other request parameters. Since post-matching request
                 filters are invoked when a particular resource method has already been selected, such filters can not
                 influence the resoure method matching process.
             </para>
             <para>
-                To overcome the above described limitation, there is a possibility to mark 
-                a server request filter as a <emphasis>pre-matching</emphasis> filter, 
-                i.e. to annotate the filter class with the &jaxrs.Prematching; annotation. 
+                To overcome the above described limitation, there is a possibility to mark
+                a server request filter as a <emphasis>pre-matching</emphasis> filter,
+                i.e. to annotate the filter class with the &jaxrs.Prematching; annotation.
                 Pre-matching filters are request filters that are executed before
                 the request matching is started. Thanks to this, pre-matching request filters have
                 the possibility to influence which method will be matched. Such a pre-matching request filter example is shown
@@ -222,17 +222,17 @@ public class PreMatchingFilter implements ContainerRequestFilter {
             </para>
             <para>
                 The <literal>PreMatchingFilter</literal> is a simple pre-matching filter which changes all PUT HTTP
-                methods to POST. This might be useful when you want to always handle these PUT and POST HTTP methods 
-                with the same Java code. After the <literal>PreMatchingFilter</literal> has been invoked, the rest 
+                methods to POST. This might be useful when you want to always handle these PUT and POST HTTP methods
+                with the same Java code. After the <literal>PreMatchingFilter</literal> has been invoked, the rest
                 of the request processing will behave as if the POST HTTP method was originally used.
                 You cannot do this in post-matching filters
                 (standard filters without &lit.jaxrs.Prematching; annotation)
-                as the resource method is already matched (selected). An attempt to tweak the original HTTP method in 
+                as the resource method is already matched (selected). An attempt to tweak the original HTTP method in
                 a post-matching filter would cause an <literal>IllegalArgumentException</literal>.
             </para>
             <para>
-                As written above, pre-matching filters can fully influence the request matching process, which means 
-                you can even modify request URI in a pre-matching filter by invoking 
+                As written above, pre-matching filters can fully influence the request matching process, which means
+                you can even modify request URI in a pre-matching filter by invoking
                 the <literal>setRequestUri(URI)</literal> method of &lit.jaxrs.container.ContainerRequestFilter;
                 so that a different resource would be matched.
             </para>
@@ -246,7 +246,7 @@ public class PreMatchingFilter implements ContainerRequestFilter {
                 Client filters are similar to container filters. The response can also be aborted
                 in the &jaxrs.client.ClientRequestFilter; which would cause that no request will actually be sent to the server at all.
                 A new response is passed to the <literal>abort</literal> method. This response will be used and delivered
-                as a result of the request invocation. Such a response goes through the client response filters. 
+                as a result of the request invocation. Such a response goes through the client response filters.
                 This is similar to what happens on the server side. The process is shown in the following example:
             </para>
             <para>
@@ -272,21 +272,21 @@ public class PreMatchingFilter implements ContainerRequestFilter {
                 The <literal>CheckRequestFilter</literal> validates the outgoing request. It is checked for presence of
                 a <literal>Client-Name</literal> header. If the header is not present the request will be aborted
                 with a made up response with an appropriate code and message in the entity body. This will cause that
-                the original request will not be effectivelly sent to the server but the actual invocation 
+                the original request will not be effectivelly sent to the server but the actual invocation
                 will still end up with a response as if it would be generated by the
                 server side. If there would be any client response filter it would be executed on this response.
             </para>
             <para>
                 To summarize the workflow, for any client request invoked from the client API
-                the client request filters (&jaxrs.client.ClientRequestFilter;) 
-                are executed that could manipulate the request. 
+                the client request filters (&jaxrs.client.ClientRequestFilter;)
+                are executed that could manipulate the request.
                 If not aborted, the outcoming request is then physically sent over to the server side
-                and once a response is received back from the server the client response 
+                and once a response is received back from the server the client response
                 filters (&jaxrs.client.ClientResponseFilter;)
-                are executed that might again manipulate the returned response. 
-                Finally the response is passed back to the code that invoked the request. 
+                are executed that might again manipulate the returned response.
+                Finally the response is passed back to the code that invoked the request.
                 If the request was aborted in any client request filter then the
-                client/server communication is skipped and the aborted response 
+                client/server communication is skipped and the aborted response
                 is used in the response filters.
             </para>
 
@@ -295,10 +295,10 @@ public class PreMatchingFilter implements ContainerRequestFilter {
     <section>
         <title>Interceptors</title>
         <para>
-            Interceptors share a common API for the server and the client side. Whereas filters are primarily intended to manipulate 
+            Interceptors share a common API for the server and the client side. Whereas filters are primarily intended to manipulate
             request and response parameters like HTTP headers, URIs and/or HTTP methods, interceptors are intended to manipulate entities, via manipulating
             entity input/output streams. If you for example need to encode entity body of a client request then you could
-            implement an interceptor to do the work for you. 
+            implement an interceptor to do the work for you.
          </para>
          <para>
             There are two kinds of interceptors, &jaxrs.ReaderInterceptor; and &jaxrs.WriterInterceptor;.
@@ -388,12 +388,12 @@ public class PreMatchingFilter implements ContainerRequestFilter {
             <literal>proceed</literal> method internally calls the wrapped interceptor which must also return an entity.
             The <literal>proceed</literal> method invoked from the last interceptor in the chain calls message body reader which deserializes
             the entity end returns it. Every interceptor can change this entity if there is a need but in the most cases
-            interceptors will just return the entity as returned from the <literal>proceed</literal> method. 
+            interceptors will just return the entity as returned from the <literal>proceed</literal> method.
         </para>
         <para>
-            As already mentioned above, interceptors should be primarily used to manipulate entity body. 
-            Similar to methods exposed by &lit.jaxrs.WriterInterceptorContext; the &lit.jaxrs.ReaderInterceptorContext; 
-            introduces a set of methods for modification of request/response properties like HTTP headers, 
+            As already mentioned above, interceptors should be primarily used to manipulate entity body.
+            Similar to methods exposed by &lit.jaxrs.WriterInterceptorContext; the &lit.jaxrs.ReaderInterceptorContext;
+            introduces a set of methods for modification of request/response properties like HTTP headers,
             URIs and/or HTTP methods (excluding getters and setters for entity as entity has not been read yet).
             Again the same rules as for &lit.jaxrs.WriterInterceptor; applies for changing these properties (change only
             properties in order to influence reading of an entity).
@@ -404,7 +404,7 @@ public class PreMatchingFilter implements ContainerRequestFilter {
             <title>Filter and interceptor execution order</title>
         <para>
             Let's look closer at the context of execution of filters and interceptors. The following steps describes scenario
-            where a JAX-RS client makes a POST request to the server. The server receives an entity and sends a response back 
+            where a JAX-RS client makes a POST request to the server. The server receives an entity and sends a response back
             with the same entity. GZIP reader and writer interceptors are registered on the
             client and the server. Also filters are registered on client and server which change the headers of request
             and response.
@@ -632,7 +632,7 @@ public class CompressionDynamicBinding implements DynamicFeature {
             JAX-RS <literal>Configurable</literal> API. All methods for registration of filter or interceptor classes or instances can be used.
             Such dynamically registered filters or interceptors will be bound only to the actual resource method. In the example above the
             <literal>GZIPWriterInterceptor</literal> will be bound only to the method <literal>getVeryLongString()</literal>
-            which will cause that data will be compressed only for this method and not for the method 
+            which will cause that data will be compressed only for this method and not for the method
             <literal>getHello()</literal>. The code of <literal>GZIPWriterInterceptor</literal> is in the examples above.
         </para>
         <para>
@@ -646,11 +646,14 @@ public class CompressionDynamicBinding implements DynamicFeature {
 
         <para>In case you register more filters and interceptors you might want to define an exact order in which
             they should be invoked. The order can be controlled by the <literal>@Priority</literal> annotation defined
-            by the <literal>javax.annotation.Priority</literal> class. The annotation accepts an integer parameter of priority. Providers used
-            in request processing (ContainerRequestFilter, ClientRequestFilter, ReaderInterceptors) are
-            sorted based on the priority in an ascending manner. So, a request filter with priority defined with <literal>@Priority(1000)</literal>
+            by the <literal>javax.annotation.Priority</literal> class. The annotation accepts an integer parameter of priority.
+            Providers used in request processing (&lit.jaxrs.container.ContainerRequestFilter;,
+            &lit.jaxrs.client.ClientRequestFilter;) as well as entity interceptors (&lit.jaxrs.ReaderInterceptor;,
+            &lit.jaxrs.WriterInterceptor;) are sorted based on the priority in an ascending manner. So, a request filter with
+            priority defined with <literal>@Priority(1000)</literal>
             will be executed before another request filter with priority  defined as <literal>@Priority(2000)</literal>. Providers
-            used during response processing (ContainerResponseFilter, ClientResponseFilter, WriterIntercepors) are executed
+            used during response processing (&lit.jaxrs.container.ContainerResponseFilter;,
+            &lit.jaxrs.client.ClientResponseFilter;) are executed
             in the reverse order (using descending manner), so a provider with the priority defined with
             <literal>@Priority(2000)</literal> will be executed before another provider with
              priority defined with <literal>@Priority(1000)</literal>.
