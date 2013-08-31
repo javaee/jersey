@@ -58,7 +58,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public class PropertiesHelper {
+public final class PropertiesHelper {
 
     private static final Logger LOGGER = Logger.getLogger(PropertiesHelper.class.getName());
 
@@ -289,5 +289,11 @@ public class PropertiesHelper {
         } else {
             return value != null && Boolean.parseBoolean(value.toString());
         }
+    }
+
+    /**
+     * Prevent instantiation.
+     */
+    private PropertiesHelper() {
     }
 }

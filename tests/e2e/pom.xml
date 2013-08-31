@@ -111,6 +111,11 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-entity-filtering</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-mvc</artifactId>
             <scope>test</scope>
         </dependency>

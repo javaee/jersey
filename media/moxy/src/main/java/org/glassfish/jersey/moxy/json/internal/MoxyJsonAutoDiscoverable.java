@@ -50,7 +50,7 @@ import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class MoxyJsonAutoDiscoverable implements AutoDiscoverable {
+public final class MoxyJsonAutoDiscoverable implements AutoDiscoverable {
 
     @Override
     public void configure(final FeatureContext context) {

@@ -823,7 +823,7 @@ Server: Jetty(6.1.24)
     <section>
         <title>Example</title>
 
-        <para>To see a complete wroking example of using Bean Validation (JSR-349) with Jersey refer to the
+        <para>To see a complete working example of using Bean Validation (JSR-349) with Jersey refer to the
             &jersey.github.bv.example.path;.</para>
     </section>
 </chapter>

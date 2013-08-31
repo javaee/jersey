@@ -129,6 +129,7 @@ This line fits the page width.
     <xi:include href="security.xml" />
     <xi:include href="wadl.xml" />
     <xi:include href="bean-validation.xml" />
+    <xi:include href="entity-filtering.xml" />
     <xi:include href="mvc.xml" />
     <xi:include href="monitoring.xml" />
     <xi:include href="spring.xml" />

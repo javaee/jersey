@@ -403,11 +403,20 @@ class ServerRuntime {
                     inMappable = true;
                 } else if (inMappable || throwable instanceof WebApplicationException) {
                     Response waeResponse = null;
+                    Throwable cause = throwable;
+
                     if (throwable instanceof WebApplicationException) {
-                        waeResponse = ((WebApplicationException) throwable).getResponse();
+                        final WebApplicationException webApplicationException = (WebApplicationException) throwable;
+                        cause = webApplicationException.getCause();
+                        waeResponse = webApplicationException.getResponse();
                         if (waeResponse.hasEntity()) {
                             return waeResponse;
                         }
+                    }
+
+                    // Log cause of WebApplicationException.
+                    if (cause != null) {
+                        LOGGER.log(Level.WARNING, LocalizationMessages.WEB_APPLICATION_EXCEPTION_CAUSE(), cause);
                     }
 
                     ExceptionMapper mapper = runtime.exceptionMappers.findMapping(throwable);
