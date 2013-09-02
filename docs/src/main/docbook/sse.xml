@@ -173,7 +173,7 @@
         <para>
             Before you start working with Jersey SSE, in order to add support for SSE you need to include the dependency to the
             <emphasis>SSE media type module</emphasis>:
-            <programlisting xml:id="sse.dependency" language="java" linenumbering="numbered"><![CDATA[<dependency>
+            <programlisting xml:id="sse.dependency" language="xml" linenumbering="numbered"><![CDATA[<dependency>
     <groupId>org.glassfish.jersey.media</groupId>
     <artifactId>jersey-media-sse</artifactId>
 </dependency>]]></programlisting>
@@ -600,7 +600,7 @@ message-to-client; Hello world 9!</screen>
 
                 <example>
                     <title>Overriding <literal>EventSource.onEvent(InboundEvent)</literal> method</title>
-                    <programlisting language="text" linenumbering="numbered">Client client = ClientBuilder.newBuilder()
+                    <programlisting language="java" linenumbering="numbered">Client client = ClientBuilder.newBuilder()
                         .register(SseFeature.class).build();
 WebTarget target = client.target("http://example.com/events");
 EventSource eventSource = new EventSource(target) {
