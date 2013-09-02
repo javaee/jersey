@@ -409,7 +409,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         try {
             doFilter((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse, filterChain);
         } catch (ClassCastException e) {
-            throw new ServletException("non-HTTP request or response");
+            throw new ServletException("non-HTTP request or response", e);
         }
     }
 
