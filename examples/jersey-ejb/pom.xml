@@ -93,7 +93,7 @@
             </properties>
         </profile>
         <profile>
-            <id>examples-source-zip</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
