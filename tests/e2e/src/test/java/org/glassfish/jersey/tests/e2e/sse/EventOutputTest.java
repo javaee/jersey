@@ -64,6 +64,7 @@ import static org.junit.Assert.fail;
  * Event output tests.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class EventOutputTest extends JerseyTest {
 
@@ -121,6 +122,16 @@ public class EventOutputTest extends JerseyTest {
             output.close();
             return output;
         }
+
+        @GET
+        @Path("charset")
+        @Produces("text/event-stream;charset=utf-8")
+        public EventOutput getSseWithCharset() throws IOException {
+            final EventOutput output = new EventOutput();
+            output.write(new OutboundEvent.Builder().data(String.class, "charset").build());
+            output.close();
+            return output;
+        }
     }
 
     @Test
@@ -154,5 +165,21 @@ public class EventOutputTest extends JerseyTest {
         input = target().path("test/closed-empty").request().header("Connection", "close").get(EventInput.class);
         assertEquals(null, input.read());
         assertTrue(input.isClosed());
+    }
+
+    @Test
+    public void testSseContentTypeWithCharset() {
+        /**
+         * Need to disable HTTP Keep-Alive to prevent this test from hanging in HttpURLConnection
+         * due to an attempt to read from a stale, out-of-sync connection closed by the server.
+         * Thus setting the "Connection: close" HTTP header on all requests.
+         */
+        Response r;
+        r = target().path("test/charset").request().header("Connection", "close").get();
+        assertTrue(r.getMediaType().getParameters().get("charset").equalsIgnoreCase("utf-8"));
+        final EventInput eventInput = r.readEntity(EventInput.class);
+        String eventData = eventInput.read().readData();
+        assertEquals("charset", eventData);
+        eventInput.close();
     }
 }
