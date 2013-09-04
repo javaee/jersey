@@ -664,6 +664,7 @@ Client client = ClientBuilder.newClient(clientConfig);</programlisting>
                     &jersey.client.EncodingFeature; in order to use it.</member>
                 <member>&jersey.client.HttpBasicAuthFilter;: HTTP Basic Authentication filter (see <xref linkend="ssl" />
                     below).</member>
+                <member>&jersey.client.HttpDigestAuthFilter;: HTTP Digest Authentication filter.</member>
             </simplelist>
 
             Note that these features are provided by Jersey, but since they use and implement JAX-RS API, the features should
@@ -756,6 +757,17 @@ Client client = ClientBuilder.newBuilder().sslContext(sslContext).build();</prog
                 See the example of how to configure and register the filter:
                 <programlisting linenumbering="numbered"
                             language="java">client.register(new HttpBasicAuthFilter("Homer", "SecretPassword"));</programlisting>
+            </para>
+        </section>
+
+        <section>
+            <title>HTTP Digest Authentication Support</title>
+            <para>
+                Jersey contains a filter that allows client to authenticate to servers which requires HTTP Digest Authentication.
+                Use &jersey.client.HttpDigestAuthFilter; to add authentication header to requests initiated from from the client.
+                See the example of how to configure and register the filter:
+                <programlisting linenumbering="numbered"
+                            language="java">client.register(new HttpDigestAuthFilter("Homer", "SecretPassword"));</programlisting>
             </para>
         </section>
 

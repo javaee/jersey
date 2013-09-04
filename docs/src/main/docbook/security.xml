@@ -248,7 +248,8 @@ public class Resource {
         <para>
             For details about client security please see the <link linkend="client">Client chapter</link>. Jersey
             client allows to define parameters of SSL communication using <literal>HTTPS</literal> protocol.
-            You can also use jersey built-in authentication filter which performs <emphasis>HTTP Basic Authentication</emphasis>.
+            You can also use jersey built-in authentication filters which perform <emphasis>HTTP Basic Authentication</emphasis>
+			or <emphasis>HTTP Digest Authentication</emphasis>.
             See the client chapter for more details.
         </para>
     </section>
