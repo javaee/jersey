@@ -294,16 +294,24 @@ public final class ClientProperties {
 	 */
 	public static final String SUPPRESS_HTTP_COMPLIANCE_VALIDATION =
 			"jersey.config.client.suppressHttpComplianceValidation";
+
+
 	/**
-	 * Digest authentication URI cache size limit.
-	 *
+	 * The property defines the size of digest cache in the
+     * {@link org.glassfish.jersey.client.filter.HttpDigestAuthFilter}. Cache contains authentication
+     * schemes for different request URIs.
+	 * <p>
 	 * The value MUST be an instance of {@link java.lang.Integer} and it must be
-	 * higher or equal to 1. The limit should be bigger than the amount of
-	 * simultaneous requests to the server.
-	 * <p />
-	 * If the property is absent then a predefined size limit will be used.
-	 * <p />
+	 * higher or equal to 1.
+     * </p>
+	 * <p>
+     * The default value is {@code 1000}.
+     * </p>
+	 * <p>
 	 * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.3
 	 */
 	public static final String DIGESTAUTH_URI_CACHE_SIZELIMIT = "jersey.config.client.digestAuthUriCacheSizeLimit";
 
