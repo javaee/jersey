@@ -66,7 +66,7 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return (type.equals(OutboundEvent.class));
+        return type.equals(OutboundEvent.class) && SseFeature.SERVER_SENT_EVENTS_TYPE.isCompatible(mediaType);
     }
 
     @Override

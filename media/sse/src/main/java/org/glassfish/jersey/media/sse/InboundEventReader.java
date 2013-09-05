@@ -81,7 +81,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return InboundEvent.class.equals(type) && mediaType.equals(SseFeature.SERVER_SENT_EVENTS_TYPE);
+        return InboundEvent.class.equals(type) && SseFeature.SERVER_SENT_EVENTS_TYPE.isCompatible(mediaType);
     }
 
     @Override
