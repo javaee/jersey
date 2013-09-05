@@ -39,19 +39,14 @@
  */
 package org.glassfish.jersey.client.filter;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.nio.charset.Charset;
-
 import java.util.Arrays;
 import java.util.List;
-import javax.ws.rs.core.Configuration;
-import org.glassfish.jersey.client.ClientConfig;
+
 import org.glassfish.jersey.client.filter.HttpDigestAuthFilter.DigestScheme;
 
-import org.junit.Test;
 import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author raphael.jolivet@gmail.com
@@ -59,84 +54,84 @@ import org.junit.Assert;
  */
 public class HttpDigestAuthFilterTest {
 
-	@Test
-	public void testParseHeaders1() throws Exception // no digest scheme
-	{
-		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-		Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
-		method.setAccessible(true);
-		DigestScheme ds = (DigestScheme) method.invoke(f,
-				Arrays.asList(new String[]{
-			"basic toto=tutu",
-			"basic toto=\"tutu\""
-		}));
+    @Test
+    public void testParseHeaders1() throws Exception // no digest scheme
+    {
+        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+                        "basic toto=tutu",
+                        "basic toto=\"tutu\""
+                }));
 
-		Assert.assertNull(ds);
-	}
+        Assert.assertNull(ds);
+    }
 
-	@Test
-	public void testParseHeaders2() throws Exception // Two concurrent schemes
-	{
-		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-		Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
-		method.setAccessible(true);
-		DigestScheme ds = (DigestScheme) method.invoke(f,
-				Arrays.asList(new String[]{
-			"Digest realm=\"tata\"",
-			"basic  toto=\"tutu\""
-		}));
-		Assert.assertNotNull(ds);
+    @Test
+    public void testParseHeaders2() throws Exception // Two concurrent schemes
+    {
+        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+                        "Digest realm=\"tata\"",
+                        "basic  toto=\"tutu\""
+                }));
+        Assert.assertNotNull(ds);
 
-		Assert.assertEquals("tata", ds.getRealm());
-	}
+        Assert.assertEquals("tata", ds.getRealm());
+    }
 
-	@Test
-	public void testParseHeaders3() throws Exception // Complex case, with comma inside value
-	{
-		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-		Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
-		method.setAccessible(true);
-		DigestScheme ds = (DigestScheme) method.invoke(f,
-				Arrays.asList(new String[]{
-			"digest realm=\"tata\",nonce=\"foo, bar\""
-		}));
+    @Test
+    public void testParseHeaders3() throws Exception // Complex case, with comma inside value
+    {
+        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+                        "digest realm=\"tata\",nonce=\"foo, bar\""
+                }));
 
-		Assert.assertNotNull(ds);
-		Assert.assertEquals("tata", ds.getRealm());
-		Assert.assertEquals("foo, bar", ds.getNonce());
-	}
+        Assert.assertNotNull(ds);
+        Assert.assertEquals("tata", ds.getRealm());
+        Assert.assertEquals("foo, bar", ds.getNonce());
+    }
 
-	@Test
-	public void testParseHeaders4() throws Exception // Spaces
-	{
-		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-		Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
-		method.setAccessible(true);
-		DigestScheme ds = (DigestScheme) method.invoke(f,
-				Arrays.asList(new String[]{
-			"    digest realm =   \"tata\"  ,  opaque=\"bar\" ,nonce=\"foo, bar\""
-		}));
+    @Test
+    public void testParseHeaders4() throws Exception // Spaces
+    {
+        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+                        "    digest realm =   \"tata\"  ,  opaque=\"bar\" ,nonce=\"foo, bar\""
+                }));
 
-		Assert.assertNotNull(ds);
-		Assert.assertEquals("tata", ds.getRealm());
-		Assert.assertEquals("foo, bar", ds.getNonce());
-		Assert.assertEquals("bar", ds.getOpaque());
-	}
+        Assert.assertNotNull(ds);
+        Assert.assertEquals("tata", ds.getRealm());
+        Assert.assertEquals("foo, bar", ds.getNonce());
+        Assert.assertEquals("bar", ds.getOpaque());
+    }
 
-	@Test
-	public void testParseHeaders5() throws Exception // Mix of quotes and  non-quotes
-	{
-		HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-		Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
-		method.setAccessible(true);
-		DigestScheme ds = (DigestScheme) method.invoke(f,
-				Arrays.asList(new String[]{
-			"    digest realm =   \"tata\"  ,  opaque =bar ,nonce=\"foo, bar\""
-		}));
+    @Test
+    public void testParseHeaders5() throws Exception // Mix of quotes and  non-quotes
+    {
+        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+                        "    digest realm =   \"tata\"  ,  opaque =bar ,nonce=\"foo, bar\""
+                }));
 
-		Assert.assertNotNull(ds);
-		Assert.assertEquals("tata", ds.getRealm());
-		Assert.assertEquals("foo, bar", ds.getNonce());
-		Assert.assertEquals("bar", ds.getOpaque());
-	}
+        Assert.assertNotNull(ds);
+        Assert.assertEquals("tata", ds.getRealm());
+        Assert.assertEquals("foo, bar", ds.getNonce());
+        Assert.assertEquals("bar", ds.getOpaque());
+    }
 }
