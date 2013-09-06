@@ -113,6 +113,7 @@
                     <groupId>org.mortbay.jetty</groupId>
                     <artifactId>jetty-maven-plugin</artifactId>
                     <configuration>
+                        <skip>${skip.tests}</skip>
                         <scanIntervalSeconds>10</scanIntervalSeconds>
                         <stopPort>9999</stopPort>
                         <stopKey>STOP</stopKey>

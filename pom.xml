@@ -252,6 +252,7 @@
                     <version>2.13</version>
                     <configuration>
                         <argLine>-Xmx1024m</argLine>
+                        <skipTests>${skip.tests}</skipTests>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -334,7 +335,7 @@
                         <preparationGoals>clean install</preparationGoals>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <arguments>${skip.release.tests} ${release.arguments}</arguments>
+                        <arguments>${release.tests.args} ${release.arguments}</arguments>
                     </configuration>
                 </plugin>
 
@@ -441,6 +442,10 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
                     <version>2.6</version>
+                    <configuration>
+                        <skipTests>${skip.tests}</skipTests>
+                        <skipITs>${skip.tests}</skipITs>
+                    </configuration>
                     <executions>
                         <execution>
                             <goals>
@@ -561,7 +566,8 @@
                 <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
-                <skip.release.tests>-Dmaven.test.skip=true</skip.release.tests>
+                <skip.release.tests>-Dmaven.test.skip=true -Dskip.tests=true</skip.release.tests>
+                <skip.tests>true</skip.tests>
             </properties>
         </profile>
         <profile>
@@ -1163,7 +1169,8 @@
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <xdk.absolute.path />
-        <skip.release.tests />
+        <release.tests.args>-Dmaven.test.skip=false</release.tests.args>
+        <skip.tests>false</skip.tests>
 
         <jersey.version>${project.version}</jersey.version>
         <!-- Dependency versions -->
@@ -1203,7 +1210,6 @@
         <pax-swissbox-version>1.3.1</pax-swissbox-version>
         <servlet2.version>2.4</servlet2.version>
         <servlet3.version>3.0.1</servlet3.version>
-        <skip.release.tests>-Dmaven.test.skip=false</skip.release.tests> <!-- do not skip tests by default -->
         <simple.version>5.1.4</simple.version>
         <spring3.version>3.2.3.RELEASE</spring3.version>
         <httpclient.version>4.2.5</httpclient.version>
