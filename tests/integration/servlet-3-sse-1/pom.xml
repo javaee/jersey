@@ -71,6 +71,11 @@
             <artifactId>jersey-test-framework-provider-external</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-grizzly-connector</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -83,17 +88,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
             </plugin>
-            <!--<plugin>
+            <!--plugin>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
                 <configuration>
-                    <scanIntervalSeconds>10</scanIntervalSeconds>
+                    <scanIntervalSeconds>0</scanIntervalSeconds>
                     <stopPort>9999</stopPort>
                     <stopKey>STOP</stopKey>
                     <contextPath>/</contextPath>
                     <webApp>
                         <contextPath>/</contextPath>
                     </webApp>
+                    <war>${project.build.directory}/${project.build.finalName}.war</war>
                     <systemProperties>
                         <systemProperty>
                             <name>jetty.port</name>
@@ -106,10 +112,9 @@
                         <id>start-jetty</id>
                         <phase>pre-integration-test</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>run-war</goal>
                         </goals>
                         <configuration>
-                            <scanIntervalSeconds>0</scanIntervalSeconds>
                             <daemon>true</daemon>
                         </configuration>
                     </execution>
@@ -121,7 +126,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>-->
+            </plugin-->
         </plugins>
     </build>
 </project>

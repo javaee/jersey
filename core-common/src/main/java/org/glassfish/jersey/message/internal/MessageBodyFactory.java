@@ -75,9 +75,9 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.KeyComparator;
-import org.glassfish.jersey.internal.util.KeyComparatorHashMap;
-import org.glassfish.jersey.internal.util.KeyComparatorLinkedHashMap;
+import org.glassfish.jersey.internal.util.collection.KeyComparator;
+import org.glassfish.jersey.internal.util.collection.KeyComparatorHashMap;
+import org.glassfish.jersey.internal.util.collection.KeyComparatorLinkedHashMap;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper.DeclaringClassInterfacePair;

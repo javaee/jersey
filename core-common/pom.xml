@@ -65,6 +65,21 @@
         </resources>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <compilerArguments>
+                        <!-- Do not warn about using sun.misc.Unsafe -->
+                        <XDignore.symbol.file />
+                    </compilerArguments>
+                    <showWarnings>false</showWarnings>
+                    <fork>false</fork>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>com.sun.istack</groupId>
                 <artifactId>maven-istack-commons-plugin</artifactId>
                 <inherited>true</inherited>
@@ -82,7 +97,10 @@
                 <configuration>
                     <instructions>
                         <!-- Note: When you're changing these properties change them also in bundles/jaxrs-ri/pom.xml. -->
-                        <Import-Package>*</Import-Package>
+                        <Import-Package>
+                            sun.misc.*;resolution:=optional,
+                            *
+                        </Import-Package>
                         <Export-Package>org.glassfish.jersey.*;version=${project.version}</Export-Package>
                         <Private-Package>org.glassfish.jersey.osgi</Private-Package>
                     </instructions>
