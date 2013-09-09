@@ -102,6 +102,17 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 
         @GET
         public Response get1() {
+            return verify();
+        }
+
+
+        @GET
+        @Path("ěščřžýáíé")
+        public Response getEncoding() {
+            return verify();
+        }
+
+        private Response verify() {
             if (httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION) == null) {
                 // the first request has no authorization header, tell filter its 401
                 // and send filter back seed for the new to be built header
@@ -121,7 +132,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
                 String authHeader = authList.get(0);
 
                 String ha1 = md5(DIGEST_TEST_LOGIN, DIGEST_TEST_REALM, DIGEST_TEST_PASS);
-                String ha2 = md5("GET", uriInfo.getRequestUri().getPath().toString());
+                String ha2 = md5("GET", uriInfo.getRequestUri().getRawPath());
                 String response = md5(
                         ha1,
                         DIGEST_TEST_NONCE,
@@ -193,17 +204,29 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 
     @Test
     public void testHttpDigestAuthFilter() {
+        final String path = "auth-digest";
+        testRequest(path);
+    }
+
+    @Test
+    public void testHttpDigestAuthFilterWithEncodedUri() {
+        final String path = "auth-digest/ěščřžýáíé";
+        testRequest(path);
+    }
+
+    private void testRequest(String path) {
         ClientConfig jerseyConfig = new ClientConfig();
 
         Client client = ClientBuilder.newClient(jerseyConfig);
         client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
 
-        WebTarget resource = client.target(getBaseUri()).path("auth-digest");
+        WebTarget resource = client.target(getBaseUri()).path(path);
 
         ncExpected = 0;
         Response r1 = resource.request().get();
         Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.OK);
     }
+
 
     @Test
     public void testPreemptive() {
