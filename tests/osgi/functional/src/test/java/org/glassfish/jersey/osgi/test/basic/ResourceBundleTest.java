@@ -62,15 +62,15 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.junit.PaxExam;
 
 /**
  * Ensures server localization resource bundle gets loaded fine in OSGi runtime.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ResourceBundleTest {
 
     private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);

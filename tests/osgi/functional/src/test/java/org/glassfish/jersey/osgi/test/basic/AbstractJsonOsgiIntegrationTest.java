@@ -55,7 +55,8 @@ import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
+
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -63,7 +64,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public abstract class AbstractJsonOsgiIntegrationTest {
 
     private static final String CONTEXT = "/jersey";

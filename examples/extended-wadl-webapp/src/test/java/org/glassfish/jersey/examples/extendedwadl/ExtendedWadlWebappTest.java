@@ -43,6 +43,7 @@ package org.glassfish.jersey.examples.extendedwadl;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.logging.Logger;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
@@ -78,6 +79,8 @@ import static junit.framework.Assert.assertEquals;
  */
 public class ExtendedWadlWebappTest extends JerseyTest {
 
+    private static final Logger LOGGER = Logger.getLogger(ExtendedWadlWebappTest.class.getName());
+
     @Override
     protected Application configure() {
         final ResourceConfig resourceConfig = new ResourceConfig(new MyApplication().getClasses());
@@ -106,7 +109,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     public void testExtendedWadl() throws Exception {
         String wadl = target().path("application.wadl").request(MediaTypes.WADL).get(String.class);
 
-        System.out.println(wadl);
+        LOGGER.fine(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));
@@ -118,7 +121,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     public void testWadlOptionsMethod() throws Exception {
         String wadl = target().path("items").request(MediaTypes.WADL).options(String.class);
 
-        System.out.println(wadl);
+        LOGGER.fine(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));

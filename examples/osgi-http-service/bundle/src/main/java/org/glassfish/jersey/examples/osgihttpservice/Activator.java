@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -116,7 +116,19 @@ public class Activator implements BundleActivator {
         logger.info("JERSEY BUNDLE: REGISTERING SERVLETS");
         logger.info("JERSEY BUNDLE: HTTP SERVICE = " + httpService.toString());
 
-        httpService.registerServlet("/jersey-http-service", new ServletContainer(), getJerseyServletParams(), null);
+        // TODO - temporary workaround
+        // This is a workaround related to issue JERSEY-2093; grizzly (1.9.5) needs to have the correct context
+        // classloader set
+        ClassLoader myClassLoader = getClass().getClassLoader();
+        ClassLoader originalContextClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            Thread.currentThread().setContextClassLoader(myClassLoader);
+            httpService.registerServlet("/jersey-http-service", new ServletContainer(), getJerseyServletParams(), null);
+        } finally {
+            Thread.currentThread().setContextClassLoader(originalContextClassLoader);
+        }
+        // END of workaround - after grizzly updated to the recent version, only the inner call from try block will remain:
+        // httpService.registerServlet("/jersey-http-service", new ServletContainer(), getJerseyServletParams(), null);
 
         sendAdminEvent();
         logger.info("JERSEY BUNDLE: SERVLETS REGISTERED");
@@ -127,7 +139,6 @@ public class Activator implements BundleActivator {
         if (eaRef != null) {
             EventAdmin ea = (EventAdmin) bc.getService(eaRef);
             ea.sendEvent(new Event("jersey/test/DEPLOYED", new HashMap<String, String>() {
-
                 {
                     put("context-path", "/");
                 }

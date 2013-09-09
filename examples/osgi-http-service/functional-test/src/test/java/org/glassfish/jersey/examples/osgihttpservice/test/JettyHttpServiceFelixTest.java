@@ -40,20 +40,30 @@
 
 package org.glassfish.jersey.examples.osgihttpservice.test;
 
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 
-@RunWith(JUnit4TestRunner.class)
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+
+@RunWith(PaxExam.class)
 public class JettyHttpServiceFelixTest extends AbstractHttpServiceTest {
 
     @Override
     public List<Option> osgiRuntimeOptions() {
-        return felixOptions();
+        return Arrays.asList(CoreOptions.options(
+                mavenBundle()
+                        .groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin")
+                        .versionAsInProject()
+        )
+        );
     }
 
     @Override

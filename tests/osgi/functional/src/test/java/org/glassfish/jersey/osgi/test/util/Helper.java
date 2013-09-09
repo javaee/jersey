@@ -40,23 +40,21 @@
 
 package org.glassfish.jersey.osgi.test.util;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.test.TestProperties;
+import org.ops4j.pax.exam.Option;
+
 import java.security.AccessController;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.test.TestProperties;
-
-import org.ops4j.pax.exam.Option;
-import static org.ops4j.pax.exam.CoreOptions.felix;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.rawPaxRunnerOption;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 /**
  * Helper class to be used by individual tests.
@@ -142,18 +140,9 @@ public class Helper {
     public static List<Option> getCommonOsgiOptions(final boolean includeJerseyJaxRsLibs) {
         final List<Option> options = new LinkedList<Option>(expandedList(
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
-                systemProperty("org.osgi.service.http.port").value(String.valueOf(port)), rawPaxRunnerOption("clean"),
+                systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
                 systemProperty(TestProperties.CONTAINER_PORT).value(String.valueOf(port)),
                 systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
-
-                // define maven repositories
-                repositories("http://repo1.maven.org/maven2",
-                        "http://repository.apache.org/content/groups/snapshots-group",
-                        "http://repository.ops4j.org/maven2",
-                        "http://svn.apache.org/repos/asf/servicemix/m2-repo",
-                        "http://repository.springsource.com/maven/bundles/release",
-                        "http://repository.springsource.com/maven/bundles/external",
-                        "http://maven.java.net/content/repositories/snapshots"),
 
                 // log
                 // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
@@ -169,10 +158,13 @@ public class Helper {
                 // mavenBundle("org.apache.geronimo.specs","geronimo-servlet_2.5_spec","1.1.2"),
 
                 // javax.annotation has to go first!
-                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject()),
+//                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject()),
+                mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
 
                 // Google Guava
                 mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
+
+                junitBundles(),
 
                 // HK2
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),
@@ -195,10 +187,8 @@ public class Helper {
 
                 // Jersey Grizzly
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http")
-                        .versionAsInProject(),
-
-                // start felix framework
-                felix()));
+                        .versionAsInProject()
+        ));
 
         if (includeJerseyJaxRsLibs) {
             options.addAll(expandedList(
@@ -212,7 +202,8 @@ public class Helper {
             ));
         }
 
-        return addPaxExamMavenLocalRepositoryProperty(options);
+//        return addPaxExamMavenLocalRepositoryProperty(options);
+        return options;
     }
 
     /**

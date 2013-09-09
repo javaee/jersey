@@ -47,7 +47,7 @@ import javax.ws.rs.core.Feature;
 import org.glassfish.jersey.osgi.test.util.Helper;
 
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
+import org.ops4j.pax.exam.Configuration;
 import static org.ops4j.pax.exam.CoreOptions.bootDelegationPackage;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 

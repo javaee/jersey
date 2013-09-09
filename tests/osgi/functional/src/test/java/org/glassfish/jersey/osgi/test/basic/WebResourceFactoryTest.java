@@ -70,15 +70,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.junit.PaxExam;
+
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class WebResourceFactoryTest {
 
     private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
@@ -198,18 +199,18 @@ public class WebResourceFactoryTest {
     @Test
     public void testPostIt() {
         MyBean bean = new MyBean();
-        bean.name = "Ahoj";
-        assertEquals("Ahoj", resource.postIt(Collections.singletonList(bean)).get(0).name);
+        bean.name = "Foo";
+        assertEquals("Foo", resource.postIt(Collections.singletonList(bean)).get(0).name);
     }
 
     @Test
     public void testPathParam() {
-        assertEquals("jouda", resource.getId("jouda"));
+        assertEquals("Bar", resource.getId("Bar"));
     }
 
     @Test
     public void testQueryParam() {
-        assertEquals("jiri", resource.getByName("jiri"));
+        assertEquals("Jersey2", resource.getByName("Jersey2"));
     }
 
     @Test
