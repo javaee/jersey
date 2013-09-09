@@ -93,6 +93,28 @@ import java.util.logging.Logger;
  * <li>{@link JettyClientProperties#FOLLOW_REDIRECTS}</li>
  * </ul>
  * <p/>
+ * This transport supports both synchronous and asynchronous processing of client requests.
+ * The following methods are supported: GET, POST, PUT, DELETE, HEAD, OPTIONS, TRACE, CONNECT and MOVE.
+ * <p/>
+ * Typical usage:
+ * <p/>
+ * <pre>
+ * {@code
+ * ClientConfig config = new ClientConfig();
+ * Connector connector = new JettyConnector(config);
+ * config.connector(connector);
+ * Client client = ClientBuilder.newClient(config);
+ *
+ * // async request
+ * WebTarget target = client.target("http://localhost:8080");
+ * Future<Response> future = target.path("resource").request().async().get();
+ *
+ * // wait for 3 seconds
+ * Response response = future.get(3, TimeUnit.SECONDS);
+ * String entity = response.readEntity(String.class);
+ * client.close();
+ * }
+ * </pre>
  *
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */

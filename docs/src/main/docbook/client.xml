@@ -626,7 +626,9 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
             You can use &jersey.apache.ApacheConnector; (add a maven dependency to
             <literal>org.glassfish.jersey.connectors:jersey-apache-connector</literal>)
             or &jersey.grizzly.GrizzlyConnector; (add a maven dependency to
-            <literal>org.glassfish.jersey.connectors:jersey-grizzly-connector</literal>) alternatively. Please, note again, that
+            <literal>org.glassfish.jersey.connectors:jersey-grizzly-connector</literal>)
+            or &jersey.jetty.JettyConnector;; (add a maven dependency to
+            <literal>org.glassfish.jersey.connectors:jersey-jetty-connector</literal>) alternatively. Please, note again, that
             the &jersey.client.Connector; SPI is not a feature of JAX-RS but is a Jersey-specific extension API that will only
             work with Jersey. Following example shows how to setup the custom &lit.jersey.client.Connector; to the Jersey client.
 
