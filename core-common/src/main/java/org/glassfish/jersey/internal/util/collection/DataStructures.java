@@ -88,6 +88,16 @@ public final class DataStructures {
         LTQ_CLASS = c;
     }
 
+    /**
+     * Default concurrency level calculated based on the number of available CPUs.
+     */
+    public static final int DEFAULT_CONCURENCY_LEVEL = ceilingNextPowerOfTwo(Runtime.getRuntime().availableProcessors());
+
+    private static int ceilingNextPowerOfTwo(int x) {
+        // Hacker's Delight, Chapter 3, Harry S. Warren Jr.
+        return 1 << (Integer.SIZE - Integer.numberOfLeadingZeros(x - 1));
+    }
+
     private static Class<?> getAndVerify(final String cn) throws Throwable {
         try {
             return AccessController.doPrivileged(new PrivilegedExceptionAction<Class<?>>() {

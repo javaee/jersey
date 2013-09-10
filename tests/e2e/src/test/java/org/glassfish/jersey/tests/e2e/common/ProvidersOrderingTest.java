@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -274,17 +274,17 @@ public class ProvidersOrderingTest extends JerseyTest {
         }
     }
 
-
     @Path("/")
     public static class MyResource {
 
-        @Context MessageBodyWorkers messageBodyWorkers;
+        @Context
+        MessageBodyWorkers messageBodyWorkers;
 
         @PUT
         @Consumes("application/test1")
         public MyType getMyType(MyTypeExtExt myType) {
 
-            final Map<MediaType,List<MessageBodyWriter>> writers = messageBodyWorkers.getWriters(MediaType.APPLICATION_XML_TYPE);
+            final Map<MediaType, List<MessageBodyWriter>> writers = messageBodyWorkers.getWriters(MediaType.APPLICATION_XML_TYPE);
             final List<MessageBodyWriter> messageBodyWriters = writers.get(MediaType.APPLICATION_XML_TYPE);
 
             assertTrue(messageBodyWriters.get(0) instanceof MyMBW5);
