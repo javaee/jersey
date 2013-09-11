@@ -53,6 +53,7 @@ import javax.ws.rs.core.Configuration;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.util.collection.DataStructures;
@@ -77,7 +78,8 @@ import com.google.common.collect.Lists;
 @ConstrainedTo(RuntimeType.SERVER)
 class ServerScopeProvider extends CommonScopeProvider {
 
-    private final ExtendedUriInfo uriInfo;
+    @Inject
+    private Provider<ExtendedUriInfo> uriInfoProvider;
 
     private final ConcurrentMap<String, Set<String>> uriToContexts;
 
@@ -88,8 +90,6 @@ class ServerScopeProvider extends CommonScopeProvider {
     @Inject
     public ServerScopeProvider(final Configuration config, final ServiceLocator serviceLocator) {
         super(config, serviceLocator);
-
-        this.uriInfo = serviceLocator.getService(ExtendedUriInfo.class);
         this.uriToContexts = DataStructures.createConcurrentMap();
     }
 
@@ -98,13 +98,14 @@ class ServerScopeProvider extends CommonScopeProvider {
         Set<String> filteringScope = super.getFilteringScopes(entityAnnotations, false);
 
         if (filteringScope.isEmpty()) {
+            final ExtendedUriInfo uriInfo = uriInfoProvider.get();
             final String path = uriInfo.getPath();
 
             if (uriToContexts.containsKey(path)) {
                 return uriToContexts.get(path);
             }
 
-            for (final ResourceMethod method : getMatchedMethods()) {
+            for (final ResourceMethod method : ServerScopeProvider.getMatchedMethods(uriInfo)) {
                 final Invocable invocable = method.getInvocable();
 
                 mergeFilteringScopes(filteringScope, getFilteringScopes(invocable.getHandlingMethod(), invocable.getHandler().getHandlerClass()));
@@ -139,7 +140,7 @@ class ServerScopeProvider extends CommonScopeProvider {
         return scope;
     }
 
-    private List<ResourceMethod> getMatchedMethods() {
+    private static List<ResourceMethod> getMatchedMethods(final ExtendedUriInfo uriInfo) {
         final List<ResourceMethod> matchedResourceLocators = uriInfo.getMatchedResourceLocators();
         final List<ResourceMethod> methods = Lists.newArrayListWithCapacity(1 + matchedResourceLocators.size());
 
