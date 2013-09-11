@@ -67,6 +67,7 @@ public class JsonMoxyTest extends AbstractJsonOsgiIntegrationTest {
 
                 // jersey-json dependencies
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-moxy").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.ext").artifactId("jersey-entity-filtering").versionAsInProject(),
                 mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.moxy").versionAsInProject(),
                 mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.antlr").versionAsInProject(),
                 mavenBundle().groupId("org.eclipse.persistence").artifactId("org.eclipse.persistence.core").versionAsInProject(),

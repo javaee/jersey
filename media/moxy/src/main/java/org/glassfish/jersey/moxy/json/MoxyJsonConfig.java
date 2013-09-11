@@ -41,6 +41,8 @@ package org.glassfish.jersey.moxy.json;
 
 import java.util.Map;
 
+import javax.ws.rs.ext.ContextResolver;
+
 import javax.xml.bind.Marshaller;
 
 import org.eclipse.persistence.jaxb.MarshallerProperties;
@@ -95,6 +97,16 @@ public final class MoxyJsonConfig {
             // org.eclipse.persistence.jaxb.JAXBContextProperties.JSON_NAMESPACE_SEPARATOR
             setNamespaceSeparator(XMLConstants.DOT);
         }
+    }
+
+    /**
+     * Copy constructor.
+     *
+     * @param that config to make a copy of.
+     */
+    private MoxyJsonConfig(final MoxyJsonConfig that) {
+        this.marshallerProperties.putAll(that.marshallerProperties);
+        this.unmarshallerProperties.putAll(that.unmarshallerProperties);
     }
 
     /**
@@ -297,5 +309,22 @@ public final class MoxyJsonConfig {
             unmarshallerProperties.remove(UnmarshallerProperties.JSON_VALUE_WRAPPER);
         }
         return this;
+    }
+
+    /**
+     * Create a {@link ContextResolver context resolver} for a current state of this {@code MoxyJsonConfig}.
+     *
+     * @return context resolver for this config.
+     */
+    public ContextResolver<MoxyJsonConfig> resolver() {
+        return new ContextResolver<MoxyJsonConfig>() {
+
+            private final MoxyJsonConfig config = new MoxyJsonConfig(MoxyJsonConfig.this);
+
+            @Override
+            public MoxyJsonConfig getContext(final Class<?> type) {
+                return config;
+            }
+        };
     }
 }

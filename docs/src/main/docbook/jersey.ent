@@ -363,8 +363,21 @@
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlFeature.html'>WadlFeature</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
 <!ENTITY jersey.server.WadlGeneratorConfig "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGeneratorConfig.html'>WadlGeneratorConfig</link>">
+
 <!ENTITY jersey.message.MessageProperties "<link xlink:href='&jersey.javadoc.path;/message/MessageProperties.html'>MessageProperties</link>">
 <!ENTITY jersey.message.MessageBodyWorkers "<link xlink:href='&jersey.javadoc.path;/message/MessageBodyWorkers.html'>MessageBodyWorkers</link>">
+
+<!ENTITY jersey.message.filtering.AbstractEntityProcessor "<link xlink:href='&jersey.javadoc.path;/message/filtering/spi/AbstractEntityProcessor.html'>AbstractEntityProcessor</link>">
+<!ENTITY jersey.message.filtering.AbstractObjectProvider "<link xlink:href='&jersey.javadoc.path;/message/filtering/spi/AbstractObjectProvider.html'>AbstractObjectProvider</link>">
+<!ENTITY jersey.message.filtering.EntityFiltering "<link xlink:href='&jersey.javadoc.path;/message/filtering/EntityFiltering.html'>@EntityFiltering</link>">
+<!ENTITY jersey.message.filtering.EntityFilteringFeature "<link xlink:href='&jersey.javadoc.path;/message/filtering/EntityFilteringFeature.html'>EntityFilteringFeature</link>">
+<!ENTITY jersey.message.filtering.EntityFilteringFeature.ENTITY_FILTERING_SCOPE "<link xlink:href='&jersey.javadoc.path;/message/filtering/EntityFilteringFeature.html#ENTITY_FILTERING_SCOPE'>EntityFilteringFeature.ENTITY_FILTERING_SCOPE</link>" >
+<!ENTITY jersey.message.filtering.EntityProcessor "<link xlink:href='&jersey.javadoc.path;/message/filtering/spi/EntityProcessor.html'>EntityProcessor</link>">
+<!ENTITY jersey.message.filtering.ObjectGraphTransformer "<link xlink:href='&jersey.javadoc.path;/message/filtering/spi/ObjectGraphTransformer.html'>ObjectGraphTransformer</link>">
+<!ENTITY jersey.message.filtering.ObjectProvider "<link xlink:href='&jersey.javadoc.path;/message/filtering/spi/ObjectProvider.html'>ObjectProvider</link>">
+<!ENTITY jersey.message.filtering.ScopeResolver "<link xlink:href='&jersey.javadoc.path;/message/filtering/spi/ScopeResolver.html'>ScopeResolver</link>">
+<!ENTITY jersey.message.filtering.SecurityAnnotations "<link xlink:href='&jersey.javadoc.path;/message/filtering/SecurityAnnotations.html'>SecurityAnnotations</link>">
+<!ENTITY jersey.message.filtering.SecurityEntityFilteringFeature "<link xlink:href='&jersey.javadoc.path;/message/filtering/SecurityEntityFilteringFeature.html'>SecurityEntityFilteringFeature</link>">
 
 <!ENTITY jersey.server.mvc.MvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/MvcFeature.html'>MvcFeature</link>">
 <!ENTITY jersey.server.mvc.FreemarkerMvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/FreemarkerMvcFeature.html'>FreemarkerMvcFeature</link>">
@@ -401,6 +414,7 @@
 
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
+<!ENTITY jersey-entity-filtering "<link xlink:href='&jersey.site.path;/jersey-entity-filtering/dependencies.html'>jersey-entity-filtering</link>" >
 <!ENTITY jersey-media-json-processing "<link xlink:href='&jersey.site.path;/jersey-media-json-processing/dependencies.html'>jersey-media-json-processing</link>" >
 <!ENTITY jersey-media-json-jettison "<link xlink:href='&jersey.site.path;/jersey-media-json-jettison/dependencies.html'>jersey-media-json-jettison</link>" >
 <!ENTITY jersey-media-json-jackson "<link xlink:href='&jersey.site.path;/jersey-media-json-jackson/dependencies.html'>jersey-media-json-jackson</link>" >
@@ -413,6 +427,8 @@
 
 <!-- Jersey GitHub links -->
 <!ENTITY jersey.github.bv.example.path "<link xlink:href='&jersey.github.examples.path;/bean-validation-webapp'>Bean Validation example</link>">
+<!ENTITY jersey.github.ef.example.path "<link xlink:href='&jersey.github.examples.path;/entity-filtering'>Entity Filtering example</link>">
+<!ENTITY jersey.github.ef.security.example.path "<link xlink:href='&jersey.github.examples.path;/entity-filtering-security'>Entity Filtering example (with security annotations)</link>">
 <!ENTITY jersey.github.helloworld.example.path "<link xlink:href='&jersey.github.examples.path;/helloworld'>helloworld example</link>">
 <!ENTITY jersey.github.jackson.example.path "<link xlink:href='&jersey.github.examples.path;/json-jackson'>JSON Jackson example</link>">
 <!ENTITY jersey.github.jaxb.example.path "<link xlink:href='&jersey.github.examples.path;/jaxb'>JAXB example</link>">
@@ -427,6 +443,7 @@
 <!-- JEE links -->
 <!ENTITY jee6.annotations.RolesAllowed "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/RolesAllowed.html'>@RolesAllowed</link>">
 <!ENTITY jee6.annotations.PermitAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/PermitAll.html'>@PermitAll</link>">
+<!ENTITY jee6.annotations.DenyAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/DenyAll.html'>@DenyAll</link>">
 <!ENTITY jee6.servlet.HttpServletRequest "<link xlink:href='&jee6.javadoc.path;/javax/servlet/http/HttpServletRequest.html'>HttpServletRequest</link>">
 <!ENTITY jee6.inject.Singleton "<link xlink:href='&jee6.javadoc.path;/javax/inject/Singleton.html'>@Singleton</link>">
 <!ENTITY jee6.javax.inject.Inject "<link xlink:href='&jee6.javadoc.path;/javax/inject/Inject.html'>@Inject</link>">
@@ -516,6 +533,7 @@
 <!ENTITY lit.jaxrs.core.Context "<literal>@Context</literal>">
 <!ENTITY lit.jaxrs.core.Form "<literal>Form</literal>">
 <!ENTITY lit.jaxrs.core.Configurable "<literal>Configurable</literal>">
+<!ENTITY lit.jaxrs.core.Configuration "<literal>Configuration</literal>">
 
 <!ENTITY lit.jaxrs.client.WebTarget "<literal>WebTarget</literal>">
 
@@ -590,6 +608,9 @@
 
 <!ENTITY lit.jersey.message.MessageProperties "<literal>MessageProperties</literal>">
 <!ENTITY lit.jersey.message.MessageBodyWorkers "<literal>MessageBodyWorkers</literal>">
+
+<!ENTITY lit.jersey.message.filtering.EntityFilteringFeature "<literal>EntityFilteringFeature</literal>">
+<!ENTITY lit.jersey.message.filtering.SecurityEntityFilteringFeature "<literal>SecurityEntityFilteringFeature</literal>">
 
 <!ENTITY lit.jersey.common.CommonProperties "<literal>CommonProperties</literal>">
 <!ENTITY lit.jersey.common.SslConfigurator "<literal>SslConfigurator</literal>">

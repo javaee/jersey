@@ -1,0 +1,823 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="entity-filtering">
+
+    <title>Entity Data Filtering</title>
+
+    <para>
+        Support for Entity Filtering in Jersey provides means to effectively expose only a part of domain entity model (or subset
+        of entity fields) to be read/written. The main idea behind this feature is to reduce the amount of data sent from server
+        to client (or vice versa) to the necessary subset while keeping one model for manipulation and transferring the data.
+    </para>
+    <para>
+        Entity filtering allows you to define own entity-filtering rules to entity classes based on current context (e.g. resource
+        method) and keep these rules in one place (domain model). It is also possible to assign security access rules to entity
+        classes properties and property accessors.
+    </para>
+    <para>
+        This chapter discusses topics from perspective of basic use-cases,
+
+        <itemizedlist>
+            <listitem>
+                <para><xref linkend="ef.annotations"/></para>
+            </listitem>
+            <listitem>
+                <para><xref linkend="ef.security.annotations"/></para>
+            </listitem>
+        </itemizedlist>
+
+        as well as some more complex ones.
+
+        <itemizedlist>
+            <listitem>
+                <para><xref linkend="ef.custom.annotations"/></para>
+            </listitem>
+        </itemizedlist>
+    </para>
+    <para>
+        Entity filtering is currently supported in modules listed in <xref linkend="ef.modules"/>.
+    </para>
+
+    <section>
+        <title>Concepts used in describing entity-filtering features</title>
+
+        <para>
+            In the next section the entity-filtering features will be illustrated on a project-tracking application containing
+            three classes in it's domain model and few resources (only <literal>Project</literal> resource will be shown in this
+            chapter). All classes are taken from the &jersey.github.ef.example.path;.
+        </para>
+
+        <section>
+            <title>Domain (Entity classes)</title>
+
+            <para>
+                Suppose there are three domain (entity) classes in our model: <literal>Project</literal>, <literal>User</literal>
+                and <literal>Task</literal> (getters/setter are omitted in this section).
+
+                <example>
+                    <title>Project</title>
+
+                    <programlisting language="java" linenumbering="numbered">public class Project {
+
+    private Long id;
+
+    private String name;
+
+    private String description;
+
+    private List&lt;Task&gt; tasks;
+
+    private List&lt;User&gt; users;
+
+    // getters and setters
+}</programlisting>
+                </example>
+
+                <example>
+                    <title>User</title>
+
+                    <programlisting language="java" linenumbering="numbered">public class User {
+
+    private Long id;
+
+    private String name;
+
+    private String email;
+
+    private List&lt;Project&gt; projects;
+
+    private List&lt;Task&gt; tasks;
+
+    // getters and setters
+}</programlisting>
+                </example>
+
+                <example>
+                    <title>Task</title>
+
+                    <programlisting language="java" linenumbering="numbered">public class Task {
+
+    private Long id;
+
+    private String name;
+
+    private String description;
+
+    private Project project;
+
+    private User user;
+
+    // getters and setters
+}</programlisting>
+                </example>
+            </para>
+        </section>
+
+        <section>
+            <title>JAX-RS Resources</title>
+
+            <para>
+                To retrieve the entities from server to client, we have created also a couple of JAX-RS resources from whose the
+                <literal>ProjectsResource</literal> is shown as example.
+
+                <example>
+                    <title>ProjectsResource</title>
+
+                    <programlisting language="java" linenumbering="numbered">@Path("projects")
+@Produces("application/json")
+public class ProjectsResource {
+
+    @GET
+    @Path("{id}")
+    public Project getProject(@PathParam("id") final Long id) {
+        return getDetailedProject(id);
+    }
+
+    @GET
+    public List&lt;Project&gt; getProjects() {
+        return getDetailedProjects();
+    }
+}</programlisting>
+                </example>
+            </para>
+        </section>
+    </section>
+
+    <section>
+        <title>Entity Filtering Dependencies</title>
+
+        <para>
+            Entity Filtering support in Jersey is provided as an extension module and needs to be mentioned explicitly in your
+            &lit.pom.xml; file (in case of using Maven):
+
+            <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-entity-filtering&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+            <note>
+                <para>
+                    If you're not using Maven make sure to have also all the transitive dependencies (see &jersey-entity-filtering;) on
+                    the classpath.
+                </para>
+            </note>
+        </para>
+    </section>
+
+    <section>
+        <title>Enabling and configuring Entity Filtering in Jersey</title>
+
+        <para>
+            The entity-filtering extension module provides two &lit.jaxrs.core.Feature;s which you can register into server/client
+            runtime in prior to use Entity Filtering in an application:
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jersey.message.filtering.EntityFilteringFeature;</para>
+                    <para>
+                        Filtering based on entity-filtering annotations (or i.e. external configuration file) created using
+                        &jersey.message.filtering.EntityFiltering; meta-annotation.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.message.filtering.SecurityEntityFilteringFeature;</para>
+                    <para>Filtering based on security (<literal>javax.annotation.security</literal>) and entity-filtering annotations.</para>
+                </listitem>
+            </itemizedlist>
+
+            If you want to use both entity-filtering annotations and security annotations for entity data filtering it is enough
+            to register &lit.jersey.message.filtering.SecurityEntityFilteringFeature; as this feature registers also
+            &lit.jersey.message.filtering.EntityFilteringFeature;.
+        </para>
+        <para>
+            Entity-filtering currently recognizes one property that can be passed into the &jaxrs.core.Configuration; instance
+            (client/server):
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jersey.message.filtering.EntityFilteringFeature.ENTITY_FILTERING_SCOPE; - "<literal>jersey.config.entityFiltering.scope</literal>"</para>
+                    <para>
+                        Defines one or more annotations that should be used as entity-filtering scope when reading/writing an
+                        entity.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <note>
+                <para>
+                    Processing of entity-filtering annotations to create an entity-filtering scope is defined by
+                    following: "<literal>Request/Resource entity annotations</literal>" &gt;
+                    "<literal>Configuration</literal>" &gt; "<literal>Resource method/class annotations</literal>"
+                    (on server).
+                </para>
+            </note>
+        </para>
+        <para>
+            You can configure entity-filtering on server (basic + security examples) as follows:
+
+            <example xml:id="ef.example.server.registration">
+                <title>Registering and configuring entity-filtering feature on server.</title>
+
+                <programlisting language="java" linenumbering="numbered">new ResourceConfig()
+    // Set entity-filtering scope via configuration.
+    .property(EntityFilteringFeature.ENTITY_FILTERING_SCOPE, new Annotation[] {ProjectDetailedView.Factory.get()})
+    // Register the EntityFilteringFeature.
+    .register(EntityFilteringFeature.class)
+    // Further configuration of ResourceConfig.
+    .register( ... );</programlisting>
+            </example>
+
+            <example xml:id="ef.example.server.security.registration">
+                <title>Registering and configuring entity-filtering feature with security annotations on server.</title>
+
+                <programlisting language="java" linenumbering="numbered">new ResourceConfig()
+    // Set entity-filtering scope via configuration.
+    .property(EntityFilteringFeature.ENTITY_FILTERING_SCOPE, new Annotation[] {SecurityAnnotations.rolesAllowed("manager")})
+    // Register the SecurityEntityFilteringFeature.
+    .register(SecurityEntityFilteringFeature.class)
+    // Further configuration of ResourceConfig.
+    .register( ... );</programlisting>
+            </example>
+        </para>
+        <para>
+            Use similar steps to register entity-filtering on client:
+
+            <example xml:id="ef.example.client.registration">
+                <title>Registering and configuring entity-filtering feature on client.</title>
+
+                <programlisting language="java" linenumbering="numbered">final ClientConfig config = new ClientConfig()
+    // Set entity-filtering scope via configuration.
+    .property(EntityFilteringFeature.ENTITY_FILTERING_SCOPE, new Annotation[] {ProjectDetailedView.Factory.get()})
+    // Register the EntityFilteringFeature.
+    .register(EntityFilteringFeature.class)
+    // Further configuration of ClientConfig.
+    .register( ... );
+
+// Create new client.
+final Client client = ClientClientBuilder.newClient(config);
+
+// Use the client.</programlisting>
+            </example>
+        </para>
+    </section>
+
+    <section xml:id="ef.annotations">
+        <title>Using entity-filtering annotations</title>
+
+        <para>
+            Entity filtering via annotations is based on an &jersey.message.filtering.EntityFiltering; meta-annotation.
+            This meta-annotation is used to create entity-filtering annotations that are supposed to be used on:
+
+            <itemizedlist>
+                <listitem>
+                    <para>entity classes (supported on both, server and client sides), and</para>
+                </listitem>
+                <listitem>
+                    <para>resource methods / resource classes (only on server side)</para>
+                </listitem>
+            </itemizedlist>
+
+            An example of entity-filtering annotation applicable to a class, field or method can be seen in
+            <xref linkend="ef.annotations.sample.annotation"/>.
+
+            <example xml:id="ef.annotations.sample.annotation">
+                    <title>ProjectDetailedView</title>
+
+                    <programlisting language="java" linenumbering="numbered">@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@EntityFiltering
+public @interface ProjectDetailedView {
+
+    /**
+     * Factory class for creating instances of {@code ProjectDetailedView} annotation.
+     */
+    public static class Factory extends AnnotationLiteral&lt;ProjectDetailedView&gt; implements ProjectDetailedView {
+
+        private Factory() {
+        }
+
+        public static ProjectDetailedView get() {
+            return new Factory();
+        }
+    }
+}</programlisting>
+                </example>
+
+        </para>
+        <para>
+            Every custom entity-filtering annotation should contain an inner factory class though which an instance of this
+            annotation can be created. The annotation implementation class can extend <literal>AnnotationLiteral</literal>
+            and has to implement the annotation itself. Such annotation instances can be then passed to the client/server
+            runtime to define/override entity-filtering scopes.
+        </para>
+        <para>
+            By placing an entity-filtering annotation on an entity (class, fields, getters or setters) we can define a so-called
+            <emphasis>entity-filtering scope</emphasis> for the entity. Entity-filtering scope groups fields of an entity that
+            should be processed when the particular scope is requested. We distinguish between:
+
+            <itemizedlist>
+                <listitem>
+                    <para>global entity-filtering scope (defined by filtering annotation on class), and</para>
+                </listitem>
+                <listitem>
+                    <para>local entity-filtering scope (defined by filtering anotation on field/getter/setter)</para>
+                </listitem>
+            </itemizedlist>
+
+            Unannotated members of a class are automatically added to all existing global entity-filtering scopes. If there is no
+            explicit global entity-filtering scope defined on a class a default one is created for this class to group appropriate
+            members.
+        </para>
+        <para>
+            With entity-filtering annotations we can create entity-filtering scopes for domain entity classes.
+
+            <example>
+                    <title>Annotated Project</title>
+
+                    <programlisting language="java" linenumbering="numbered">public class Project {
+
+    private Long id;
+
+    private String name;
+
+    private String description;
+
+    @ProjectDetailedView
+    private List&lt;Task&gt; tasks;
+
+    @ProjectDetailedView
+    private List&lt;User&gt; users;
+
+    // getters and setters
+}</programlisting>
+                </example>
+
+                <example>
+                    <title>Annotated User</title>
+
+                    <programlisting language="java" linenumbering="numbered">public class User {
+
+    private Long id;
+
+    private String name;
+
+    private String email;
+
+    @UserDetailedView
+    private List&lt;Project&gt; projects;
+
+    @UserDetailedView
+    private List&lt;Task&gt; tasks;
+
+    // getters and setters
+}</programlisting>
+                </example>
+
+                <example>
+                    <title>Annotated Task</title>
+
+                    <programlisting language="java" linenumbering="numbered">public class Task {
+
+    private Long id;
+
+    private String name;
+
+    private String description;
+
+    @TaskDetailedView
+    private Project project;
+
+    @TaskDetailedView
+    private User user;
+
+    // getters and setters
+}</programlisting>
+                </example>
+        </para>
+        <para>
+            To process an entity in a certain way (e.g. expose the detailed view) we need to tell the server/client runtime which
+            entity-filtering scopes we want to use. There are 2 ways how to do this for client-side and 3 ways for server-side:
+
+            <itemizedlist>
+                <listitem>
+                    <para>(client/server) Request/Response created with applicable entity annotations</para>
+                </listitem>
+                <listitem>
+                    <para>(client/server) property passed through &jaxrs.core.Configuration;</para>
+                </listitem>
+                <listitem>
+                    <para>(server) entity-filtering annotations over resource method / class</para>
+                </listitem>
+            </itemizedlist>
+
+            The priorities of providing annotation using the mentioned ways is as follows: <literal>Annotations passed through
+            Request/Response</literal> &gt; <literal>Annotation passed through Configuration</literal> &gt; <literal>Annotations
+            over resource method / class</literal>.
+        </para>
+        <para>
+            If one entity (e.g. <literal>Project</literal>) is referencing another entity (e.g. <literal>User</literal>) and the
+            first entity should be processed in certain entity-filtering scopes (e.g. <literal>ProjectDetailedView</literal>) which
+            are not present between entity-filtering scopes of the second entity, the default entity-filtering scope is used for
+            processing the second entity.
+        </para>
+
+        <section>
+            <title>Server</title>
+
+            <para>
+                To pass entity-filtering annotations via &jaxrs.core.Response; returned from a resource method you need to use
+                <link xlink:href='&jax-rs.javadoc.path;/core/Response.ResponseBuilder.html#entity(java.lang.Object, java.lang.annotation.Annotation[])'>Response.ResponseBuilder#entity(java.lang.Object, java.lang.annotation.Annotation[])</link>
+                method. In this example you can see why every custom entity-filtering annotation should contain a factory for
+                creating instances of the annotation.
+
+                <example>
+                    <title>ProjectsResource - Response entity-filtering annotations</title>
+
+                    <programlisting language="java" linenumbering="numbered">@Path("projects")
+@Produces("application/json")
+public class ProjectsResource {
+
+    @GET
+    public Response getProjects(@QueryParam("detailed") final boolean isDetailed) {
+        return Response
+                .ok()
+                .entity(new GenericEntity&lt;List&lt;Project&gt;&gt;(EntityStore.getProjects()) {},
+                        isDetailed ? new Annotation[]{ProjectDetailedView.Factory.get()} : new Annotation[0])
+                .build();
+    }
+}</programlisting>
+                </example>
+            </para>
+            <para>
+                Annotating resource method / class is a bit easier although it may require more methods to be created.
+
+                <example>
+                    <title>ProjectsResource - Entity-filtering annotations on methods</title>
+
+                    <programlisting language="java" linenumbering="numbered">@Path("projects")
+@Produces("application/json")
+public class ProjectsResource {
+
+    @GET
+    public List&lt;Project&gt; getProjects() {
+        return getDetailedProjects();
+    }
+
+    @GET
+    @Path("detailed")
+    @ProjectDetailedView
+    public List&lt;Project&gt; getDetailedProjects() {
+        return EntityStore.getProjects();
+    }
+}</programlisting>
+                </example>
+            </para>
+            <para>
+                For providing entity-filtering annotations via &lit.jaxrs.core.Configuration;, see <xref linkend="ef.example.server.registration"/>.
+            </para>
+            <para>
+                When the <literal>ProjectDetailedView</literal> entity-filtering scope is requested for the examples above the
+                resulting <literal>Project</literal> entity would contain:
+
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>Project</literal> - <literal>id</literal>, <literal>name</literal>, <literal>description</literal>, <literal>tasks</literal>, <literal>users</literal>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>Task</literal> - <literal>id</literal>, <literal>name</literal>, <literal>description</literal>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>User</literal> - <literal>id</literal>, <literal>name</literal>, <literal>email</literal>
+                        </para>
+                    </listitem>
+                </itemizedlist>
+
+                Or to illustrate this in JSON format:
+
+                <programlisting language="xml" linenumbering="numbered">{
+   "description" : "Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339) production quality Reference Implementation for building RESTful Web services.",
+   "id" : 1,
+   "name" : "Jersey",
+   "tasks" : [ {
+      "description" : "Entity Data Filtering",
+      "id" : 1,
+      "name" : "ENT_FLT"
+   }, {
+      "description" : "OAuth 1 + 2",
+      "id" : 2,
+      "name" : "OAUTH"
+   } ],
+   "users" : [ {
+      "email" : "very@secret.com",
+      "id" : 1,
+      "name" : "Jersey Robot"
+   } ]
+}</programlisting>
+
+                For the <emphasis>default entity-filtering view</emphasis> the entity would look just like:
+
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>Project</literal> - <literal>id</literal>, <literal>name</literal>, <literal>description</literal>
+                        </para>
+                    </listitem>
+                </itemizedlist>
+
+                Or in JSON format:
+
+                <programlisting language="xml" linenumbering="numbered">{
+   "description" : "Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339) production quality Reference Implementation for building RESTful Web services.",
+   "id" : 1,
+   "name" : "Jersey"
+}</programlisting>
+            </para>
+
+        </section>
+        <section>
+            <title>Client</title>
+
+            <para>
+                As mentioned above you can provide annotations to define entity-filtering scope using either &lit.jaxrs.core.Configuration;
+                (see <xref linkend="ef.example.client.registration"/>) or during creating a request to be sent to server.
+
+                <example>
+                    <title>Client - Request entity-filtering annotations</title>
+
+                    <programlisting language="java" linenumbering="numbered">ClientBuilder.newClient(config)
+    .target(uri)
+    .request()
+    .post(Entity.entity(project, new Annotation[] {ProjectDetailedView.Factory.get()}));</programlisting>
+                </example>
+
+                You can use the mentioned method with client injected into a resource as well.
+
+                <example>
+                    <title>Client - Request entity-filtering annotations</title>
+
+                    <programlisting language="java" linenumbering="numbered">@Path("clients")
+@Produces("application/json")
+public class ClientsResource {
+
+    @Uri("projects")
+    private WebTarget target;
+
+    @GET
+    public List&lt;Project&gt; getProjects() {
+        return target.request()
+            .post(Entity.entity(project, new Annotation[] {ProjectDetailedView.Factory.get()}));
+    }
+}</programlisting>
+                </example>
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="ef.security.annotations">
+        <title>Using security (<literal>javax.annotation.security</literal>) annotations</title>
+
+        <para>
+            By registering &jersey.message.filtering.SecurityEntityFilteringFeature; you can use exactly the same features
+            as described in previous chapter plus you can annotate your entity classes with Java Security annotations (from
+            <literal>javax.annotation.security</literal> package). Supported security annotations are:
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jee6.annotations.PermitAll;</para>
+                </listitem>
+                <listitem>
+                    <para>&jee6.annotations.RolesAllowed;</para>
+                </listitem>
+                <listitem>
+                    <para>&jee6.annotations.DenyAll;</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <para>
+            Although the Entity Data Filtering for entity-filtering annotation is the same the processing of security annotations
+            differs in some aspects:
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        (server) custom &jaxrs.core.SecurityContext; should be provided in order to use &lit.jee6.annotations.RolesAllowed;
+                        for different roles on an entity class
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        (server) no need to provide entity-filtering scopes for &lit.jee6.annotations.RolesAllowed; as all available
+                        roles for current user can be determined from &lit.jaxrs.core.SecurityContext;
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>instances of security annotations can be created using &jersey.message.filtering.SecurityAnnotations; factory class</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+    </section>
+
+    <section xml:id="ef.custom.annotations">
+        <title>Creating entity-filtering annotations with custom meaning</title>
+
+        <para>
+            To create a custom entity-filtering annotation with special handling, i.e. an field aggregator annotation used
+            to annotate classes as in <xref linkend="ef.custom.annotations.annotation"/> it is, in most cases, sufficient to
+            implement and register following contracts:
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jersey.message.filtering.EntityProcessor;</para>
+                    <para>To process entity class and it's members. The implementations can extend &jersey.message.filtering.AbstractEntityProcessor;.</para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.message.filtering.ScopeResolver;</para>
+                    <para>To retrieve entity-filtering scopes from an array of provided annotations.</para>
+                </listitem>
+            </itemizedlist>
+
+            <example xml:id="ef.custom.annotations.annotation">
+                    <title>Entity-filtering annotation with custom meaning</title>
+
+                    <programlisting language="java" linenumbering="numbered">@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@EntityFiltering
+public @interface FilteringAggregator {
+
+    /**
+     * Entity-filtering scope to add given fields to.
+     */
+    Annotation filteringScope();
+
+    /**
+     * Fields to be a part of entity-filtering scope.
+     */
+    String[] fields();
+}</programlisting>
+                </example>
+        </para>
+    </section>
+
+    <section xml:id="ef.custom.providers">
+        <title>Support Entity Data Filtering in custom providers</title>
+
+        <para>
+            To support Entity Data Filtering in custom providers, e.g. message body workers as in <xref linkend="ef.modules.custom"/>
+            it is sufficient, in most of the cases, to implement and register the following contracts:
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jersey.message.filtering.ObjectProvider;</para>
+                    <para>
+                        To be able to obtain filtering object your provider understands and can act on.
+                        The implementations can extend &jersey.message.filtering.AbstractObjectProvider;.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.message.filtering.ObjectGraphTransformer;</para>
+                    <para>
+                        To transform a read-only generic representation of a graph of an entity to be processed.
+                        The implementations can extend &jersey.message.filtering.AbstractObjectProvider;.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            <example xml:id="ef.modules.custom">
+                    <title>Entity Data Filtering for MOXy provider</title>
+
+                    <programlisting language="java" linenumbering="numbered">@Singleton
+public class FilteringMoxyJsonProvider extends ConfigurableMoxyJsonProvider {
+
+    @Inject
+    private Provider&lt;ObjectProvider&lt;ObjectGraph&gt;&gt; provider;
+
+    @Override
+    protected void preWriteTo(final Object object, final Class&lt;?&gt; type, final Type genericType, final Annotation[] annotations,
+                              final MediaType mediaType, final MultivaluedMap&lt;String, Object&gt; httpHeaders,
+                              final Marshaller marshaller) throws JAXBException {
+        super.preWriteTo(object, type, genericType, annotations, mediaType, httpHeaders, marshaller);
+
+        // Entity Filtering.
+        if (marshaller.getProperty(MarshallerProperties.OBJECT_GRAPH) == null) {
+            final Object objectGraph = provider.get().getFilteringObject(genericType, true, annotations);
+
+            if (objectGraph != null) {
+                marshaller.setProperty(MarshallerProperties.OBJECT_GRAPH, objectGraph);
+            }
+        }
+    }
+
+    @Override
+    protected void preReadFrom(final Class&lt;Object&gt; type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType, final MultivaluedMap&lt;String, String&gt; httpHeaders,
+                               final Unmarshaller unmarshaller) throws JAXBException {
+        super.preReadFrom(type, genericType, annotations, mediaType, httpHeaders, unmarshaller);
+
+        // Entity Filtering.
+        if (unmarshaller.getProperty(MarshallerProperties.OBJECT_GRAPH) == null) {
+            final Object objectGraph = provider.get().getFilteringObject(genericType, false, annotations);
+
+            if (objectGraph != null) {
+                unmarshaller.setProperty(MarshallerProperties.OBJECT_GRAPH, objectGraph);
+            }
+        }
+    }
+}</programlisting>
+                </example>
+        </para>
+    </section>
+
+    <section xml:id="ef.modules">
+        <title>Modules with support for Entity Data Filtering</title>
+
+        <para>
+            List of modules from Jersey workspace that support Entity Filtering:
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <link linkend='json.moxy'>MOXy</link>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <para>
+            In order to use Entity Filtering in mentioned modules you need to register either &jersey.message.filtering.EntityFilteringFeature;
+            or &jersey.message.filtering.SecurityEntityFilteringFeature; to activate Entity Filtering for particular module.
+        </para>
+    </section>
+
+    <section>
+        <title>Examples</title>
+
+        <para>
+            To see a complete working examples of entity-filtering feature refer to the:
+
+            <itemizedlist>
+                <listitem>
+                    <para>&jersey.github.ef.example.path;</para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.github.ef.security.example.path;</para>
+                </listitem>
+            </itemizedlist>
+        </para>
+    </section>
+</chapter>

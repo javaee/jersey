@@ -40,12 +40,17 @@
 package org.glassfish.jersey.moxy.json;
 
 import javax.ws.rs.Priorities;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
+import org.glassfish.jersey.message.filtering.SecurityEntityFilteringFeature;
+import org.glassfish.jersey.moxy.internal.MoxyFilteringFeature;
 import org.glassfish.jersey.moxy.json.internal.ConfigurableMoxyJsonProvider;
+import org.glassfish.jersey.moxy.json.internal.FilteringMoxyJsonProvider;
 
 /**
  * Feature used to register MOXy JSON providers.
@@ -57,14 +62,27 @@ public class MoxyJsonFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
-        if (PropertiesHelper.getValue(context.getConfiguration().getProperties(), context.getConfiguration().getRuntimeType(),
+        final Configuration config = context.getConfiguration();
+
+        if (PropertiesHelper.getValue(config.getProperties(), config.getRuntimeType(),
                 CommonProperties.MOXY_JSON_FEATURE_DISABLE, Boolean.FALSE, Boolean.class)) {
             return false;
         }
 
         // Set a slightly lower priority of workers than JSON-P so MOXy is not pick-ed up for JsonStructures (if both are used).
-        context.register(ConfigurableMoxyJsonProvider.class, Priorities.USER + 2000);
+        final int workerPriority = Priorities.USER + 2000;
+
+        if (entityFilteringEnabled(config)) {
+            context.register(MoxyFilteringFeature.class);
+            context.register(FilteringMoxyJsonProvider.class, workerPriority);
+        } else {
+            context.register(ConfigurableMoxyJsonProvider.class, workerPriority);
+        }
 
         return true;
+    }
+
+    private boolean entityFilteringEnabled(final Configuration config) {
+        return config.isRegistered(EntityFilteringFeature.class) || config.isRegistered(SecurityEntityFilteringFeature.class);
     }
 }

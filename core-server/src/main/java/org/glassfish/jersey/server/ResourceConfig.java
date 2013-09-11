@@ -846,7 +846,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         Set<ResourceFinder> rfs = Sets.newHashSet(_state.getResourceFinders());
 
         // classes registered via configuration property
-        String[] classNames = parsePropertyValue(ServerProperties.PROVIDER_CLASSNAMES);
+        final String[] classNames = parsePropertyValue(ServerProperties.PROVIDER_CLASSNAMES);
         if (classNames != null) {
             for (String className : classNames) {
                 try {
@@ -864,7 +864,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
             rfs.add(new PackageNamesScanner(packageNames, recursive));
         }
 
-        String[] classPathElements = parsePropertyValue(ServerProperties.PROVIDER_CLASSPATH);
+        final String[] classPathElements = parsePropertyValue(ServerProperties.PROVIDER_CLASSPATH);
         if (classPathElements != null) {
             rfs.add(new FilesScanner(classPathElements, true));
         }
@@ -888,7 +888,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         return result;
     }
 
-    private String[] parsePropertyValue(String propertyName) {
+    private String[] parsePropertyValue(final String propertyName) {
         String[] classNames = null;
         final Object o = state.getProperties().get(propertyName);
         if (o != null) {

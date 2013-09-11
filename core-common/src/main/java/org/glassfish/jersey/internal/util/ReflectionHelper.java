@@ -839,13 +839,14 @@ public class ReflectionHelper {
     }
 
     /**
-     * Determines whether a given method is {@code getter}.
+     * Determine whether a given method is {@code getter}.
      *
      * @param method method to be examined.
      * @return {@code true} if the method is {@code getter}, {@code false} otherwise.
      */
     public static boolean isGetter(final Method method) {
-        if (method.getParameterTypes().length == 0) {
+        if (method.getParameterTypes().length == 0
+                && Modifier.isPublic(method.getModifiers())) {
             final String methodName = method.getName();
 
             if (methodName.startsWith("get")) {
@@ -878,6 +879,39 @@ public class ReflectionHelper {
             genericType = (instance == null) ? null : new GenericType(instance.getClass());
         }
         return genericType;
+    }
+
+    /**
+     * Determine whether a given method is {@code setter}.
+     *
+     * @param method method to be examined.
+     * @return {@code true} if the method is {@code setter}, {@code false} otherwise.
+     */
+    public static boolean isSetter(final Method method) {
+        return Modifier.isPublic(method.getModifiers())
+                && void.class.equals(method.getReturnType())
+                && method.getParameterTypes().length == 1
+                && method.getName().startsWith("set");
+    }
+
+    /**
+     * Determine property (field) name from given getter/setter method.
+     *
+     * @param method method to be examined.
+     * @return property (field) name.
+     */
+    public static String getPropertyName(final Method method) {
+        if (!isGetter(method) && !isSetter(method)) {
+            throw new IllegalArgumentException(LocalizationMessages.METHOD_NOT_GETTER_NOR_SETTER());
+        }
+
+        final String methodName = method.getName();
+        final int offset = methodName.startsWith("is") ? 2 : 3;
+
+        final char[] chars = methodName.toCharArray();
+        chars[offset] = Character.toLowerCase(chars[offset]);
+
+        return new String(chars, offset, chars.length - offset);
     }
 
     /**
