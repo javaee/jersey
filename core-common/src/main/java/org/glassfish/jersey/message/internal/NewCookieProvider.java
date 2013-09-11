@@ -94,6 +94,9 @@ public class NewCookieProvider implements HeaderDelegateProvider<NewCookie> {
         if (cookie.isSecure()) {
             b.append(";Secure");
         }
+        if (cookie.isHttpOnly()) {
+            b.append(";HttpOnly");
+        }
         return b.toString();
     }
 
