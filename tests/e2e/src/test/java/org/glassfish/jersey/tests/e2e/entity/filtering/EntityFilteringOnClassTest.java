@@ -163,6 +163,12 @@ public class EntityFilteringOnClassTest extends JerseyTest {
     }
 
     @Test
+    public void testMultipleViewsOnClass() throws Exception {
+        testOneEntityFilteringOnClass();
+        testOneEntityFilteringOnClassDefaultView();
+    }
+
+    @Test
     public void testManyFilteringsEntityPrimaryView() throws Exception {
         final String fields = target("ManyFilteringsEntityPrimaryView").request().get(String.class);
 
