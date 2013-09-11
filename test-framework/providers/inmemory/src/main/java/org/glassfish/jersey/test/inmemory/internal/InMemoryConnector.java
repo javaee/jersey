@@ -91,7 +91,7 @@ public class InMemoryConnector implements Connector {
     /**
      * Constructor.
      *
-     * @param baseUri application base URI.
+     * @param baseUri     application base URI.
      * @param application RequestInvoker instance which represents application.
      */
     public InMemoryConnector(final URI baseUri, final ApplicationHandler application) {
@@ -148,6 +148,7 @@ public class InMemoryConnector implements Connector {
 
         /**
          * Get the written entity.
+         *
          * @return Byte array which contains the entity written by the server.
          */
         public byte[] getEntity() {
@@ -159,6 +160,7 @@ public class InMemoryConnector implements Connector {
 
         /**
          * Return response headers.
+         *
          * @return headers.
          */
         public MultivaluedMap<String, String> getHeaders() {
@@ -167,6 +169,7 @@ public class InMemoryConnector implements Connector {
 
         /**
          * Returns response status info.
+         *
          * @return status info.
          */
         public Response.StatusType getStatusInfo() {
@@ -191,15 +194,17 @@ public class InMemoryConnector implements Connector {
                 clientRequest.getUri(), clientRequest.getMethod(),
                 null, propertiesDelegate);
 
+        containerRequest.getHeaders().putAll(clientRequest.getStringHeaders());
+
         final ByteArrayOutputStream clientOutput = new ByteArrayOutputStream();
         if (clientRequest.getEntity() != null) {
             clientRequest.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                 @Override
                 public OutputStream getOutputStream(int contentLength) throws IOException {
-                    containerRequest.getHeaders().putAll(clientRequest.getStringHeaders());
-                    List<String> length = Lists.newArrayList();
-                    length.add(String.valueOf(contentLength));
-                    containerRequest.getHeaders().put(HttpHeaders.CONTENT_LENGTH, length);
+                    final MultivaluedMap<String, Object> clientHeaders = clientRequest.getHeaders();
+                    if (contentLength != -1 && !clientHeaders.containsKey(HttpHeaders.CONTENT_LENGTH)) {
+                        containerRequest.getHeaders().putSingle(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
+                    }
                     return clientOutput;
                 }
             });
@@ -213,6 +218,7 @@ public class InMemoryConnector implements Connector {
                 throw new ProcessingException(msg, e);
             }
         }
+
         containerRequest.setEntityStream(new ByteArrayInputStream(clientOutput.toByteArray()));
 
 
