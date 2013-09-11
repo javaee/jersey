@@ -85,8 +85,8 @@ import org.glassfish.jersey.spi.Contract;
 public interface ObjectGraphTransformer<T> {
 
     /**
-     * Transform a given graph into a entity-filtering object. The entire graph (incl. it's subgraphs) should be processed by this
-     * method as this method is invoked only once for a root entity class.
+     * Transform a given graph into an entity-filtering object. The entire graph (incl. it's subgraphs) should be processed by
+     * this method as this method is invoked only once for a root entity class.
      *
      * @param graph object graph to be transformed.
      * @return entity-filtering object requested by provider.
