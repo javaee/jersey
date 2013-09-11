@@ -305,7 +305,6 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                 close();
             } else {
                 ByteArrayInputStream chunkStream = new ByteArrayInputStream(chunk);
-                //noinspection unchecked
                 // TODO: add interceptors: interceptors are used in ChunkedOutput, so the stream should
                 // be intercepted in the ChunkedInput too. Interceptors cannot be easily added to the readFrom
                 // method as they should wrap the stream before it is processed by ChunkParser. Also please check todo

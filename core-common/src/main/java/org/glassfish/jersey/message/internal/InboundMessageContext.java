@@ -92,6 +92,21 @@ public class InboundMessageContext {
         public int read() throws IOException {
             return -1;
         }
+
+        @Override
+        public void mark(int readlimit) {
+            // no-op
+        }
+
+        @Override
+        public void reset() throws IOException {
+            // no-op
+        }
+
+        @Override
+        public boolean markSupported() {
+            return true;
+        }
     };
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
@@ -106,25 +121,19 @@ public class InboundMessageContext {
      * is used to control the execution of interceptors.
      */
     private static class EntityContent extends EntityInputStream {
-        private boolean interceptable;
         private boolean buffered;
 
-        EntityContent(InputStream input) {
-            super(input);
+        EntityContent() {
+            super(EMPTY);
         }
 
-        void setBufferedContentStream(InputStream bufferedInput) {
-            setWrappedStream(bufferedInput);
-            buffered = true;
+        void setContent(InputStream content, boolean buffered) {
+            this.buffered = buffered;
+            setWrappedStream(content);
         }
 
-        void setExternalContentStream(InputStream input) {
-            setWrappedStream(input);
-            interceptable = true;
-        }
-
-        boolean isInterceptable() {
-            return interceptable;
+        boolean hasContent() {
+            return getWrappedStream() != EMPTY;
         }
 
         boolean isBuffered() {
@@ -133,6 +142,13 @@ public class InboundMessageContext {
 
         @Override
         public void close() {
+            close(false);
+        }
+
+        void close(boolean force) {
+            if (buffered && !force) {
+                return;
+            }
             try {
                 super.close();
             } finally {
@@ -158,7 +174,7 @@ public class InboundMessageContext {
      */
     public InboundMessageContext(boolean translateNce) {
         this.headers = HeadersFactory.createInbound();
-        this.entityContent = new EntityContent(EMPTY);
+        this.entityContent = new EntityContent();
         this.translateNce = translateNce;
     }
 
@@ -754,7 +770,7 @@ public class InboundMessageContext {
      * @param input new entity input stream.
      */
     public void setEntityStream(InputStream input) {
-        this.entityContent.setExternalContentStream(input);
+        this.entityContent.setContent(input, false);
     }
 
     /**
@@ -808,7 +824,8 @@ public class InboundMessageContext {
      */
     @SuppressWarnings("unchecked")
     public <T> T readEntity(Class<T> rawType, Type type, Annotation[] annotations, PropertiesDelegate propertiesDelegate) {
-        if (entityContent.isBuffered()) {
+        final boolean buffered = entityContent.isBuffered();
+        if (buffered) {
             entityContent.reset();
         }
 
@@ -839,10 +856,10 @@ public class InboundMessageContext {
                     headers,
                     propertiesDelegate,
                     entityContent.getWrappedStream(),
-                    entityContent.isInterceptable() ? readerInterceptors.get() : Collections.<ReaderInterceptor>emptyList(),
+                    entityContent.hasContent() ? readerInterceptors.get() : Collections.<ReaderInterceptor>emptyList(),
                     translateNce);
 
-            if (!entityContent.isBuffered() && !(t instanceof Closeable) && !(t instanceof Source)) {
+            if (!buffered && !(t instanceof Closeable) && !(t instanceof Source)) {
                 entityContent.close();
             }
             return t;
@@ -862,7 +879,7 @@ public class InboundMessageContext {
         entityContent.ensureNotClosed();
 
         try {
-            if (entityContent.isBuffered()) {
+            if (entityContent.isBuffered() || !entityContent.hasContent()) {
                 return true;
             }
 
@@ -874,7 +891,7 @@ public class InboundMessageContext {
                 entityStream.close();
             }
 
-            entityContent.setBufferedContentStream(new ByteArrayInputStream(baos.toByteArray()));
+            entityContent.setContent(new ByteArrayInputStream(baos.toByteArray()), true);
 
             return true;
         } catch (IOException ex) {
@@ -886,7 +903,7 @@ public class InboundMessageContext {
      * Closes the underlying content stream.
      */
     public void close() {
-        entityContent.close();
+        entityContent.close(true);
     }
 
     /**

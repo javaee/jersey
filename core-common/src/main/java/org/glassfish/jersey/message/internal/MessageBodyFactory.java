@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -73,6 +74,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
@@ -1031,7 +1033,15 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, readerInterceptors, translateNce);
-        return executor.proceed();
+        Object instance = executor.proceed();
+        if (!(instance instanceof Closeable) && !(instance instanceof Source)) {
+            final InputStream stream = executor.getInputStream();
+            if (stream != null) {
+                stream.close();
+            }
+        }
+
+        return instance;
     }
 
     @Override
