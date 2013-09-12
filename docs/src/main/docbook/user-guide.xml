@@ -132,6 +132,7 @@ This line fits the page width.
     <xi:include href="entity-filtering.xml" />
     <xi:include href="mvc.xml" />
     <xi:include href="monitoring.xml" />
+    <xi:include href="custom-di.xml" />
     <xi:include href="spring.xml" />
     <xi:include href="test-framework.xml" />
     <xi:include href="how-to-build.xml" />
