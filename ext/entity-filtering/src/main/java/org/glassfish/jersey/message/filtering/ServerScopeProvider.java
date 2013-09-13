@@ -108,7 +108,8 @@ class ServerScopeProvider extends CommonScopeProvider {
             for (final ResourceMethod method : ServerScopeProvider.getMatchedMethods(uriInfo)) {
                 final Invocable invocable = method.getInvocable();
 
-                mergeFilteringScopes(filteringScope, getFilteringScopes(invocable.getHandlingMethod(), invocable.getHandler().getHandlerClass()));
+                mergeFilteringScopes(filteringScope,
+                        getFilteringScopes(invocable.getHandlingMethod(), invocable.getHandler().getHandlerClass()));
 
                 if (!filteringScope.isEmpty()) {
                     uriToContexts.putIfAbsent(path, filteringScope);

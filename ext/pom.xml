@@ -66,8 +66,10 @@
         <module>bean-validation</module>
         <module>entity-filtering</module>
         <module>mvc</module>
+        <module>mvc-bean-validation</module>
         <module>mvc-freemarker</module>
         <module>mvc-jsp</module>
+        <module>mvc-mustache</module>
         <module>proxy-client</module>
         <module>servlet-portability</module>
         <module>spring3</module>
