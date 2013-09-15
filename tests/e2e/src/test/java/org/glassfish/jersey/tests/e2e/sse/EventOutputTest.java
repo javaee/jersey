@@ -40,16 +40,28 @@
 package org.glassfish.jersey.tests.e2e.sse;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
 import org.glassfish.jersey.media.sse.EventInput;
+import org.glassfish.jersey.media.sse.EventListener;
 import org.glassfish.jersey.media.sse.EventOutput;
+import org.glassfish.jersey.media.sse.EventSource;
+import org.glassfish.jersey.media.sse.InboundEvent;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -181,5 +193,46 @@ public class EventOutputTest extends JerseyTest {
         String eventData = eventInput.read().readData();
         assertEquals("charset", eventData);
         eventInput.close();
+    }
+
+    @Test
+    public void testGrizzlyConnectorWithEventSource() throws InterruptedException {
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 15000);
+        clientConfig.property(ClientProperties.READ_TIMEOUT, 0);
+        clientConfig.property(ClientProperties.ASYNC_THREADPOOL_SIZE, 8);
+        GrizzlyConnector jerseyClientConnector = new GrizzlyConnector(clientConfig);
+        clientConfig.connector(jerseyClientConnector);
+        Client client = ClientBuilder.newBuilder().withConfig(clientConfig).build();
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<String> eventData = new AtomicReference<String>();
+        final AtomicInteger counter = new AtomicInteger(0);
+        WebTarget single = client.target(getBaseUri()).path("test/single");
+        EventSource es = EventSource.target(single).build();
+        es.register(new EventListener() {
+            @Override
+            public void onEvent(InboundEvent inboundEvent) {
+                final int i = counter.incrementAndGet();
+                if (i == 1) {
+                    eventData.set(inboundEvent.readData());
+                }
+                latch.countDown();
+            }
+        });
+
+        boolean latchTimedOut;
+        boolean closeTimedOut;
+        try {
+            es.open();
+            latchTimedOut = latch.await(5, TimeUnit.SECONDS);
+        } finally {
+            closeTimedOut = es.close(5, TimeUnit.SECONDS);
+        }
+
+        assertEquals("Unexpected event count", 1, counter.get());
+        assertEquals("Unexpected event data", "single", eventData.get());
+        assertTrue("Event latch has timed out", latchTimedOut);
+        assertTrue("EventSource.close() has timed out", closeTimedOut);
     }
 }

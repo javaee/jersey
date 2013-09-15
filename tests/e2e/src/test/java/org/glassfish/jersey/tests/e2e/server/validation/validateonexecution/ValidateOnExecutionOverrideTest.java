@@ -126,7 +126,7 @@ public class ValidateOnExecutionOverrideTest extends JerseyTest {
         assertThat(target(path).request().get().getStatus(), equalTo(500));
 
         final List<LogRecord> loggedRecords = getLoggedRecords();
-        assertThat(loggedRecords.size(), equalTo(1));
+        assertThat(loggedRecords.size(), equalTo(2));
         assertThat(loggedRecords.get(0).getThrown(), instanceOf(ValidationException.class));
     }
 }

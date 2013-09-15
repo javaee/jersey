@@ -153,7 +153,9 @@ class ClientRuntime {
                     }
                 };
                 try {
-                    connector.apply(addUserAgent(Stages.process(request, requestProcessingRoot), connector.getName()), connectorCallback);
+                    connector.apply(
+                            addUserAgent(Stages.process(request, requestProcessingRoot), connector.getName()),
+                            connectorCallback);
                 } catch (AbortException aborted) {
                     connectorCallback.response(aborted.getAbortResponse());
                 } catch (Throwable throwable) {

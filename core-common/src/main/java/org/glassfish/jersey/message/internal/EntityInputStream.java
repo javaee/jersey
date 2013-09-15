@@ -128,7 +128,8 @@ class EntityInputStream extends InputStream {
      * a runtime {@link javax.ws.rs.ProcessingException} is thrown.
      * </p>
      *
-     * @throws javax.ws.rs.ProcessingException in case the reset operation on the underlying entity input stream failed.
+     * @throws javax.ws.rs.ProcessingException
+     *          in case the reset operation on the underlying entity input stream failed.
      */
     @Override
     public void reset() {
@@ -146,7 +147,8 @@ class EntityInputStream extends InputStream {
      * a runtime {@link javax.ws.rs.ProcessingException} is thrown.
      * </p>
      *
-     * @throws javax.ws.rs.ProcessingException in case the close operation on the underlying entity input stream failed.
+     * @throws javax.ws.rs.ProcessingException
+     *          in case the close operation on the underlying entity input stream failed.
      */
     @Override
     public void close() throws ProcessingException {
@@ -215,6 +217,15 @@ class EntityInputStream extends InputStream {
         if (closed) {
             throw new IllegalStateException(LocalizationMessages.ERROR_ENTITY_STREAM_CLOSED());
         }
+    }
+
+    /**
+     * Get the closed status of this input stream.
+     *
+     * @return {@code true} if the stream has been closed, {@code false} otherwise.
+     */
+    public boolean isClosed() {
+        return closed;
     }
 
     /**

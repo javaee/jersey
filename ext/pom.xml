@@ -64,6 +64,7 @@
 
     <modules>
         <module>bean-validation</module>
+        <module>entity-filtering</module>
         <module>mvc</module>
         <module>mvc-freemarker</module>
         <module>mvc-jsp</module>

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,32 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.util;
 
-import java.io.Serializable;
-import java.util.Comparator;
+package org.glassfish.jersey.tests.e2e.entity.filtering.domain;
+
+import org.glassfish.jersey.tests.e2e.entity.filtering.TertiaryDetailedView;
 
 /**
- * A key comparator.
- *
- * @param <K> Key's type
- * @author Paul Sandoz
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public interface KeyComparator<K> extends Comparator<K>, Serializable {
+@TertiaryDetailedView
+public class FilteredClassEntity {
 
-    /**
-     * Compare two keys for equality.
-     *
-     * @param x the first key
-     * @param y the second key
-     * @return true if the keys are equal.
-     */
-    boolean equals(K x, K y);
+    private int field;
+    private String property;
 
-    /**
-     * Get the hash code of a key.
-     * @param k the key.
-     * @return the hash code of the key.
-     */
-    int hash(K k);
+    public String getProperty() {
+        return property;
+    }
+
+    public void setProperty(final String property) {
+        this.property = property;
+    }
 }

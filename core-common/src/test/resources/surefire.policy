@@ -48,8 +48,10 @@ grant codebase "file:${local.repo}/-" {
 };
 
 // this is to be able to set runtime delegate instance in jax-rs from the tests
+// and to run multi-threaded tests
 grant codebase "file:${build.dir}/test-classes/-" {
   permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+  permission java.lang.RuntimePermission "modifyThread";
 };
 
 grant codebase "file:${build.dir}/classes/-" {

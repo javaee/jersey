@@ -131,11 +131,6 @@ public class TraceSupportTest extends JerseyTest {
 
     }
 
-    @Override
-    protected void configureClient(ClientConfig config) {
-        config.connector(new ApacheConnector(config));
-    }
-
     private String[] expectedFragmentsProgrammatic = new String[]{
             "TRACE http://localhost:" + this.getPort() + "/tracing/programmatic"
     };

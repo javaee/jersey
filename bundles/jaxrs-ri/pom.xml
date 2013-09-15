@@ -193,6 +193,21 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <compilerArguments>
+                        <!-- Do not warn about using sun.misc.Unsafe -->
+                        <XDignore.symbol.file />
+                    </compilerArguments>
+                    <showWarnings>false</showWarnings>
+                    <fork>false</fork>
+                </configuration>
+            </plugin>
             <!-- producing single jar bundle -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -252,6 +267,7 @@
                             javax.servlet.descriptor.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
                             javax.servlet.*;version="[2.4,4.0)",
                             javax.persistence.*;resolution:=optional,
+                            sun.misc.*;resolution:=optional,
                             *
                         </Import-Package>
                         <Private-Package>

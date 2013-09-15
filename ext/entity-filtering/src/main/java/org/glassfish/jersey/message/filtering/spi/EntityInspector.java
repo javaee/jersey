@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,30 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.util;
+
+package org.glassfish.jersey.message.filtering.spi;
+
+import org.glassfish.jersey.spi.Contract;
 
 /**
- * Case insensitive String key comparator.
+ * Responsible for inspecting entity classes. This class invokes all available {@link EntityProcessor entity processors} with
+ * different {@link EntityProcessorContext contexts}.
  *
- * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class StringIgnoreCaseKeyComparator implements KeyComparator<String> {
+@Contract
+public interface EntityInspector {
 
-    private static final long serialVersionUID = 9106900325469360723L;
-
-    public static final StringIgnoreCaseKeyComparator SINGLETON = new StringIgnoreCaseKeyComparator();
-
-    public int hash(String k) {
-        return k.toLowerCase().hashCode();
-    }
-
-    public boolean equals(String x, String y) {
-        return x.equalsIgnoreCase(y);
-    }
-
-    public int compare(String o1, String o2) {
-        return o1.compareToIgnoreCase(o2);
-    }
-
+    /**
+     * Inspect entity class and create/update {@link EntityGraph} for reader/writer. The entity graph will be used to create
+     * entity-filtering object which is requested by {@code #createFilteringObject(...)}.
+     * <p>
+     * Method recursively inspects entity fields classes suitable for inspecting.
+     * </p>
+     * <p>
+     * Method uses {@link EntityProcessor}s for inspecting.
+     * </p>
+     *
+     * @param entityClass entity class to be examined.
+     * @param forWriter flag determining whether the class should be examined for reader or writer.
+     */
+    public void inspect(final Class<?> entityClass, final boolean forWriter);
 }
