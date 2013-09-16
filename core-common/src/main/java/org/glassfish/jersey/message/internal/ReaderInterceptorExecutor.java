@@ -72,12 +72,14 @@ import com.google.common.collect.Lists;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public final class ReaderInterceptorExecutor extends InterceptorExecutor implements ReaderInterceptorContext {
+public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderInterceptor>
+        implements ReaderInterceptorContext {
 
     private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
 
     private final Iterator<ReaderInterceptor> interceptors;
+    private int processedCount;
     private final MessageBodyWorkers workers;
     private final boolean translateNce;
 
@@ -117,6 +119,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
         effectiveInterceptors.add(new TerminalReaderInterceptor());
 
         this.interceptors = effectiveInterceptors.iterator();
+        this.processedCount = 0;
     }
 
     /**
@@ -130,10 +133,15 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
         if (!interceptors.hasNext()) {
             throw new ProcessingException(LocalizationMessages.ERROR_INTERCEPTOR_READER_PROCEED());
         }
-
-        return interceptors.next().aroundReadFrom(this);
+        final ReaderInterceptor interceptor = interceptors.next();
+        traceBefore(interceptor, MsgTraceEvent.RI_BEFORE);
+        try {
+            return interceptor.aroundReadFrom(this);
+        } finally {
+            processedCount++;
+            traceAfter(interceptor, MsgTraceEvent.RI_AFTER);
+        }
     }
-
     @Override
     public InputStream getInputStream() {
         return this.inputStream;
@@ -151,6 +159,15 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
     }
 
     /**
+     * Get number of processed interceptors.
+     *
+     * @return number of processed interceptors.
+     */
+    int getProcessedCount() {
+        return processedCount;
+    }
+
+    /**
      * Terminal reader interceptor which choose the appropriate {@link MessageBodyReader}
      * and reads the entity from the input stream. The order of actions is the following: <br>
      * 1. choose the appropriate {@link MessageBodyReader} <br>
@@ -161,38 +178,71 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor impleme
         @Override
         @SuppressWarnings("unchecked")
         public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
-            final MessageBodyReader bodyReader = workers.getMessageBodyReader(context.getType(), context.getGenericType(),
-                    context.getAnnotations(), context.getMediaType());
+            processedCount--; //this is not regular interceptor -> count down
 
-            final EntityInputStream input = new EntityInputStream(context.getInputStream());
-
-            if (bodyReader == null) {
-                if (input.isEmpty() && !context.getHeaders().containsKey(HttpHeaders.CONTENT_TYPE)) {
-                    return null;
-                } else {
-                    throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(
-                            context.getMediaType(), context.getType(), context.getGenericType()));
+            traceBefore(null, MsgTraceEvent.RI_BEFORE);
+            try {
+                final TracingLogger tracingLogger = getTracingLogger();
+                if (tracingLogger.isLogEnabled(MsgTraceEvent.MBR_FIND)) {
+                    tracingLogger.log(MsgTraceEvent.MBR_FIND,
+                            context.getType().getName(),
+                            (context.getGenericType() instanceof Class ?
+                                    ((Class) context.getGenericType()).getName() : context.getGenericType()),
+                            String.valueOf(context.getMediaType()), java.util.Arrays.toString(context.getAnnotations()));
                 }
-            }
 
-            Object entity;
-            if (translateNce) {
-                try {
+                final MessageBodyReader bodyReader = workers.getMessageBodyReader(
+                        context.getType(),
+                        context.getGenericType(),
+                        context.getAnnotations(),
+                        context.getMediaType(),
+                        ReaderInterceptorExecutor.this);
+
+                final EntityInputStream input = new EntityInputStream(context.getInputStream());
+
+                if (bodyReader == null) {
+                    if (input.isEmpty() && !context.getHeaders().containsKey(HttpHeaders.CONTENT_TYPE)) {
+                        return null;
+                    } else {
+                        throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(
+                                context.getMediaType(), context.getType(), context.getGenericType()));
+                    }
+                }
+                Object entity = invokeReadFrom(context, bodyReader, input);
+
+                if (bodyReader instanceof CompletableReader) {
+                    entity = ((CompletableReader) bodyReader).complete(entity);
+                }
+                return entity;
+            } finally {
+                clearLastTracedInterceptor();
+                traceAfter(null, MsgTraceEvent.RI_AFTER);
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        private Object invokeReadFrom(ReaderInterceptorContext context, MessageBodyReader bodyReader, EntityInputStream input)
+                throws WebApplicationException, IOException {
+
+            final TracingLogger tracingLogger = getTracingLogger();
+            final long timestamp = tracingLogger.timestamp(MsgTraceEvent.MBR_READ_FROM);
+            try {
+                Object entity;
+                if (translateNce) {
+                    try {
+                        entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
+                                context.getMediaType(), context.getHeaders(), input);
+                    } catch (NoContentException ex) {
+                        throw new BadRequestException(ex);
+                    }
+                } else {
                     entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
                             context.getMediaType(), context.getHeaders(), input);
-                } catch (NoContentException ex) {
-                    throw new BadRequestException(ex);
                 }
-
-            } else {
-                entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
-                        context.getMediaType(), context.getHeaders(), input);
+                return entity;
+            } finally {
+                tracingLogger.logDuration(MsgTraceEvent.MBR_READ_FROM, timestamp, bodyReader);
             }
-
-            if (bodyReader instanceof CompletableReader) {
-                entity = ((CompletableReader) bodyReader).complete(entity);
-            }
-            return entity;
         }
     }
 }

@@ -635,21 +635,28 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public <T> MessageBodyReader<T> getMessageBodyReader(Class<T> c, Type t,
                                                          Annotation[] as,
                                                          MediaType mediaType) {
+        return getMessageBodyReader(c, t, as, mediaType, null);
+    }
+
+    @Override
+    public <T> MessageBodyReader<T> getMessageBodyReader(Class<T> c, Type t,
+                                                         Annotation[] as,
+                                                         MediaType mediaType,
+                                                         PropertiesDelegate propertiesDelegate) {
 
         MessageBodyReader<T> p = null;
         if (legacyProviderOrdering) {
             if (mediaType != null) {
-                p = _getMessageBodyReader(c, t, as, mediaType, mediaType);
+                p = _getMessageBodyReader(c, t, as, mediaType, mediaType, propertiesDelegate);
                 if (p == null) {
-                    p = _getMessageBodyReader(c, t, as, mediaType,
-                            MediaTypes.getTypeWildCart(mediaType));
+                    p = _getMessageBodyReader(c, t, as, mediaType, MediaTypes.getTypeWildCart(mediaType), propertiesDelegate);
                 }
             }
             if (p == null) {
-                p = _getMessageBodyReader(c, t, as, mediaType, MediaTypes.GENERAL_MEDIA_TYPE);
+                p = _getMessageBodyReader(c, t, as, mediaType, MediaTypes.GENERAL_MEDIA_TYPE, propertiesDelegate);
             }
         } else {
-            p = _getMessageBodyReader(c, t, as, mediaType, readers);
+            p = _getMessageBodyReader(c, t, as, mediaType, readers, propertiesDelegate);
         }
 
         return p;
@@ -709,7 +716,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private <T> MessageBodyReader<T> _getMessageBodyReader(Class<T> c, Type t,
                                                            Annotation[] as,
                                                            MediaType mediaType,
-                                                           List<MbrModel> models) {
+                                                           List<MbrModel> models,
+                                                           PropertiesDelegate propertiesDelegate) {
 
         List<MbrModel> readers = mbrLookupCache.get(new ModelLookupKey(c, mediaType));
         if (readers == null) {
@@ -728,20 +736,34 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             return null;
         }
 
-        for (MbrModel model : readers) {
+        final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
+        MessageBodyReader <T> selected = null;
+        final Iterator<MbrModel> iterator = readers.iterator();
+        while (iterator.hasNext()) {
+            final MbrModel model = iterator.next();
             if (model.isReadable(c, t, as, mediaType)) {
-                return model.provider;
+                selected = (MessageBodyReader<T>) model.provider;
+                tracingLogger.log(MsgTraceEvent.MBR_SELECTED, selected);
+                break;
+            }
+            tracingLogger.log(MsgTraceEvent.MBR_NOT_READABLE, model.provider);
+        }
+
+        if (tracingLogger.isLogEnabled(MsgTraceEvent.MBR_SKIPPED)) {
+            while (iterator.hasNext()) {
+                final MbrModel model = iterator.next();
+                tracingLogger.log(MsgTraceEvent.MBR_SKIPPED, model.provider);
             }
         }
 
-        return null;
+        return selected;
     }
-
 
     @SuppressWarnings("unchecked")
     private <T> MessageBodyReader<T> _getMessageBodyReader(Class<T> c, Type t,
                                                            Annotation[] as,
-                                                           MediaType mediaType, MediaType lookup) {
+                                                           MediaType mediaType, MediaType lookup,
+                                                           PropertiesDelegate propertiesDelegate) {
 
         List<MessageBodyReader> readers = readersCache.get(lookup);
 
@@ -749,34 +771,55 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             return null;
         }
 
-        for (MessageBodyReader<?> p : readers) {
+        final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
+        MessageBodyReader<T> selected = null;
+        final Iterator<MessageBodyReader> iterator = readers.iterator();
+        while (iterator.hasNext()) {
+            final MessageBodyReader p = iterator.next();
             if (MbrModel.isReadable(p, c, t, as, mediaType)) {
-                return (MessageBodyReader<T>) p;
+                selected = (MessageBodyReader<T>) p;
+                tracingLogger.log(MsgTraceEvent.MBR_SELECTED, selected);
+                break;
+            }
+            tracingLogger.log(MsgTraceEvent.MBR_NOT_READABLE, p);
+        }
+
+        if (tracingLogger.isLogEnabled(MsgTraceEvent.MBR_SKIPPED)) {
+            while (iterator.hasNext()) {
+                final MessageBodyReader p = iterator.next();
+                tracingLogger.log(MsgTraceEvent.MBR_SKIPPED, p);
             }
         }
 
-        return null;
+        return selected;
     }
 
     @Override
     public <T> MessageBodyWriter<T> getMessageBodyWriter(Class<T> c, Type t,
                                                          Annotation[] as,
                                                          MediaType mediaType) {
+        return getMessageBodyWriter(c, t, as, mediaType, null);
+    }
+
+    @Override
+    public <T> MessageBodyWriter<T> getMessageBodyWriter(Class<T> c, Type t,
+                                                         Annotation[] as,
+                                                         MediaType mediaType,
+                                                         PropertiesDelegate propertiesDelegate) {
         MessageBodyWriter<T> p = null;
 
         if (legacyProviderOrdering) {
             if (mediaType != null) {
-                p = _getMessageBodyWriter(c, t, as, mediaType, mediaType);
+                p = _getMessageBodyWriter(c, t, as, mediaType, mediaType, propertiesDelegate);
                 if (p == null) {
-                    p = _getMessageBodyWriter(c, t, as, mediaType,
-                            MediaTypes.getTypeWildCart(mediaType));
+                    p = _getMessageBodyWriter(c, t, as, mediaType, MediaTypes.getTypeWildCart(mediaType), propertiesDelegate);
                 }
             }
             if (p == null) {
-                p = _getMessageBodyWriter(c, t, as, mediaType, MediaTypes.GENERAL_MEDIA_TYPE);
+                p = _getMessageBodyWriter(c, t, as, mediaType, MediaTypes.GENERAL_MEDIA_TYPE, propertiesDelegate);
             }
         } else {
-            p = _getMessageBodyWriter(c, t, as, mediaType, writers);
+            p = _getMessageBodyWriter(c, t, as, mediaType, writers, propertiesDelegate);
         }
 
         return p;
@@ -786,7 +829,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private <T> MessageBodyWriter<T> _getMessageBodyWriter(Class<T> c, Type t,
                                                            Annotation[] as,
                                                            MediaType mediaType,
-                                                           List<MbwModel> models) {
+                                                           List<MbwModel> models,
+                                                           PropertiesDelegate propertiesDelegate) {
 
         List<MbwModel> writers = mbwLookupCache.get(new ModelLookupKey(c, mediaType));
         if (writers == null) {
@@ -806,33 +850,60 @@ public class MessageBodyFactory implements MessageBodyWorkers {
             return null;
         }
 
-
-        for (MbwModel model : writers) {
+        final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
+        MessageBodyWriter<T> selected = null;
+        final Iterator<MbwModel> iterator = writers.iterator();
+        while (iterator.hasNext()) {
+            final MbwModel model = iterator.next();
             if (model.isWriteable(c, t, as, mediaType)) {
-                return model.provider;
+                selected = (MessageBodyWriter<T>) model.provider;
+                tracingLogger.log(MsgTraceEvent.MBW_SELECTED, selected);
+                break;
+            }
+            tracingLogger.log(MsgTraceEvent.MBW_NOT_WRITEABLE, model.provider);
+        }
+
+        if (tracingLogger.isLogEnabled(MsgTraceEvent.MBW_SKIPPED)) {
+            while (iterator.hasNext()) {
+                final MbwModel model = iterator.next();
+                tracingLogger.log(MsgTraceEvent.MBW_SKIPPED, model.provider);
             }
         }
 
-        return null;
+        return selected;
     }
 
     @SuppressWarnings("unchecked")
     private <T> MessageBodyWriter<T> _getMessageBodyWriter(Class<T> c, Type t,
                                                            Annotation[] as,
-                                                           MediaType mediaType, MediaType lookup) {
+                                                           MediaType mediaType, MediaType lookup,
+                                                           PropertiesDelegate propertiesDelegate) {
         List<MessageBodyWriter> writers = writersCache.get(lookup);
 
         if (writers == null) {
             return null;
         }
 
-        for (MessageBodyWriter<?> p : writers) {
+        final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
+        MessageBodyWriter <T> selected = null;
+        final Iterator<MessageBodyWriter> iterator = writers.iterator();
+        while (iterator.hasNext()) {
+            final MessageBodyWriter p = iterator.next();
             if (MbwModel.isWriteable(p, c, t, as, mediaType)) {
-                return (MessageBodyWriter<T>) p;
+                selected = (MessageBodyWriter<T>) p;
+                tracingLogger.log(MsgTraceEvent.MBW_SELECTED, selected);
+                break;
             }
+            tracingLogger.log(MsgTraceEvent.MBW_NOT_WRITEABLE, p);
         }
 
-        return null;
+        if (tracingLogger.isLogEnabled(MsgTraceEvent.MBW_SKIPPED)) {
+            while (iterator.hasNext()) {
+                final MessageBodyWriter p = iterator.next();
+                tracingLogger.log(MsgTraceEvent.MBW_SKIPPED, p);
+            }
+        }
+        return selected;
     }
 
     private <T> void getCompatibleProvidersMap(MediaType mediaType,
@@ -1030,18 +1101,23 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                            InputStream entityStream,
                            Iterable<ReaderInterceptor> readerInterceptors,
                            boolean translateNce) throws WebApplicationException, IOException {
-
         ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, readerInterceptors, translateNce);
-        Object instance = executor.proceed();
-        if (!(instance instanceof Closeable) && !(instance instanceof Source)) {
-            final InputStream stream = executor.getInputStream();
-            if (stream != null) {
-                stream.close();
+        final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
+        final long timestamp = tracingLogger.timestamp(MsgTraceEvent.RI_SUMMARY);
+        try {
+            Object instance = executor.proceed();
+            if (!(instance instanceof Closeable) && !(instance instanceof Source)) {
+                final InputStream stream = executor.getInputStream();
+                if (stream != null) {
+                    stream.close();
+                }
             }
-        }
 
-        return instance;
+            return instance;
+        } finally {
+            tracingLogger.logDuration(MsgTraceEvent.RI_SUMMARY, timestamp, executor.getProcessedCount());
+        }
     }
 
     @Override
@@ -1055,10 +1131,15 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                 OutputStream entityStream,
                                 Iterable<WriterInterceptor> writerInterceptors)
             throws IOException, WebApplicationException {
-
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
                 httpHeaders, propertiesDelegate, entityStream, this, writerInterceptors);
-        executor.proceed();
+        final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
+        final long timestamp = tracingLogger.timestamp(MsgTraceEvent.WI_SUMMARY);
+        try {
+            executor.proceed();
+        } finally {
+            tracingLogger.logDuration(MsgTraceEvent.WI_SUMMARY, timestamp, executor.getProcessedCount());
+        }
 
         return executor.getOutputStream();
     }

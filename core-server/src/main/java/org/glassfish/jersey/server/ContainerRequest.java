@@ -70,6 +70,7 @@ import org.glassfish.jersey.message.internal.AcceptableMediaType;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
+import org.glassfish.jersey.message.internal.TracingAwarePropertiesDelegate;
 import org.glassfish.jersey.message.internal.VariantSelector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.monitoring.EmptyRequestEventBuilder;
@@ -94,7 +95,7 @@ import com.google.common.collect.Lists;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ContainerRequest extends InboundMessageContext
-        implements ContainerRequestContext, Request, HttpHeaders {
+        implements ContainerRequestContext, Request, HttpHeaders, PropertiesDelegate {
 
     private static URI DEFAULT_BASE_URI = URI.create("/");
 
@@ -158,7 +159,7 @@ public class ContainerRequest extends InboundMessageContext
         this.requestUri = requestUri;
         this.httpMethod = httpMethod;
         this.securityContext = securityContext;
-        this.propertiesDelegate = propertiesDelegate;
+        this.propertiesDelegate = new TracingAwarePropertiesDelegate(propertiesDelegate);
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package org.glassfish.jersey.message.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.InterceptorContext;
@@ -54,25 +53,49 @@ import org.glassfish.jersey.internal.PropertiesDelegate;
 /**
  * Abstract class with implementation of {@link InterceptorContext} which is common for {@link ReaderInterceptorContext}
  * and {@link WriterInterceptorContext} implementations.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-abstract class InterceptorExecutor implements InterceptorContext {
+abstract class InterceptorExecutor<T> implements InterceptorContext, PropertiesDelegate {
     private final PropertiesDelegate propertiesDelegate;
     private Annotation[] annotations;
     private Class<?> type;
     private Type genericType;
     private MediaType mediaType;
 
+    private final TracingLogger tracingLogger;
+    private InterceptorTimestampPair<T> lastTracedInterceptor;
+
+    /**
+     * Holder of interceptor instance and timestamp of the interceptor invocation (in ns).
+     */
+    private static class InterceptorTimestampPair<T> {
+        private final T interceptor;
+        private final long timestamp;
+
+        private InterceptorTimestampPair(T interceptor, long timestamp) {
+            this.interceptor = interceptor;
+            this.timestamp = timestamp;
+        }
+
+        private T getInterceptor() {
+            return interceptor;
+        }
+
+        private long getTimestamp() {
+            return timestamp;
+        }
+    }
+
     /**
      * Constructor initializes common properties of this abstract class.
      *
-     * @param rawType     raw Java entity type.
-     * @param type        generic Java entity type.
-     * @param annotations Annotations on the formal declaration of the resource
-     *  method parameter that is the target of the message body
-     *  conversion. See {@link InterceptorContext#getAnnotations()}.
-     * @param mediaType MediaType of HTTP entity. See {@link InterceptorContext#getMediaType()}.
+     * @param rawType            raw Java entity type.
+     * @param type               generic Java entity type.
+     * @param annotations        Annotations on the formal declaration of the resource
+     *                           method parameter that is the target of the message body
+     *                           conversion. See {@link InterceptorContext#getAnnotations()}.
+     * @param mediaType          MediaType of HTTP entity. See {@link InterceptorContext#getMediaType()}.
      * @param propertiesDelegate request-scoped properties delegate.
      */
     public InterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
@@ -83,6 +106,7 @@ abstract class InterceptorExecutor implements InterceptorContext {
         this.annotations = annotations;
         this.mediaType = mediaType;
         this.propertiesDelegate = propertiesDelegate;
+        this.tracingLogger = TracingLogger.getInstance(propertiesDelegate);
     }
 
     @Override
@@ -103,6 +127,52 @@ abstract class InterceptorExecutor implements InterceptorContext {
     @Override
     public void removeProperty(String name) {
         propertiesDelegate.removeProperty(name);
+    }
+
+    /**
+     * Get tracing logger instance configured in via properties.
+     *
+     * @return tracing logger instance.
+     */
+    protected final TracingLogger getTracingLogger() {
+        return tracingLogger;
+    }
+
+    /**
+     * Tracing support - log invocation of interceptor BEFORE context.proceed() call.
+     *
+     * @param interceptor invoked interceptor
+     * @param event       event type to be tested
+     */
+    protected final void traceBefore(T interceptor, TracingLogger.Event event) {
+        if (tracingLogger.isLogEnabled(event)) {
+            if ((lastTracedInterceptor != null) && (interceptor != null)) {
+                tracingLogger.logDuration(event, lastTracedInterceptor.getTimestamp(), lastTracedInterceptor.getInterceptor());
+            }
+            lastTracedInterceptor = new InterceptorTimestampPair<T>(interceptor, System.nanoTime());
+        }
+    }
+
+    /**
+     * Tracing support - log invocation of interceptor AFTER context.proceed() call.
+     *
+     * @param interceptor invoked interceptor
+     * @param event       event type to be tested
+     */
+    protected final void traceAfter(T interceptor, TracingLogger.Event event) {
+        if (tracingLogger.isLogEnabled(event)) {
+            if ((lastTracedInterceptor != null) && (lastTracedInterceptor.getInterceptor() != null)) {
+                tracingLogger.logDuration(event, lastTracedInterceptor.getTimestamp(), interceptor);
+            }
+            lastTracedInterceptor = new InterceptorTimestampPair<T>(interceptor, System.nanoTime());
+        }
+    }
+
+    /**
+     * Clear last traced interceptor information.
+     */
+    protected final void clearLastTracedInterceptor(){
+        lastTracedInterceptor = null;
     }
 
     @Override

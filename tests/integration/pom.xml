@@ -91,6 +91,7 @@
         <module>servlet-3-sse-1</module>
         <module>servlet-tests</module>
         <module>spring3</module>
+        <module>tracing-support</module>
     </modules>
 
     <profiles>

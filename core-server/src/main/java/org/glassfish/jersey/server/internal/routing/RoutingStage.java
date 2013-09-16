@@ -42,11 +42,13 @@ package org.glassfish.jersey.server.internal.routing;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Inflecting;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 
 /**
@@ -101,16 +103,22 @@ public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
     @Override
     public Continuation<ContainerRequest> apply(ContainerRequest request) {
         request.triggerEvent(RequestEvent.Type.MATCHING_START);
-        final TransformableData<ContainerRequest, ContainerResponse> result =
-                _apply(request, routingRoot);
 
-        Stage<ContainerRequest> nextStage = null;
-        if (result.hasInflector()) {
-            routingContextFactory.get().setInflector(result.inflector());
-            nextStage = getDefaultNext();
+        final TracingLogger tracingLogger = TracingLogger.getInstance(request);
+        final long timestamp = tracingLogger.timestamp(ServerTraceEvent.MATCH_SUMMARY);
+        try {
+            final TransformableData<ContainerRequest, ContainerResponse> result = _apply(request, routingRoot);
+
+            Stage<ContainerRequest> nextStage = null;
+            if (result.hasInflector()) {
+                routingContextFactory.get().setInflector(result.inflector());
+                nextStage = getDefaultNext();
+            }
+
+            return Continuation.of(result.data(), nextStage);
+        } finally {
+            tracingLogger.logDuration(ServerTraceEvent.MATCH_SUMMARY, timestamp);
         }
-
-        return Continuation.of(result.data(), nextStage);
     }
 
     @SuppressWarnings("unchecked")

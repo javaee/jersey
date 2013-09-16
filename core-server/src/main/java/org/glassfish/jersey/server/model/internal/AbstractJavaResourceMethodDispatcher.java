@@ -54,9 +54,11 @@ import javax.ws.rs.core.SecurityContext;
 import javax.inject.Inject;
 import javax.validation.ValidationException;
 
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.SubjectSecurityContext;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
@@ -97,8 +99,13 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
 
     @Override
     public final Response dispatch(Object resource, ContainerRequest request) throws ProcessingException {
-        // TODO measure time spent in invocation
-        return doDispatch(resource, request);
+        Response response = null;
+        try {
+            response = doDispatch(resource, request);
+        } finally {
+            TracingLogger.getInstance(request).log(ServerTraceEvent.DISPATCH_RESPONSE, response);
+        }
+        return response;
     }
 
     /**
@@ -132,9 +139,13 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
                 validator.validateResourceAndInputParams(resource, resourceMethod, args);
             }
 
+            final ContainerRequest containerRequest = request.get();
+
             final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
                 @Override
                 public Object run() {
+                    final TracingLogger tracingLogger = TracingLogger.getInstance(containerRequest);
+                    final long timestamp = tracingLogger.timestamp(ServerTraceEvent.METHOD_INVOKE);
                     try {
 
                         return methodHandler.invoke(resource, method, args);
@@ -149,11 +160,13 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
                         throw mapTargetToRuntimeEx(ex.getCause());
                     } catch (Throwable t) {
                         throw new ProcessingException(t);
+                    } finally {
+                        tracingLogger.logDuration(ServerTraceEvent.METHOD_INVOKE, timestamp, resource, method);
                     }
                 }
             };
 
-            final SecurityContext securityContext = request.get().getSecurityContext();
+            final SecurityContext securityContext = containerRequest.getSecurityContext();
 
             final Object invocationResult = (securityContext instanceof SubjectSecurityContext) ?
                     ((SubjectSecurityContext)securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();

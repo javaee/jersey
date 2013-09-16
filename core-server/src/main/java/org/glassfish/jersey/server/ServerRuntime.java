@@ -82,10 +82,12 @@ import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.internal.HeaderValueException;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.BackgroundScheduler;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
@@ -131,6 +133,9 @@ class ServerRuntime {
     private final ExecutorsFactory<ContainerRequest> asyncExecutorsFactory;
     private final ApplicationEventListener applicationEventListener;
     private final Configuration configuration;
+
+    private final TracingConfig tracingConfig;
+    private final TracingLogger.Level tracingThreshold;
 
     /**
      * Server-side request processing runtime builder.
@@ -211,6 +216,9 @@ class ServerRuntime {
         this.asyncExecutorsFactory = asyncExecutorsFactory;
         this.applicationEventListener = applicationEventListener;
         this.configuration = configuration;
+
+        this.tracingConfig = TracingUtils.getTracingConfig(configuration);
+        this.tracingThreshold = TracingUtils.getTracingThreshold(configuration);
     }
 
     /**
@@ -221,11 +229,14 @@ class ServerRuntime {
     public void process(final ContainerRequest request) {
         initRequestEventListeners(request);
 
+        TracingUtils.initTracingSupport(tracingConfig, tracingThreshold, request);
         try {
             request.checkState();
             requestScope.runInScope(new Runnable() {
                 @Override
                 public void run() {
+                    TracingUtils.logStart(request);
+
                     final Responder responder = new Responder(request, ServerRuntime.this);
                     final AsyncResponderHolder asyncResponderHolder = new AsyncResponderHolder(
                             responder, requestScope.referenceCurrent());
@@ -321,10 +332,14 @@ class ServerRuntime {
         private final CompletionCallbackRunner completionCallbackRunner = new CompletionCallbackRunner();
         private final ConnectionCallbackRunner connectionCallbackRunner = new ConnectionCallbackRunner();
 
+        private final TracingLogger tracingLogger;
+
 
         public Responder(final ContainerRequest request, final ServerRuntime runtime) {
             this.request = request;
             this.runtime = runtime;
+
+            this.tracingLogger = TracingLogger.getInstance(request);
         }
 
         public void process(ContainerResponse response) {
@@ -419,12 +434,20 @@ class ServerRuntime {
                         LOGGER.log(Level.WARNING, LocalizationMessages.WEB_APPLICATION_EXCEPTION_CAUSE(), cause);
                     }
 
+                    final long timestamp = tracingLogger.timestamp(ServerTraceEvent.EXCEPTION_MAPPING);
                     ExceptionMapper mapper = runtime.exceptionMappers.findMapping(throwable);
                     if (mapper != null) {
                         request.getRequestEventBuilder().setExceptionMapper(mapper);
                         request.triggerEvent(RequestEvent.Type.EXCEPTION_MAPPER_FOUND);
                         try {
                             final Response mappedResponse = mapper.toResponse(throwable);
+
+                            if (tracingLogger.isLogEnabled(ServerTraceEvent.EXCEPTION_MAPPING)) {
+                                tracingLogger.logDuration(ServerTraceEvent.EXCEPTION_MAPPING,
+                                        timestamp, mapper, throwable, throwable.getLocalizedMessage(),
+                                        mappedResponse != null ? mappedResponse.getStatusInfo() : "-no-response-");
+                            }
+
                             if (mappedResponse != null) {
                                 // response successfully mapped
                                 return mappedResponse;
@@ -483,6 +506,7 @@ class ServerRuntime {
          *
          * @param response ContainerResponse object ready to be streamed
          */
+        @SuppressWarnings("unchecked")
         private void absolutizeLocationHeaderUri(ContainerResponse response) {
             if (response == null || response.getRequestContext() == null || response.getRequestContext().getBaseUri() == null) {
                 return;
@@ -504,6 +528,10 @@ class ServerRuntime {
 
             if (!response.hasEntity()) {
                 absolutizeLocationHeaderUri(response);
+
+                tracingLogger.log(ServerTraceEvent.FINISHED, response.getStatusInfo());
+                tracingLogger.flush(response.getHeaders());
+
                 writer.writeResponseStatusAndHeaders(0, response);
                 setWrittenResponse(response);
                 return response;
@@ -546,6 +574,9 @@ class ServerRuntime {
                         connectionCallbackRunner.onDisconnect(runtime.asyncContextProvider.get());
                     }
                     throw mpe;
+                } finally {
+                    tracingLogger.log(ServerTraceEvent.FINISHED, response.getStatusInfo());
+                    tracingLogger.flush(response.getHeaders());
                 }
                 setWrittenResponse(response);
 
