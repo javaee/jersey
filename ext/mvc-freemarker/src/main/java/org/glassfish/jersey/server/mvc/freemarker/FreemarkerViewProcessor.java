@@ -37,13 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
-package org.glassfish.jersey.server.mvc.freemarker.internal;
+package org.glassfish.jersey.server.mvc.freemarker;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -51,7 +52,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.glassfish.jersey.server.mvc.freemarker.FreemarkerProperties;
 import org.glassfish.jersey.server.mvc.internal.DefaultTemplateProcessor;
 
 import com.google.common.collect.Lists;
@@ -62,16 +62,23 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
 /**
+ * Freemarker view template processor.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public final class FreemarkerViewProcessor extends DefaultTemplateProcessor<String> {
+final class FreemarkerViewProcessor extends DefaultTemplateProcessor<String> {
 
     private final Configuration configuration;
 
     @Context
     private UriInfo uriInfo;
 
+    /**
+     * Injection constructor.
+     *
+     * @param config JAX-RS/Jersey runtime configuration.
+     */
     public FreemarkerViewProcessor(@Context final javax.ws.rs.core.Configuration config) {
         super(config);
 
@@ -109,7 +116,13 @@ public final class FreemarkerViewProcessor extends DefaultTemplateProcessor<Stri
         final Template template = configuration.getTemplate(templateReference);
 
         try {
-            template.process(viewable.getModel(), new OutputStreamWriter(out));
+            Object model = viewable.getModel();
+            if (!(model instanceof Map)) {
+                model = new HashMap<String, Object>() {{
+                    put("model", viewable.getModel());
+                }};
+            }
+            template.process(model, new OutputStreamWriter(out));
         } catch (TemplateException te) {
             throw new ContainerException(te);
         }

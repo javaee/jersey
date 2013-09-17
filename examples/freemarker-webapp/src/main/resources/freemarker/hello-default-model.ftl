@@ -1,9 +1,8 @@
-<?xml version="1.0"?>
 <!--
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,51 +39,12 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<html>
+    <head>
+      <title>Welcome!</title>
+    </head>
 
-    <parent>
-        <groupId>org.glassfish.jersey.ext</groupId>
-        <artifactId>project</artifactId>
-        <version>2.3-SNAPSHOT</version>
-    </parent>
-
-    <artifactId>jersey-mvc-freemarker</artifactId>
-    <name>jersey-ext-mvc-freemarker</name>
-
-    <description>
-        Jersey extension module providing support for Freemarker templates.
-    </description>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <inherited>true</inherited>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Export-Package>org.glassfish.jersey.server.mvc.freemarker.*;version=${project.version}</Export-Package>
-                    </instructions>
-                    <unpackBundle>true</unpackBundle>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-mvc</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <version>2.3.20</version>
-        </dependency>
-    </dependencies>
-
-</project>
+    <body>
+      <h1>Welcome ${model}!</h1>
+    </body>
+</html>

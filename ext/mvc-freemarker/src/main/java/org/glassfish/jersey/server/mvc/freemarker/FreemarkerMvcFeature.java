@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.mvc.freemarker;
 
 import javax.ws.rs.ConstrainedTo;
@@ -46,7 +45,6 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.server.mvc.MvcFeature;
-import org.glassfish.jersey.server.mvc.freemarker.internal.FreemarkerViewProcessor;
 
 /**
  * {@code FreemarkerMvcFeature} used to add MVC ({@link MvcFeature}) and Freemarker template support to the server.

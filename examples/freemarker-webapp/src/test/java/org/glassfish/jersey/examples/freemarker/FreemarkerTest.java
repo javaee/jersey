@@ -39,10 +39,10 @@
  */
 package org.glassfish.jersey.examples.freemarker;
 
+import java.net.URI;
+
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
-
-import java.net.URI;
 
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerProperties;
 import org.glassfish.jersey.test.JerseyTest;
@@ -72,6 +72,11 @@ public class FreemarkerTest extends JerseyTest {
     @Test
     public void testHello() {
         assertTrue(target().path("hello").request().get(String.class).contains("Pavel"));
+    }
+
+    @Test
+    public void testHellowithDefaultModel() {
+        assertTrue(target().path("hello-default-model").request().get(String.class).contains("Pavel"));
     }
 
     @Test
