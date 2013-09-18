@@ -124,6 +124,9 @@ final class CommittingOutputStream extends OutputStream {
      */
     private boolean isClosed;
 
+    private static final String STREAM_PROVIDER_NULL = LocalizationMessages.STREAM_PROVIDER_NULL();
+    private static final String COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE = LocalizationMessages.COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE();
+
     /**
      * Creates new committing output stream. The returned stream instance still needs to be initialized before
      * writing first bytes.
@@ -158,8 +161,7 @@ final class CommittingOutputStream extends OutputStream {
      *                   {@link org.glassfish.jersey.message.internal.OutboundMessageContext.StreamProvider#getOutputStream(int) callback}.
      */
     public void enableBuffering(int bufferSize) {
-        Preconditions.checkState(!isCommitted && (this.buffer == null || this.buffer.size() == 0),
-                LocalizationMessages.COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE());
+        Preconditions.checkState(!isCommitted && (this.buffer == null || this.buffer.size() == 0), COMMITTING_STREAM_BUFFERING_ILLEGAL_STATE);
         this.bufferSize = bufferSize;
         if (bufferSize <= 0) {
             this.directWrite = true;
@@ -194,7 +196,7 @@ final class CommittingOutputStream extends OutputStream {
 
     private void commitStream(int currentSize) throws IOException {
         if (!isCommitted) {
-            Preconditions.checkState(streamProvider != null, LocalizationMessages.STREAM_PROVIDER_NULL());
+            Preconditions.checkState(streamProvider != null, STREAM_PROVIDER_NULL);
             adaptedOutput = streamProvider.getOutputStream(currentSize);
             if (adaptedOutput == null) {
                 adaptedOutput = new NullOutputStream();

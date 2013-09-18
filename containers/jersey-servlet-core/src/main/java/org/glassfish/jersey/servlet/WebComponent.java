@@ -40,6 +40,7 @@
 package org.glassfish.jersey.servlet;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.AccessController;
 import java.security.Principal;
@@ -112,6 +113,9 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 public class WebComponent {
 
     private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
+
+    private static final Type RequestTYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
+    private static final Type ResponseTYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
 
     private static final AsyncContextDelegate DefaultAsyncDELEGATE = new AsyncContextDelegate() {
 
@@ -348,10 +352,8 @@ public class WebComponent {
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
                 public void initialize(ServiceLocator locator) {
-                    locator.<Ref<HttpServletRequest>>getService((new TypeLiteral<Ref<HttpServletRequest>>() {
-                    }).getType()).set(servletRequest);
-                    locator.<Ref<HttpServletResponse>>getService((new TypeLiteral<Ref<HttpServletResponse>>() {
-                    }).getType()).set(servletResponse);
+                    locator.<Ref<HttpServletRequest>>getService(RequestTYPE).set(servletRequest);
+                    locator.<Ref<HttpServletResponse>>getService(ResponseTYPE).set(servletResponse);
                 }
             });
             requestContext.setWriter(responseWriter);

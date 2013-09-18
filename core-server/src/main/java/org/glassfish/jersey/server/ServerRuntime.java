@@ -1013,8 +1013,10 @@ class ServerRuntime {
     private static class CompletionCallbackRunner
             extends AbstractCallbackRunner<CompletionCallback> implements CompletionCallback {
 
+        private static final Logger LOGGER = Logger.getLogger(CompletionCallbackRunner.class.getName());
+
         private CompletionCallbackRunner() {
-            super(Logger.getLogger(CompletionCallbackRunner.class.getName()));
+            super(LOGGER);
         }
 
         @Override
@@ -1039,8 +1041,10 @@ class ServerRuntime {
     static class ConnectionCallbackRunner
             extends AbstractCallbackRunner<ConnectionCallback> implements ConnectionCallback {
 
+        private static final Logger LOGGER = Logger.getLogger(ConnectionCallbackRunner.class.getName());
+
         private ConnectionCallbackRunner() {
-            super(Logger.getLogger(ConnectionCallbackRunner.class.getName()));
+            super(LOGGER);
         }
 
         @Override

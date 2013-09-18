@@ -92,6 +92,9 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
+import org.glassfish.hk2.utilities.cache.Cache;
+import org.glassfish.hk2.utilities.cache.Computable;
+
 /**
  * Server-side request-response {@link Inflector inflector} for invoking methods
  * of annotation-based resource classes.
@@ -344,6 +347,13 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
     }
 
+    private static final Cache<Method, Annotation[]> methodAnnotationCache = new Cache<Method, Annotation[]>(new Computable<Method, Annotation[]>(){
+
+        @Override
+        public Annotation[] compute(Method m) {
+            return m.getDeclaredAnnotations();
+        }
+    });
 
     private Response invoke(ContainerRequest requestContext, Object resource) {
 
@@ -368,7 +378,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
                 final Invocable invocable = method.getInvocable();
                 final Annotation[] entityAnn = response.getEntityAnnotations();
-                final Annotation[] methodAnn = invocable.getHandlingMethod().getDeclaredAnnotations();
+                final Annotation[] methodAnn = methodAnnotationCache.compute(invocable.getHandlingMethod());
                 if (methodAnn.length > 0) {
                     if (entityAnn.length == 0) {
                         response.setEntityAnnotations(methodAnn);

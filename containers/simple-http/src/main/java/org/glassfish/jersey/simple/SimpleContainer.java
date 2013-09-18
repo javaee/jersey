@@ -41,6 +41,7 @@ package org.glassfish.jersey.simple;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
@@ -91,6 +92,9 @@ import org.simpleframework.http.Status;
 public final class SimpleContainer implements org.simpleframework.http.core.Container, Container {
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(SimpleContainer.class.getName()), Level.FINEST);
+
+    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>(){}).getType();
+    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>(){}).getType();
 
     /**
      * Referencing factory for Simple request.
@@ -240,10 +244,8 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
                 public void initialize(ServiceLocator locator) {
-                    locator.<Ref<Request>>getService((new TypeLiteral<Ref<Request>>() {
-                    }).getType()).set(request);
-                    locator.<Ref<Response>>getService((new TypeLiteral<Ref<Response>>() {
-                    }).getType()).set(response);
+                    locator.<Ref<Request>>getService(RequestTYPE).set(request);
+                    locator.<Ref<Response>>getService(ResponseTYPE).set(response);
                 }
             });
 
