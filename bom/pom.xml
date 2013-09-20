@@ -157,12 +157,22 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-mvc-bean-validation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext</groupId>
                 <artifactId>jersey-mvc-freemarker</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext</groupId>
                 <artifactId>jersey-mvc-jsp</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-mvc-mustache</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

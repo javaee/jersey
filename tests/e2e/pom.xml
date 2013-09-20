@@ -120,6 +120,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-mvc-bean-validation</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-sse</artifactId>
             <scope>test</scope>
@@ -143,6 +148,21 @@
             <groupId>org.glassfish.jersey.connectors</groupId>
             <artifactId>jersey-grizzly-connector</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.security</groupId>
+            <artifactId>oauth1-signature</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.security</groupId>
+            <artifactId>oauth1-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.security</groupId>
+            <artifactId>oauth1-server</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
     </dependencies>

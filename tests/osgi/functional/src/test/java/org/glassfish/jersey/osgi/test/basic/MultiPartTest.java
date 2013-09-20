@@ -69,12 +69,13 @@ import org.glassfish.grizzly.http.server.HttpServer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.junit.PaxExam;
+
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class MultiPartTest {
 
     private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);

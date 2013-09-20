@@ -78,7 +78,7 @@ public @interface Template {
 
     /**
      * The class to be used to resolve the template name if the template name is not absolute.
-     * If the value is {@code Object.class} then the resolving class will be obtained from the last matching resource.
+     * If the value is {@code Object.class} then the resolving class will be obtained from the last matched resource.
      * <p/>
      * Defaults to {@link Object}.
      */

@@ -39,20 +39,31 @@
  */
 package org.glassfish.jersey.examples.helloworld.test;
 
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerSuite;
+import java.util.Arrays;
+import java.util.List;
 
-@RunWith(JUnit4TestRunner.class)
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+
+@RunWith(PaxExam.class)
+@ExamReactorStrategy(PerSuite.class)
 public class WebAppFelixTest extends AbstractWebAppTest {
 
     @Override
     public List<Option> osgiRuntimeOptions() {
-        return felixOptions();
+        return Arrays.asList(CoreOptions.options(
+                mavenBundle()
+                        .groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin")
+                        .versionAsInProject()
+        )
+        );
     }
 
     @Before

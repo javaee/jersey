@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,10 @@
     <listener>
         <listener-class>org.glassfish.jersey.examples.osgi.helloworld.WebAppContextListener</listener-class>
     </listener>
+    <!-- We do not really need the welcome files, but the jetty bundled with pax exam requires it -->
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
     <servlet>
         <servlet-name>Jersey Web Application</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>

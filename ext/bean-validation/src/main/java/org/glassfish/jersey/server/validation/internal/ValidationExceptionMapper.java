@@ -40,11 +40,7 @@
 
 package org.glassfish.jersey.server.validation.internal;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,10 +57,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.annotation.Priority;
 import javax.inject.Provider;
-import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
-import javax.validation.ElementKind;
-import javax.validation.Path;
 import javax.validation.ValidationException;
 
 import org.glassfish.jersey.server.ServerProperties;
@@ -96,7 +89,7 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
             LOGGER.log(Level.FINER, LocalizationMessages.CONSTRAINT_VIOLATIONS_ENCOUNTERED(), exception);
 
             final ConstraintViolationException cve = (ConstraintViolationException) exception;
-            final Response.ResponseBuilder response = Response.status(getStatus(cve));
+            final Response.ResponseBuilder response = Response.status(ValidationHelper.getResponseStatus(cve));
 
             // Entity.
             final Object property = config.getProperty(ServerProperties.BV_SEND_ERROR_IN_RESPONSE);
@@ -118,7 +111,7 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
                 }
                 response.entity(
                         new GenericEntity<List<ValidationError>>(
-                                getEntity(cve.getConstraintViolations()),
+                                ValidationHelper.constraintViolationToValidationErrors(cve),
                                 new GenericType<List<ValidationError>>() {}.getType()
                         )
                 );
@@ -130,60 +123,5 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
 
             return Response.serverError().entity(exception.getMessage()).build();
         }
-    }
-
-    private List<ValidationError> getEntity(final Set<ConstraintViolation<?>> violations) {
-        final List<ValidationError> errors = new ArrayList<ValidationError>();
-
-        for (final ConstraintViolation violation : violations) {
-            errors.add(new ValidationError(
-                    violation.getMessage(), violation.getMessageTemplate(), getPath(violation), getInvalidValue(violation.getInvalidValue())));
-        }
-
-        return errors;
-    }
-
-    private String getInvalidValue(final Object invalidValue) {
-        if (invalidValue == null) {
-            return null;
-        }
-
-        if (invalidValue.getClass().isArray()) {
-            return Arrays.toString((Object[]) invalidValue);
-        }
-        return invalidValue.toString();
-    }
-
-    private Response.Status getStatus(final ConstraintViolationException exception) {
-        return getResponseStatus(exception.getConstraintViolations());
-    }
-
-    private Response.Status getResponseStatus(final Set<ConstraintViolation<?>> constraintViolations) {
-        final Iterator<ConstraintViolation<?>> iterator = constraintViolations.iterator();
-
-        if (iterator.hasNext()) {
-            return getResponseStatus(iterator.next());
-        } else {
-            return Response.Status.BAD_REQUEST;
-        }
-    }
-
-    private Response.Status getResponseStatus(final ConstraintViolation<?> constraintViolation) {
-        for (final Path.Node node : constraintViolation.getPropertyPath()) {
-            final ElementKind kind = node.getKind();
-
-            if (ElementKind.RETURN_VALUE.equals(kind)) {
-                return Response.Status.INTERNAL_SERVER_ERROR;
-            }
-        }
-
-        return Response.Status.BAD_REQUEST;
-    }
-
-    private String getPath(final ConstraintViolation violation) {
-        final String leafBeanName = violation.getLeafBean().getClass().getSimpleName();
-        final String propertyPath = violation.getPropertyPath().toString();
-
-        return leafBeanName + (!"".equals(propertyPath) ? '.' + propertyPath : "");
     }
 }

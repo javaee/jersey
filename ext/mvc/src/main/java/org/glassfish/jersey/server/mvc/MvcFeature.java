@@ -45,6 +45,7 @@ import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
+import org.glassfish.jersey.server.mvc.internal.ErrorTemplateExceptionMapper;
 import org.glassfish.jersey.server.mvc.internal.MvcBinder;
 
 /**
@@ -57,7 +58,12 @@ public final class MvcFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
-        context.register(new MvcBinder());
-        return true;
+        if (!context.getConfiguration().isRegistered(ErrorTemplateExceptionMapper.class)) {
+            context.register(ErrorTemplateExceptionMapper.class);
+            context.register(new MvcBinder());
+
+            return true;
+        }
+        return false;
     }
 }

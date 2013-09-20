@@ -41,6 +41,7 @@
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -76,6 +77,7 @@ class ClientFilteringStages {
     static ChainableStage<ClientRequest> createRequestFilteringStage(final ServiceLocator locator) {
         final RankedComparator<ClientRequestFilter> comparator = new RankedComparator<ClientRequestFilter>(RankedComparator.Order.ASCENDING);
         final Iterable<ClientRequestFilter> requestFilters = Providers.getAllProviders(locator, ClientRequestFilter.class, comparator);
+        Providers.injectProviders(requestFilters, locator);
 
         return requestFilters.iterator().hasNext() ? new RequestFilteringStage(requestFilters) : null;
     }
@@ -91,6 +93,7 @@ class ClientFilteringStages {
     static ChainableStage<ClientResponse> createResponseFilteringStage(final ServiceLocator locator) {
         final RankedComparator<ClientResponseFilter> comparator = new RankedComparator<ClientResponseFilter>(RankedComparator.Order.DESCENDING);
         final Iterable<ClientResponseFilter> responseFilters = Providers.getAllProviders(locator, ClientResponseFilter.class, comparator);
+        Providers.injectProviders(responseFilters, locator);
 
         return responseFilters.iterator().hasNext() ? new ResponseFilterStage(responseFilters) : null;
     }

@@ -57,6 +57,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
@@ -550,6 +551,20 @@ public class Providers {
             }
         }
         return false;
+    }
+
+    /**
+     * Inject {@code providerInstances}. The method iterates through {@code providerInstances}
+     * and initializes injectable fields of each instance using {@code serviceLocator}.
+     *
+     * @param providerInstances Iterable of provider instances to be injected.
+     * @param serviceLocator Service locator.
+     */
+    public static <T> void injectProviders(Iterable<T> providerInstances, ServiceLocator serviceLocator) {
+        for (T providerInstance : providerInstances) {
+            serviceLocator.inject(providerInstance);
+        }
+
     }
 
     private static boolean findFirstProviderContract(Class<?> clazz) {

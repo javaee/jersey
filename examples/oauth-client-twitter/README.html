@@ -1,0 +1,106 @@
+<!--
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  ~
+  ~ Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+  ~
+  ~ The contents of this file are subject to the terms of either the GNU
+  ~ General Public License Version 2 only ("GPL") or the Common Development
+  ~ and Distribution License("CDDL") (collectively, the "License").  You
+  ~ may not use this file except in compliance with the License.  You can
+  ~ obtain a copy of the License at
+  ~ http://glassfish.java.net/public/CDDL+GPL_1_1.html
+  ~ or packager/legal/LICENSE.txt.  See the License for the specific
+  ~ language governing permissions and limitations under the License.
+  ~
+  ~ When distributing the software, include this License Header Notice in each
+  ~ file and include the License file at packager/legal/LICENSE.txt.
+  ~
+  ~ GPL Classpath Exception:
+  ~ Oracle designates this particular file as subject to the "Classpath"
+  ~ exception as provided by Oracle in the GPL Version 2 section of the License
+  ~ file that accompanied this code.
+  ~
+  ~ Modifications:
+  ~ If applicable, add the following below the License Header, with the fields
+  ~ enclosed by brackets [] replaced by your own identifying information:
+  ~ "Portions Copyright [year] [name of copyright owner]"
+  ~
+  ~ Contributor(s):
+  ~ If you wish your version of this file to be governed by only the CDDL or
+  ~ only the GPL Version 2, indicate your decision by adding "[Contributor]
+  ~ elects to include this software in this distribution under the [CDDL or GPL
+  ~ Version 2] license."  If you don't indicate a single choice of license, a
+  ~ recipient has the option to distribute your version of this file under
+  ~ either the CDDL, the GPL Version 2 or to extend the choice of license to
+  ~ its licensees as provided above.  However, if you add GPL Version 2 code
+  ~ and therefore, elected the GPL Version 2 license, then the option applies
+  ~ only if the new code is made subject to such option by the copyright
+  ~ holder.
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <title>OAuth 1 Client Sample - Twitter Client</title>
+    </head>
+    <body style="width: 50em">
+        <h1>OAuth 1 Client Sample - Twitter Client</h1>
+
+        <p>
+            This example demonstrates how to develop a simple web app client
+            utilizing JAX-RS client API and Jersey OAuth support.
+        </p>
+
+        <h2>Contents</h2>
+        <p>
+            This example consists of the main class (<code>App</code>) and two JAXB beans
+            used for unmarshaling the responses from Twitter (<code>Status</code> and <code>User</code>).
+        </p>
+
+        <h2>Running the Example</h2>
+        <h3>Registering with Twitter</h3>
+        <p>
+            Before running the example, you have to register your own application
+            with Twitter (to obtain consumer key and consumer secret you have to use
+            to configure this client). You can do it as follows:
+        </p>
+        <ol>
+            <li>Go to <a href="http://dev.twitter.com/">Twitter Developers Page</a>. You need to sign in to the
+                Twitter (if you are new to Twitter you need to sign up). Then in the right upper corner you
+                will see your profile photo and drop down list in which you select
+                "My Application". Click on <b>Create a new application</b> button.</li>
+            <li>Fill out the "Create an application" form - you have to pick a unique application name (e.g. app12345678), put in
+                some description, put in something for app website (e.g. http://jersey.java.net),
+                Accept terms by selecting <b>Yes, I agree</b> in "Twitter Content" checkbox, enter captcha.</li>
+            <li>Click <b>Create your twitter application</b> button.</li>
+            <li>You will be presented with consumer key, consumer secret and other details for your registered application.</li>
+
+        </ol>
+        <h3>Running for the First Time</h3>
+        <p>Enter the following on the command-line:</p>
+
+	<pre>
+        mvn clean compile exec:java -DconsumerKey=&lt;consumer key assigned to your app&gt; -DconsumerSecret=&lt;consumer secret assigned to your app&gt;
+        </pre>
+        <h3>Subsequent Runs</h3>
+        <p>After you run the application for the first time, it stores the consumer key, secret and token and token secret
+        in a property file for future use. So, for subsequent runs you don't have to specify these as system properties.
+        The following command is good enough for running the application after it was built, run for the first time and
+        the property file was created:</p>
+        <pre>
+        mvn exec:java
+        </pre>
+<h2>Troubleshooting</h2>
+<h3>HTTP Proxy</h3>
+<p>Behind a HTTP proxy, you will need to setup the following system properties to communicate with the Twitter server:
+<ul>
+	<li>http.proxyHost - the name of the proxy host.</li>
+	<li>http.proxyPort - the port of the proxy host.</li>
+	<li>http.proxyAuth - the user name and password to use when connecting to the proxy; this string should be the user name and password separated by a colon (e.g., rickhall:mypassword).</li>
+</ul>
+
+These system properties can be set directly on the command line when starting the JVM using the standard "-D&lt;prop&gt;=&lt;value&gt;" syntax.</p>
+
+    </body>
+</html>

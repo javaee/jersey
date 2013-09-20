@@ -67,6 +67,7 @@
             <artifactId>jersey-test-framework-provider-external</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>

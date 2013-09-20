@@ -126,7 +126,8 @@ class ConfiguredValidatorImpl implements ConfiguredValidator {
             constraintViolations.addAll(validate(resource));
         }
 
-        if (configuration.getBootstrapConfiguration().isExecutableValidationEnabled()) {
+        if (resourceMethod != null
+                && configuration.getBootstrapConfiguration().isExecutableValidationEnabled()) {
             final Method validationMethod = resourceMethod.getValidateMethod();
 
             // Resource method validation - input parameters.

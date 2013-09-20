@@ -1,0 +1,151 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <title>Shortener Webapp (MVC + Bean Validation)</title>
+
+        <!-- Bootstrap -->
+        <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-offset-1 col-lg-10">
+                    <header class="page-header">
+                        <h1>Link Shortener <small>MVC + Bean Validation Example</small></h1>
+                    </header>
+
+                    <p>
+                        This example demonstrates a simple Link Shortener webapp demonstrating Jersey MVC and Bean Validation
+                        capabilities.
+                        There is no validation on the frontend side, every error displayed is recognized on the backend.
+                    </p>
+
+                    <h2>Contents</h2>
+
+                    <p>
+                        The mapping of the URI path space is presented in the following table:
+                    </p>
+
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>URI path</th>
+                                <th>Resource class</th>
+                                <th>HTTP methods</th>
+                                <th>Allowed values</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td><code>/</code></td>
+                                <td>ShortenerResource</td>
+                                <td>GET, POST</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td><code>/r/{link}</code></td>
+                                <td>ResolverResource</td>
+                                <td>GET</td>
+                                <td>link - shortened link part</td>
+                            </tr>
+                            <tr>
+                                <td><code>/i/{link}</code></td>
+                                <td>PermanentLinkResource</td>
+                                <td>GET</td>
+                                <td>link - shortened link part</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>
+                        Application is configured by using web.xml, which registers
+                        <a href="https://jax-rs-spec.java.net/nonav/2.0/apidocs/javax/ws/rs/core/Application.html">javax.ws.rs.core.Application</a>
+                        extension to get classes and singletons from it (see class <code>ShortenerApplication</code>).
+                        MVC and Bean Validation annotations are present on resource classes (see <code>ShortenerResource</code>,
+                        <code>ResolverResource</code>, <code>PermanentLinkResource</code>)
+                        as well as on the domain class (see <code>ShortenedLink</code>).
+                    </p>
+
+                    <h2>Running the Example</h2>
+
+                    <p>Run the example as follows:</p>
+                    <blockquote>
+                        <pre>mvn clean package jetty:run</pre>
+                    </blockquote>
+
+                    <p>
+                        This deploys current example using Jetty. You can access the application at
+                        <a href="http://localhost:8080/">http://localhost:8080/</a>
+                    </p>
+
+                    <h2>Resources</h2>
+                    <p>This examples is using following (3-rd party) front-end frameworks:</p>
+                    <div>
+                        <strong>Mustache.java</strong> by spullara - templating engine
+                        <ul>
+                            <li><a href="http://mustache.github.io/">Homepage</a></li>
+                            <li><a href="https://github.com/spullara/mustache.java">Homepage.Java</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <strong>Bootstrap</strong> by Twitter - front-end HTML/CSS/JS framework
+                        <ul>
+                            <li><a href="http://twitter.github.com/bootstrap">Homepage</a></li>
+                            <li><a href="http://twitter.github.com/bootstrap/getting-started.html">Getting started</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    </body>
+</html>

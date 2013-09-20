@@ -148,7 +148,7 @@ public static class MyResource {
                     define HTTP methods that are allowed to be executed. See the following example.
 
                     <example>
-                        <title>Injecting <code>SecurityContext</code> into singletons</title>
+                        <title>Securing resources using <literal>web.xml</literal></title>
                         <programlisting language="java" linenumbering="numbered">&lt;security-constraint&gt;
     &lt;web-resource-collection&gt;
         &lt;url-pattern&gt;/rest/admin/*&lt;/url-pattern&gt;
@@ -167,7 +167,7 @@ public static class MyResource {
 &lt;/security-constraint&gt;
 &lt;login-config&gt;
     &lt;auth-method&gt;BASIC&lt;/auth-method&gt;
-    &lt;realm-name&gt;my-defaul-realm&lt;/realm-name&gt;
+    &lt;realm-name&gt;my-default-realm&lt;/realm-name&gt;
 &lt;/login-config&gt;</programlisting>
                     </example>
 
@@ -224,7 +224,7 @@ public class Resource {
                     </example>
 
                     The resource class <literal>Resource</literal> defined in the example is annotated with a
-                    &jee6.annotations.PermitAll; annotation. This means that all methods in the class which do not this
+                    &jee6.annotations.PermitAll; annotation. This means that all methods in the class which do not override this
                     annotation will be permitted for all user groups (no restrictions are defined). In our example, the
                     annotation will only apply to the <literal>getSubResource()</literal> method as it is the only method
                     that does not override the annotation by defining custom role-based security settings using the
@@ -237,7 +237,8 @@ public class Resource {
                     Jersey &lit.jersey.server.RolesAllowedDynamicFeature;. The roles defined in the annotations are tested against
                     current roles set in the &lit.jaxrs.core.SecurityContext; using
                     the &lit.jaxrs.core.SecurityContext;<literal>.isUserInRole(String role)</literal> method. In case the caller
-                    is not in the role specified by the annotation, the HTTP <literal>404</literal> error response is returned.
+                    is not in the role specified by the annotation, the HTTP <literal>403 (Forbidden)</literal> error response is
+                    returned.
                 </para>
             </section>
         </section>
@@ -249,7 +250,7 @@ public class Resource {
             For details about client security please see the <link linkend="client">Client chapter</link>. Jersey
             client allows to define parameters of SSL communication using <literal>HTTPS</literal> protocol.
             You can also use jersey built-in authentication filters which perform <emphasis>HTTP Basic Authentication</emphasis>
-			or <emphasis>HTTP Digest Authentication</emphasis>.
+            or <emphasis>HTTP Digest Authentication</emphasis>.
             See the client chapter for more details.
         </para>
     </section>

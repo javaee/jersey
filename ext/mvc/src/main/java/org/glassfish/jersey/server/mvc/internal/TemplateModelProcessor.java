@@ -61,6 +61,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
@@ -91,18 +92,21 @@ class TemplateModelProcessor implements ModelProcessor {
     private final ResourceContext resourceContext;
 
     private final Provider<ExtendedUriInfo> extendedUriInfoProvider;
+    private final Provider<ConfiguredValidator> validatorProvider;
 
     /**
      * Inflector producing response with {@link org.glassfish.jersey.server.mvc.spi.ResolvedViewable resolved viewable} where
      * model is the resource class annotated with {@link Template} or 404 as its status code.
      */
-    private class TemplateInflector implements Inflector<ContainerRequestContext, Response> {
+    private class TemplateInflectorImpl implements TemplateInflector, Inflector<ContainerRequestContext, Response> {
 
         private final String templateName;
         private final Class<?> resolvingClass;
 
         private final Class<?> resourceClass;
         private final Object resourceInstance;
+
+        private Class<?> modelClass;
 
         /**
          * Create enhancing template {@link Inflector inflector} method.
@@ -114,8 +118,8 @@ class TemplateModelProcessor implements ModelProcessor {
          * @param resourceInstance model for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}. May be
          * {@code null}.
          */
-        private TemplateInflector(final String templateName, final Class<?> resolvingClass,
-                                  final Class<?> resourceClass, final Object resourceInstance) {
+        private TemplateInflectorImpl(final String templateName, final Class<?> resolvingClass, final Class<?> resourceClass,
+                                      final Object resourceInstance) {
             this.templateName = templateName;
             this.resolvingClass = resolvingClass;
 
@@ -125,15 +129,31 @@ class TemplateModelProcessor implements ModelProcessor {
 
         @Override
         public Response apply(ContainerRequestContext requestContext) {
-            final ExtendedUriInfo extendedUriInfo = extendedUriInfoProvider.get();
-
             final List<String> templateNames = getTemplateNames(requestContext);
+            final Object model = getModel(extendedUriInfoProvider.get());
 
-            final Object model = getModel(extendedUriInfo);
+            // Validate resource class.
+            final ConfiguredValidator validator = validatorProvider.get();
+            if (validator != null) {
+                validator.validateResourceAndInputParams(model, null, null);
+            }
+
             final Class<?> resolvingClass = Object.class.equals(this.resolvingClass) || this.resolvingClass == null
                     ? resourceClass : this.resolvingClass;
 
             return Response.ok().entity(new ImplicitViewable(templateNames, model, resolvingClass)).build();
+        }
+
+        @Override
+        public Class<?> getModelClass() {
+            return modelClass;
+        }
+
+        private Object setModelClass(final Object model) {
+            if (modelClass == null) {
+                modelClass = model.getClass();
+            }
+            return model;
         }
 
         /**
@@ -146,11 +166,11 @@ class TemplateModelProcessor implements ModelProcessor {
             final List<Object> matchedResources = extendedUriInfo.getMatchedResources();
 
             if (resourceInstance != null) {
-                return resourceInstance;
+                return setModelClass(resourceInstance);
             } else if (matchedResources.size() > 1) {
-                return matchedResources.get(1);
+                return setModelClass(matchedResources.get(1));
             } else {
-                return resourceContext.getResource(resourceClass);
+                return setModelClass(resourceContext.getResource(resourceClass));
             }
         }
 
@@ -216,8 +236,11 @@ class TemplateModelProcessor implements ModelProcessor {
      * @param extendedUriInfoProvider (injected) extended uri info provider.
      */
     @Inject
-    TemplateModelProcessor(final ResourceContext resourceContext, final Provider<ExtendedUriInfo> extendedUriInfoProvider) {
+    TemplateModelProcessor(final ResourceContext resourceContext,
+                           final Provider<ConfiguredValidator> validatorProvider,
+                           final Provider<ExtendedUriInfo> extendedUriInfoProvider) {
         this.resourceContext = resourceContext;
+        this.validatorProvider = validatorProvider;
         this.extendedUriInfoProvider = extendedUriInfoProvider;
     }
 
@@ -314,7 +337,7 @@ class TemplateModelProcessor implements ModelProcessor {
                     .createQualitySourceMediaTypes(annotatedResourceClass.getAnnotation(Produces.class));
             final List<MediaType> consumes = MediaTypes.createFrom(annotatedResourceClass.getAnnotation(Consumes.class));
 
-            final TemplateInflector inflector = new TemplateInflector(template.name(), template.resolvingClass(),
+            final TemplateInflectorImpl inflector = new TemplateInflectorImpl(template.name(), template.resolvingClass(),
                     resourceClass, resourceInstance);
 
             newMethods.add(new ModelProcessorUtil.Method(HttpMethod.GET, consumes, produces, inflector));

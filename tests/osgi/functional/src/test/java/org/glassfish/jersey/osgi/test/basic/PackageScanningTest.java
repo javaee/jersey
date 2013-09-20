@@ -61,12 +61,13 @@ import org.glassfish.grizzly.http.server.HttpServer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.junit.PaxExam;
+
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class PackageScanningTest {
 
     private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
@@ -116,7 +117,21 @@ public class PackageScanningTest {
         initParams.put(
                 ServerProperties.PROVIDER_PACKAGES,
                 SimpleResource.class.getPackage().getName());
-        final HttpServer server = GrizzlyWebContainerFactory.create(baseUri, ServletContainer.class, initParams);
+
+        // TODO - temporary workaround
+        // This is a workaround related to issue JERSEY-2093; grizzly (1.9.5) needs to have the correct context
+        // classloader set
+        ClassLoader myClassLoader = getClass().getClassLoader();
+        ClassLoader originalContextClassLoader = Thread.currentThread().getContextClassLoader();
+        HttpServer server = null;
+        try {
+            Thread.currentThread().setContextClassLoader(myClassLoader);
+            server = GrizzlyWebContainerFactory.create(baseUri, ServletContainer.class, initParams);
+        } finally {
+            Thread.currentThread().setContextClassLoader(originalContextClassLoader);
+        }
+        // END of workaround - when grizzly updated to more recent version, only the inner line of try clause should remain:
+        // HttpServer server = GrizzlyWebContainerFactory.create(baseUri, ServletContainer.class, initParams);
 
         _testSimpleResource(server);
     }
