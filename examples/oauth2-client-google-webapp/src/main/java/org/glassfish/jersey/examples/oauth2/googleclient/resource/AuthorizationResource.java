@@ -38,41 +38,43 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.oauth2.googleclient;
+package org.glassfish.jersey.examples.oauth2.googleclient.resource;
+
+import java.net.URI;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.glassfish.jersey.client.oauth2.ClientIdentifier;
+import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
+import org.glassfish.jersey.client.oauth2.TokenResult;
+import org.glassfish.jersey.examples.oauth2.googleclient.SimpleOAuthService;
 
 /**
- * Resource initializes Client ID (ID of application issued by Google).
+ * User will be redirected back to this resource after he/she grants access to our application.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Path("setup")
-public class SetupResource {
+@Path("oauth2")
+public class AuthorizationResource {
     @Context
     private UriInfo uriInfo;
 
     @GET
-    @Produces("text/html")
-    public String setup(@QueryParam("clientId") String consumerKey,
-                        @QueryParam("clientSecret") String consumerSecret) {
+    @Path("authorize")
+    public Response authorize(@QueryParam("code") String code, @QueryParam("state") String state) {
+        final OAuth2CodeGrantFlow flow = SimpleOAuthService.getFlow();
 
-        CredentialStore.setClientIdentifier(new ClientIdentifier(consumerKey, consumerSecret));
-        final String uri = UriBuilder.fromUri(uriInfo.getBaseUri()).path("tasks")
-                .build().toString();
+        final TokenResult tokenResult = flow.finish(code, state);
 
-        return "Setup done. Go to <a href=\"" + uri + "\">" + uri + "</a> to get tasks." +
-                " OAuth 2 authorization flow will be initiated. You will be redirected to your" +
-                " Google account and you will be asked to grant a permission to the application" +
-                " you have registered. Afterwards you will be redirected back and your tasks" +
-                " will be requested from Google API using a Jersey client and OAuth2 support. ";
+        SimpleOAuthService.setAccessToken(tokenResult.getAccessToken());
+
+        // authorization is finished -> now redirect back to the task resource
+        final URI uri = UriBuilder.fromUri(uriInfo.getBaseUri()).path("tasks").build();
+        return Response.seeOther(uri).build();
     }
 }

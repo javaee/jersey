@@ -38,20 +38,41 @@
   ~ holder.
   -->
 <html>
+<head>
+    <!-- Bootstrap -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
 <body>
-<h1>OAuth 2 Jersey client WebApp Google sample</h1>
-<p>
-    Start by entering Client ID and Client Secret of your application:
-</p>
-<form method="get" action="api/setup">
-    Client ID: <input type="text" name="clientId"><br>
-    Client Secret: <input type="text" name="clientSecret">
-    <br/>
-    <input type="submit" title="submit">
-</form>
-<p>
-    If you don't have Client ID and Client Secret, you need to register this application on Google API console to get
-    these details. See README.html for more information.
-</p>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-offset-2 col-lg-8">
+            <header class="page-header">
+                <h1>Enter your Client Id and Secret:</h1>
+            </header>
+
+            <form class="form-group" method="get" action="api/setup">
+                <div class="input-group input-group-lg">
+                    <div class="form-group">
+                        <input class="form-control input-lg" type="text" placeholder="Client Id" name="clientId"
+                               autofocus/>
+                    </div>
+                    <div class="form-group">
+                        <input class="form-control input-lg" type="text" placeholder="Client Secret" name="clientSecret"
+                               />
+                    </div>
+                    <div class="form-group">
+                        <!--<span class="input-group-btn">-->
+                        <button class="btn btn-default btn-lg" type="submit">OK</button>
+                        <!--</span>-->
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+
 </body>
 </html>

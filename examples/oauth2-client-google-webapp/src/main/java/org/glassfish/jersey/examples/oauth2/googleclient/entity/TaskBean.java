@@ -38,37 +38,29 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.oauth2.googleclient;
+package org.glassfish.jersey.examples.oauth2.googleclient.entity;
 
-import org.glassfish.jersey.client.oauth2.ClientIdentifier;
-import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
-import org.glassfish.jersey.client.oauth2.TokenResult;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
- * Store of credentials and Authorization flow. This is very simple one user store for credentials.
- * In real usage we would store tokens and flows per user.
+ * Bean that contains one Google task.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class CredentialStore {
-    public static TokenResult tokenResult = null;
-    /**
-     * Contains null or actually authorization flow.
-     */
-    public static OAuth2CodeGrantFlow cachedFlow;
-    private static ClientIdentifier clientIdentifier;
+@XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class TaskBean {
+    @XmlAttribute
+    private String title;
 
-    public static TokenResult getTokenResult() {
-        //check();
-        return tokenResult;
+    public String getTitle() {
+        return title;
     }
 
-    public static ClientIdentifier getClientId() {
-        return clientIdentifier;
+    public void setTitle(String title) {
+        this.title = title;
     }
-
-    public static void setClientIdentifier(ClientIdentifier clientId) {
-        clientIdentifier = clientId;
-    }
-
 }

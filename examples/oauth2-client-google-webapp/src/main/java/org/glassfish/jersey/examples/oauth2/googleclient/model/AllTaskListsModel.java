@@ -38,29 +38,23 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.oauth2.googleclient;
+package org.glassfish.jersey.examples.oauth2.googleclient.model;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import java.util.List;
 
 /**
- * Bean that contains one Google task.
+ * Model (MVC) that contains all task lists.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@XmlRootElement
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class Task {
-    @XmlAttribute
-    private String title;
+public class AllTaskListsModel {
+    private final List<TaskListModel> taskListModels;
 
-    public String getTitle() {
-        return title;
+    public AllTaskListsModel(List<TaskListModel> taskListModels) {
+        this.taskListModels = taskListModels;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public List<TaskListModel> getTaskListModels() {
+        return taskListModels;
     }
 }

@@ -38,27 +38,21 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.oauth2.googleclient;
-
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+package org.glassfish.jersey.examples.oauth2.googleclient.model;
 
 /**
+ * Model (MVC) that contains one google task.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@ApplicationPath("/")
-public class MyApplication extends Application {
+public class TaskModel {
+    private final String title;
 
-    @Override
-    public Set<Class<?>> getClasses() {
-        Set<Class<?>> set = new HashSet<Class<?>>();
-        set.add(AuthorizationResource.class);
-        set.add(TaskResource.class);
-        set.add(SetupResource.class);
-        return set;
+    public TaskModel(String title) {
+        this.title = title;
+    }
+
+    public String getTitle() {
+        return title;
     }
 }
