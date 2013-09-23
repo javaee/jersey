@@ -127,6 +127,7 @@
         <module>servlet-tests</module>
         <module>spring3</module>
         <module>tracing-support</module>
+		<module>spring-boot</module>
     </modules>
 
     <profiles>
