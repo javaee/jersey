@@ -118,7 +118,9 @@
                         <scanIntervalSeconds>10</scanIntervalSeconds>
                         <stopPort>9999</stopPort>
                         <stopKey>STOP</stopKey>
-                        <contextPath>/</contextPath>
+                        <webApp>
+                            <contextPath>/</contextPath>
+                        </webApp>
                         <connectors>
                             <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
                                 <port>${jersey.config.test.container.port}</port>

@@ -43,12 +43,14 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.ws.rs.core.GenericType;
 
 import javax.inject.Provider;
 
+import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.MappableException;
@@ -68,6 +70,8 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
 
     private volatile boolean closed = false;
     private boolean flushing = false;
+    private volatile RequestScope requestScope;
+    private volatile RequestScope.Instance requestScopeInstance;
     private volatile ContainerRequest requestContext;
     private volatile ContainerResponse responseContext;
     private volatile ServerRuntime.ConnectionCallbackRunner connectionCallbackRunner;
@@ -81,7 +85,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     }
 
     /**
-     * Create {@link ChunkedOutput} with specified type.
+     * Create {@code ChunkedOutput} with specified type.
      *
      * @param chunkType chunk type
      */
@@ -108,85 +112,90 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     }
 
     private void flushQueue() throws IOException {
-        if (requestContext == null || responseContext == null) {
+        if (requestScopeInstance == null || requestContext == null || responseContext == null) {
             return;
         }
 
         Exception ex = null;
-        T t;
-        boolean shouldClose;
-
-        synchronized (this) {
-            if (flushing) {
-                // if another thread is already flushing the queue, we don't have to do anything
-                return;
-            }
-            // remember the closed flag before polling the queue
-            // (if we did it after, we could miss the last chunk as some other thread may add
-            // a chunk and set closed to true right after we we poll the queue (i.e. we'd think the queue is empty),
-            // but before we check if we should close - so we would close the stream leaving the last chunk undelivered)
-            shouldClose = closed;
-            t = queue.poll();
-            if (t != null || shouldClose) {
-                // no other thread is flushing this queue at the moment and it is not empty and/or we should close ->
-                // set the flushing flag so that other threads know it is already being taken care of
-                // and they don't have to bother
-                flushing = true;
-            }
-        }
-
         try {
-            while (t != null) {
-                try {
-                    responseContext.setEntityStream(requestContext.getWorkers().writeTo(
-                            t,
-                            t.getClass(),
-                            getType(),
-                            responseContext.getEntityAnnotations(),
-                            responseContext.getMediaType(),
-                            responseContext.getHeaders(),
-                            requestContext.getPropertiesDelegate(),
-                            responseContext.getEntityStream(),
-                            // TODO: (MM) should intercept only for the very first chunk!
-                            // TODO: from then on the stream is already wrapped by interceptor streams
-                            // JERSEY-1809
-                            uriRoutingContext.getBoundWriterInterceptors()));
-                } catch (MappableException mpe) {
-                    if (mpe.getCause() instanceof IOException) {
-                        connectionCallbackRunner.onDisconnect(asyncContext.get());
-                    }
-                    throw mpe;
-                }
-                t = queue.poll();
-                if (t == null) {
+            requestScope.runInScope(requestScopeInstance, new Callable<Void>() {
+                @Override
+                public Void call() throws IOException {
+                    boolean shouldClose;
+                    T t;
+
                     synchronized (this) {
-                        // queue seems empty
-                        // check again in the synchronized block before clearing the flushing flag
-                        // first remember the closed flag (this has to be before polling the queue,
-                        // otherwise we could miss the last chunk)
+                        if (flushing) {
+                            // if another thread is already flushing the queue, we don't have to do anything
+                            return null;
+                        }
+                        // remember the closed flag before polling the queue
+                        // (if we did it after, we could miss the last chunk as some other thread may add
+                        // a chunk and set closed to true right after we we poll the queue (i.e. we'd think the queue is empty),
+                        // but before we check if we should close - so we would close the stream leaving the last chunk undelivered)
                         shouldClose = closed;
                         t = queue.poll();
-                        if (t == null) {
-                            // ok, it is really empty - if anyone adds a chunk while we are here,
-                            // other thread will take care of it -> flush the stream and unset
-                            // the flushing flag at the very end (to make sure it is unset only if no
-                            // exception is thrown)
-                            responseContext.commitStream();
-                            // if closing, we keep the "flushing" flag set, since no other thread needs to flush
-                            // this queue anymore - finally clause will take care of closing the stream
-                            flushing = shouldClose;
-                            break;
+                        if (t != null || shouldClose) {
+                            // no other thread is flushing this queue at the moment and it is not empty and/or we should close ->
+                            // set the flushing flag so that other threads know it is already being taken care of
+                            // and they don't have to bother
+                            flushing = true;
                         }
                     }
+
+                    while (t != null) {
+                        try {
+                            responseContext.setEntityStream(requestContext.getWorkers().writeTo(
+                                    t,
+                                    t.getClass(),
+                                    getType(),
+                                    responseContext.getEntityAnnotations(),
+                                    responseContext.getMediaType(),
+                                    responseContext.getHeaders(),
+                                    requestContext.getPropertiesDelegate(),
+                                    responseContext.getEntityStream(),
+                                    // TODO: (MM) should intercept only for the very first chunk!
+                                    // TODO: from then on the stream is already wrapped by interceptor streams
+                                    // JERSEY-1809
+                                    uriRoutingContext.getBoundWriterInterceptors()));
+                        } catch (MappableException mpe) {
+                            if (mpe.getCause() instanceof IOException) {
+                                connectionCallbackRunner.onDisconnect(asyncContext.get());
+                            }
+                            throw mpe;
+                        }
+                        t = queue.poll();
+                        if (t == null) {
+                            synchronized (this) {
+                                // queue seems empty
+                                // check again in the synchronized block before clearing the flushing flag
+                                // first remember the closed flag (this has to be before polling the queue,
+                                // otherwise we could miss the last chunk)
+                                shouldClose = closed;
+                                t = queue.poll();
+                                if (t == null) {
+                                    // ok, it is really empty - if anyone adds a chunk while we are here,
+                                    // other thread will take care of it -> flush the stream and unset
+                                    // the flushing flag at the very end (to make sure it is unset only if no
+                                    // exception is thrown)
+                                    responseContext.commitStream();
+                                    // if closing, we keep the "flushing" flag set, since no other thread needs to flush
+                                    // this queue anymore - finally clause will take care of closing the stream
+                                    flushing = shouldClose;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    return null;
                 }
-            }
+            });
         } catch (Exception e) {
             closed = true;
-            shouldClose = true;
             // remember the exception (it will get rethrown from finally clause, once it does it's work)
             ex = e;
         } finally {
-            if (shouldClose) {
+            if (closed) {
                 try {
                     responseContext.close();
                 } catch (Exception e) {
@@ -194,6 +203,9 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                     // otherwise the previously remembered exception (from catch clause) takes precedence
                     ex = ex == null ? e : ex;
                 }
+
+                requestScopeInstance.release();
+
                 // rethrow remembered exception (if any)
                 if (ex instanceof IOException) {
                     //noinspection ThrowFromFinallyBlock
@@ -219,7 +231,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     /**
      * Get state information.
      *
-     * Please note that {@link ChunkedOutput} can be closed by the client side - client can close connection
+     * Please note that {@code ChunkedOutput} can be closed by the client side - client can close connection
      * from its side.
      *
      * @return true when closed, false otherwise.
@@ -249,18 +261,24 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     /**
      * Set context used for writing chunks.
      *
-     *
-     * @param requestContext  request context.
-     * @param responseContext response context.
+     * @param requestScope             request scope.
+     * @param requestScopeInstance     current request scope instance.
+     * @param requestContext           request context.
+     * @param responseContext          response context.
      * @param connectionCallbackRunner connection callback runner.
-     * @param asyncContext async context value.
+     * @param asyncContext             async context value.
+     * @param uriRoutingContext        URI routing context.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
-    void setContext(final ContainerRequest requestContext,
+    void setContext(final RequestScope requestScope,
+                    final RequestScope.Instance requestScopeInstance,
+                    final ContainerRequest requestContext,
                     final ContainerResponse responseContext,
                     final ServerRuntime.ConnectionCallbackRunner connectionCallbackRunner,
                     final Provider<AsyncContext> asyncContext,
                     final UriRoutingContext uriRoutingContext) throws IOException {
+        this.requestScope = requestScope;
+        this.requestScopeInstance = requestScopeInstance;
         this.requestContext = requestContext;
         this.responseContext = responseContext;
         this.connectionCallbackRunner = connectionCallbackRunner;
