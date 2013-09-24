@@ -93,6 +93,6 @@ public class EntityFilteringScopesTest extends JerseyTest {
     public void testEntityFilteringScopes() throws Exception {
         final String fields = target().request().get(String.class);
 
-        assertThat(fields, equalTo("accessor,property,field.field,field.accessor,field.property.accessor"));
+        assertThat(fields, equalTo("accessor,property,field.field,field.accessor,field.property.accessor,field.property.property"));
     }
 }

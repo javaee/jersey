@@ -102,6 +102,6 @@ final class EntityGraphProviderImpl implements EntityGraphProvider {
         final Map<Class<?>, EntityGraph> classToGraph = forWriter ? writerClassToGraph : readerClassToGraph;
         final EntityGraph entityGraph = classToGraph.get(entityClass);
 
-        return new ObjectGraphImpl(classToGraph, entityGraph, filteringScopes, false);
+        return new ObjectGraphImpl(classToGraph, entityGraph, filteringScopes);
     }
 }

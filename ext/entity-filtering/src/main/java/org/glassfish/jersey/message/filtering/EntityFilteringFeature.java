@@ -81,9 +81,11 @@ public final class EntityFilteringFeature implements Feature {
     public boolean configure(final FeatureContext context) {
         final Configuration config = context.getConfiguration();
 
-        if (!config.isRegistered(EntityFilteringBinder.class)) {
+        if (!config.isRegistered(EntityFilteringProcessor.class)) {
             // Binder (FilteringObjectProvider/FilteringGraphTransformer).
-            context.register(new EntityFilteringBinder());
+            if (!config.isRegistered(EntityFilteringBinder.class)) {
+                context.register(new EntityFilteringBinder());
+            }
 
             // Entity Processors.
             context.register(EntityFilteringProcessor.class);
