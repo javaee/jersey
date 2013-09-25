@@ -41,6 +41,7 @@ package org.glassfish.jersey.client;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
@@ -426,31 +427,44 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         ensureMediaType();
         final GenericType<?> entityType = new GenericType(getEntityType());
         OutputStream entityStream = null;
+        boolean connectionFailed = false;
         try {
-            entityStream = workers.writeTo(
-                    getEntity(),
-                    entityType.getRawType(),
-                    entityType.getType(),
-                    getEntityAnnotations(),
-                    getMediaType(),
-                    getHeaders(),
-                    getPropertiesDelegate(),
-                    getEntityStream(),
-                    writerInterceptors);
-            setEntityStream(entityStream);
-        } finally {
-            if (entityStream != null) {
-                try {
-                    entityStream.close();
-                } catch (IOException ex) {
-                    LOGGER.log(Level.FINE, LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), ex);
-                }
-            }
-
             try {
-                commitStream();
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
+                entityStream = workers.writeTo(
+                        getEntity(),
+                        entityType.getRawType(),
+                        entityType.getType(),
+                        getEntityAnnotations(),
+                        getMediaType(),
+                        getHeaders(),
+                        getPropertiesDelegate(),
+                        getEntityStream(),
+                        writerInterceptors);
+                setEntityStream(entityStream);
+            } catch (ConnectException ce) {
+                // MessageBodyWorkers.writeTo() produces more general IOException, but we are only interested in specifying if
+                // the failure was caused by connection problems or by other circumstances
+                connectionFailed = true;
+                throw ce;
+            }
+        } finally {
+            // in case we've seen the ConnectException, we won't try to close/commit stream as this would produce just
+            // another instance of ConnectException (which would be logged even if the previously thrown one is propagated)
+            // However, if another failure occurred, we still have to try to close and commit the stream - and if we experience
+            // another failure, there is a valid reason to log it
+            if (!connectionFailed) {
+                if (entityStream != null) {
+                    try {
+                        entityStream.close();
+                    } catch (IOException ex) {
+                        LOGGER.log(Level.FINE, LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), ex);
+                    }
+                }
+                try {
+                    commitStream();
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
+                }
             }
         }
     }
