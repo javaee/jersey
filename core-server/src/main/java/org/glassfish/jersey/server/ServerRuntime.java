@@ -87,9 +87,9 @@ import org.glassfish.jersey.process.internal.ExecutorsFactory;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.BackgroundScheduler;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
@@ -516,7 +516,7 @@ class ServerRuntime {
                 URI baseUri = response.getRequestContext().getBaseUri();
                 URI absoluteUri = baseUri.resolve(responseLocation);
                 // Get the mutable message headers multivalued map
-                MultivaluedMap<String, ? extends Object > headers = response.getWrappedMessageContext().getHeaders();
+                MultivaluedMap<String, ? extends Object> headers = response.getWrappedMessageContext().getHeaders();
                 List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
                 // according to RFC2616 (HTTP/1.1), this field can contain one single URI
                 locations.set(0, absoluteUri);
@@ -607,6 +607,8 @@ class ServerRuntime {
 
                         try {
                             ((ChunkedOutput) entity).setContext(
+                                    runtime.requestScope,
+                                    runtime.requestScope.referenceCurrent(),
                                     request,
                                     response,
                                     connectionCallbackRunner,

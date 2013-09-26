@@ -106,7 +106,6 @@
         </plugins>
     </build>
 
-
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
