@@ -144,8 +144,8 @@ public class EntityFilteringOnClassTest extends JerseyTest {
     public void testOneEntityFilteringOnClass() throws Exception {
         final String fields = target("OneFilteringEntity").request().get(String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,subEntities.field2,subEntities.property1,defaultEntities.field," +
-                "" + "defaultEntities.property"));
+        assertThat(fields, equalTo("field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1," +
+                "subEntities.field1,defaultEntities.field,defaultEntities.property"));
     }
 
     @Test
@@ -172,16 +172,16 @@ public class EntityFilteringOnClassTest extends JerseyTest {
     public void testManyFilteringsEntityPrimaryView() throws Exception {
         final String fields = target("ManyFilteringsEntityPrimaryView").request().get(String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,oneEntities.field2,oneEntities.property1," +
-                "" + "defaultEntities.field,defaultEntities.property"));
+        assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
     }
 
     @Test
     public void testManyFilteringsEntitySecondaryView() throws Exception {
         final String fields = target("ManyFilteringsEntitySecondaryView").request().get(String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,manyEntities.field2,manyEntities.property2,oneEntities.field1," +
-                "" + "oneEntities.property2,defaultEntities.field,defaultEntities.property"));
+        assertThat(fields, equalTo("field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.field1," +
+                "oneEntities.property2,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
     }
 
     @Test
@@ -196,6 +196,7 @@ public class EntityFilteringOnClassTest extends JerseyTest {
         final String fields = target("ManyFilteringsEntityManyViews").request().get(String.class);
 
         assertThat(fields, equalTo("field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.property1," +
-                "oneEntities.field2,oneEntities.property1,defaultEntities.field,defaultEntities.property"));
+                "manyEntities.field1,oneEntities.field2,oneEntities.property2,oneEntities.property1,oneEntities.field1," +
+                "defaultEntities.field,defaultEntities.property"));
     }
 }

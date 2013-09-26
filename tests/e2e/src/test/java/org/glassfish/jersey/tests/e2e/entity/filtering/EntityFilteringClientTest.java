@@ -107,8 +107,8 @@ public class EntityFilteringClientTest extends JerseyTest {
                         new Annotation[]{PrimaryDetailedView.Factory.get()}),
                         String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,subEntities.field2,subEntities.property1,defaultEntities.field," +
-                "defaultEntities.property"));
+        assertThat(fields, equalTo("field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1," +
+                "subEntities.field1,defaultEntities.field,defaultEntities.property"));
     }
 
     @Test
@@ -139,8 +139,8 @@ public class EntityFilteringClientTest extends JerseyTest {
 
     @Test
     public void testConfigurationPrimaryView() throws Exception {
-        testConfiguration("field,accessor,property,subEntities.field2,subEntities.property1,defaultEntities.field," +
-                "defaultEntities.property", PrimaryDetailedView.Factory.get());
+        testConfiguration("field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1," +
+                "subEntities.field1,defaultEntities.field,defaultEntities.property", PrimaryDetailedView.Factory.get());
     }
 
     @Test
@@ -150,8 +150,9 @@ public class EntityFilteringClientTest extends JerseyTest {
 
     @Test
     public void testConfigurationMultipleViews() throws Exception {
-        testConfiguration("field,accessor,property,subEntities.field2,subEntities.property1,defaultEntities.field," +
-                "defaultEntities.property", PrimaryDetailedView.Factory.get(), new CustomAnnotationImpl());
+        testConfiguration("field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1," +
+                "subEntities.field1,defaultEntities.field,defaultEntities.property", PrimaryDetailedView.Factory.get(),
+                new CustomAnnotationImpl());
     }
 
     private void testConfiguration(final String expected, final Annotation... annotations) {
@@ -174,10 +175,10 @@ public class EntityFilteringClientTest extends JerseyTest {
         configureClient(config);
 
         final String fields =
-ClientBuilder.newClient(config)
-    .target(getBaseUri())
-    .request()
-    .post(Entity.entity(new OneFilteringOnClassEntity(), ENTITY_FILTERING), String.class);
+                ClientBuilder.newClient(config)
+                    .target(getBaseUri())
+                    .request()
+                    .post(Entity.entity(new OneFilteringOnClassEntity(), ENTITY_FILTERING), String.class);
 
         assertThat(fields, equalTo(""));
     }
@@ -197,7 +198,7 @@ ClientBuilder.newClient(config)
                         new Annotation[]{PrimaryDetailedView.Factory.get()}),
                         String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,oneEntities.field2,oneEntities.property1," +
-                "defaultEntities.field,defaultEntities.property"));
+        assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
     }
 }

@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.message.filtering;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,6 +50,7 @@ import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Default implementation of {@link ObjectGraph}.
@@ -58,7 +60,6 @@ import com.google.common.collect.Maps;
 final class ObjectGraphImpl implements ObjectGraph {
 
     private final Set<String> filteringScopes;
-    private final boolean fallbackToDefault;
 
     private final Map<Class<?>, EntityGraph> classToGraph;
     private final EntityGraph graph;
@@ -66,10 +67,8 @@ final class ObjectGraphImpl implements ObjectGraph {
     private Set<String> fields;
     private Map<String, ObjectGraph> subgraphs;
 
-    ObjectGraphImpl(final Map<Class<?>, EntityGraph> classToGraph, final EntityGraph graph, final Set<String> filteringScopes,
-                    final boolean fallbackToDefault) {
+    ObjectGraphImpl(final Map<Class<?>, EntityGraph> classToGraph, final EntityGraph graph, final Set<String> filteringScopes) {
         this.filteringScopes = filteringScopes;
-        this.fallbackToDefault = fallbackToDefault;
 
         this.classToGraph = classToGraph;
         this.graph = graph;
@@ -83,8 +82,7 @@ final class ObjectGraphImpl implements ObjectGraph {
     @Override
     public Set<String> getFields() {
         if (fields == null) {
-            final Set<String> scopeFields = graph.getFields(filteringScopes);
-            fields = scopeFields.isEmpty() ? graph.getFields(ScopeProvider.DEFAULT_SCOPE) : scopeFields;
+            fields = graph.getFields(Sets.union(filteringScopes, Collections.singleton(ScopeProvider.DEFAULT_SCOPE)));
         }
         return fields;
     }
@@ -92,16 +90,14 @@ final class ObjectGraphImpl implements ObjectGraph {
     @Override
     public Map<String, ObjectGraph> getSubgraphs() {
         if (subgraphs == null) {
-            Map<String, Class<?>> contextSubgraphs = graph.getSubgraphs(filteringScopes);
-            if (contextSubgraphs.isEmpty() && fallbackToDefault) {
-                contextSubgraphs = graph.getSubgraphs(ScopeProvider.DEFAULT_SCOPE);
-            }
+            final Map<String, Class<?>> contextSubgraphs = graph.getSubgraphs(filteringScopes);
+            contextSubgraphs.putAll(graph.getSubgraphs(ScopeProvider.DEFAULT_SCOPE));
 
             subgraphs = Maps.transformValues(contextSubgraphs, new Function<Class<?>, ObjectGraph>() {
 
                 @Override
                 public ObjectGraphImpl apply(final Class<?> clazz) {
-                    return new ObjectGraphImpl(classToGraph, classToGraph.get(clazz), filteringScopes, true);
+                    return new ObjectGraphImpl(classToGraph, classToGraph.get(clazz), filteringScopes);
                 }
             });
         }

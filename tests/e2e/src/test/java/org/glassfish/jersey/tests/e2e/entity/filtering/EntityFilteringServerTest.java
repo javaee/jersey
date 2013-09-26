@@ -156,16 +156,16 @@ public class EntityFilteringServerTest {
         public void testConfiguration() throws Exception {
             final String fields = target("configuration").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,oneEntities.field2,oneEntities.property1," +
-                    "defaultEntities.field,defaultEntities.property"));
+            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
         }
 
         @Test
         public void testConfigurationOverResource() throws Exception {
             final String fields = target("configurationOverResource").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,oneEntities.field2,oneEntities.property1," +
-                    "defaultEntities.field,defaultEntities.property"));
+            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
         }
     }
 
@@ -201,16 +201,16 @@ public class EntityFilteringServerTest {
         public void testAnnotations() throws Exception {
             final String fields = target("annotations").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,oneEntities.field2,oneEntities.property1," +
-                    "defaultEntities.field,defaultEntities.property"));
+            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
         }
 
         @Test
         public void testAnnotationsOverResource() throws Exception {
             final String fields = target("annotationsOverResource").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,oneEntities.field2,oneEntities.property1," +
-                    "defaultEntities.field,defaultEntities.property"));
+            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
         }
     }
 
@@ -230,16 +230,16 @@ public class EntityFilteringServerTest {
         public void testAnnotationsOverConfiguration() throws Exception {
             final String fields = target("annotationsOverConfiguration").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,oneEntities.field2,oneEntities.property1," +
-                    "defaultEntities.field,defaultEntities.property"));
+            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
         }
 
         @Test
         public void testAnnotationsOverConfigurationOverResource() throws Exception {
             final String fields = target("annotationsOverConfigurationOverResource").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,oneEntities.field2,oneEntities.property1," +
-                    "defaultEntities.field,defaultEntities.property"));
+            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
         }
     }
 }
