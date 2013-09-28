@@ -42,16 +42,11 @@ package org.glassfish.jersey.server.spring.boot.test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Properties;
-import java.util.logging.Logger;
+import java.net.ConnectException;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientBuilder;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -59,80 +54,25 @@ import org.junit.Test;
  * 
  * @author Manabu Otake (manabu2783 at hotmail.com)
  */
-public class IntegrationTest {
-
-    private static final Logger L = Logger.getLogger(IntegrationTest.class.getName());
-    
-    private String[] mavenPackageCommand = {"mvn", "package",
-            "-Dmaven.test.skip=true", "-Dsource.skip=true" };
-
-    private Process process;
-
-    @Before
-    public void setup() throws Exception {
-        executePackage();
-        runServer();
-    }
-
-    @After
-    public void teardown() throws Exception {
-        if (process != null)
-            process.destroy();
-    }
+public class SpringBootIT {
 
     @Test
     public void testJerseyIntegration() throws Exception {
-        Thread.sleep(5000);
-        String response = ClientBuilder.newClient()
-                .target("http://127.0.0.1:1234/test/").path("integration")
-                .request().get(String.class);
-        assertThat(response, is("success"));
-    }
-
-    protected void executePackage() throws Exception {
-        read(builder(mavenPackageCommand).start().getInputStream());
-    }
-
-    protected void runServer() throws Exception {
-        final ProcessBuilder builder = builder("java", "-jar",
-                "target/spring-boot-" + getVersion() + ".jar");
-        Runnable runner = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    process = builder.start();
-                    read(process.getInputStream());
-                } catch (Exception e) {
-                    // ignore
+        boolean retry = true;
+        int cnt = 1;
+        while (retry) {
+            try {
+                String response = ClientBuilder.newClient()
+                        .target("http://127.0.0.1:1234/test/").path("integration")
+                        .request().get(String.class);
+                assertThat(response, is("success"));
+            } catch (ProcessingException e) {
+                if (e.getCause() instanceof ConnectException) {
+                    cnt++;
+                    if (cnt > 5) retry = false;
                 }
             }
-        };
-        Thread server = new Thread(runner);
-        server.start();
-    }
-
-    protected ProcessBuilder builder(String... command) throws Exception {
-        return new ProcessBuilder(command);
-    }
-
-    protected void read(InputStream stream) throws Exception {
-        StringBuilder log = new StringBuilder();
-        while (true) {
-            int c = stream.read();
-            if (c == -1) {
-                stream.close();
-                break;
-            }
-            log.append((char) c);
         }
-        L.info(log.toString());
-    }
-
-    protected String getVersion() throws Exception {
-        Properties p = new Properties();
-        p.load(new FileInputStream(new File(
-                "target/maven-archiver/pom.properties")));
-        return p.getProperty("version", "");
     }
 
 }
