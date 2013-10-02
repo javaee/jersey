@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.oauth2.googleclient;
+package org.glassfish.jersey.examples.oauth2.googleclient.entity;
 
 import java.util.List;
 
@@ -53,14 +53,14 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
  */
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TaskList {
+public class TaskListBean {
 
     @XmlAttribute
     private String id;
     @XmlAttribute
     private String title;
     @XmlAttribute(name = "items")
-    private List<Task> tasks;
+    private List<TaskBean> taskBeans;
 
 
     public String getId() {
@@ -79,11 +79,11 @@ public class TaskList {
         this.title = title;
     }
 
-    public List<Task> getTasks() {
-        return tasks;
+    public List<TaskBean> getTasks() {
+        return taskBeans;
     }
 
-    public void setTasks(List<Task> tasks) {
-        this.tasks = tasks;
+    public void setTasks(List<TaskBean> taskBeans) {
+        this.taskBeans = taskBeans;
     }
 }

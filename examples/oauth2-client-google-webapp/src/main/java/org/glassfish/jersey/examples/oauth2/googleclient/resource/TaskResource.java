@@ -38,10 +38,14 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.oauth2.googleclient;
+package org.glassfish.jersey.examples.oauth2.googleclient.resource;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
@@ -53,8 +57,15 @@ import javax.ws.rs.core.UriInfo;
 import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
 import org.glassfish.jersey.client.oauth2.OAuth2FlowGoogleBuilder;
-import org.glassfish.jersey.client.oauth2.TokenResult;
+import org.glassfish.jersey.examples.oauth2.googleclient.SimpleOAuthService;
+import org.glassfish.jersey.examples.oauth2.googleclient.entity.TaskBean;
+import org.glassfish.jersey.examples.oauth2.googleclient.entity.TaskListBean;
+import org.glassfish.jersey.examples.oauth2.googleclient.entity.TaskRootBean;
+import org.glassfish.jersey.examples.oauth2.googleclient.model.AllTaskListsModel;
+import org.glassfish.jersey.examples.oauth2.googleclient.model.TaskListModel;
+import org.glassfish.jersey.examples.oauth2.googleclient.model.TaskModel;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.mvc.Template;
 
 /**
  * Task resource that returns Google tasks that was queried using a {@link Client}.
@@ -68,35 +79,31 @@ public class TaskResource {
     private UriInfo uriInfo;
 
     @GET
+    @Template(name = "/tasks.mustache")
+    @Produces("text/html")
     public Response getTasks() {
-        final TokenResult tokenResult = CredentialStore.getTokenResult();
-        if (tokenResult == null) {
-            // we do not have access token yet. We need to perform authorization flow.
+        if (SimpleOAuthService.getAccessToken() == null) {
+            final String redirectURI = UriBuilder.fromUri(uriInfo.getBaseUri())
+                    .path("oauth2/authorize").build().toString();
 
-            // build the redirect URI (the same URI must be registered in Google API console).
-            final String redirectURI = UriBuilder.fromUri(uriInfo.getBaseUri()).path("oauth2/authorize")
-                    .build().toString();
-
-            // create a new Google Authorization Flow.
             final OAuth2CodeGrantFlow flow = OAuth2ClientSupport.googleFlowBuilder(
-                    CredentialStore.getClientId(),
+                    SimpleOAuthService.getClientIdentifier(),
                     redirectURI,
                     "https://www.googleapis.com/auth/tasks.readonly")
                     .prompt(OAuth2FlowGoogleBuilder.Prompt.CONSENT).build();
 
-            // cache this flow -> it will be used later on after user will be redirected back to redirectURI
-            CredentialStore.cachedFlow = flow;
-            final String uri = flow.start();
+            SimpleOAuthService.setFlow(flow);
+
+            // start the flow
+            final String googleAuthURI = flow.start();
 
             // redirect user to Google Authorization URI.
-            return Response.seeOther(UriBuilder.fromUri(uri).build()).build();
+            return Response.seeOther(UriBuilder.fromUri(googleAuthURI).build()).build();
         }
-
-        // We have already an access token. Query the data from Google.
-        final Client client = CredentialStore.cachedFlow.getAuthorizedClient();
-        String message = "These tasks were queried using a Jersey client and access " +
-                "token received from the authorization flow:<br/>\n";
-        return Response.ok(message + getTasksAsString(client)).type(MediaType.TEXT_HTML_TYPE).build();
+        // We have already an access token. Query the data from Google API.
+        final Client client = SimpleOAuthService.getFlow().getAuthorizedClient();
+        final AllTaskListsModel allTaskListsModel = getTasks(client);
+        return Response.ok(allTaskListsModel).type(MediaType.TEXT_HTML_TYPE).build();
     }
 
 
@@ -105,24 +112,28 @@ public class TaskResource {
      * @param client Client configured for authentication with access token.
      * @return String html Google task data.
      */
-    private static String getTasksAsString(Client client) {
+    private static AllTaskListsModel getTasks(Client client) {
         client.register(JacksonFeature.class);
         final WebTarget baseTarget = client.target(GOOGLE_TASKS_BASE_URI);
         final Response response = baseTarget.path("users/@me/lists").request().get();
 
         StringBuilder sb = new StringBuilder();
-        final TaskRoot taskRoot = response.readEntity(TaskRoot.class);
-        for (TaskList taskList : taskRoot.getItems()) {
-            sb.append("<b>" + taskList.getTitle() + "</b><br/>");
-            final WebTarget listTarget = baseTarget.path("lists/{tasklist}/tasks")
-                    .resolveTemplate("tasklist", taskList.getId());
+        final TaskRootBean taskRootBean = response.readEntity(TaskRootBean.class);
 
-            final TaskList fullTaskList = listTarget.request().get(TaskList.class);
-            for (Task task : fullTaskList.getTasks()) {
-                sb.append("   - ").append(task.getTitle()).append("<br/>");
+        final List<TaskListModel> listOfTaskLists = new ArrayList<TaskListModel>();
+        for (TaskListBean taskListBean : taskRootBean.getItems()) {
+            List<TaskModel> taskList = new ArrayList<TaskModel>();
+            final WebTarget listTarget = baseTarget.path("lists/{tasklist}/tasks")
+                    .resolveTemplate("tasklist", taskListBean.getId());
+
+            final TaskListBean fullTaskListBean = listTarget.request().get(TaskListBean.class);
+            for (TaskBean taskBean : fullTaskListBean.getTasks()) {
+                taskList.add(new TaskModel(taskBean.getTitle()));
             }
-            sb.append("<br/>");
+            TaskListModel listModel = new TaskListModel(taskListBean.getTitle(), taskList);
+            listOfTaskLists.add(listModel);
+
         }
-        return sb.toString();
+        return new AllTaskListsModel(listOfTaskLists);
     }
 }

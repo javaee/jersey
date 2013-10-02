@@ -38,47 +38,28 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.oauth2.googleclient;
+package org.glassfish.jersey.examples.oauth2.googleclient.resource;
 
-import java.net.URI;
+import javax.ws.rs.ApplicationPath;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-
-import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
-import org.glassfish.jersey.client.oauth2.TokenResult;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.mustache.MustacheMvcFeature;
 
 /**
- * User will be redirected back to this resource after he/she grants access to our application.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Path("oauth2")
-public class AuthorizationResource {
-    @Context
-    private UriInfo uriInfo;
+@ApplicationPath("/")
+public class MyApplication extends ResourceConfig {
 
-    @GET
-    @Path("authorize")
-    public Response authorize(@QueryParam("code") String code, @QueryParam("state") String state) {
-        // get the flow that was cached in the TaskResource. OAuth2CodeGrantFlow.start was already
-        // invoked on this flow, so we need to call OAuth2CodeGrantFlow.finish() to finish the
-        // authentication flow (to retrieve an access token).
-        final OAuth2CodeGrantFlow flow = CredentialStore.cachedFlow;
-        if (flow == null) {
-            return Response.status(400).type("text/plain").entity("Authorization flow is not in progress.").build();
-        }
+    public MyApplication() {
+        register(AuthorizationResource.class);
+        register(TaskResource.class);
+        register(SetupResource.class);
 
-        final TokenResult tokenResult = flow.finish(code, state);
-        CredentialStore.tokenResult = tokenResult;
+        register(MustacheMvcFeature.class);
+        property(MustacheMvcFeature.TEMPLATE_BASE_PATH, "/mustache");
 
-        // authorization is finished -> now redirect back to the tasks and get tasks from Google API
-        final URI uri = UriBuilder.fromUri(uriInfo.getBaseUri()).path("tasks").build();
-        return Response.seeOther(uri).build();
     }
+
 }
