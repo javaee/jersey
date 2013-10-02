@@ -546,6 +546,27 @@
                     <artifactId>jetty-maven-plugin</artifactId>
                     <version>9.0.5.v20130815</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.glassfish.build</groupId>
+                    <artifactId>gfnexus-maven-plugin</artifactId>
+                    <version>0.16</version>
+                    <configuration>
+                        <stagingRepos>
+                            <stagingRepo>
+                                <!--
+                                    The reference artifact used to identify the right staging repository
+                                -->
+                                <ref>org.glassfish.jersey:project:${project.version}:pom</ref>
+                                <profile>com.sun.jersey</profile>
+                            </stagingRepo>
+                        </stagingRepos>
+                        <!--
+                            Temporary till there is a jersey promotion profile
+                        -->
+                        <promotionProfile>glassfish</promotionProfile>
+                        <message>JERSEY-${project.version}</message>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
