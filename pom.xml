@@ -563,7 +563,7 @@
                         <!--
                             Temporary till there is a jersey promotion profile
                         -->
-                        <promotionProfile>glassfish</promotionProfile>
+                        <promotionProfile>glassfish-integration</promotionProfile>
                         <message>JERSEY-${project.version}</message>
                     </configuration>
                 </plugin>
