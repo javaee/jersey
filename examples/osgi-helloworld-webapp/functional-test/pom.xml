@@ -66,6 +66,19 @@
         </dependency>
 
         <dependency>
+            <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
+            <artifactId>additional-bundle</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
+            <artifactId>alternate-version-bundle</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet-core</artifactId>
             <scope>test</scope>

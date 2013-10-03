@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -46,30 +46,70 @@
 
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
-        <artifactId>project</artifactId>
+        <artifactId>osgi-helloworld-webapp</artifactId>
         <version>2.4-SNAPSHOT</version>
     </parent>
 
-    <artifactId>osgi-helloworld-webapp</artifactId>
-    <name>jersey-examples-osgi-helloworld-webapp</name>
-    <packaging>pom</packaging>
+    <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
+    <artifactId>alternate-version-bundle</artifactId>
+    <name>jersey-examples-osgi-helloworld-webapp-alternate-version</name>
 
-    <modules>
-        <module>war-bundle</module>
-        <module>functional-test</module>
-        <module>lib-bundle</module>
-        <module>additional-bundle</module>
-        <module>alternate-version-bundle</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- to generate the MANIFEST-FILE required by the bundle -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <manifestLocation>${project.build.directory}/META-INF</manifestLocation>
+                    <supportedProjectTypes>
+                        <supportedProjectType>bundle</supportedProjectType>
+                        <supportedProjectType>jar</supportedProjectType>
+                    </supportedProjectTypes>
+                    <instructions>
+                        <Bundle-SymbolicName>additional-bundle</Bundle-SymbolicName>
+                        <Bundle-Name>jersey-examples-osgi-helloworld-webapp-additional</Bundle-Name>
+                        <!-- this version has to be different from the 'additional-bundle'
+                        version in order to test the correct bundle resolution within OSGi -->
+                        <Bundle-Version>2.2.1</Bundle-Version>
+                        <Import-Package>*</Import-Package>
+                        <Export-Package>org.glassfish.jersey.examples.osgi.helloworld.additional.resource</Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <profiles>
         <profile>
             <id>release</id>
+            <!-- do not create source zip bundles -->
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <skipAssembly>true</skipAssembly>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

@@ -90,6 +90,7 @@ import org.osgi.framework.SynchronousBundleListener;
  * does not work in this case within OSGi.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public final class OsgiRegistry implements SynchronousBundleListener {
 
@@ -292,7 +293,6 @@ public final class OsgiRegistry implements SynchronousBundleListener {
     @SuppressWarnings("unchecked")
     public Enumeration<URL> getPackageResources(final String packagePath, final ClassLoader classLoader) {
         List<URL> result = new LinkedList<URL>();
-        classToBundleMapping.clear();
 
         for (Bundle bundle : bundleContext.getBundles()) {
             // Look for resources at the given <packagePath> and at WEB-INF/classes/<packagePath> in case a WAR is being examined.
