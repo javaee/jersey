@@ -80,7 +80,15 @@
             <!-- Run the application using "mvn jetty:run" -->
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
-                <artifactId>maven-jetty-plugin</artifactId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <configuration>
+                    <connectors>
+                        <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
+                            <port>9998</port>
+                            <responseHeaderSize>16192</responseHeaderSize>
+                        </connector>
+                    </connectors>
+                </configuration>
             </plugin>
         </plugins>
     </build>

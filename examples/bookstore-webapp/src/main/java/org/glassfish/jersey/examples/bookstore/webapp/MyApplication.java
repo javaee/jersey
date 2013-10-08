@@ -43,6 +43,8 @@ package org.glassfish.jersey.examples.bookstore.webapp;
 import org.glassfish.jersey.examples.bookstore.webapp.resource.Bookstore;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.TracingConfig;
 import org.glassfish.jersey.server.mvc.jsp.JspMvcFeature;
 
 /**
@@ -59,5 +61,8 @@ public class MyApplication extends ResourceConfig {
 
         // Logging.
         register(LoggingFilter.class);
+
+        // Tracing support.
+        property(ServerProperties.TRACING, TracingConfig.ON_DEMAND.name());
     }
 }
