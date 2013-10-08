@@ -51,6 +51,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -58,6 +59,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.JerseyClient;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
@@ -84,8 +86,10 @@ import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
 public class GrizzlyConnector implements Connector {
+    private volatile AsyncHttpClient grizzlyClient = null;
+    private final Configuration config;
 
-    private AsyncHttpClient client;
+    private final Object LOCK = new Object();
 
     /**
      * Create the new Grizzly async client connector.
@@ -93,39 +97,16 @@ public class GrizzlyConnector implements Connector {
      * @param config client configuration.
      */
     public GrizzlyConnector(Configuration config) {
-        AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
-
-        ExecutorService executorService;
-        if (config != null) {
-            final Object threadPoolSize = config.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
-
-            if (threadPoolSize != null && threadPoolSize instanceof Integer && (Integer) threadPoolSize > 0) {
-                executorService = Executors.newFixedThreadPool((Integer) threadPoolSize);
-            } else {
-                executorService = Executors.newCachedThreadPool();
-            }
-
-            builder = builder.setExecutorService(executorService);
-
-            builder.setConnectionTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
-                    ClientProperties.CONNECT_TIMEOUT, 0));
-
-            builder.setRequestTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
-                    ClientProperties.READ_TIMEOUT, 0));
-        } else {
-            executorService = Executors.newCachedThreadPool();
-            builder.setExecutorService(executorService);
-        }
-
-        AsyncHttpClientConfig asyncClientConfig = builder.setAllowPoolingConnection(true).build();
-        this.client = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(asyncClientConfig), asyncClientConfig);
+        this.config = config;
     }
+
 
     /*
      * Sends the {@link javax.ws.rs.core.Request} via Grizzly transport and returns the {@link javax.ws.rs.core.Response}.
      */
     @Override
     public ClientResponse apply(final ClientRequest request) {
+        AsyncHttpClient grizzlyClient = getClient(request);
         final Request connectorRequest = translate(request);
 
         final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
@@ -133,7 +114,7 @@ public class GrizzlyConnector implements Connector {
         final AtomicBoolean futureSet = new AtomicBoolean(false);
 
         try {
-            client.executeRequest(connectorRequest, new AsyncHandler<Void>() {
+            grizzlyClient.executeRequest(connectorRequest, new AsyncHandler<Void>() {
                 private volatile HttpResponseStatus status = null;
 
                 @Override
@@ -166,6 +147,7 @@ public class GrizzlyConnector implements Connector {
 
                 @Override
                 public void onThrowable(Throwable t) {
+                    t.printStackTrace();
                     entityStream.closeQueue(t);
 
                     if (futureSet.compareAndSet(false, true)) {
@@ -186,6 +168,59 @@ public class GrizzlyConnector implements Connector {
         }
     }
 
+    private AsyncHttpClient getClient(ClientRequest request) {
+        final JerseyClient jerseyClient = request.getClient();
+        AsyncHttpClient client = grizzlyClient;
+        if (client == null) {
+            synchronized (LOCK) {
+                client = grizzlyClient;
+                if (client == null) {
+                    client = createClient(jerseyClient);
+                    grizzlyClient = client;
+                }
+            }
+        }
+        return client;
+    }
+
+    private AsyncHttpClient createClient(Client client) {
+        AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
+
+        ExecutorService executorService;
+        if (config != null) {
+            final Object threadPoolSize = config.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
+
+            if (threadPoolSize != null && threadPoolSize instanceof Integer && (Integer) threadPoolSize > 0) {
+                executorService = Executors.newFixedThreadPool((Integer) threadPoolSize);
+            } else {
+                executorService = Executors.newCachedThreadPool();
+            }
+
+            builder = builder.setExecutorService(executorService);
+
+            builder.setConnectionTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
+                    ClientProperties.CONNECT_TIMEOUT, 0));
+
+            builder.setRequestTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
+                    ClientProperties.READ_TIMEOUT, 0));
+        } else {
+            executorService = Executors.newCachedThreadPool();
+            builder.setExecutorService(executorService);
+        }
+
+        builder.setAllowPoolingConnection(true);
+        if (client.getSslContext() != null) {
+            builder.setSSLContext(client.getSslContext());
+        }
+        if (client.getHostnameVerifier() != null) {
+            builder.setHostnameVerifier(client.getHostnameVerifier());
+        }
+        AsyncHttpClientConfig asyncClientConfig = builder.build();
+
+        return new AsyncHttpClient(new GrizzlyAsyncHttpProvider(asyncClientConfig), asyncClientConfig);
+    }
+
+
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
         final Request connectorRequest = translate(request);
@@ -194,7 +229,7 @@ public class GrizzlyConnector implements Connector {
 
         Throwable failure;
         try {
-            return client.executeRequest(connectorRequest, new AsyncHandler<Void>() {
+            return getClient(request).executeRequest(connectorRequest, new AsyncHandler<Void>() {
                 private volatile HttpResponseStatus status = null;
 
                 @Override
@@ -251,7 +286,9 @@ public class GrizzlyConnector implements Connector {
 
     @Override
     public void close() {
-        client.close();
+        if (grizzlyClient != null) {
+            grizzlyClient.close();
+        }
     }
 
     private ClientResponse translate(final ClientRequest requestContext,
@@ -334,7 +371,6 @@ public class GrizzlyConnector implements Connector {
         if (entity == null) {
             return null;
         }
-
 
         return new com.ning.http.client.Request.EntityWriter() {
             @Override

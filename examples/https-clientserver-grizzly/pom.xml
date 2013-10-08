@@ -75,6 +75,11 @@
             <artifactId>jersey-client</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-grizzly-connector</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
