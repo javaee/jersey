@@ -325,6 +325,54 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
         private StatusType status;
         private final OutboundMessageContext context;
 
+        /* thread-local storage for request baseUri for use in the response headers */
+        private static final InheritableThreadLocal<URI> baseUriThreadLocal = new InheritableThreadLocal<URI>();
+
+        /**
+         * Set the {@code baseUri} of the actual request into the {@link InheritableThreadLocal}.
+         * <p>
+         * The {@code baseUri} will be used for absolutizing the location header
+         * content in case that only a relative URI is provided.
+         * </p>
+         * <p>
+         * After resource method invocation when the value is not needed
+         * any more to be stored in {@code ThreadLocal} {@link #clearBaseUri() clearBaseUri()} should be
+         * called for cleanup in order to prevent possible memory leaks.
+         * </p>
+         *
+         * @param baseUri - baseUri of the actual request
+         * @see #location(java.net.URI)
+         * @since 2.4
+         */
+        public static void setBaseUri(URI baseUri) {
+            baseUriThreadLocal.set(baseUri);
+        }
+
+        /**
+         * Return request baseUri previously set by {@link #setBaseUri(java.net.URI)}.
+         *
+         * Returned {@link URI} is used for absolutization of the location header in case that only a relative
+         * {@code URI} was provided.
+         *
+         * @return baseUri of the actual request
+         * @see #location(java.net.URI)
+         * @since 2.4
+         */
+        private static URI getBaseUri() {
+            return baseUriThreadLocal.get();
+        }
+
+        /**
+         * Remove the current thread's value for baseUri thread-local variable (set by {@link #setBaseUri(java.net.URI)}).
+         *
+         * Should be called after resource method invocation for cleanup.
+         *
+         * @see #location(java.net.URI)
+         * @since 2.4
+         */
+        public static void clearBaseUri() {
+            baseUriThreadLocal.remove();
+        }
 
         /**
          * Create new outbound JAX-RS response builder.
@@ -477,7 +525,14 @@ public class OutboundJaxrsResponse extends javax.ws.rs.core.Response {
 
         @Override
         public javax.ws.rs.core.Response.ResponseBuilder location(URI location) {
-            headerSingle(HttpHeaders.LOCATION, location);
+            URI locationUri = location;
+            if (location != null && !location.isAbsolute())  {
+                URI baseUri = getBaseUri();
+                if (baseUri != null) {
+                    locationUri = baseUri.resolve(location);
+                }
+            }
+            headerSingle(HttpHeaders.LOCATION, locationUri);
             return this;
         }
 

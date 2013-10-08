@@ -81,6 +81,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.internal.HeaderValueException;
+import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
@@ -243,6 +244,9 @@ class ServerRuntime {
 
                     try {
                         final Ref<Endpoint> endpointRef = Refs.emptyRef();
+                        // set base URI into response builder thread-local variable
+                        // for later absolutization of relative location URIs
+                        OutboundJaxrsResponse.Builder.setBaseUri(request.getBaseUri());
                         final ContainerRequest data = Stages.process(request, requestProcessingRoot, endpointRef);
 
                         final Endpoint endpoint = endpointRef.get();
@@ -261,6 +265,8 @@ class ServerRuntime {
                         responder.process(throwable);
                     } finally {
                         asyncResponderHolder.release();
+                        // clear base URI from the thread
+                        OutboundJaxrsResponse.Builder.clearBaseUri();
                     }
                 }
             });
@@ -290,6 +296,24 @@ class ServerRuntime {
     ScheduledExecutorService getBackgroundScheduler() {
         return backgroundScheduler;
     }
+
+    /**
+     * Ensure that the value a {@value HttpHeaders#LOCATION} header is an absolute URI, if present among headers.
+     *
+     * Relative URI value will be made absolute using a base request URI.
+     *
+     * @param location location URI; value of the HTTP {@value HttpHeaders#LOCATION} response header.
+     * @param headers  mutable map of response headers.
+     * @param request  container request.
+     */
+    private static void ensureAbsolute(URI location, MultivaluedMap<String, Object> headers, ContainerRequest request) {
+        if (location == null || location.isAbsolute()) {
+            return;
+        }
+        // according to RFC2616 (HTTP/1.1), this field can contain one single URI
+        headers.putSingle(HttpHeaders.LOCATION, request.getBaseUri().resolve(location));
+    }
+
 
     private static class AsyncResponderHolder implements Value<AsyncContext> {
 
@@ -372,6 +396,7 @@ class ServerRuntime {
                 try {
                     try {
                         response = convertResponse(exceptionResponse);
+                        ensureAbsolute(response.getLocation(), response.getHeaders(), request);
                         request.getRequestEventBuilder().setContainerResponse(response).setResponseSuccessfullyMapped(true);
                     } finally {
                         request.triggerEvent(RequestEvent.Type.EXCEPTION_MAPPING_FINISHED);
@@ -493,42 +518,12 @@ class ServerRuntime {
             throw originalThrowable;
         }
 
-        /**
-         * Converts the relative URI to absolute in the Location response header
-         *
-         * Checks the response headers for presence of the Location header.
-         * If the Location header is present and contains a relative URI,
-         * it must be converted to the absolute one.
-         * For this purpose, the baseUri from the request is used.
-         *
-         * Changes the content of a mutable multivalued map returned by
-         * {@link org.glassfish.jersey.message.internal.OutboundMessageContext#getHeaders() OutboundMessageContext.getHeaders()}
-         *
-         * @param response ContainerResponse object ready to be streamed
-         */
-        @SuppressWarnings("unchecked")
-        private void absolutizeLocationHeaderUri(ContainerResponse response) {
-            if (response == null || response.getRequestContext() == null || response.getRequestContext().getBaseUri() == null) {
-                return;
-            }
-            URI responseLocation = response.getLocation();
-            if (responseLocation != null && !responseLocation.isAbsolute()) {
-                URI baseUri = response.getRequestContext().getBaseUri();
-                URI absoluteUri = baseUri.resolve(responseLocation);
-                // Get the mutable message headers multivalued map
-                MultivaluedMap<String, ? extends Object> headers = response.getWrappedMessageContext().getHeaders();
-                List<URI> locations = (List<URI>) headers.get(HttpHeaders.LOCATION);
-                // according to RFC2616 (HTTP/1.1), this field can contain one single URI
-                locations.set(0, absoluteUri);
-            }
-        }
-
         private ContainerResponse writeResponse(final ContainerResponse response) {
             final ContainerResponseWriter writer = request.getResponseWriter();
+            ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(),
+                    response.getRequestContext());
 
             if (!response.hasEntity()) {
-                absolutizeLocationHeaderUri(response);
-
                 tracingLogger.log(ServerTraceEvent.FINISHED, response.getStatusInfo());
                 tracingLogger.flush(response.getHeaders());
 
@@ -544,11 +539,11 @@ class ServerRuntime {
 
 
             try {
-
                 response.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                     @Override
                     public OutputStream getOutputStream(int contentLength) throws IOException {
-                        absolutizeLocationHeaderUri(response);
+                        ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(),
+                                response.getRequestContext());
                         final OutputStream outputStream = writer.writeResponseStatusAndHeaders(contentLength, response);
                         return isHead ? null : outputStream;
                     }
@@ -653,8 +648,7 @@ class ServerRuntime {
                 }
 
             } catch (Throwable throwable) {
-                // TODO L10N
-                LOGGER.log(Level.WARNING, "Attempt to release single request processing resources has failed.", throwable);
+                LOGGER.log(Level.WARNING, LocalizationMessages.RELEASING_REQUEST_PROCESSING_RESOURCES_FAILED(), throwable);
             }
         }
     }
@@ -701,12 +695,7 @@ class ServerRuntime {
                     }
                 }
             } catch (Throwable throwable) {
-                try {
-                    resume(throwable);
-                } catch (IllegalStateException ignored) {
-                    // TODO remove the try-catch block once the resume API changes.
-                    // ignore the exception - already resumed by someone else
-                }
+                resume(throwable);
             }
         }
 
@@ -758,6 +747,8 @@ class ServerRuntime {
                 public void run() {
                     try {
                         final Response jaxrsResponse = toJaxrsResponse(response);
+                        ServerRuntime.ensureAbsolute(
+                                jaxrsResponse.getLocation(), jaxrsResponse.getHeaders(), responder.request);
                         responder.process(new ContainerResponse(responder.request, jaxrsResponse));
                     } catch (Throwable t) {
                         responder.process(t);
@@ -775,7 +766,7 @@ class ServerRuntime {
         }
 
         @Override
-        public boolean resume(final Throwable error) throws IllegalStateException {
+        public boolean resume(final Throwable error) {
             return resume(new Runnable() {
                 @Override
                 public void run() {
