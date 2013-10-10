@@ -40,6 +40,7 @@
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.AccessController;
 import java.util.Collection;
 import java.util.Collections;
@@ -875,10 +876,17 @@ public class ResourceConfig extends Application implements Configurable<Resource
             while (resourceFinder.hasNext()) {
                 final String next = resourceFinder.next();
                 if (afl.accept(next)) {
+                    final InputStream in = resourceFinder.open();
                     try {
-                        afl.process(next, resourceFinder.open());
+                        afl.process(next, in);
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_PROCESS(next));
+                    } finally {
+                        try {
+                            in.close();
+                        } catch (IOException ex) {
+                            LOGGER.log(Level.FINER, "Error closing resource stream.", ex);
+                        }
                     }
                 }
             }
