@@ -37,29 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.logging.Logger;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ejb.Asynchronous;
+import javax.ejb.Stateless;
+import javax.ws.rs.container.AsyncResponse;
 
 /**
- * JAX-RS application to configure resources.
- *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Jan Algermissen
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@ApplicationPath("/rest")
-public class MyApplication extends Application {
-    @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-            add(CounterFilter.class);
-            add(AsyncResource.class);
-        }};
+@Stateless
+public class AsyncService {
+    private static Logger LOG = Logger.getLogger(AsyncService.class.getName());
+
+    @Asynchronous
+    public void getAsync(AsyncResponse ar) {
+        ar.resume("async");
     }
 }
+
