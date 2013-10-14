@@ -69,6 +69,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -76,6 +78,7 @@ import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public abstract class AbstractWebAppTest {
 
@@ -165,6 +168,22 @@ public abstract class AbstractWebAppTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core")
+                        .versionAsInProject(),
+
+                // Those two bundles have different (unique) maven coordinates, but represent the same OSGi bundle in two
+                // different versions.
+                // (see the maven bundle plugin configuration in each of the two pom.xml files
+                // Both bundles are explicitly loaded here to ensure, that both co-exist within the OSGi runtime;
+                mavenBundle().groupId("org.glassfish.jersey.examples.osgi-helloworld-webapp")
+                        .artifactId("additional-bundle")
+                        .versionAsInProject(),
+
+                // The alternate-version-bundle contains the same resource in the same package
+                // (org.glassfish.jersey.examples.osgi.helloworld.additional.resource.AdditionalResource),
+                // mapped to the same URI (/additional), but returning a different string as a response.
+                // ---> if the test passes, it ensures, that Jersey sees/uses the correct version of the bundle
+                mavenBundle().groupId("org.glassfish.jersey.examples.osgi-helloworld-webapp")
+                        .artifactId("alternate-version-bundle")
                         .versionAsInProject()
 
                 // Debug
@@ -285,6 +304,13 @@ public abstract class AbstractWebAppTest {
         final String anotherResult = target.path("/webresources/another").request().build("GET").invoke().readEntity(String.class);
         LOGGER.info("ANOTHER RESULT = " + anotherResult);
         assertEquals("Another", anotherResult);
+
+        // send request and check response for the additional bundle - should fail now
+        final String additionalResult = target.path("/webresources/additional").request().build("GET").invoke()
+                .readEntity(String.class);
+
+        LOGGER.info("ADDITIONAL RESULT = " + additionalResult);
+        assertEquals("Additional Bundle!", additionalResult);
     }
 
     private static int getProperty(final String varName, int defaultValue) {
