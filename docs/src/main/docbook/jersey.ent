@@ -40,16 +40,19 @@
     holder.
 
 -->
+<!-- Externally configured entities -->
 <!ENTITY version "$version">
 <!ENTITY docs.version "$docs.version">
 <!ENTITY apidocs.version "$apidocs.version">
 <!ENTITY src.branch "$src.branch">
 <!ENTITY repository "$repository">
-<!ENTITY experimentalrepository "snapshots">
-
-<!-- Version & External Link Base Entities -->
+<!ENTITY jaxb-api-jar.version "$jaxb-api-jar-version">
 <!ENTITY jax-rs.version "$jax-rs-version">
 <!ENTITY jax-rs-api-jar.version "$jax-rs-api-jar-version">
+<!ENTITY jackson.javadoc.version "$jackson-version">
+
+<!-- Version & External Link Base Entities -->
+<!ENTITY experimentalrepository "snapshots">
 <!ENTITY jax-rs.release.path "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
 <!ENTITY jax-rs.javadoc.path "&jax-rs.release.path;/apidocs/javax/ws/rs">
 
@@ -61,9 +64,12 @@
 <!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
 <!ENTITY jdk7.javadoc.path "http://docs.oracle.com/javase/7/docs/api">
 
+<!ENTITY hk2.javadoc.path "https://hk2.java.net/apidocs">
+
 <!ENTITY wadl.project.link "<link xlink:href='http://wadl.java.net/'>WADL</link>">
 <!ENTITY sse.spec.link "<link xlink:href='http://www.w3.org/TR/2009/WD-eventsource-20091029/'>SSE API specification</link>">
 <!ENTITY grizzly.link "<link xlink:href='http://grizzly.java.net/'>Grizzly</link>">
+<!ENTITY hk2.link "<link xlink:href='http://hk2.java.net/'>HK2</link>">
 <!ENTITY maven.link "<link xlink:href='http://maven.apache.org/'>Apache Maven</link>">
 <!ENTITY maven.central.repo.link "<link xlink:href='http://search.maven.org/'>Central Maven Repository</link>">
 
@@ -71,14 +77,11 @@
 <!ENTITY jersey.github.release.path "&jersey.github.path;/&src.branch;">
 <!ENTITY jersey.github.examples.path "&jersey.github.release.path;/examples">
 
-<!ENTITY jaxb-api-jar.version "$jaxb-api-jar-version">
 <!ENTITY jaxb.release.path "http://jaxb.java.net/nonav/&jaxb-api-jar.version;">
 <!ENTITY jaxb.javadoc.path "&jaxb.release.path;/docs/api/javax/xml/bind">
 
 <!ENTITY bv.project.link "<link xlink:href='http://beanvalidation.org/'>Bean Validation</link>">
 <!ENTITY bv11.javadoc.path "http://docs.jboss.org/hibernate/beanvalidation/spec/1.1/api">
-
-<!ENTITY jackson.javadoc.version "$jackson-version">
 
 <!ENTITY wikipedia.path "http://en.wikipedia.org/wiki">
 
@@ -118,10 +121,7 @@
 <!ENTITY jdk6.ObjectName "<link xlink:href='&jdk6.javadoc.path;/javax/management/ObjectName.html'>ObjectName</link>">
 
 
-
-
 <!ENTITY jdk7.org.w3c.dom.Document "<link xlink:href='&jdk7.javadoc.path;/org/w3c/dom/Document.html'>Document</link>">
-
 <!ENTITY jdk7.StreamSource "<link xlink:href='&jdk7.javadoc.path;/javax/xml/transform/stream/StreamSource.html'>StreamSource</link>">
 <!ENTITY jdk7.SAXSource "<link xlink:href='&jdk7.javadoc.path;/javax/xml/transform/sax/SAXSource.html'>SAXSource</link>">
 <!ENTITY jdk7.DOMSource "<link xlink:href='&jdk7.javadoc.path;/javax/xml/transform/dom/DOMSource.html'>DOMSource</link>">
@@ -236,9 +236,6 @@
 <!ENTITY jaxrs.client.Client "<link xlink:href='&jax-rs.javadoc.path;/client/Client.html'>Client</link>">
 <!ENTITY jaxrs.client.ClientBuilder "<link xlink:href='&jax-rs.javadoc.path;/client/ClientBuilder.html'>ClientBuilder</link>">
 <!ENTITY jaxrs.client.Entity "<link xlink:href='&jax-rs.javadoc.path;/client/Entity.html'>Entity</link>">
-
-
-
 
 
 <!-- Jersey Javadoc Links -->
@@ -411,6 +408,7 @@
 <!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
 <!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
 
+<!ENTITY jersey.server.spi.ComponentProvider "<link xlink:href='&jersey.javadoc.path;/server/spi/ComponentProvider.html'>ComponentProvider</link>">
 
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
@@ -445,10 +443,11 @@
 <!ENTITY jee6.annotations.PermitAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/PermitAll.html'>@PermitAll</link>">
 <!ENTITY jee6.annotations.DenyAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/DenyAll.html'>@DenyAll</link>">
 <!ENTITY jee6.servlet.HttpServletRequest "<link xlink:href='&jee6.javadoc.path;/javax/servlet/http/HttpServletRequest.html'>HttpServletRequest</link>">
+<!ENTITY jee6.servlet.HttpSession "<link xlink:href='&jee6.javadoc.path;/javax/servlet/http/HttpSession.html'>HttpSession</link>">
 <!ENTITY jee6.inject.Singleton "<link xlink:href='&jee6.javadoc.path;/javax/inject/Singleton.html'>@Singleton</link>">
 <!ENTITY jee6.javax.inject.Inject "<link xlink:href='&jee6.javadoc.path;/javax/inject/Inject.html'>@Inject</link>">
+<!ENTITY jee6.javax.inject.Singleton "<link xlink:href='&jee6.javadoc.path;/javax/inject/Singleton.html'>@Singleton</link>">
 <!ENTITY jee6.javax.inject.Provider "<link xlink:href='&jee6.javadoc.path;/javax/inject/Provider.html'>Provider</link>">
-
 
 <!-- JAXB links -->
 <!ENTITY jaxb.annotation.XmlRootElement "<link xlink:href='&jaxb.javadoc.path;/annotation/XmlRootElement.html'>@XmlRootElement</link>">
@@ -468,6 +467,13 @@
 <!ENTITY bv.ValidationException "<link xlink:href='&bv11.javadoc.path;/javax/validation/ValidationException.html'>ValidationException</link>">
 <!ENTITY bv.Validator "<link xlink:href='&bv11.javadoc.path;/javax/validation/Validator.html'>Validator</link>">
 <!ENTITY bv.ValidatorFactory "<link xlink:href='&bv11.javadoc.path;/javax/validation/ValidatorFactory.html'>ValidatorFactory</link>">
+
+<!-- HK2 links -->
+<!ENTITY hk2.Binder "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/utilities/Binder.html'>Binder</link>">
+<!ENTITY hk2.Factory "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/Factory.html'>Factory</link>">
+<!ENTITY hk2.InjectionResolver "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/InjectionResolver.html'>InjectionResolver</link>">
+<!ENTITY hk2.PerLookup "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/PerLookup.html'>PerLookup</link>">
+<!ENTITY hk2.ServiceLocator "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/ServiceLocator.html'>ServiceLocator</link>">
 
 <!-- Various links -->
 <!ENTITY wiki.JSONP "<link xlink:href='&wikipedia.path;/JSONP'>JSONP</link>">
@@ -664,8 +670,8 @@
 <!ENTITY lit.jersey.test.JerseyTest "<literal>JerseyTest</literal>">
 <!ENTITY lit.jersey.test.TestProperties "<literal>TestProperties</literal>">
 <!ENTITY lit.jersey.test.spi.TestContainerFactory "<literal>TestContainerFactory</literal>">
-<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 
+<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.ApplicationMXBean "<literal>ApplicationMXBean</literal>">
 <!ENTITY lit.jersey.server.monitoring.ApplicationEvent "<literal>ApplicationEvent</literal>">
@@ -686,6 +692,7 @@
 <!ENTITY lit.jersey.server.monitoring.ResponseStatistics "<literal>ResponseStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.TimeWindowStatistics "<literal>TimeWindowStatistics</literal>">
 
+<!ENTITY lit.jersey.server.spi.ComponentProvider "<literal>ComponentProvider</literal>">
 
 <!--JDK 6 literals -->
 <!ENTITY lit.jdk6.HttpUrlConnection "<literal>HttpUrlConnection</literal>">
@@ -714,10 +721,12 @@
 <!ENTITY lit.jee6.annotations.RolesAllowed "<literal>@RolesAllowed</literal>">
 <!ENTITY lit.jee6.annotations.PermitAll "<literal>@PermitAll</literal>">
 <!ENTITY lit.jee6.servlet.HttpServletRequest "<literal>HttpServletRequest</literal>">
+<!ENTITY lit.jee6.servlet.HttpSession "<literal>HttpSession</literal>">
 <!ENTITY lit.jee6.inject.Singleton "<literal>@Singleton</literal>">
 <!ENTITY lit.jaxb.JAXBElement "<literal>JAXBElement</literal>">
 <!ENTITY lit.jaxb.JAXBContext "<literal>JAXBContext</literal>">
 <!ENTITY lit.jee6.javax.inject.Inject "<literal>@Inject</literal>">
+<!ENTITY lit.jee6.javax.inject.Singleton "<literal>@Singleton</literal>">
 <!ENTITY lit.jee6.javax.inject.Provider "<literal>Provider</literal>">
 
 <!-- Jersey Module Literals -->
@@ -739,6 +748,13 @@
 <!ENTITY lit.bv.ValidationException "<literal>ValidationException</literal>" >
 <!ENTITY lit.bv.Validator "<literal>Validator</literal>" >
 <!ENTITY lit.bv.ValidateOnExecution "<literal>@ValidateOnExecution</literal>" >
+
+<!-- HK2 Literals -->
+<!ENTITY lit.hk2.Binder "<literal>Binder</literal>" >
+<!ENTITY lit.hk2.Factory "<literal>Factory</literal>" >
+<!ENTITY lit.hk2.InjectionResolver "<literal>InjectionResolver</literal>" >
+<!ENTITY lit.hk2.PerLookup "<literal>PerLookup</literal>" >
+<!ENTITY lit.hk2.ServiceLocator "<literal>ServiceLocator</literal>" >
 
 <!-- Various literals -->
 <!ENTITY lit.pom.xml "<literal>pom.xml</literal>">
