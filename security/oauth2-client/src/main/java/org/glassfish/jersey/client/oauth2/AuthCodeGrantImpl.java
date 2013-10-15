@@ -283,7 +283,8 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
     private void initDefaultProperties(String redirectUri, String scope) {
         setDefaultProperty(OAuth2Parameters.RESPONSE_TYPE, "code", authorizationProperties);
         setDefaultProperty(OAuth2Parameters.CLIENT_ID, clientIdentifier.getClientId(), authorizationProperties, accessTokenProperties, refreshTokenProperties);
-        setDefaultProperty(OAuth2Parameters.REDIRECT_URI, redirectUri, authorizationProperties, accessTokenProperties);
+        setDefaultProperty(OAuth2Parameters.REDIRECT_URI, redirectUri == null
+                ? OAuth2Parameters.REDIRECT_URI_UNDEFINED : redirectUri, authorizationProperties, accessTokenProperties);
         setDefaultProperty(OAuth2Parameters.STATE, UUID.randomUUID().toString(), authorizationProperties);
         setDefaultProperty(OAuth2Parameters.SCOPE, scope, authorizationProperties);
 

@@ -164,6 +164,11 @@
             <artifactId>oauth1-server</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.security</groupId>
+            <artifactId>oauth2-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
     </dependencies>
 
