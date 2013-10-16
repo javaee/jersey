@@ -95,7 +95,6 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -184,14 +183,15 @@ public class WebComponent {
 
         @Override
         protected void configure() {
-            bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class).in(PerLookup.class);
-            bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory()).to(new TypeLiteral<Ref<HttpServletRequest>>() {
-            }).in(RequestScoped.class);
+            bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class)
+                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory())
+                    .to(new TypeLiteral<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
 
-            bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class).in(PerLookup.class);
+            bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class)
+                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
             bindFactory(ReferencingFactory.<HttpServletResponse>referenceFactory())
-                    .to(new TypeLiteral<Ref<HttpServletResponse>>() {
-                    }).in(RequestScoped.class);
+                    .to(new TypeLiteral<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
 
             bindFactory(new Factory<ServletContext>() {
                 @Override

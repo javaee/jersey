@@ -1221,12 +1221,13 @@
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <xdk.absolute.path />
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <release.tests.args>-Dmaven.test.skip=false</release.tests.args>
         <skip.tests>false</skip.tests>
+        <xdk.absolute.path />
 
-        <jersey.version>${project.version}</jersey.version>
         <!-- Dependency versions -->
+        <jersey.version>${project.version}</jersey.version>
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
         <ejb.version>3.2</ejb.version>
