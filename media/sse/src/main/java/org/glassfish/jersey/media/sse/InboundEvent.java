@@ -357,49 +357,6 @@ public class InboundEvent {
     }
 
     /**
-     * See {@link #readData()}.
-     *
-     * @return event data de-serialized into a string.
-     * @throws IOException when provided type can't be read.
-     * @deprecated Use {@link #readData()} instead.
-     */
-    @Deprecated
-    public String getData() throws IOException {
-        return getData(String.class);
-    }
-
-    /**
-     * See {@link #readData(Class)}.
-     *
-     * @param type Java type to be used for event data de-serialization.
-     * @return event data de-serialized as an instance of a given type.
-     * @throws IOException when provided type can't be read.
-     * @deprecated Use {@link #readData(Class)} instead.
-     */
-    @Deprecated
-    public <T> T getData(Class<T> type) throws IOException {
-        return getData(type, null);
-    }
-
-    /**
-     * See {@link #readData(Class)}.
-     *
-     * @param messageType Java type to be used for event data de-serialization.
-     * @param mediaType   {@link MediaType media type} to be used for event data de-serialization.
-     * @return event data de-serialized as an instance of a given type.
-     * @throws IOException when provided type can't be read.
-     * @deprecated Use {@link #readData(Class, javax.ws.rs.core.MediaType)} instead.
-     */
-    @Deprecated
-    public <T> T getData(Class<T> messageType, MediaType mediaType) throws IOException {
-        try {
-            return readData(messageType, mediaType);
-        } catch (ProcessingException pe) {
-            throw (IOException) pe.getCause();
-        }
-    }
-
-    /**
      * Get the raw event data bytes.
      *
      * @return raw event data bytes. The returned byte array may be empty if the event does not

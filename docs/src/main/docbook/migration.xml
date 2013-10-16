@@ -52,6 +52,22 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.4">
+        <title>Migrating from Jersey 2.3 to 2.4</title>
+
+        <para>
+            <itemizedlist>
+                <listitem><para>
+                    All deprecated SSE &jersey.sse.InboundEvent; <literal>getData(...)</literal> methods have been removed
+                    from the API. Use the new <literal>readData(...)</literal> methods have been introduced instead in
+                    Jersey 2.3 for consistency with other parts of client-side JAX-RS API.
+                    Access to the raw SSE event data content is provided via a &lit.jersey.sse.InboundEvent;'s
+                    <literal>byte[] getRawData()</literal> method that has been too introduced in Jersey 2.3.
+                </para></listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
     <section xml:id="mig-2.3">
         <title>Migrating from Jersey 2.0, 2.1 or 2.2 to 2.3</title>
 
