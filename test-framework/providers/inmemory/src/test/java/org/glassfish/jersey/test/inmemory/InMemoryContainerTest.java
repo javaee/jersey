@@ -74,7 +74,7 @@ public class InMemoryContainerTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(TestResource.class, Resource1956.class);
+        return new ResourceConfig(TestResource.class, Resource1956.class, Resource2091.class);
     }
 
     /**
@@ -127,7 +127,19 @@ public class InMemoryContainerTest extends JerseyTest {
             String agent = headers.getHeaderString(HttpHeaders.USER_AGENT);
             return "{\"agent\": \"" + agent + "\"}";
         }
+    }
 
+    /**
+     * Reproducer resource for JERSEY-2091.
+     */
+    @Path("2091")
+    public static class Resource2091 {
+        @POST
+        @Produces(MediaType.TEXT_PLAIN)
+        @Path("post-dummy-header")
+        public String postHeader(@Context HttpHeaders headers) throws Exception {
+            return "post-" + headers.getHeaderString("dummy-header");
+        }
     }
 
     /**
@@ -142,5 +154,18 @@ public class InMemoryContainerTest extends JerseyTest {
         response = target("1956/get-json").request(MediaType.APPLICATION_JSON).header(HttpHeaders.USER_AGENT, "test").get();
         assertThat(response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
         assertThat(response.readEntity(String.class), equalTo("{\"agent\": \"test\"}"));
+    }
+
+    /**
+     * Reproducer for JERSEY-2091.
+     */
+    @Test
+    public void testHeadersMakeItThroughForEntityLessRequest() {
+
+        Response response;
+
+        response = target("2091/post-dummy-header").request(MediaType.TEXT_PLAIN).header("dummy-header", "bummer").post(null);
+        assertThat(response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+        assertThat(response.readEntity(String.class), equalTo("post-bummer"));
     }
 }
