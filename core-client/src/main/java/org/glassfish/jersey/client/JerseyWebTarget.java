@@ -69,7 +69,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent parent client.
      */
     /*package*/ JerseyWebTarget(String uri, JerseyClient parent) {
-        this(UriBuilder.fromUri(uri), parent.getConfiguration().snapshot());
+        this(UriBuilder.fromUri(uri), parent.getConfiguration());
     }
 
 
@@ -80,7 +80,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent parent client.
      */
     /*package*/ JerseyWebTarget(URI uri, JerseyClient parent) {
-        this(UriBuilder.fromUri(uri), parent.getConfiguration().snapshot());
+        this(UriBuilder.fromUri(uri), parent.getConfiguration());
     }
 
 
@@ -91,7 +91,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param parent     parent client.
      */
     /*package*/ JerseyWebTarget(UriBuilder uriBuilder, JerseyClient parent) {
-        this(uriBuilder.clone(), parent.getConfiguration().snapshot());
+        this(uriBuilder.clone(), parent.getConfiguration());
     }
 
     /**
@@ -102,7 +102,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      */
     /*package*/ JerseyWebTarget(Link link, JerseyClient parent) {
         // TODO handle relative links
-        this(UriBuilder.fromUri(link.getUri()), parent.getConfiguration().snapshot());
+        this(UriBuilder.fromUri(link.getUri()), parent.getConfiguration());
     }
 
     /**
@@ -112,7 +112,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
      * @param that       original target to copy the internal data from.
      */
     protected JerseyWebTarget(UriBuilder uriBuilder, JerseyWebTarget that) {
-        this(uriBuilder, that.config.snapshot());
+        this(uriBuilder, that.config);
     }
 
     /**
@@ -125,7 +125,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         clientConfig.checkClient();
 
         this.targetUri = uriBuilder;
-        this.config = clientConfig;
+        this.config = clientConfig.snapshot();
     }
 
     @Override
