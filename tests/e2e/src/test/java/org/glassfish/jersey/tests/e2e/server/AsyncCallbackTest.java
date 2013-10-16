@@ -58,66 +58,20 @@ import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
-
-import junit.framework.Assert;
 
 /**
  * Tests {@link ConnectionCallback connection callback}.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class AsyncCallbackTest extends JerseyTest {
     public static boolean onDisconnectCalled;
 
     public static CountDownLatch streamClosedSignal = new TestLatch(1, "streamClosedSignal");
     public static CountDownLatch callbackCalledSignal = new TestLatch(1, "callbackCalledSignal");
-
-    public static void reset() {
-        onDisconnectCalled = false;
-        streamClosedSignal = new TestLatch(1, "streamClosedSignal");
-        callbackCalledSignal = new TestLatch(1, "callbackCalledSignal");
-
-    }
-
-    @Override
-    protected Application configure() {
-        return new ResourceConfig(Resource.class);
-    }
-
-    @Test
-    public void testOutputStream() throws InterruptedException, IOException {
-        _testConnectionCallback("resource/outputStream");
-    }
-
-    @Test
-    public void testChunkedOutput() throws InterruptedException, IOException {
-        _testConnectionCallback("resource/chunked");
-    }
-
-    private void _testConnectionCallback(String path) throws IOException, InterruptedException {
-        reset();
-        final Response response = target().path(path).request().get();
-        final InputStream inputStream = response.readEntity(InputStream.class);
-        for (int i = 0; i < 500; i++) {
-            inputStream.read();
-        }
-        response.close();
-        System.out.println("Response closed.");
-        streamClosedSignal.countDown();
-        callbackCalledSignal.await();
-        Assert.assertTrue(onDisconnectCalled);
-    }
-
-    public static class MyConnectionCallback implements ConnectionCallback {
-
-        @Override
-        public void onDisconnect(AsyncResponse disconnected) {
-            onDisconnectCalled = true;
-            callbackCalledSignal.countDown();
-        }
-    }
-
 
     @Path("resource")
     public static class Resource {
@@ -137,7 +91,6 @@ public class AsyncCallbackTest extends JerseyTest {
             };
             asyncResponse.resume(is);
         }
-
 
         @GET
         @ManagedAsync
@@ -162,22 +115,59 @@ public class AsyncCallbackTest extends JerseyTest {
 
         @Override
         public void countDown() {
-            System.out.println(Thread.currentThread().getName() + ": Latch  [" + name + "] counts down.");
             super.countDown();
         }
 
         @Override
         public void await() throws InterruptedException {
-            System.out.println(Thread.currentThread().getName() + ": Latch [" + name + "] awaits...");
             final boolean success = super.await(10, TimeUnit.SECONDS);
-            if (success) {
-                System.out.println(Thread.currentThread().getName() + ": Latch [" + name + "] awaiting finished.");
-            } else {
-                final String msg = Thread.currentThread().getName() + ": Latch [" + name + "] awaiting -> timeout!!!";
-                System.out.println(msg);
-                Assert.fail(msg);
-            }
+            Assert.assertTrue(
+                    Thread.currentThread().getName() + ": Latch [" + name + "] awaiting -> timeout!!!",
+                    success);
         }
     }
 
+    @Before
+    public void setup() {
+        onDisconnectCalled = false;
+        streamClosedSignal = new TestLatch(1, "streamClosedSignal");
+        callbackCalledSignal = new TestLatch(1, "callbackCalledSignal");
+
+    }
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
+    }
+
+    @Test
+    public void testOutputStream() throws InterruptedException, IOException {
+        _testConnectionCallback("resource/outputStream");
+    }
+
+    @Test
+    public void testChunkedOutput() throws InterruptedException, IOException {
+        _testConnectionCallback("resource/chunked");
+    }
+
+    private void _testConnectionCallback(String path) throws IOException, InterruptedException {
+        final Response response = target().path(path).request().get();
+        final InputStream inputStream = response.readEntity(InputStream.class);
+        for (int i = 0; i < 500; i++) {
+            inputStream.read();
+        }
+        response.close();
+        streamClosedSignal.countDown();
+        callbackCalledSignal.await();
+        Assert.assertTrue(onDisconnectCalled);
+    }
+
+    public static class MyConnectionCallback implements ConnectionCallback {
+
+        @Override
+        public void onDisconnect(AsyncResponse disconnected) {
+            onDisconnectCalled = true;
+            callbackCalledSignal.countDown();
+        }
+    }
 }

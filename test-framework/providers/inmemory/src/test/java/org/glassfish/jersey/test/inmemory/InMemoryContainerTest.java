@@ -42,8 +42,11 @@ package org.glassfish.jersey.test.inmemory;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -51,12 +54,14 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.inmemory.internal.InMemoryConnector;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test class for {@link org.glassfish.jersey.test.inmemory.internal.InMemoryConnector}.
@@ -74,7 +79,7 @@ public class InMemoryContainerTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(TestResource.class, Resource1956.class, Resource2091.class);
+        return new ResourceConfig(TestResource.class, Resource1956.class, Resource2091.class, Resource2030.class);
     }
 
     /**
@@ -143,6 +148,29 @@ public class InMemoryContainerTest extends JerseyTest {
     }
 
     /**
+     * Reproducer resource for JERSEY-2030.
+     */
+    @Path("2030")
+    public static class Resource2030 {
+        @GET
+        @Produces(MediaType.TEXT_PLAIN)
+        public void asyncGet(@Suspended final AsyncResponse asyncResponse) {
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    asyncResponse.resume("resumed");
+                }
+            }).start();
+        }
+    }
+
+    /**
      * Reproducer for JERSEY-1956.
      */
     @Test
@@ -161,11 +189,23 @@ public class InMemoryContainerTest extends JerseyTest {
      */
     @Test
     public void testHeadersMakeItThroughForEntityLessRequest() {
-
-        Response response;
-
-        response = target("2091/post-dummy-header").request(MediaType.TEXT_PLAIN).header("dummy-header", "bummer").post(null);
+        Response response =
+                target("2091/post-dummy-header").request(MediaType.TEXT_PLAIN).header("dummy-header", "bummer").post(null);
         assertThat(response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
         assertThat(response.readEntity(String.class), equalTo("post-bummer"));
+    }
+
+    /**
+     * Reproducer for JERSEY-2030.
+     */
+    @Test
+    public void testAsyncMethodsNotSupported() {
+        try {
+            target("2030").request(MediaType.TEXT_PLAIN).get();
+            fail("ProcessingException expected.");
+        } catch (ProcessingException ex) {
+            assertThat(ex.getStackTrace()[0].getClassName(),
+                    equalTo(InMemoryConnector.InMemoryResponseWriter.class.getName()));
+        }
     }
 }
