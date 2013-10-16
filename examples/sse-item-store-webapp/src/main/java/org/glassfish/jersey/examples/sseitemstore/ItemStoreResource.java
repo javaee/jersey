@@ -202,6 +202,11 @@ public class ItemStoreResource {
      */
     @POST
     public void addItem(@FormParam("name") String name) {
+        // Ignore if the request was sent without name parameter.
+        if (name == null) {
+            return;
+        }
+
         final int eventId;
         try {
             storeLock.writeLock().lock();
