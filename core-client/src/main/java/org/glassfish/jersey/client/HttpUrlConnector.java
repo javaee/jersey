@@ -57,6 +57,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -83,6 +84,8 @@ import com.google.common.util.concurrent.MoreExecutors;
  */
 public class HttpUrlConnector implements Connector {
     private final ConnectionFactory connectionFactory;
+    private final Integer chunkLength;
+    private final boolean fixLengthStreaming;
 
     /**
      * A factory for {@link HttpURLConnection} instances.
@@ -91,7 +94,8 @@ public class HttpUrlConnector implements Connector {
      * it in a custom manner that is not possible using the Client API.
      * <p>
      * A factory instance may be registered with the constructor
-     * {@link HttpUrlConnector#HttpUrlConnector(HttpUrlConnector.ConnectionFactory)}.
+     * {@link HttpUrlConnector#HttpUrlConnector(javax.ws.rs.core.Configuration,
+       org.glassfish.jersey.client.HttpUrlConnector.ConnectionFactory)}
      * Then the {@link HttpUrlConnector} instance may be registered with a {@link JerseyClient}
      * or {@link JerseyWebTarget} configuration via
      * {@link ClientConfig#connector(org.glassfish.jersey.client.spi.Connector)}.
@@ -114,17 +118,26 @@ public class HttpUrlConnector implements Connector {
 
     /**
      * Create default {@link HttpURLConnection}-based Jersey client {@link Connector connector}.
+     *
+     * @param configuration Client configuration.
      */
-    public HttpUrlConnector() {
-        connectionFactory = null;
+    public HttpUrlConnector(final Configuration configuration) {
+        this(configuration, null);
     }
 
     /**
      * Create default {@link HttpURLConnection}-based Jersey client {@link Connector connector}.
      *
+     * @param configuration Client configuration.
      * @param connectionFactory {@link HttpURLConnection} instance factory.
      */
-    public HttpUrlConnector(ConnectionFactory connectionFactory) {
+    public HttpUrlConnector(final Configuration configuration, final ConnectionFactory connectionFactory) {
+        this.chunkLength = PropertiesHelper.getValue(configuration.getProperties(),
+                ClientProperties.CHUNKED_ENCODING_SIZE, null, Integer.class);
+
+        this.fixLengthStreaming = PropertiesHelper.getValue(configuration.getProperties(),
+                ClientProperties.HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING, false, Boolean.class);
+
         this.connectionFactory = connectionFactory;
     }
 
@@ -270,6 +283,13 @@ public class HttpUrlConnector implements Connector {
 
         final Object entity = request.getEntity();
         if (entity != null) {
+            final int length = request.getLength();
+            if (fixLengthStreaming && length > 0) {
+                uc.setFixedLengthStreamingMode(length);
+            } else if (chunkLength != null) {
+                uc.setChunkedStreamingMode(chunkLength);
+            }
+
             uc.setDoOutput(true);
 
             if (httpMethod.equalsIgnoreCase("GET")) {
