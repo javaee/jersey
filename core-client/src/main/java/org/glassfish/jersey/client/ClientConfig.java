@@ -455,7 +455,7 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
      */
     ClientConfig(JerseyClient parent) {
         this.state = new State(parent);
-        this.state.setConnector(new HttpUrlConnector());
+        this.state.setConnector(new HttpUrlConnector(this.state));
     }
 
     /**
@@ -469,11 +469,11 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
         if (that instanceof ClientConfig) {
             state = ((ClientConfig) that).state.copy(parent);
             if (state.getConnector() == null) {
-                state.setConnector(new HttpUrlConnector());
+                state.setConnector(new HttpUrlConnector(state));
             }
         } else {
             state = new State(parent);
-            state.setConnector(new HttpUrlConnector());
+            state.setConnector(new HttpUrlConnector(state));
             state.loadFrom(that);
         }
     }
@@ -516,7 +516,7 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
         if (config instanceof ClientConfig) {
             state = ((ClientConfig) config).state.copy();
             if (state.getConnector() == null) {
-                state.setConnector(new HttpUrlConnector());
+                state.setConnector(new HttpUrlConnector(state));
             }
         } else {
             state.loadFrom(config);
