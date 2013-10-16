@@ -151,7 +151,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     public void pushLeftHandPath() {
         final String rightHandPath = getFinalMatchingGroup();
         final int rhpLength = (rightHandPath != null) ? rightHandPath.length() : 0;
-        final String encodedRequestPath = getAbsolutePath().toString();
+        final String encodedRequestPath = getPath(false);
         // TODO: do we need to cut the starting slash ?
 //        paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
         if (encodedRequestPath.length() != rhpLength) {
