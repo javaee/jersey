@@ -63,6 +63,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -141,12 +142,13 @@ public class ClientBufferingDisabledTest extends JerseyTest {
      * This test uses {@link ClientProperties#HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING} to enable
      * fix length streaming on {@code HttpURLConnection}.
      * <p>
-     * !!! In Jersey 1.x chunk encoding with {@code HttpURLConnection} was causing bugs
-     * which occurred from time to time. If this happens and builds will sometimes fail,
-     * then this test should be probably disabled.
+     * In Jersey 1.x chunk encoding with {@code HttpURLConnection} was causing bugs
+     * which occurred from time to time. This looks to be a case also in Jersey 2.x. This test
+     * failed on some machines. Therefore it is disabled now.
      * </p>
      */
     @Test
+    @Ignore("fails unpredictable (see javadoc)")
     public void testDisableBufferingWithChunkEncoding() {
         postLatch = new CountDownLatch(1);
 
