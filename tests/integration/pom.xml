@@ -63,6 +63,7 @@
         <module>jersey-1223</module>
         <module>jersey-1604</module>
         <module>jersey-1829</module>
+        <module>jersey-1960</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
         <module>servlet-2.5-autodiscovery-1</module>
