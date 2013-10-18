@@ -59,18 +59,14 @@ import javax.inject.Inject;
  * @author Roberto Chinnici
  */
 @ManagedBean
-@Path("echoconstructor/{a}")
+@Path("echoparamconstructor/{a}")
 public class EchoParamConstructorResource {
 
     static final Logger LOGGER = Logger.getLogger(EchoParamConstructorResource.class.getName());
 
     String a;
 
-    // to make the class proxiable
-    public EchoParamConstructorResource() {
-    }
-
-    //@Inject
+    @Inject
     public EchoParamConstructorResource(@PathParam("a") String a) {
         this.a = a;
     }

@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.cdi;
+package org.glassfish.jersey.gf.cdi.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -53,24 +53,26 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.core.Application;
-
 import javax.annotation.ManagedBean;
 import javax.annotation.Priority;
-
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.Annotated;
+import javax.enterprise.inject.spi.AnnotatedCallable;
+import javax.enterprise.inject.spi.AnnotatedConstructor;
+import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
-
 import javax.inject.Qualifier;
-
 import javax.naming.InitialContext;
+import javax.ws.rs.core.Application;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -78,10 +80,14 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
+import org.glassfish.hk2.utilities.cache.Cache;
+import org.glassfish.hk2.utilities.cache.Computable;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.ComponentProvider;
+import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
 /**
  * Jersey CDI integration implementation.
@@ -226,6 +232,72 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
     }
 
+    /**
+     * CDI producer for CDI bean constructor String parameters, that should be injected by JAX-RS.
+     */
+    @ApplicationScoped
+    public static class JaxRsParamProducer {
+
+        /**
+         * Internal cache to store CDI {@link InjectionPoint} to Jersey {@link Parameter} mapping.
+         */
+        final Cache<InjectionPoint, Parameter> parameterCache = new Cache<InjectionPoint, Parameter>(new Computable<InjectionPoint, Parameter>() {
+
+            @Override
+            public Parameter compute(final InjectionPoint injectionPoint) {
+                final Annotated annotated = injectionPoint.getAnnotated();
+                final Class<?> clazz = injectionPoint.getMember().getDeclaringClass();
+
+                if (annotated instanceof AnnotatedParameter) {
+
+                    AnnotatedParameter annotatedParameter = (AnnotatedParameter) annotated;
+                    final AnnotatedCallable callable = annotatedParameter.getDeclaringCallable();
+
+                    if (callable instanceof AnnotatedConstructor) {
+
+                        AnnotatedConstructor ac = (AnnotatedConstructor) callable;
+                        final int position = annotatedParameter.getPosition();
+                        final List<Parameter> parameters = Parameter.create(clazz, clazz, ac.getJavaMember(), false);
+
+                        return parameters.get(position);
+                    }
+                }
+
+                return null;
+            }
+        });
+
+        /**
+         * Provide a String value for given injection point. If the injection point does not refer
+         * to a CDI bean constructor parameter, or the value could not be found, the method will return null.
+         *
+         * @param injectionPoint actual injection point.
+         * @param beanManager current application bean manager.
+         * @return String value for given injection point.
+         */
+        @javax.enterprise.inject.Produces
+        public String getParameterValue(InjectionPoint injectionPoint, BeanManager beanManager) {
+
+            final Parameter parameter = parameterCache.compute(injectionPoint);
+
+            if (parameter != null) {
+
+                ServiceLocator locator = beanManager.getExtension(CdiComponentProvider.class).locator;
+
+                final Set<ValueFactoryProvider> providers = Providers.getProviders(locator, ValueFactoryProvider.class);
+
+                for (ValueFactoryProvider vfp : providers) {
+                    final Factory<?> valueFactory = vfp.getValueFactory(parameter);
+                    if (valueFactory != null) {
+                        return (String) valueFactory.provide();
+                    }
+                }
+            }
+
+            return null;
+        }
+    }
+
     @Override
     public boolean bind(final Class<?> clazz, final Set<Class<?>> providerContracts) {
 
@@ -288,6 +360,11 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     private boolean isManagedBean(Class<?> component) {
         return component.isAnnotationPresent(ManagedBean.class);
+    }
+
+    @SuppressWarnings("unused")
+    private void beforeBeanDiscovery(@Observes BeforeBeanDiscovery bbd, BeanManager bm) {
+        bbd.addAnnotatedType(bm.createAnnotatedType(JaxRsParamProducer.class));
     }
 
     @SuppressWarnings("unused")

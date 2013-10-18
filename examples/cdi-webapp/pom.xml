@@ -73,6 +73,11 @@
             <artifactId>cdi-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency> <!-- this is to avoid Jersey jars to be bundled with the WAR -->
+           <groupId>org.glassfish.jersey.containers</groupId>
+           <artifactId>jersey-container-servlet-core</artifactId>
+           <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <profiles>

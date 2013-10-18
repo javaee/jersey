@@ -37,40 +37,71 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.ejb;
+package org.glassfish.jersey.gf.ejb.internal;
 
-import javax.annotation.PostConstruct;
-import javax.interceptor.InvocationContext;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.ejb.EJBException;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.gf.cdi.CdiComponentProvider;
+import org.glassfish.jersey.spi.ExceptionMappers;
+import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 
 /**
- * EJB interceptor to inject Jersey specific stuff into EJB beans.
+ * Helper class to handle exceptions wrapped by the EJB container with EJBException.
+ * If this mapper was not registered, no {@link WebApplicationException}
+ * would end up mapped to the corresponding response.
  *
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public final class EjbComponentInterceptor {
+public class EjbExceptionMapper implements ExtendedExceptionMapper<EJBException> {
 
-    private final ServiceLocator locator;
+    private final Provider<ExceptionMappers> mappers;
 
     /**
-     * Create new EJB component locator.
+     * Create new EJB exception mapper.
      *
-     * @param locator HK2 service locator.
+     * @param mappers utility to find mapper delegate.
      */
-    public EjbComponentInterceptor(final ServiceLocator locator) {
-        this.locator = locator;
+    @Inject
+    public EjbExceptionMapper(Provider<ExceptionMappers> mappers) {
+        this.mappers = mappers;
     }
 
-    @PostConstruct
-    private void inject(final InvocationContext context) throws Exception {
+    @Override
+    public Response toResponse(EJBException exception) {
+        return causeToResponse(exception);
+    }
 
-        final Object beanInstance = context.getTarget();
-        locator.inject(beanInstance, CdiComponentProvider.CDI_CLASS_ANALYZER);
+    @Override
+    public boolean isMappable(EJBException exception) {
+        try {
+            return (causeToResponse(exception) != null);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
 
-        // Invoke next interceptor in chain
-        context.proceed();
+    private Response causeToResponse(EJBException exception) {
+
+        final Exception cause = exception.getCausedByException();
+
+        if (cause != null) {
+
+            final ExceptionMapper mapper = mappers.get().findMapping(cause);
+            if (mapper != null && mapper != this) {
+
+                return mapper.toResponse(cause);
+
+            } else if (cause instanceof WebApplicationException) {
+
+                return ((WebApplicationException)cause).getResponse();
+            }
+        }
+        return null;
     }
 }

@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.cdi;
+package org.glassfish.jersey.gf.cdi.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 
-import org.glassfish.jersey.gf.cdi.CdiComponentProviderTest.MyPojo;
+import org.glassfish.jersey.gf.cdi.internal.CdiComponentProviderTest.MyPojo;
 
 import org.junit.Test;
 
