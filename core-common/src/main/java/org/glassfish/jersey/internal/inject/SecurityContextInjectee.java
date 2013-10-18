@@ -44,29 +44,34 @@ import java.security.Principal;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.SecurityContext;
 
+import javax.inject.Inject;
+
 import org.glassfish.jersey.internal.LocalizationMessages;
 
 /**
  * Proxiable wrapper for request scoped {@link SecurityContext} instance.
  *
+ * <p>
+ * This wrapper must be used and cannot be replaced by {@link ReferencingFactory}.
+ * The reason is that {@link SecurityContext security context} can be set
+ * many times during the request processing. However, the HK2 proxy caches
+ * the first value that is injected. So, if for example any filter injects
+ * security context, then this security context will be cached and it will
+ * never be replaced for the same request. On the other hand, HK2 should
+ * probably cache the first value returned in the request scope to prevent
+ * that two subsequent calls done on the proxy will be forwarded to different
+ * object if the the object changes in the meantime.
+ * <p/>
+ *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class SecurityContextInjectee implements SecurityContext {
 
-    private ContainerRequestContext requestContext;
+    private final ContainerRequestContext requestContext;
 
-    /**
-     * Set request instance, where to take the actual security context from.
-     * Should be invoked on each incoming request,
-     * when a new injectee instance is created by HK2.
-     *
-     * @param containerRequest
-     */
-    public void setRequest(final ContainerRequestContext containerRequest) {
-        if (requestContext != null) {
-            throw new IllegalStateException(LocalizationMessages.SECURITY_CONTEXT_WAS_ALREADY_SET());
-        }
-        requestContext = containerRequest;
+    @Inject
+    public SecurityContextInjectee(ContainerRequestContext requestContext) {
+        this.requestContext = requestContext;
     }
 
     @Override
