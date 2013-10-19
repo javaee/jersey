@@ -59,6 +59,7 @@ public class MyApplication extends Application {
             add(EchoResource.class);
             add(RawEchoResource.class);
             add(CounterFilter.class);
+            add(AsyncResource.class);
         }};
     }
 }

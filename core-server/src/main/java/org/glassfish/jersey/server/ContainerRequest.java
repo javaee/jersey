@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Cookie;
@@ -70,6 +71,7 @@ import org.glassfish.jersey.message.internal.AcceptableMediaType;
 import org.glassfish.jersey.message.internal.HttpHeaderReader;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
+import org.glassfish.jersey.message.internal.TracingAwarePropertiesDelegate;
 import org.glassfish.jersey.message.internal.VariantSelector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.monitoring.EmptyRequestEventBuilder;
@@ -94,7 +96,7 @@ import com.google.common.collect.Lists;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ContainerRequest extends InboundMessageContext
-        implements ContainerRequestContext, Request, HttpHeaders {
+        implements ContainerRequestContext, Request, HttpHeaders, PropertiesDelegate {
 
     private static URI DEFAULT_BASE_URI = URI.create("/");
 
@@ -132,6 +134,14 @@ public class ContainerRequest extends InboundMessageContext
     private RequestEventListener requestEventListener = null;
     private RequestEventBuilder requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
 
+    private static final Pattern UriPartPATTERN = Pattern.compile("[a-zA-Z][a-zA-Z\\+\\-\\.]*(:[^/]*)?://.+");
+
+    private static final String ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE();
+    private static final String ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE();
+    private static final String ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE();
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY("variants");
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_ETAG = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag");
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified");
 
     /**
      * Create new Jersey container request context.
@@ -158,7 +168,7 @@ public class ContainerRequest extends InboundMessageContext
         this.requestUri = requestUri;
         this.httpMethod = httpMethod;
         this.securityContext = securityContext;
-        this.propertiesDelegate = propertiesDelegate;
+        this.propertiesDelegate = new TracingAwarePropertiesDelegate(propertiesDelegate);
     }
 
     /**
@@ -408,7 +418,7 @@ public class ContainerRequest extends InboundMessageContext
 
             final String uriPart = rawPath.substring(slashPos + 1);
 
-            if (uriPart.matches("[a-zA-Z][a-zA-Z\\+\\-\\.]*(:[^/]*)?://.+")) {
+            if (UriPartPATTERN.matcher(uriPart).matches()) {
                 return URI.create(builder.toString()).normalize().toString() + uriPart;
             }
 
@@ -497,13 +507,13 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void setSecurityContext(SecurityContext context) {
-        Preconditions.checkState(!inResponseProcessingPhase, LocalizationMessages.ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE());
+        Preconditions.checkState(!inResponseProcessingPhase, ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE);
         this.securityContext = context;
     }
 
     @Override
     public void setEntityStream(InputStream input) {
-        Preconditions.checkState(!inResponseProcessingPhase, LocalizationMessages.ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE());
+        Preconditions.checkState(!inResponseProcessingPhase, ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE);
         super.setEntityStream(input);
     }
 
@@ -514,7 +524,7 @@ public class ContainerRequest extends InboundMessageContext
 
     @Override
     public void abortWith(Response response) {
-        Preconditions.checkState(!inResponseProcessingPhase, LocalizationMessages.ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE());
+        Preconditions.checkState(!inResponseProcessingPhase, ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE);
         this.abortResponse = response;
     }
 
@@ -573,7 +583,7 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     public Variant selectVariant(List<Variant> variants) throws IllegalArgumentException {
         if (variants == null || variants.isEmpty()) {
-            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY("variants"));
+            throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY);
         }
         Ref<String> varyValueRef = Refs.emptyRef();
         final Variant variant = VariantSelector.selectVariant(this, variants, varyValueRef);
@@ -595,7 +605,7 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     public Response.ResponseBuilder evaluatePreconditions(EntityTag eTag) {
         if (eTag == null) {
-            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag"));
+            throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_ETAG);
         }
 
         Response.ResponseBuilder r = evaluateIfMatch(eTag);
@@ -608,7 +618,7 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     public Response.ResponseBuilder evaluatePreconditions(Date lastModified) {
         if (lastModified == null) {
-            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified"));
+            throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED);
         }
 
         final long lastModifiedTime = lastModified.getTime();
@@ -622,10 +632,10 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     public Response.ResponseBuilder evaluatePreconditions(Date lastModified, EntityTag eTag) {
         if (lastModified == null) {
-            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified"));
+            throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED);
         }
         if (eTag == null) {
-            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag"));
+            throw new IllegalArgumentException(METHOD_PARAMETER_CANNOT_BE_NULL_ETAG);
         }
 
         Response.ResponseBuilder r = evaluateIfMatch(eTag);

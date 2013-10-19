@@ -64,7 +64,9 @@ import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.internal.DefaultTemplateProcessor;
 import org.glassfish.jersey.server.mvc.jsp.JspProperties;
@@ -90,6 +92,8 @@ public class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
     private Provider<Ref<HttpServletRequest>> requestProviderRef;
     @Inject
     private Provider<Ref<HttpServletResponse>> responseProviderRef;
+    @Inject
+    private Provider<ContainerRequest> containerRequestProvider;
 
     /**
      * Creates new {@link TemplateProcessor template processor} for JSP.
@@ -128,7 +132,10 @@ public class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
 
     @Override
     public void writeTo(String templateReference, Viewable viewable, MediaType mediaType, final OutputStream out) throws IOException {
-        // TODO add trace information about forward to JSP page when tracing is enabled
+        TracingLogger tracingLogger = TracingLogger.getInstance(containerRequestProvider.get().getPropertiesDelegate());
+        if (tracingLogger.isLogEnabled(MvcJspEvent.JSP_FORWARD)) {
+            tracingLogger.log(MvcJspEvent.JSP_FORWARD, templateReference, viewable.getModel());
+        }
 
         RequestDispatcher dispatcher = servletContext.getRequestDispatcher(templateReference);
         if (dispatcher == null) {
@@ -165,4 +172,37 @@ public class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
             responseWriter.flush();
         }
     }
+
+    /**
+     * MVC-JSP side tracing events.
+     */
+    private static enum MvcJspEvent implements TracingLogger.Event {
+        JSP_FORWARD(TracingLogger.Level.SUMMARY, "MVC", "Forwarding view to JSP page [%s], model %s");
+
+        private final TracingLogger.Level level;
+        private final String category;
+        private final String messageFormat;
+
+        private MvcJspEvent(TracingLogger.Level level, String category, String messageFormat) {
+            this.level = level;
+            this.category = category;
+            this.messageFormat = messageFormat;
+        }
+
+        @Override
+        public String category() {
+            return category;
+        }
+
+        @Override
+        public TracingLogger.Level level() {
+            return level;
+        }
+
+        @Override
+        public String messageFormat() {
+            return messageFormat;
+        }
+    }
+
 }

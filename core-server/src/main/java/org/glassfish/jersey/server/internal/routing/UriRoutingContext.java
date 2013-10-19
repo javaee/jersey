@@ -60,6 +60,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -67,6 +68,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
@@ -107,6 +109,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
     private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
 
+    private final TracingLogger tracingLogger;
 
     /**
      * Injection constructor.
@@ -117,6 +120,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     @Inject
     UriRoutingContext(ContainerRequest requestContext, ProcessingProviders processingProviders) {
         this.requestContext = requestContext;
+        this.tracingLogger = TracingLogger.getInstance(requestContext);
         this.processingProviders = processingProviders;
     }
 
@@ -128,6 +132,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public void pushMatchedResource(Object resource) {
+        tracingLogger.log(ServerTraceEvent.MATCH_RESOURCE, resource);
         matchedResources.push(resource);
     }
 
@@ -138,6 +143,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public void pushMatchedLocator(ResourceMethod resourceLocator) {
+        tracingLogger.log(ServerTraceEvent.MATCH_LOCATOR, resourceLocator.getInvocable().getHandlingMethod());
         matchedLocators.push(resourceLocator);
     }
 
@@ -145,7 +151,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     public void pushLeftHandPath() {
         final String rightHandPath = getFinalMatchingGroup();
         final int rhpLength = (rightHandPath != null) ? rightHandPath.length() : 0;
-        final String encodedRequestPath = getAbsolutePath().toString();
+        final String encodedRequestPath = getPath(false);
         // TODO: do we need to cut the starting slash ?
 //        paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
         if (encodedRequestPath.length() != rhpLength) {
@@ -252,11 +258,21 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public void setMatchedResourceMethod(ResourceMethod resourceMethod) {
+        tracingLogger.log(ServerTraceEvent.MATCH_RESOURCE_METHOD, resourceMethod.getInvocable().getHandlingMethod());
         this.matchedResourceMethod = resourceMethod;
     }
 
     @Override
     public void pushMatchedRuntimeResource(RuntimeResource runtimeResource) {
+        if (tracingLogger.isLogEnabled(ServerTraceEvent.MATCH_RUNTIME_RESOURCE)) {
+            tracingLogger.log(ServerTraceEvent.MATCH_RUNTIME_RESOURCE,
+                    runtimeResource.getResources().get(0).getPath(),
+                    runtimeResource.getResources().get(0).getPathPattern().getRegex(),
+                    matchResults.peek().group()
+                            .substring(0, matchResults.peek().group().length() - getFinalMatchingGroup().length()),
+                    matchResults.peek().group());
+        }
+
         this.matchedRuntimeResources.push(runtimeResource);
     }
 

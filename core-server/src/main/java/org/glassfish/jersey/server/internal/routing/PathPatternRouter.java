@@ -39,13 +39,16 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.MatchResult;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.uri.PathPattern;
 
 /**
@@ -104,16 +107,39 @@ class PathPatternRouter implements Router {
         // Peek at matching information to obtain path to match
         String path = rc.getFinalMatchingGroup();
 
-        for (final Route<PathPattern> acceptedRoute : acceptedRoutes) {
-            final MatchResult m = acceptedRoute.routingPattern().match(path);
+        final TracingLogger tracingLogger = TracingLogger.getInstance(request);
+        tracingLogger.log(ServerTraceEvent.MATCH_PATH_FIND, path);
+
+        Router.Continuation result = null;
+        final Iterator<Route<PathPattern>> iterator = acceptedRoutes.iterator();
+        while (iterator.hasNext()) {
+            final Route<PathPattern> acceptedRoute = iterator.next();
+            final PathPattern routePattern = acceptedRoute.routingPattern();
+            final MatchResult m = routePattern.match(path);
             if (m != null) {
                 // Push match result information and rest of path to match
                 rc.pushMatchResult(m);
-                return Router.Continuation.of(request, acceptedRoute.next());
+                result = Router.Continuation.of(request, acceptedRoute.next());
+
+                //tracing
+                tracingLogger.log(ServerTraceEvent.MATCH_PATH_SELECTED, routePattern.getRegex());
+                break;
+            } else {
+                tracingLogger.log(ServerTraceEvent.MATCH_PATH_NOT_MATCHED, routePattern.getRegex());
             }
         }
 
-        // No match
-        return Router.Continuation.of(request);
+        if (tracingLogger.isLogEnabled(ServerTraceEvent.MATCH_PATH_SKIPPED)) {
+            while (iterator.hasNext()) {
+                tracingLogger.log(ServerTraceEvent.MATCH_PATH_SKIPPED, iterator.next().routingPattern().getRegex());
+            }
+        }
+
+        if (result == null) {
+            // No match
+            result = Router.Continuation.of(request);
+        }
+
+        return result;
     }
 }

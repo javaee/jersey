@@ -501,6 +501,54 @@ public final class ServerProperties {
      */
     public static final String APPLICATION_NAME = "jersey.config.server.application.name";
 
+    /**
+     * Enable tracing support.
+     *
+     * It allows service developer to get diagnostic information about request processing by Jersey.
+     * Those diagnostic/tracing information are returned in response headers ({@code X-Jersey-Tracing-nnn}).
+     * The feature should not be switched on on production environment.
+     *
+     * <p>
+     * Allowed values:
+     * <ul>
+     *     <li>{@code OFF} - tracing support is disabled.</li>
+     *     <li>{@code ON_DEMAND} - tracing support is in 'stand by' mode, it is enabled on demand by existence of request HTTP header</li>
+     *     <li>{@code ALL} - tracing support is enabled for every request.</li>
+     * </ul>
+     * The default value is {@code OFF}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.3
+     */
+    public static final String TRACING = "jersey.config.server.tracing";
+
+    /**
+     * Set level o tracing information.
+     *
+     * The property allows to set application default level o diagnostic information.
+     * Tracing level can be changed for each request by specifying request HTTP header {@code X-Jersey-Tracing-Threshold}.
+     *
+     * <p>
+     * Allowed values:
+     * <ul>
+     *     <li>{@code SUMMARY}</li>
+     *     <li>{@code TRACE}</li>
+     *     <li>{@code VERBOSE}</li>
+     * </ul>
+     * The default value is {@code TRACE}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.3
+     * @see {@link #TRACING}
+     */
+    public static final String TRACING_THRESHOLD = "jersey.config.server.tracing.threshold";
+
     private ServerProperties() {
         // prevents instantiation
     }

@@ -144,21 +144,7 @@ public class Helper {
                 systemProperty(TestProperties.CONTAINER_PORT).value(String.valueOf(port)),
                 systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
 
-                // log
-                // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
-                // mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
-
-                // felix config admin
-                // mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.4"),
-
-                // felix preference service
-                // mavenBundle("org.apache.felix", "org.apache.felix.prefs","1.0.2"),
-
-                // HTTP SPEC
-                // mavenBundle("org.apache.geronimo.specs","geronimo-servlet_2.5_spec","1.1.2"),
-
                 // javax.annotation has to go first!
-//                wrappedBundle(mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject()),
                 mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
 
                 // Google Guava
@@ -202,8 +188,7 @@ public class Helper {
             ));
         }
 
-//        return addPaxExamMavenLocalRepositoryProperty(options);
-        return options;
+        return addPaxExamMavenLocalRepositoryProperty(options);
     }
 
     /**

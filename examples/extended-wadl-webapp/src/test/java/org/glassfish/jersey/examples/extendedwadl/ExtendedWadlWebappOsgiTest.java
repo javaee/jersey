@@ -45,6 +45,7 @@ import org.glassfish.jersey.examples.extendedwadl.resources.ItemsResource;
 import org.glassfish.jersey.examples.extendedwadl.resources.MyApplication;
 import org.glassfish.jersey.examples.extendedwadl.util.Examples;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -72,6 +73,10 @@ import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.security.AccessController;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static junit.framework.Assert.assertEquals;
@@ -107,7 +112,7 @@ public class ExtendedWadlWebappOsgiTest {
 
     @Configuration
     public static Option[] configuration() {
-        return options(
+        List<Option> options = Arrays.asList(options(
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
                 systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
 
@@ -159,6 +164,8 @@ public class ExtendedWadlWebappOsgiTest {
                 mavenBundle().groupId("org.ops4j.pax.tinybundles").artifactId("tinybundles").versionAsInProject(),
                 mavenBundle().groupId("biz.aQute.bnd").artifactId("bndlib").versionAsInProject(),
 
+
+
                 // create ad-hoc bundle
                 provision(
                         bundle()
@@ -174,10 +181,16 @@ public class ExtendedWadlWebappOsgiTest {
                                 .add("application-grammars.xml", ClassLoader.getSystemResourceAsStream("application-grammars.xml"))
                                 .add("resourcedoc.xml", ClassLoader.getSystemResourceAsStream("resourcedoc.xml"))
                                 .set("Export-Package", MyApplication.class.getPackage().getName() + "," + SampleWadlGeneratorConfig.class.getPackage().getName())
-//                             .set(Constants.IMPORT_PACKAGE, "*")
                                 .set("DynamicImport-Package", "*")
                                 .set("Bundle-SymbolicName", "webapp").build())
+            )
         );
+        final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
+        if (localRepository != null) {
+            options = new ArrayList<Option>(options);
+            options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
+        }
+        return options.toArray(new Option[options.size()]);
     }
 
 

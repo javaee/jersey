@@ -40,6 +40,7 @@
 package org.glassfish.jersey.servlet;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.AccessController;
 import java.security.Principal;
@@ -94,7 +95,6 @@ import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
 
 import org.glassfish.hk2.api.Factory;
-import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -112,6 +112,9 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 public class WebComponent {
 
     private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
+
+    private static final Type RequestTYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
+    private static final Type ResponseTYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
 
     private static final AsyncContextDelegate DefaultAsyncDELEGATE = new AsyncContextDelegate() {
 
@@ -180,14 +183,15 @@ public class WebComponent {
 
         @Override
         protected void configure() {
-            bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class).in(PerLookup.class);
-            bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory()).to(new TypeLiteral<Ref<HttpServletRequest>>() {
-            }).in(RequestScoped.class);
+            bindFactory(HttpServletRequestReferencingFactory.class).to(HttpServletRequest.class)
+                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<HttpServletRequest>referenceFactory())
+                    .to(new TypeLiteral<Ref<HttpServletRequest>>() {}).in(RequestScoped.class);
 
-            bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class).in(PerLookup.class);
+            bindFactory(HttpServletResponseReferencingFactory.class).to(HttpServletResponse.class)
+                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
             bindFactory(ReferencingFactory.<HttpServletResponse>referenceFactory())
-                    .to(new TypeLiteral<Ref<HttpServletResponse>>() {
-                    }).in(RequestScoped.class);
+                    .to(new TypeLiteral<Ref<HttpServletResponse>>() {}).in(RequestScoped.class);
 
             bindFactory(new Factory<ServletContext>() {
                 @Override
@@ -348,10 +352,8 @@ public class WebComponent {
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
                 public void initialize(ServiceLocator locator) {
-                    locator.<Ref<HttpServletRequest>>getService((new TypeLiteral<Ref<HttpServletRequest>>() {
-                    }).getType()).set(servletRequest);
-                    locator.<Ref<HttpServletResponse>>getService((new TypeLiteral<Ref<HttpServletResponse>>() {
-                    }).getType()).set(servletResponse);
+                    locator.<Ref<HttpServletRequest>>getService(RequestTYPE).set(servletRequest);
+                    locator.<Ref<HttpServletResponse>>getService(ResponseTYPE).set(servletResponse);
                 }
             });
             requestContext.setWriter(responseWriter);

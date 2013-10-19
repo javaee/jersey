@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,6 +59,8 @@ import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentEx
 @Singleton
 public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
 
+    private static final String MEDIA_TYPE_IS_NULL = LocalizationMessages.MEDIA_TYPE_IS_NULL();
+
     @Override
     public boolean supports(Class<?> type) {
         return MediaType.class.isAssignableFrom(type);
@@ -67,7 +69,7 @@ public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
     @Override
     public String toString(MediaType header) {
 
-        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.MEDIA_TYPE_IS_NULL());
+        throwIllegalArgumentExceptionIfNull(header, MEDIA_TYPE_IS_NULL);
 
         StringBuilder b = new StringBuilder();
         b.append(header.getType()).append('/').append(header.getSubtype());
@@ -81,7 +83,7 @@ public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
     @Override
     public MediaType fromString(String header) {
 
-        throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.MEDIA_TYPE_IS_NULL());
+        throwIllegalArgumentExceptionIfNull(header, MEDIA_TYPE_IS_NULL);
 
         try {
             return valueOf(HttpHeaderReader.newInstance(header));

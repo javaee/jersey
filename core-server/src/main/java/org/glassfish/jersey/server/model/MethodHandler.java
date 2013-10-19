@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -202,7 +202,7 @@ public abstract class MethodHandler implements ResourceModelComponent {
 
         @Override
         public String toString() {
-            return "MethodHandler{"
+            return "ClassBasedMethodHandler{"
                     + "handlerClass=" + handlerClass
                     + ", handlerConstructors=" + handlerConstructors + '}';
         }
@@ -241,6 +241,14 @@ public abstract class MethodHandler implements ResourceModelComponent {
         @Override
         public boolean isClassBased() {
             return false;
+        }
+
+        @Override
+        public String toString() {
+            return "InstanceBasedMethodHandler{" +
+                    "handler=" + handler +
+                    ", handlerClass=" + handlerClass +
+                    '}';
         }
     }
 

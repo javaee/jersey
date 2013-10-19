@@ -150,6 +150,22 @@ public class EjbTest extends JerseyTest {
         assertThat(requestCount2, is(greaterThan(requestCount1)));
     }
 
+
+    @Test
+    public void testSync() {
+        final Response response = target().path("rest/async-test/sync").request().get();
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.readEntity(String.class), is("sync"));
+    }
+
+    @Test
+    public void testAsync() {
+        final Response response = target().path("rest/async-test/async").request().get();
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.readEntity(String.class), is("async"));
+    }
+
+
     private void _check500Response(final Response response, final String expectedSubstring) {
         assertThat(response.getStatus(), is(500));
         assertThat(response.readEntity(String.class), containsString(expectedSubstring));

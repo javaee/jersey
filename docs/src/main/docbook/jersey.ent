@@ -40,16 +40,19 @@
     holder.
 
 -->
+<!-- Externally configured entities -->
 <!ENTITY version "$version">
 <!ENTITY docs.version "$docs.version">
 <!ENTITY apidocs.version "$apidocs.version">
 <!ENTITY src.branch "$src.branch">
 <!ENTITY repository "$repository">
-<!ENTITY experimentalrepository "snapshots">
-
-<!-- Version & External Link Base Entities -->
+<!ENTITY jaxb-api-jar.version "$jaxb-api-jar-version">
 <!ENTITY jax-rs.version "$jax-rs-version">
 <!ENTITY jax-rs-api-jar.version "$jax-rs-api-jar-version">
+<!ENTITY jackson.javadoc.version "$jackson-version">
+
+<!-- Version & External Link Base Entities -->
+<!ENTITY experimentalrepository "snapshots">
 <!ENTITY jax-rs.release.path "http://jax-rs-spec.java.net/nonav/&jax-rs.version;">
 <!ENTITY jax-rs.javadoc.path "&jax-rs.release.path;/apidocs/javax/ws/rs">
 
@@ -61,26 +64,30 @@
 <!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
 <!ENTITY jdk7.javadoc.path "http://docs.oracle.com/javase/7/docs/api">
 
+<!ENTITY hk2.javadoc.path "https://hk2.java.net/apidocs">
+
 <!ENTITY wadl.project.link "<link xlink:href='http://wadl.java.net/'>WADL</link>">
 <!ENTITY sse.spec.link "<link xlink:href='http://www.w3.org/TR/2009/WD-eventsource-20091029/'>SSE API specification</link>">
 <!ENTITY grizzly.link "<link xlink:href='http://grizzly.java.net/'>Grizzly</link>">
+<!ENTITY hk2.link "<link xlink:href='http://hk2.java.net/'>HK2</link>">
 <!ENTITY maven.link "<link xlink:href='http://maven.apache.org/'>Apache Maven</link>">
 <!ENTITY maven.central.repo.link "<link xlink:href='http://search.maven.org/'>Central Maven Repository</link>">
+<!ENTITY oauth1.spec.link "<link xlink:href='http://tools.ietf.org/html/rfc5849'>OAuth 1.0 specification</link>">
+<!ENTITY oauth2.spec.link "<link xlink:href='http://tools.ietf.org/html/rfc6749'>OAuth 2.0 specification</link>">
 
 <!ENTITY jersey.github.path "https://github.com/jersey/jersey/tree">
 <!ENTITY jersey.github.release.path "&jersey.github.path;/&src.branch;">
 <!ENTITY jersey.github.examples.path "&jersey.github.release.path;/examples">
 
-<!ENTITY jaxb-api-jar.version "$jaxb-api-jar-version">
 <!ENTITY jaxb.release.path "http://jaxb.java.net/nonav/&jaxb-api-jar.version;">
 <!ENTITY jaxb.javadoc.path "&jaxb.release.path;/docs/api/javax/xml/bind">
 
 <!ENTITY bv.project.link "<link xlink:href='http://beanvalidation.org/'>Bean Validation</link>">
 <!ENTITY bv11.javadoc.path "http://docs.jboss.org/hibernate/beanvalidation/spec/1.1/api">
 
-<!ENTITY jackson.javadoc.version "$jackson-version">
-
 <!ENTITY wikipedia.path "http://en.wikipedia.org/wiki">
+
+
 
 <!-- Common Literals -->
 <!ENTITY lit.null "<literal>null</literal>">
@@ -117,11 +124,7 @@
 <!ENTITY jdk6.DynamicMBean "<link xlink:href='&jdk6.javadoc.path;/javax/management/DynamicMBean.html'>DynamicMBean</link>">
 <!ENTITY jdk6.ObjectName "<link xlink:href='&jdk6.javadoc.path;/javax/management/ObjectName.html'>ObjectName</link>">
 
-
-
-
 <!ENTITY jdk7.org.w3c.dom.Document "<link xlink:href='&jdk7.javadoc.path;/org/w3c/dom/Document.html'>Document</link>">
-
 <!ENTITY jdk7.StreamSource "<link xlink:href='&jdk7.javadoc.path;/javax/xml/transform/stream/StreamSource.html'>StreamSource</link>">
 <!ENTITY jdk7.SAXSource "<link xlink:href='&jdk7.javadoc.path;/javax/xml/transform/sax/SAXSource.html'>SAXSource</link>">
 <!ENTITY jdk7.DOMSource "<link xlink:href='&jdk7.javadoc.path;/javax/xml/transform/dom/DOMSource.html'>DOMSource</link>">
@@ -238,9 +241,6 @@
 <!ENTITY jaxrs.client.Entity "<link xlink:href='&jax-rs.javadoc.path;/client/Entity.html'>Entity</link>">
 
 
-
-
-
 <!-- Jersey Javadoc Links -->
 <!ENTITY jersey.client.Connector "<link xlink:href='&jersey.javadoc.path;/client/spi/Connector.html'>Connector</link>">
 <!ENTITY jersey.client.ChunkedInput "<link xlink:href='&jersey.javadoc.path;/client/ChunkedInput.html'>ChunkedInput</link>">
@@ -296,6 +296,7 @@
 <!ENTITY jersey.sse.SseBroadcaster "<link xlink:href='&jersey.javadoc.path;/media/sse/SseBroadcaster.html'>SseBroadcaster</link>">
 <!ENTITY jersey.sse.SseFeature "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html'>SseFeature</link>">
 
+<!ENTITY jersey.common.Beta "<link xlink:href='&jersey.javadoc.path;/Beta.html'>Beta</link>">
 <!ENTITY jersey.common.CommonProperties "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html'>CommonProperties</link>">
 <!ENTITY jersey.common.CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html#FEATURE_AUTO_DISCOVERY_DISABLE'>CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE</link>" >
 <!ENTITY jersey.common.CommonProperties.JSON_PROCESSING_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html#JSON_PROCESSING_FEATURE_DISABLE'>CommonProperties.JSON_PROCESSING_FEATURE_DISABLE</link>" >
@@ -410,6 +411,28 @@
 <!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
 <!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
 
+<!ENTITY jersey.server.spi.ComponentProvider "<link xlink:href='&jersey.javadoc.path;/server/spi/ComponentProvider.html'>ComponentProvider</link>">
+
+
+<!ENTITY jersey.client.oauth1.AccessToken "<link xlink:href='&jersey.javadoc.path;/client/oauth1/AccessToken.html'>AccessToken</link>">
+<!ENTITY jersey.client.oauth1.ConsumerCredentials "<link xlink:href='&jersey.javadoc.path;/client/oauth1/ConsumerCredentials.html'>ConsumerCredentials</link>">
+<!ENTITY jersey.client.oauth1.OAuth1AuthorizationFlow "<link xlink:href='&jersey.javadoc.path;/client/oauth1/OAuth1AuthorizationFlow.html'>OAuth1AuthorizationFlow</link>">
+<!ENTITY jersey.client.oauth1.OAuth1Builder "<link xlink:href='&jersey.javadoc.path;/client/oauth1/OAuth1Builder.html'>OAuth1Builder</link>">
+<!ENTITY jersey.client.oauth1.OAuth1ClientSupport "<link xlink:href='&jersey.javadoc.path;/client/oauth1/OAuth1ClientSupport.html'>OAuth1ClientSupport</link>">
+<!ENTITY jersey.server.oauth1.DefaultOAuth1Provider "<link xlink:href='&jersey.javadoc.path;/server/oauth1/DefaultOAuth1Provider.html'>DefaultOAuth1Provider</link>">
+<!ENTITY jersey.server.oauth1.OAuth1Consumer "<link xlink:href='&jersey.javadoc.path;/server/oauth1/OAuth1Consumer.html'>OAuth1Consumer</link>">
+<!ENTITY jersey.server.oauth1.OAuth1Exception "<link xlink:href='&jersey.javadoc.path;/server/oauth1/OAuth1Exception.html'>OAuth1Exception</link>">
+<!ENTITY jersey.server.oauth1.OAuth1Provider "<link xlink:href='&jersey.javadoc.path;/server/oauth1/OAuth1Provider.html'>OAuth1Provider</link>">
+<!ENTITY jersey.server.oauth1.OAuth1ServerFeature "<link xlink:href='&jersey.javadoc.path;/server/oauth1/OAuth1ServerFeature.html'>OAuth1ServerFeature</link>">
+<!ENTITY jersey.server.oauth1.OAuth1ServerProperties "<link xlink:href='&jersey.javadoc.path;/server/oauth1/OAuth1ServerProperties.html'>OAuth1ServerProperties</link>">
+<!ENTITY jersey.server.oauth1.OAuth1Token "<link xlink:href='&jersey.javadoc.path;/server/oauth1/OAuth1Token.html'>OAuth1Token</link>">
+<!ENTITY jersey.server.oauth1.TokenResource "<link xlink:href='&jersey.javadoc.path;/server/oauth1/TokenResource.html'>TokenResource</link>">
+<!ENTITY jersey.client.oauth2.ClientIdentifier "<link xlink:href='&jersey.javadoc.path;/client/oauth2/ClientIdentifier.html'>ClientIdentifier</link>">
+<!ENTITY jersey.client.oauth2.OAuth2CodeGrantFlow "<link xlink:href='&jersey.javadoc.path;/client/oauth2/OAuth2CodeGrantFlow.html'>OAuth2CodeGrantFlow</link>">
+<!ENTITY jersey.client.oauth2.OAuth2FlowGoogleBuilder "<link xlink:href='&jersey.javadoc.path;/client/oauth2/OAuth2FlowGoogleBuilder.html'>OAuth2FlowGoogleBuilder</link>">
+<!ENTITY jersey.client.oauth2.OAuth2Parameters "<link xlink:href='&jersey.javadoc.path;/client/oauth2/OAuth2Parameters.html'>OAuth2Parameters</link>">
+<!ENTITY jersey.client.oauth2.TokenResult "<link xlink:href='&jersey.javadoc.path;/client/oauth2/TokenResult.html'>TokenResult</link>">
+<!ENTITY jersey.client.oauth2.OAuth2ClientSupport "<link xlink:href='&jersey.javadoc.path;/client/oauth2/OAuth2ClientSupport.html'>OAuth2ClientSupport</link>">
 
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
@@ -438,16 +461,19 @@
 <!ENTITY jersey.github.multipart.example.path "<link xlink:href='&jersey.github.examples.path;/multipart-webapp'>multipart-webapp example</link>">
 <!ENTITY jersey.github.mvc.example.path "<link xlink:href='&jersey.github.examples.path;/bookstore-webapp'>MVC (Bookstore) example</link>">
 <!ENTITY jersey.github.spring.example.path "<link xlink:href='&jersey.github.examples.path;/helloworld-spring-webapp'>Spring DI example</link>">
+<!ENTITY jersey.github.oauth1.twitter.client "<link xlink:href='&jersey.github.examples.path;/oauth-client-twitter'>OAuth 1 Twitter Client example</link>">
+<!ENTITY jersey.github.oauth2.google.client "<link xlink:href='&jersey.github.examples.path;/oauth2-client-google-webapp'>OAuth 2 Google Client WebApp example</link>">
 
 <!-- JEE links -->
 <!ENTITY jee6.annotations.RolesAllowed "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/RolesAllowed.html'>@RolesAllowed</link>">
 <!ENTITY jee6.annotations.PermitAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/PermitAll.html'>@PermitAll</link>">
 <!ENTITY jee6.annotations.DenyAll "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/DenyAll.html'>@DenyAll</link>">
 <!ENTITY jee6.servlet.HttpServletRequest "<link xlink:href='&jee6.javadoc.path;/javax/servlet/http/HttpServletRequest.html'>HttpServletRequest</link>">
+<!ENTITY jee6.servlet.HttpSession "<link xlink:href='&jee6.javadoc.path;/javax/servlet/http/HttpSession.html'>HttpSession</link>">
 <!ENTITY jee6.inject.Singleton "<link xlink:href='&jee6.javadoc.path;/javax/inject/Singleton.html'>@Singleton</link>">
 <!ENTITY jee6.javax.inject.Inject "<link xlink:href='&jee6.javadoc.path;/javax/inject/Inject.html'>@Inject</link>">
+<!ENTITY jee6.javax.inject.Singleton "<link xlink:href='&jee6.javadoc.path;/javax/inject/Singleton.html'>@Singleton</link>">
 <!ENTITY jee6.javax.inject.Provider "<link xlink:href='&jee6.javadoc.path;/javax/inject/Provider.html'>Provider</link>">
-
 
 <!-- JAXB links -->
 <!ENTITY jaxb.annotation.XmlRootElement "<link xlink:href='&jaxb.javadoc.path;/annotation/XmlRootElement.html'>@XmlRootElement</link>">
@@ -467,6 +493,13 @@
 <!ENTITY bv.ValidationException "<link xlink:href='&bv11.javadoc.path;/javax/validation/ValidationException.html'>ValidationException</link>">
 <!ENTITY bv.Validator "<link xlink:href='&bv11.javadoc.path;/javax/validation/Validator.html'>Validator</link>">
 <!ENTITY bv.ValidatorFactory "<link xlink:href='&bv11.javadoc.path;/javax/validation/ValidatorFactory.html'>ValidatorFactory</link>">
+
+<!-- HK2 links -->
+<!ENTITY hk2.Binder "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/utilities/Binder.html'>Binder</link>">
+<!ENTITY hk2.Factory "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/Factory.html'>Factory</link>">
+<!ENTITY hk2.InjectionResolver "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/InjectionResolver.html'>InjectionResolver</link>">
+<!ENTITY hk2.PerLookup "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/PerLookup.html'>PerLookup</link>">
+<!ENTITY hk2.ServiceLocator "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/ServiceLocator.html'>ServiceLocator</link>">
 
 <!-- Various links -->
 <!ENTITY wiki.JSONP "<link xlink:href='&wikipedia.path;/JSONP'>JSONP</link>">
@@ -612,6 +645,7 @@
 <!ENTITY lit.jersey.message.filtering.EntityFilteringFeature "<literal>EntityFilteringFeature</literal>">
 <!ENTITY lit.jersey.message.filtering.SecurityEntityFilteringFeature "<literal>SecurityEntityFilteringFeature</literal>">
 
+<!ENTITY lit.jersey.common.Beta "<literal>Beta</literal>">
 <!ENTITY lit.jersey.common.CommonProperties "<literal>CommonProperties</literal>">
 <!ENTITY lit.jersey.common.SslConfigurator "<literal>SslConfigurator</literal>">
 
@@ -664,8 +698,8 @@
 <!ENTITY lit.jersey.test.JerseyTest "<literal>JerseyTest</literal>">
 <!ENTITY lit.jersey.test.TestProperties "<literal>TestProperties</literal>">
 <!ENTITY lit.jersey.test.spi.TestContainerFactory "<literal>TestContainerFactory</literal>">
-<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 
+<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.ApplicationMXBean "<literal>ApplicationMXBean</literal>">
 <!ENTITY lit.jersey.server.monitoring.ApplicationEvent "<literal>ApplicationEvent</literal>">
@@ -686,6 +720,27 @@
 <!ENTITY lit.jersey.server.monitoring.ResponseStatistics "<literal>ResponseStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.TimeWindowStatistics "<literal>TimeWindowStatistics</literal>">
 
+<!ENTITY lit.jersey.server.spi.ComponentProvider "<literal>ComponentProvider</literal>">
+
+<!ENTITY lit.jersey.client.oauth1.AccessToken "<literal>AccessToken</literal>">
+<!ENTITY lit.jersey.client.oauth1.ConsumerCredentials "<literal>ConsumerCredentials</literal>">
+<!ENTITY lit.jersey.client.oauth1.OAuth1AuthorizationFlow "<literal>OAuth1AuthorizationFlow</literal>">
+<!ENTITY lit.jersey.client.oauth1.OAuth1Builder "<literal>OAuth1Builder</literal>">
+<!ENTITY lit.jersey.client.oauth1.OAuth1ClientSupport "<literal>OAuth1ClientSupport</literal>">
+<!ENTITY lit.jersey.server.oauth1.DefaultOAuth1Provider "<literal>DefaultOAuth1Provider</literal>">
+<!ENTITY lit.jersey.server.oauth1.OAuth1Consumer "<literal>OAuth1Consumer</literal>">
+<!ENTITY lit.jersey.server.oauth1.OAuth1Exception "<literal>OAuth1Exception</literal>">
+<!ENTITY lit.jersey.server.oauth1.OAuth1Provider "<literal>OAuth1Provider</literal>">
+<!ENTITY lit.jersey.server.oauth1.OAuth1ServerFeature "<literal>OAuth1ServerFeature</literal>">
+<!ENTITY lit.jersey.server.oauth1.OAuth1ServerProperties "<literal>OAuth1ServerProperties</literal>">
+<!ENTITY lit.jersey.server.oauth1.OAuth1Token "<literal>OAuth1Token</literal>">
+<!ENTITY lit.jersey.server.oauth1.TokenResource "<literal>TokenResource</literal>">
+<!ENTITY lit.jersey.client.oauth2.ClientIdentifier "<literal>ClientIdentifier</literal>">
+<!ENTITY lit.jersey.client.oauth2.OAuth2CodeGrantFlow "<literal>OAuth2CodeGrantFlow</literal>">
+<!ENTITY lit.jersey.client.oauth2.OAuth2FlowGoogleBuilder "<literal>OAuth2FlowGoogleBuilder</literal>">
+<!ENTITY lit.jersey.client.oauth2.OAuth2Parameters "<literal>OAuth2Parameters</literal>">
+<!ENTITY lit.jersey.client.oauth2.TokenResult "<literal>TokenResult</literal>">
+<!ENTITY lit.jersey.client.oauth2.OAuth2ClientSupport "<literal>OAuth2ClientSupport</literal>">
 
 <!--JDK 6 literals -->
 <!ENTITY lit.jdk6.HttpUrlConnection "<literal>HttpUrlConnection</literal>">
@@ -714,10 +769,12 @@
 <!ENTITY lit.jee6.annotations.RolesAllowed "<literal>@RolesAllowed</literal>">
 <!ENTITY lit.jee6.annotations.PermitAll "<literal>@PermitAll</literal>">
 <!ENTITY lit.jee6.servlet.HttpServletRequest "<literal>HttpServletRequest</literal>">
+<!ENTITY lit.jee6.servlet.HttpSession "<literal>HttpSession</literal>">
 <!ENTITY lit.jee6.inject.Singleton "<literal>@Singleton</literal>">
 <!ENTITY lit.jaxb.JAXBElement "<literal>JAXBElement</literal>">
 <!ENTITY lit.jaxb.JAXBContext "<literal>JAXBContext</literal>">
 <!ENTITY lit.jee6.javax.inject.Inject "<literal>@Inject</literal>">
+<!ENTITY lit.jee6.javax.inject.Singleton "<literal>@Singleton</literal>">
 <!ENTITY lit.jee6.javax.inject.Provider "<literal>Provider</literal>">
 
 <!-- Jersey Module Literals -->
@@ -739,6 +796,13 @@
 <!ENTITY lit.bv.ValidationException "<literal>ValidationException</literal>" >
 <!ENTITY lit.bv.Validator "<literal>Validator</literal>" >
 <!ENTITY lit.bv.ValidateOnExecution "<literal>@ValidateOnExecution</literal>" >
+
+<!-- HK2 Literals -->
+<!ENTITY lit.hk2.Binder "<literal>Binder</literal>" >
+<!ENTITY lit.hk2.Factory "<literal>Factory</literal>" >
+<!ENTITY lit.hk2.InjectionResolver "<literal>InjectionResolver</literal>" >
+<!ENTITY lit.hk2.PerLookup "<literal>PerLookup</literal>" >
+<!ENTITY lit.hk2.ServiceLocator "<literal>ServiceLocator</literal>" >
 
 <!-- Various literals -->
 <!ENTITY lit.pom.xml "<literal>pom.xml</literal>">

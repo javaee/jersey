@@ -135,7 +135,7 @@ public class HttpUrlConnectorTest {
                 return wrapNoContentHttps(result);
             }
         };
-        HttpUrlConnector connector = new HttpUrlConnector(factory);
+        HttpUrlConnector connector = new HttpUrlConnector(client.getConfiguration(), factory);
         ClientResponse res = connector.apply(request);
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), res.getStatusInfo().getStatusCode());
         assertEquals(Response.Status.NO_CONTENT.getReasonPhrase(), res.getStatusInfo().getReasonPhrase());

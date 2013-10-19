@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
@@ -48,10 +47,12 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
@@ -135,6 +136,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
         final boolean postMatching = responseFilters == null;
 
+        final TracingLogger tracingLogger = TracingLogger.getInstance(requestContext);
         if (postMatching) {
             // post-matching
             RoutingContext rc = locator.getService(RoutingContext.class);
@@ -147,18 +149,25 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
         } else {
             // pre-matching (response filter stage is pushed in pre-matching phase, so that if pre-matching filter
             // throws exception, response filters get still invoked)
-            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, locator));
+            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, locator, tracingLogger));
             sortedRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(), requestFilters);
         }
 
+        final TracingLogger.Event summaryEvent =
+                (postMatching ? ServerTraceEvent.REQUEST_FILTER_SUMMARY : ServerTraceEvent.PRE_MATCH_SUMMARY);
+        final long timestamp = tracingLogger.timestamp(summaryEvent);
+        int processedCount = 0;
         try {
+            final TracingLogger.Event filterEvent = (postMatching ? ServerTraceEvent.REQUEST_FILTER : ServerTraceEvent.PRE_MATCH);
             for (ContainerRequestFilter filter : sortedRequestFilters) {
+                final long filterTimestamp = tracingLogger.timestamp(filterEvent);
                 try {
                     filter.filter(requestContext);
-                } catch (WebApplicationException wae) {
-                    throw wae;
                 } catch (Exception exception) {
                     throw new MappableException(exception);
+                } finally {
+                    processedCount++;
+                    tracingLogger.logDuration(filterEvent, filterTimestamp, filter);
                 }
 
                 final Response abortResponse = requestContext.getAbortResponse();
@@ -178,7 +187,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
             if (postMatching) {
                 requestContext.triggerEvent(RequestEvent.Type.REQUEST_FILTERED);
             }
-
+            tracingLogger.logDuration(summaryEvent, timestamp, processedCount);
         }
 
         return Continuation.of(requestContext, getDefaultNext());
@@ -187,10 +196,14 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
     private static class ResponseFilterStage extends AbstractChainableStage<ContainerResponse> {
         private final Iterable<RankedProvider<ContainerResponseFilter>> filters;
         private final ServiceLocator locator;
+        private final TracingLogger tracingLogger;
 
-        private ResponseFilterStage(Iterable<RankedProvider<ContainerResponseFilter>> filters, ServiceLocator locator) {
+        private ResponseFilterStage(Iterable<RankedProvider<ContainerResponseFilter>> filters,
+                                    ServiceLocator locator,
+                                    TracingLogger tracingLogger) {
             this.filters = filters;
             this.locator = locator;
+            this.tracingLogger = tracingLogger;
         }
 
         @Override
@@ -200,24 +213,32 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
             RoutingContext rc = locator.getService(RoutingContext.class);
 
             Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.sortRankedProviders(
-                    new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), filters, rc.getBoundResponseFilters()
+                    new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING),
+                    filters,
+                    rc.getBoundResponseFilters()
             );
 
             final ContainerRequest request = responseContext.getRequestContext();
             request.getRequestEventBuilder().setContainerResponseFilters(sortedResponseFilters);
             request.triggerEvent(RequestEvent.Type.RESP_FILTERS_START);
+
+            final long timestamp = tracingLogger.timestamp(ServerTraceEvent.RESPONSE_FILTER_SUMMARY);
+            int processedCount = 0;
             try {
                 for (ContainerResponseFilter filter : sortedResponseFilters) {
+                    final long filterTimestamp = tracingLogger.timestamp(ServerTraceEvent.RESPONSE_FILTER);
                     try {
                         filter.filter(request, responseContext);
-                    } catch (WebApplicationException wae) {
-                        throw wae;
                     } catch (Exception ex) {
                         throw new MappableException(ex);
+                    } finally {
+                        processedCount++;
+                        tracingLogger.logDuration(ServerTraceEvent.RESPONSE_FILTER, filterTimestamp, filter);
                     }
                 }
             } finally {
                 request.triggerEvent(RequestEvent.Type.RESP_FILTERS_FINISHED);
+                tracingLogger.logDuration(ServerTraceEvent.RESPONSE_FILTER_SUMMARY, timestamp, processedCount);
             }
 
             return Continuation.of(responseContext, getDefaultNext());

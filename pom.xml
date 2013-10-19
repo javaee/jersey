@@ -52,7 +52,7 @@
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <version>2.3-SNAPSHOT</version>
+    <version>2.4-SNAPSHOT</version>
     <name>jersey</name>
     <description>
         Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
@@ -546,6 +546,27 @@
                     <artifactId>jetty-maven-plugin</artifactId>
                     <version>9.0.5.v20130815</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.glassfish.build</groupId>
+                    <artifactId>gfnexus-maven-plugin</artifactId>
+                    <version>0.16</version>
+                    <configuration>
+                        <stagingRepos>
+                            <stagingRepo>
+                                <!--
+                                    The reference artifact used to identify the right staging repository
+                                -->
+                                <ref>org.glassfish.jersey:project:${project.version}:pom</ref>
+                                <profile>com.sun.jersey</profile>
+                            </stagingRepo>
+                        </stagingRepos>
+                        <!--
+                            Temporary till there is a jersey promotion profile
+                        -->
+                        <promotionProfile>glassfish-integration</promotionProfile>
+                        <message>JERSEY-${project.version}</message>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -748,7 +769,7 @@
                     <!-- TODO: links still not working :-( -->
                     <links>
                         <link>http://jax-rs-spec.java.net/nonav/2.0/apidocs</link>
-                        <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
+                        <link>http://hk2.java.net/${hk2.version}/apidocs</link>
                     </links>
                 </configuration>
                 <reportSets>
@@ -944,7 +965,7 @@
             <dependency>
                 <groupId>org.glassfish.grizzly</groupId>
                 <artifactId>grizzly-http-client</artifactId>
-                <version>1.4</version>
+                <version>1.5</version>
             </dependency>
 
             <dependency>
@@ -1206,12 +1227,13 @@
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <xdk.absolute.path />
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <release.tests.args>-Dmaven.test.skip=false</release.tests.args>
         <skip.tests>false</skip.tests>
+        <xdk.absolute.path />
 
-        <jersey.version>${project.version}</jersey.version>
         <!-- Dependency versions -->
+        <jersey.version>${project.version}</jersey.version>
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
         <ejb.version>3.2</ejb.version>
@@ -1221,7 +1243,7 @@
         <freemarker.version>2.3.20</freemarker.version>
         <grizzly2.version>2.3.3</grizzly2.version>
         <hamcrest.version>1.2.1</hamcrest.version>
-        <hk2.version>2.2.0-b14</hk2.version>
+        <hk2.version>2.2.0-b21</hk2.version>
         <jackson.version>1.9.11</jackson.version>
         <javax.annotation.version>1.2</javax.annotation.version>
         <javax.annotation.bundle.version>1.2</javax.annotation.bundle.version>

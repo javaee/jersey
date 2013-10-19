@@ -88,6 +88,8 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerP
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.hk2.utilities.cache.Cache;
+import org.glassfish.hk2.utilities.cache.Computable;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -139,7 +141,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         /**
          * Build a new resource method invoker instance.
          *
-         * @param method                      resource method model.
+         * @param method              resource method model.
          * @param processingProviders Processing providers.
          * @return new resource method invoker instance.
          */
@@ -177,7 +179,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
         this.method = method;
         final Invocable invocable = method.getInvocable();
-        this.dispatcher =  dispatcherProvider.create(invocable,
+        this.dispatcher = dispatcherProvider.create(invocable,
                 invocationHandlerProvider.create(invocable));
 
         this.resourceMethod = invocable.getHandlingMethod();
@@ -344,11 +346,19 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
     }
 
+    private static final Cache<Method, Annotation[]> methodAnnotationCache = new Cache<Method, Annotation[]>(new Computable<Method, Annotation[]>() {
+
+        @Override
+        public Annotation[] compute(Method m) {
+            return m.getDeclaredAnnotations();
+        }
+    });
 
     private Response invoke(ContainerRequest requestContext, Object resource) {
 
         Response jaxrsResponse;
         requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_START);
+
         try {
             jaxrsResponse = dispatcher.dispatch(resource, requestContext);
         } finally {
@@ -368,7 +378,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
                 final Invocable invocable = method.getInvocable();
                 final Annotation[] entityAnn = response.getEntityAnnotations();
-                final Annotation[] methodAnn = invocable.getHandlingMethod().getDeclaredAnnotations();
+                final Annotation[] methodAnn = methodAnnotationCache.compute(invocable.getHandlingMethod());
                 if (methodAnn.length > 0) {
                     if (entityAnn.length == 0) {
                         response.setEntityAnnotations(methodAnn);

@@ -179,9 +179,15 @@ class EntityInputStream extends InputStream {
         }
 
         try {
-            if (input.available() > 0) {
-                return false;
-            } else if (input.markSupported()) {
+            try {
+                if (input.available() > 0) {
+                    return false;
+                }
+            } catch (IOException ioe) {
+                // NOOP. Try other approaches as this can fail on WLS when "chunked" transfer encoding is used.
+            }
+
+            if (input.markSupported()) {
                 input.mark(1);
                 int i = input.read();
                 input.reset();

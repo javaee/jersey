@@ -144,8 +144,8 @@ public class EntityFilteringOnPropertiesTest extends JerseyTest {
     public void testOneEntityFilteringOnProperties() throws Exception {
         final String fields = target("OneFilteringEntity").request().get(String.class);
 
-        assertThat(fields, equalTo("accessor,property,subEntities.field2,subEntities.property1,defaultEntities.field," +
-                "defaultEntities.property"));
+        assertThat(fields, equalTo("field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1," +
+                "subEntities.field1,defaultEntities.field,defaultEntities.property"));
     }
 
     @Test
@@ -166,16 +166,16 @@ public class EntityFilteringOnPropertiesTest extends JerseyTest {
     public void testManyFilteringsEntityPrimaryView() throws Exception {
         final String fields = target("ManyFilteringsEntityPrimaryView").request().get(String.class);
 
-        assertThat(fields, equalTo("property,oneEntities.field2,oneEntities.property1,defaultEntities.field," +
-                "defaultEntities.property"));
+        assertThat(fields, equalTo("field,accessor,property,oneEntities.field2,oneEntities.property2,oneEntities.property1," +
+                "oneEntities.field1,defaultEntities.field,defaultEntities.property"));
     }
 
     @Test
     public void testManyFilteringsEntitySecondaryView() throws Exception {
         final String fields = target("ManyFilteringsEntitySecondaryView").request().get(String.class);
 
-        assertThat(fields, equalTo("property,manyEntities.field2,manyEntities.property2,oneEntities.field1," +
-                "oneEntities.property2"));
+        assertThat(fields, equalTo("field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.field1," +
+                "oneEntities.property2,oneEntities.field1"));
     }
 
     @Test
@@ -189,7 +189,8 @@ public class EntityFilteringOnPropertiesTest extends JerseyTest {
     public void testManyFilteringsEntityManyViews() throws Exception {
         final String fields = target("ManyFilteringsEntityManyViews").request().get(String.class);
 
-        assertThat(fields, equalTo("property,manyEntities.field2,manyEntities.property2,manyEntities.property1," +
-                "oneEntities.field2,oneEntities.property1,defaultEntities.field,defaultEntities.property"));
+        assertThat(fields, equalTo("field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.property1," +
+                "manyEntities.field1,oneEntities.field2,oneEntities.property2,oneEntities.property1,oneEntities.field1," +
+                "defaultEntities.field,defaultEntities.property"));
     }
 }
