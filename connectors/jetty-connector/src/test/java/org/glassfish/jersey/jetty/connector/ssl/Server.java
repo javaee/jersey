@@ -40,27 +40,25 @@
 package org.glassfish.jersey.jetty.connector.ssl;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
-import com.google.common.io.ByteStreams;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
-import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public class Server {
 
-    private static HttpServer webServer;
+    private static org.eclipse.jetty.server.Server webServer;
 
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
@@ -86,41 +84,40 @@ public class Server {
     }
 
     protected static void startServer() throws IOException {
-        final InputStream trustStore = Server.class.getResourceAsStream("/truststore_server");
-        final InputStream keyStore = Server.class.getResourceAsStream("/keystore_server");
+        final URL trustStore = Server.class.getResource("/truststore_server");
+        final URL keyStore = Server.class.getResource("/keystore_server");
 
-        // Grizzly ssl configuration
-        SSLContextConfigurator sslContext = new SSLContextConfigurator();
+        // Jetty ssl context factory
+        SslContextFactory sslContextFactory = new SslContextFactory();
 
         // set up security context
-        sslContext.setKeyStoreBytes(ByteStreams.toByteArray(keyStore));  // contains server keypair
-        sslContext.setKeyStorePass("asdfgh");
-        sslContext.setTrustStoreBytes(ByteStreams.toByteArray(trustStore)); // contains client certificate
-        sslContext.setTrustStorePass("asdfgh");
+        sslContextFactory.setKeyStoreResource(Resource.newResource(keyStore));  // contains server keypair
+        sslContextFactory.setKeyStorePassword("asdfgh");
+        sslContextFactory.setTrustStoreResource(Resource.newResource(trustStore)); // contains client certificate
+        sslContextFactory.setTrustStorePassword("asdfgh");
 
         ResourceConfig rc = new ResourceConfig();
         rc.register(new LoggingFilter(LOGGER, true));
         rc.registerClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
 
         try {
-            webServer = GrizzlyHttpServerFactory.createHttpServer(
+            webServer = JettyHttpContainerFactory.create(
                     getBaseURI(),
-                    rc,
-                    true,
-                    new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(true)
+                    sslContextFactory,
+                    rc
             );
 
-            // start Grizzly embedded server //
+            // Jetty embedded server started //
             System.out.println("Jersey app started. Try out " + BASE_URI + "\nHit CTRL + C to stop it...");
-            webServer.start();
 
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
     }
 
-    protected static void stopServer() {
-        webServer.stop();
+    protected static void stopServer() throws Exception {
+        if (webServer != null)
+            webServer.stop();
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
