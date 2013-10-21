@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
@@ -69,7 +67,7 @@ public class OptionsTest extends AbstractJettyServerTester {
     @Test
     public void testFooBarOptions() {
         startServer(HelloWorldResource.class);
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         Response response = client.target(getUri()).path("helloworld").request().header("Accept", "foo/bar").options();
         assertEquals(200, response.getStatus());
         final String allowHeader = response.getHeaderString("Allow");

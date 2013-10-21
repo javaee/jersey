@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
@@ -70,7 +68,7 @@ public class MatrixParamTest extends AbstractJettyServerTester {
         startServer(MatrixParamResource.class);
 
         UriBuilder base = getUri().path("test");
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(base.clone()).matrixParam("y", "1");
 
         assertEquals("1", r.request().get(String.class));

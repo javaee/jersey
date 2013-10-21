@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.junit.Test;
 
 import javax.ws.rs.*;
@@ -81,7 +79,7 @@ public class HttpMethodTest extends AbstractJettyServerTester {
     @Test
     public void testGet() {
         startServer(HttpMethodResource.class);
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
         assertEquals("GET", r.request().get(String.class));
     }
@@ -89,7 +87,7 @@ public class HttpMethodTest extends AbstractJettyServerTester {
     @Test
     public void testPost() {
         startServer(HttpMethodResource.class);
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
@@ -98,7 +96,7 @@ public class HttpMethodTest extends AbstractJettyServerTester {
     @Test
     public void testPut() {
         startServer(HttpMethodResource.class);
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
 
         assertEquals("PUT", r.request().put(Entity.text("PUT"), String.class));
@@ -107,7 +105,7 @@ public class HttpMethodTest extends AbstractJettyServerTester {
     @Test
     public void testDelete() {
         startServer(HttpMethodResource.class);
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
 
         assertEquals("DELETE", r.request().delete(String.class));
@@ -116,7 +114,7 @@ public class HttpMethodTest extends AbstractJettyServerTester {
     @Test
     public void testAll() {
         startServer(HttpMethodResource.class);
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
 
         assertEquals("GET", r.request().get(String.class));

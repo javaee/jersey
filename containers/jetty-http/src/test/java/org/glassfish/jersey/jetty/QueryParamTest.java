@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
@@ -53,7 +51,6 @@ import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
-
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -71,7 +68,7 @@ public class QueryParamTest extends AbstractJettyServerTester {
     public void testQueryParam() {
         startServer(QueryParamResource.class);
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("test").build());
 
         URI u = UriBuilder.fromPath("").

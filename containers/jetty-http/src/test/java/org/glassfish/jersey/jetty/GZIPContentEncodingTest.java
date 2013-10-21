@@ -40,7 +40,6 @@
 package org.glassfish.jersey.jetty;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
@@ -79,7 +78,7 @@ public class GZIPContentEncodingTest extends AbstractJettyServerTester {
         rc.register(GZipEncoder.class);
         startServer(rc);
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig(GZipEncoder.class))));
+        Client client = ClientBuilder.newClient(new ClientConfig(GZipEncoder.class));
         WebTarget r = client.target(getUri().build());
 
         assertEquals("GET", r.request().get(String.class));
@@ -91,7 +90,7 @@ public class GZIPContentEncodingTest extends AbstractJettyServerTester {
         rc.register(GZipEncoder.class);
         startServer(rc);
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig(GZipEncoder.class))));
+        Client client = ClientBuilder.newClient(new ClientConfig(GZipEncoder.class));
         WebTarget r = client.target(getUri().build());
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));

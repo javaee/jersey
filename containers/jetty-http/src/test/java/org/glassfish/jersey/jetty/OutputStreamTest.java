@@ -41,7 +41,6 @@ package org.glassfish.jersey.jetty;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.junit.Test;
@@ -96,8 +95,7 @@ public class OutputStreamTest extends AbstractJettyServerTester {
     public void testGet() {
         startServer(TestResource.class);
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig(LoggingFilter.class))));
-        WebTarget r = client.target(getUri().path("output").build());
+        WebTarget r = ClientBuilder.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
         assertEquals("RESOURCE", r.request().get(String.class));
     }
 
@@ -105,8 +103,7 @@ public class OutputStreamTest extends AbstractJettyServerTester {
     public void testPost() {
         startServer(TestResource.class);
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig(LoggingFilter.class))));
-        WebTarget r = client.target(getUri().path("output").build());
+        WebTarget r = ClientBuilder.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
         String s = r.request().post(Entity.text("RESOURCE"), String.class);
         assertEquals("RESOURCE", s);
     }
@@ -115,11 +112,10 @@ public class OutputStreamTest extends AbstractJettyServerTester {
     public void testAll() {
         startServer(TestResource.class);
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig(LoggingFilter.class))));
-        WebTarget r = client.target(getUri().path("output").build());
+        WebTarget r = ClientBuilder.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
         assertEquals("RESOURCE", r.request().get(String.class));
 
-        r = client.target(getUri().path("output").build());
+        r = ClientBuilder.newClient(new ClientConfig(LoggingFilter.class)).target(getUri().path("output").build());
         assertEquals("RESOURCE", r.request().post(Entity.text("RESOURCE"), String.class));
     }
 }

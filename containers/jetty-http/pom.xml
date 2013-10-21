@@ -70,13 +70,6 @@
             <artifactId>jetty-continuation</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.glassfish.jersey.connectors</groupId>
-            <artifactId>jersey-jetty-connector</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-
     </dependencies>
 
     <build>

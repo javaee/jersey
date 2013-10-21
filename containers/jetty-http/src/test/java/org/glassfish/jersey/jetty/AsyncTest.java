@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.junit.Test;
 
 import javax.ws.rs.GET;
@@ -122,7 +120,7 @@ public class AsyncTest extends AbstractJettyServerTester {
     @Test
     public void testAsyncGet() throws ExecutionException, InterruptedException {
         startServer(AsyncResource.class);
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         final Future<Response> responseFuture = client.target(getUri().path("/async")).request().async().get();
         // Request is being processed asynchronously.
         final Response response = responseFuture.get();
@@ -133,7 +131,7 @@ public class AsyncTest extends AbstractJettyServerTester {
     @Test
     public void testAsyncGetWithTimeout() throws ExecutionException, InterruptedException, TimeoutException {
         startServer(AsyncResource.class);
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         final Future<Response> responseFuture = client.target(getUri().path("/async/timeout")).request().async().get();
         // Request is being processed asynchronously.
         final Response response = responseFuture.get();

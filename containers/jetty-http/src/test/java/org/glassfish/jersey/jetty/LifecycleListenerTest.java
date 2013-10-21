@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
@@ -110,7 +108,7 @@ public class LifecycleListenerTest extends AbstractJettyServerTester {
 
         startServer(rc);
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("/").build());
 
         assertEquals("one", r.path("one").request().get(String.class));
@@ -144,7 +142,7 @@ public class LifecycleListenerTest extends AbstractJettyServerTester {
 
         startServer(new ResourceConfig(One.class).register(listener));
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("/").build());
 
         assertThat(r.path("one").request().get(String.class), equalTo("one"));

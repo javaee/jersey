@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
 
@@ -104,7 +102,7 @@ public class ResponseWriterMetadataTest extends AbstractJettyServerTester {
                 StringWriter.class);
         startServer(rc);
 
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(new ClientConfig())));
+        Client client = ClientBuilder.newClient();
         WebTarget r = client.target(getUri().path("/").build());
         Response cr = r.request("text/plain").get(Response.class);
         assertEquals("x", cr.getHeaderString("X-BEFORE-WRITE"));
