@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
@@ -75,6 +76,7 @@ import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
@@ -325,7 +327,9 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         final Object resource = routingContextProvider.get().peekMatchedResource();
 
         if (method.isSuspendDeclared() || method.isManagedAsyncDeclared()) {
-            asyncContextProvider.get().suspend();
+            if (!asyncContextProvider.get().suspend()) {
+                throw new ProcessingException(LocalizationMessages.ERROR_SUSPENDING_ASYNC_REQUEST());
+            }
         }
 
         if (method.isManagedAsyncDeclared()) {

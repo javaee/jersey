@@ -592,12 +592,13 @@ class ServerRuntime {
                 }
             } finally {
                 if (!skipFinally) {
-
+                    boolean close = !response.isChunked();
                     if (response.isChunked()) {
                         try {
                             response.commitStream();
                         } catch (Exception e) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
+                            close = true;
                         }
 
                         try {
@@ -611,11 +612,16 @@ class ServerRuntime {
                                     runtime.uriRoutingContextProvider.get());
                         } catch (IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
+                            close = true;
                         }
                         // suspend the writer indefinitely (passing null timeout handler is ok in such case).
-                        writer.suspend(0, TimeUnit.SECONDS, null);
                         // TODO what to do if we detect that the writer has already been suspended? override the timeout value?
-                    } else {
+                        if (!writer.suspend(0, TimeUnit.SECONDS, null)) {
+                            LOGGER.fine(LocalizationMessages.ERROR_SUSPENDING_CHUNKED_OUTPUT_RESPONSE());
+                        }
+                    }
+
+                    if (close) {
                         try {
                             // the response must be closed here instead of just flushed or committed. Some
                             // output streams writes out bytes only on close (for example GZipOutputStream).
@@ -732,9 +738,10 @@ class ServerRuntime {
         public boolean suspend() {
             synchronized (stateLock) {
                 if (state == RUNNING) {
-                    state = SUSPENDED;
-                    responder.request.getResponseWriter().suspend(AsyncResponse.NO_TIMEOUT, TimeUnit.SECONDS, this);
-                    return true;
+                    if (responder.request.getResponseWriter().suspend(AsyncResponse.NO_TIMEOUT, TimeUnit.SECONDS, this)) {
+                        state = SUSPENDED;
+                        return true;
+                    }
                 }
             }
             return false;
