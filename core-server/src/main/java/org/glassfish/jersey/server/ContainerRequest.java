@@ -107,32 +107,32 @@ public class ContainerRequest extends InboundMessageContext
     // Request-scoped properties delegate
     private final PropertiesDelegate propertiesDelegate;
     // Absolute application root URI (base URI)
-    private URI baseUri;
+    private volatile URI baseUri;
     // Absolute request URI
-    private URI requestUri;
+    private volatile URI requestUri;
     // Lazily computed encoded request path (relative to application root URI)
-    private String encodedRelativePath = null;
+    private volatile String encodedRelativePath = null;
     // Lazily computed decoded request path (relative to application root URI)
-    private String decodedRelativePath = null;
+    private volatile String decodedRelativePath = null;
     // Request method
-    private String httpMethod;
+    private volatile String httpMethod;
     // Request security context
-    private SecurityContext securityContext;
+    private volatile SecurityContext securityContext;
     // Request filter chain execution aborting response
-    private Response abortResponse;
+    private volatile Response abortResponse;
     // Vary header value to be set in the response
-    private String varyValue;
+    private volatile String varyValue;
     // UriInfo reference
-    private UriRoutingContext uriRoutingContext;
+    private volatile UriRoutingContext uriRoutingContext;
     // Custom Jersey container request scoped initializer
-    private RequestScopedInitializer requestScopedInitializer;
+    private volatile RequestScopedInitializer requestScopedInitializer;
     // Request-scoped response writer of the invoking container
-    private ContainerResponseWriter responseWriter;
+    private volatile ContainerResponseWriter responseWriter;
     // True if the request is used in the response processing phase (for example in ContainerResponseFilter)
-    private boolean inResponseProcessingPhase;
+    private volatile boolean inResponseProcessingPhase;
     // Event listener registered to this request.
-    private RequestEventListener requestEventListener = null;
-    private RequestEventBuilder requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
+    private volatile RequestEventListener requestEventListener = null;
+    private volatile RequestEventBuilder requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
 
     private static final Pattern UriPartPATTERN = Pattern.compile("[a-zA-Z][a-zA-Z\\+\\-\\.]*(:[^/]*)?://.+");
 
@@ -459,7 +459,7 @@ public class ContainerRequest extends InboundMessageContext
      * @param requestEventBuilder Request event builder.
      */
     void setRequestEventListener(RequestEventListener requestEventListener,
-                                        RequestEventBuilder requestEventBuilder) {
+                                 RequestEventBuilder requestEventBuilder) {
         if (requestEventListener != null) {
             this.requestEventListener = requestEventListener;
             this.requestEventBuilder = requestEventBuilder;

@@ -39,29 +39,31 @@
  */
 package org.glassfish.jersey.server.internal.inject;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.security.Principal;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
-import org.glassfish.jersey.internal.inject.RequestInjectee;
 import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
-import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * Test if request scoped injection points are injected without using
@@ -71,57 +73,100 @@ import static org.junit.Assert.assertEquals;
  */
 public class ProxyInjectablesTest extends AbstractTest {
 
-    private final static Map<Class<?>, Class<?>> InjecteeMap = new HashMap<Class<?>, Class<?>>() {
-        {
-            put(UriInfo.class, UriInfoInjectee.class);
-            put(HttpHeaders.class, HttpHeadersInjectee.class);
-            put(Request.class, RequestInjectee.class);
-            put(SecurityContext.class, SecurityContextInjectee.class);
-        }
-    };
+    public static final Class<RequestContextBuilder.TestContainerRequest> REQUEST_CLASS = RequestContextBuilder.TestContainerRequest.class;
 
     private ContainerResponse resource(String uri) throws Exception {
         return apply(RequestContextBuilder.from(uri, "GET").build());
     }
 
+    @Provider
+    public static class SecurityContextFilter implements ContainerRequestFilter {
+
+        @Override
+        public void filter(ContainerRequestContext requestContext) throws IOException {
+            requestContext.setSecurityContext(new MySecurityContext());
+        }
+    }
+
+
+    private static class MySecurityContext implements SecurityContext {
+
+        @Override
+        public Principal getUserPrincipal() {
+            return new Principal() {
+                @Override
+                public String getName() {
+                    return "a";
+                }
+            };
+        }
+
+        @Override
+        public boolean isUserInRole(String role) {
+            return true;
+        }
+
+        @Override
+        public boolean isSecure() {
+            return false;
+        }
+
+        @Override
+        public String getAuthenticationScheme() {
+            return "BASIC";
+        }
+    }
+
     @Path("/")
     public static class PerRequestContextInjectedResource {
 
-        @Context UriInfo ui;
+        @Context
+        UriInfo ui;
 
-        @Context HttpHeaders hs;
+        @Context
+        HttpHeaders hs;
 
-        @Context Request r;
+        @Context
+        Request r;
 
-        @Context SecurityContext sc;
+        @Context
+        SecurityContext sc;
+
 
         @GET
         public String get() {
-            assertEquals(InjecteeMap.get(UriInfo.class), ui.getClass());
-            assertEquals(InjecteeMap.get(HttpHeaders.class), hs.getClass());
-            assertEquals(InjecteeMap.get(Request.class), r.getClass());
-            assertEquals(InjecteeMap.get(SecurityContext.class), sc.getClass());
+            assertEquals(UriRoutingContext.class, ui.getClass());
+            assertEquals(REQUEST_CLASS, hs.getClass());
+            assertEquals(REQUEST_CLASS, r.getClass());
+            assertEquals(SecurityContextInjectee.class, sc.getClass());
+            assertEquals("a", sc.getUserPrincipal().getName());
             return "GET";
         }
     }
 
     @Path("/")
-    public static class PerRequestInjectInjectedResource {
+    @Singleton
+    public static class SingletonInjectedResource {
 
-        @Inject UriInfo ui;
+        @Inject
+        UriInfo ui;
 
-        @Inject HttpHeaders hs;
+        @Inject
+        HttpHeaders hs;
 
-        @Inject Request r;
+        @Inject
+        Request r;
 
-        @Inject SecurityContext sc;
+        @Inject
+        SecurityContext sc;
 
         @GET
         public String get() {
-            assertEquals(InjecteeMap.get(UriInfo.class), ui.getClass());
-            assertEquals(InjecteeMap.get(HttpHeaders.class), hs.getClass());
-            assertEquals(InjecteeMap.get(Request.class), r.getClass());
-            assertEquals(InjecteeMap.get(SecurityContext.class), sc.getClass());
+            assertNotEquals(UriRoutingContext.class, ui.getClass());
+            assertNotEquals(REQUEST_CLASS, hs.getClass());
+            assertNotEquals(REQUEST_CLASS, r.getClass());
+            assertNotEquals(MySecurityContext.class, sc.getClass());
+            assertEquals("a", sc.getUserPrincipal().getName());
             return "GET";
         }
     }
@@ -134,10 +179,11 @@ public class ProxyInjectablesTest extends AbstractTest {
                 @Context HttpHeaders hs,
                 @Context Request r,
                 @Context SecurityContext sc) {
-            assertEquals(InjecteeMap.get(UriInfo.class), ui.getClass());
-            assertEquals(InjecteeMap.get(HttpHeaders.class), hs.getClass());
-            assertEquals(InjecteeMap.get(Request.class), r.getClass());
-            assertEquals(InjecteeMap.get(SecurityContext.class), sc.getClass());
+            assertEquals(UriRoutingContext.class, ui.getClass());
+            assertEquals(REQUEST_CLASS, hs.getClass());
+            assertEquals(REQUEST_CLASS, r.getClass());
+            assertEquals(SecurityContextInjectee.class, sc.getClass());
+            assertEquals("a", sc.getUserPrincipal().getName());
             return "GET";
         }
     }
@@ -151,31 +197,39 @@ public class ProxyInjectablesTest extends AbstractTest {
                 @Context HttpHeaders hs,
                 @Context Request r,
                 @Context SecurityContext sc) {
-            assertEquals(InjecteeMap.get(UriInfo.class), ui.getClass());
-            assertEquals(InjecteeMap.get(HttpHeaders.class), hs.getClass());
-            assertEquals(InjecteeMap.get(Request.class), r.getClass());
-            assertEquals(InjecteeMap.get(SecurityContext.class), sc.getClass());
+            assertEquals(UriRoutingContext.class, ui.getClass());
+            assertEquals(REQUEST_CLASS, hs.getClass());
+            assertEquals(REQUEST_CLASS, r.getClass());
+            assertEquals(SecurityContextInjectee.class, sc.getClass());
+            assertEquals("a", sc.getUserPrincipal().getName());
             return "GET";
         }
     }
 
     @Test
     public void testPerRequestContextInjected() throws Exception {
-        initiateWebApplication(PerRequestContextInjectedResource.class);
+        initiateWebApplication(PerRequestContextInjectedResource.class, SecurityContextFilter.class);
 
         assertEquals("GET", resource("/").getEntity());
     }
 
     @Test
     public void testPerRequestInjectInjected() throws Exception {
-        initiateWebApplication(PerRequestInjectInjectedResource.class);
+        initiateWebApplication(SingletonInjectedResource.class, SecurityContextFilter.class);
 
         assertEquals("GET", resource("/").getEntity());
     }
 
     @Test
     public void testPerRequestMethodParameterInjected() throws Exception {
-        initiateWebApplication(PerRequestContextMethodParameterResource.class);
+        initiateWebApplication(PerRequestContextMethodParameterResource.class, SecurityContextFilter.class);
+
+        assertEquals("GET", resource("/").getEntity());
+    }
+
+    @Test
+    public void testSingletonParameterInjected() throws Exception {
+        initiateWebApplication(SingletonContextMethodParameterResource.class, SecurityContextFilter.class);
 
         assertEquals("GET", resource("/").getEntity());
     }

@@ -60,12 +60,9 @@ import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
 import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.inject.RequestInjectee;
 import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
-import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -166,10 +163,50 @@ class ServerBinder extends AbstractBinder {
 
         bindAsContract(ReferencesInitializer.class);
 
-        // JAX-RS proxiable request scoped injections
-        bindAsContract(UriInfoInjectee.class).to(UriInfo.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-        bindAsContract(HttpHeadersInjectee.class).to(HttpHeaders.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-        bindAsContract(RequestInjectee.class).to(Request.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-        bindAsContract(SecurityContextInjectee.class).to(SecurityContext.class).proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(UriInfoReferencingFactory.class).to(UriInfo.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(ReferencingFactory.<UriInfo>referenceFactory()).to(new TypeLiteral<Ref<UriInfo>>() {
+        }).in(RequestScoped.class);
+
+        bindFactory(HttpHeadersReferencingFactory.class).to(HttpHeaders.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).to(new TypeLiteral<Ref<HttpHeaders>>() {
+        }).in(RequestScoped.class);
+
+        bindFactory(RequestReferencingFactory.class).to(Request.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
+        }).in(RequestScoped.class);
+
+        // SecurityContext must be injected using the Injectee. The reason is that
+        // SecurityContext can be changed by filters but it looks like the proxy internally caches
+        // the first SecurityContext value injected in the RequestScope. This is
+        bindAsContract(SecurityContextInjectee.class).to(SecurityContext.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+
+    }
+
+    @SuppressWarnings("JavaDoc")
+    private static class UriInfoReferencingFactory extends ReferencingFactory<UriInfo> {
+        @Inject
+        public UriInfoReferencingFactory(Provider<Ref<UriInfo>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    @SuppressWarnings("JavaDoc")
+    private static class HttpHeadersReferencingFactory extends ReferencingFactory<HttpHeaders> {
+        @Inject
+        public HttpHeadersReferencingFactory(Provider<Ref<HttpHeaders>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    @SuppressWarnings("JavaDoc")
+    private static class RequestReferencingFactory extends ReferencingFactory<Request> {
+        @Inject
+        public RequestReferencingFactory(Provider<Ref<Request>> referenceFactory) {
+            super(referenceFactory);
+        }
     }
 }
