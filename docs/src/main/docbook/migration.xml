@@ -64,6 +64,10 @@
                     Access to the raw SSE event data content is provided via a &lit.jersey.sse.InboundEvent;'s
                     <literal>byte[] getRawData()</literal> method that has been too introduced in Jersey 2.3.
                 </para></listitem>
+                 <listitem><para>
+                    All EJB and CDI integration classes have been moved into internal Jersey packages,
+                    to clearly state the integration code should not be used as a public API.
+                </para></listitem>
             </itemizedlist>
         </para>
     </section>

@@ -60,6 +60,7 @@ public class MyApplication extends Application {
         classes.add(HelloWorldResource.class);
         classes.add(EchoParamResource.class);
         classes.add(EchoParamFieldResource.class);
+        classes.add(EchoParamConstructorResource.class);
         return classes;
     }
 }

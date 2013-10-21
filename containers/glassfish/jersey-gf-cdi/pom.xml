@@ -97,6 +97,7 @@
                 <configuration>
                     <instructions>
                         <!--Import-Package>javax.interceptor;version="[1.0-4)",*</Import-Package-->
+                        <Export-Package>org.glassfish.jersey.containers.gf.cdi.internal</Export-Package>
                         <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                         <_nodefaultversion>false</_nodefaultversion>
                     </instructions>

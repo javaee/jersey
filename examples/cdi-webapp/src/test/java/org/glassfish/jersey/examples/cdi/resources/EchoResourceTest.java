@@ -44,7 +44,6 @@ import java.util.List;
 
 import javax.ws.rs.client.WebTarget;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.junit.runner.RunWith;
@@ -93,9 +92,7 @@ public class EchoResourceTest extends CdiTest {
         assertThat(s, containsString(a));
     }
 
-    // TODO: re-enable when ctor injection is implemented
     @Test
-    @Ignore
     public void testEchoParamCtorResource() {
 
         final WebTarget target = target().path("echoparamconstructor").path(a);
