@@ -40,16 +40,11 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Factory;
@@ -59,6 +54,8 @@ import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.InjecteeImpl;
+import org.glassfish.hk2.utilities.cache.Cache;
+import org.glassfish.hk2.utilities.cache.Computable;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -95,13 +92,6 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
         resolver = result;
     }
 
-    private static final Map<Class<?>, ActiveDescriptor> PROXIABLE_TYPE_DESC = Collections.unmodifiableMap(new HashMap<Class<?>, ActiveDescriptor>() {{
-        put(UriInfo.class, createDescriptor(UriInfo.class));
-        put(HttpHeaders.class, createDescriptor(HttpHeaders.class));
-        put(Request.class, createDescriptor(Request.class));
-        put(SecurityContext.class, createDescriptor(SecurityContext.class));
-    }});
-
     @Override
     public Factory<?> getValueFactory(final Parameter parameter) {
         final Source paramSource = parameter.getSource();
@@ -130,15 +120,31 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
         return Priority.LOW;
     }
 
+    /**
+     * We do not want to create a new descriptor instance for every and each method invocation.
+     */
+    static final Cache<Parameter, ActiveDescriptor> descriptorCache =
+            new Cache<Parameter, ActiveDescriptor>(new Computable<Parameter, ActiveDescriptor>(){
+
+        @Override
+        public ActiveDescriptor compute(Parameter parameter) {
+            Class<?> rawType = parameter.getRawType();
+                if (rawType.isInterface() && ! (parameter.getType() instanceof ParameterizedType)) {
+                    return createDescriptor(rawType);
+                }
+            return null;
+        }
+    });
+
     private static Injectee getInjectee(final Parameter parameter) {
         return new InjecteeImpl() {
 
-            private Class<?> rawType = parameter.getRawType();
+            private final Class<?> rawType = parameter.getRawType();
 
             {
                 setRequiredType(parameter.getType());
                 setRequiredQualifiers(Collections.<Annotation>emptySet());
-                final ActiveDescriptor proxyDescriptor = PROXIABLE_TYPE_DESC.get(rawType);
+                final ActiveDescriptor proxyDescriptor = descriptorCache.compute(parameter);
                 if (proxyDescriptor != null) {
                     setInjecteeDescriptor(proxyDescriptor);
                 }

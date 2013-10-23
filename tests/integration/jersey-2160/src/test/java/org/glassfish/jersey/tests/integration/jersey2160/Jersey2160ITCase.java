@@ -37,25 +37,46 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.jersey1960;
+package org.glassfish.jersey.tests.integration.jersey2160;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
+
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- * Test resource.
+ * Reproducer tests for JERSEY-2160.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path("echo")
-public class EchoResource {
+public class Jersey2160ITCase extends JerseyTest {
 
-    @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
-    public String echo(String message) {
-        return message + "." + this.getClass().getPackage().getName();
+    @Override
+    protected Application configure() {
+        return new Jersey2160App();
+    }
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
+    }
+
+    /**
+     * Reproducer method for JERSEY-2160.
+     */
+    @Test
+    public void testJersey2160Fix() {
+        for (int i = 0; i < 10; i++) {
+            String response = target().path("jersey-2160/servletInjectees")
+                    .request().header(RequestFilter.REQUEST_NUMBER_HEADER, i)
+                    .get(String.class);
+            assertEquals(Integer.parseInt(response), i);
+        }
     }
 }

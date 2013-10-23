@@ -37,25 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.jersey1960;
+package org.glassfish.jersey.tests.integration.jersey2160;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import java.io.IOException;
+
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
- * Test resource.
+ * Filter that set a property on actual request. The property value
+ * is expected to be propagated to the resource method via injected
+ * {@link HttpServletRequest} parameter.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path("echo")
-public class EchoResource {
+@PreMatching
+public class RequestFilter implements ContainerRequestFilter {
 
-    @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
-    public String echo(String message) {
-        return message + "." + this.getClass().getPackage().getName();
+    public static final String REQUEST_NUMBER_PROPERTY = "request-number";
+    public static final String REQUEST_NUMBER_HEADER = "number";
+
+    @Override
+    public void filter(ContainerRequestContext ctx) throws IOException {
+        final String number = ctx.getHeaderString(REQUEST_NUMBER_HEADER);
+        ctx.setProperty(REQUEST_NUMBER_PROPERTY, number);
     }
 }

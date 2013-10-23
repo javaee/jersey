@@ -37,25 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.jersey1960;
+package org.glassfish.jersey.tests.integration.jersey2160;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import java.util.Set;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+
+import java.util.HashSet;
 
 /**
- * Test resource.
+ * JAX-RS application for the JERSEY-1960 reproducer test.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path("echo")
-public class EchoResource {
+public class Jersey2160App extends Application {
 
-    @POST
-    @Consumes("text/plain")
-    @Produces("text/plain")
-    public String echo(String message) {
-        return message + "." + this.getClass().getPackage().getName();
+    @SuppressWarnings({"unchecked"})
+    @Override
+    public Set<Class<?>> getClasses() {
+        return new HashSet<Class<?>>() {
+            {
+                add(RequestFilter.class);
+                add(Issue2160ReproducerResource.class);
+            }
+        };
     }
 }

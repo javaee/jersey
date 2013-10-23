@@ -37,25 +37,41 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.jersey1960;
+package org.glassfish.jersey.tests.integration.jersey2160;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import org.glassfish.hk2.api.ProxyCtl;
 
 /**
  * Test resource.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path("echo")
-public class EchoResource {
+@Path("servletInjectees")
+public class Issue2160ReproducerResource {
 
-    @POST
-    @Consumes("text/plain")
+    @Context HttpServletRequest requestField;
+    @Context HttpServletResponse responseField;
+
+    @GET
     @Produces("text/plain")
-    public String echo(String message) {
-        return message + "." + this.getClass().getPackage().getName();
+    public String ensureNoProxyInjected(@Context HttpServletRequest requestParam, @Context HttpServletResponse responseParam) {
+
+        // make sure the injectees are same no matter how they got injected
+        if (requestParam != requestField || responseParam != responseField) {
+            throw new IllegalArgumentException("injected field and parameter should refer to the same instance");
+        }
+
+        // make sure we have not got proxies
+        if (requestParam instanceof ProxyCtl || responseParam instanceof ProxyCtl) {
+            throw new IllegalArgumentException("no proxy expected!");
+        }
+
+        return (String)requestParam.getAttribute(RequestFilter.REQUEST_NUMBER_PROPERTY);
     }
 }
