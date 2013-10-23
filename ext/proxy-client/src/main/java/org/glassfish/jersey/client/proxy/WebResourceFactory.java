@@ -47,6 +47,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.security.AccessController;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -205,26 +206,47 @@ public final class WebResourceFactory implements InvocationHandler {
                     if ((ann = anns.get(PathParam.class)) != null) {
                         newTarget = newTarget.resolveTemplate(((PathParam) ann).value(), value);
                     } else if ((ann = anns.get((QueryParam.class))) != null) {
-                        newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
+                        if (value instanceof Collection) {
+                            newTarget = newTarget.queryParam(((QueryParam) ann).value(), convert(value));
+                        } else {
+                            newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
+                        }
                     } else if ((ann = anns.get((HeaderParam.class))) != null) {
-                        headers.addAll(((HeaderParam) ann).value(), value);
+                        if (value instanceof Collection) {
+                            headers.addAll(((HeaderParam) ann).value(), convert(value));
+                        } else {
+                            headers.addAll(((HeaderParam) ann).value(), value);
+                        }
+
                     } else if ((ann = anns.get((CookieParam.class))) != null) {
                         String name = ((CookieParam) ann).value();
                         Cookie c;
-                        if (!(value instanceof Cookie)) {
-                            c = new Cookie(name, value.toString());
-                        } else {
-                            c = (Cookie) value;
-                            if (!name.equals(((Cookie) value).getName())) {
-                                // is this the right thing to do? or should I fail? or ignore the difference?
-                                c = new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion());
+                        if (value instanceof Collection) {
+                            for (Object v : ((Collection) value)) {
+                                if (!(v instanceof Cookie)) {
+                                    c = new Cookie(name, v.toString());
+                                } else {
+                                    c = (Cookie) v;
+                                    if (!name.equals(((Cookie) v).getName())) {
+                                        // is this the right thing to do? or should I fail? or ignore the difference?
+                                        c = new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion());
+                                    }
+                                }
+                                cookies.add(c);
                             }
                         }
-                        cookies.add(c);
                     } else if ((ann = anns.get((MatrixParam.class))) != null) {
-                        newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), value);
+                        if (value instanceof Collection) {
+                            newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), convert(value));
+                        } else {
+                            newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), value);
+                        }
                     } else if ((ann = anns.get((FormParam.class))) != null) {
-                        form.param(((FormParam) ann).value(), value.toString());
+                        if (value instanceof Collection) {
+                            for (Object v : ((Collection) value)) {
+                                form.param(((FormParam) ann).value(), v.toString());
+                            }
+                        }
                     }
                 }
             }
@@ -255,23 +277,18 @@ public final class WebResourceFactory implements InvocationHandler {
             }
         }
 
-        Invocation.Builder b;
+        Invocation.Builder builder;
         if (accepts != null) {
-            b = newTarget.request(accepts);
+            builder = newTarget.request(accepts);
         } else {
-            b = newTarget.request();
+            builder = newTarget.request();
         }
 
         // apply header params and cookies
         for (Cookie c : cookies) {
-            b = b.cookie(c);
+            builder = builder.cookie(c);
         }
-        // TODO: change this to b.headers(headers) once we switch to the latest JAX-RS API
-        for (Map.Entry<String, List<Object>> header : headers.entrySet()) {
-            for (Object value : header.getValue()) {
-                b = b.header(header.getKey(), value);
-            }
-        }
+        builder.headers(headers);
 
         Object result;
 
@@ -296,12 +313,16 @@ public final class WebResourceFactory implements InvocationHandler {
             if (entityType instanceof ParameterizedType) {
                 entity = new GenericEntity(entity, entityType);
             }
-            result = b.method(httpMethod, Entity.entity(entity, contentType), responseGenericType);
+            result = builder.method(httpMethod, Entity.entity(entity, contentType), responseGenericType);
         } else {
-            result = b.method(httpMethod, responseGenericType);
+            result = builder.method(httpMethod, responseGenericType);
         }
 
         return result;
+    }
+
+    private Object[] convert(Object value) {
+        return ((Collection) value).toArray();
     }
 
     private static WebTarget addPathFromAnnotation(AnnotatedElement ae, WebTarget target) {
