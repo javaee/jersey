@@ -892,6 +892,10 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     private ProcessingException convertToException(Response response) {
         try {
+            // Buffer and close entity input stream (if any) to prevent
+            // leaking connections (see JERSEY-2157).
+            response.bufferEntity();
+
             WebApplicationException webAppException;
             final int statusCode = response.getStatus();
             final Response.Status status = Response.Status.fromStatusCode(statusCode);
