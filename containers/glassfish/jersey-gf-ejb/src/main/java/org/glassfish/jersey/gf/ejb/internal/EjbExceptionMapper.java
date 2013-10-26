@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,80 +37,71 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.inject;
+package org.glassfish.jersey.gf.ejb.internal;
 
-import java.util.Date;
-import java.util.List;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
-import javax.ws.rs.core.EntityTag;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Variant;
+import javax.ejb.EJBException;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.spi.ExceptionMappers;
+import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 
 /**
- * Proxiable wrapper for request scoped {@link Request} instance.
+ * Helper class to handle exceptions wrapped by the EJB container with EJBException.
+ * If this mapper was not registered, no {@link WebApplicationException}
+ * would end up mapped to the corresponding response.
  *
+ * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public class RequestInjectee implements Request {
+public class EjbExceptionMapper implements ExtendedExceptionMapper<EJBException> {
 
-    private Request wrapped;
+    private final Provider<ExceptionMappers> mappers;
 
     /**
-     * Set wrapped instance. Should be invoked on each incoming request,
-     * when a new injectee instance is created by HK2.
+     * Create new EJB exception mapper.
      *
-     * @param request actual request instance.
+     * @param mappers utility to find mapper delegate.
      */
-    public void set(final Request request) {
-        if (wrapped != null) {
-            throw new IllegalStateException(LocalizationMessages.REQUEST_WAS_ALREADY_SET());
-        }
-        wrapped = request;
+    @Inject
+    public EjbExceptionMapper(Provider<ExceptionMappers> mappers) {
+        this.mappers = mappers;
     }
 
     @Override
-    public String getMethod() {
-        checkState();
-        return wrapped.getMethod();
+    public Response toResponse(EJBException exception) {
+        return causeToResponse(exception);
     }
 
     @Override
-    public Variant selectVariant(List<Variant> variants) throws IllegalArgumentException {
-        checkState();
-        return wrapped.selectVariant(variants);
-    }
-
-    @Override
-    public ResponseBuilder evaluatePreconditions(EntityTag eTag) {
-        checkState();
-        return wrapped.evaluatePreconditions(eTag);
-    }
-
-    @Override
-    public ResponseBuilder evaluatePreconditions(Date lastModified) {
-        checkState();
-        return wrapped.evaluatePreconditions(lastModified);
-    }
-
-    @Override
-    public ResponseBuilder evaluatePreconditions(Date lastModified, EntityTag eTag) {
-        checkState();
-        return wrapped.evaluatePreconditions(lastModified, eTag);
-    }
-
-    @Override
-    public ResponseBuilder evaluatePreconditions() {
-        checkState();
-        return wrapped.evaluatePreconditions();
-    }
-
-    private void checkState() {
-        if (wrapped == null) {
-            throw new IllegalStateException(LocalizationMessages.REQUEST_WAS_NOT_SET());
+    public boolean isMappable(EJBException exception) {
+        try {
+            return (causeToResponse(exception) != null);
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 
+    private Response causeToResponse(EJBException exception) {
+
+        final Exception cause = exception.getCausedByException();
+
+        if (cause != null) {
+
+            final ExceptionMapper mapper = mappers.get().findMapping(cause);
+            if (mapper != null && mapper != this) {
+
+                return mapper.toResponse(cause);
+
+            } else if (cause instanceof WebApplicationException) {
+
+                return ((WebApplicationException)cause).getResponse();
+            }
+        }
+        return null;
+    }
 }

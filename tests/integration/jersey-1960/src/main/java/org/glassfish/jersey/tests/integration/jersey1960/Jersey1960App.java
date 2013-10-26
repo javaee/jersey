@@ -49,7 +49,7 @@ import com.google.common.collect.Sets;
 /**
  * JAX-RS application for the JERSEY-1960 reproducer test.
  *
- * @author Marek Potociar (marek.potociar at oralce.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @ApplicationPath("application_path")
 public class Jersey1960App extends Application {

@@ -47,7 +47,7 @@ import javax.ws.rs.Produces;
 /**
  * Test resource.
  *
- * @author Marek Potociar (marek.potociar at oralce.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Path("echo")
 public class EchoResource {

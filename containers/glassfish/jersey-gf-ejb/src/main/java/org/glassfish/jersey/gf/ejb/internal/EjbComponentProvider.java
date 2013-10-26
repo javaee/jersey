@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.ejb;
+package org.glassfish.jersey.gf.ejb.internal;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;

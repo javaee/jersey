@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,40 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.ejb;
+package org.glassfish.jersey.tests.integration.jersey2160;
 
-import javax.annotation.PostConstruct;
-import javax.interceptor.InvocationContext;
+import java.util.Set;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.gf.cdi.CdiComponentProvider;
+import java.util.HashSet;
 
 /**
- * EJB interceptor to inject Jersey specific stuff into EJB beans.
+ * JAX-RS application for the JERSEY-1960 reproducer test.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public final class EjbComponentInterceptor {
+public class Jersey2160App extends Application {
 
-    private final ServiceLocator locator;
-
-    /**
-     * Create new EJB component locator.
-     *
-     * @param locator HK2 service locator.
-     */
-    public EjbComponentInterceptor(final ServiceLocator locator) {
-        this.locator = locator;
-    }
-
-    @PostConstruct
-    private void inject(final InvocationContext context) throws Exception {
-
-        final Object beanInstance = context.getTarget();
-        locator.inject(beanInstance, CdiComponentProvider.CDI_CLASS_ANALYZER);
-
-        // Invoke next interceptor in chain
-        context.proceed();
+    @SuppressWarnings({"unchecked"})
+    @Override
+    public Set<Class<?>> getClasses() {
+        return new HashSet<Class<?>>() {
+            {
+                add(RequestFilter.class);
+                add(Issue2160ReproducerResource.class);
+            }
+        };
     }
 }

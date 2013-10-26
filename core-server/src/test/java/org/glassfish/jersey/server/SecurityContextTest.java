@@ -42,13 +42,14 @@ package org.glassfish.jersey.server;
 import java.io.IOException;
 import java.security.Principal;
 
-import javax.annotation.Priority;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
+
+import javax.annotation.Priority;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -111,7 +112,7 @@ public class SecurityContextTest {
                         @Override
                         public boolean equals(Object obj) {
                             return (obj instanceof Principal) &&
-                                        PRINCIPAL_NAME.equals(((Principal)obj).getName());
+                                    PRINCIPAL_NAME.equals(((Principal) obj).getName());
                         }
 
                         @Override
@@ -193,7 +194,7 @@ public class SecurityContextTest {
                         @Override
                         public boolean equals(Object obj) {
                             return (obj instanceof Principal) &&
-                                        PRINCIPAL_NAME_SECOND.equals(((Principal)obj).getName());
+                                    PRINCIPAL_NAME_SECOND.equals(((Principal) obj).getName());
                         }
 
                         @Override

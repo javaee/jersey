@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.gf.cdi;
+package org.glassfish.jersey.gf.cdi.internal;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

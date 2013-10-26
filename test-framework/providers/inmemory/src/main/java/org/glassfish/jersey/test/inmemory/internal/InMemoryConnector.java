@@ -123,12 +123,13 @@ public class InMemoryConnector implements Connector {
 
         @Override
         public boolean suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) {
+            LOGGER.warning("Asynchronous server side invocations are not supported by InMemoryContainer.");
             return false;
         }
 
         @Override
         public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
-            throw new UnsupportedOperationException("not supported");
+            throw new UnsupportedOperationException("Async server side invocations are not supported by InMemoryContainer.");
         }
 
         @Override
@@ -138,7 +139,7 @@ public class InMemoryConnector implements Connector {
 
         @Override
         public void failure(Throwable error) {
-            throw new RuntimeException("InMemoryResponseWriter.failure called.", error);
+            throw new ProcessingException("Server-side request processing failed with an error.", error);
         }
 
         @Override

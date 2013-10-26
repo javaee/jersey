@@ -213,14 +213,17 @@ public final class OsgiRegistry implements SynchronousBundleListener {
 
         @Override
         public List<Class<?>> call() throws Exception {
+            BufferedReader reader = null;
+
             try {
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.log(Level.FINEST, "Loading providers for SPI: {0}", spi);
                 }
-                final BufferedReader br = new BufferedReader(new InputStreamReader(spiRegistryUrl.openStream(), "UTF-8"));
+                reader = new BufferedReader(new InputStreamReader(spiRegistryUrl.openStream(), "UTF-8"));
                 String providerClassName;
+
                 final List<Class<?>> providerClasses = new ArrayList<Class<?>>();
-                while ((providerClassName = br.readLine()) != null) {
+                while ((providerClassName = reader.readLine()) != null) {
                     if (providerClassName.trim().length() == 0) {
                         continue;
                     }
@@ -229,7 +232,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
                     }
                     providerClasses.add(loadClass(bundle, providerClassName));
                 }
-                br.close();
+
                 return providerClasses;
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.EXCEPTION_CAUGHT_WHILE_LOADING_SPI_PROVIDERS(), e);
@@ -237,6 +240,14 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             } catch (Error e) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.ERROR_CAUGHT_WHILE_LOADING_SPI_PROVIDERS(), e);
                 throw e;
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException ioe) {
+                        LOGGER.log(Level.FINE, "Error closing SPI registry stream:" + spiRegistryUrl, ioe);
+                    }
+                }
             }
         }
 
