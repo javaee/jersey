@@ -56,6 +56,8 @@ import org.glassfish.jersey.server.spi.ComponentProvider;
 
 import org.jvnet.hk2.spring.bridge.api.SpringBridge;
 import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
+import org.springframework.aop.framework.Advised;
+import org.springframework.beans.factory.BeanCreationException;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -165,12 +167,27 @@ public class SpringComponentProvider implements ComponentProvider {
         @Override
         public Object provide() {
             Object bean = ctx.getBean(beanName);
-            locator.inject(bean);
+            inject(bean);
             return bean;
         }
 
         @Override
         public void dispose(Object instance) {
+        }
+
+        private void inject(Object bean) {
+            Object injectTarget = bean;
+
+            // correctly handle adviced (proxied) spring beans
+            if (bean instanceof Advised) {
+              try {
+                injectTarget = ((Advised) bean).getTargetSource().getTarget();
+              } catch (Exception e) {
+                throw new BeanCreationException("Failed to resolve injectTarget for " + bean, e);
+              }
+            }
+
+            locator.inject(injectTarget);
         }
     }
 }
