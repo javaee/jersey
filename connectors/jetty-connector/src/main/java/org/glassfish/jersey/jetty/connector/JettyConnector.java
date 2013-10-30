@@ -123,7 +123,7 @@ public class JettyConnector implements Connector {
     private static final Logger LOGGER = Logger.getLogger(JettyConnector.class.getName());
 
     private final HttpClient client;
-    private CookieStore cookieStore = null;
+    private final CookieStore cookieStore;
 
     /**
      * Create the new Jetty client connector.
@@ -278,46 +278,8 @@ public class JettyConnector implements Connector {
             throw new ProcessingException(LocalizationMessages.METHOD_NOT_SUPPORTED(clientRequest.getMethod()));
         }
         final URI uri = clientRequest.getUri();
-        Request request = null;
-
-        switch (method) {
-            case GET:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-            case POST:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-            case PUT:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-            case DELETE:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-            case HEAD:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-            case OPTIONS:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-            case TRACE:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-            case CONNECT:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-            case MOVE:
-                request = client.newRequest(uri);
-                request.method(method);
-                break;
-        }
+        Request request = client.newRequest(uri);
+        request.method(method);
 
         // Per-request override
         request.followRedirects(PropertiesHelper.getValue(clientRequest.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS, client.isFollowRedirects()));
