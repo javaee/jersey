@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -68,7 +69,7 @@ import org.junit.Test;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class AsyncCallbackTest extends JerseyTest {
-    public static boolean onDisconnectCalled;
+    public static final AtomicBoolean onDisconnectCalled = new AtomicBoolean(false);
 
     public static CountDownLatch streamClosedSignal = new TestLatch(1, "streamClosedSignal");
     public static CountDownLatch callbackCalledSignal = new TestLatch(1, "callbackCalledSignal");
@@ -129,7 +130,7 @@ public class AsyncCallbackTest extends JerseyTest {
 
     @Before
     public void setup() {
-        onDisconnectCalled = false;
+        onDisconnectCalled.set(false);
         streamClosedSignal = new TestLatch(1, "streamClosedSignal");
         callbackCalledSignal = new TestLatch(1, "callbackCalledSignal");
 
@@ -159,14 +160,14 @@ public class AsyncCallbackTest extends JerseyTest {
         response.close();
         streamClosedSignal.countDown();
         callbackCalledSignal.await();
-        Assert.assertTrue(onDisconnectCalled);
+        Assert.assertTrue(onDisconnectCalled.get());
     }
 
     public static class MyConnectionCallback implements ConnectionCallback {
 
         @Override
         public void onDisconnect(AsyncResponse disconnected) {
-            onDisconnectCalled = true;
+            onDisconnectCalled.set(true);
             callbackCalledSignal.countDown();
         }
     }

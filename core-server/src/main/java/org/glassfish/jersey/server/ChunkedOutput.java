@@ -41,12 +41,15 @@ package org.glassfish.jersey.server;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Provider;
 
@@ -63,10 +66,14 @@ import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
  * @param <T> chunk type.
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers
 public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
+    private static final byte[] NO_DELIM = new byte[0];
+
     private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
+    private final byte[] chunkDelimiter;
 
     private volatile boolean closed = false;
     private boolean flushing = false;
@@ -79,18 +86,82 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     private volatile UriRoutingContext uriRoutingContext;
 
     /**
-     * Create new chunked response.
+     * Create new {@code ChunkedOutput}.
      */
     protected ChunkedOutput() {
+        this.chunkDelimiter = NO_DELIM;
     }
 
     /**
      * Create {@code ChunkedOutput} with specified type.
      *
-     * @param chunkType chunk type
+     * @param chunkType chunk type. Must not be {code null}.
      */
     public ChunkedOutput(final Type chunkType) {
         super(chunkType);
+        this.chunkDelimiter = NO_DELIM;
+    }
+
+    /**
+     * Create new {@code ChunkedOutput} with a custom chunk delimiter.
+     *
+     * @param chunkDelimiter custom chunk delimiter bytes. Must not be {code null}.
+     * @since 2.5
+     */
+    protected ChunkedOutput(byte[] chunkDelimiter) {
+        if (chunkDelimiter.length > 0) {
+            this.chunkDelimiter = new byte[chunkDelimiter.length];
+            System.arraycopy(chunkDelimiter, 0, this.chunkDelimiter, 0, chunkDelimiter.length);
+        } else {
+            this.chunkDelimiter = NO_DELIM;
+        }
+    }
+
+    /**
+     * Create new {@code ChunkedOutput} with a custom chunk delimiter.
+     *
+     * @param chunkType      chunk type. Must not be {code null}.
+     * @param chunkDelimiter custom chunk delimiter bytes. Must not be {code null}.
+     * @since 2.5
+     */
+    public ChunkedOutput(final Type chunkType, byte[] chunkDelimiter) {
+        super(chunkType);
+        if (chunkDelimiter.length > 0) {
+            this.chunkDelimiter = new byte[chunkDelimiter.length];
+            System.arraycopy(chunkDelimiter, 0, this.chunkDelimiter, 0, chunkDelimiter.length);
+        } else {
+            this.chunkDelimiter = NO_DELIM;
+        }
+    }
+
+    /**
+     * Create new {@code ChunkedOutput} with a custom chunk delimiter.
+     *
+     * @param chunkDelimiter custom chunk delimiter string. Must not be {code null}.
+     * @since 2.5
+     */
+    protected ChunkedOutput(String chunkDelimiter) {
+        if (chunkDelimiter.isEmpty()) {
+            this.chunkDelimiter = NO_DELIM;
+        } else {
+            this.chunkDelimiter = chunkDelimiter.getBytes();
+        }
+    }
+
+    /**
+     * Create new {@code ChunkedOutput} with a custom chunk delimiter.
+     *
+     * @param chunkType      chunk type. Must not be {code null}.
+     * @param chunkDelimiter custom chunk delimiter string. Must not be {code null}.
+     * @since 2.5
+     */
+    public ChunkedOutput(final Type chunkType, String chunkDelimiter) {
+        super(chunkType);
+        if (chunkDelimiter.isEmpty()) {
+            this.chunkDelimiter = NO_DELIM;
+        } else {
+            this.chunkDelimiter = chunkDelimiter.getBytes();
+        }
     }
 
     /**
@@ -130,9 +201,10 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                             return null;
                         }
                         // remember the closed flag before polling the queue
-                        // (if we did it after, we could miss the last chunk as some other thread may add
-                        // a chunk and set closed to true right after we we poll the queue (i.e. we'd think the queue is empty),
-                        // but before we check if we should close - so we would close the stream leaving the last chunk undelivered)
+                        // (if we did it after, we could miss the last chunk as some other thread may add a chunk
+                        // and set closed to true right after we have polled the queue (i.e. we'd think the queue is empty),
+                        // but before we check if we should close - so we would close the stream leaving the last chunk
+                        // undelivered)
                         shouldClose = closed;
                         t = queue.poll();
                         if (t != null || shouldClose) {
@@ -145,7 +217,8 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
 
                     while (t != null) {
                         try {
-                            responseContext.setEntityStream(requestContext.getWorkers().writeTo(
+                            final OutputStream origStream = responseContext.getEntityStream();
+                            final OutputStream writtenStream = requestContext.getWorkers().writeTo(
                                     t,
                                     t.getClass(),
                                     getType(),
@@ -153,11 +226,27 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                                     responseContext.getMediaType(),
                                     responseContext.getHeaders(),
                                     requestContext.getPropertiesDelegate(),
-                                    responseContext.getEntityStream(),
-                                    // TODO: (MM) should intercept only for the very first chunk!
-                                    // TODO: from then on the stream is already wrapped by interceptor streams
-                                    // JERSEY-1809
-                                    uriRoutingContext.getBoundWriterInterceptors()));
+                                    origStream,
+                                    // The output stream stored in the response context for this chunked output
+                                    // is already intercepted as a whole (if there are any interceptors);
+                                    // no need to intercept the individual chunks.
+                                    Collections.<WriterInterceptor>emptyList());
+
+                            if (chunkDelimiter != NO_DELIM) {
+                                // if the chunked output is configured with a custom delimiter, use it
+                                writtenStream.write(chunkDelimiter);
+                            }
+
+                            // flush the chunk (some writers do it, but some don't)
+                            writtenStream.flush();
+
+                            if (origStream != writtenStream) {
+                                // if MBW replaced the stream, let's make sure to set it in the response context.
+                                responseContext.setEntityStream(writtenStream);
+                            }
+                        } catch (IOException ioe) {
+                            connectionCallbackRunner.onDisconnect(asyncContext.get());
+                            throw ioe;
                         } catch (MappableException mpe) {
                             if (mpe.getCause() instanceof IOException) {
                                 connectionCallbackRunner.onDisconnect(asyncContext.get());

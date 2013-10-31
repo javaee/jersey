@@ -128,11 +128,13 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                             // found chunk delimiter
                             break;
                         }
-                    } else if (dPos > 0) {
-                        buffer.write(delimiterBuffer, 0, dPos - 1);
-                        dPos = 0;
+                    } else {
+                        if (dPos > 0) {
+                            buffer.write(delimiterBuffer, 0, dPos);
+                            dPos = 0;
+                        }
+                        buffer.write(b);
                     }
-                    buffer.write(b);
                 }
             } while (data != -1 && buffer.size() == 0);
 
