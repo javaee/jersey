@@ -149,7 +149,7 @@
             <title>Client application on JDK</title>
             <para>Applications running on plain JDK using only client part of JAX-RS specification need
                 to depend only on client. There are various additional modules which can be added, like
-                for example grizzly or apache connector (see dependencies snipped below). Jersey client
+                for example grizzly or apache or jetty connector (see dependencies snipped below). Jersey client
                 runs by default with plain JDK (using HttpUrlConnection). See <xref linkend="client"/>.
                 for more details.
             </para>
@@ -173,6 +173,12 @@
     &lt;groupId&gt;org.glassfish.jersey.connectors&lt;/groupId&gt;
     &lt;artifactId&gt;jersey-apache-connector&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.connectors&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-jetty-connector&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
         </section>
 
@@ -181,7 +187,7 @@
             <para>Apart for a standard JAX-RS Servlet-based deployment that works with any Servlet container that
                 supports Servlet 2.5 and higher,
                 Jersey provides support for programmatic deployment to the following containers: Grizzly 2 (HTTP and Servlet),
-                JDK Http server and Simple Http server. This chapter presents only required maven dependencies,
+                JDK Http server, Simple Http server and Jetty Http server. This chapter presents only required maven dependencies,
                 more information can be found in <xref linkend="deployment"/>.
             </para>
 
@@ -190,19 +196,28 @@
     &lt;artifactId&gt;jersey-container-grizzly2-http&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;
+
 &lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
     &lt;artifactId&gt;jersey-container-grizzly2-servlet&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;
+
 &lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
     &lt;artifactId&gt;jersey-container-jdk-http&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;
+
 &lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
     &lt;artifactId&gt;jersey-container-simple-http&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-container-jetty-http&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
         </section>
@@ -315,6 +330,14 @@
                         </entry>
                         <entry>Simple Http Container.</entry>
                     </row>
+                    <row>
+                        <entry>
+                            <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-container-jetty-http/dependencies.html">
+                                jersey-container-jetty-http
+                            </link>
+                        </entry>
+                        <entry>Jetty Http Container.</entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>
@@ -346,6 +369,14 @@
                             </link>
                         </entry>
                         <entry>Jersey Client Transport via Apache.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-jetty-connector/dependencies.html">
+                                jersey-jetty-connector
+                            </link>
+                        </entry>
+                        <entry>Jersey Client Transport via Jetty.</entry>
                     </row>
                 </tbody>
             </tgroup>
@@ -567,6 +598,14 @@
                             </link>
                         </entry>
                         <entry>Jersey Test Framework - Simple HTTP container.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-jetty/dependencies.html">
+                                jersey-test-framework-provider-jetty
+                            </link>
+                        </entry>
+                        <entry>Jersey Test Framework - Jetty HTTP container.</entry>
                     </row>
                 </tbody>
             </tgroup>

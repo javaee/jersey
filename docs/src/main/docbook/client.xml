@@ -95,7 +95,7 @@
         As an extension to the standard JAX-RS Client API, the  Jersey Client API supports a pluggable architecture to enable the
         use of different underlying HTTP client &jersey.client.Connector; implementations. Several such implementations are
         currently provided with Jersey. We have a default client connector using <literal>Http(s)URLConnection</literal> supplied
-        with the JDK as well as connector implementations based on Apache HTTP Client, and Grizzly Asynchronous Client.
+        with the JDK as well as connector implementations based on Apache HTTP Client, Jetty HTTP client and Grizzly Asynchronous Client.
     </para>
 
     <section>

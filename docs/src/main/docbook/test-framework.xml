@@ -65,7 +65,7 @@
 
         <itemizedlist>
             <listitem><para>pre-configured client to access deployed application</para></listitem>
-            <listitem><para>support for multiple containers - grizzly, in-memory, jdk, simple</para></listitem>
+            <listitem><para>support for multiple containers - grizzly, in-memory, jdk, simple, jetty</para></listitem>
             <listitem><para>able to run against any external container</para></listitem>
             <listitem><para>automated configurable traffic logging</para></listitem>
         </itemizedlist>
@@ -118,8 +118,8 @@
         <para>
             &jersey.test.JerseyTest; supports deploying applications on various containers, all (except the external container
             wrapper) need to have some "glue" code to be supported. Currently Jersey Test Framework provides support for
-            Grizzly, In-Memory, JDK (<literal>com.sun.net.httpserver.HttpServer</literal>) and Simple HTTP container
-            (<literal>org.simpleframework.http</literal>).
+            Grizzly, In-Memory, JDK (<literal>com.sun.net.httpserver.HttpServer</literal>), Simple HTTP container
+            (<literal>org.simpleframework.http</literal>) and Jetty HTTP container (<literal>org.eclipse.jetty</literal>).
         </para>
 
         <para>
@@ -185,6 +185,18 @@
                         <programlisting language="xml">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
     &lt;artifactId&gt;jersey-test-framework-provider-simple&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Jetty container (<literal>org.eclipse.jetty</literal>) is another high-performance, light-weight HTTP server
+                        that integrates with Jersey and is supported by Jersey Test Framework.
+
+                        <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-test-framework-provider-jetty&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
                     </para>
