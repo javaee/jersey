@@ -58,6 +58,8 @@ import org.glassfish.jersey.client.*;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
+import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 
@@ -73,6 +75,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -84,12 +87,13 @@ import java.util.logging.Logger;
  * <ul>
  * <li>{@link ClientProperties#ASYNC_THREADPOOL_SIZE}</li>
  * <li>{@link ClientProperties#CONNECT_TIMEOUT}</li>
+ * <li>{@link ClientProperties#PROXY_URI}</li>
+ * <li>{@link ClientProperties#PROXY_USERNAME}</li>
+ * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
+ * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
  * <li>{@link JettyClientProperties#SSL_CONFIG}</li>
  * <li>{@link JettyClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
  * <li>{@link JettyClientProperties#DISABLE_COOKIES}</li>
- * <li>{@link JettyClientProperties#PROXY_URI}</li>
- * <li>{@link JettyClientProperties#PROXY_USERNAME}</li>
- * <li>{@link JettyClientProperties#PROXY_PASSWORD}</li>
  * <li>{@link JettyClientProperties#FOLLOW_REDIRECTS}</li>
  * </ul>
  * <p/>
@@ -164,7 +168,7 @@ public class JettyConnector implements Connector {
                 auth.addAuthentication((BasicAuthentication) basicAuthProvider);
             }
 
-            final Object proxyUri = config.getProperties().get(JettyClientProperties.PROXY_URI);
+            final Object proxyUri = config.getProperties().get(ClientProperties.PROXY_URI);
             if (proxyUri != null) {
                 final URI u = getProxyUri(proxyUri);
                 ProxyConfiguration proxyConfig = new ProxyConfiguration(u.getHost(), u.getPort());
@@ -193,7 +197,7 @@ public class JettyConnector implements Connector {
         } else if (proxy instanceof String) {
             return URI.create((String) proxy);
         } else {
-            throw new ProcessingException(LocalizationMessages.WRONG_PROXY_URI_TYPE(JettyClientProperties.PROXY_URI));
+            throw new ProcessingException(LocalizationMessages.WRONG_PROXY_URI_TYPE(ClientProperties.PROXY_URI));
         }
     }
 
@@ -362,6 +366,8 @@ public class JettyConnector implements Connector {
         if (entity != null) {
             jettyRequest.content(entity);
         }
+        final ByteBufferInputStream entityStream = new ByteBufferInputStream();
+        final AtomicBoolean callbackInvoked = new AtomicBoolean(false);
 
         final Throwable[] failure = new Throwable[1];
         final ClientResponse[] jerseyResponse = new ClientResponse[1];
@@ -370,21 +376,44 @@ public class JettyConnector implements Connector {
                     .send(new Response.Listener.Empty() {
 
                         @Override
-                        public void onContent(Response jettyResponse, ByteBuffer content) {
-                            jerseyResponse[0] = translateResponse(jerseyRequest, jettyResponse, content);
+                        public void onHeaders(Response jettyResponse) {
+                            if (!callbackInvoked.compareAndSet(false, true)) {
+                                return;
+                            }
+                            jerseyResponse[0] = translateResponse(jerseyRequest, jettyResponse, entityStream);
                             callback.response(jerseyResponse[0]);
                         }
 
                         @Override
+                        public void onContent(Response jettyResponse, ByteBuffer content) {
+                            try {
+                                entityStream.put(content);
+                            } catch (InterruptedException ex) {
+                                failure[0] = new ProcessingException(ex.getMessage(), ex.getCause());
+                            }
+                        }
+
+                        @Override
+                        public void onComplete(Result result) {
+                            entityStream.closeQueue();
+                        }
+
+                        @Override
                         public void onFailure(Response response, Throwable t) {
-                            failure[0] = t;
-                            callback.failure(t);
+                            entityStream.closeQueue(t);
+
+                            if (callbackInvoked.compareAndSet(false, true)) {
+                                callback.failure(t);
+                            }
                         }
                     });
             return Futures.immediateFuture(jerseyResponse[0]);
         } catch (Throwable t) {
             failure[0] = t;
-            callback.failure(t);
+        }
+
+        if (callbackInvoked.compareAndSet(false, true)) {
+            callback.failure(failure[0]);
         }
         final SettableFuture<Object> errorFuture = SettableFuture.create();
         errorFuture.setException(failure[0]);
@@ -399,37 +428,13 @@ public class JettyConnector implements Connector {
         return request;
     }
 
-    private ClientResponse translateResponse(final ClientRequest jerseyRequest, final org.eclipse.jetty.client.api.Response jettyResponse, final ByteBuffer content) {
+    private ClientResponse translateResponse(final ClientRequest jerseyRequest,
+                                             final org.eclipse.jetty.client.api.Response jettyResponse,
+                                             final NonBlockingInputStream entityStream) {
         final ClientResponse jerseyResponse = new ClientResponse(Statuses.from(jettyResponse.getStatus()), jerseyRequest);
         processResponseHeaders(jettyResponse.getHeaders(), jerseyResponse);
-        jerseyResponse.setEntityStream(new ByteBufferBackedInputStream(content));
+        jerseyResponse.setEntityStream(entityStream);
         return jerseyResponse;
-    }
-
-    private static final class ByteBufferBackedInputStream extends InputStream {
-        ByteBuffer buf;
-
-        public ByteBufferBackedInputStream(ByteBuffer buf) {
-            this.buf = buf;
-        }
-
-        public synchronized int read() throws IOException {
-            if (!buf.hasRemaining()) {
-                return -1;
-            }
-            return buf.get() & 0xFF;
-        }
-
-        public synchronized int read(byte[] bytes, int off, int len)
-                throws IOException {
-            if (!buf.hasRemaining()) {
-                return -1;
-            }
-
-            len = Math.min(len, buf.remaining());
-            buf.get(bytes, off, len);
-            return len;
-        }
     }
 
     @Override

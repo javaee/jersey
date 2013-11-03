@@ -88,35 +88,6 @@ public class JettyClientProperties {
             "jersey.config.jetty.client.preemptiveBasicAuthentication";
 
     /**
-     * A value of a URI to configure the proxy host and proxy port to proxy
-     * HTTP requests and responses. If the port component of the URI is absent
-     * then a default port of 8080 be selected.
-     * <p/>
-     * The value MUST be an instance of {@link String} or {@link java.net.URI}.
-     * If the property absent then no proxy will be utilized.
-     */
-    public static final String PROXY_URI =
-            "jersey.config.jetty.client.proxyURI";
-
-    /**
-     * User name which will be used for proxy authentication.
-     * <p/>
-     * The value MUST be an instance of {@link String}.
-     * If the property absent then no proxy authentication will be utilized.
-     */
-    public static final String PROXY_USERNAME =
-            "jersey.config.jetty.client.proxyUsername";
-
-    /**
-     * Password which will be used for proxy authentication.
-     * <p/>
-     * The value MUST be an instance of {@link String}.
-     * If the property absent then no proxy authentication will be utilized.
-     */
-    public static final String PROXY_PASSWORD =
-            "jersey.config.jetty.client.proxyPassword";
-
-    /**
      * Automatic redirection set globally on the client instance.
      * A value of {@code true} declares that the client will
      * automatically redirect to the URI declared in 3xx responses.

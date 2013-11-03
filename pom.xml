@@ -1181,14 +1181,14 @@
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty</artifactId>
-                <version>${jetty-version}</version>
+                <version>${jetty.plugin.version}</version>
                 <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
-                <version>${jetty-version}</version>
+                <version>${jetty.plugin.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -1269,7 +1269,8 @@
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <jersey1.version>1.17</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
-        <jetty-version>6.1.22</jetty-version>
+        <jetty.plugin.version>6.1.22</jetty.plugin.version>
+        <jetty.version>9.0.6.v20130930</jetty.version>
         <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
         <jsonp.api.version>1.0</jsonp.api.version>
         <jsonp.ri.version>1.0.2</jsonp.ri.version>
@@ -1287,7 +1288,6 @@
         <simple.version>5.1.4</simple.version>
         <spring3.version>3.2.3.RELEASE</spring3.version>
         <httpclient.version>4.2.5</httpclient.version>
-        <jetty.version>9.0.6.v20130930</jetty.version>
         <validation.api.version>1.1.0.Final</validation.api.version>
         <weld.version>2.0.0.Final</weld.version>
         <gae.version>1.8.0</gae.version>

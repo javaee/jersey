@@ -101,6 +101,16 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.glassfish.jersey.connectors</groupId>
+                <artifactId>jersey-jetty-connector</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.containers</groupId>
+                <artifactId>jersey-container-jetty-http</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.glassfish.jersey.containers</groupId>
                 <artifactId>jersey-container-grizzly2-http</artifactId>
                 <version>${project.version}</version>

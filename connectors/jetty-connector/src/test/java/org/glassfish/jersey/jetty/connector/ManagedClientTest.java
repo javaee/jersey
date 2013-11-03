@@ -78,8 +78,6 @@ public class ManagedClientTest extends JerseyTest {
 
     /**
      * Managed client configuration for client A.
-     *
-     * @author Marek Potociar (marek.potociar at oracle.com)
      */
     @ClientBinding(configClass = MyClientAConfig.class)
     @Documented
@@ -90,8 +88,6 @@ public class ManagedClientTest extends JerseyTest {
 
     /**
      * Managed client configuration for client B.
-     *
-     * @author Marek Potociar (marek.potociar at oracle.com)
      */
     @ClientBinding(configClass = MyClientBConfig.class)
     @Documented
@@ -104,8 +100,6 @@ public class ManagedClientTest extends JerseyTest {
      * Dynamic feature that appends a properly configured {@link CustomHeaderFilter} instance
      * to every method that is annotated with {@link Require &#64;Require} internal feature
      * annotation.
-     *
-     * @author Marek Potociar (marek.potociar at oracle.com)
      */
     public static class CustomHeaderFeature implements DynamicFeature {
 
@@ -146,8 +140,6 @@ public class ManagedClientTest extends JerseyTest {
      * On the server side, validates that each request has a custom header with a configured name and value.
      * If the validation fails a HTTP 403 response is returned.
      * </p>
-     *
-     * @author Marek Potociar (marek.potociar at oracle.com)
      */
     public static class CustomHeaderFilter implements ContainerRequestFilter, ClientRequestFilter {
         private final String headerName;
@@ -179,8 +171,6 @@ public class ManagedClientTest extends JerseyTest {
 
     /**
      * Internal resource accessed from the managed client resource.
-     *
-     * @author Marek Potociar (marek.potociar at oracle.com)
      */
     @Path("internal")
     public static class InternalResource {
@@ -210,8 +200,6 @@ public class ManagedClientTest extends JerseyTest {
      * configured to insert the {@link CustomHeaderFeature.Require required} custom header
      * with a proper value into the outgoing client requests.
      * </p>
-     *
-     * @author Marek Potociar (marek.potociar at oracle.com)
      */
     @Path("public")
     public static class PublicResource {
