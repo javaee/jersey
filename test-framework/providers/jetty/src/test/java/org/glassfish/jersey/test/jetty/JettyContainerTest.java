@@ -53,7 +53,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Test class for {@link JettyHttpContainer}.
  *
- * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Arul Dhesiaseelan (aruld at acm org)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class JettyContainerTest extends JerseyTest {
@@ -89,9 +89,9 @@ public class JettyContainerTest extends JerseyTest {
 
     @Test
     /**
-     * Test {@link Simple HttpServer} container.
+     * Test {@link Server Jetty Server} container.
      */
-    public void testSimpleContainerTarget() {
+    public void testJettyContainerTarget() {
         final Response response = target().path("one").request().get();
 
         assertEquals("Response status unexpected.", 200, response.getStatus());
