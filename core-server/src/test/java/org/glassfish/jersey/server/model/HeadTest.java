@@ -39,13 +39,20 @@
  */
 package org.glassfish.jersey.server.model;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.HEAD;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.Provider;
+import javax.ws.rs.ext.WriterInterceptor;
+import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -53,6 +60,9 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -247,5 +257,72 @@ public class HeadTest {
         response = app.apply(RequestContextBuilder.from("/", "HEAD").accept("text/html").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("html", response.getHeaderString("x-value"));
+    }
+
+    @Path("/")
+    public static class InputStreamResource {
+
+        private static boolean INPUT_STREAM_CLOSED = false;
+
+        @GET
+        public InputStream testInputStream() {
+            return new InputStream() {
+
+                @Override
+                public int read() throws IOException {
+                    return -1;
+                }
+
+                @Override
+                public void close() throws IOException {
+                    INPUT_STREAM_CLOSED = true;
+                }
+            };
+        }
+    }
+
+    @Provider
+    public static class InputStreamWriterInterceptor implements WriterInterceptor {
+
+        private static boolean INPUT_STREAM_CLOSED = false;
+
+        @Override
+        public void aroundWriteTo(final WriterInterceptorContext context) throws IOException, WebApplicationException {
+            final InputStream inputStream = (InputStream) context.getEntity();
+
+            context.setEntity(new InputStream() {
+
+                @Override
+                public int read() throws IOException {
+                    return inputStream.read();
+                }
+
+                @Override
+                public void close() throws IOException {
+                    INPUT_STREAM_CLOSED = true;
+
+                    inputStream.close();
+                }
+            });
+
+            context.proceed();
+        }
+    }
+
+    /**
+     * Test whether an input stream returned from resource method is properly closed when the method is invoked to handle HTTP
+     * HEAD request.
+     * <p/>
+     * JERSEY-1922 reproducer.
+     */
+    @Test
+    public void testHeadWithInputStream() throws Exception {
+        initiateWebApplication(InputStreamResource.class, InputStreamWriterInterceptor.class);
+
+        final ContainerResponse response = app.apply(RequestContextBuilder.from("/", "HEAD").build()).get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(InputStreamResource.INPUT_STREAM_CLOSED, is(true));
+        assertThat(InputStreamWriterInterceptor.INPUT_STREAM_CLOSED, is(true));
     }
 }
