@@ -101,7 +101,7 @@ public class Server {
         rc.registerClasses(RootResource.class, SecurityFilter.class, AuthenticationExceptionMapper.class);
 
         try {
-            webServer = JettyHttpContainerFactory.create(
+            webServer = JettyHttpContainerFactory.createServer(
                     getBaseURI(),
                     sslContextFactory,
                     rc

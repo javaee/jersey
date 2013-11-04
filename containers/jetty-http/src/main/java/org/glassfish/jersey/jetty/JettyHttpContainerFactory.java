@@ -65,6 +65,34 @@ public final class JettyHttpContainerFactory {
     }
 
     /**
+     * Creates a {@link Server} instance that registers an {@link org.eclipse.jetty.server.Handler}.
+     *
+     * @param uri uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used as
+     *            context path, the rest will be ignored.
+     * @return newly created {@link Server}.
+     * @throws ProcessingException
+     * @throws IllegalArgumentException if <code>uri</code> is null
+     */
+    public static Server createServer(final URI uri) throws ProcessingException {
+        return createServer(uri, null, null, true);
+    }
+
+    /**
+     * Creates a {@link Server} instance that registers an {@link org.eclipse.jetty.server.Handler}.
+     *
+     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
+     *              as context path, the rest will be ignored.
+     * @param start if set to false, server will not get started, which allows to configure the underlying transport
+     *              layer, see above for details.
+     * @return newly created {@link Server}.
+     * @throws ProcessingException
+     * @throws IllegalArgumentException if <code>uri</code> is null
+     */
+    public static Server createServer(final URI uri, final boolean start) throws ProcessingException {
+        return createServer(uri, null, null, start);
+    }
+
+    /**
      * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
      * in turn manages all root resource and provider classes declared by the
      * resource configuration.
@@ -73,21 +101,44 @@ public final class JettyHttpContainerFactory {
      * {@link org.glassfish.jersey.server.ContainerFactory#createContainer(Class, javax.ws.rs.core.Application)} method
      * for creating an Container that manages the root resources.
      *
-     * @param address the URI to create the http server. The URI scheme must be
+     * @param uri the URI to create the http server. The URI scheme must be
      *                equal to "http". The URI user information and host
      *                are ignored If the URI port is not present then port 80 will be
      *                used. The URI path, query and fragment components are ignored.
      * @param config  the resource configuration.
-     * @return the closeable connection, with the endpoint started
+     * @return newly created {@link Server}.
      * @throws ProcessingException      Thrown when problems during server creation
-     * @throws IllegalArgumentException if <code>address</code> is null
+     * @throws IllegalArgumentException if <code>uri</code> is null
      */
-    public static Server create(URI address, ResourceConfig config)
+    public static Server createServer(final URI uri, final ResourceConfig config)
             throws ProcessingException {
 
         final JettyHttpContainer container = ContainerFactory.createContainer(JettyHttpContainer.class, config);
-        return create(address, null, container);
+        return createServer(uri, null, container, true);
     }
+
+    /**
+     * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
+     * <p/>
+     * This implementation defers to the
+     * {@link org.glassfish.jersey.server.ContainerFactory#createContainer(Class, javax.ws.rs.core.Application)} method
+     * for creating an Container that manages the root resources.
+     *
+     * @param uri           URI on which the Jersey web application will be deployed. Only first path segment will be
+     *                      used as context path, the rest will be ignored.
+     * @param configuration web application configuration.
+     * @param start         if set to false, server will not get started, which allows to configure the underlying
+     *                      transport layer, see above for details.
+     * @return newly created {@link Server}.
+     * @throws ProcessingException
+     * @throws IllegalArgumentException if <code>uri</code> is null
+     */
+    public static Server createServer(final URI uri, final ResourceConfig configuration, final boolean start) throws ProcessingException {
+        return createServer(uri, null, ContainerFactory.createContainer(JettyHttpContainer.class, configuration), start);
+    }
+
 
     /**
      * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
@@ -98,45 +149,69 @@ public final class JettyHttpContainerFactory {
      * {@link ContainerFactory#createContainer(Class, javax.ws.rs.core.Application)} method
      * for creating an Container that manages the root resources.
      *
-     * @param address the URI to create the http server. The URI scheme must be
+     * @param uri the URI to create the http server. The URI scheme must be
      *                equal to "https". The URI user information and host
      *                are ignored If the URI port is not present then port 143 will be
      *                used. The URI path, query and fragment components are ignored.
      * @param sslContextFactory this is the SSL context factory used to configure SSL connector
      * @param config  the resource configuration.
-     * @return the closeable connection, with the endpoint started
+     * @return newly created {@link Server}.
      * @throws ProcessingException      Thrown when problems during server creation
-     * @throws IllegalArgumentException if <code>address</code> is null
+     * @throws IllegalArgumentException if <code>uri</code> is null
      */
-    public static Server create(URI address, SslContextFactory sslContextFactory, ResourceConfig config)
+    public static Server createServer(final URI uri, final SslContextFactory sslContextFactory, final ResourceConfig config)
             throws ProcessingException {
         final JettyHttpContainer container = ContainerFactory.createContainer(JettyHttpContainer.class, config);
-        return create(address, sslContextFactory, container);
+        return createServer(uri, sslContextFactory, container, true);
     }
 
     /**
-     * Creates HttpServer instance.
+     * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
      *
      * @param uri        URI on which the Jersey web application will be deployed.
      * @param appHandler web application handler.
-     * @return the closeable connection, with the endpoint started
+     * @return newly created {@link Server}.
      * @throws ProcessingException Thrown when problems during server creation
+     * @throws IllegalArgumentException if <code>uri</code> is null
      */
-    public static Server create(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
-        return create(uri, null, new JettyHttpContainer(appHandler));
+    public static Server createServer(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
+        return createServer(uri, null, new JettyHttpContainer(appHandler), true);
     }
 
     /**
-     * Creates HttpServer instance.
+     * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
+     *
+     * @param uri        URI on which the Jersey web application will be deployed. Only first path segment will be used
+     *                   as context path, the rest will be ignored.
+     * @param appHandler web application handler.
+     * @param start      if set to false, server will not get started, which allows to configure the underlying
+     *                   transport, see above for details.
+     * @return newly created {@link Server}.
+     * @throws ProcessingException
+     * @throws IllegalArgumentException if <code>uri</code> is null
+     */
+    public static Server createServer(final URI uri, final ApplicationHandler appHandler, final boolean start) throws ProcessingException {
+        return createServer(uri, null, new JettyHttpContainer(appHandler), start);
+    }
+
+    /**
+     * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
      *
      * @param uri        URI on which the Jersey web application will be deployed.
      * @param sslContextFactory    this is the SSL context factory used to configure SSL connector
      * @param appHandler web application handler.
-     * @return the closeable connection, with the endpoint started
+     * @return newly created {@link Server}.
      * @throws ProcessingException Thrown when problems during server creation
+     * @throws IllegalArgumentException if <code>uri</code> is null
      */
-    public static Server create(final URI uri, SslContextFactory sslContextFactory, final ApplicationHandler appHandler) throws ProcessingException {
-        return create(uri, sslContextFactory, new JettyHttpContainer(appHandler));
+    public static Server createServer(final URI uri, final SslContextFactory sslContextFactory, final ApplicationHandler appHandler) throws ProcessingException {
+        return createServer(uri, sslContextFactory, new JettyHttpContainer(appHandler), true);
     }
 
     /**
@@ -144,21 +219,28 @@ public final class JettyHttpContainerFactory {
      * in turn manages all root resource and provider classes found by searching the
      * classes referenced in the java classpath.
      *
-     * @param address   the URI to create the http server. The URI scheme must be
+     * @param uri   the URI to create the http server. The URI scheme must be
      *                  equal to "https". The URI user information and host
      *                  are ignored If the URI port is not present then port 143 will be
      *                  used. The URI path, query and fragment components are ignored.
      * @param sslContextFactory   this is the SSL context factory used to configure SSL connector
-     * @param container the container that handles all HTTP requests
-     * @return the closeable connection, with the endpoint started
+     * @param handler the container that handles all HTTP requests
+     * @param start                 if set to false, server will not get started, this allows end users to set
+     *                              additional properties on the underlying listener.
+     * @return newly created {@link Server}.
      * @throws ProcessingException Thrown when problems during server creation
+     * @throws IllegalArgumentException if <code>uri</code> is null
+     * @see JettyHttpContainer
      */
-    public static Server create(final URI address, final SslContextFactory sslContextFactory, final JettyHttpContainer container)
+    public static Server createServer(final URI uri,
+                                final SslContextFactory sslContextFactory,
+                                final JettyHttpContainer handler,
+                                final boolean start)
             throws ProcessingException {
-        if (address == null) {
+        if (uri == null) {
             throw new IllegalArgumentException("The URI must not be null");
         }
-        String scheme = address.getScheme();
+        String scheme = uri.getScheme();
         int defaultPort = 80;
 
         if (sslContextFactory == null) {
@@ -171,11 +253,7 @@ public final class JettyHttpContainerFactory {
             }
             defaultPort = 143; // default HTTPS port
         }
-        int port = address.getPort();
-
-        if (port == -1) {
-            port = defaultPort;
-        }
+        final int port = (uri.getPort() == -1) ? defaultPort : uri.getPort();
 
         Server server = new Server();
         HttpConfiguration config = new HttpConfiguration();
@@ -195,14 +273,17 @@ public final class JettyHttpContainerFactory {
             http.setPort(port);
             server.setConnectors(new Connector[]{http});
         }
-        server.setHandler(container);
+        if (handler != null) {
+            server.setHandler(handler);
+        }
 
-        try {
-            server.start();
-        } catch (InterruptedException ie) {
-            throw new ProcessingException("InterruptedException thrown when trying to create jetty server", ie);
-        } catch (Exception e) {
-            throw new ProcessingException("Exception thrown when trying to create jetty server", e);
+        if (start) {
+            try {
+                // Start the server.
+                server.start();
+            } catch (Exception e) {
+                throw new ProcessingException("Exception thrown when trying to create jetty server", e);
+            }
         }
         return server;
     }

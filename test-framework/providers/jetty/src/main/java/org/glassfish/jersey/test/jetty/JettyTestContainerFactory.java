@@ -47,8 +47,8 @@ import javax.ws.rs.ProcessingException;
 
 import org.eclipse.jetty.server.Server;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -89,7 +89,7 @@ public class JettyTestContainerFactory implements TestContainerFactory {
             }
 
             try {
-                this.server = JettyHttpContainerFactory.create(uri, appHandler);
+                this.server = JettyHttpContainerFactory.createServer(uri, appHandler);
             } catch (ProcessingException e) {
                 throw new TestContainerException(e);
             }

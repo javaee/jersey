@@ -219,6 +219,12 @@
     &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
     &lt;artifactId&gt;jersey-container-jetty-http&lt;/artifactId&gt;
     &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.containers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-container-jetty-servlet&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
         </section>
     </section>
@@ -337,6 +343,14 @@
                             </link>
                         </entry>
                         <entry>Jetty Http Container.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-container-jetty-servlet/dependencies.html">
+                                jersey-container-jetty-servlet
+                            </link>
+                        </entry>
+                        <entry>Jetty Servlet Container.</entry>
                     </row>
                 </tbody>
             </tgroup>

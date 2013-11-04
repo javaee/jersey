@@ -101,13 +101,13 @@ public abstract class AbstractJettyServerTester {
         ResourceConfig config = new ResourceConfig(resources);
         config.register(new LoggingFilter(LOGGER, true));
         final URI baseUri = getBaseUri();
-        server = JettyHttpContainerFactory.create(baseUri, config);
+        server = JettyHttpContainerFactory.createServer(baseUri, config);
         LOGGER.log(Level.INFO, "Jetty-http server started on base uri: " + baseUri);
     }
 
     public void startServer(ResourceConfig config) {
         final URI baseUri = getBaseUri();
-        server = JettyHttpContainerFactory.create(baseUri, config);
+        server = JettyHttpContainerFactory.createServer(baseUri, config);
         LOGGER.log(Level.INFO, "Jetty-http server started on base uri: " + baseUri);
     }
 

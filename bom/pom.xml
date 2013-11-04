@@ -122,6 +122,11 @@
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.containers</groupId>
+                <artifactId>jersey-container-jetty-servlet</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.containers</groupId>
                 <artifactId>jersey-container-jdk-http</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -275,6 +280,11 @@
             <dependency>
                 <groupId>org.glassfish.jersey.test-framework.providers</groupId>
                 <artifactId>jersey-test-framework-provider-simple</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+                <artifactId>jersey-test-framework-provider-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
