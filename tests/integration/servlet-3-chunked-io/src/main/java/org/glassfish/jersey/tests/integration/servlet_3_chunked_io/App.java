@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,45 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
 
-import java.io.IOException;
+package org.glassfish.jersey.tests.integration.servlet_3_chunked_io;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.junit.Test;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.ext.ContextResolver;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
+import org.glassfish.jersey.server.ResourceConfig;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * Chunked I/O test JAX-RS application class.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ChunkedOutputTest {
-    @Path("/test")
-    public static class MyResource {
-        @GET
-        public ChunkedOutput<String> get() {
-            final ChunkedOutput<String> output = new ChunkedOutput<String>(String.class);
+@ApplicationPath("resources")
+public class App extends ResourceConfig {
+    /**
+     * Chunked I/O test JAX-RS application.
+     */
+    public App() {
+        super(TestResource.class);
 
-            new Thread() {
-                public void run() {
-                    try {
-                        output.write("test");
-                        output.write("test");
-                        output.write("test");
-                        output.close();
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        fail();
-                    }
-
-                }
-            }.start();
-
-            return output;
-        }
+        register(createMoxyJsonResolver());
     }
 
-    @Test
-    public void testChunkedResponse() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class, ChunkedResponseWriter.class);
-        final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
-
-        ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/test", "GET").build()).get();
-        assertEquals(200, response.getStatus());
+    /**
+     * Create MOXy JSON config context resolver.
+     *
+     * @return new MOXy JSON config context resolver.
+     */
+    public static ContextResolver<MoxyJsonConfig> createMoxyJsonResolver() {
+        final MoxyJsonConfig moxyJsonConfig = new MoxyJsonConfig();
+        Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
+        namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
+        moxyJsonConfig.setNamespacePrefixMapper(namespacePrefixMapper).setNamespaceSeparator(':');
+        return moxyJsonConfig.resolver();
     }
+
 }

@@ -91,6 +91,7 @@
         <module>servlet-3-init-5</module>
         <module>servlet-3-init-provider</module>
         <module>servlet-3-params</module>
+        <module>servlet-3-chunked-io</module>
         <module>servlet-3-sse-1</module>
         <module>servlet-tests</module>
         <module>spring3</module>
@@ -123,6 +124,7 @@
                         <stopKey>STOP</stopKey>
                         <webApp>
                             <contextPath>/</contextPath>
+                            <webInfIncludeJarPattern>.*/.*jersey-[^/]\.jar$</webInfIncludeJarPattern>
                         </webApp>
                         <connectors>
                             <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
