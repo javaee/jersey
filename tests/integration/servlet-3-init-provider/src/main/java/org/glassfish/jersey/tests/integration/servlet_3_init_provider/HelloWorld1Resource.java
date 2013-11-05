@@ -66,4 +66,10 @@ public class HelloWorld1Resource extends AbstractHelloWorldResource {
         return TestServletContainerProvider.getServletNames().contains(servletName);
     }
 
+    @GET
+    @Path("immutableServletNames")
+    public boolean isImmutableServletNames() {
+        return TestServletContainerProvider.isImmutableServletNames();
+    }
+
 }

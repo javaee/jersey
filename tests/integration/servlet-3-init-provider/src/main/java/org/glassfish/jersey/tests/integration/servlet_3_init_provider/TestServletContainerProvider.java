@@ -39,9 +39,7 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
-import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Set;
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
@@ -60,9 +58,29 @@ public class TestServletContainerProvider implements ServletContainerProvider {
     public static final String TEST_FILTER = "TestFilter";
 
     private static Set<String> SERVLET_NAMES;
+    private static boolean immutableServletNames = false;
 
     @Override
-    public void init(ServletContext servletContext) throws ServletException {
+    public void preInit(ServletContext servletContext, Set<Class<?>> classes) throws ServletException {
+        classes.add(AbstractHelloWorldResource.class);
+    }
+
+    @Override
+    public void postInit(ServletContext servletContext, Set<Class<?>> classes, Set<String> servletNames) throws ServletException {
+        try {
+            servletNames.add("TEST");
+        } catch (UnsupportedOperationException ex) {
+            immutableServletNames = true;
+        }
+    }
+
+    @Override
+    public void onRegister(ServletContext servletContext, Set<String> servletNames) throws ServletException {
+        this.SERVLET_NAMES = servletNames;
+
+        servletContext.addFilter("TestFilter", TestFilter.class).
+                addMappingForServletNames(EnumSet.allOf(DispatcherType.class), false,
+                        servletNames.toArray(new String[servletNames.size()]));
     }
 
     @Override
@@ -72,16 +90,12 @@ public class TestServletContainerProvider implements ServletContainerProvider {
         }
     }
 
-    @Override
-    public void onRegister(ServletContext servletContext, String... servletNames) throws ServletException {
-        this.SERVLET_NAMES = new HashSet<String>(Arrays.asList(servletNames));
-
-        servletContext.addFilter("TestFilter", TestFilter.class).
-                addMappingForServletNames(EnumSet.allOf(DispatcherType.class), false, servletNames);
-    }
-
     public static Set<String> getServletNames() {
         return SERVLET_NAMES;
+    }
+
+    public static boolean isImmutableServletNames() {
+        return immutableServletNames;
     }
 
 }
