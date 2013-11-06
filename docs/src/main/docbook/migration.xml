@@ -52,6 +52,23 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.5">
+        <title>Migrating from Jersey 2.4 to 2.5</title>
+
+        <para>
+            <itemizedlist>
+                <listitem><para>
+                    The unsupported <literal>ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION</literal> property,
+                    with value of <literal>jersey.config.client.bufferResponseEntityOnException</literal>, has been
+                    removed from the API. Since Jersey 2.4 where
+                    <link xlink:href='https://java.net/jira/browse/jersey-2157'>JERSEY-2157</link>
+                    issue has been fixed, Jersey client runtime automatically buffers error response entities.
+                    This behavior is automatic and there is no need to set any property.
+                </para></listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
     <section xml:id="mig-2.4">
         <title>Migrating from Jersey 2.3 to 2.4</title>
 

@@ -254,21 +254,17 @@ public class HttpUrlConnector implements Connector {
         uc.setDoInput(true);
 
         final String httpMethod = request.getMethod();
-        if (PropertiesHelper.getValue(configurationProperties,
-                ClientProperties.HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND, false)) {
+        if (request.resolveProperty(ClientProperties.HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND, false)) {
             setRequestMethodViaJreBugWorkaround(uc, httpMethod);
         } else {
             uc.setRequestMethod(httpMethod);
         }
 
-        uc.setInstanceFollowRedirects(PropertiesHelper.getValue(configurationProperties,
-                ClientProperties.FOLLOW_REDIRECTS, true));
+        uc.setInstanceFollowRedirects(request.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
 
-        uc.setConnectTimeout(PropertiesHelper.getValue(configurationProperties,
-                ClientProperties.CONNECT_TIMEOUT, uc.getConnectTimeout()));
+        uc.setConnectTimeout(request.resolveProperty(ClientProperties.CONNECT_TIMEOUT, uc.getConnectTimeout()));
 
-        uc.setReadTimeout(PropertiesHelper.getValue(configurationProperties,
-                ClientProperties.READ_TIMEOUT, uc.getReadTimeout()));
+        uc.setReadTimeout(request.resolveProperty(ClientProperties.READ_TIMEOUT, uc.getReadTimeout()));
 
         if (uc instanceof HttpsURLConnection) {
             HttpsURLConnection suc = (HttpsURLConnection) uc;

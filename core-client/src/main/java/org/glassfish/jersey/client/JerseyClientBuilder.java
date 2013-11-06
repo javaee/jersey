@@ -139,7 +139,7 @@ public class JerseyClientBuilder extends ClientBuilder {
     }
 
     @Override
-    public Configuration getConfiguration() {
+    public ClientConfig getConfiguration() {
         return config;
     }
 

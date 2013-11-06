@@ -102,21 +102,7 @@ public final class ClientProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String CHUNKED_ENCODING_SIZE = "jersey.config.client.chunkedEncodingSize";
-    /**
-     * Automatic response buffering in case of an exception.
-     *
-     * A value of {@code true} declares that the client will automatically read
-     * & buffer the response entity (if any) and close all resources associated
-     * with the response.
-     *
-     * The value MUST be an instance convertible to {@link java.lang.Boolean}.
-     * <p />
-     * The default value is {@code true}.
-     * <p />
-     * The name of the configuration property is <tt>{@value}</tt>.
-     */
-    // TODO add support (ported from Jersey 1.x).
-    public static final String BUFFER_RESPONSE_ENTITY_ON_EXCEPTION = "jersey.config.client.bufferResponseEntityOnException";
+
     /**
      * Asynchronous thread pool size.
      *
@@ -132,7 +118,7 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    // TODO add support (ported from Jersey 1.x).
+    // TODO add support in default connector (ported from Jersey 1.x);
     public static final String ASYNC_THREADPOOL_SIZE = "jersey.config.client.async.threadPoolSize";
     /**
      * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is

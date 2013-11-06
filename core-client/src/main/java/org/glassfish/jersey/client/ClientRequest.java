@@ -65,6 +65,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 
@@ -130,6 +131,67 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
         this.readerInterceptors = original.readerInterceptors;
         this.writerInterceptors = original.writerInterceptors;
         this.propertiesDelegate = new MapPropertiesDelegate(original.propertiesDelegate);
+    }
+
+    /**
+     * Resolve a property value for the specified property {@code name}.
+     *
+     * <p>
+     * The method returns the value of the property registered in the request-specific
+     * property bag, if available. If no property for the given property name is found
+     * in the request-specific property bag, the method looks at the properties stored
+     * in the {@link #getConfiguration() global client-runtime configuration} this request
+     * belongs to. If there is a value defined in the client-runtime configuration,
+     * it is returned, otherwise the method returns {@code null} if no such property is
+     * registered neither in the client runtime nor in the request-specific property bag.
+     * </p>
+     *
+     * @param name property name.
+     * @param type expected property class type.
+     * @param <T> property Java type.
+     * @return resolved property value or {@code null} if no such property is registered.
+     */
+    public <T> T resolveProperty(final String name, final Class<T> type) {
+        return resolveProperty(name, null, type);
+    }
+
+    /**
+     * Resolve a property value for the specified property {@code name}.
+     *
+     * <p>
+     * The method returns the value of the property registered in the request-specific
+     * property bag, if available. If no property for the given property name is found
+     * in the request-specific property bag, the method looks at the properties stored
+     * in the {@link #getConfiguration() global client-runtime configuration} this request
+     * belongs to. If there is a value defined in the client-runtime configuration,
+     * it is returned, otherwise the method returns {@code defaultValue} if no such property is
+     * registered neither in the client runtime nor in the request-specific property bag.
+     * </p>
+     *
+     * @param name property name.
+     * @param defaultValue default value to return if the property is not registered.
+     * @param <T> property Java type.
+     * @return resolved property value or {@code defaultValue} if no such property is registered.
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T resolveProperty(final String name, final T defaultValue) {
+        return resolveProperty(name, defaultValue, (Class<T>) defaultValue.getClass());
+    }
+
+    private <T> T resolveProperty(final String name, Object defaultValue, final Class <T> type) {
+        // Check runtime configuration first
+        Object result = clientConfig.getProperty(name);
+        if (result != null) {
+            defaultValue = result;
+        }
+
+        // Check request properties next
+        result = propertiesDelegate.getProperty(name);
+        if (result == null) {
+            result = defaultValue;
+        }
+
+        return (result == null) ? null : PropertiesHelper.convertValue(result, type);
     }
 
     @Override
