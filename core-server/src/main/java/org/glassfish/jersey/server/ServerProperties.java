@@ -191,6 +191,23 @@ public final class ServerProperties {
     public static final String LANGUAGE_MAPPINGS = "jersey.config.server.languageMappings";
 
     /**
+     * If the property is set to {@code true} then exceptions which are instance of MappableException or
+     * WebApplicationException will not be log by the server
+     *
+     * <p>
+     * The property value MUST be an instance of {@code Boolean} type or a {@code String} convertible
+     * to {@code Boolean} type.
+     * </p>
+     * <p>
+     * A default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     */
+    public static final String LOGGING_MAPPABLE_EXCEPTION_DISABLE = "jersey.config.server.logging.mappableException.disable";
+
+    /**
      * Defines configuration of HTTP method overriding.
      *
      * This property is used by {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter} to determine

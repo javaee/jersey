@@ -77,6 +77,7 @@ import javax.inject.Provider;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Closure;
 import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -412,6 +413,8 @@ class ServerRuntime {
             Throwable throwable = originalThrowable;
             boolean inMappable = false;
             boolean mappingNotFound = false;
+            boolean loggingMappableExceptionDisable = PropertiesHelper.getValue(runtime.configuration.getProperties(),
+                    ServerProperties.LOGGING_MAPPABLE_EXCEPTION_DISABLE, Boolean.FALSE);
 
             do {
                 if (throwable instanceof MappableException) {
@@ -430,7 +433,7 @@ class ServerRuntime {
                     }
 
                     // Log cause of WebApplicationException.
-                    if (cause != null) {
+                    if (cause != null && !loggingMappableExceptionDisable) {
                         LOGGER.log(Level.WARNING, LocalizationMessages.WEB_APPLICATION_EXCEPTION_CAUSE(), cause);
                     }
 
