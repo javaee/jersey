@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,32 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.tests.integration.jersey1667;
 
-package org.glassfish.jersey.media.multipart;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 
-import javax.ws.rs.core.FeatureContext;
-
-import org.glassfish.jersey.media.multipart.internal.FormDataParameterInjectionFeature;
-import org.glassfish.jersey.media.multipart.internal.MultiPartReaderClientSide;
-import org.glassfish.jersey.media.multipart.internal.MultiPartReaderServerSide;
-import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 /**
- * Feature used to register Multipart providers.
+ * Test resource.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class MultiPartFeature implements javax.ws.rs.core.Feature {
+@Path("/")
+public class Issue1667Resource {
 
-    @Override
-    public boolean configure(final FeatureContext context) {
-        context.register(FormDataParameterInjectionFeature.class);
-
-        context.register(MultiPartReaderServerSide.class);
-        context.register(MultiPartReaderClientSide.class);
-
-        context.register(MultiPartWriter.class);
-
-        return true;
+    @POST
+    @Path("part-file-name")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public String post(
+            @FormDataParam("part") String s,
+            @FormDataParam("part") FormDataContentDisposition d) {
+        return s + ":" + d.getFileName();
     }
 }
