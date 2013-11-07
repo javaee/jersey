@@ -249,7 +249,11 @@ class ClientRuntime {
      * Close the client runtime and release the underlying transport connector.
      */
     public void close() {
-        connector.close();
+        try {
+            connector.close();
+        } finally {
+            asyncExecutorsFactory.shutdown();
+        }
     }
 
     /**

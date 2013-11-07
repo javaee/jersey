@@ -96,4 +96,10 @@ class ClientAsyncExecutorsFactory extends ExecutorsFactory<ClientRequest> {
     public ExecutorService getRespondingExecutor(ClientRequest request) {
         return respondingExecutor;
     }
+
+    @Override
+    public void shutdown() {
+        requestingExecutor.shutdownNow();
+        respondingExecutor.shutdownNow();
+    }
 }
