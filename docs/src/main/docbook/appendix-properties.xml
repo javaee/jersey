@@ -402,16 +402,8 @@
                         <entry><literal>jersey.config.client.async.threadPoolSize</literal></entry>
                         <entry>
                             <para>
-                                Asynchronous thread pool size. Default value is not set. <emphasis>NOT SUPPORTED</emphasis>.
-                            </para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry>&jersey.client.ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION;</entry>
-                        <entry><literal>jersey.config.client.bufferResponseEntityOnException</literal></entry>
-                        <entry>
-                            <para>
-                                Automatic response buffering in case of an exception. Default value is <literal>true</literal>. <emphasis>NOT SUPPORTED</emphasis>.
+                                Asynchronous thread pool size. Default value is not set.
+                                <emphasis>Supported with &jersey.grizzly.GrizzlyConnector; only.</emphasis>.
                             </para>
                         </entry>
                     </row>
@@ -420,7 +412,7 @@
                         <entry><literal>jersey.config.client.chunkedEncodingSize</literal></entry>
                         <entry>
                             <para>
-                                Chunked encoding size. Default value is not set. <emphasis>NOT SUPPORTED</emphasis>.
+                                Chunked encoding size. Default value is not set.
                             </para>
                         </entry>
                     </row>

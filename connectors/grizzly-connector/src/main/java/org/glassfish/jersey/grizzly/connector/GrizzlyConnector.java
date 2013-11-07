@@ -331,8 +331,7 @@ public class GrizzlyConnector implements Connector {
 
         RequestBuilder builder = new RequestBuilder(strMethod).setUrl(uri.toString());
 
-        builder.setFollowRedirects(PropertiesHelper.getValue(requestContext.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS,
-                true));
+        builder.setFollowRedirects(requestContext.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
 
         final com.ning.http.client.Request.EntityWriter entity = this.getHttpEntity(requestContext);
 
