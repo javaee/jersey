@@ -74,4 +74,10 @@ public class HelloWorld1ResourceTest extends AbstractHelloWorldResourceTest {
         Assert.assertTrue(target.resolveTemplate("name", servletName).request().get(Boolean.TYPE));
     }
 
+    @Test
+    public void testImmutableServletNames() {
+        WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("immutableServletNames");
+        Assert.assertTrue(target.request().get(Boolean.TYPE));
+    }
+
 }
