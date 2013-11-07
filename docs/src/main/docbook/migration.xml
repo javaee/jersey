@@ -52,8 +52,8 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
-    <section xml:id="mig-2.5">
-        <title>Migrating from Jersey 2.4 to 2.5</title>
+    <section xml:id="mig-2.4.1">
+        <title>Migrating from Jersey 2.4 to 2.4.1</title>
 
         <para>
             <itemizedlist>

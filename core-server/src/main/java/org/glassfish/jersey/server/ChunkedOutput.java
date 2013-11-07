@@ -106,7 +106,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * Create new {@code ChunkedOutput} with a custom chunk delimiter.
      *
      * @param chunkDelimiter custom chunk delimiter bytes. Must not be {code null}.
-     * @since 2.5
+     * @since 2.4.1
      */
     protected ChunkedOutput(byte[] chunkDelimiter) {
         if (chunkDelimiter.length > 0) {
@@ -122,7 +122,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      *
      * @param chunkType      chunk type. Must not be {code null}.
      * @param chunkDelimiter custom chunk delimiter bytes. Must not be {code null}.
-     * @since 2.5
+     * @since 2.4.1
      */
     public ChunkedOutput(final Type chunkType, byte[] chunkDelimiter) {
         super(chunkType);
@@ -138,7 +138,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * Create new {@code ChunkedOutput} with a custom chunk delimiter.
      *
      * @param chunkDelimiter custom chunk delimiter string. Must not be {code null}.
-     * @since 2.5
+     * @since 2.4.1
      */
     protected ChunkedOutput(String chunkDelimiter) {
         if (chunkDelimiter.isEmpty()) {
@@ -153,7 +153,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      *
      * @param chunkType      chunk type. Must not be {code null}.
      * @param chunkDelimiter custom chunk delimiter string. Must not be {code null}.
-     * @since 2.5
+     * @since 2.4.1
      */
     public ChunkedOutput(final Type chunkType, String chunkDelimiter) {
         super(chunkType);

@@ -122,7 +122,7 @@ public class MultiPartProperties {
      * threshold.
      *
      * @return path to the temporary directory.
-     * @since 2.5
+     * @since 2.4.1
      */
     public String getTempDir() {
         return tempDir;
@@ -133,7 +133,7 @@ public class MultiPartProperties {
      *
      * @param threshold size of body part.
      * @return {@code MultiPartProperties} instance.
-     * @since 2.5
+     * @since 2.4.1
      */
     public MultiPartProperties bufferThreshold(final int threshold) {
         this.bufferThreshold = threshold < -1 ? -1 : threshold;
@@ -146,7 +146,7 @@ public class MultiPartProperties {
      *
      * @param path path to the temporary directory.
      * @return {@code MultiPartProperties} instance.
-     * @since 2.5
+     * @since 2.4.1
      */
     public MultiPartProperties tempDir(final String path) {
         this.tempDir = path;
@@ -201,7 +201,7 @@ public class MultiPartProperties {
      * Create a {@link ContextResolver context resolver} for a current state of this {@code MultiPartProperties}.
      *
      * @return context resolver for this config.
-     * @since 2.5
+     * @since 2.4.1
      */
     public ContextResolver<MultiPartProperties> resolver() {
         return new ContextResolver<MultiPartProperties>() {
