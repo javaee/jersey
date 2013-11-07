@@ -61,7 +61,10 @@ public class JarFileScannerTest {
             JarFileScanner jarFileScanner = new JarFileScanner(embeddedJarResource, "javax/portlet", true);
             while (jarFileScanner.hasNext()) {
                 String name = jarFileScanner.next();
- 
+
+				// This test doens't actually do anything with the input stream, but it is important that it
+				// open/close the stream to simulate actual usage.  The reported defect is only exposed if you
+				// call open/close in some fashion.
                 InputStream classStream = jarFileScanner.open();
                 try {
                     entryCount++;
