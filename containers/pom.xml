@@ -64,6 +64,8 @@
         <module>jersey-servlet-core</module>
         <module>jersey-servlet</module>
         <module>simple-http</module>
+        <module>jetty-http</module>
+        <module>jetty-servlet</module>
     </modules>
 
     <dependencies>

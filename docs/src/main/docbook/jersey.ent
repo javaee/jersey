@@ -257,6 +257,7 @@
 <!ENTITY jersey.client.Connector "<link xlink:href='&jersey.javadoc.path;/client/spi/Connector.html'>Connector</link>">
 <!ENTITY jersey.apache.ApacheConnector "<link xlink:href='&jersey.javadoc.path;/apache/connector/ApacheConnector.html'>ApacheConnector</link>">
 <!ENTITY jersey.grizzly.GrizzlyConnector "<link xlink:href='&jersey.javadoc.path;/grizzly/connector/GrizzlyConnector.html'>GrizzlyConnector</link>">
+<!ENTITY jersey.jetty.JettyConnector "<link xlink:href='&jersey.javadoc.path;/jetty/connector/JettyConnector.html'>JettyConnector</link>">
 <!ENTITY jersey.client.HttpUrlConnector "<link xlink:href='&jersey.javadoc.path;/client/HttpUrlConnector.html'>HttpUrlConnector</link>">
 <!ENTITY jersey.client.ClientConfig "<link xlink:href='&jersey.javadoc.path;/client/ClientConfig.html'>ClientConfig</link>">
 <!ENTITY jersey.client.ClientProperties "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html'>ClientProperties</link>">
@@ -309,8 +310,6 @@
 <!ENTITY jersey.ext.ValidationFeature "<link xlink:href='&jersey.javadoc.path;/server/validation/ValidationFeature.html'>ValidationFeature</link>">
 <!ENTITY jersey.ext.ValidationConfig "<link xlink:href='&jersey.javadoc.path;/server/validation/ValidationConfig.html'>ValidationConfig</link>">
 <!ENTITY jersey.ext.ValidationError "<link xlink:href='&jersey.javadoc.path;/server/validation/ValidationError.html'>ValidationError</link>">
-
-<!ENTITY jersey.grizzly.GrizzlyConnector "<link xlink:href='&jersey.javadoc.path;/grizzly/GrizzlyConnector.html'>GrizzlyConnector</link>">
 
 <!ENTITY jersey.media.JacksonFeature "<link xlink:href='&jersey.javadoc.path;/jackson/JacksonFeature.html'>JacksonFeature</link>" >
 <!ENTITY jersey.media.JettisonFeature "<link xlink:href='&jersey.javadoc.path;/jettison/JettisonFeature.html'>JettisonFeature</link>" >
@@ -628,6 +627,7 @@
 <!ENTITY lit.jersey.server.WadlGeneratorConfig "<literal>WadlGeneratorConfig</literal>">
 <!ENTITY lit.jersey.client.Connector "<literal>Connector</literal>">
 <!ENTITY lit.jersey.apache.ApacheConnector "<literal>ApacheConnector</literal>">
+<!ENTITY lit.jersey.jetty.JettyConnector "<literal>JettyConnector</literal>">
 
 <!ENTITY lit.jersey.client.ChunkParser "<literal>ChunkParser</literal>">
 <!ENTITY lit.jersey.client.ClientConfig "<literal>ClientConfig</literal>">

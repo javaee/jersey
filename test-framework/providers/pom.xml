@@ -63,5 +63,6 @@
         <module>jdk-http</module>
         <module>inmemory</module>
         <module>simple</module>
+        <module>jetty</module>
     </modules>
 </project>

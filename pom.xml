@@ -975,6 +975,30 @@
             </dependency>
 
             <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-webapp</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-continuation</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.simpleframework</groupId>
                 <artifactId>simple</artifactId>
                 <version>${simple.version}</version>
@@ -1163,14 +1187,14 @@
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty</artifactId>
-                <version>${jetty-version}</version>
+                <version>${jetty.plugin.version}</version>
                 <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
-                <version>${jetty-version}</version>
+                <version>${jetty.plugin.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -1251,7 +1275,8 @@
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <jersey1.version>1.17</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
-        <jetty-version>6.1.22</jetty-version>
+        <jetty.plugin.version>6.1.22</jetty.plugin.version>
+        <jetty.version>9.0.6.v20130930</jetty.version>
         <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
         <jsonp.api.version>1.0</jsonp.api.version>
         <jsonp.ri.version>1.0.2</jsonp.ri.version>

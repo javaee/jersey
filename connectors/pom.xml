@@ -59,6 +59,7 @@
     <modules>
         <module>grizzly-connector</module>
         <module>apache-connector</module>
+        <module>jetty-connector</module>
     </modules>
 
     <dependencies>
