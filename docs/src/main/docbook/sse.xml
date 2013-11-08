@@ -361,6 +361,28 @@ data: Hello world 9!</screen>
 
                 Each message is received with a delay of one second.
             </para>
+
+            <note>
+                <para>
+                    If you have worked with streams in JAX-RS, you may wonder what is the difference between
+                    &jersey.server.ChunkedOutput; and &jaxrs.core.StreamingOutput;.
+                </para>
+                <para>
+                    &lit.jersey.server.ChunkedOutput; is Jersey-specific API. It lets you send "chunks" of data without closing
+                    the client connection using series of convenient calls to <literal>ChunkedOutput.write</literal> methods
+                    that take POJO + chunk media type as an input and then use the configured JAX-RS
+                    &lit.jaxrs.ext.MessageBodyWriter; providers to figure out the proper way of serializing each chunk POJO
+                    to bytes. Additionally, &lit.jersey.server.ChunkedOutput; writes can be invoked multiple times on the same
+                    outbound response connection, i.e. individual chunks are written in each write, not the full response entity.
+                </para>
+                <para>
+                    &lit.jaxrs.core.StreamingOutput; is, on the other hand, a low level JAX-RS API that works with bytes
+                    directly. You have to implement &lit.jaxrs.core.StreamingOutput; interface yourself. Also, its
+                    <literal>write(OutputStream)</literal> method will be invoked by JAX-RS runtime only once per response
+                    and the call to this method is blocking, i.e. the method is expected to write the entire entity body
+                    before returning.
+                </para>
+            </note>
         </section>
 
         <section>

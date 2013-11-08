@@ -199,15 +199,28 @@ public static class MyResource {
 
                     <example>
                         <title>Registering RolesAllowedDynamicFeature using ResourceConfig</title>
-                        <programlisting language="java" linenumbering="numbered">final ResourceConfig resourceConfig =
-        new ResourceConfig(MyResource.class);
+                        <programlisting language="java" linenumbering="numbered">final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class);
 resourceConfig.register(RolesAllowedDynamicFeature.class);
                         </programlisting>
                     </example>
+
+                    Alternatively, typically when deploying your application to a Servlet container, you can implement your JAX-RS
+                    &jaxrs.core.Application; subclass by extending from the Jersey &lit.jersey.server.ResourceConfig; and
+                    registering the &lit.jersey.server.RolesAllowedDynamicFeature; in the constructor:
+
+                    <example>
+                        <title>Registering RolesAllowedDynamicFeature by extending ResourceConfig</title>
+                        <programlisting language="java" linenumbering="numbered">public class MyApplication extends ResourceConfig {
+    public MyApplication() {
+        super(MyResource.class);
+        register(RolesAllowedDynamicFeature.class);
+    }
+}</programlisting>
+                    </example>
                 </para>
                 <para>
-                    Then you can use annotations from package <literal>javax.annotation.security</literal>
-                    defined by JSR-250. See the following example.
+                    Once the feature is registered, you can use annotations from package
+                    <literal>javax.annotation.security</literal> defined by JSR-250. See the following example.
 
                     <example>
                         <title>Applying <literal>javax.annotation.security</literal> to JAX-RS resource methods.</title>

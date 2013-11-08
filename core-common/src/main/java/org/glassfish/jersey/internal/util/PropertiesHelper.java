@@ -192,7 +192,6 @@ public final class PropertiesHelper {
         return value;
     }
 
-
     /**
      * Returns value of a specified property. If the property is not set or the real value type is not compatible with
      * the specified value type, returns null.
@@ -233,6 +232,18 @@ public final class PropertiesHelper {
             return null;
         }
 
+        return convertValue(value, type);
+    }
+
+    /**
+     * Convert {@code Object} value to a value of the specified class type.
+     *
+     * @param value {@code Object} value to convert.
+     * @param type conversion type.
+     * @param <T> converted value type.
+     * @return value converted to the specified class type.
+     */
+    public static <T> T convertValue(Object value, Class<T> type) {
         if (!type.isInstance(value)) {
             // TODO: Move string value readers from server to common and utilize them here
             final Constructor constructor = AccessController.doPrivileged(ReflectionHelper.getStringConstructorPA(type));

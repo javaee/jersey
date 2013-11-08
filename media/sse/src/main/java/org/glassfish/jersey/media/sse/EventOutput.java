@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,15 @@ import org.glassfish.jersey.server.ChunkedOutput;
  * is able to send events. One instance of this class corresponds with exactly one HTTP connection.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class EventOutput extends ChunkedOutput<OutboundEvent> {
+    private static final byte[] SSE_EVENT_DELIMITER = "\n\n".getBytes();
 
+    /**
+     * Create new outbound Server-Sent Events channel.
+     */
+    public EventOutput() {
+        super(SSE_EVENT_DELIMITER);
+    }
 }

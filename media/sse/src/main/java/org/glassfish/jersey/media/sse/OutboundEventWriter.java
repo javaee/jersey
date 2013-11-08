@@ -58,8 +58,15 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  * Writer for {@link OutboundEvent}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
+    private static final byte[] COMMENT_LEAD= ": ".getBytes();
+    private static final byte[] NAME_LEAD= "event: ".getBytes();
+    private static final byte[] ID_LEAD= "id: ".getBytes();
+    private static final byte[] RETRY_LEAD= "retry: ".getBytes();
+    private static final byte[] DATA_LEAD= "data: ".getBytes();
+    private static final byte[] EOL= {'\n'};
 
     @Inject
     private Provider<MessageBodyWorkers> workersProvider;
@@ -89,18 +96,28 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
                         final OutputStream entityStream) throws IOException, WebApplicationException {
 
         if (outboundEvent.getComment() != null) {
-            entityStream.write(String.format(": %s\n", outboundEvent.getComment()).getBytes());
+            for (String comment : outboundEvent.getComment().split("\n")) {
+                entityStream.write(COMMENT_LEAD);
+                entityStream.write(comment.getBytes());
+                entityStream.write(EOL);
+            }
         }
 
         if (outboundEvent.getType() != null) {
             if (outboundEvent.getName() != null) {
-                entityStream.write(String.format("event: %s\n", outboundEvent.getName()).getBytes());
+                entityStream.write(NAME_LEAD);
+                entityStream.write(outboundEvent.getName().getBytes());
+                entityStream.write(EOL);
             }
             if (outboundEvent.getId() != null) {
-                entityStream.write(String.format("id: %s\n", outboundEvent.getId()).getBytes());
+                entityStream.write(ID_LEAD);
+                entityStream.write(outboundEvent.getId().getBytes());
+                entityStream.write(EOL);
             }
             if (outboundEvent.getReconnectDelay() > SseFeature.RECONNECT_NOT_SET) {
-                entityStream.write(String.format("retry: %s\n", outboundEvent.getReconnectDelay()).getBytes());
+                entityStream.write(RETRY_LEAD);
+                entityStream.write(Long.toString(outboundEvent.getReconnectDelay()).getBytes());
+                entityStream.write(EOL);
             }
 
             final MediaType eventMediaType =
@@ -121,18 +138,15 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
                         @Override
                         public void write(int i) throws IOException {
                             if (start) {
-                                entityStream.write("data: ".getBytes());
+                                entityStream.write(DATA_LEAD);
                                 start = false;
                             }
                             entityStream.write(i);
                             if (i == '\n') {
-                                entityStream.write("data: ".getBytes());
+                                entityStream.write(DATA_LEAD);
                             }
                         }
                     });
         }
-
-        entityStream.write("\n\n".getBytes());
-        entityStream.flush();
     }
 }

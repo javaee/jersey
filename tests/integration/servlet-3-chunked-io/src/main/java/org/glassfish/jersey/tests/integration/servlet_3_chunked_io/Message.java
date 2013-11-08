@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,73 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.tests.integration.servlet_3_chunked_io;
 
-import java.io.IOException;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-
-import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * Message POJO.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ChunkedOutputTest {
-    @Path("/test")
-    public static class MyResource {
-        @GET
-        public ChunkedOutput<String> get() {
-            final ChunkedOutput<String> output = new ChunkedOutput<String>(String.class);
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+public class Message {
+    /**
+     * Message id.
+     */
+    public int id;
+    /**
+     * Message content.
+     */
+    public String data;
 
-            new Thread() {
-                public void run() {
-                    try {
-                        output.write("test");
-                        output.write("test");
-                        output.write("test");
-                        output.close();
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        fail();
-                    }
-
-                }
-            }.start();
-
-            return output;
-        }
+    /**
+     * Create new message.
+     */
+    public Message() {
+        this.id = -1;
+        this.data = "";
     }
 
-    @Test
-    public void testChunkedResponse() throws Exception {
-        final ResourceConfig resourceConfig = new ResourceConfig(MyResource.class, ChunkedResponseWriter.class);
-        final ApplicationHandler applicationHandler = new ApplicationHandler(resourceConfig);
+    /**
+     * Create new message.
+     * @param id message id.
+     * @param data message content.
+     */
+    public Message(int id, String data) {
+        if (data == null) {
+            throw new IllegalArgumentException("Message data must not be null.");
+        }
 
-        ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/test", "GET").build()).get();
-        assertEquals(200, response.getStatus());
+        this.id = id;
+        this.data = data;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Message message = (Message) o;
+
+        if (id != message.id) return false;
+        if (!data.equals(message.data)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id;
+        result = 31 * result + data.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "{\"id\":" + id + ",\"data\":\"" + data + "\"}";
     }
 }

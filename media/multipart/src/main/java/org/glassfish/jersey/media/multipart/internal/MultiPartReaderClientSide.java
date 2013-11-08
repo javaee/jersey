@@ -39,12 +39,15 @@
  */
 package org.glassfish.jersey.media.multipart.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ConstrainedTo;
@@ -90,6 +93,8 @@ import org.jvnet.mimepull.MIMEPart;
 @ConstrainedTo(RuntimeType.CLIENT)
 public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
 
+    private static final Logger LOGGER = Logger.getLogger(MultiPartReaderClientSide.class.getName());
+
     /**
      * Injectable helper to look up appropriate {@link MessageBodyReader}s
      * for our body parts.
@@ -107,18 +112,36 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
         final ContextResolver<MultiPartProperties> contextResolver =
                 providers.getContextResolver(MultiPartProperties.class, MediaType.WILDCARD_TYPE);
 
-        if (contextResolver == null) {
-            throw new IllegalArgumentException(LocalizationMessages.CONTEXT_RESOLVER_NOT_PRESENT());
+        MultiPartProperties properties = null;
+        if (contextResolver != null) {
+            properties = contextResolver.getContext(this.getClass());
+        }
+        if (properties == null) {
+            properties = new MultiPartProperties();
         }
 
-        final MultiPartProperties config = contextResolver.getContext(this.getClass());
+        mimeConfig = createMimeConfig(properties);
+    }
 
-        if (config == null) {
-            throw new IllegalArgumentException(LocalizationMessages.CONFIG_NOT_PRESENT());
+    private MIMEConfig createMimeConfig(final MultiPartProperties properties) {
+        final MIMEConfig mimeConfig = new MIMEConfig();
+
+        // Set values defined by user.
+        mimeConfig.setMemoryThreshold(properties.getBufferThreshold());
+
+        final String tempDir = properties.getTempDir();
+        if (tempDir != null) {
+            mimeConfig.setDir(tempDir);
         }
 
-        mimeConfig = new MIMEConfig();
-        mimeConfig.setMemoryThreshold(config.getBufferThreshold());
+        // Validate - this checks whether it's possible to create temp files in currently set temp directory.
+        try {
+            File.createTempFile("MIME", null, tempDir != null ? new File(tempDir) : null);
+        } catch (final IOException ioe) {
+            LOGGER.log(Level.WARNING, LocalizationMessages.TEMP_FILE_CANNOT_BE_CREATED(properties.getBufferThreshold()), ioe);
+        }
+
+        return mimeConfig;
     }
 
     public boolean isReadable(final Class<?> type,
@@ -130,7 +153,7 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
 
     /**
      * Reads the entire list of body parts from the Input stream, using the
-     * appropriate provider implementation to deserialize each body part's entity.
+     * appropriate provider implementation to de-serialize each body part's entity.
      *
      * @param type        the class of the object to be read (i.e. {@link MultiPart}.class).
      * @param genericType the type of object to be written.
@@ -140,10 +163,9 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
      * @param stream      output stream to which the entity should be written.
      * @throws java.io.IOException if an I/O error occurs.
      * @throws javax.ws.rs.WebApplicationException
-     *                             if an HTTP error response needs to be produced (only effective if the response is not
-     *                             committed yet).
-     * @throws javax.ws.rs.WebApplicationException
-     *                             if the Content-Disposition header of a {@code multipart/form-data} body part cannot be parsed.
+     *                             If an HTTP error response needs to be produced (only effective if the response is not
+     *                             committed yet) or if the Content-Disposition header of a {@code multipart/form-data} body part
+     *                             cannot be parsed.
      */
     public MultiPart readFrom(final Class<MultiPart> type,
                               final Type genericType,
@@ -153,8 +175,12 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
                               final InputStream stream) throws IOException, WebApplicationException {
         try {
             return readMultiPart(type, genericType, annotations, mediaType, headers, stream);
-        } catch (MIMEParsingException ex) {
-            throw new BadRequestException(ex);
+        } catch (final MIMEParsingException mpe) {
+            if (mpe.getCause() instanceof IOException) {
+                throw (IOException) mpe.getCause();
+            } else {
+                throw new BadRequestException(mpe);
+            }
         }
     }
 

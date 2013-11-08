@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,9 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.Provider;
 
 /**
  * Injectable JavaBean containing the configuration parameters for
@@ -56,29 +54,6 @@ import javax.ws.rs.ext.Provider;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class MultiPartProperties {
-
-    /**
-     * Feature that supplies a configured instance of {@link org.glassfish.jersey.media.multipart
-     * .MultiPartProperties} for this application.
-     */
-    public static class Feature implements javax.ws.rs.core.Feature {
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public boolean configure(final FeatureContext context) {
-            context.register(MultiPartContextResolver.class);
-            return true;
-        }
-
-        @Provider
-        private static class MultiPartContextResolver implements ContextResolver<MultiPartProperties> {
-
-            @Override
-            public MultiPartProperties getContext(final Class<?> type) {
-                return new MultiPartProperties();
-            }
-        }
-    }
 
     /**
      * Default threshold size for buffer.
@@ -101,10 +76,23 @@ public class MultiPartProperties {
     public static final String BUFFER_THRESHOLD = "jersey.config.multipart.bufferThreshold";
 
     /**
+     * Name of the resource property for the directory to store temporary files containing body parts of multipart message that
+     * extends allowed memory threshold..
+     *
+     * The default value is not set (will be taken from {@code java.io.tmpdir} system property).
+     */
+    public static final String TEMP_DIRECTORY = "jersey.config.multipart.tempDir";
+
+    /**
      * The threshold size (in bytes) above which a body part entity will be
      * buffered to disk instead of being held in memory.
      */
     private int bufferThreshold = DEFAULT_BUFFER_THRESHOLD;
+
+    /**
+     * Directory to store temporary files containing body parts of multipart message that extends allowed memory threshold.
+     */
+    private String tempDir = null;
 
     /**
      * Load and customize (if necessary) the configuration values for the
@@ -127,6 +115,42 @@ public class MultiPartProperties {
      */
     public int getBufferThreshold() {
         return bufferThreshold;
+    }
+
+    /**
+     * Get the directory to store temporary files containing body parts of multipart message that extends allowed memory
+     * threshold.
+     *
+     * @return path to the temporary directory.
+     * @since 2.4.1
+     */
+    public String getTempDir() {
+        return tempDir;
+    }
+
+    /**
+     * Set the size (in bytes) of the entity of an incoming {@link BodyPart} before it will be buffered to disk.
+     *
+     * @param threshold size of body part.
+     * @return {@code MultiPartProperties} instance.
+     * @since 2.4.1
+     */
+    public MultiPartProperties bufferThreshold(final int threshold) {
+        this.bufferThreshold = threshold < -1 ? -1 : threshold;
+        return this;
+    }
+
+    /**
+     * Set the path to the directory to store temporary files containing body parts of multipart message that extends allowed
+     * memory threshold.
+     *
+     * @param path path to the temporary directory.
+     * @return {@code MultiPartProperties} instance.
+     * @since 2.4.1
+     */
+    public MultiPartProperties tempDir(final String path) {
+        this.tempDir = path;
+        return this;
     }
 
     /**
@@ -153,11 +177,12 @@ public class MultiPartProperties {
             }
             Properties props = new Properties();
             props.load(stream);
-            String value = null;
-            value = props.getProperty(BUFFER_THRESHOLD);
-            if (value != null) {
-                System.out.println("Setting bufferThreshold to " + value);
-                this.bufferThreshold = Integer.valueOf(value);
+
+            if (props.containsKey(BUFFER_THRESHOLD)) {
+                this.bufferThreshold = Integer.valueOf(props.getProperty(BUFFER_THRESHOLD));
+            }
+            if (props.containsKey(TEMP_DIRECTORY)) {
+                this.tempDir = props.getProperty(TEMP_DIRECTORY);
             }
         } catch (IOException e) {
             throw new IllegalArgumentException(e);
@@ -172,4 +197,19 @@ public class MultiPartProperties {
         }
     }
 
+    /**
+     * Create a {@link ContextResolver context resolver} for a current state of this {@code MultiPartProperties}.
+     *
+     * @return context resolver for this config.
+     * @since 2.4.1
+     */
+    public ContextResolver<MultiPartProperties> resolver() {
+        return new ContextResolver<MultiPartProperties>() {
+
+            @Override
+            public MultiPartProperties getContext(final Class<?> type) {
+                return MultiPartProperties.this;
+            }
+        };
+    }
 }

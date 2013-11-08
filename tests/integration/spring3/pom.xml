@@ -54,7 +54,7 @@
     <name>jersey-tests-integration-spring3</name>
 
     <description>
-       Jersey tests for Spring 3 integration
+        Jersey tests for Spring 3 integration
     </description>
 
     <dependencies>
@@ -85,7 +85,7 @@
             <scope>test</scope>
         </dependency>
 
-       <dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet</artifactId>
             <scope>runtime</scope>
@@ -106,7 +106,7 @@
     </dependencies>
 
     <properties>
-      <spring3.version>3.2.3.RELEASE</spring3.version>
+        <spring3.version>3.2.3.RELEASE</spring3.version>
     </properties>
 
     <build>
@@ -120,8 +120,14 @@
                 <artifactId>maven-failsafe-plugin</artifactId>
             </plugin>
             <plugin>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>jetty-maven-plugin</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <configuration>
+                    <webApp>
+                        <contextPath>/</contextPath>
+                        <webInfIncludeJarPattern>.*\.jar$</webInfIncludeJarPattern>
+                    </webApp>
+                </configuration>
             </plugin>
         </plugins>
     </build>

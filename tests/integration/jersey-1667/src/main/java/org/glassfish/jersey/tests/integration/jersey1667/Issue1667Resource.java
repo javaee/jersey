@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,63 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.server;
+package org.glassfish.jersey.tests.integration.jersey1667;
 
-import javax.ws.rs.GET;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.server.ChunkedOutput;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-
-import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 /**
- * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * Test resource.
+ *
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ChunkedResponseTest extends JerseyTest {
+@Path("/")
+public class Issue1667Resource {
 
-    @Override
-    protected Application configure() {
-        return new ResourceConfig(MyResource.class);
+    @POST
+    @Path("part-file-name")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public String post(
+            @FormDataParam("part") String s,
+            @FormDataParam("part") FormDataContentDisposition d) {
+        return s + ":" + d.getFileName();
     }
-
-    @Path("/test")
-    public static class MyResource {
-
-        @GET
-        public ChunkedOutput<String> get() {
-            final ChunkedOutput<String> output = new ChunkedOutput<String>(String.class);
-
-            new Thread() {
-                public void run() {
-                    try {
-                        output.write("test");
-                        output.write("test");
-                        output.write("test");
-                        output.close();
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        fail();
-                    }
-
-                }
-            }.start();
-
-            return output;
-        }
-    }
-
-    @Test
-    public void testChunkedResponse() throws Exception {
-        final String s = target().path("test").request().get(String.class);
-
-        assertEquals("testtesttest", s);
-    }
-
 }
