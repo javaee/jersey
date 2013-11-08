@@ -92,14 +92,14 @@ public class FollowRedirectsTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.property(JettyClientProperties.FOLLOW_REDIRECTS, false);
+        config.property(ClientProperties.FOLLOW_REDIRECTS, false);
         config.connector(new JettyConnector(config));
     }
 
     @Test
     public void testDoFollow() {
         final URI u = target().getUri();
-        ClientConfig config = new ClientConfig().property(JettyClientProperties.FOLLOW_REDIRECTS, true);
+        ClientConfig config = new ClientConfig().property(ClientProperties.FOLLOW_REDIRECTS, true);
         config.connector(new JettyConnector(config));
         Client c = ClientBuilder.newClient(config);
         WebTarget t = c.target(u);
@@ -127,7 +127,7 @@ public class FollowRedirectsTest extends JerseyTest {
     @Test
     public void testDontFollowPerRequestOverride() {
         final URI u = target().getUri();
-        ClientConfig config = new ClientConfig().property(JettyClientProperties.FOLLOW_REDIRECTS, true);
+        ClientConfig config = new ClientConfig().property(ClientProperties.FOLLOW_REDIRECTS, true);
         config.connector(new JettyConnector(config));
         Client client = ClientBuilder.newClient(config);
         WebTarget t = client.target(u);

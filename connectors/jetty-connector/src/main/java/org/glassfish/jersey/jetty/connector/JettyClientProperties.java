@@ -87,18 +87,4 @@ public class JettyClientProperties {
     public static final String PREEMPTIVE_BASIC_AUTHENTICATION =
             "jersey.config.jetty.client.preemptiveBasicAuthentication";
 
-    /**
-     * Automatic redirection set globally on the client instance.
-     * A value of {@code true} declares that the client will
-     * automatically redirect to the URI declared in 3xx responses.
-     *
-     * The value MUST be an instance convertible to {@link java.lang.Boolean}.
-     * <p />
-     * The default value is {@code true}.
-     * <p />
-     * The name of the configuration property is <tt>{@value}</tt>.
-     */
-    public static final String FOLLOW_REDIRECTS =
-            "jersey.config.jetty.client.followRedirects";
-
 }

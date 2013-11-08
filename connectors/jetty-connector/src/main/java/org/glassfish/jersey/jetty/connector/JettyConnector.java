@@ -87,6 +87,7 @@ import java.util.logging.Logger;
  * <ul>
  * <li>{@link ClientProperties#ASYNC_THREADPOOL_SIZE}</li>
  * <li>{@link ClientProperties#CONNECT_TIMEOUT}</li>
+ * <li>{@link ClientProperties#FOLLOW_REDIRECTS}</li>
  * <li>{@link ClientProperties#PROXY_URI}</li>
  * <li>{@link ClientProperties#PROXY_USERNAME}</li>
  * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
@@ -94,7 +95,6 @@ import java.util.logging.Logger;
  * <li>{@link JettyClientProperties#SSL_CONFIG}</li>
  * <li>{@link JettyClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
  * <li>{@link JettyClientProperties#DISABLE_COOKIES}</li>
- * <li>{@link JettyClientProperties#FOLLOW_REDIRECTS}</li>
  * </ul>
  * <p/>
  * This transport supports both synchronous and asynchronous processing of client requests.
@@ -179,8 +179,6 @@ public class JettyConnector implements Connector {
                 client.setCookieStore(new HttpCookieStore.Empty());
             }
 
-            // Controls redirects globally on the client instance.
-            client.setFollowRedirects(PropertiesHelper.getValue(config.getProperties(), JettyClientProperties.FOLLOW_REDIRECTS, true));
         }
 
         try {
@@ -285,8 +283,7 @@ public class JettyConnector implements Connector {
         Request request = client.newRequest(uri);
         request.method(method);
 
-        // Per-request override
-        request.followRedirects(PropertiesHelper.getValue(clientRequest.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS, client.isFollowRedirects()));
+        request.followRedirects(clientRequest.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
         final Object readTimeout = clientRequest.getConfiguration().getProperties().get(ClientProperties.READ_TIMEOUT);
         if (readTimeout != null && readTimeout instanceof Integer && (Integer)readTimeout > 0) {
             request.timeout((Integer) readTimeout, TimeUnit.MILLISECONDS);
