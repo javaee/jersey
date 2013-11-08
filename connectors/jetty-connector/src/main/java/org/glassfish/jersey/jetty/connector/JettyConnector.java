@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import org.eclipse.jetty.client.HttpClient;
@@ -73,9 +74,11 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -121,6 +124,7 @@ import java.util.logging.Logger;
  * </pre>
  *
  * @author Arul Dhesiaseelan (aruld at acm.org)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JettyConnector implements Connector {
 
@@ -363,22 +367,37 @@ public class JettyConnector implements Connector {
         if (entity != null) {
             jettyRequest.content(entity);
         }
-        final ByteBufferInputStream entityStream = new ByteBufferInputStream();
         final AtomicBoolean callbackInvoked = new AtomicBoolean(false);
-
-        final Throwable[] failure = new Throwable[1];
-        final ClientResponse[] jerseyResponse = new ClientResponse[1];
+        Throwable failure;
         try {
+            final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
+            Futures.addCallback(responseFuture, new FutureCallback<ClientResponse>() {
+                @Override
+                public void onSuccess(ClientResponse result) {
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    if (t instanceof CancellationException) {
+                        // take care of future cancellation
+                        jettyRequest.abort(t);
+                    }
+                }
+            });
+            final AtomicReference<ClientResponse> jerseyResponse = new AtomicReference<ClientResponse>();
+            final ByteBufferInputStream entityStream = new ByteBufferInputStream();
             buildAsyncRequest(jettyRequest)
                     .send(new Response.Listener.Empty() {
 
                         @Override
                         public void onHeaders(Response jettyResponse) {
-                            if (!callbackInvoked.compareAndSet(false, true)) {
-                                return;
-                            }
-                            jerseyResponse[0] = translateResponse(jerseyRequest, jettyResponse, entityStream);
-                            callback.response(jerseyResponse[0]);
+                            if (responseFuture.isDone())
+                                if (!callbackInvoked.compareAndSet(false, true)) {
+                                    return;
+                                }
+                            final ClientResponse response = translateResponse(jerseyRequest, jettyResponse, entityStream);
+                            jerseyResponse.set(response);
+                            callback.response(response);
                         }
 
                         @Override
@@ -386,35 +405,40 @@ public class JettyConnector implements Connector {
                             try {
                                 entityStream.put(content);
                             } catch (InterruptedException ex) {
-                                failure[0] = new ProcessingException(ex.getMessage(), ex.getCause());
+                                final ProcessingException pe = new ProcessingException(ex);
+                                entityStream.closeQueue(pe);
+                                // try to complete the future with an exception
+                                responseFuture.setException(pe);
+                                Thread.currentThread().interrupt();
                             }
                         }
 
                         @Override
                         public void onComplete(Result result) {
                             entityStream.closeQueue();
+                            // try to complete the future with the response only once truly done
+                            responseFuture.set(jerseyResponse.get());
                         }
 
                         @Override
                         public void onFailure(Response response, Throwable t) {
                             entityStream.closeQueue(t);
-
+                            // try to complete the future with an exception
+                            responseFuture.setException(t);
                             if (callbackInvoked.compareAndSet(false, true)) {
                                 callback.failure(t);
                             }
                         }
                     });
-            return Futures.immediateFuture(jerseyResponse[0]);
+            return responseFuture;
         } catch (Throwable t) {
-            failure[0] = t;
+            failure = t;
         }
 
         if (callbackInvoked.compareAndSet(false, true)) {
-            callback.failure(failure[0]);
+            callback.failure(failure);
         }
-        final SettableFuture<Object> errorFuture = SettableFuture.create();
-        errorFuture.setException(failure[0]);
-        return errorFuture;
+        return Futures.immediateFailedFuture(failure);
     }
 
     private Request buildAsyncRequest(final Request jettyRequest) {
