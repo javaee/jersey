@@ -66,6 +66,7 @@
         <module>jersey-1829</module>
         <module>jersey-1928</module>
         <module>jersey-1960</module>
+        <module>jersey-1964</module>
         <module>jersey-2160</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
