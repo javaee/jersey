@@ -495,7 +495,40 @@
                         </entry>
                     </row>
                     <row>
-                        <entry>&jersey.client.ClientProperties.READ_TIMEOUT;</entry>
+                        <entry>&jersey.client.ClientProperties.PROXY_URI;</entry>
+                        <entry><literal>jersey.config.client.proxy.uri</literal></entry>
+                        <entry>
+                            <para>
+                                URI of a HTTP proxy the client connector should use. Default value is not set.
+                                <emphasis>Currently supported with &jersey.apache.ApacheConnector; and
+                                    &jersey.jetty.JettyConnector; only.</emphasis>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.PROXY_USERNAME; (Jersey 2.5 or later)</entry>
+                        <entry><literal>jersey.config.client.proxy.username</literal></entry>
+                        <entry>
+                            <para>
+                                User name which will be used for HTTP proxy authentication. Default value is not set.
+                                <emphasis>Currently supported with &jersey.apache.ApacheConnector; and
+                                    &jersey.jetty.JettyConnector; only.</emphasis>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.PROXY_PASSWORD; (Jersey 2.5 or later)</entry>
+                        <entry><literal>jersey.config.client.proxy.password</literal></entry>
+                        <entry>
+                            <para>
+                                Password which will be used for HTTP proxy authentication. Default value is not set.
+                                <emphasis>Currently supported with &jersey.apache.ApacheConnector; and
+                                    &jersey.jetty.JettyConnector; only.</emphasis>
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.client.ClientProperties.READ_TIMEOUT; (Jersey 2.5 or later)</entry>
                         <entry><literal>jersey.config.client.readTimeout</literal></entry>
                         <entry>
                             <para>

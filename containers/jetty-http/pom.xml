@@ -96,4 +96,16 @@
         </resources>
     </build>
 
+    <profiles>
+        <profile>
+            <id>skip-tests-on-jdk-6</id>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+            <properties>
+                <skip.tests>true</skip.tests>
+            </properties>
+        </profile>
+    </profiles>
+
 </project>

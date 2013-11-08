@@ -59,8 +59,8 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String FOLLOW_REDIRECTS =
-            "jersey.config.client.followRedirects";
+    public static final String FOLLOW_REDIRECTS = "jersey.config.client.followRedirects";
+
     /**
      * Read timeout interval, in milliseconds.
      *
@@ -73,6 +73,7 @@ public final class ClientProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String READ_TIMEOUT = "jersey.config.client.readTimeout";
+
     /**
      * Connect timeout interval, in milliseconds.
      *
@@ -84,6 +85,7 @@ public final class ClientProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String CONNECT_TIMEOUT = "jersey.config.client.connectTimeout";
+
     /**
      * Chunked encoding size.
      *
@@ -120,6 +122,7 @@ public final class ClientProperties {
      */
     // TODO add support in default connector (ported from Jersey 1.x);
     public static final String ASYNC_THREADPOOL_SIZE = "jersey.config.client.async.threadPoolSize";
+
     /**
      * If {@link org.glassfish.jersey.client.filter.EncodingFilter} is
      * registered, this property indicates the value of Content-Encoding
@@ -130,6 +133,7 @@ public final class ClientProperties {
      * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
      */
     public static final String USE_ENCODING = "jersey.config.client.useEncoding";
+
     /**
      * A value of {@code true} declares that the client will try to set
      * unsupported HTTP method to {@link java.net.HttpURLConnection} via
@@ -145,6 +149,7 @@ public final class ClientProperties {
      */
     public static final String HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND =
             "jersey.config.client.httpUrlConnection.setMethodWorkaround";
+
     /**
      * If {@code true} then disable auto-discovery on the client.
      * <p>
@@ -163,6 +168,7 @@ public final class ClientProperties {
      * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
      */
     public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE + ".client";
+
     /**
      * An integer value that defines the buffer size used to buffer client-side
      * request entity in order to determine its size and set the value of HTTP
@@ -188,6 +194,7 @@ public final class ClientProperties {
      * @since 2.2
      */
     public static final String OUTBOUND_CONTENT_LENGTH_BUFFER = CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".client";
+
     /**
      * If {@code true} then disable configuration of Json Processing (JSR-353)
      * feature on client.
@@ -204,10 +211,10 @@ public final class ClientProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
-     * @see
-     * org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE
+     * @see org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE
      */
     public static final String JSON_PROCESSING_FEATURE_DISABLE = CommonProperties.JSON_PROCESSING_FEATURE_DISABLE + ".client";
+
     /**
      * If {@code true} then disable META-INF/services lookup on client.
      * <p>
@@ -222,10 +229,10 @@ public final class ClientProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
-     * @see
-     * org.glassfish.jersey.CommonProperties#METAINF_SERVICES_LOOKUP_DISABLE
+     * @see org.glassfish.jersey.CommonProperties#METAINF_SERVICES_LOOKUP_DISABLE
      */
     public static final String METAINF_SERVICES_LOOKUP_DISABLE = CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE + ".client";
+
     /**
      * If {@code true} then disable configuration of MOXy Json feature on
      * client.
@@ -247,6 +254,7 @@ public final class ClientProperties {
      * @since 2.1
      */
     public static final String MOXY_JSON_FEATURE_DISABLE = CommonProperties.MOXY_JSON_FEATURE_DISABLE + ".client";
+
     /**
      * If {@code true}, the strict validation of HTTP specification compliance
      * will be suppressed.
@@ -282,7 +290,6 @@ public final class ClientProperties {
      */
     public static final String SUPPRESS_HTTP_COMPLIANCE_VALIDATION =
             "jersey.config.client.suppressHttpComplianceValidation";
-
 
     /**
      * The property defines the size of digest cache in the
@@ -344,33 +351,46 @@ public final class ClientProperties {
 
     // TODO Need to implement support for PROXY-* properties in other connectors
     /**
-     * A value of a URI to configure the proxy host and proxy port to proxy
-     * HTTP requests and responses. If the port component of the URI is absent
-     * then a default port of 8080 be selected.
-     * <p/>
-     * The value MUST be an instance of {@link String} or {@link java.net.URI}.
+     * The property defines a URI of a HTTP proxy the client connector should use.
+     * <p>
+     * If the port component of the URI is absent then a default port of {@code 8080} is assumed.
      * If the property absent then no proxy will be utilized.
+     * </p>
+     * <p>The value MUST be an instance of {@link String}.</p>
+     * <p>The default value is {@code null}.</p>
+     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
+     *
+     * @since 2.5
      */
-    public static final String PROXY_URI =
-            "jersey.config.client.proxyURI";
+    public static final String PROXY_URI = "jersey.config.client.proxy.uri";
 
     /**
-     * User name which will be used for proxy authentication.
-     * <p/>
-     * The value MUST be an instance of {@link String}.
+     * The property defines a user name which will be used for HTTP proxy authentication.
+     * <p>
+     * The property is ignored if no {@link #PROXY_URI HTTP proxy URI} has been set.
      * If the property absent then no proxy authentication will be utilized.
+     * </p>
+     * <p>The value MUST be an instance of {@link String}.</p>
+     * <p>The default value is {@code null}.</p>
+     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
+     *
+     * @since 2.5
      */
-    public static final String PROXY_USERNAME =
-            "jersey.config.client.proxyUsername";
+    public static final String PROXY_USERNAME = "jersey.config.client.proxy.username";
 
     /**
-     * Password which will be used for proxy authentication.
-     * <p/>
-     * The value MUST be an instance of {@link String}.
+     * The property defines a user password which will be used for HTTP proxy authentication.
+     * <p>
+     * The property is ignored if no {@link #PROXY_URI HTTP proxy URI} has been set.
      * If the property absent then no proxy authentication will be utilized.
+     * </p>
+     * <p>The value MUST be an instance of {@link String}.</p>
+     * <p>The default value is {@code null}.</p>
+     * <p>The name of the configuration property is <tt>{@value}</tt>.</p>
+     *
+     * @since 2.5
      */
-    public static final String PROXY_PASSWORD =
-            "jersey.config.client.proxyPassword";
+    public static final String PROXY_PASSWORD = "jersey.config.client.proxy.password";
 
     private ClientProperties() {
         // prevents instantiation

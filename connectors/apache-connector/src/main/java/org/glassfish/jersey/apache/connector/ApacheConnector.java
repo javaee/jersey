@@ -119,9 +119,9 @@ import com.google.common.util.concurrent.MoreExecutors;
  * <li>{@link ApacheClientProperties#HTTP_PARAMS}</li>
  * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
  * <li>{@link ApacheClientProperties#DISABLE_COOKIES}</li>
- * <li>{@link ApacheClientProperties#PROXY_URI}</li>
- * <li>{@link ApacheClientProperties#PROXY_USERNAME}</li>
- * <li>{@link ApacheClientProperties#PROXY_PASSWORD}</li>
+ * <li>{@link ClientProperties#PROXY_URI} (or {@link ApacheClientProperties#PROXY_URI})</li>
+ * <li>{@link ClientProperties#PROXY_USERNAME} (or {@link ApacheClientProperties#PROXY_USERNAME})</li>
+ * <li>{@link ClientProperties#PROXY_PASSWORD} (or {@link ApacheClientProperties#PROXY_PASSWORD})</li>
  * <li>{@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
  * <li>{@link ApacheClientProperties#SSL_CONFIG}</li>
  * </ul>
@@ -233,9 +233,7 @@ public class ApacheConnector implements Connector {
                 client.getParams().setParameter(entry.getKey(), entry.getValue());
             }
 
-            Boolean disableCookies = (Boolean) config.getProperties().get(ApacheClientProperties.DISABLE_COOKIES);
-            disableCookies = (disableCookies != null) ? disableCookies : false;
-            if (disableCookies) {
+            if (PropertiesHelper.isProperty(config.getProperties(), ApacheClientProperties.DISABLE_COOKIES)) {
                 client.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.IGNORE_COOKIES);
             }
 
@@ -244,21 +242,36 @@ public class ApacheConnector implements Connector {
                 ((DefaultHttpClient) client).setCredentialsProvider((CredentialsProvider) credentialsProvider);
             }
 
-            final Object proxyUri = config.getProperties().get(ApacheClientProperties.PROXY_URI);
+
+            Object proxyUri;
+            proxyUri = config.getProperty(ClientProperties.PROXY_URI);
+            if (proxyUri == null) {
+                proxyUri = config.getProperty(ApacheClientProperties.PROXY_URI);
+            }
             if (proxyUri != null) {
                 final URI u = getProxyUri(proxyUri);
                 final HttpHost proxy = new HttpHost(u.getHost(), u.getPort(), u.getScheme());
 
-                if (config.getProperties().containsKey(ApacheClientProperties.PROXY_USERNAME) &&
-                        config.getProperties().containsKey(ApacheClientProperties.PROXY_PASSWORD)) {
+                String userName;
+                userName = PropertiesHelper.getValue( config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
+                if (userName == null) {
+                    userName = PropertiesHelper.getValue(
+                            config.getProperties(), ApacheClientProperties.PROXY_USERNAME, String.class);
+                }
+                if (userName != null) {
+                    String password;
+                    password = PropertiesHelper.getValue( config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
+                    if (password == null) {
+                        password = PropertiesHelper.getValue(
+                                config.getProperties(), ApacheClientProperties.PROXY_PASSWORD, String.class);
+                    }
 
-                    ((DefaultHttpClient) client).getCredentialsProvider().setCredentials(
-                            new AuthScope(u.getHost(), u.getPort()),
-                            new UsernamePasswordCredentials(
-                                    config.getProperty(ApacheClientProperties.PROXY_USERNAME).toString(),
-                                    config.getProperty(ApacheClientProperties.PROXY_PASSWORD).toString())
-                    );
-
+                    if (password != null) {
+                        ((DefaultHttpClient) client).getCredentialsProvider().setCredentials(
+                                new AuthScope(u.getHost(), u.getPort()),
+                                new UsernamePasswordCredentials(userName, password)
+                        );
+                    }
                 }
                 client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
             }

@@ -144,6 +144,8 @@ public final class ApacheClientProperties {
      * If the property absent then no proxy will be utilized.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_URI} instead.
      */
     public static final String PROXY_URI =
             "jersey.config.apache.client.proxyUri";
@@ -156,6 +158,8 @@ public final class ApacheClientProperties {
      * If the property absent then no proxy authentication will be utilized.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_USERNAME} instead.
      */
     public static final String PROXY_USERNAME =
             "jersey.config.apache.client.proxyUsername";
@@ -168,6 +172,8 @@ public final class ApacheClientProperties {
      * If the property absent then no proxy authentication will be utilized.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_PASSWORD} instead.
      */
     public static final String PROXY_PASSWORD =
             "jersey.config.apache.client.proxyPassword";

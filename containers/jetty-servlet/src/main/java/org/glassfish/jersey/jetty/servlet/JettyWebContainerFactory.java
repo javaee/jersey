@@ -39,18 +39,20 @@
  */
 package org.glassfish.jersey.jetty.servlet;
 
+import java.net.URI;
+import java.util.Map;
+
+import javax.servlet.Servlet;
+
+import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.glassfish.jersey.uri.UriComponent;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
-import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
-import org.glassfish.jersey.servlet.ServletContainer;
-import org.glassfish.jersey.uri.UriComponent;
-
-import javax.servlet.Servlet;
-import java.net.URI;
-import java.util.Map;
 
 /**
  * Factory for creating and starting Jetty {@link Server} instances
@@ -77,9 +79,9 @@ public final class JettyWebContainerFactory {
      *          are ignored If the URI port is not present then port 80 will be
      *          used. The URI query and fragment components are ignored. Only first path segment will be used
      *          as context path, the rest will be ignored.
-     * @return the http server, with the endpoint started
-     * @throws Exception      if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(String u)
             throws Exception {
@@ -99,9 +101,9 @@ public final class JettyWebContainerFactory {
      *                   used. The URI query and fragment components are ignored. Only first path segment will be used
      *                   as context path, the rest will be ignored.
      * @param initParams the servlet initialization parameters.
-     * @return the http server, with the endpoint started
-     * @throws Exception              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(String u, Map<String, String> initParams)
             throws Exception {
@@ -120,9 +122,9 @@ public final class JettyWebContainerFactory {
      *          are ignored If the URI port is not present then port 80 will be
      *          used. The URI query and fragment components are ignored. Only first path segment will be used
      *          as context path, the rest will be ignored.
-     * @return the http server, with the endpoint started
-     * @throws Exception              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(URI u)
             throws Exception {
@@ -138,9 +140,9 @@ public final class JettyWebContainerFactory {
      *                   used. The URI query and fragment components are ignored. Only first path segment will be used
      *                   as context path, the rest will be ignored.
      * @param initParams the servlet initialization parameters.
-     * @return the http server, with the endpoint started
-     * @throws Exception              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(URI u, Map<String, String> initParams)
             throws Exception {
@@ -156,10 +158,10 @@ public final class JettyWebContainerFactory {
      *          are ignored If the URI port is not present then port 80 will be
      *          used. The URI query and fragment components are ignored. Only first path segment will be used
      *          as context path, the rest will be ignored.
-     * @param c the servlet class
-     * @return the http server, with the endpoint started
-     * @throws Exception              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @param c the servlet class.
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(String u, Class<? extends Servlet> c)
             throws Exception {
@@ -179,14 +181,14 @@ public final class JettyWebContainerFactory {
      *                   are ignored If the URI port is not present then port 80 will be
      *                   used. The URI query and fragment components are ignored. Only first path segment will be used
      *                   as context path, the rest will be ignored.
-     * @param c          the servlet class
+     * @param c          the servlet class.
      * @param initParams the servlet initialization parameters.
-     * @return the http server, with the endpoint started
-     * @throws Exception              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(String u, Class<? extends Servlet> c,
-                                    Map<String, String> initParams)
+                                Map<String, String> initParams)
             throws Exception {
         if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
@@ -204,10 +206,10 @@ public final class JettyWebContainerFactory {
      *          are ignored If the URI port is not present then port 80 will be
      *          used. The URI query and fragment components are ignored. Only first path segment will be used
      *          as context path, the rest will be ignored.
-     * @param c the servlet class
-     * @return the http server, with the endpoint started
-     * @throws Exception              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @param c the servlet class.
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(URI u, Class<? extends Servlet> c)
             throws Exception {
@@ -223,11 +225,11 @@ public final class JettyWebContainerFactory {
      *                   are ignored If the URI port is not present then port 80 will be
      *                   used. The URI query and fragment components are ignored. Only first path segment will be used
      *                   as context path, the rest will be ignored.
-     * @param c          the servlet class
+     * @param c          the servlet class.
      * @param initParams the servlet initialization parameters.
-     * @return the http server, with the endpoint started
-     * @throws Exception              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(URI u, Class<? extends Servlet> c, Map<String, String> initParams)
             throws Exception {
@@ -235,7 +237,7 @@ public final class JettyWebContainerFactory {
     }
 
     private static Server create(URI u, Class<? extends Servlet> c, Servlet servlet,
-                                     Map<String, String> initParams, Map<String, String> contextInitParams)
+                                 Map<String, String> initParams, Map<String, String> contextInitParams)
             throws Exception {
         if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
@@ -254,17 +256,17 @@ public final class JettyWebContainerFactory {
         WebAppContext context = new WebAppContext();
         context.setDisplayName("JettyContext");
         context.setContextPath(path);
-        context.setConfigurations(new Configuration[] {new WebXmlConfiguration()});
+        context.setConfigurations(new Configuration[]{new WebXmlConfiguration()});
         ServletHolder holder;
-        if(c != null) {
+        if (c != null) {
             holder = context.addServlet(c, "/*");
         } else {
             holder = new ServletHolder(servlet);
             context.addServlet(holder, "/*");
         }
 
-        if(contextInitParams != null) {
-            for(Map.Entry<String, String> e : contextInitParams.entrySet()) {
+        if (contextInitParams != null) {
+            for (Map.Entry<String, String> e : contextInitParams.entrySet()) {
                 context.setInitParameter(e.getKey(), e.getValue());
             }
         }
@@ -283,17 +285,17 @@ public final class JettyWebContainerFactory {
      * Create a {@link Server} that registers the declared
      * servlet instance.
      *
-     * @param u          the URI to create the http server. The URI scheme must be
-     *                   equal to "http". The URI user information and host
-     *                   are ignored If the URI port is not present then port 80 will be
-     *                   used. The URI query and fragment components are ignored. Only first path segment will be used
-     *                   as context path, the rest will be ignored.
-     * @param servlet    the servlet instance
-     * @param initParams the servlet initialization parameters
+     * @param u                 the URI to create the HTTP server. The URI scheme must be
+     *                          equal to "http". The URI user information and host
+     *                          are ignored If the URI port is not present then port 80 will be
+     *                          used. The URI query and fragment components are ignored. Only first path segment will be used
+     *                          as context path, the rest will be ignored.
+     * @param servlet           the servlet instance.
+     * @param initParams        the servlet initialization parameters.
      * @param contextInitParams the servlet context initialization parameters.
-     * @return the http server, with the endpoint started
-     * @throws Exception              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @return the http server, with the endpoint started.
+     * @throws Exception                if an error occurs creating the container.
+     * @throws IllegalArgumentException if HTTP server URI is {@code null}.
      */
     public static Server create(URI u, Servlet servlet, Map<String, String> initParams, Map<String, String> contextInitParams)
             throws Exception {
