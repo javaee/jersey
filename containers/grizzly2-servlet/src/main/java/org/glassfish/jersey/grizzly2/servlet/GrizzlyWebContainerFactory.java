@@ -252,13 +252,13 @@ public final class GrizzlyWebContainerFactory {
         path = String.format("/%s", UriComponent.decodePath(u.getPath(), true).get(1).toString());
 
         WebappContext context = new WebappContext("GrizzlyContext", path);
-        ServletRegistration registration = null;
+        ServletRegistration registration;
         if(c != null) {
             registration = context.addServlet(c.getName(), c);
         } else {
             registration = context.addServlet(servlet.getClass().getName(), servlet);
         }
-        registration.addMapping("");
+        registration.addMapping("/*");
 
         if(contextInitParams != null) {
             for(Map.Entry<String, String> e : contextInitParams.entrySet()) {

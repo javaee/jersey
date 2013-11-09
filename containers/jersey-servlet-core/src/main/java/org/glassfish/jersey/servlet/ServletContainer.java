@@ -300,9 +300,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
          * We need to work around this and not use getPathInfo
          * for the decodedPath.
          */
-        final String decodedBasePath = (pathInfo != null)
-                ? request.getContextPath() + servletPath + "/"
-                : request.getContextPath() + "/";
+        final String decodedBasePath = request.getContextPath() + servletPath + "/";
 
         final String encodedBasePath = UriComponent.encode(decodedBasePath,
                 UriComponent.Type.PATH);
