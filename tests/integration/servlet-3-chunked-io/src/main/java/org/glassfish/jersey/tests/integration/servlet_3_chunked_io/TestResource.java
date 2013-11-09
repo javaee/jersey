@@ -76,7 +76,7 @@ public class TestResource {
                 try {
                     for (int i = 0; i < 3; i++) {
                         output.write(new Message(i, "test"));
-                        Thread.sleep(2000);
+                        Thread.sleep(200);
                     }
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Error writing chunk.", e);

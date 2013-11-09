@@ -81,7 +81,7 @@ public class ChunkedInputOutputITCase extends JerseyTest {
     @Override
     protected void configureClient(ClientConfig config) {
         config.property(ClientProperties.CONNECT_TIMEOUT, 15000);
-        config.property(ClientProperties.READ_TIMEOUT, 2000);
+        config.property(ClientProperties.READ_TIMEOUT, 5000);
         config.property(ClientProperties.ASYNC_THREADPOOL_SIZE, MAX_LISTENERS + 1);
         GrizzlyConnector jerseyClientConnector = new GrizzlyConnector(config);
         config.connector(jerseyClientConnector);
