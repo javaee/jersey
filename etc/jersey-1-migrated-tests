@@ -266,7 +266,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/AcceptMediaT
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/BeanTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/EntityTagProviderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/LocaleProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/MatchingEntityTagTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/MediaTypeProviderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/QualitySourceMediaTypeProviderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/ToStringHeaderTest.java

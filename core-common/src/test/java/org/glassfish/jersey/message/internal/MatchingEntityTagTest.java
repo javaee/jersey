@@ -40,72 +40,72 @@
 package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
-import java.util.Collections;
 import java.util.Set;
 
 import javax.ws.rs.core.EntityTag;
 
-import org.glassfish.jersey.internal.LocalizationMessages;
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.fail;
 
 /**
- * A matching entity tag.
- * <p>
- * Note that this type and it's super type cannot be used to create request
- * header values for {@code If-Match} and {@code If-None-Match}
- * of the form {@code If-Match: *} or {@code If-None-Match: *} as
- * {@code *} is not a valid entity tag.
+ * {@link MatchingEntityTag} unit tests ported from Jersey 1.x.
  *
- * @author Paul Sandoz
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MatchingEntityTag extends EntityTag {
+public class MatchingEntityTagTest {
 
-    /**
-     * An empty set that corresponds to {@code If-Match: *} or {@code If-None-Match: *}.
-     */
-    public static final Set<MatchingEntityTag> ANY_MATCH = Collections.emptySet();
+    @Test
+    public void testOneEntityTag() throws Exception {
+        String header = "\"1\"";
+        Set<MatchingEntityTag> s = HttpHeaderReader.readMatchingEntityTag(header);
 
-    /**
-     * Create new strongly validating entity tag.
-     *
-     * @param value ETag header value.
-     */
-    public MatchingEntityTag(String value) {
-        super(value, false);
+        assertEquals(1, s.size());
+
+        assertTrue(s.contains(new EntityTag("1")));
+    }
+
+    @Test
+    public void testMultipleEntityTag() throws Exception {
+        String header = "\"1\", W/\"2\", \"3\"";
+        Set<MatchingEntityTag> s = HttpHeaderReader.readMatchingEntityTag(header);
+
+        assertEquals(3, s.size());
+
+        assertTrue(s.contains(new EntityTag("1")));
+
+        assertTrue(s.contains(new EntityTag("2", true)));
+
+        assertTrue(s.contains(new EntityTag("3")));
+    }
+
+    @Test
+    public void testAnyMatch() throws Exception {
+        String header = "*";
+        Set<MatchingEntityTag> s = HttpHeaderReader.readMatchingEntityTag(header);
+
+        assertThat(s.size(), is(equalTo(0)));
+        assertThat(MatchingEntityTag.ANY_MATCH, is(s));
     }
 
     /**
-     * Create new matching entity tag.
-     *
-     * @param value ETag header value.
-     * @param weak should be set to false, if strong validation is required,
-     *            otherwise should be set to true.
+     * Reproducer for JERSEY-1278.
      */
-    public MatchingEntityTag(String value, boolean weak) {
-        super(value, weak);
-    }
-
-    /**
-     * Create new matching entity tag out of provided header reader.
-     *
-     * @param reader HTTP header content reader.
-     * @return a new matching entity tag.
-     * @throws ParseException in case the header could not be parsed.
-     */
-    public static MatchingEntityTag valueOf(HttpHeaderReader reader) throws ParseException {
-        final String tagString = reader.getRemainder();
-
-        HttpHeaderReader.Event e = reader.next(false);
-        if (e == HttpHeaderReader.Event.QuotedString) {
-            return new MatchingEntityTag(reader.getEventValue());
-        } else if (e == HttpHeaderReader.Event.Token) {
-            String v = reader.getEventValue();
-            if (v.equals("W")) {
-                reader.nextSeparator('/');
-                return new MatchingEntityTag(reader.nextQuotedString(), true);
-            }
+    @Test
+    public void testBadEntityTag() {
+        String header = "1\"";
+        try {
+            HttpHeaderReader.readMatchingEntityTag(header);
+            fail("ParseException expected");
+        } catch (ParseException pe) {
+            assertThat(pe.getMessage(), containsString(header));
         }
-
-        throw new ParseException(LocalizationMessages.ERROR_PARSING_ENTITY_TAG(tagString), reader.getIndex());
     }
 }
