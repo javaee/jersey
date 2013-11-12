@@ -43,6 +43,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Context;
+import java.util.Enumeration;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)

@@ -49,19 +49,12 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.Test;
 import org.junit.Assert;
 
-import java.net.URI;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.UriBuilder;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public abstract class AbstractHelloWorldResourceTest extends JerseyTest {
-
-    @Override
-    protected URI getBaseUri() {
-        return UriBuilder.fromUri(super.getBaseUri()).path(AbstractHelloWorldResource.CONTEXT_ROOT).build();
-    }
 
     @Override
     protected ResourceConfig configure() {

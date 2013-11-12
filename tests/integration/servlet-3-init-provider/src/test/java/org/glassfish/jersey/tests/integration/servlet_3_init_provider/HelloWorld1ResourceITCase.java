@@ -42,25 +42,42 @@ package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.client.WebTarget;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class HelloWorld4ResourceTest extends AbstractHelloWorldResourceTest {
+public class HelloWorld1ResourceITCase extends AbstractHelloWorldResourceTest {
 
     protected Class<?> getResourceClass() {
-        return HelloWorld4Resource.class;
+        return HelloWorld1Resource.class;
     }
 
     protected int getIndex() {
-        return 4;
+        return 1;
     }
 
     @Test
-    public void testRegisterFilter() throws Exception {
-        Response response = target("application" + getIndex()).path("helloworld" + getIndex()).path("filter").request().get();
-        Assert.assertEquals(404, response.getStatus());
+    public void testRegisteredServletNames() throws Exception {
+        WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("servlets");
+        Assert.assertEquals(AbstractHelloWorldResource.NUMBER_OF_APPLICATIONS, (int)target.request().get(Integer.TYPE));
+
+        target = target.path("{name}");
+        testRegisteredServletNames(target, "org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application1");
+        testRegisteredServletNames(target, "application2");
+        testRegisteredServletNames(target, "application3");
+        testRegisteredServletNames(target, "org.glassfish.jersey.tests.integration.servlet_3_init_provider.Application4");
+        testRegisteredServletNames(target, "javax.ws.rs.core.Application");
+    }
+
+    private void testRegisteredServletNames(WebTarget target, String servletName) throws Exception {
+        Assert.assertTrue(target.resolveTemplate("name", servletName).request().get(Boolean.TYPE));
+    }
+
+    @Test
+    public void testImmutableServletNames() {
+        WebTarget target = target("application" + getIndex()).path("helloworld" + getIndex()).path("immutableServletNames");
+        Assert.assertTrue(target.request().get(Boolean.TYPE));
     }
 
 }

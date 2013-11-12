@@ -42,23 +42,25 @@ package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 import org.junit.Assert;
 import org.junit.Test;
 
+import javax.ws.rs.core.Response;
+
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class HelloWorld5ResourceTest extends AbstractHelloWorldResourceTest {
+public class HelloWorld4ResourceITCase extends AbstractHelloWorldResourceTest {
 
     protected Class<?> getResourceClass() {
-        return HelloWorld5Resource.class;
+        return HelloWorld4Resource.class;
     }
 
     protected int getIndex() {
-        return 5;
+        return 4;
     }
 
     @Test
     public void testRegisterFilter() throws Exception {
-        String actual = target("application" + getIndex()).path("helloworld" + getIndex()).path("filter").request().get(String.class);
-        Assert.assertEquals(TestServletContainerProvider.TEST_FILTER, actual);
+        Response response = target("application" + getIndex()).path("helloworld" + getIndex()).path("filter").request().get();
+        Assert.assertEquals(404, response.getStatus());
     }
 
 }

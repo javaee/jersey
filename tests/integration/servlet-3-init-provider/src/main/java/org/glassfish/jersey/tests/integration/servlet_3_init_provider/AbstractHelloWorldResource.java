@@ -47,8 +47,6 @@ import javax.ws.rs.Produces;
  */
 public abstract class AbstractHelloWorldResource {
 
-    public static final String CONTEXT_ROOT = "/servlet-3-init-provider";
-
     public static final int NUMBER_OF_APPLICATIONS = 5;
 
     @GET

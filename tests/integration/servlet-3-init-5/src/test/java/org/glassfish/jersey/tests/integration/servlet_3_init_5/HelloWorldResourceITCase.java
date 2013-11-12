@@ -41,6 +41,7 @@ package org.glassfish.jersey.tests.integration.servlet_3_init_5;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -56,6 +57,8 @@ public class HelloWorldResourceITCase extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+
         return new ResourceConfig(HelloWorldResource.class);
     }
 
