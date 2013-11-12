@@ -79,6 +79,13 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Default client transport connector using {@link HttpURLConnection}.
+ * <p>
+ * The connector overrides default behaviour of the property {@link ClientProperties#REQUEST_ENTITY_PROCESSING}
+ * and uses {@link RequestEntityProcessing#BUFFERED} as the default value. Chunked encoding support on
+ * {@code HttpURLConnection} contains bug which cause that request fails unpredictable. The workaround is to
+ * define the property {@link ClientProperties#HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING} and define
+ * {@code Content-length} for each request.
+ * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -95,7 +102,7 @@ public class HttpUrlConnector implements Connector {
      * <p>
      * A factory instance may be registered with the constructor
      * {@link HttpUrlConnector#HttpUrlConnector(javax.ws.rs.core.Configuration,
-       org.glassfish.jersey.client.HttpUrlConnector.ConnectionFactory)}
+            org.glassfish.jersey.client.HttpUrlConnector.ConnectionFactory)}
      * Then the {@link HttpUrlConnector} instance may be registered with a {@link JerseyClient}
      * or {@link JerseyWebTarget} configuration via
      * {@link ClientConfig#connector(org.glassfish.jersey.client.spi.Connector)}.
@@ -279,13 +286,18 @@ public class HttpUrlConnector implements Connector {
 
         final Object entity = request.getEntity();
         if (entity != null) {
-            final int length = request.getLength();
-            if (fixLengthStreaming && length > 0) {
-                uc.setFixedLengthStreamingMode(length);
-            } else if (chunkLength != null) {
-                uc.setChunkedStreamingMode(chunkLength);
-            }
+            RequestEntityProcessing entityProcessing = request.resolveProperty(
+                    ClientProperties.REQUEST_ENTITY_PROCESSING, RequestEntityProcessing.class);
 
+
+            if (entityProcessing == null || entityProcessing != RequestEntityProcessing.BUFFERED) {
+                final int length = request.getLength();
+                if (fixLengthStreaming && length > 0) {
+                    uc.setFixedLengthStreamingMode(length);
+                } else if (entityProcessing == RequestEntityProcessing.CHUNKED) {
+                    uc.setChunkedStreamingMode(chunkLength == null ? 4096 : chunkLength);
+                }
+            }
             uc.setDoOutput(true);
 
             if (httpMethod.equalsIgnoreCase("GET")) {

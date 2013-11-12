@@ -41,6 +41,7 @@ package org.glassfish.jersey.apache.connector;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -63,6 +64,7 @@ import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -98,6 +100,7 @@ import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.AbstractHttpEntity;
+import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -122,33 +125,40 @@ import com.google.common.util.concurrent.MoreExecutors;
  * <li>{@link ClientProperties#PROXY_URI} (or {@link ApacheClientProperties#PROXY_URI})</li>
  * <li>{@link ClientProperties#PROXY_USERNAME} (or {@link ApacheClientProperties#PROXY_USERNAME})</li>
  * <li>{@link ClientProperties#PROXY_PASSWORD} (or {@link ApacheClientProperties#PROXY_PASSWORD})</li>
+ * <li>{@link ClientProperties#REQUEST_ENTITY_PROCESSING} - default value is {@link RequestEntityProcessing#CHUNKED}</li>
  * <li>{@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
  * <li>{@link ApacheClientProperties#SSL_CONFIG}</li>
  * </ul>
- * <p/>
- * By default a request entity is buffered and repeatable such that
- * authorization may be performed automatically in response to a 401 response.
- * <p/>
- * If the property {@link org.glassfish.jersey.client.ClientProperties#CHUNKED_ENCODING_SIZE} size
- * is set to a value greater than 0 then chunked encoding will be enabled
- * and the request entity (if present) will not be buffered and is not
- * repeatable. For authorization to work in such scenarios the property
+ * <p>
+ * This connector uses {@link RequestEntityProcessing#CHUNKED chunked encoding} as a default setting. This can
+ * be overriden by the {@link ClientProperties#REQUEST_ENTITY_PROCESSING}.
+ * </p>
+ * <p>
+ * Using of authorization is dependent on the chunk encoding setting. If the entity
+ * buffering is enabled, the entity is buffered and authorization can be performed
+ * automatically in response to a 401 by sending the request again. When entity buffering
+ * is disabled (chunked encoding is used) then the property
  * {@link org.glassfish.jersey.apache.connector.ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION} must
  * be set to {@code true}.
- * <p/>
+ * </p>
+ * <p>
  * If a {@link org.glassfish.jersey.client.ClientResponse} is obtained and an
  * entity is not read from the response then
  * {@link org.glassfish.jersey.client.ClientResponse#close()} MUST be called
  * after processing the response to release connection-based resources.
- * <p/>
+ * </p>
+ * <p>
  * Client operations are thread safe, the HTTP connection may
  * be shared between different threads.
  * <p/>
+ * <p>
  * If a response entity is obtained that is an instance of {@link Closeable}
  * then the instance MUST be closed after processing the entity to release
  * connection-based resources.
- * <p/>
+ * </p>
+ * <p>
  * The following methods are currently supported: HEAD, GET, POST, PUT, DELETE and OPTIONS.
+ * </p>
  *
  * @author jorgeluisw@mac.com
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -253,14 +263,14 @@ public class ApacheConnector implements Connector {
                 final HttpHost proxy = new HttpHost(u.getHost(), u.getPort(), u.getScheme());
 
                 String userName;
-                userName = PropertiesHelper.getValue( config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
+                userName = PropertiesHelper.getValue(config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
                 if (userName == null) {
                     userName = PropertiesHelper.getValue(
                             config.getProperties(), ApacheClientProperties.PROXY_USERNAME, String.class);
                 }
                 if (userName != null) {
                     String password;
-                    password = PropertiesHelper.getValue( config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
+                    password = PropertiesHelper.getValue(config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
                     if (password == null) {
                         password = PropertiesHelper.getValue(
                                 config.getProperties(), ApacheClientProperties.PROXY_PASSWORD, String.class);
@@ -403,7 +413,10 @@ public class ApacheConnector implements Connector {
         final String strMethod = clientRequest.getMethod();
         final URI uri = clientRequest.getUri();
 
-        final HttpEntity entity = getHttpEntity(clientRequest);
+        Boolean bufferingEnabled = clientRequest.resolveProperty(ClientProperties.REQUEST_ENTITY_PROCESSING,
+                RequestEntityProcessing.class) == RequestEntityProcessing.BUFFERED;
+
+        final HttpEntity entity = getHttpEntity(clientRequest, bufferingEnabled);
         final HttpUriRequest request;
 
         if (strMethod.equals(HttpGet.METHOD_NAME)) {
@@ -437,23 +450,29 @@ public class ApacheConnector implements Connector {
         }
         request.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS,
                 clientRequest.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
+
         if (entity != null && request instanceof HttpEntityEnclosingRequestBase) {
             ((HttpEntityEnclosingRequestBase) request).setEntity(entity);
         } else if (entity != null) {
             throw new ProcessingException(LocalizationMessages.ENTITY_NOT_SUPPORTED(clientRequest.getMethod()));
         }
 
+        Integer chunkSize = clientRequest.resolveProperty(ClientProperties.CHUNKED_ENCODING_SIZE, Integer.class);
+        if (chunkSize != null && !bufferingEnabled) {
+            client.getParams().setIntParameter(CoreConnectionPNames.MIN_CHUNK_LIMIT, chunkSize);
+        }
         return request;
     }
 
-    private HttpEntity getHttpEntity(final ClientRequest clientRequest) {
+
+    private HttpEntity getHttpEntity(final ClientRequest clientRequest, final boolean bufferingEnabled) {
         final Object entity = clientRequest.getEntity();
 
         if (entity == null) {
             return null;
         }
 
-        return new AbstractHttpEntity() {
+        AbstractHttpEntity httpEntity = new AbstractHttpEntity() {
             @Override
             public boolean isRepeatable() {
                 return false;
@@ -466,7 +485,13 @@ public class ApacheConnector implements Connector {
 
             @Override
             public InputStream getContent() throws IOException, IllegalStateException {
-                return null;
+                if (bufferingEnabled) {
+                    ByteArrayOutputStream buffer = new ByteArrayOutputStream(512);
+                    writeTo(buffer);
+                    return new ByteArrayInputStream(buffer.toByteArray());
+                } else {
+                    return null;
+                }
             }
 
             @Override
@@ -485,6 +510,16 @@ public class ApacheConnector implements Connector {
                 return false;
             }
         };
+
+        if (bufferingEnabled) {
+            try {
+                return new BufferedHttpEntity(httpEntity);
+            } catch (IOException e) {
+                throw new ProcessingException(LocalizationMessages.ERROR_BUFFERING_ENTITY(), e);
+            }
+        } else {
+            return httpEntity;
+        }
     }
 
     private void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final HttpUriRequest request) {

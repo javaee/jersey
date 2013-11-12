@@ -39,35 +39,12 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
-import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.api.*;
-import org.eclipse.jetty.client.util.BasicAuthentication;
-import org.eclipse.jetty.client.util.BytesContentProvider;
-import org.eclipse.jetty.client.util.OutputStreamContentProvider;
-import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.http.HttpFields;
-import org.eclipse.jetty.http.HttpMethod;
-import org.eclipse.jetty.util.HttpCookieStore;
-import org.eclipse.jetty.util.Jetty;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.glassfish.jersey.SslConfigurator;
-import org.glassfish.jersey.client.*;
-import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
-import org.glassfish.jersey.client.spi.Connector;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
-import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
-import org.glassfish.jersey.message.internal.OutboundMessageContext;
-import org.glassfish.jersey.message.internal.Statuses;
-
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.MultivaluedMap;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.CookieStore;
 import java.net.URI;
 import java.nio.ByteBuffer;
@@ -81,6 +58,45 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.glassfish.jersey.SslConfigurator;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.ClientRequest;
+import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
+import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
+import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
+import org.glassfish.jersey.message.internal.OutboundMessageContext;
+import org.glassfish.jersey.message.internal.Statuses;
+
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.api.AuthenticationStore;
+import org.eclipse.jetty.client.api.ContentProvider;
+import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.ProxyConfiguration;
+import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.client.util.BasicAuthentication;
+import org.eclipse.jetty.client.util.BytesContentProvider;
+import org.eclipse.jetty.client.util.OutputStreamContentProvider;
+import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
+import org.eclipse.jetty.http.HttpMethod;
+import org.eclipse.jetty.util.HttpCookieStore;
+import org.eclipse.jetty.util.Jetty;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * A {@link Connector} that utilizes the Jetty HTTP Client to send and receive
@@ -122,6 +138,10 @@ import java.util.logging.Logger;
  * client.close();
  * }
  * </pre>
+ * <p>
+ * This connector supports only {@link org.glassfish.jersey.client.RequestEntityProcessing#BUFFERED entity buffering}.
+ * Defining the property {@link ClientProperties#REQUEST_ENTITY_PROCESSING} has no effect on this connector.
+ * </p>
  *
  * @author Arul Dhesiaseelan (aruld at acm.org)
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -153,7 +173,7 @@ public class JettyConnector implements Connector {
 
         if (config != null) {
             final Object connectTimeout = config.getProperties().get(ClientProperties.CONNECT_TIMEOUT);
-            if (connectTimeout != null && connectTimeout instanceof Integer && (Integer)connectTimeout > 0) {
+            if (connectTimeout != null && connectTimeout instanceof Integer && (Integer) connectTimeout > 0) {
                 client.setConnectTimeout((Integer) connectTimeout);
             }
             final Object threadPoolSize = config.getProperties().get(ClientProperties.ASYNC_THREADPOOL_SIZE);
@@ -289,7 +309,7 @@ public class JettyConnector implements Connector {
 
         request.followRedirects(clientRequest.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
         final Object readTimeout = clientRequest.getConfiguration().getProperties().get(ClientProperties.READ_TIMEOUT);
-        if (readTimeout != null && readTimeout instanceof Integer && (Integer)readTimeout > 0) {
+        if (readTimeout != null && readTimeout instanceof Integer && (Integer) readTimeout > 0) {
             request.timeout((Integer) readTimeout, TimeUnit.MILLISECONDS);
         }
         writeOutBoundHeaders(clientRequest.getHeaders(), request);

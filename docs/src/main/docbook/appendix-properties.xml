@@ -537,6 +537,19 @@
                         </entry>
                     </row>
                     <row>
+                        <entry>&jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING; (Jersey 2.5 or later)</entry>
+                        <entry><literal>jersey.config.client.request.entity.processing</literal></entry>
+                        <entry>
+                            <para>
+                                Defines whether the request entity should be serialized using internal buffer to
+                                evaluate content length or chunk encoding should be used. Possible values are
+                                <literal>BUFFERED</literal> or <literal>CHUNKED</literal>. Default value is
+                                <literal>BUFFERED</literal>.
+                            </para>
+                        </entry>
+                    </row>
+
+                    <row>
                         <entry>&jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION;
                             (Jersey 2.2 or later)</entry>
                         <entry><literal>jersey.config.client.suppressHttpComplianceValidation</literal></entry>
