@@ -51,7 +51,9 @@ import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.process.internal.Stage;
@@ -83,7 +85,7 @@ class ClientRuntime {
      * @param connector client transport connector.
      * @param locator   HK2 service locator.
      */
-    public ClientRuntime(final ExtendedConfig config, final Connector connector, final ServiceLocator locator) {
+    public ClientRuntime(final CommonConfig config, final Connector connector, final ServiceLocator locator) {
         final Stage.Builder<ClientRequest> requestingChainBuilder = Stages
                 .chain(locator.createAndInitialize(RequestProcessingInitializationStage.class));
         final ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(locator);
@@ -94,11 +96,12 @@ class ClientRuntime {
         this.responseProcessingRoot = responseFilteringStage != null ?
                 responseFilteringStage : Stages.<ClientResponse>identity();
 
-        this.config = config;
+        this.config = config.getConfiguration();
         this.connector = connector;
 
         this.requestScope = locator.getService(RequestScope.class);
-        this.asyncExecutorsFactory = new ClientAsyncExecutorsFactory(locator);
+        int asyncThreadpoolSize = PropertiesHelper.getValue(config.getProperties(), ClientProperties.ASYNC_THREADPOOL_SIZE, 0, Integer.class);
+        this.asyncExecutorsFactory = new ClientAsyncExecutorsFactory(locator, asyncThreadpoolSize);
 
         this.locator = locator;
     }
