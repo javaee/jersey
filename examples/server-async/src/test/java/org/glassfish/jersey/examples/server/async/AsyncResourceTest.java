@@ -39,7 +39,10 @@
  */
 package org.glassfish.jersey.examples.server.async;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +99,7 @@ public class AsyncResourceTest extends JerseyTest {
         final Object sequentialPostLock = new Object();
 
         final ExecutorService executor = Executors.newCachedThreadPool(
-                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%d").build());
+                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%02d").build());
 
         final Map<Integer, String> postResponses = new ConcurrentHashMap<Integer, String>();
         final Map<Integer, String> getResponses = new ConcurrentHashMap<Integer, String>();
@@ -127,7 +130,7 @@ public class AsyncResourceTest extends JerseyTest {
                                 attemptCounter++;
                                 try {
                                     final String response = resourceTarget.request()
-                                            .post(Entity.text("" + requestId), String.class);
+                                            .post(Entity.text(String.format("%02d", requestId)), String.class);
                                     postResponses.put(requestId, response);
                                     break;
                                 } catch (Throwable t) {
@@ -206,29 +209,27 @@ public class AsyncResourceTest extends JerseyTest {
 
         StringBuilder messageBuilder = new StringBuilder("POST responses received: ").append(postResponses.size()).append("\n");
         for (Map.Entry<Integer, String> postResponseEntry : postResponses.entrySet()) {
-            messageBuilder.append("POST response for message ")
-                    .append(postResponseEntry.getKey()).append(": ")
+            messageBuilder.append(String.format("POST response for message %02d: ", postResponseEntry.getKey()))
                     .append(postResponseEntry.getValue()).append('\n');
         }
         messageBuilder.append('\n');
         messageBuilder.append("GET responses received: ").append(getResponses.size()).append("\n");
         for (Map.Entry<Integer, String> getResponseEntry : getResponses.entrySet()) {
-            messageBuilder.append("GET response for message ")
-                    .append(getResponseEntry.getKey()).append(": ")
+            messageBuilder.append(String.format("GET response for message %02d: ", getResponseEntry.getKey()))
                     .append(getResponseEntry.getValue()).append('\n');
         }
         LOGGER.info(messageBuilder.toString());
 
         for (Map.Entry<Integer, String> postResponseEntry : postResponses.entrySet()) {
             assertEquals(
-                    "Unexpected POST notification response for message " + postResponseEntry.getKey(),
+                    String.format("Unexpected POST notification response for message %02d", postResponseEntry.getKey()),
                     expectedPostResponse, postResponseEntry.getValue());
         }
 
         final List<Integer> lost = new LinkedList<Integer>();
         final Collection<String> getResponseValues = getResponses.values();
         for (int i = 0; i < MAX_MESSAGES; i++) {
-            if (!getResponseValues.contains("" + i)) {
+            if (!getResponseValues.contains(String.format("%02d", i))) {
                 lost.add(i);
             }
         }
@@ -245,13 +246,13 @@ public class AsyncResourceTest extends JerseyTest {
         final String expectedResponse = SimpleLongRunningResource.NOTIFICATION_RESPONSE;
 
         final int MAX_MESSAGES = 100;
-        final int LATCH_WAIT_TIMEOUT = 10;
+        final int LATCH_WAIT_TIMEOUT = 25;
         final boolean debugMode = false;
         final boolean sequentialGet = false;
         final Object sequentialGetLock = new Object();
 
         final ExecutorService executor = Executors.newCachedThreadPool(
-                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%d").build());
+                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%02d").build());
 
         final Map<Integer, String> getResponses = new ConcurrentHashMap<Integer, String>();
 
@@ -312,22 +313,29 @@ public class AsyncResourceTest extends JerseyTest {
             executor.shutdownNow();
         }
 
-        StringBuilder messageBuilder = new StringBuilder("GET responses received: ").append(getResponses.size()).append("\n");
-        for (Map.Entry<Integer, String> getResponseEntry : getResponses.entrySet()) {
-            messageBuilder.append("GET response for message ")
-                    .append(getResponseEntry.getKey()).append(": ")
+        final ArrayList<Map.Entry<Integer, String>> responseEntryList =
+                new ArrayList<Map.Entry<Integer, String>>(getResponses.entrySet());
+        Collections.sort(responseEntryList,
+                new Comparator<Map.Entry<Integer, String>>() {
+                    @Override
+                    public int compare(Map.Entry<Integer, String> o1, Map.Entry<Integer, String> o2) {
+                        return o1.getKey().compareTo(o2.getKey());
+                    }
+                });
+        StringBuilder messageBuilder = new StringBuilder("GET responses received: ").append(responseEntryList.size()).append("\n");
+        for (Map.Entry<Integer, String> getResponseEntry : responseEntryList) {
+            messageBuilder.append(String.format("GET response for message %02d: ", getResponseEntry.getKey()))
                     .append(getResponseEntry.getValue()).append('\n');
         }
         LOGGER.info(messageBuilder.toString());
 
-        for (Map.Entry<Integer, String> entry : getResponses.entrySet()) {
+        for (Map.Entry<Integer, String> entry : responseEntryList) {
             assertEquals(
-                    "Unexpected GET notification response for message " + entry.getKey(),
+                    String.format("Unexpected GET notification response for message %02d", entry.getKey()),
                     expectedResponse, entry.getValue());
         }
         assertEquals(MAX_MESSAGES, getResponses.size());
     }
-
 
 
 }

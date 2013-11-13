@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
+import java.net.NoRouteToHostException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -61,8 +62,10 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -119,12 +122,11 @@ public class TimeoutTest extends JerseyTest {
         try {
             t.path("test/timeout").request().get();
         } catch (ProcessingException e) {
-            if (!(e.getCause() instanceof TimeoutException)) {
-                e.printStackTrace();
-                fail();
-            }
+            assertThat("Unexpected processing exception cause",
+                    e.getCause(), instanceOf(TimeoutException.class));
+        } finally {
+            c.close();
         }
-        c.close();
     }
 
     @Test
@@ -137,11 +139,11 @@ public class TimeoutTest extends JerseyTest {
         try {
             target.request().get();
         } catch (ProcessingException e) {
-            if (!(e.getCause().getCause() instanceof SocketTimeoutException)) {
-                e.printStackTrace();
-                fail();
-            }
+            assertThat("Unexpected processing exception cause",
+                    e.getCause().getCause(),
+                    anyOf(instanceOf(SocketTimeoutException.class), instanceOf(NoRouteToHostException.class)));
+        } finally {
+            c.close();
         }
-        c.close();
     }
 }
