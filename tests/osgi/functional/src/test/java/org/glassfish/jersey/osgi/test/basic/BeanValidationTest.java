@@ -40,18 +40,8 @@
 
 package org.glassfish.jersey.osgi.test.basic;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.osgi.test.util.Helper;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.validation.ValidationFeature;
-import org.glassfish.jersey.test.TestProperties;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.junit.PaxExam;
+import java.net.URI;
+import java.util.List;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -60,9 +50,20 @@ import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
-import java.util.List;
 
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.osgi.test.util.Helper;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.validation.ValidationFeature;
+
+import org.glassfish.grizzly.http.server.HttpServer;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.PaxExam;
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
@@ -75,13 +76,11 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 @RunWith(PaxExam.class)
 public class BeanValidationTest {
 
-    private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
-
     private static final String CONTEXT = "/jersey";
 
     private static final URI baseUri = UriBuilder.
             fromUri("http://localhost").
-            port(port).
+            port(Helper.getPort()).
             path(CONTEXT).build();
 
     @Configuration

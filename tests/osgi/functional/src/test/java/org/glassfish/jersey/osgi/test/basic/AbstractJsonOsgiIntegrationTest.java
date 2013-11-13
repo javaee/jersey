@@ -68,7 +68,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractJsonOsgiIntegrationTest {
 
     private static final String CONTEXT = "/jersey";
-    private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(Helper.port).path(CONTEXT).build();
+    private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(Helper.getPort()).path(CONTEXT).build();
 
     protected abstract Feature getJsonProviderFeature();
 

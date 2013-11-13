@@ -53,16 +53,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.internal.Errors;
-import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 
 /**
@@ -73,13 +72,11 @@ import org.ops4j.pax.exam.junit.PaxExam;
 @RunWith(PaxExam.class)
 public class ResourceBundleTest {
 
-    private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
-
     private static final String CONTEXT = "/jersey";
 
     private static final URI baseUri = UriBuilder.
             fromUri("http://localhost").
-            port(port).
+            port(Helper.getPort()).
             path(CONTEXT).build();
 
     @Configuration

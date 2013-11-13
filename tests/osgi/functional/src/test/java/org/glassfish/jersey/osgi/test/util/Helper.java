@@ -40,21 +40,20 @@
 
 package org.glassfish.jersey.osgi.test.util;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.test.TestProperties;
-import org.ops4j.pax.exam.Option;
-
 import java.security.AccessController;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.test.TestProperties;
+
+import org.ops4j.pax.exam.Option;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
 
 /**
  * Helper class to be used by individual tests.
@@ -67,7 +66,7 @@ public class Helper {
     /**
      * Jersey HTTP port.
      */
-    public static final int port = getEnvVariable("JERSEY_HTTP_PORT", 8080);
+    private static final int port = getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
 
     /**
      * Returns an integer value of given system property, or a default value
@@ -91,6 +90,15 @@ public class Helper {
             }
         }
         return defaultValue;
+    }
+
+    /**
+     * Returns a value of {@value TestProperties#CONTAINER_PORT} property which should be used as port number for test container.
+     *
+     * @return port number.
+     */
+    public static int getPort() {
+        return port;
     }
 
     /**
