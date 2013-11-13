@@ -47,7 +47,7 @@ import javax.ws.rs.client.WebTarget;
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class HelloWorld3ResourceTest extends AbstractHelloWorldResourceTest {
+public class HelloWorld3ResourceITCase extends AbstractHelloWorldResourceTest {
 
     protected Class<?> getResourceClass() {
         return HelloWorld3Resource.class;

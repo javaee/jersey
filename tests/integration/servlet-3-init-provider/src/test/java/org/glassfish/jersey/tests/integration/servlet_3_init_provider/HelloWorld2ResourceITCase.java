@@ -42,7 +42,7 @@ package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class HelloWorld2ResourceTest extends AbstractHelloWorldResourceTest {
+public class HelloWorld2ResourceITCase extends AbstractHelloWorldResourceTest {
 
     protected Class<?> getResourceClass() {
         return HelloWorld2Resource.class;

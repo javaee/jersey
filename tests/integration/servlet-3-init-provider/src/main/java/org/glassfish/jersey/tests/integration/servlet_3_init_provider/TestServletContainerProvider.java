@@ -78,7 +78,7 @@ public class TestServletContainerProvider implements ServletContainerProvider {
     public void onRegister(ServletContext servletContext, Set<String> servletNames) throws ServletException {
         this.SERVLET_NAMES = servletNames;
 
-        servletContext.addFilter("TestFilter", TestFilter.class).
+        servletContext.addFilter(TEST_FILTER, TestFilter.class).
                 addMappingForServletNames(EnumSet.allOf(DispatcherType.class), false,
                         servletNames.toArray(new String[servletNames.size()]));
     }
