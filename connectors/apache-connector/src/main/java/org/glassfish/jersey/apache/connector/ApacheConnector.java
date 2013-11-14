@@ -41,6 +41,7 @@ package org.glassfish.jersey.apache.connector;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -98,6 +99,7 @@ import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.AbstractHttpEntity;
+import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -453,7 +455,7 @@ public class ApacheConnector implements Connector {
             return null;
         }
 
-        return new AbstractHttpEntity() {
+        HttpEntity httpEntity = new AbstractHttpEntity() {
             @Override
             public boolean isRepeatable() {
                 return false;
@@ -461,12 +463,14 @@ public class ApacheConnector implements Connector {
 
             @Override
             public long getContentLength() {
-                return -1;
+                return clientRequest.getLength();
             }
 
             @Override
             public InputStream getContent() throws IOException, IllegalStateException {
-                return null;
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream(512);
+                writeTo(buffer);
+                return new ByteArrayInputStream(buffer.toByteArray());
             }
 
             @Override
@@ -485,6 +489,28 @@ public class ApacheConnector implements Connector {
                 return false;
             }
         };
+
+        Integer chunkedEncodingSize = null;
+        try {
+            chunkedEncodingSize = (Integer)client.getParams().getParameter(ClientProperties.CHUNKED_ENCODING_SIZE);
+        } catch (ClassCastException e) {
+            LOGGER.log(
+                    Level.WARNING,
+                    LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                            ClientProperties.CHUNKED_ENCODING_SIZE,
+                            clientRequest.getProperty(ClientProperties.CHUNKED_ENCODING_SIZE).getClass().getName(),
+                            Integer.class)
+                    );
+        }
+        if (chunkedEncodingSize == null || chunkedEncodingSize == 0) {
+            try {
+                httpEntity = new BufferedHttpEntity(httpEntity);
+            } catch (IOException e) {
+                throw new ProcessingException(e);
+            }
+        }
+        
+        return httpEntity;
     }
 
     private void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final HttpUriRequest request) {

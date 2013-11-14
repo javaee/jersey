@@ -51,6 +51,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -64,8 +65,8 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -81,12 +82,15 @@ public class HttpHeadersTest extends JerseyTest {
         @POST
         public String post(
                 @HeaderParam("Transfer-Encoding") String transferEncoding,
+                @HeaderParam("Content-Length") Integer contentLength,
                 @HeaderParam("X-CLIENT") String xClient,
-                @HeaderParam("X-WRITER") String xWriter,
+                @HeaderParam("X-CHUNKED") String xChunked,
                 String entity) {
             assertEquals("client", xClient);
-            if (transferEncoding == null || !transferEncoding.equals("chunked"))
-                assertEquals("writer", xWriter);
+            if (transferEncoding == null)
+                transferEncoding = "identity";
+            assertEquals("Transfer-Encoding", xChunked, transferEncoding);
+            assertEquals("Content-Length", xChunked.equals("chunked") ? null : 4, contentLength);
             return entity;
         }
     }
@@ -109,6 +113,8 @@ public class HttpHeadersTest extends JerseyTest {
         }
     }
 
+    private Integer chunkedEncodingSize; 
+    
     @Override
     protected Application configure() {
         ResourceConfig config = new ResourceConfig(HttpMethodResource.class, HeaderWriter.class);
@@ -119,14 +125,34 @@ public class HttpHeadersTest extends JerseyTest {
     @Override
     protected void configureClient(ClientConfig config) {
         config.property(ClientProperties.READ_TIMEOUT, 1000);
+        config.property(ClientProperties.CHUNKED_ENCODING_SIZE, chunkedEncodingSize);
         config.connector(new ApacheConnector(config));
     }
-
+    
+    private Invocation.Builder request() {
+        WebTarget r = target("test");
+        
+        boolean chunked = chunkedEncodingSize != null && chunkedEncodingSize.intValue() != 0;
+        return r.request()
+                .header("X-CLIENT", "client")
+                .header("X-CHUNKED", chunked ? "chunked" : "identity");
+    }
+    
     @Test
     public void testPost() {
-        WebTarget r = target("test");
-
-        Response cr = r.request().header("X-CLIENT", "client").post(Entity.text("POST"));
+        chunkedEncodingSize = null;
+        
+        Response cr = request().post(Entity.text("POST"));
+        assertEquals(200, cr.getStatus());
+        assertTrue(cr.hasEntity());
+        cr.close();
+    }
+    
+    @Test
+    public void testPostUnchunked() {
+        chunkedEncodingSize = 0;
+        
+        Response cr = request().post(Entity.text("POST"));
         assertEquals(200, cr.getStatus());
         assertTrue(cr.hasEntity());
         cr.close();
@@ -134,9 +160,9 @@ public class HttpHeadersTest extends JerseyTest {
 
     @Test
     public void testPostChunked() {
-        WebTarget r = target("test");
-
-        Response cr = r.request().header("X-CLIENT", "client").post(Entity.text("POST"));
+        chunkedEncodingSize = -1;
+        
+        Response cr = request().post(Entity.text("POST"));
         assertEquals(200, cr.getStatus());
         assertTrue(cr.hasEntity());
         cr.close();
