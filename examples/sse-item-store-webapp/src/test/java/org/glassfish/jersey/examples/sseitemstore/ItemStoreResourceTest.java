@@ -71,10 +71,7 @@ import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.describedAs;
@@ -104,10 +101,7 @@ public class ItemStoreResourceTest extends JerseyTest {
     @Override
     protected void configureClient(ClientConfig config) {
         // using AHC as a test client connector to avoid issues with HttpUrlConnection socket management.
-        SchemeRegistry registry = new SchemeRegistry();
-        registry.register(new Scheme("http", getPort(), PlainSocketFactory.getSocketFactory()));
-
-        PoolingClientConnectionManager cm = new PoolingClientConnectionManager(registry);
+        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
 
         // adjusting max. connections just to be safe - the testEventSourceReconnect is quite greedy...
         cm.setMaxTotal(MAX_LISTENERS * MAX_ITEMS);
