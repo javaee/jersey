@@ -317,7 +317,7 @@ Got it!* Closing connection #0]]></screen>
         <para>
             To create a Web Application that can be packaged as WAR and deployed in a Servlet container follow a similar process
             to the one described in <xref linkend="new-from-archetype" />.
-            In addition to the Grizzly-based archetype, Jersey provides also a Maven arcehtype for creating web application
+            In addition to the Grizzly-based archetype, Jersey provides also a Maven archetype for creating web application
             skeletons. To create the new web application skeleton project, execute the following Maven command in the directory
             where the new project should reside:
 
@@ -328,7 +328,7 @@ Got it!* Closing connection #0]]></screen>
 
             As with the Grizzly based project, feel free to adjust the <literal>groupId</literal>, <literal>package</literal>
             and/or <literal>artifactId</literal> of your new web application project. Alternatively, you can change it by updating
-            the new project pom.xml once it gets generated.
+            the new project &lit.pom.xml; once it gets generated.
         </para>
         <para>
             Once the project generation from a Jersey maven archetype is successfully finished, you should see the new
@@ -358,7 +358,7 @@ Got it!* Closing connection #0]]></screen>
 
             <programlisting language="bash" linenumbering="unnumbered">mvn clean package</programlisting>
 
-            A successfull build output will produce an output similar to the one below:
+            A successful build output will produce an output similar to the one below:
 
             <screen linenumbering="unnumbered">Results :
 
@@ -391,6 +391,268 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
                 </para>
             </important>
         </para>
+    </section>
+
+     <section xml:id="heroku-webapp">
+        <title>Creating a Web Application that can be deployed on Heroku</title>
+        <para>
+            To create a Web Application that can be either packaged as WAR and deployed in a Servlet container or that can be
+            pushed and deployed on &heroku; the process is very similar to the one described in <xref linkend="new-webapp" />.
+            To create the new web application skeleton project, execute the following Maven command in the directory
+            where the new project should reside:
+
+            <programlisting language="bash" linenumbering="unnumbered">mvn archetype:generate -DarchetypeArtifactId=jersey-heroku-webapp \
+                -DarchetypeGroupId=org.glassfish.jersey.archetypes -DinteractiveMode=false \
+                -DgroupId=com.example -DartifactId=simple-heroku-webapp -Dpackage=com.example \
+                -DarchetypeVersion=&version;</programlisting>
+
+            Adjust the <literal>groupId</literal>, <literal>package</literal> and/or <literal>artifactId</literal> of your new web
+            application project to your needs or, alternatively, you can change it by updating the new project &lit.pom.xml; once it
+            gets generated.
+        </para>
+        <para>
+            Once the project generation from a Jersey maven archetype is successfully finished, you should see the new
+            <literal>simple-heroku-webapp</literal> project directory created in your current location. The directory contains
+            a standard Maven project structure:
+
+            <simplelist>
+                <member>
+                    Project build and management configuration is described in the &lit.pom.xml; located
+                    in the project root directory.
+                </member>
+                <member>Project sources are located under <literal>src/main/java</literal>.</member>
+                <member>Project resources are located under <literal>src/main/resources</literal>.</member>
+                <member>Project web application files are located under <literal>src/main/webapp</literal>.</member>
+                <member>Project test-sources (based on &jersey.test.JerseyTest;) are located under <literal>src/test/java</literal>.</member>
+                <member>Heroku system properties (OpenJDK version) are defined in <literal>system.properties</literal>.</member>
+                <member>Lists of the process types in an application for Heroku is in <literal>Procfile</literal>.</member>
+            </simplelist>
+
+            The project contains one JAX-RS resource class, <literal>MyResouce</literal>, and one resource method which returns
+            simple text message. To make sure the resource is properly tested there is also a end-to-end test-case
+            in <literal>MyResourceTest</literal> (the test is based on &jersey.test.JerseyTest; from our <xref linkend="test-framework" />).
+            Similarly to <literal>simple-service-webapp</literal>, the project contains the standard Java EE web application
+            <literal>web.xml</literal> deployment descriptor under <literal>src/main/webapp/WEB-INF</literal> since the goal is to
+            deploy the application in a Servlet container (the application will run in Jetty on Heroku).
+        </para>
+        <para>
+            To compile and package the application into a WAR, invoke the following maven command in your console:
+
+            <programlisting language="bash" linenumbering="unnumbered">mvn clean package</programlisting>
+
+            A successful build output will produce an output similar to the one below:
+
+            <screen linenumbering="unnumbered">    Results :
+
+    Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+
+    [INFO]
+    [INFO] --- maven-war-plugin:2.2:war (default-war) @ simple-heroku-webapp ---
+    [INFO] Packaging webapp
+    [INFO] Assembling webapp [simple-heroku-webapp] in [.../simple-heroku-webapp/target/simple-heroku-webapp]
+    [INFO] Processing war project
+    [INFO] Copying webapp resources [.../simple-heroku-webapp/src/main/webapp]
+    [INFO] Webapp assembled in [57 msecs]
+    [INFO] Building war: .../simple-heroku-webapp/target/simple-heroku-webapp.war
+    [INFO] WEB-INF/web.xml already added, skipping
+    [INFO]
+    [INFO] --- maven-dependency-plugin:2.8:copy-dependencies (copy-dependencies) @ simple-heroku-webapp ---
+    [INFO] Copying hk2-locator-2.2.0-b21.jar to .../simple-heroku-webapp/target/dependency/hk2-locator-2.2.0-b21.jar
+    [INFO] Copying jetty-security-9.0.6.v20130930.jar to .../simple-heroku-webapp/target/dependency/jetty-security-9.0.6.v20130930.jar
+    [INFO] Copying asm-all-repackaged-2.2.0-b21.jar to .../simple-heroku-webapp/target/dependency/asm-all-repackaged-2.2.0-b21.jar
+    [INFO] Copying jersey-common-2.5.jar to .../simple-heroku-webapp/target/dependency/jersey-common-2.5.jar
+    [INFO] Copying validation-api-1.1.0.Final.jar to .../simple-heroku-webapp/target/dependency/validation-api-1.1.0.Final.jar
+    [INFO] Copying jetty-webapp-9.0.6.v20130930.jar to .../simple-heroku-webapp/target/dependency/jetty-webapp-9.0.6.v20130930.jar
+    [INFO] Copying jersey-container-servlet-2.5.jar to .../simple-heroku-webapp/target/dependency/jersey-container-servlet-2.5.jar
+    [INFO] Copying cglib-2.2.0-b21.jar to .../simple-heroku-webapp/target/dependency/cglib-2.2.0-b21.jar
+    [INFO] Copying osgi-resource-locator-1.0.1.jar to .../simple-heroku-webapp/target/dependency/osgi-resource-locator-1.0.1.jar
+    [INFO] Copying hk2-utils-2.2.0-b21.jar to .../simple-heroku-webapp/target/dependency/hk2-utils-2.2.0-b21.jar
+    [INFO] Copying hk2-api-2.2.0-b21.jar to .../simple-heroku-webapp/target/dependency/hk2-api-2.2.0-b21.jar
+    [INFO] Copying jetty-io-9.0.6.v20130930.jar to .../simple-heroku-webapp/target/dependency/jetty-io-9.0.6.v20130930.jar
+    [INFO] Copying jetty-server-9.0.6.v20130930.jar to .../simple-heroku-webapp/target/dependency/jetty-server-9.0.6.v20130930.jar
+    [INFO] Copying jetty-util-9.0.6.v20130930.jar to .../simple-heroku-webapp/target/dependency/jetty-util-9.0.6.v20130930.jar
+    [INFO] Copying jersey-client-2.5.jar to .../simple-heroku-webapp/target/dependency/jersey-client-2.5.jar
+    [INFO] Copying jetty-http-9.0.6.v20130930.jar to .../simple-heroku-webapp/target/dependency/jetty-http-9.0.6.v20130930.jar
+    [INFO] Copying guava-14.0.1.jar to .../simple-heroku-webapp/target/dependency/guava-14.0.1.jar
+    [INFO] Copying jetty-xml-9.0.6.v20130930.jar to .../simple-heroku-webapp/target/dependency/jetty-xml-9.0.6.v20130930.jar
+    [INFO] Copying jersey-server-2.5.jar to .../simple-heroku-webapp/target/dependency/jersey-server-2.5.jar
+    [INFO] Copying jersey-container-servlet-core-2.5.jar to .../simple-heroku-webapp/target/dependency/jersey-container-servlet-core-2.5.jar
+    [INFO] Copying javax.ws.rs-api-2.0.jar to .../simple-heroku-webapp/target/dependency/javax.ws.rs-api-2.0.jar
+    [INFO] Copying jetty-servlet-9.0.6.v20130930.jar to .../simple-heroku-webapp/target/dependency/jetty-servlet-9.0.6.v20130930.jar
+    [INFO] Copying javax.inject-2.2.0-b21.jar to .../simple-heroku-webapp/target/dependency/javax.inject-2.2.0-b21.jar
+    [INFO] Copying javax.servlet-3.0.0.v201112011016.jar to .../simple-heroku-webapp/target/dependency/javax.servlet-3.0.0.v201112011016.jar
+    [INFO] Copying javax.annotation-api-1.2.jar to .../simple-heroku-webapp/target/dependency/javax.annotation-api-1.2.jar
+    [INFO] ------------------------------------------------------------------------
+    [INFO] BUILD SUCCESS
+    [INFO] ------------------------------------------------------------------------
+    [INFO] Total time: 4.401s
+    [INFO] Finished at: Mon Dec 09 20:19:06 CET 2013
+    [INFO] Final Memory: 20M/246M
+    [INFO] ------------------------------------------------------------------------</screen>
+
+            Now that you know everything went as expected you are ready to:
+
+            <itemizedlist>
+                <listitem><simpara>
+                    make some changes in your project,
+                </simpara></listitem>
+                <listitem><simpara>
+                    take the packaged WAR (located under <literal>./target/simple-service-webapp.war</literal>) and deploy it to a
+                    Servlet container of your choice, or
+                </simpara></listitem>
+                <listitem><simpara>
+                    <xref linkend="deploy-it-on-heroku" />
+                </simpara></listitem>
+            </itemizedlist>
+
+            <tip>
+                <para>
+                    If you want to make some changes to your application you can run the application locally by simply running
+                    <code>mvn clean package jetty:run</code> (which starts the embedded Jetty server) or by
+                    <code>java -cp target/classes:target/dependency/* com.example.heroku.Main</code> (this is how Jetty is
+                    started on Heroku).
+                </para>
+            </tip>
+        </para>
+        <section xml:id="deploy-it-on-heroku">
+            <title>Deploy it on Heroku</title>
+            <para>
+                We won't go into details how to create an account on &heroku; and setup the <literal>Heroku</literal> tools
+                on your machine. You can find a lot of information in this article: <link xlink:href='https://devcenter.heroku.com/articles/getting-started-with-java'>Getting Started with Java on Heroku</link>.
+                Instead, we'll take a look at the steps needed after your environment is ready.
+            </para>
+            <para>
+                The first step is to create a Git repository from your project:
+                <screen linenumbering="unnumbered">    $ git init
+    Initialized empty Git repository in /.../simple-heroku-webapp/.git/</screen>
+            </para>
+            <para>
+                Then, create a &heroku; instance and add a remote reference to your Git repository:
+                <screen linenumbering="unnumbered">    $ heroku create
+    Creating simple-heroku-webapp... done, stack is cedar
+    http://simple-heroku-webapp.herokuapp.com/ | git@heroku.com:simple-heroku-webapp.git
+    Git remote heroku added</screen>
+
+                <note>
+                    <para>
+                        The name of the instance is changed in the output to <literal>simple-heroku-webapp</literal>. Your will be
+                        named more like <literal>tranquil-basin-4744</literal>.
+                    </para>
+                </note>
+            </para>
+            <para>
+                Add and commit files to your Git repository:
+                <screen linenumbering="unnumbered">    $ git add src/ pom.xml Procfile system.properties</screen>
+                <screen linenumbering="unnumbered">    $ git commit -a -m "initial commit"
+    [master (root-commit) e2b58e3] initial commit
+     7 files changed, 221 insertions(+)
+     create mode 100644 Procfile
+     create mode 100644 pom.xml
+     create mode 100644 src/main/java/com/example/MyResource.java
+     create mode 100644 src/main/java/com/example/heroku/Main.java
+     create mode 100644 src/main/webapp/WEB-INF/web.xml
+     create mode 100644 src/test/java/com/example/MyResourceTest.java
+     create mode 100644 system.properties</screen>
+            </para>
+            <para>
+                Push changes to Heroku:
+                <screen linenumbering="unnumbered">    $ git push heroku master
+    Counting objects: 21, done.
+    Delta compression using up to 8 threads.
+    Compressing objects: 100% (11/11), done.
+    Writing objects: 100% (21/21), 3.73 KiB | 0 bytes/s, done.
+    Total 21 (delta 0), reused 0 (delta 0)
+
+    -----> Java app detected
+    -----> Installing OpenJDK 1.7... done
+    -----> Installing Maven 3.0.3... done
+    -----> Installing settings.xml... done
+    -----> executing /app/tmp/cache/.maven/bin/mvn -B -Duser.home=/tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd -Dmaven.repo.local=/app/tmp/cache/.m2/repository -s /app/tmp/cache/.m2/settings.xml -DskipTests=true clean install
+           [INFO] Scanning for projects...
+           [INFO]
+           [INFO] ------------------------------------------------------------------------
+           [INFO] Building simple-heroku-webapp 1.0-SNAPSHOT
+           [INFO] ------------------------------------------------------------------------
+           [INFO]
+           [INFO] --- maven-clean-plugin:2.4.1:clean (default-clean) @ simple-heroku-webapp ---
+           [INFO]
+           [INFO] --- maven-resources-plugin:2.4.3:resources (default-resources) @ simple-heroku-webapp ---
+           [INFO] Using 'UTF-8' encoding to copy filtered resources.
+           [INFO] skip non existing resourceDirectory /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/src/main/resources
+           [INFO]
+           [INFO] --- maven-compiler-plugin:2.5.1:compile (default-compile) @ simple-heroku-webapp ---
+           [INFO] Compiling 2 source files to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/classes
+           [INFO]
+           [INFO] --- maven-resources-plugin:2.4.3:testResources (default-testResources) @ simple-heroku-webapp ---
+           [INFO] Using 'UTF-8' encoding to copy filtered resources.
+           [INFO] skip non existing resourceDirectory /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/src/test/resources
+           [INFO]
+           [INFO] --- maven-compiler-plugin:2.5.1:testCompile (default-testCompile) @ simple-heroku-webapp ---
+           [INFO] Compiling 1 source file to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/test-classes
+           [INFO]
+           [INFO] --- maven-surefire-plugin:2.7.2:test (default-test) @ simple-heroku-webapp ---
+           [INFO] Tests are skipped.
+           [INFO]
+           [INFO] --- maven-war-plugin:2.1.1:war (default-war) @ simple-heroku-webapp ---
+           [INFO] Packaging webapp
+           [INFO] Assembling webapp [simple-heroku-webapp] in [/tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/simple-heroku-webapp]
+           [INFO] Processing war project
+           [INFO] Copying webapp resources [/tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/src/main/webapp]
+           [INFO] Webapp assembled in [88 msecs]
+           [INFO] Building war: /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/simple-heroku-webapp.war
+           [INFO] WEB-INF/web.xml already added, skipping
+           [INFO]
+           [INFO] --- maven-dependency-plugin:2.1:copy-dependencies (copy-dependencies) @ simple-heroku-webapp ---
+           [INFO] Copying guava-14.0.1.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/guava-14.0.1.jar
+           [INFO] Copying javax.annotation-api-1.2.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/javax.annotation-api-1.2.jar
+           [INFO] Copying validation-api-1.1.0.Final.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/validation-api-1.1.0.Final.jar
+           [INFO] Copying javax.ws.rs-api-2.0.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/javax.ws.rs-api-2.0.jar
+           [INFO] Copying jetty-http-9.0.6.v20130930.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jetty-http-9.0.6.v20130930.jar
+           [INFO] Copying jetty-io-9.0.6.v20130930.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jetty-io-9.0.6.v20130930.jar
+           [INFO] Copying jetty-security-9.0.6.v20130930.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jetty-security-9.0.6.v20130930.jar
+           [INFO] Copying jetty-server-9.0.6.v20130930.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jetty-server-9.0.6.v20130930.jar
+           [INFO] Copying jetty-servlet-9.0.6.v20130930.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jetty-servlet-9.0.6.v20130930.jar
+           [INFO] Copying jetty-util-9.0.6.v20130930.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jetty-util-9.0.6.v20130930.jar
+           [INFO] Copying jetty-webapp-9.0.6.v20130930.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jetty-webapp-9.0.6.v20130930.jar
+           [INFO] Copying jetty-xml-9.0.6.v20130930.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jetty-xml-9.0.6.v20130930.jar
+           [INFO] Copying javax.servlet-3.0.0.v201112011016.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/javax.servlet-3.0.0.v201112011016.jar
+           [INFO] Copying hk2-api-2.2.0-b21.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/hk2-api-2.2.0-b21.jar
+           [INFO] Copying hk2-locator-2.2.0-b21.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/hk2-locator-2.2.0-b21.jar
+           [INFO] Copying hk2-utils-2.2.0-b21.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/hk2-utils-2.2.0-b21.jar
+           [INFO] Copying osgi-resource-locator-1.0.1.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/osgi-resource-locator-1.0.1.jar
+           [INFO] Copying asm-all-repackaged-2.2.0-b21.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/asm-all-repackaged-2.2.0-b21.jar
+           [INFO] Copying cglib-2.2.0-b21.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/cglib-2.2.0-b21.jar
+           [INFO] Copying javax.inject-2.2.0-b21.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/javax.inject-2.2.0-b21.jar
+           [INFO] Copying jersey-container-servlet-2.5.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jersey-container-servlet-2.5.jar
+           [INFO] Copying jersey-container-servlet-core-2.5.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jersey-container-servlet-core-2.5.jar
+           [INFO] Copying jersey-client-2.5.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jersey-client-2.5.jar
+           [INFO] Copying jersey-common-2.5.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jersey-common-2.5.jar
+           [INFO] Copying jersey-server-2.5.jar to /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/dependency/jersey-server-2.5.jar
+           [INFO]
+           [INFO] --- maven-install-plugin:2.3.1:install (default-install) @ simple-heroku-webapp ---
+           [INFO] Installing /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/target/simple-heroku-webapp.war to /app/tmp/cache/.m2/repository/com/example/simple-heroku-webapp/1.0-SNAPSHOT/simple-heroku-webapp-1.0-SNAPSHOT.war
+           [INFO] Installing /tmp/build_992cc747-26d6-4800-bdb1-add47b9583cd/pom.xml to /app/tmp/cache/.m2/repository/com/example/simple-heroku-webapp/1.0-SNAPSHOT/simple-heroku-webapp-1.0-SNAPSHOT.pom
+           [INFO] ------------------------------------------------------------------------
+           [INFO] BUILD SUCCESS
+           [INFO] ------------------------------------------------------------------------
+           [INFO] Total time: 45.861s
+           [INFO] Finished at: Mon Dec 09 19:51:34 UTC 2013
+           [INFO] Final Memory: 17M/514M
+           [INFO] ------------------------------------------------------------------------
+    -----> Discovering process types
+           Procfile declares types -> web
+
+    -----> Compiled slug size: 75.9MB
+    -----> Launching... done, v6
+           http://simple-heroku-webapp.herokuapp.com deployed to Heroku
+
+    To git@heroku.com:simple-heroku-webapp.git
+     * [new branch]      master -> master</screen>
+            </para>
+            <para>
+                Now you can access your application at, for example: <link xlink:href='http://simple-heroku-webapp.herokuapp.com/myresource'>http://simple-heroku-webapp.herokuapp.com/myresource</link>
+            </para>
+        </section>
     </section>
 
     <section xml:id="exploring-jersey-examples">

@@ -89,6 +89,7 @@
 <!ENTITY bv.project.link "<link xlink:href='http://beanvalidation.org/'>Bean Validation</link>">
 <!ENTITY bv11.javadoc.path "http://docs.jboss.org/hibernate/beanvalidation/spec/1.1/api">
 
+<!ENTITY heroku.path "https://www.heroku.com">
 <!ENTITY wikipedia.path "http://en.wikipedia.org/wiki">
 <!ENTITY osgi.wiki.path "http://wiki.osgi.org/wiki">
 <!ENTITY osgi.path "<link xlink:href='http://www.osgi.org/Download/Release4V42'>here</link>">
@@ -532,12 +533,13 @@
 <!ENTITY hk2.ServiceLocator "<link xlink:href='&hk2.javadoc.path;/org/glassfish/hk2/api/ServiceLocator.html'>ServiceLocator</link>">
 
 <!-- Various links -->
+<!ENTITY heroku "<link xlink:href='&heroku.path;'>Heroku</link>">
+<!ENTITY localhost.example.osgi.http "<link xlink:href='http://localhost:8080/osgi/jersey-http-service/status'>http://localhost:8080/osgi/jersey-http-service/status</link>">
+<!ENTITY osgi.wiki.headers "<link xlink:href='&osgi.wiki.path;/Category:Manifest_Header'>OSGi WIKI</link>">
 <!ENTITY wiki.JSONP "<link xlink:href='&wikipedia.path;/JSONP'>JSONP</link>">
 <!ENTITY wiki.Multipart "<link xlink:href='&wikipedia.path;/MIME#Multipart_messages'>MIME multipart message</link>">
 <!ENTITY wiki.MultipartMixed "<link xlink:href='&wikipedia.path;/MIME#Mixed'>multipart/mixed</link>">
 <!ENTITY wiki.JavaMemoryModel "<link xlink:href='&wikipedia.path;/Java_Memory_Model'>Java Memory Model</link>">
-<!ENTITY localhost.example.osgi.http "<link xlink:href='http://localhost:8080/osgi/jersey-http-service/status'>http://localhost:8080/osgi/jersey-http-service/status</link>">
-<!ENTITY osgi.wiki.headers "<link xlink:href='&osgi.wiki.path;/Category:Manifest_Header'>OSGi WIKI</link>">
 
 <!-- API Literals -->
 <!ENTITY lit.jaxrs.ApplicationPath "<literal>@ApplicationPath</literal>">
