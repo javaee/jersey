@@ -75,6 +75,10 @@ class InboundJaxrsResponse extends Response {
         this.context = context;
     }
 
+    public ClientRequest getRequestContext() {
+        return context.getRequestContext();
+    }
+
     @Override
     public int getStatus() {
         return context.getStatus();

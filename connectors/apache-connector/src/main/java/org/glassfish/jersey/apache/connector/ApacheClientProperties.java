@@ -110,12 +110,12 @@ public final class ApacheClientProperties {
     /**
      * Connection Manager which will be used to create {@link org.apache.http.client.HttpClient}.
      * <p/>
-     * The value MUST be an instance of {@link org.apache.http.conn.ClientConnectionManager}.
+     * The value MUST be an instance of {@link org.apache.http.conn.HttpClientConnectionManager}.
      * <p/>
      * If the property is absent a default Connection Manager will be used
-     * ({@link org.apache.http.impl.conn.BasicClientConnectionManager}).
+     * ({@link org.apache.http.impl.conn.BasicHttpClientConnectionManager}).
      * If you want to use this client in multi-threaded environment, be sure you override default value with
-     * {@link org.apache.http.impl.conn.PoolingClientConnectionManager} instance.
+     * {@link org.apache.http.impl.conn.PoolingHttpClientConnectionManager} instance.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
@@ -130,6 +130,8 @@ public final class ApacheClientProperties {
      * If the property is absent default http parameters will be used.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link org.glassfish.jersey.apache.connector.ApacheClientProperties#REQUEST_CONFIG} instead.
      */
     public static final String HTTP_PARAMS =
             "jersey.config.apache.client.httpParams";
@@ -177,6 +179,18 @@ public final class ApacheClientProperties {
      */
     public static final String PROXY_PASSWORD =
             "jersey.config.apache.client.proxyPassword";
+
+    /**
+     * Request configuration for the {@link org.apache.http.client.HttpClient}.
+     * <p/>
+     * The value MUST be an instance of {@link org.apache.http.client.config.RequestConfig}.
+     * <p/>
+     * If the property is absent default request configuration will be used.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String REQUEST_CONFIG =
+            "jersey.config.apache.client.requestConfig";
 
     private ApacheClientProperties() {
         // prevents instantiation

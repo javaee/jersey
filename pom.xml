@@ -1328,7 +1328,7 @@
         <servlet3.version>3.0.1</servlet3.version>
         <simple.version>5.1.4</simple.version>
         <spring3.version>3.2.3.RELEASE</spring3.version>
-        <httpclient.version>4.2.5</httpclient.version>
+        <httpclient.version>4.3.1</httpclient.version>
         <validation.api.version>1.1.0.Final</validation.api.version>
         <weld.version>2.0.0.Final</weld.version>
         <gae.version>1.8.0</gae.version>
