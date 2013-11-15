@@ -76,10 +76,11 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpProxy;
+import org.eclipse.jetty.client.ProxyConfiguration;
 import org.eclipse.jetty.client.api.AuthenticationStore;
 import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.ProxyConfiguration;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
@@ -195,8 +196,8 @@ public class JettyConnector implements Connector {
             final Object proxyUri = config.getProperties().get(ClientProperties.PROXY_URI);
             if (proxyUri != null) {
                 final URI u = getProxyUri(proxyUri);
-                ProxyConfiguration proxyConfig = new ProxyConfiguration(u.getHost(), u.getPort());
-                client.setProxyConfiguration(proxyConfig);
+                ProxyConfiguration proxyConfig = client.getProxyConfiguration();
+                proxyConfig.getProxies().add(new HttpProxy(u.getHost(), u.getPort()));
             }
 
             if (disableCookies) {
@@ -290,12 +291,7 @@ public class JettyConnector implements Connector {
             super(getInputStream(jettyResponse));
         }
 
-        @Override
-        public void close() throws IOException {
-            super.close();
-        }
-
-        private static InputStream getInputStream(final ContentResponse response) throws IOException {
+        private static InputStream getInputStream(final ContentResponse response) {
             return new ByteArrayInputStream(response.getContent());
         }
     }
@@ -408,7 +404,7 @@ public class JettyConnector implements Connector {
             });
             final AtomicReference<ClientResponse> jerseyResponse = new AtomicReference<ClientResponse>();
             final ByteBufferInputStream entityStream = new ByteBufferInputStream();
-            jettyRequest.send(new Response.Listener.Empty() {
+            jettyRequest.send(new Response.Listener.Adapter() {
 
                         @Override
                         public void onHeaders(Response jettyResponse) {

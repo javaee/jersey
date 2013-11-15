@@ -1333,7 +1333,7 @@
         <jersey1.version>1.17</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
         <jetty.plugin.version>6.1.22</jetty.plugin.version>
-        <jetty.version>9.0.6.v20130930</jetty.version>
+        <jetty.version>9.1.1.v20140108</jetty.version>
         <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
         <jsonp.api.version>1.0</jsonp.api.version>
         <jsonp.ri.version>1.0.2</jsonp.ri.version>
