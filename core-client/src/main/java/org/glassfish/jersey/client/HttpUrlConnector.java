@@ -358,7 +358,18 @@ public class HttpUrlConnector implements Connector {
                 AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
                     @Override
                     public Object run() throws NoSuchFieldException, IllegalAccessException {
-                        final Field methodField = httpURLConnectionClass.getSuperclass().getDeclaredField("method");
+                        final Class<?> parentClass = httpURLConnectionClass
+                                .getSuperclass();
+                        final Field methodField;
+                        // If the implementation class is an HTTPS URL Connection, we
+                        // need to go up one level higher in the heirarchy to modify the
+                        // 'method' field.
+                        if (parentClass == HttpsURLConnection.class) {
+                            methodField = parentClass.getSuperclass().getDeclaredField(
+                                "method");
+                        } else {
+                            methodField = parentClass.getDeclaredField("method");
+                        }
                         methodField.setAccessible(true);
                         methodField.set(httpURLConnection, method);
                         return null;
