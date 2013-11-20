@@ -52,10 +52,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
- * MXBean implementing {@link org.glassfish.jersey.server.monitoring.ApplicationMXBean} MXbean interface.
+ * MXBean implementing {@link org.glassfish.jersey.server.monitoring.ApplicationMXBean} MXBean interface.
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class ApplicationMXBeanImpl implements ApplicationMXBean {
+
     private final String applicationName;
     private final String applicationClass;
     private final Map<String, String> configurationProperties;
@@ -66,12 +68,12 @@ public class ApplicationMXBeanImpl implements ApplicationMXBean {
 
     /**
      * Create a new application MXBean and register it to the mbean server using {@code mBeanExposer}.
+     *
      * @param applicationStatistics Application statistics which should be exposed.
      * @param mBeanExposer MBean exposer.
      * @param parentName {@link javax.management.ObjectName Object name} prefix of parent mbeans.
      */
-    public ApplicationMXBeanImpl(ApplicationStatistics applicationStatistics,
-                                 MBeanExposer mBeanExposer, String parentName) {
+    public ApplicationMXBeanImpl(ApplicationStatistics applicationStatistics, MBeanExposer mBeanExposer, String parentName) {
         this.providers = Sets.newHashSet();
         this.registeredClasses = Sets.newHashSet();
         this.registeredInstances = Sets.newHashSet();
@@ -95,7 +97,7 @@ public class ApplicationMXBeanImpl implements ApplicationMXBean {
         for (Map.Entry<String, Object> entry : resourceConfig.getProperties().entrySet()) {
             configurationProperties.put(entry.getKey(), entry.getValue().toString());
         }
-        this.startTime = applicationStatistics.getStartTime();
+        this.startTime = new Date(applicationStatistics.getStartTime().getTime());
 
         mBeanExposer.registerMBean(this, parentName + ",global=Configuration");
     }

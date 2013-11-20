@@ -54,10 +54,11 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class EmptyRequestEventBuilder implements RequestEventBuilder {
+
     /**
      * Instance of empty request event builder.
      */
-    public static EmptyRequestEventBuilder EMPTY_EVENT_BUILDER = new EmptyRequestEventBuilder();
+    public static final EmptyRequestEventBuilder EMPTY_EVENT_BUILDER = new EmptyRequestEventBuilder();
 
     @Override
     public RequestEventBuilder setExceptionMapper(ExceptionMapper<?> exceptionMapper) {
