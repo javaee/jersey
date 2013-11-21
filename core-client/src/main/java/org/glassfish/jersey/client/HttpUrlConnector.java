@@ -355,26 +355,57 @@ public class HttpUrlConnector implements Connector {
         } catch (final ProtocolException pe) {
             try {
                 final Class<?> httpURLConnectionClass = httpURLConnection.getClass();
-                AccessController.doPrivileged(new PrivilegedExceptionAction<Object>() {
-                    @Override
-                    public Object run() throws NoSuchFieldException, IllegalAccessException {
-                        final Class<?> parentClass = httpURLConnectionClass
-                                .getSuperclass();
-                        final Field methodField;
-                        // If the implementation class is an HTTPS URL Connection, we
-                        // need to go up one level higher in the heirarchy to modify the
-                        // 'method' field.
-                        if (parentClass == HttpsURLConnection.class) {
-                            methodField = parentClass.getSuperclass().getDeclaredField(
-                                "method");
-                        } else {
-                            methodField = parentClass.getDeclaredField("method");
-                        }
-                        methodField.setAccessible(true);
-                        methodField.set(httpURLConnection, method);
-                        return null;
-                    }
-                });
+				AccessController
+						.doPrivileged(new PrivilegedExceptionAction<Object>() {
+							@Override
+							public Object run() throws NoSuchFieldException,
+									IllegalAccessException {
+								try {
+									httpURLConnection.setRequestMethod(method);
+									// Check whether we are running on a buggy
+									// JRE
+								} catch (final ProtocolException pe) {
+									Class<?> connectionClass = httpURLConnection
+											.getClass();
+									Field delegateField = null;
+									try {
+										delegateField = connectionClass
+												.getDeclaredField("delegate");
+										delegateField.setAccessible(true);
+										HttpURLConnection delegateConnection = (HttpURLConnection) delegateField
+												.get(httpURLConnection);
+										setRequestMethodViaJreBugWorkaround(
+												delegateConnection, method);
+									} catch (NoSuchFieldException e) {
+										// Ignore for now, keep going
+									} catch (IllegalArgumentException e) {
+										throw new RuntimeException(e);
+									} catch (IllegalAccessException e) {
+										throw new RuntimeException(e);
+									}
+									try {
+										Field methodField;
+										while (connectionClass != null) {
+											try {
+												methodField = connectionClass
+														.getDeclaredField("method");
+											} catch (NoSuchFieldException e) {
+												connectionClass = connectionClass
+														.getSuperclass();
+												continue;
+											}
+											methodField.setAccessible(true);
+											methodField.set(httpURLConnection,
+													method);
+											break;
+										}
+									} catch (final Exception e) {
+										throw new RuntimeException(e);
+									}
+								}
+								return null;
+							}
+						});
             } catch (final PrivilegedActionException e) {
                 final Throwable cause = e.getCause();
                 if (cause instanceof RuntimeException) {
