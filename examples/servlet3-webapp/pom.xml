@@ -133,17 +133,6 @@
 
     <profiles>
         <profile>
-            <id>default</id>
-            <properties>
-                <env>default</env>
-                <jersey.config.test.container.port>9998</jersey.config.test.container.port>
-            </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-        </profile>
-
-        <profile>
             <id>release</id>
             <build>
                 <plugins>
@@ -159,5 +148,9 @@
             </build>
         </profile>
     </profiles>
+
+    <properties>
+        <jersey.config.test.container.port>9998</jersey.config.test.container.port>
+    </properties>
 
 </project>
