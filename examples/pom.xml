@@ -109,6 +109,7 @@
         <module>system-properties-example</module>
         <module>webapp-example-parent</module>
         <module>xml-moxy</module>
+        <module>servlet3-webapp</module>
     </modules>
 
     <dependencyManagement>

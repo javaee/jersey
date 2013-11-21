@@ -63,12 +63,16 @@
 <!ENTITY jee6.javadoc.path "http://docs.oracle.com/javaee/6/api">
 <!ENTITY jdk6.javadoc.path "http://docs.oracle.com/javase/6/docs/api">
 <!ENTITY jdk7.javadoc.path "http://docs.oracle.com/javase/7/docs/api">
+<!ENTITY jdk6.javadoc.httpserver "http://docs.oracle.com/javase/6/docs/jre/api/net/httpserver/spec">
+<!ENTITY jsr.path "http://jcp.org/en/jsr/detail?id=">
+<!ENTITY maven.java.net.releases.link "https://maven.java.net/content/repositories/releases/">
 
 <!ENTITY hk2.javadoc.path "https://hk2.java.net/apidocs">
 
 <!ENTITY wadl.project.link "<link xlink:href='http://wadl.java.net/'>WADL</link>">
 <!ENTITY sse.spec.link "<link xlink:href='http://www.w3.org/TR/2009/WD-eventsource-20091029/'>SSE API specification</link>">
 <!ENTITY grizzly.link "<link xlink:href='http://grizzly.java.net/'>Grizzly</link>">
+<!ENTITY simple.link "<link xlink:href='http://www.simpleframework.org/'>Simple</link>">
 <!ENTITY hk2.link "<link xlink:href='http://hk2.java.net/'>HK2</link>">
 <!ENTITY maven.link "<link xlink:href='http://maven.apache.org/'>Apache Maven</link>">
 <!ENTITY maven.central.repo.link "<link xlink:href='http://search.maven.org/'>Central Maven Repository</link>">
@@ -86,8 +90,15 @@
 <!ENTITY bv11.javadoc.path "http://docs.jboss.org/hibernate/beanvalidation/spec/1.1/api">
 
 <!ENTITY wikipedia.path "http://en.wikipedia.org/wiki">
+<!ENTITY osgi.wiki.path "http://wiki.osgi.org/wiki">
+<!ENTITY osgi.path "<link xlink:href='http://www.osgi.org/Download/Release4V42'>here</link>">
+<!ENTITY felix.path "<link xlink:href='http://felix.apache.org/site/index.html'>Apache Felix</link>">
+<!ENTITY pax.path "<link xlink:href='http://ops4j1.jira.com/wiki/display/PAXEXAM3/Pax+Exam'>PAX Exam</link>">
 
-
+<!ENTITY jsr311.path "<link xlink:href='&jsr.path;311'>JSR 311</link>">
+<!ENTITY jsr315.path "<link xlink:href='&jsr.path;315'>JSR 315</link>">
+<!ENTITY weblogic.guide "<link xlink:href='http://docs.oracle.com/middleware/1212/wls/RESTF/version-restful-service.htm'>guide</link>">
+<!ENTITY cloud.guide "<link xlink:href='http://docs.oracle.com/cloud/131/developer_services/CSJSU/java-develop.htm#BABHDAJH'>guide</link>">
 
 <!-- Common Literals -->
 <!ENTITY lit.null "<literal>null</literal>">
@@ -123,6 +134,8 @@
 <!ENTITY jdk6.ParameterizedType "<link xlink:href='&jdk6.javadoc.path;/java/lang/reflect/ParameterizedType.html'>ParameterizedType</link>">
 <!ENTITY jdk6.DynamicMBean "<link xlink:href='&jdk6.javadoc.path;/javax/management/DynamicMBean.html'>DynamicMBean</link>">
 <!ENTITY jdk6.ObjectName "<link xlink:href='&jdk6.javadoc.path;/javax/management/ObjectName.html'>ObjectName</link>">
+<!ENTITY jdk6.HttpServer "<link xlink:href='&jdk6.javadoc.httpserver;/com/sun/net/httpserver/HttpServer.html'>HttpServer</link>">
+<!ENTITY jdk6.NIO "<link xlink:href='&jdk6.javadoc.path;/java/nio/package-summary.html'>NIO</link>">
 
 <!ENTITY jdk7.org.w3c.dom.Document "<link xlink:href='&jdk7.javadoc.path;/org/w3c/dom/Document.html'>Document</link>">
 <!ENTITY jdk7.StreamSource "<link xlink:href='&jdk7.javadoc.path;/javax/xml/transform/stream/StreamSource.html'>StreamSource</link>">
@@ -258,6 +271,7 @@
 <!ENTITY jersey.apache.ApacheConnector "<link xlink:href='&jersey.javadoc.path;/apache/connector/ApacheConnector.html'>ApacheConnector</link>">
 <!ENTITY jersey.grizzly.GrizzlyConnector "<link xlink:href='&jersey.javadoc.path;/grizzly/connector/GrizzlyConnector.html'>GrizzlyConnector</link>">
 <!ENTITY jersey.jetty.JettyConnector "<link xlink:href='&jersey.javadoc.path;/jetty/connector/JettyConnector.html'>JettyConnector</link>">
+<!ENTITY jersey.grizzly.JdkHttpServerFactory "<link xlink:href='&jersey.javadoc.path;/jdkhttp/JdkHttpServerFactory.html'>JdkHttpServerFactory</link>">
 <!ENTITY jersey.client.HttpUrlConnector "<link xlink:href='&jersey.javadoc.path;/client/HttpUrlConnector.html'>HttpUrlConnector</link>">
 <!ENTITY jersey.client.ClientConfig "<link xlink:href='&jersey.javadoc.path;/client/ClientConfig.html'>ClientConfig</link>">
 <!ENTITY jersey.client.ClientProperties "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html'>ClientProperties</link>">
@@ -298,6 +312,7 @@
 <!ENTITY jersey.sse.OutboundEventWriter "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEventWriter.html'>OutboundEventWriter</link>">
 <!ENTITY jersey.sse.SseBroadcaster "<link xlink:href='&jersey.javadoc.path;/media/sse/SseBroadcaster.html'>SseBroadcaster</link>">
 <!ENTITY jersey.sse.SseFeature "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html'>SseFeature</link>">
+<!ENTITY jersey.containers.ServletContainer "<link xlink:href='&jersey.javadoc.path;/servlet/ServletContainer.html'>ServletContainer</link>">
 
 <!ENTITY jersey.common.Beta "<link xlink:href='&jersey.javadoc.path;/Beta.html'>Beta</link>">
 <!ENTITY jersey.common.CommonProperties "<link xlink:href='&jersey.javadoc.path;/CommonProperties.html'>CommonProperties</link>">
@@ -415,6 +430,7 @@
 <!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.path;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
 
 <!ENTITY jersey.server.spi.ComponentProvider "<link xlink:href='&jersey.javadoc.path;/server/spi/ComponentProvider.html'>ComponentProvider</link>">
+<!ENTITY jersey.server.spi.ContainerProvider "<link xlink:href='&jersey.javadoc.path;/server/spi/ContainerProvider.html'>ContainerProvider</link>">
 
 
 <!ENTITY jersey.client.oauth1.AccessToken "<link xlink:href='&jersey.javadoc.path;/client/oauth1/AccessToken.html'>AccessToken</link>">
@@ -466,6 +482,11 @@
 <!ENTITY jersey.github.spring.example.path "<link xlink:href='&jersey.github.examples.path;/helloworld-spring-webapp'>Spring DI example</link>">
 <!ENTITY jersey.github.oauth1.twitter.client "<link xlink:href='&jersey.github.examples.path;/oauth-client-twitter'>OAuth 1 Twitter Client example</link>">
 <!ENTITY jersey.github.oauth2.google.client "<link xlink:href='&jersey.github.examples.path;/oauth2-client-google-webapp'>OAuth 2 Google Client WebApp example</link>">
+<!ENTITY jersey.github.osgi.webapp "<link xlink:href='&jersey.github.examples.path;/osgi-helloworld-webapp'>WAB Example</link>">
+<!ENTITY jersey.github.osgi.httpservice "<link xlink:href='&jersey.github.examples.path;/osgi-http-service'>HTTP Service example</link>">
+
+<!-- Jersey maven repo links -->
+<!ENTITY repo.osgi.httpservice.bundle "<link xlink:href='&maven.java.net.releases.link;org/glassfish/jersey/examples/osgi-http-service/bundle/&version;'>repository</link>">
 
 <!-- JEE links -->
 <!ENTITY jee6.annotations.RolesAllowed "<link xlink:href='&jee6.javadoc.path;/javax/annotation/security/RolesAllowed.html'>@RolesAllowed</link>">
@@ -509,6 +530,8 @@
 <!ENTITY wiki.Multipart "<link xlink:href='&wikipedia.path;/MIME#Multipart_messages'>MIME multipart message</link>">
 <!ENTITY wiki.MultipartMixed "<link xlink:href='&wikipedia.path;/MIME#Mixed'>multipart/mixed</link>">
 <!ENTITY wiki.JavaMemoryModel "<link xlink:href='&wikipedia.path;/Java_Memory_Model'>Java Memory Model</link>">
+<!ENTITY localhost.example.osgi.http "<link xlink:href='http://localhost:8080/osgi/jersey-http-service/status'>http://localhost:8080/osgi/jersey-http-service/status</link>">
+<!ENTITY osgi.wiki.headers "<link xlink:href='&osgi.wiki.path;/Category:Manifest_Header'>OSGi WIKI</link>">
 
 <!-- API Literals -->
 <!ENTITY lit.jaxrs.ApplicationPath "<literal>@ApplicationPath</literal>">
@@ -723,6 +746,7 @@
 <!ENTITY lit.jersey.server.monitoring.TimeWindowStatistics "<literal>TimeWindowStatistics</literal>">
 
 <!ENTITY lit.jersey.server.spi.ComponentProvider "<literal>ComponentProvider</literal>">
+<!ENTITY lit.jersey.server.spi.ContainerProvider "<literal>ContainerProvider</literal>">
 
 <!ENTITY lit.jersey.client.oauth1.AccessToken "<literal>AccessToken</literal>">
 <!ENTITY lit.jersey.client.oauth1.ConsumerCredentials "<literal>ConsumerCredentials</literal>">
