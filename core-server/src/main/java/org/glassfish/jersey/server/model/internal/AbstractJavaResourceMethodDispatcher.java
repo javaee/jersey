@@ -91,7 +91,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param methodHandler  method invocation handler.
      */
     AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler) {
-        this.method = resourceMethod.getHandlingMethod();
+        this.method = resourceMethod.getDefinitionMethod();
         this.methodHandler = methodHandler;
 
         this.resourceMethod = resourceMethod;
@@ -169,7 +169,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
             final SecurityContext securityContext = containerRequest.getSecurityContext();
 
             final Object invocationResult = (securityContext instanceof SubjectSecurityContext) ?
-                    ((SubjectSecurityContext)securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
+                    ((SubjectSecurityContext) securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
 
             // Validate response entity.
             if (validator != null) {

@@ -202,7 +202,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     public Method createMethod(org.glassfish.jersey.server.model.Resource resource,
                                ResourceMethod resourceMethod) {
         final Method result = _delegate.createMethod(resource, resourceMethod);
-        final java.lang.reflect.Method method = resourceMethod.getInvocable().getHandlingMethod();
+        final java.lang.reflect.Method method = resourceMethod.getInvocable().getDefinitionMethod();
         final MethodDocType methodDoc = _resourceDoc.getMethodDoc(method.getDeclaringClass(), method);
         if (methodDoc != null && !isEmpty(methodDoc.getCommentText())) {
             final Doc doc = new Doc();
@@ -228,8 +228,8 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
                                                       MediaType mediaType) {
         final Representation result = _delegate.createRequestRepresentation(r, m, mediaType);
         final RepresentationDocType requestRepresentation = _resourceDoc.getRequestRepresentation(m.getInvocable()
-                .getHandlingMethod().getDeclaringClass(),
-                m.getInvocable().getHandlingMethod(), result.getMediaType());
+                .getDefinitionMethod().getDeclaringClass(),
+                m.getInvocable().getDefinitionMethod(), result.getMediaType());
         if (requestRepresentation != null) {
             result.setElement(requestRepresentation.getElement());
             addDocForExample(result.getDoc(), requestRepresentation.getExample());
@@ -258,8 +258,8 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      */
     public List<Response> createResponses(org.glassfish.jersey.server.model.Resource r,
                                           org.glassfish.jersey.server.model.ResourceMethod m) {
-        final ResponseDocType responseDoc = _resourceDoc.getResponse(m.getInvocable().getHandlingMethod().getDeclaringClass(),
-                m.getInvocable().getHandlingMethod());
+        final ResponseDocType responseDoc = _resourceDoc.getResponse(m.getInvocable().getDefinitionMethod().getDeclaringClass(),
+                m.getInvocable().getDefinitionMethod());
         List<Response> responses = new ArrayList<Response>();
         if (responseDoc != null && responseDoc.hasRepresentations()) {
             for (RepresentationDocType representationDoc : responseDoc.getRepresentations()) {
@@ -336,8 +336,8 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
                              org.glassfish.jersey.server.model.ResourceMethod m, Parameter p) {
         final Param result = _delegate.createParam(r, m, p);
         if (result != null) {
-            final ParamDocType paramDoc = _resourceDoc.getParamDoc(m.getInvocable().getHandlingMethod().getDeclaringClass(),
-                    m.getInvocable().getHandlingMethod(), p);
+            final ParamDocType paramDoc = _resourceDoc.getParamDoc(m.getInvocable().getDefinitionMethod().getDeclaringClass(),
+                    m.getInvocable().getDefinitionMethod(), p);
             if (paramDoc != null && !isEmpty(paramDoc.getCommentText())) {
                 final Doc doc = new Doc();
                 doc.getContent().add(paramDoc.getCommentText());

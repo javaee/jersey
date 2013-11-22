@@ -234,7 +234,6 @@ public class MonitoringStatisticsTest {
             final ExecutionStatistics st = methodStatistics.getMethodStatistics();
             if (method.getHttpMethod().equals("GET")) {
                 Assert.assertEquals(20, st.getLastStartTime().getTime());
-                // TODO: M: test more statistics
             } else if (method.getHttpMethod().equals("POST")) {
                 Assert.assertEquals(30, st.getLastStartTime().getTime());
             } else {

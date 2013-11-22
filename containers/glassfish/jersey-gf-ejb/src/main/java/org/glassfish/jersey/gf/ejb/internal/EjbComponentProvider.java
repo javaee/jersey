@@ -243,11 +243,11 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
         final Class<?> resourceClass = method.getHandler().getHandlerClass();
 
-        if (resourceClass == null ||!isEjbComponent(resourceClass)) {
+        if (resourceClass == null || !isEjbComponent(resourceClass)) {
             return null;
         }
 
-        final Method handlingMethod = method.getHandlingMethod();
+        final Method handlingMethod = method.getDefinitionMethod();
 
         for (Class iFace : remoteAndLocalIfaces(resourceClass)) {
             try {
@@ -272,8 +272,8 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
     private void logLookupException(final Method method, final Class<?> component, Class<?> iFace, Exception ex) {
         LOGGER.log(
-            Level.WARNING,
-            LocalizationMessages.EJB_INTERFACE_HANDLING_METHOD_LOOKUP_EXCEPTION(method, component, iFace), ex);
+                Level.WARNING,
+                LocalizationMessages.EJB_INTERFACE_HANDLING_METHOD_LOOKUP_EXCEPTION(method, component, iFace), ex);
     }
 
     private List<Class> remoteAndLocalIfaces(final Class<?> resourceClass) {
