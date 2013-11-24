@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,38 +37,25 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.internal.l10n;
+package org.glassfish.jersey.examples.servlet3.webapp;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * @author WS Development Team
+ * Test Application subclass for servlet3-webapp example.
+ *
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public final class LocalizableMessage implements Localizable {
-
-    private final String _bundlename;
-    private final String _key;
-    private final Object[] _args;
-
-    public LocalizableMessage(String bundlename, String key, Object... args) {
-        _bundlename = bundlename;
-        _key = key;
-        if (args == null) {
-            args = new Object[0];
-        }
-        _args = args;
-    }
-
+public class App extends Application {
     @Override
-    public String getKey() {
-        return _key;
+    public Set<Class<?>> getClasses() {
+        HashSet<Class<?>> classes = new HashSet<Class<?>>();
+        classes.add(DogResource.class);
+        classes.add(CatResource.class);
+        return classes;
     }
 
-    @Override
-    public Object[] getArguments() {
-        return _args.clone();
-    }
-
-    @Override
-    public String getResourceBundleName() {
-        return _bundlename;
-    }
 }

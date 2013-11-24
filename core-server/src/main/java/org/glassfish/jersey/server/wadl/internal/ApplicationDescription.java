@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,8 +60,7 @@ public class ApplicationDescription {
     private Application _application;
     private WadlGenerator.ExternalGrammarDefinition _externalGrammarDefiniton;
 
-    ApplicationDescription( Application application,
-                            WadlGenerator.ExternalGrammarDefinition externalGrammarDefiniton ) {
+    ApplicationDescription(Application application, WadlGenerator.ExternalGrammarDefinition externalGrammarDefiniton) {
         super();
         this._application = application;
         this._externalGrammarDefiniton = externalGrammarDefiniton;
@@ -73,7 +72,7 @@ public class ApplicationDescription {
     public Application getApplication() {
         return _application;
     }
-    
+
     /**
      * @param type java class to be resolved.
      * @return the QName for the given Class in the grammar.
@@ -85,33 +84,32 @@ public class ApplicationDescription {
     /**
      * @param path path to external metadata.
      * @return the external metadata for a given URL, generally provided as a sub resource
-     *   or the root application.wadl.
+     *         or the root application.wadl.
      */
     public ExternalGrammar getExternalGrammar(String path) {
-        return _externalGrammarDefiniton.map.get( path );
+        return _externalGrammarDefiniton.map.get(path);
     }
 
-    
     /**
      * @return A set of all the external metadata keys
      */
     public Set<String> getExternalMetadataKeys() {
         return _externalGrammarDefiniton.map.keySet();
     }
-    
 
     /**
      * A simple holder class that stores a type and binary content
      * to be used to return extra metadata with
      */
     public static class ExternalGrammar {
+
         private MediaType _type;
         private byte[] _content;
 
-        public ExternalGrammar( MediaType type, byte[] content ) {
+        public ExternalGrammar(MediaType type, byte[] content) {
             super();
             this._type = type;
-            this._content = content;
+            this._content = content.clone();
         }
 
         public MediaType getType() {
