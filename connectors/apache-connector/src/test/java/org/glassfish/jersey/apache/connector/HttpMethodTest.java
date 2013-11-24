@@ -58,12 +58,12 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -87,7 +87,7 @@ public class HttpMethodTest extends JerseyTest {
 
     protected Client createPoolingClient() {
         ClientConfig cc = new ClientConfig();
-        PoolingClientConnectionManager connectionManager = new PoolingClientConnectionManager();
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(100);
         connectionManager.setDefaultMaxPerRoute(100);
         cc.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
