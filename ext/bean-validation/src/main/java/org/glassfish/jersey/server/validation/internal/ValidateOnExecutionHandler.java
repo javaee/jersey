@@ -92,17 +92,16 @@ class ValidateOnExecutionHandler {
 
     /**
      * Determine whether the given {@link Method getter} on the given {@link Class clazz} should be validated during the
-     * resource class validation. See {@code #validationMethod} to understand the difference between this and {@code
-     * #validationMethod}.
+     * resource class validation. See {@code #validateMethod} to understand the difference between this and {@code
+     * #validateMethod}.
      *
      * @param clazz class on which the getter will be invoked.
      * @param method method to be examined.
-     * @param forceValidation forces validation of a getter if no {@link ValidateOnExecution} annotation is present.
      * @return {@code true} if the getter should be validated, {@code false} otherwise.
      */
-    boolean validateGetter(final Class<?> clazz, final Method method, final boolean forceValidation) {
+    boolean validateGetter(final Class<?> clazz, final Method method) {
         if (!validateGetterCache.containsKey(method)) {
-            processMethod(clazz, method, method, forceValidation);
+            processMethod(clazz, method, method, true);
         }
         return validateGetterCache.get(method);
     }

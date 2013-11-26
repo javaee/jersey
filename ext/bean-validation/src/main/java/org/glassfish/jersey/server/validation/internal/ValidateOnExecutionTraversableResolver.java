@@ -90,10 +90,11 @@ class ValidateOnExecutionTraversableResolver implements TraversableResolver {
                                final Class<?> rootBeanType,
                                final Path pathToTraversableObject,
                                final ElementType elementType) {
-        // Make sure a getter method is validated on a resource class.
+        // Make sure only getters on entities are validated (not getters on resource classes).
         final Class<?> traversableObjectClass = traversableObject.getClass();
+        final boolean isEntity = !rootBeanType.equals(traversableObjectClass);
 
-        if (validateExecutable && ElementType.METHOD.equals(elementType)) {
+        if (isEntity && validateExecutable && ElementType.METHOD.equals(elementType)) {
             final String propertyName = traversableProperty.getName();
             final String propertyKey = traversableObjectClass.getName() + "#" + propertyName;
 
@@ -101,11 +102,8 @@ class ValidateOnExecutionTraversableResolver implements TraversableResolver {
                 propertyToMethod.putIfAbsent(propertyKey, getGetterMethod(traversableObjectClass, propertyName));
             }
 
-            // Ignore check if traversing through entity (getters should be validated).
-            final boolean isEntity = !rootBeanType.equals(traversableObjectClass);
-
             final Method getter = propertyToMethod.get(propertyKey);
-            return getter != null && validateOnExecutionHandler.validateGetter(traversableObjectClass, getter, isEntity);
+            return getter != null && validateOnExecutionHandler.validateGetter(traversableObjectClass, getter);
         }
 
         return delegate.isReachable(traversableObject, traversableProperty, rootBeanType, pathToTraversableObject, elementType);
