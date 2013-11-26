@@ -505,6 +505,21 @@
                             <outputDirectory>${project.build.directory}/dependency/gf-examples</outputDirectory>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>unpack-wls-examples</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>unpack-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <stripVersion>true</stripVersion>
+                            <includeGroupIds>org.glassfish.jersey.examples</includeGroupIds>
+                            <classifier>wls-project-src</classifier>
+                            <type>zip</type>
+                            <failOnMissingClassifierArtifact>false</failOnMissingClassifierArtifact>
+                            <outputDirectory>${project.build.directory}/dependency/wls-examples</outputDirectory>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -513,6 +528,7 @@
                     <descriptors>
                         <descriptor>src/main/assembly/examples-assembly.xml</descriptor>
                         <descriptor>src/main/assembly/gf-examples-assembly.xml</descriptor>
+                        <descriptor>src/main/assembly/wls-examples-assembly.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
