@@ -131,13 +131,11 @@ class ConfiguredValidatorImpl implements ConfiguredValidator {
             final Method validationMethod = resourceMethod.getValidateMethod();
 
             // Resource method validation - input parameters.
-            final Method handlingMethod = resourceMethod.getHandlingMethod();
             final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
                     validationMethod.getParameterTypes());
 
             if (methodDescriptor != null
-                    && methodDescriptor.hasConstrainedParameters()
-                    && validateOnExecutionHandler.validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
+                    && methodDescriptor.hasConstrainedParameters()) {
                 constraintViolations.addAll(forExecutables().validateParameters(resource, validationMethod, args));
             }
         }

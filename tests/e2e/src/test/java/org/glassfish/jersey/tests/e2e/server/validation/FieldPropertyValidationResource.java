@@ -62,8 +62,8 @@ public class FieldPropertyValidationResource {
         return new SubResource("valid", "valid", "valid", "valid", "valid", null);
     }
 
-    @Path("validPropertyGetterAndClassLong")
-    public SubResource validPropertyGetterAndClassLong() {
+    @Path("invalidPropertyGetterAndClassLong")
+    public SubResource invalidPropertyGetterAndClassLong() {
         return new SubResource("valid", "valid", "valid", "valid", "valid", "valid-valid");
     }
 
@@ -82,9 +82,9 @@ public class FieldPropertyValidationResource {
         return new SubResource("valid", "valid", null, "valid", "valid", "valid");
     }
 
-    @Path("validPropertyGetterLong")
-    public SubResource validPropertyGetterLong() {
-        return new SubResource("valid", "valid", "valid-valid", "valid", "valid", "valid-valid");
+    @Path("invalidPropertyGetterLong")
+    public SubResource invalidPropertyGetterLong() {
+        return new SubResource("valid", "valid", "valid-valid", "valid", "valid", "valid");
     }
 
     @Path("invalidPropertyNull")

@@ -48,6 +48,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -278,6 +279,38 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
         }
     }
 
+    @Path("getter-resource-method")
+    @Singleton
+    public static class ValidateGetterResourceMethod {
+
+        private int count = 1;
+
+        @GET
+        @Max(1)
+        public int getValue() {
+            return count++;
+        }
+    }
+
+    @Path("on-type-getter-null")
+    @ValidateOnExecution(type = ExecutableType.NON_GETTER_METHODS)
+    public static class ValidateExecutableResource {
+
+        @Path("nogetter")
+        @GET
+        @NotNull
+        public String daNull() {
+            return null;
+        }
+
+        @Path("getter")
+        @GET
+        @NotNull
+        public String getNull() {
+            return null;
+        }
+    }
+
     @Override
     protected Application configure() {
         enable(TestProperties.LOG_TRAFFIC);
@@ -296,7 +329,9 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
                 ValidateGetterExecutableOnTypeDefault.class,
                 ValidateGetterExecutableOnTypeMiss.class,
                 ValidateGetterExecutableOnTypeMatch.class,
-                ValidateGetterExecutableOnBeans.class)
+                ValidateGetterExecutableOnBeans.class,
+                ValidateGetterResourceMethod.class,
+                ValidateExecutableResource.class)
                 .property(ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK, true);
     }
 
@@ -323,11 +358,10 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
         final WebTarget target = target("getter-on-method-miss");
 
         Response response = target.request().get();
-        assertThat(response.getStatus(), equalTo(204));
+        assertThat(response.getStatus(), equalTo(400));
 
         response = target.path("sanity").request().get();
-        assertThat(response.getStatus(), equalTo(200));
-        assertThat(response.readEntity(String.class), equalTo("ok"));
+        assertThat(response.getStatus(), equalTo(400));
     }
 
     @Test
@@ -342,8 +376,8 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
     public void testOnTypeGetterDefault() throws Exception {
         final WebTarget target = target("getter-on-type-default");
 
-        assertThat(target.request().get().getStatus(), equalTo(500));
-        assertThat(target.path("sanity").request().get().getStatus(), equalTo(200));
+        assertThat(target.request().get().getStatus(), equalTo(400));
+        assertThat(target.path("sanity").request().get().getStatus(), equalTo(400));
     }
 
     @Test
@@ -351,11 +385,32 @@ public class ValidateOnExecutionBasicTest extends ValidateOnExecutionAbstractTes
         final WebTarget target = target("getter-on-type-miss");
 
         Response response = target.request().get();
-        assertThat(response.getStatus(), equalTo(204));
+        assertThat(response.getStatus(), equalTo(400));
 
         response = target.path("sanity").request().get();
-        assertThat(response.getStatus(), equalTo(200));
-        assertThat(response.readEntity(String.class), equalTo("ok"));
+        assertThat(response.getStatus(), equalTo(400));
+    }
+
+    /**
+     * Validation should fail when getter (also a resource method) is invoked and not when the resource class is validated.
+     */
+    @Test
+    public void testGetterResourceMethod() throws Exception {
+        final WebTarget target = target("getter-resource-method");
+        final Response response = target.request().get();
+
+        assertThat(response.getStatus(), equalTo(500));
+    }
+
+    @Test
+    public void testOnTypeGetterNull() throws Exception {
+        final WebTarget target = target("on-type-getter-null");
+
+        Response response = target.path("nogetter").request().get();
+        assertThat(response.getStatus(), equalTo(400));
+
+        response = target.path("getter").request().get();
+        assertThat(response.getStatus(), equalTo(400));
     }
 
     @Test
