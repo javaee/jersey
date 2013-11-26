@@ -739,7 +739,7 @@ public class OutboundMessageContext {
      * @return entity annotations.
      */
     public Annotation[] getEntityAnnotations() {
-        return entityAnnotations;
+        return entityAnnotations.clone();
     }
 
     /**

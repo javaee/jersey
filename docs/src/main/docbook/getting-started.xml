@@ -398,7 +398,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
         <para>
             In the sections above, we have covered an approach how to get dirty with Jersey quickly. Please consult the other
             sections of the Jersey User Guide to learn more about Jersey and JAX-RS.
-            Even though we try our best to cover as much as possibly in the User Guide, there is always a chance that you would
+            Even though we try our best to cover as much as possible in the User Guide, there is always a chance that you would
             not be able to get a full answer to the problem you are solving. In that case, consider diving in our examples that
             provide additional tips and hints to the features you may want to use in your projects.
         </para>

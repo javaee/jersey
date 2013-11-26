@@ -436,7 +436,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator keyStorePassword(char[] password) {
-        this.keyStorePass = password;
+        this.keyStorePass = password.clone();
         return this;
     }
 
@@ -458,7 +458,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator keyPassword(char[] password) {
-        this.keyPass = password;
+        this.keyPass = password.clone();
         return this;
     }
 
@@ -490,7 +490,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator trustStoreBytes(byte[] payload) {
-        this.trustStoreBytes = payload;
+        this.trustStoreBytes = payload.clone();
         this.trustStoreFile = null;
         this.trustStore = null;
         return this;
@@ -524,7 +524,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator keyStoreBytes(byte[] payload) {
-        this.keyStoreBytes = payload;
+        this.keyStoreBytes = payload.clone();
         this.keyStoreFile = null;
         this.keyStore = null;
         return this;

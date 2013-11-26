@@ -125,7 +125,7 @@ public class PackageNamesScanner implements ResourceFinder {
      */
     public PackageNamesScanner(final ClassLoader classLoader, final String[] packages, final boolean recursive) {
         this.recursive = recursive;
-        this.packages = packages;
+        this.packages = packages.clone();
         this.classloader = classLoader;
 
         this.finderFactories = new HashMap<String, UriSchemeResourceFinderFactory>();

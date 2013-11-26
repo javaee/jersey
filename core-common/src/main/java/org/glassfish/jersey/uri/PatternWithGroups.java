@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,7 +50,7 @@ import java.util.regex.PatternSyntaxException;
  * A pattern for matching a string against a regular expression
  * and returning capturing group values for any capturing groups present in
  * the expression.
- *
+ * <p/>
  * #renamed com.sun.jersey.api.uri.UriPattern
  *
  * @author Paul Sandoz
@@ -76,7 +76,7 @@ public class PatternWithGroups {
     private final int[] groupIndexes;
 
     /**
-     *  Construct an empty pattern.
+     * Construct an empty pattern.
      */
     protected PatternWithGroups() {
         this.regex = "";
@@ -87,11 +87,9 @@ public class PatternWithGroups {
     /**
      * Construct a new pattern.
      *
-     * @param regex the regular expression. If the expression is null or an
-     *        empty string then the pattern will only match a null or empty
-     *        string.
-     * @throws java.util.regex.PatternSyntaxException if the
-     *         regular expression could not be compiled
+     * @param regex the regular expression. If the expression is {@code null} or an empty string then the pattern will only match
+     * a {@code null} or empty string.
+     * @throws java.util.regex.PatternSyntaxException if the regular expression could not be compiled.
      */
     public PatternWithGroups(final String regex) throws PatternSyntaxException {
         this(regex, EMPTY_INT_ARRAY);
@@ -100,12 +98,10 @@ public class PatternWithGroups {
     /**
      * Construct a new pattern.
      *
-     * @param regex the regular expression. If the expression is null or an
-     *        empty string then the pattern will only match a null or empty
-     *        string.
+     * @param regex the regular expression. If the expression is {@code null} or an empty string then the pattern will only match
+     * a {@code null} or empty string.
      * @param groupIndexes the array of group indexes to capturing groups.
-     * @throws java.util.regex.PatternSyntaxException if the
-     *         regular expression could not be compiled
+     * @throws java.util.regex.PatternSyntaxException if the regular expression could not be compiled.
      */
     public PatternWithGroups(final String regex, final int[] groupIndexes) throws PatternSyntaxException {
         this(compile(regex), groupIndexes);
@@ -118,8 +114,8 @@ public class PatternWithGroups {
     /**
      * Construct a new pattern.
      *
-     * @param regexPattern  the regular expression pattern
-     * @throws IllegalArgumentException if the regexPattern is null.
+     * @param regexPattern the regular expression pattern.
+     * @throws IllegalArgumentException if the regexPattern is {@code null}.
      */
     public PatternWithGroups(final Pattern regexPattern) throws IllegalArgumentException {
         this(regexPattern, EMPTY_INT_ARRAY);
@@ -128,9 +124,9 @@ public class PatternWithGroups {
     /**
      * Construct a new pattern.
      *
-     * @param regexPattern the regular expression pattern
+     * @param regexPattern the regular expression pattern.
      * @param groupIndexes the array of group indexes to capturing groups.
-     * @throws IllegalArgumentException if the regexPattern is null.
+     * @throws IllegalArgumentException if the regexPattern is {@code null}.
      */
     public PatternWithGroups(final Pattern regexPattern, final int[] groupIndexes) throws IllegalArgumentException {
         if (regexPattern == null) {
@@ -139,7 +135,7 @@ public class PatternWithGroups {
 
         this.regex = regexPattern.toString();
         this.regexPattern = regexPattern;
-        this.groupIndexes = groupIndexes;
+        this.groupIndexes = groupIndexes.clone();
     }
 
     /**
@@ -157,7 +153,7 @@ public class PatternWithGroups {
      * @return the group indexes.
      */
     public final int[] getGroupIndexes() {
-        return groupIndexes;
+        return groupIndexes.clone();
     }
 
     private static final class EmptyStringMatchResult implements MatchResult {
@@ -206,6 +202,7 @@ public class PatternWithGroups {
             return 0;
         }
     }
+
     private static final EmptyStringMatchResult EMPTY_STRING_MATCH_RESULT = new EmptyStringMatchResult();
 
     private final class GroupIndexMatchResult implements MatchResult {
@@ -293,17 +290,14 @@ public class PatternWithGroups {
 
     /**
      * Match against the pattern.
-     * <p>
-     * If a matched then the capturing group values
-     * (if any) will be added to a list passed in as parameter.
+     * <p/>
+     * If a matched then the capturing group values (if any) will be added to a list passed in as parameter.
      *
      * @param cs the char sequence to match against the template.
-     * @param groupValues the list to add the values of a pattern's
-     *        capturing groups if matching is successful. The values are added
-     *        in the same order as the pattern's capturing groups. The list
-     *        is cleared before values are added.
-     * @return true if the char sequence matches the pattern, otherwise false.
-     * @throws IllegalArgumentException if the group values is null.
+     * @param groupValues the list to add the values of a pattern's capturing groups if matching is successful. The values are
+     * added in the same order as the pattern's capturing groups. The list is cleared before values are added.
+     * @return {@code true} if the char sequence matches the pattern, otherwise {@code false}.
+     * @throws IllegalArgumentException if the group values is {@code null}.
      */
     public final boolean match(final CharSequence cs, final List<String> groupValues) throws IllegalArgumentException {
         if (groupValues == null) {
@@ -312,7 +306,7 @@ public class PatternWithGroups {
 
         // Check for match against the empty pattern
         if (cs == null || cs.length() == 0) {
-            return (regexPattern == null) ? true : false;
+            return regexPattern == null;
         } else if (regexPattern == null) {
             return false;
         }
@@ -342,33 +336,26 @@ public class PatternWithGroups {
 
     /**
      * Match against the pattern.
-     * <p>
-     * If a matched then the capturing group values
-     * (if any) will be added to a list passed in as parameter.
+     * <p/>
+     * If a matched then the capturing group values (if any) will be added to a list passed in as parameter.
      *
      * @param cs the char sequence to match against the template.
-     * @param groupNames the list names associated with a pattern's
-     *        capturing groups. The names MUST be in the same order as the
-     *        pattern's capturing groups and the size MUST be equal to or
-     *        less than the number of capturing groups.
-     * @param groupValues the map to add the values of a pattern's
-     *        capturing groups if matching is successful. A values is put
-     *        into the map using the group name associated with the
-     *        capturing group. The map is cleared before values are added.
-     * @return true if the matches the pattern, otherwise false.
-     * @throws IllegalArgumentException if group values is null.
+     * @param groupNames the list names associated with a pattern's capturing groups. The names MUST be in the same order as the
+     * pattern's capturing groups and the size MUST be equal to or less than the number of capturing groups.
+     * @param groupValues the map to add the values of a pattern's capturing groups if matching is successful. A values is put
+     * into the map using the group name associated with the capturing group. The map is cleared before values are added.
+     * @return {@code true} if the matches the pattern, otherwise {@code false}.
+     * @throws IllegalArgumentException if group values is {@code null}.
      */
-    public final boolean match(
-            final CharSequence cs,
-            final List<String> groupNames,
-            final Map<String, String> groupValues) throws IllegalArgumentException {
+    public final boolean match(final CharSequence cs, final List<String> groupNames, final Map<String,
+            String> groupValues) throws IllegalArgumentException {
         if (groupValues == null) {
             throw new IllegalArgumentException();
         }
 
         // Check for match against the empty pattern
         if (cs == null || cs.length() == 0) {
-            return (regexPattern == null) ? true : false;
+            return regexPattern == null;
         } else if (regexPattern == null) {
             return false;
         }
@@ -385,7 +372,7 @@ public class PatternWithGroups {
             String name = groupNames.get(i);
             String currentValue = m.group((groupIndexes.length > 0) ? groupIndexes[i] : i + 1);
 
-            // Group names can have the same name occuring more than once,
+            // Group names can have the same name occurring more than once,
             // check that groups values are same.
             String previousValue = groupValues.get(name);
             if (previousValue != null && !previousValue.equals(currentValue)) {

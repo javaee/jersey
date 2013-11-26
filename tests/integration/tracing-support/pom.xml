@@ -66,18 +66,6 @@
             <artifactId>jersey-test-framework-provider-external</artifactId>
             <scope>test</scope>
         </dependency>
-<!--
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.connectors</groupId>
-            <artifactId>jersey-grizzly-connector</artifactId>
-            <scope>test</scope>
-        </dependency>
--->
     </dependencies>
 
     <build>
@@ -86,24 +74,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-<!--
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <forkMode>always</forkMode>
-                    <enableAssertions>false</enableAssertions>
-                    <systemPropertyVariables>&lt;!&ndash; ??? still logging not working &ndash;&gt;
-                        <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
--->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <configuration>
-                    <systemPropertyVariables><!-- ??? still logging not working -->
+                    <systemPropertyVariables>
+                        <!-- client side config works - failsafe plugin forks jvm -->
                         <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
                     </systemPropertyVariables>
                 </configuration>
@@ -111,19 +87,22 @@
             <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
-                <!--<version>8.1.12.v20130726</version>-->
                 <configuration>
                     <connectors>
                         <connector>
                             <responseHeaderSize>16192</responseHeaderSize>
                         </connector>
                     </connectors>
+                    <!-- server side config does not fork with jetty:run goal - it uses same jvm
+                         use maven '-D' option instead:
+                             mvn _goal_ -Djava.util.logging.config.file=target/test-classes/logging.properties
                     <systemProperties>
-                        <systemProperty><!-- ??? still logging not working -->
+                        <systemProperty>
                             <name>java.util.logging.config.file</name>
                             <value>${project.build.testOutputDirectory}/logging.properties</value>
                         </systemProperty>
                     </systemProperties>
+                    -->
                 </configuration>
             </plugin>
         </plugins>
