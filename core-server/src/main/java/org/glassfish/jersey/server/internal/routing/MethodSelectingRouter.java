@@ -637,11 +637,12 @@ final class MethodSelectingRouter implements Router {
                         }
                     }
                 }
-                // Found media type for current writer.
-                if (selected != null) {
-                    return selected.getCombinedMediaType();
-                }
             }
+        }
+
+        // Found media type for current writer.
+        if (selected != null) {
+            return selected.getCombinedMediaType();
         }
 
         // If the media type couldn't be determined, choose pre-selected one and wait whether interceptors change the mediaType
