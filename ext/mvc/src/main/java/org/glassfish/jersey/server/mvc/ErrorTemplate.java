@@ -46,6 +46,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.glassfish.jersey.Beta;
+
 /**
  * Used to annotate JAX-RS resources and resource methods to provide reference to an error template if an exception has been
  * raised during processing a request (resource method invocation).
@@ -66,6 +68,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Documented
+@Beta
 public @interface ErrorTemplate {
 
     /**
@@ -73,12 +76,4 @@ public @interface ErrorTemplate {
      * declared as absolute template name if the name begins with a '/', otherwise the template name is recognized to be relative.
      */
     String name() default "";
-
-    /**
-     * The class to be used to resolve the error template name if the error template name is not absolute.
-     * If the value is {@code Object.class} then the resolving class will be obtained from the last matched resource.
-     * <p/>
-     * Defaults to {@link Object}.
-     */
-    Class<?> resolvingClass() default Object.class;
 }

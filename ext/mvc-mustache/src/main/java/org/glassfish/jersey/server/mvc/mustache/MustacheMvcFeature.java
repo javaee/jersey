@@ -47,7 +47,6 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.server.mvc.MvcFeature;
-import org.glassfish.jersey.server.mvc.MvcProperties;
 
 /**
  * {@link Feature} used to add support for {@link MvcFeature MVC} and Mustache templates.
@@ -76,7 +75,7 @@ public class MustacheMvcFeature implements Feature {
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String TEMPLATE_BASE_PATH = MvcProperties.TEMPLATE_BASE_PATH + ".mustache";
+    public static final String TEMPLATE_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + ".mustache";
 
     /**
      * If {@code true} then enable caching of Mustache templates to avoid multiple compilation.
@@ -84,8 +83,22 @@ public class MustacheMvcFeature implements Feature {
      * The default value is {@code false}.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @since 2.5
      */
-    public static final String CACHING_TEMPLATES_ENABLED = "jersey.config.server.mvc.caching.mustache.enabled";
+    public static final String CACHE_TEMPLATES = MvcFeature.CACHE_TEMPLATES + ".mustache";
+
+    /**
+     * Property used to pass user-configured {@link com.github.mustachejava.MustacheFactory factory} able to create
+     * {@link com.github.mustachejava.Mustache Mustache templates}.
+     * <p/>
+     * The default value is not set.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @since 2.5
+     */
+    public static final String TEMPLATE_OBJECT_FACTORY = MvcFeature.TEMPLATE_OBJECT_FACTORY + ".mustache";
 
     @Override
     public boolean configure(final FeatureContext context) {

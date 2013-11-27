@@ -56,7 +56,6 @@ import org.glassfish.jersey.server.validation.internal.ValidationHelper;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @since 2.3
  */
-@Provider
 @Singleton
 final class ValidationErrorTemplateExceptionMapper extends AbstractErrorTemplateMapper<ConstraintViolationException> {
 

@@ -40,29 +40,24 @@
 
 package org.glassfish.jersey.server.mvc.mustache;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.ext.Provider;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.ServletContext;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.internal.util.collection.DataStructures;
+import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.mvc.Viewable;
+import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import org.jvnet.hk2.annotations.Optional;
 
@@ -77,17 +72,9 @@ import com.github.mustachejava.MustacheFactory;
  * @see MustacheMvcFeature
  * @since 2.3
  */
-@Provider
 @Singleton
-final class MustacheTemplateProcessor implements TemplateProcessor<Mustache> {
+final class MustacheTemplateProcessor extends AbstractTemplateProcessor<Mustache> {
 
-    private static final String SUFFIX = ".mustache";
-
-    private final ConcurrentMap<String, Mustache> cache;
-
-    private final ServletContext servletContext;
-
-    private final String basePath;
     private final MustacheFactory factory;
 
     /**
@@ -95,68 +82,25 @@ final class MustacheTemplateProcessor implements TemplateProcessor<Mustache> {
      * (optional) {@link ServletContext servlet context}.
      *
      * @param config configuration to configure this processor from.
+     * @param serviceLocator service locator to initialize template object factory if needed.
      * @param servletContext (optional) servlet context to obtain template resources from.
      */
     @Inject
-    public MustacheTemplateProcessor(final Configuration config, @Optional final ServletContext servletContext) {
-        this.servletContext = servletContext;
-        this.factory = new DefaultMustacheFactory();
+    public MustacheTemplateProcessor(final Configuration config, final ServiceLocator serviceLocator,
+                                     @Optional final ServletContext servletContext) {
+        super(config, servletContext, "mustache", "mustache");
 
-        final Map<String,Object> properties = config.getProperties();
-
-        this.basePath = !properties.containsKey(MustacheMvcFeature.TEMPLATE_BASE_PATH) ? "" :
-                (String) config.getProperty(MustacheMvcFeature.TEMPLATE_BASE_PATH);
-
-        this.cache = PropertiesHelper.isProperty(properties, MustacheMvcFeature.CACHING_TEMPLATES_ENABLED) ?
-                DataStructures.<String, Mustache>createConcurrentMap() : null;
+        this.factory = getTemplateObjectFactory(serviceLocator, MustacheFactory.class, new Value<MustacheFactory>() {
+            @Override
+            public MustacheFactory get() {
+                return new DefaultMustacheFactory();
+            }
+        });
     }
 
     @Override
-    public Mustache resolve(final String name, final MediaType mediaType) {
-        // Look into the cache if enabled.
-        if (cache != null) {
-            if (!cache.containsKey(name)) {
-                cache.putIfAbsent(name, resolve(name));
-            }
-            return cache.get(name);
-        }
-
-        return resolve(name);
-    }
-
-    /**
-     * Resolve a template name to a template reference.
-     *
-     * @param name the template name.
-     * @return the template reference, otherwise {@code null} if the template name cannot be resolved.
-     */
-    private Mustache resolve(final String name) {
-        final String template = name.endsWith(SUFFIX) ? basePath + name : basePath + name + SUFFIX;
-
-        Reader reader = null;
-
-        // ServletContext.
-        if (servletContext != null) {
-            final InputStream stream = servletContext.getResourceAsStream(template);
-            reader = stream != null ? new InputStreamReader(stream) : null;
-        }
-
-        // Classloader.
-        if (reader == null) {
-            final InputStream stream = getClass().getResourceAsStream(template);
-            reader = stream != null ? new InputStreamReader(stream) : null;
-        }
-
-        // File-system path.
-        if (reader == null) {
-            try {
-                reader = new FileReader(template);
-            } catch (FileNotFoundException fnfe) {
-                // NOOP.
-            }
-        }
-
-        return reader != null ? factory.compile(reader, name) : null;
+    protected Mustache resolve(final String templatePath, final Reader reader) {
+        return factory.compile(reader, templatePath);
     }
 
     @Override

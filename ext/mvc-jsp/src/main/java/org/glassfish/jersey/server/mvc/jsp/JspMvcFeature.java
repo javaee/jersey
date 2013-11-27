@@ -42,26 +42,54 @@ package org.glassfish.jersey.server.mvc.jsp;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.server.mvc.MvcFeature;
 
 /**
- * {@code JspMvcFeature} used to add MVC ({@link MvcFeature}) and JSP template support to the server.
+ * {@link Feature} used to add support for {@link MvcFeature MVC} and JSP templates.
+ * <p/>
+ * Note: This feature also registers {@link MvcFeature}.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
 public final class JspMvcFeature implements Feature {
 
+    /**
+     * {@link String} property defining the base path to JSP templates. If set, the value of the property is added in front
+     * of the template name defined in:
+     * <ul>
+     * <li>{@link org.glassfish.jersey.server.mvc.Viewable Viewable}</li>
+     * <li>{@link org.glassfish.jersey.server.mvc.Template Template}, or</li>
+     * <li>{@link org.glassfish.jersey.server.mvc.ErrorTemplate ErrorTemplate}</li>
+     * </ul>
+     * <p/>
+     * Value can be absolute or relative to current {@link javax.servlet.ServletContext servlet context}.
+     * <p/>
+     * There is no default value.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + ".jsp";
+
     @Override
     public boolean configure(final FeatureContext context) {
-        if (!context.getConfiguration().isRegistered(MvcFeature.class)) {
-            context.register(MvcFeature.class);
-        }
+        final Configuration config = context.getConfiguration();
 
-        context.register(JspTemplateProcessor.class);
-        return true;
+        if (!config.isRegistered(JspTemplateProcessor.class)) {
+            // Template Processor.
+            context.register(JspTemplateProcessor.class);
+
+            // MvcFeature.
+            if (!config.isRegistered(MvcFeature.class)) {
+                context.register(MvcFeature.class);
+            }
+
+            return true;
+        }
+        return false;
     }
 }

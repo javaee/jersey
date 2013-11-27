@@ -44,13 +44,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.MalformedURLException;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.Reader;
 
 import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import javax.inject.Inject;
@@ -62,31 +58,22 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
-import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.mvc.Viewable;
-import org.glassfish.jersey.server.mvc.internal.DefaultTemplateProcessor;
 import org.glassfish.jersey.server.mvc.jsp.internal.LocalizationMessages;
-import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
-
-import com.google.common.collect.Lists;
+import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
 
 /**
- * A JSP template processor able to process resources obtained through {@link ServletContext servlet context}.
+ * A JSP template processor able to process resources obtained through {@link ServletContext servlet context}. This template
+ * processor does not support caching of template reference objects (in Jersey) or passing custom template object factory.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-final class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
-
-    private static final ExtendedLogger logger =
-            new ExtendedLogger(Logger.getLogger(JspTemplateProcessor.class.getName()), Level.FINEST);
-
-    @Context
-    private ServletContext servletContext;
+final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {
 
     @Inject
     private Provider<Ref<HttpServletRequest>> requestProviderRef;
@@ -96,38 +83,20 @@ final class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
     private Provider<ContainerRequest> containerRequestProvider;
 
     /**
-     * Creates new {@link TemplateProcessor template processor} for JSP.
+     * Create an instance of this processor with injected {@link Configuration config} and
+     * (optional) {@link ServletContext servlet context}.
      *
-     * @param config configuration to obtain {@value JspProperties#TEMPLATES_BASE_PATH} init param from.
+     * @param config configuration to configure this processor from.
+     * @param servletContext (optional) servlet context to obtain template resources from.
      */
-    public JspTemplateProcessor(@Context final Configuration config) {
-        super(config);
-
-        setBasePathFromProperty(JspProperties.TEMPLATES_BASE_PATH);
+    @Inject
+    public JspTemplateProcessor(final Configuration config, final ServletContext servletContext) {
+        super(config, servletContext, "jsp", "jsp");
     }
 
     @Override
-    public String resolve(final String name, final MediaType mediaType) {
-        if (servletContext == null) {
-            return null;
-        }
-
-        try {
-            for (final String templateName : getPossibleTemplateNames(name)) {
-                if (servletContext.getResource(templateName) != null) {
-                    return templateName;
-                }
-            }
-        } catch (MalformedURLException ex) {
-            logger.log(Level.FINE, LocalizationMessages.RESOURCE_PATH_NOT_IN_CORRECT_FORM(getTemplateName(name)));
-        }
-
-        return null;
-    }
-
-    @Override
-    protected List<String> getExtensions() {
-        return Lists.newArrayList(".jsp");
+    protected String resolve(final String templatePath, final Reader reader) throws Exception {
+        return templatePath;
     }
 
     @Override
@@ -137,12 +106,12 @@ final class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
             tracingLogger.log(MvcJspEvent.JSP_FORWARD, templateReference, viewable.getModel());
         }
 
-        RequestDispatcher dispatcher = servletContext.getRequestDispatcher(templateReference);
+        final RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(templateReference);
         if (dispatcher == null) {
             throw new ContainerException(LocalizationMessages.NO_REQUEST_DISPATCHER_FOR_RESOLVED_PATH(templateReference));
         }
 
-        dispatcher = new RequestDispatcherWrapper(dispatcher, getBasePath(), viewable);
+        final RequestDispatcher wrapper = new RequestDispatcherWrapper(dispatcher, getBasePath(), viewable);
 
         // OutputStream and Writer for HttpServletResponseWrapper.
         final ServletOutputStream responseStream = new ServletOutputStream() {
@@ -154,7 +123,7 @@ final class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
         final PrintWriter responseWriter = new PrintWriter(new OutputStreamWriter(responseStream));
 
         try {
-            dispatcher.forward(requestProviderRef.get().get(), new HttpServletResponseWrapper(responseProviderRef.get().get()) {
+            wrapper.forward(requestProviderRef.get().get(), new HttpServletResponseWrapper(responseProviderRef.get().get()) {
 
                 @Override
                 public ServletOutputStream getOutputStream() throws IOException {

@@ -128,6 +128,11 @@
                         &jersey.jetty.JettyConnectorProvider; should be used to provide Jetty HTTP Client
                         connector instances instead.
                     </para></listitem>
+                    <listitem><para>
+                        Renamed property <literal>CACHING_TEMPLATES_ENABLED</literal> in &jersey.server.mvc.MustacheMvcFeature;
+                        from <literal>jersey.config.server.mvc.caching.mustache.enabled</literal> to
+                        <literal>jersey.config.server.mvc.caching.mustache</literal>.
+                    </para></listitem>
                 </itemizedlist>
             </para>
         </section>

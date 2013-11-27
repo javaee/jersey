@@ -398,7 +398,9 @@
 <!ENTITY jersey.server.mvc.MvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/MvcFeature.html'>MvcFeature</link>">
 <!ENTITY jersey.server.mvc.FreemarkerMvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/freemarker/FreemarkerMvcFeature.html'>FreemarkerMvcFeature</link>">
 <!ENTITY jersey.server.mvc.JspMvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/jsp/JspMvcFeature.html'>JspMvcFeature</link>">
+<!ENTITY jersey.server.mvc.MustacheMvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/mustache/MustacheMvcFeature.html'>MustacheMvcFeature</link>">
 <!ENTITY jersey.server.mvc.Template "<link xlink:href='&jersey.javadoc.path;/server/mvc/Template.html'>@Template</link>">
+<!ENTITY jersey.server.mvc.ErrorTemplate "<link xlink:href='&jersey.javadoc.path;/server/mvc/ErrorTemplate.html'>@ErrorTemplate</link>">
 <!ENTITY jersey.server.mvc.TemplateProcessor "<link xlink:href='&jersey.javadoc.path;/server/mvc/spi/TemplateProcessor.html'>TemplateProcessor</link>">
 <!ENTITY jersey.server.mvc.Viewable "<link xlink:href='&jersey.javadoc.path;/server/mvc/Viewable.html'>Viewable</link>">
 
@@ -460,8 +462,10 @@
 <!ENTITY jersey-media-moxy "<link xlink:href='&jersey.site.path;/jersey-media-moxy/dependencies.html'>jersey-media-moxy</link>" >
 <!ENTITY jersey-media-multipart "<link xlink:href='&jersey.site.path;/jersey-media-multipart/dependencies.html'>jersey-media-multipart</link>" >
 <!ENTITY jersey-mvc "<link xlink:href='&jersey.site.path;/jersey-mvc/dependencies.html'>jersey-mvc</link>" >
+<!ENTITY jersey-mvc-bean-validation "<link xlink:href='&jersey.site.path;/jersey-mvc-bean-validation/dependencies.html'>jersey-mvc-bean-validation</link>" >
 <!ENTITY jersey-mvc-freemarker "<link xlink:href='&jersey.site.path;/jersey-mvc-freemarker/dependencies.html'>jersey-mvc-freemarker</link>" >
 <!ENTITY jersey-mvc-jsp "<link xlink:href='&jersey.site.path;/jersey-mvc-jsp/dependencies.html'>jersey-mvc-jsp</link>" >
+<!ENTITY jersey-mvc-mustache "<link xlink:href='&jersey.site.path;/jersey-mvc-mustache/dependencies.html'>jersey-mvc-mustache</link>" >
 <!ENTITY jersey-spring3 "<link xlink:href='&jersey.site.path;/jersey-spring3/dependencies.html'>jersey-spring3</link>" >
 
 <!-- Jersey GitHub links -->
@@ -715,6 +719,7 @@
 <!ENTITY lit.jersey.server.mvc.FreemarkerMvcFeature "<literal>FreemarkerMvcFeature</literal>">
 <!ENTITY lit.jersey.server.mvc.JspMvcFeature "<literal>JspMvcFeature</literal>">
 <!ENTITY lit.jersey.server.mvc.MvcFeature "<literal>MvcFeature</literal>">
+<!ENTITY lit.jersey.server.mvc.ErrorTemplate "<literal>@ErrorTemplate</literal>">
 <!ENTITY lit.jersey.server.mvc.Template "<literal>@Template</literal>">
 <!ENTITY lit.jersey.server.mvc.TemplateProcessor "<literal>TemplateProcessor</literal>">
 <!ENTITY lit.jersey.server.mvc.Viewable "<literal>Viewable</literal>">

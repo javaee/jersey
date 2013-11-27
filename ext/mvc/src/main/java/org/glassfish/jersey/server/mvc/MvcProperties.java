@@ -44,18 +44,18 @@ package org.glassfish.jersey.server.mvc;
  * Jersey MVC configuration properties.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @deprecated Use properties from {@link org.glassfish.jersey.server.mvc.MvcFeature} instead.
  */
+@Deprecated
 public final class MvcProperties {
 
     /**
      * The base path where templates, associated with {@link Viewable viewables} of resource classes, are located.
-     * <p></p>
+     * <p>
      * If this property is not set then the base path will be the root path.
-     * <p></p>
-     * Note: Do NOT set this property, this property is used as common prefix for specific
-     * {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor} properties.
+     * </p>
      */
-    public static final String TEMPLATE_BASE_PATH = "jersey.config.server.mvc.templateBasePath";
+    public static final String TEMPLATE_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH;
 
     /**
      * Prevent initialization.
