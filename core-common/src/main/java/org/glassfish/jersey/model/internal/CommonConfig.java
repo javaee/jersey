@@ -121,6 +121,11 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     private final Set<Feature> enabledFeatures;
 
     /**
+     * Flag determining whether the configuration of meta-providers (excl. binders) should be disabled.
+     */
+    private boolean disableMetaProviderConfiguration;
+
+    /**
      * A single feature registration record.
      */
     private static final class FeatureRegistration {
@@ -214,6 +219,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
         this.enabledFeatureClasses = Sets.newIdentityHashSet();
         this.enabledFeatures = Sets.newHashSet();
+
+        this.disableMetaProviderConfiguration = false;
     }
 
     /**
@@ -221,22 +228,46 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      *
      * @param config configurable to copy class properties from.
      */
-    public CommonConfig(CommonConfig config) {
+    public CommonConfig(final CommonConfig config) {
         this.type = config.type;
 
-        this.properties = new HashMap<String, Object>(config.properties);
+        this.properties = new HashMap<String, Object>(config.properties.size());
         this.immutablePropertiesView = Collections.unmodifiableMap(this.properties);
         this.immutablePropertyNames = Collections.unmodifiableCollection(this.properties.keySet());
 
         this.componentBag = config.componentBag.copy();
 
-        this.newFeatureRegistrations = Lists.newLinkedList(config.newFeatureRegistrations);
-
+        this.newFeatureRegistrations = Lists.newLinkedList();
         this.enabledFeatureClasses = Sets.newIdentityHashSet();
+        this.enabledFeatures = Sets.newHashSet();
+
+        copy(config, false);
+    }
+
+    /**
+     * Copy config properties, providers from given {@code config} to this instance.
+     *
+     * @param config configurable to copy class properties from.
+     * @param loadComponentBag {@code true} if the component bag from config should be copied as well, {@code false} otherwise.
+     */
+    private void copy(final CommonConfig config, final boolean loadComponentBag) {
+        this.properties.clear();
+        this.properties.putAll(config.properties);
+
+        this.newFeatureRegistrations.clear();
+        this.newFeatureRegistrations.addAll(config.newFeatureRegistrations);
+
+        this.enabledFeatureClasses.clear();
         this.enabledFeatureClasses.addAll(config.enabledFeatureClasses);
 
-        this.enabledFeatures = Sets.newHashSet();
+        this.enabledFeatures.clear();
         this.enabledFeatures.addAll(config.enabledFeatures);
+
+        this.disableMetaProviderConfiguration = config.disableMetaProviderConfiguration;
+
+        if (loadComponentBag) {
+            this.componentBag.loadFrom(config.componentBag);
+        }
     }
 
     @Override
@@ -479,29 +510,45 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
     /**
      * Load the internal configuration state from an externally provided configuration state.
+     * <p/>
+     * Calling this method effectively replaces existing configuration state of the instance with the state represented by the
+     * externally provided configuration. If the features, auto-discoverables of given config has been already configured then
+     * this method will make sure to not configure them for the second time.
      *
-     * Calling this method effectively replaces existing configuration state of the instance
-     * with the state represented by the externally provided configuration.
-     *
-     * @param config external configuration state to replace the configuration of this configurable
-     *               instance.
+     * @param config external configuration state to replace the configuration of this configurable instance.
      * @return the updated common configuration instance.
      */
     public CommonConfig loadFrom(Configuration config) {
-        setProperties(config.getProperties());
+        if (config instanceof CommonConfig) {
+            // If loading from CommonConfig then simply copy properties and check whether given config has been initialized.
+            final CommonConfig commonConfig = (CommonConfig) config;
 
-        this.enabledFeatures.clear();
-        this.enabledFeatureClasses.clear();
+            copy(commonConfig, true);
+            this.disableMetaProviderConfiguration = !commonConfig.enabledFeatureClasses.isEmpty();
+        } else {
+            setProperties(config.getProperties());
 
-        componentBag.clear();
-        resetRegistrations();
+            this.enabledFeatures.clear();
+            this.enabledFeatureClasses.clear();
 
-        for (Class<?> cls : config.getClasses()) {
-            register(cls, config.getContracts(cls));
-        }
+            componentBag.clear();
+            resetRegistrations();
 
-        for (Object o : config.getInstances()) {
-            register(o, config.getContracts(o.getClass()));
+            for (final Class<?> clazz : config.getClasses()) {
+                if (Feature.class.isAssignableFrom(clazz) && config.isEnabled((Class<? extends Feature>) clazz)) {
+                    this.disableMetaProviderConfiguration = true;
+                }
+
+                register(clazz, config.getContracts(clazz));
+            }
+
+            for (final Object instance : config.getInstances()) {
+                if (instance instanceof Feature && config.isEnabled((Feature) instance)) {
+                    this.disableMetaProviderConfiguration = true;
+                }
+
+                register(instance, config.getContracts(instance.getClass()));
+            }
         }
 
         return this;
@@ -531,15 +578,18 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      * @param locator locator in which the auto-discoverables should be configured.
      */
     public void configureAutoDiscoverableProviders(final ServiceLocator locator) {
-        for (final AutoDiscoverable autoDiscoverable : Providers.getProviders(locator, AutoDiscoverable.class)) {
-            final ConstrainedTo constrainedTo = autoDiscoverable.getClass().getAnnotation(ConstrainedTo.class);
+        // Check whether meta providers have been initialized for a config this config has been loaded from.
+        if (!disableMetaProviderConfiguration) {
+            for (final AutoDiscoverable autoDiscoverable : Providers.getProviders(locator, AutoDiscoverable.class)) {
+                final ConstrainedTo constrainedTo = autoDiscoverable.getClass().getAnnotation(ConstrainedTo.class);
 
-            if (constrainedTo == null || type.equals(constrainedTo.value())) {
-                try {
-                    autoDiscoverable.configure(this);
-                } catch (Exception e) {
-                    LOGGER.log(Level.FINE,
-                            LocalizationMessages.AUTODISCOVERABLE_CONFIGURATION_FAILED(autoDiscoverable.getClass()), e);
+                if (constrainedTo == null || type.equals(constrainedTo.value())) {
+                    try {
+                        autoDiscoverable.configure(this);
+                    } catch (Exception e) {
+                        LOGGER.log(Level.FINE,
+                                LocalizationMessages.AUTODISCOVERABLE_CONFIGURATION_FAILED(autoDiscoverable.getClass()), e);
+                    }
                 }
             }
         }
@@ -554,14 +604,17 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         // First, configure existing binders
         final Set<Binder> configuredBinders = configureBinders(locator, Collections.<Binder>emptySet());
 
-        // Next, configure all features
-        configureFeatures(
-                locator,
-                new HashSet<FeatureRegistration>(),
-                resetRegistrations());
+        // Check whether meta providers have been initialized for a config this config has been loaded from.
+        if (!disableMetaProviderConfiguration) {
+            // Next, configure all features
+            configureFeatures(
+                    locator,
+                    new HashSet<FeatureRegistration>(),
+                    resetRegistrations());
 
-        // At last, configure any new binders added by features
-        configureBinders(locator, configuredBinders);
+            // At last, configure any new binders added by features
+            configureBinders(locator, configuredBinders);
+        }
     }
 
     private Set<Binder> configureBinders(final ServiceLocator locator, final Set<Binder> configured) {
@@ -635,17 +688,33 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CommonConfig)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof CommonConfig)) {
+            return false;
+        }
 
         CommonConfig that = (CommonConfig) o;
 
-        if (type != that.type) return false;
-        if (!properties.equals(that.properties)) return false;
-        if (!componentBag.equals(that.componentBag)) return false;
-        if (!enabledFeatureClasses.equals(that.enabledFeatureClasses)) return false;
-        if (!enabledFeatures.equals(that.enabledFeatures)) return false;
-        if (!newFeatureRegistrations.equals(that.newFeatureRegistrations)) return false;
+        if (type != that.type) {
+            return false;
+        }
+        if (!properties.equals(that.properties)) {
+            return false;
+        }
+        if (!componentBag.equals(that.componentBag)) {
+            return false;
+        }
+        if (!enabledFeatureClasses.equals(that.enabledFeatureClasses)) {
+            return false;
+        }
+        if (!enabledFeatures.equals(that.enabledFeatures)) {
+            return false;
+        }
+        if (!newFeatureRegistrations.equals(that.newFeatureRegistrations)) {
+            return false;
+        }
 
         return true;
     }

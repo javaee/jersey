@@ -39,27 +39,38 @@
  */
 package org.glassfish.jersey.client;
 
+import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
+import javax.ws.rs.core.Response;
 
+import javax.annotation.Priority;
 import javax.net.ssl.SSLContext;
 
 import org.junit.Before;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-
 
 /**
  * {@link JerseyClient} unit test.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class JerseyClientBuilderTest {
+
     private JerseyClientBuilder builder;
 
     @Before
@@ -135,5 +146,82 @@ public class JerseyClientBuilderTest {
 
         client = new JerseyClientBuilder().sslContext(ctx).trustStore(ks).build();
         assertNotSame("SSL context not overridden in the client builder.", ctx, client.getSslContext());
+    }
+
+    @Priority(2)
+    public static class AbortingClientFilter implements ClientRequestFilter {
+
+        @Override
+        public void filter(final ClientRequestContext requestContext) throws IOException {
+            requestContext.abortWith(Response.ok("ok").build());
+        }
+    }
+
+    @Priority(1)
+    public static class ClientCreatingFilter implements ClientRequestFilter {
+
+        @Override
+        public void filter(final ClientRequestContext requestContext) throws IOException {
+            if (Boolean.valueOf(requestContext.getHeaderString("create"))) {
+                assertThat(requestContext.getProperty("foo").toString(), equalTo("rab"));
+
+                final Client client = ClientBuilder.newBuilder().withConfig(requestContext.getConfiguration()).build();
+                final Response response = client.target("http://localhost").request().header("create", false).get();
+
+                requestContext.abortWith(response);
+            } else {
+                assertThat(requestContext.getConfiguration().getProperty("foo").toString(), equalTo("bar"));
+            }
+        }
+    }
+
+    public static class ClientFeature implements Feature {
+
+        @Override
+        public boolean configure(final FeatureContext context) {
+            if (context.getConfiguration().isRegistered(AbortingClientFilter.class)) {
+                throw new RuntimeException("Already Configured!");
+            }
+
+            context.register(ClientCreatingFilter.class);
+            context.register(AbortingClientFilter.class);
+
+            context.property("foo", "bar");
+
+            return true;
+        }
+    }
+
+    @Test
+    public void testCreateClientWithConfigFromClient() throws Exception {
+        _testCreateClientWithAnotherConfig(false);
+    }
+
+    @Test
+    public void testCreateClientWithConfigFromRequestContext() throws Exception {
+        _testCreateClientWithAnotherConfig(true);
+    }
+
+    public void _testCreateClientWithAnotherConfig(final boolean clientInFilter) throws Exception {
+        final Client client = ClientBuilder.newBuilder().register(new ClientFeature()).build();
+        Response response = client.target("http://localhost")
+                .request().property("foo", "rab").header("create", clientInFilter).get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("ok"));
+
+        final Client newClient = ClientBuilder.newClient(client.getConfiguration());
+        response = newClient.target("http://localhost")
+                .request().property("foo", "rab").header("create", clientInFilter).get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("ok"));
+
+        final Client newClientFromBuilder = ClientBuilder.newBuilder().withConfig(client.getConfiguration()).build();
+        response = newClientFromBuilder.target("http://localhost")
+                .request().property("foo", "rab").header("create", clientInFilter).get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("ok"));
     }
 }
