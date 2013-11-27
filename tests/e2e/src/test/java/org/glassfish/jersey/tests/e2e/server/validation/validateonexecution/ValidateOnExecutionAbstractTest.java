@@ -80,7 +80,7 @@ public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
 
     @Test
     public void testOnMethodValidateInputPassBiggerValidateExecutableMiss() throws Exception {
-        _testOnMethod("validateExecutableMiss", 15, 200);
+        _testOnMethod("validateExecutableMiss", 15, 400);
     }
 
     @Test
@@ -90,7 +90,7 @@ public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
 
     @Test
     public void testOnMethodValidateInputPassBiggerValidateExecutableNone() throws Exception {
-        _testOnMethod("validateExecutableNone", 15, 200);
+        _testOnMethod("validateExecutableNone", 15, 400);
     }
 
     @Test
@@ -155,7 +155,7 @@ public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
 
     @Test
     public void testOnTypeValidateInputPassBiggerValidateExecutableMiss() throws Exception {
-        _testOnType("miss", 15, 200);
+        _testOnType("miss", 15, 400);
     }
 
     @Test
@@ -165,7 +165,7 @@ public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
 
     @Test
     public void testOnTypeValidateInputPassBiggerValidateExecutableNone() throws Exception {
-        _testOnType("none", 15, 200);
+        _testOnType("none", 15, 400);
     }
 
     @Test
@@ -225,7 +225,7 @@ public abstract class ValidateOnExecutionAbstractTest extends JerseyTest {
 
     @Test
     public void testMixedValidateInputPassNone() throws Exception {
-        _test("mixed-none", 15, 200);
+        _test("mixed-none", 15, 400);
     }
 
     @Test

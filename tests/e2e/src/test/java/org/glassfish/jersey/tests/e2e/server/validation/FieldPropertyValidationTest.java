@@ -71,8 +71,8 @@ public class FieldPropertyValidationTest extends JerseyTest {
     }
 
     @Test
-    public void testValidPropertyGetterAndClassLong() throws Exception {
-        _test("validPropertyGetterAndClassLong", 200);
+    public void testInvalidPropertyGetterAndClassLong() throws Exception {
+        _test("invalidPropertyGetterAndClassLong", 400);
     }
 
     @Test
@@ -91,8 +91,8 @@ public class FieldPropertyValidationTest extends JerseyTest {
     }
 
     @Test
-    public void testValidPropertyGetterLong() throws Exception {
-        _test("validPropertyGetterLong", 200);
+    public void testInvalidPropertyGetterLong() throws Exception {
+        _test("invalidPropertyGetterLong", 400);
     }
 
     @Test
