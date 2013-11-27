@@ -71,4 +71,5 @@ public interface MonitoringStatisticsListener {
      * @param statistics Newly calculated monitoring statistics.
      */
     public void onStatistics(MonitoringStatistics statistics);
+
 }

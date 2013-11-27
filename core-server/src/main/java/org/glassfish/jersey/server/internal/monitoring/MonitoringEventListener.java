@@ -43,8 +43,11 @@ package org.glassfish.jersey.server.internal.monitoring;
 import java.util.List;
 import java.util.Queue;
 
+import javax.ws.rs.ProcessingException;
+
 import javax.inject.Inject;
 
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
@@ -81,6 +84,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
     private final Queue<Integer> responseStatuses = Queues.newArrayBlockingQueue(50000);
     private final Queue<RequestEvent> exceptionMapperEvents = Queues.newArrayBlockingQueue(50000);
     private volatile long applicationStartTime;
+    private volatile MonitoringStatisticsProcessor monitoringStatisticsProcessor;
 
 
     /**
@@ -192,11 +196,19 @@ public class MonitoringEventListener implements ApplicationEventListener {
             case INITIALIZATION_FINISHED:
                 this.applicationStartTime = now;
                 this.applicationEvents.add(event);
-                final MonitoringStatisticsProcessor monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(serviceLocator, this);
-                monitoringStatisticsProcessor.startMonitoringWorker();
+                this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(serviceLocator, this);
+                this.monitoringStatisticsProcessor.startMonitoringWorker();
                 break;
             case DESTROY_FINISHED:
                 this.applicationEvents.add(event);
+                if (monitoringStatisticsProcessor != null) {
+                    try {
+                        monitoringStatisticsProcessor.shutDown();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new ProcessingException(LocalizationMessages.ERROR_MONITORING_SHUTDOWN_INTERRUPTED(), e);
+                    }
+                }
                 break;
 
         }

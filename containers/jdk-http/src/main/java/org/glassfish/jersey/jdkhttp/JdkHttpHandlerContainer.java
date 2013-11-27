@@ -206,9 +206,11 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
 
     @Override
     public void reload(ResourceConfig configuration) {
+        containerListener.onShutdown(this);
         appHandler = new ApplicationHandler(configuration);
-        containerListener.onReload(this);
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
+        containerListener.onReload(this);
+        containerListener.onStartup(this);
     }
 
     /**

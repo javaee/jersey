@@ -73,6 +73,16 @@
                     buffering as default options due to bugs in <literal>HttpURLConnection</literal>. Also
                     &jersey.jetty.JettyConnector; currently does not support chunked encoding at all.
                 </para></listitem>
+                <listitem><para>
+                    The &jersey.server.ContainerLifecycleListener; invokes event <literal>onStartup</literal>
+                    and <literal>onShutdown</literal> also when application is being started or stopped because of
+                    application redeploy. The interface was marked as a Beta now.
+                </para></listitem>
+                <listitem><para>
+                    The monitoring statistics method <literal>ApplicationStatistics.getDestroyTime()</literal>
+                    is deprecated and returns always null. Use &jersey.server.ContainerLifecycleListener; to
+                    listen on application destroy and get the destroy time.
+                </para></listitem>
             </itemizedlist>
         </para>
     </section>

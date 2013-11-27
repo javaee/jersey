@@ -39,36 +39,6 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.eclipse.jetty.continuation.Continuation;
-import org.eclipse.jetty.continuation.ContinuationListener;
-import org.eclipse.jetty.continuation.ContinuationSupport;
-import org.eclipse.jetty.http.HttpStatus;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.glassfish.hk2.api.PerLookup;
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.Binder;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.internal.MapPropertiesDelegate;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.util.ExtendedLogger;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.*;
-import org.glassfish.jersey.server.internal.ConfigHelper;
-import org.glassfish.jersey.server.spi.Container;
-import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
-import org.glassfish.jersey.server.spi.ContainerResponseWriter;
-import org.glassfish.jersey.server.spi.RequestScopedInitializer;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
@@ -83,6 +53,44 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.SecurityContext;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
+
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationListener;
+import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+
 /**
  * Jetty Jersey HTTP Container.
  *
@@ -93,8 +101,10 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(JettyHttpContainer.class.getName()), Level.FINEST);
 
-    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>(){}).getType();
-    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>(){}).getType();
+    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {
+    }).getType();
+    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
+    }).getType();
 
     /**
      * Referencing factory for Jetty request.
@@ -324,7 +334,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
 
         @Override
         public boolean enableResponseBuffering() {
-          return false;
+            return false;
         }
 
 
@@ -356,9 +366,11 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
 
     @Override
     public void reload(ResourceConfig configuration) {
+        containerListener.onShutdown(this);
         appHandler = new ApplicationHandler(configuration.register(new JettyBinder()));
-        containerListener.onReload(this);
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
+        containerListener.onReload(this);
+        containerListener.onShutdown(this);
     }
 
     /**

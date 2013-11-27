@@ -531,7 +531,7 @@ public final class ApplicationHandler {
 
         if (compositeListener != null) {
             final ApplicationEventImpl initFinishedEvent = new ApplicationEventImpl(
-                    ApplicationEvent.Type.INITIALIZATION_FINISHED, runtimeConfig,
+                    ApplicationEvent.Type.INITIALIZATION_APP_FINISHED, runtimeConfig,
                     componentBag.getRegistrations(), resourceBag.classes, resourceBag.instances, resourceModel);
             compositeListener.onEvent(initFinishedEvent);
 
@@ -580,8 +580,8 @@ public final class ApplicationHandler {
     private List<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
         final List<RankedProvider<ComponentProvider>> result = new LinkedList<RankedProvider<ComponentProvider>>();
 
-        final boolean enableMetainfServicesLookup = ! PropertiesHelper.getValue(application.getProperties(), RuntimeType.SERVER,
-                    CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
+        final boolean enableMetainfServicesLookup = !PropertiesHelper.getValue(application.getProperties(), RuntimeType.SERVER,
+                CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
         if (enableMetainfServicesLookup) {
             for (ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
                 result.add(new RankedProvider<ComponentProvider>(provider));

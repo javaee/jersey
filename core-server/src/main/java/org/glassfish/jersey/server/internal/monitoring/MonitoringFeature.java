@@ -43,11 +43,12 @@ package org.glassfish.jersey.server.internal.monitoring;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
+
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -131,7 +132,9 @@ public class MonitoringFeature implements Feature {
         }
 
         if (mBeansEnabled) {
-            context.register(MBeanExposer.class);
+            // instance registration is needed here as MBeanExposer needs to be a singleton so that
+            // one instance handles listening to events of MonitoringStatisticsListener and ContainerLifecycleListener
+            context.register(new MBeanExposer());
         }
 
         return monitoringEnabled;

@@ -58,10 +58,14 @@ import javax.management.ObjectName;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
+import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
+import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.After;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -76,6 +80,7 @@ public class MBeansTest extends JerseyTest {
         resourceConfig.property("very-important", "yes");
         resourceConfig.property("another-property", 48);
         resourceConfig.property(ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, true);
+        resourceConfig.register(StatisticsListener.class);
         return resourceConfig;
     }
 
@@ -132,6 +137,29 @@ public class MBeansTest extends JerseyTest {
         }
     }
 
+    public static class StatisticsListener extends AbstractContainerLifecycleListener implements MonitoringStatisticsListener {
+        public static boolean ON_SHUTDOWN_CALLED = false;
+
+        @Override
+        public void onStatistics(MonitoringStatistics statistics) {
+            // do nothing
+        }
+
+        @Override
+        public void onShutdown(Container container) {
+            StatisticsListener.ON_SHUTDOWN_CALLED = true;
+        }
+    }
+
+
+    @Override
+    @After
+    public void tearDown() throws Exception {
+        super.tearDown();
+        Assert.assertTrue(StatisticsListener.ON_SHUTDOWN_CALLED);
+
+    }
+
     public static class SubResource {
         @GET
         @Path("in-subresource")
@@ -147,41 +175,38 @@ public class MBeansTest extends JerseyTest {
 
     @Test
     public void test() throws Exception {
-            final String path = "resource";
+        final String path = "resource";
 
-            assertEquals(200, target().path(path).request().get().getStatus());
-            assertEquals(200, target().path(path).request().post(Entity.entity("post",
-                    MediaType.TEXT_PLAIN_TYPE)).getStatus());
-            assertEquals(200, target().path(path).request().post(Entity.entity("post",
-                    MediaType.TEXT_PLAIN_TYPE)).getStatus());
-            assertEquals(200, target().path(path).request().post(Entity.entity("post",
-                    MediaType.TEXT_PLAIN_TYPE)).getStatus());
-            assertEquals(200, target().path(path).request().post(Entity.entity("post",
-                    MediaType.TEXT_PLAIN_TYPE)).getStatus());
-            assertEquals(200, target().path(path + "/sub2").request().post(Entity.entity("post",
-                    MediaType.TEXT_PLAIN_TYPE)).getStatus());
-            final Response response = target().path(path + "/exception").request().get();
-            assertEquals(200, response.getStatus());
-            assertEquals("mapped", response.readEntity(String.class));
+        assertEquals(200, target().path(path).request().get().getStatus());
+        assertEquals(200, target().path(path).request().post(Entity.entity("post",
+                MediaType.TEXT_PLAIN_TYPE)).getStatus());
+        assertEquals(200, target().path(path).request().post(Entity.entity("post",
+                MediaType.TEXT_PLAIN_TYPE)).getStatus());
+        assertEquals(200, target().path(path).request().post(Entity.entity("post",
+                MediaType.TEXT_PLAIN_TYPE)).getStatus());
+        assertEquals(200, target().path(path).request().post(Entity.entity("post",
+                MediaType.TEXT_PLAIN_TYPE)).getStatus());
+        assertEquals(200, target().path(path + "/sub2").request().post(Entity.entity("post",
+                MediaType.TEXT_PLAIN_TYPE)).getStatus());
+        final Response response = target().path(path + "/exception").request().get();
+        assertEquals(200, response.getStatus());
+        assertEquals("mapped", response.readEntity(String.class));
 
-            assertEquals(200, target().path("resource/sub").request().get().getStatus());
-            assertEquals(200, target().path("resource/sub").request().get().getStatus());
-            assertEquals(200, target().path("resource/locator/in-subresource").request().get().getStatus());
-            assertEquals(200, target().path("resource/locator/locator/in-subresource").request().get().getStatus());
-            assertEquals(200, target().path("resource/locator/locator/locator/in-subresource").request().get().getStatus());
-            assertEquals(404, target().path("resource/not-found-404").request().get().getStatus());
+        assertEquals(200, target().path("resource/sub").request().get().getStatus());
+        assertEquals(200, target().path("resource/sub").request().get().getStatus());
+        assertEquals(200, target().path("resource/locator/in-subresource").request().get().getStatus());
+        assertEquals(200, target().path("resource/locator/locator/in-subresource").request().get().getStatus());
+        assertEquals(200, target().path("resource/locator/locator/locator/in-subresource").request().get().getStatus());
+        assertEquals(404, target().path("resource/not-found-404").request().get().getStatus());
 
-            // wait until statistics are propagated to mxbeans
-            Thread.sleep(1500);
+        // wait until statistics are propagated to mxbeans
+        Thread.sleep(1500);
 
-            final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-            final ObjectName name = new ObjectName("org.glassfish.jersey:type=myApplication,subType=Global,global=Configuration");
-            final String str = (String) mBeanServer.getAttribute(name, "ApplicationName");
-            Assert.assertEquals("myApplication", str);
-
-            // TODO: add more tests
+        final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        final ObjectName name = new ObjectName("org.glassfish.jersey:type=myApplication,subType=Global,global=Configuration");
+        final String str = (String) mBeanServer.getAttribute(name, "ApplicationName");
+        Assert.assertEquals("myApplication", str);
     }
-
 
 
     // this test runs the jersey environments, exposes mbeans and makes requests to
