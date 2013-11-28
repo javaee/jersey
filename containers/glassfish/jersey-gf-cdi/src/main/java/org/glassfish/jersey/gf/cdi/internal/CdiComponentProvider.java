@@ -66,6 +66,7 @@ import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
+import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
@@ -442,12 +443,19 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private static BeanManager beanManagerFromJndi() {
+    	BeanManager beanManager=null;
         try {
-            return (BeanManager)new InitialContext().lookup("java:comp/BeanManager");
+        	return (BeanManager)new InitialContext().lookup("java:comp/BeanManager");
         } catch (Exception ex) {
-            LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());
-            return null;
+        	try {
+        		return CDI.current().getBeanManager();
+        	}
+        	catch (Exception e) {
+            	LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());      
+            	return null;
+        	}
         }
+        return beanManager;
     }
 
     private void bindHk2ClassAnalyzer() {
