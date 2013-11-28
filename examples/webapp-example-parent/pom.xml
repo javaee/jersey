@@ -112,6 +112,14 @@
                                         <stylesheet>../etc/wls-project-src-pom.xsl</stylesheet>
                                         <outputDir>${project.build.directory}/wls-pom-file</outputDir>
                                     </transformationSet>
+                                    <transformationSet>
+                                        <dir>${project.basedir}</dir>
+                                        <includes>
+                                            <include>**/web.xml</include>
+                                        </includes>
+                                        <stylesheet>../etc/wls-project-src-web.xsl</stylesheet>
+                                        <outputDir>${project.build.directory}/wls-web-xml-file</outputDir>
+                                    </transformationSet>
                                 </transformationSets>
                             </configuration>
                         </execution>

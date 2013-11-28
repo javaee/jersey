@@ -40,44 +40,23 @@
     holder.
 
 -->
-<assembly>
-    <!--
-     An assembly that produces an example project source zip bundle with
-     the jersey dependencies in the original project pom.xml file transformed
-     to the "provided" scope.
-     The resulting zipped example project sources are thus able to build example
-     binaries that are suitable for a deployment on containers which host Jersey
-     runtime by default (e.g. GlassFish).
-    -->
-    <id>wls-project-src</id>
-    <formats>
-        <format>zip</format>
-    </formats>
-    <fileSets>
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <outputDirectory>/</outputDirectory>
-            <useDefaultExcludes>true</useDefaultExcludes>
-            <excludes>
-                <exclude>pom.xml</exclude>
-                <exclude>**/WEB-INF/web.xml</exclude>
-                <exclude>**/target/**</exclude>
-                <exclude>**/*.iml</exclude>
-                <exclude>**/glassfish-web.xml</exclude>
-                <exclude>**/sun-web.xml</exclude>
-            </excludes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/target/wls-pom-file</directory>
-            <outputDirectory>/</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/target/wls-web-xml-file/src/main/webapp/WEB-INF</directory>
-            <outputDirectory>/src/main/webapp/WEB-INF</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/../etc/wls</directory>
-            <outputDirectory>/</outputDirectory>
-        </fileSet>
-    </fileSets>
-</assembly>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+        xmlns:web="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+        version="1.0">
+
+    <xsl:template match="node()|@*">
+        <xsl:copy>
+            <xsl:apply-templates select="node()|@*"/>
+        </xsl:copy>
+    </xsl:template>
+
+    <!-- fixes the hardcoded port in managed-client-webapp example's web.xml -->
+    <xsl:template match="//web:web-app/web:servlet/web:init-param[web:param-name='org.glassfish.jersey.examples.managedclient.ClientA.baseUri']/web:param-value">
+        <xsl:copy>
+            <xsl:text>http://localhost:7001/managed-client-webapp/internal</xsl:text>
+        </xsl:copy>
+    </xsl:template>
+
+</xsl:stylesheet>

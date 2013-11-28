@@ -50,14 +50,13 @@
             <outputDirectory>wls/jersey/examples</outputDirectory>
             <!-- exclude examples not working on WebLogic-->
             <excludes>
-                <exclude>**/bean-validation-webapp/**</exclude>
-                <exclude>**/bookmark/**</exclude>
-                <exclude>**/bookstore-webapp/**</exclude>
-                <exclude>**/cdi-webapp/**</exclude>
-                <exclude>**/https-server-glassfish/**</exclude>
-                <exclude>**/managed-beans-webapp/**</exclude>
+                <exclude>**/bean-validation-webapp/**</exclude>   <!-- waits for JERSEY-2175 to be fixed and integrated -->
+                <exclude>**/bookmark/**</exclude>                 <!-- uses persistence configured for GF -->
+                <exclude>**/bookstore-webapp/**</exclude>         <!-- waits for JERSEY-2175 to be fixed and integrated -->
+                <exclude>**/cdi-webapp/**</exclude>               <!-- waits for JERSEY-???? to be fixed and integrated -->
+                <exclude>**/https-server-glassfish/**</exclude>   <!-- GF only, no tests to run anyway-->
+                <exclude>**/managed-beans-webapp/**</exclude>     <!-- uses persistence configured for GF -->
                 <exclude>**/sse-item-store-webapp/**</exclude>
-                <exclude>**/managed-client-webapp/**</exclude>
             </excludes>
         </fileSet>
     </fileSets>
