@@ -79,8 +79,9 @@ import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundExceptio
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Assert;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -109,7 +110,11 @@ public class ExceptionMapperTest extends JerseyTest {
                 IOExceptionMessageReader.class,
                 IOExceptionResource.class,
                 MessageBodyProviderNotFoundResource.class,
-                ProviderNotFoundExceptionMapper.class
+                ProviderNotFoundExceptionMapper.class,
+                // JERSEY-1887
+                Jersey1887Resource.class,
+                Jersey1887ExceptionMapperImpl.class
+                //
         );
     }
 
@@ -140,7 +145,7 @@ public class ExceptionMapperTest extends JerseyTest {
         inputStream.read();
         MyMessageBodyWritter.firstBytesReceived = true;
         while ((b = (byte) inputStream.read()) >= 0) {
-            Assert.assertEquals('a', b);
+            assertEquals('a', b);
         }
     }
 
@@ -514,8 +519,8 @@ public class ExceptionMapperTest extends JerseyTest {
     public void testIOException() {
         final Response response = target().register(IOExceptionMessageReader.class).
                 path("io").request().post(Entity.entity(new IOBean("io-bean"), MediaType.TEXT_PLAIN));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("passed", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("passed", response.readEntity(String.class));
     }
 
     @Test
@@ -555,7 +560,42 @@ public class ExceptionMapperTest extends JerseyTest {
     @Test
     public void testNotFoundResource() {
         final Response response = target().path("not-found").request().get();
-        Assert.assertEquals(500, response.getStatus());
+        assertEquals(500, response.getStatus());
     }
 
+
+    public static class Jersey1887Exception extends RuntimeException {
+    }
+
+    @Provider
+    public static interface Jersey1887ExceptionMapper extends ExceptionMapper<Jersey1887Exception> {
+    }
+
+    public static class Jersey1887ExceptionMapperImpl implements Jersey1887ExceptionMapper {
+
+        @Override
+        public Response toResponse(final Jersey1887Exception exception) {
+            return Response.ok("found").build();
+        }
+    }
+
+    @Path("jersey1887")
+    public static class Jersey1887Resource {
+
+        @GET
+        public Response get() {
+            throw new Jersey1887Exception();
+        }
+    }
+
+    /**
+     * Test that we're able to use correct exception mapper even when the mapper hierarchy has complex inheritance.
+     */
+    @Test
+    public void testJersey1887() throws Exception {
+        final Response response = target().path("jersey1887").request().get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("found"));
+    }
 }
