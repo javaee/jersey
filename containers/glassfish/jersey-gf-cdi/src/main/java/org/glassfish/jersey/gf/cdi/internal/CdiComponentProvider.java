@@ -65,6 +65,7 @@ import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
@@ -444,7 +445,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private static BeanManager beanManagerFromJndi() {
     	try {
         	return (BeanManager)new InitialContext().lookup("java:comp/BeanManager");
-        } catch (Exception ex) {
+        } catch (Exception e) {
         	try {
         		return CDI.current().getBeanManager();
         	}
