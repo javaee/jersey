@@ -442,12 +442,19 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private static BeanManager beanManagerFromJndi() {
+    	BeanManager beanManager=null;
         try {
-            return (BeanManager)new InitialContext().lookup("java:comp/BeanManager");
+        	return (BeanManager)new InitialContext().lookup("java:comp/BeanManager");
         } catch (Exception ex) {
-            LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());
-            return null;
+        	try {
+        		return CDI.current().getBeanManager();
+        	}
+        	catch (Exception ex) {
+            	LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());      
+            	return null;
+        	}
         }
+        return beanManager;
     }
 
     private void bindHk2ClassAnalyzer() {
