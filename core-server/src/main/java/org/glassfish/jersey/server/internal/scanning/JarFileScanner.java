@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -140,7 +140,54 @@ public final class JarFileScanner implements ResourceFinder {
 
     @Override
     public InputStream open() {
-        return jarInputStream;
+        return new InputStream() {
+            @Override
+            public int available() throws IOException {
+                return jarInputStream.available();
+            }
+
+            @Override
+            public void close() throws IOException {
+                jarInputStream.closeEntry();
+            }
+
+            @Override
+            public synchronized void mark(int readlimit) {
+                jarInputStream.mark(readlimit);
+            }
+
+            @Override
+            public boolean markSupported() {
+                return jarInputStream.markSupported();
+            }
+
+            @Override
+            public int read() throws IOException {
+                return jarInputStream.read();
+            }
+
+            @Override
+            public int read(byte[] b) throws IOException {
+                return jarInputStream.read(b);
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                return jarInputStream.read(b,
+                                  off,
+                                  len);
+            }
+
+            @Override
+            public synchronized void reset() throws IOException {
+                jarInputStream.reset();
+            }
+
+            @Override
+            public long skip(long n) throws IOException {
+                return jarInputStream.skip(n);
+            }
+        };
     }
 
     @Override
