@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -132,25 +132,33 @@ public class LanguageTag {
         }
     }
 
+    /**
+     * Validate input tag (header value) according to HTTP 1.1 spec + allow region code (numeric) instead of country code.
+     *
+     * @param tag accept-language header value.
+     * @return {@code true} if the given value is valid language tag, {@code false} instead.
+     */
     private boolean isValid(String tag) {
-        int alphaCount = 0;
+        int alphanumCount = 0;
+        int dash = 0;
         for (int i = 0; i < tag.length(); i++) {
             final char c = tag.charAt(i);
             if (c == '-') {
-                if (alphaCount == 0) {
+                if (alphanumCount == 0) {
                     return false;
                 }
-                alphaCount = 0;
-            } else if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) {
-                alphaCount++;
-                if (alphaCount > 8) {
+                alphanumCount = 0;
+                dash++;
+            } else if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') || (dash > 0 && '0' <= c && c <= '9')) {
+                alphanumCount++;
+                if (alphanumCount > 8) {
                     return false;
                 }
             } else {
                 return false;
             }
         }
-        return (alphaCount != 0);
+        return (alphanumCount != 0);
     }
 
     public final String getTag() {
