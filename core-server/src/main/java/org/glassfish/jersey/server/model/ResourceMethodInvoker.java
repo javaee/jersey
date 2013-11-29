@@ -363,21 +363,11 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         Response jaxrsResponse;
         requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_START);
 
-        try {
-            jaxrsResponse = dispatcher.dispatch(resource, requestContext);
-        } finally {
-            requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_FINISHED);
-        }
-
-        if (jaxrsResponse == null) {
-            jaxrsResponse = Response.noContent().build();
-        }
-
         respondingContextProvider.get().push(new Function<ContainerResponse, ContainerResponse>() {
             @Override
             public ContainerResponse apply(final ContainerResponse response) {
                 if (response == null) {
-                    return response;
+                    return null;
                 }
 
                 final Invocable invocable = method.getInvocable();
@@ -407,6 +397,16 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
             }
         });
+
+        try {
+            jaxrsResponse = dispatcher.dispatch(resource, requestContext);
+        } finally {
+            requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_FINISHED);
+        }
+
+        if (jaxrsResponse == null) {
+            jaxrsResponse = Response.noContent().build();
+        }
 
         return jaxrsResponse;
     }
