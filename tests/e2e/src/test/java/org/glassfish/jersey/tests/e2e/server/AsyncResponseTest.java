@@ -41,6 +41,9 @@ package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -55,8 +58,11 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -66,6 +72,7 @@ import org.glassfish.jersey.test.TestProperties;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -81,7 +88,8 @@ public class AsyncResponseTest extends JerseyTest {
     protected Application configure() {
         set(TestProperties.RECORD_LOG_LEVEL, Level.FINE.intValue());
 
-        return new ResourceConfig(Resource.class, ErrorResource.class, MappedExceptionMapper.class);
+        return new ResourceConfig(Resource.class, ErrorResource.class, MappedExceptionMapper.class,
+                EntityAnnotationCheckerWriter.class, AsyncMessageBodyProviderResource.class);
     }
 
     @Test
@@ -245,5 +253,81 @@ public class AsyncResponseTest extends JerseyTest {
         private String resume(final Throwable throwable) throws Exception {
             return suspended.take().resume(throwable) ? "ok" : "ko";
         }
+    }
+
+    public static class EntityAnnotationChecker {
+    }
+
+    public static class EntityAnnotationCheckerWriter implements MessageBodyWriter<EntityAnnotationChecker> {
+
+        @Override
+        public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                                   final MediaType mediaType) {
+            return true;
+        }
+
+        @Override
+        public long getSize(final EntityAnnotationChecker entityAnnotationChecker, final Class<?> type, final Type genericType,
+                            final Annotation[] annotations, final MediaType mediaType) {
+            return -1;
+        }
+
+        @Override
+        public void writeTo(final EntityAnnotationChecker entityAnnotationChecker,
+                            final Class<?> type,
+                            final Type genericType,
+                            final Annotation[] annotations,
+                            final MediaType mediaType,
+                            final MultivaluedMap<String, Object> httpHeaders,
+                            final OutputStream entityStream) throws IOException, WebApplicationException {
+
+            final String entity = annotations.length > 0 ? "ok" : "ko";
+
+            entityStream.write(entity.getBytes());
+        }
+    }
+
+    @Path("annotations")
+    public static class AsyncMessageBodyProviderResource {
+
+        private static final BlockingQueue<AsyncResponse> suspended = new ArrayBlockingQueue<AsyncResponse>(1);
+
+        @GET
+        @Path("suspend")
+        public void suspend(final @Suspended AsyncResponse asyncResponse) {
+            suspended.add(asyncResponse);
+        }
+
+        @GET
+        @Path("suspend-resume")
+        public void suspendResume(final @Suspended AsyncResponse asyncResponse) {
+            asyncResponse.resume(new EntityAnnotationChecker());
+        }
+
+        @GET
+        @Path("resume")
+        public String resume() throws Exception {
+            return suspended.take().resume(new EntityAnnotationChecker()) ? "ok" : "ko";
+        }
+    }
+
+    @Test
+    public void testAnnotations() throws Exception {
+        final WebTarget errorResource = target("annotations");
+
+        final Future<Response> suspended = errorResource.path("suspend").request().async().get();
+        final Response response = errorResource.path("resume").request().get();
+        assertThat(response.readEntity(String.class), is("ok"));
+
+        final Response suspendedResponse = suspended.get();
+        assertThat("Entity annotations are not propagated to MBW.", suspendedResponse.readEntity(String.class), is("ok"));
+        suspendedResponse.close();
+    }
+
+    @Test
+    public void testAnnotationsSuspendResume() throws Exception {
+        final Response response = target("annotations").path("suspend-resume").request().async().get().get();
+        assertThat("Entity annotations are not propagated to MBW.", response.readEntity(String.class), is("ok"));
+        response.close();
     }
 }
