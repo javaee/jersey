@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -140,12 +140,65 @@ public final class JarFileScanner implements ResourceFinder {
 
     @Override
     public InputStream open() {
-        return jarInputStream;
+        return new UncloseableStreamWrapper(jarInputStream);
     }
 
     @Override
     public void reset() {
         throw new UnsupportedOperationException();
+    }
+
+	private static class UncloseableStreamWrapper extends InputStream {
+        private final InputStream wrappedStream;
+ 
+        UncloseableStreamWrapper(InputStream is) {
+            wrappedStream = is;
+        }
+ 
+        @Override
+        public int read() throws IOException {
+            return wrappedStream.read();
+        }
+ 
+        @Override
+        public int read(byte[] bytes) throws IOException {
+            return wrappedStream.read(bytes);
+        }
+ 
+        @Override
+        public int read(byte[] bytes, int i, int i2) throws IOException {
+            return wrappedStream.read(bytes, i, i2);
+        }
+ 
+        @Override
+        public long skip(long l) throws IOException {
+            return wrappedStream.skip(l);
+        }
+ 
+        @Override
+        public int available() throws IOException {
+            return wrappedStream.available();
+        }
+ 
+        @Override
+        public void close() throws IOException {
+            // No op -- this stream is managed elsewhere
+        }
+ 
+        @Override
+        public synchronized void mark(int i) {
+            wrappedStream.mark(i);
+        }
+ 
+        @Override
+        public synchronized void reset() throws IOException {
+            super.reset();    //To change body of overridden methods use File | Settings | File Templates.
+        }
+ 
+        @Override
+        public boolean markSupported() {
+            return super.markSupported();    //To change body of overridden methods use File | Settings | File Templates.
+        }
     }
 }
 
