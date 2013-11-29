@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,17 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
 
 /**
  * Cookies parser.
@@ -51,6 +58,8 @@ import javax.ws.rs.core.NewCookie;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 /* package */ class CookiesParser {
+
+    private static final Logger LOGGER = Logger.getLogger(CookiesParser.class.getName());
 
     private static class MutableCookie {
 
@@ -118,6 +127,8 @@ import javax.ws.rs.core.NewCookie;
         String comment = null;
         int maxAge = NewCookie.DEFAULT_MAX_AGE;
         boolean secure = false;
+        boolean httpOnly = false;
+        Date expiry = null;
 
         public MutableNewCookie(String name, String value) {
             this.name = name;
@@ -125,7 +136,7 @@ import javax.ws.rs.core.NewCookie;
         }
 
         public NewCookie getImmutableNewCookie() {
-            return new NewCookie(name, value, path, domain, version, comment, maxAge, secure);
+            return new NewCookie(name, value, path, domain, version, comment, maxAge, expiry, secure, httpOnly);
         }
     }
 
@@ -133,30 +144,43 @@ import javax.ws.rs.core.NewCookie;
         String bites[] = header.split("[;,]");
 
         MutableNewCookie cookie = null;
-        for (String bite : bites) {
-            String crumbs[] = bite.split("=", 2);
+        for (int i = 0; i < bites.length; i++) {
+            String crumbs[] = bites[i].split("=", 2);
             String name = crumbs.length > 0 ? crumbs[0].trim() : "";
             String value = crumbs.length > 1 ? crumbs[1].trim() : "";
+
             if (value.startsWith("\"") && value.endsWith("\"") && value.length() > 1) {
                 value = value.substring(1, value.length() - 1);
             }
 
             if (cookie == null) {
                 cookie = new MutableNewCookie(name, value);
-            } else if (name.startsWith("Comment")) {
-                cookie.comment = value;
-            } else if (name.startsWith("Domain")) {
-                cookie.domain = value;
-            } else if (name.startsWith("Max-Age")) {
-                cookie.maxAge = Integer.parseInt(value);
-            } else if (name.startsWith("Path")) {
-                cookie.path = value;
-            } else if (name.startsWith("Secure")) {
-                cookie.secure = true;
-            } else if (name.startsWith("Version")) {
-                cookie.version = Integer.parseInt(value);
-            } else if (name.startsWith("Domain")) {
-                cookie.domain = value;
+            } else {
+                final String param = name.toLowerCase();
+
+                if (param.startsWith("comment")) {
+                    cookie.comment = value;
+                } else if (param.startsWith("domain")) {
+                    cookie.domain = value;
+                } else if (param.startsWith("max-age")) {
+                    cookie.maxAge = Integer.parseInt(value);
+                } else if (param.startsWith("path")) {
+                    cookie.path = value;
+                } else if (param.startsWith("secure")) {
+                    cookie.secure = true;
+                } else if (param.startsWith("version")) {
+                    cookie.version = Integer.parseInt(value);
+                } else if (param.startsWith("domain")) {
+                    cookie.domain = value;
+                } else if (param.startsWith("httponly")) {
+                    cookie.httpOnly = true;
+                }  else if (param.startsWith("expires")) {
+                    try {
+                        cookie.expiry = HttpDateFormat.readDate(value + ", " + bites[++i]);
+                    } catch (ParseException e) {
+                        LOGGER.log(Level.FINE, LocalizationMessages.ERROR_NEWCOOKIE_EXPIRES(value), e);
+                    }
+                }
             }
         }
 
