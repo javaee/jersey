@@ -59,7 +59,10 @@ import org.junit.Test;
 
 import junit.framework.Assert;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  *
@@ -268,5 +271,45 @@ public class EncodedParamsTest extends AbstractTest {
         initiateWebApplication(MixedEncodedOnParameters.class);
 
         _test("/%20u;m=%20m?q=%20q");
+    }
+
+    @Path("/")
+    public static class EncodedOnFormParameters {
+
+        public EncodedOnFormParameters(
+                @Encoded @FormParam("u") String ue,
+                @FormParam("u") String u) {
+
+            assertThat(ue, is("%C5%A1"));
+            assertThat(ue, is(not("\u0161")));
+
+            assertThat(u, is(not("%C5%A1")));
+            assertThat(u, is("\u0161"));
+        }
+
+        @POST
+        public String doPost(
+                @Encoded @FormParam("u") String ue,
+                @FormParam("u") String u) {
+
+            assertThat(ue, is("%C5%A1"));
+            assertThat(ue, is(not("\u0161")));
+
+            assertThat(u, is(not("%C5%A1")));
+            assertThat(u, is("\u0161"));
+
+            return "content";
+        }
+    }
+
+    @Test
+    public void testEncodedOnFormParameters() throws ExecutionException, InterruptedException {
+        initiateWebApplication(EncodedOnFormParameters.class);
+
+        final RequestContextBuilder requestBuilder = RequestContextBuilder.from("/", "POST")
+                .type(MediaType.APPLICATION_FORM_URLENCODED)
+                .entity(new Form("u", "\u0161"));
+
+        apply(requestBuilder.build());
     }
 }
