@@ -63,6 +63,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -143,6 +144,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class ServletContainer extends HttpServlet implements Filter, Container {
 
@@ -286,7 +288,12 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             absoluteUriBuilder = UriBuilder.fromUri(requestURL.toString());
         } catch (IllegalArgumentException iae) {
             final Response.Status badRequest = Response.Status.BAD_REQUEST;
-            response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            if (webComponent.configSetStatusOverSendError) {
+                response.reset();
+                response.setStatus(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            } else {
+                response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            }
             return;
         }
 
@@ -326,7 +333,12 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                     build();
         } catch (UriBuilderException ex) {
             final Response.Status badRequest = Response.Status.BAD_REQUEST;
-            response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            if (webComponent.configSetStatusOverSendError) {
+                response.reset();
+                response.setStatus(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            } else {
+                response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            }
             return;
         }
 

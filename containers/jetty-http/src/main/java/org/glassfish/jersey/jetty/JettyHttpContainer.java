@@ -39,6 +39,43 @@
  */
 package org.glassfish.jersey.jetty;
 
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationListener;
+import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.glassfish.hk2.api.PerLookup;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.Binder;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.MapPropertiesDelegate;
+import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerException;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
+import org.glassfish.jersey.jetty.internal.LocalizationMessages;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
@@ -95,6 +132,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
  * Jetty Jersey HTTP Container.
  *
  * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public final class JettyHttpContainer extends AbstractHandler implements Container {
 
@@ -105,6 +143,13 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     }).getType();
     private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
     }).getType();
+
+    /**
+     * Cached value of configuration property
+     * {@link org.glassfish.jersey.server.ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR}.
+     * If {@code true} method {@link HttpServletResponse#setStatus} is used over {@link HttpServletResponse#sendError}.
+     */
+    private boolean configSetStatusOverSendError;
 
     /**
      * Referencing factory for Jetty request.
@@ -150,7 +195,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     @Override
     public void handle(String target, final Request request, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
         final Response response = Response.getResponse(httpServletResponse);
-        final ResponseWriter responseWriter = new ResponseWriter(request, response);
+        final ResponseWriter responseWriter = new ResponseWriter(request, response, configSetStatusOverSendError);
         final URI baseUri = getBaseUri(request);
         final URI requestUri = baseUri.resolve(request.getUri().toString());
 
@@ -236,11 +281,13 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         private final Response response;
         private final String method;
         private final Continuation continuation;
+        private final boolean configSetStatusOverSendError;
 
-        ResponseWriter(Request request, Response response) {
+        ResponseWriter(Request request, Response response, boolean configSetStatusOverSendError) {
             this.response = response;
             this.method = request.getMethod();
             this.continuation = ContinuationSupport.getContinuation(request);
+            this.configSetStatusOverSendError = configSetStatusOverSendError;
         }
 
         @Override
@@ -310,9 +357,9 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
                 }
                 response.closeOutput();
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "Unable to send 500 error response.", e);
+                logger.log(Level.SEVERE, LocalizationMessages.UNABLE_TO_CLOSE_RESPONSE(), e);
             } finally {
-                logger.debugLog("commit() called");
+                logger.log(Level.FINEST, "commit() called");
             }
         }
 
@@ -320,16 +367,27 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         public void failure(Throwable error) {
             try {
                 if (!response.isCommitted()) {
-                    response.sendError(500, error.getMessage());
+                    try {
+                        if (configSetStatusOverSendError) {
+                            response.reset();
+                            response.setStatus(500, "Request failed.");
+                        } else {
+                            response.sendError(500, "Request failed.");
+                        }
+                    } catch (IllegalStateException ex) {
+                        // a race condition externally committing the response can still occur...
+                        logger.log(Level.FINER, "Unable to reset failed response.", ex);
+                    } catch (IOException ex) {
+                        throw new ContainerException(
+                                LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(500, "Request failed."),
+                                ex);
+                    }
                 }
-            } catch (IOException e) {
-                logger.debugLog("failure(...) called");
             } finally {
-                logger.debugLog("failure(...) called");
+                logger.log(Level.FINEST, "failure(...) called");
                 commit();
                 rethrow(error);
             }
-
         }
 
         @Override
@@ -371,6 +429,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
         containerListener.onReload(this);
         containerListener.onShutdown(this);
+        cacheConfigSetStatusOverSendError();
     }
 
     /**
@@ -408,5 +467,16 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         this.appHandler.registerAdditionalBinders(new HashSet<Binder>() {{
             add(new JettyBinder());
         }});
+        cacheConfigSetStatusOverSendError();
     }
+
+    /**
+     * The method reads and caches value of configuration property
+     * {@link ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR} for future purposes.
+     */
+    private void cacheConfigSetStatusOverSendError() {
+        this.configSetStatusOverSendError = PropertiesHelper.getValue(getConfiguration().getProperties(), null,
+                ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
+    }
+
 }

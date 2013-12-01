@@ -515,7 +515,7 @@ public final class ServerProperties {
      *     <li>{@code ON_DEMAND} - tracing support is in 'stand by' mode, it is enabled on demand by existence of request HTTP header</li>
      *     <li>{@code ALL} - tracing support is enabled for every request.</li>
      * </ul>
-     * The default value is {@code OFF}.
+     * Type of the property value is {@code String}. The default value is {@code "OFF"}.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
@@ -538,7 +538,7 @@ public final class ServerProperties {
      *     <li>{@code TRACE}</li>
      *     <li>{@code VERBOSE}</li>
      * </ul>
-     * The default value is {@code TRACE}.
+     * Type of the property value is {@code String}. The default value is {@code "TRACE"}.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
@@ -548,6 +548,31 @@ public final class ServerProperties {
      * @see {@link #TRACING}
      */
     public static final String TRACING_THRESHOLD = "jersey.config.server.tracing.threshold";
+
+    /**
+     * Whenever response status is {@code 4xx} or {@code 5xx} it is possible to choose between {@code sendError} or
+     * {@code setStatus} on container specific {@code Response} implementation. E.g. on servlet container Jersey
+     * can call {@code HttpServletResponse.setStatus(...)} or {@code HttpServletResponse.sendError(...)}.
+     * <p>
+     * Calling {@code sendError(...)} method usually resets entity, response headers and provide error page for
+     * specified status code (e.g. servlet {@code error-page} configuration).
+     * However if you want to post-process response (e.g. by servlet filter) the only
+     * way to do it is calling {@code setStatus(...)} on container Response object.
+     * </p>
+     * <p>
+     * If property value is {@code true} the method {@code Response.setStatus(...)} is used over default
+     * {@code Response.sendError(...)}.
+     * </p>
+     * <p>
+     * Type of the property value is {@code boolean}. The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.5
+     */
+    public static final String RESPONSE_SET_STATUS_OVER_SEND_ERROR = "jersey.config.server.response.setStatusOverSendError";
 
     private ServerProperties() {
         // prevents instantiation

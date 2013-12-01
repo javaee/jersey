@@ -70,6 +70,7 @@
         <module>jersey-2154</module>
         <module>jersey-2160</module>
         <module>jersey-2164</module>
+        <module>jersey-2176</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
         <module>servlet-2.5-autodiscovery-1</module>

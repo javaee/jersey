@@ -73,6 +73,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -83,6 +84,7 @@ import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.InternalServerProperties;
 import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
@@ -276,6 +278,12 @@ public class WebComponent {
      */
     final boolean forwardOn404;
     /**
+     * Cached value of configuration property
+     * {@link org.glassfish.jersey.server.ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR}.
+     * If {@code true} method {@link HttpServletResponse#setStatus} is used over {@link HttpServletResponse#sendError}.
+     */
+    final boolean configSetStatusOverSendError;
+    /**
      * Asynchronous context delegate provider.
      */
     private final AsyncContextDelegateProvider asyncExtensionDelegate;
@@ -303,7 +311,8 @@ public class WebComponent {
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&
                 resourceConfig.isProperty(ServletProperties.FILTER_FORWARD_ON_404);
-
+        this.configSetStatusOverSendError = PropertiesHelper.getValue(resourceConfig.getProperties(), null,
+                ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
         this.backgroundTaskScheduler = appHandler.getServiceLocator()
                 .getService(ScheduledExecutorService.class, new RuntimeExecutorsBinder.BackgroundSchedulerLiteral());
     }
@@ -345,6 +354,7 @@ public class WebComponent {
 
             final ResponseWriter responseWriter = new ResponseWriter(
                     forwardOn404,
+                    configSetStatusOverSendError,
                     servletResponse,
                     asyncExtensionDelegate.createDelegate(servletRequest, servletResponse),
                     backgroundTaskScheduler);
@@ -368,7 +378,12 @@ public class WebComponent {
             });
         } catch (final HeaderValueException hve) {
             final Response.Status status = Response.Status.BAD_REQUEST;
-            servletResponse.sendError(status.getStatusCode(), status.getReasonPhrase());
+            if (configSetStatusOverSendError) {
+                servletResponse.reset();
+                servletResponse.setStatus(status.getStatusCode(), status.getReasonPhrase());
+            } else {
+                servletResponse.sendError(status.getStatusCode(), status.getReasonPhrase());
+            }
 
             return Values.of(status.getStatusCode());
         } catch (Exception e) {

@@ -374,6 +374,31 @@
                             </para>
                         </entry>
                     </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR;</entry>
+                        <entry><literal>jersey.config.server.response.setStatusOverSendError</literal></entry>
+                        <entry>
+                            <para>
+                                Whenever response status is <literal>4xx</literal> or <literal>5xx</literal> it is
+                                possible to choose between <literal>sendError</literal> or <literal>setStatus</literal>
+                                on container specific <literal>Response</literal> implementation. E.g. on servlet
+                                container Jersey can call <literal>HttpServletResponse.setStatus(...)</literal> or
+                                <literal>HttpServletResponse.sendError(...)</literal>.
+
+                                Calling <literal>sendError(...)</literal> method usually resets entity, response headers
+                                and provide error page for specified status code (e.g. servlet
+                                <literal>error-page</literal> configuration).
+                                However if you want to post-process response (e.g. by servlet filter) the only
+                                way to do it is calling <literal>setStatus(...)</literal> on container Response object.
+
+                                If property value is &lit.true; the method <literal>Response.setStatus(...)</literal> is
+                                used over default <literal>Response.sendError(...)</literal>.
+
+                                Type of the property value is <literal>boolean</literal>.
+                                The default value is &lit.false;.
+                            </para>
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>
