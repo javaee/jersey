@@ -221,12 +221,13 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
     @Override
     public void done() {
-        if (ejbInterceptorRegistered) {
-            final DynamicConfiguration dc = Injections.getConfiguration(locator);
-            Injections.addBinding(
-                    Injections.newBinder(EjbExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class), dc);
-            dc.commit();
-        }
+        registerEjbExceptionMapper();
+    }
+
+    private void registerEjbExceptionMapper() {
+        final DynamicConfiguration dc = Injections.getConfiguration(locator);
+        Injections.addBinding(Injections.newBinder(EjbExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class), dc);
+        dc.commit();
     }
 
     private boolean isEjbComponent(Class<?> component) {
