@@ -54,7 +54,6 @@
                 <exclude>**/cdi-webapp/**</exclude>               <!-- waits for JERSEY-2251 to be fixed and integrated -->
                 <exclude>**/https-server-glassfish/**</exclude>   <!-- GF only, no tests to run anyway-->
                 <exclude>**/managed-beans-webapp/**</exclude>     <!-- uses persistence configured for GF -->
-                <exclude>**/sse-item-store-webapp/**</exclude>    <!-- will be fixed by JERSEY-2252 -->
             </excludes>
         </fileSet>
     </fileSets>
