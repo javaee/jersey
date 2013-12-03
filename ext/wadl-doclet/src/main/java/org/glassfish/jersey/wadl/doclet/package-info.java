@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,6 +38,8 @@
  * holder.
  */
 /**
- * Jersey test framework for JDK HttpServer Container.
+ * Jersey classes used for doclet generation for WADL pusposes. Classes are used during the compile time
+ * when doclet is generated. Later the result is used for WADL generation.
+ *
  */
-package org.glassfish.jersey.test.jdkhttp;
+package org.glassfish.jersey.wadl.doclet;
