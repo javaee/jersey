@@ -319,9 +319,11 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
     @Override
     public void reload(ResourceConfig configuration) {
+        containerListener.onShutdown(this);
         appHandler = new ApplicationHandler(configuration.register(new SimpleBinder()));
-        containerListener.onReload(this);
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
+        containerListener.onReload(this);
+        containerListener.onStartup(this);
     }
 
     /**

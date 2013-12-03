@@ -501,6 +501,12 @@ request count: 4, average request processing [ms]: 73</programlisting>
             </section>
             <section>
                 <title>Monitoring Statistics as MBeans</title>
+                <note>
+                    <para>
+                        Jersey examples contains &jersey.github.monitoring.example.path; which demonstrates usage of MBean statistics.
+                    </para>
+                </note>
+
                 <para>
                     Jersey provides feature to expose monitoring statistics as JMX MXBeans.
                     In order to enable monitoring statistics MXBeans exposure, the

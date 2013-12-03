@@ -620,9 +620,11 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * The name should be unique in the runtime.
      *
      * @param applicationName Unique application name.
+     * @return updated resource configuration instance.
      */
-    public final void setApplicationName(String applicationName) {
+    public final ResourceConfig setApplicationName(String applicationName) {
         state.setApplicationName(applicationName);
+        return this;
     }
 
     /**
@@ -1096,6 +1098,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
                 rc.invalidateCache();
                 rc.addProperties(super.getProperties());
                 super.addProperties(rc.getProperties());
+                super.setApplicationName(rc.getApplicationName());
+                super.setClassLoader(rc.getClassLoader());
 
                 rc.lock();
             } else if (application != null) {

@@ -37,74 +37,20 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.examples.monitoring;
 
-package org.glassfish.jersey.server.internal.monitoring;
-
-import java.util.Date;
-import java.util.Set;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.monitoring.ApplicationStatistics;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
 /**
- * Application statistics.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class ApplicationStatisticsImpl implements ApplicationStatistics {
-    private final ResourceConfig resourceConfig;
-    private final Date startTime;
-    private final Set<Class<?>> registeredClasses;
-    private final Set<Object> registeredInstances;
-    private final Set<Class<?>> providers;
 
-    /**
-     * Create a new application statistics instance.
-     * @param resourceConfig Resource config of the application being monitored.
-     * @param startTime Start time of the application (when initialization was finished).
-     * @param registeredClasses Registered resource classes.
-     * @param registeredInstances Registered resource instances.
-     * @param providers Registered providers.
-     */
-    ApplicationStatisticsImpl(ResourceConfig resourceConfig, Date startTime,
-                              Set<Class<?>> registeredClasses,
-                              Set<Object> registeredInstances, Set<Class<?>> providers) {
-        this.resourceConfig = resourceConfig;
-        this.startTime = startTime;
-
-        this.registeredClasses = registeredClasses;
-        this.registeredInstances = registeredInstances;
-        this.providers = providers;
-    }
-
-    public ResourceConfig getResourceConfig() {
-        return resourceConfig;
-    }
-
-    public Date getStartTime() {
-        return startTime;
-    }
-
-    public Set<Class<?>> getRegisteredClasses() {
-        return registeredClasses;
-    }
-
-    public Set<Object> getRegisteredInstances() {
-        return registeredInstances;
-    }
-
-    public Set<Class<?>> getProviders() {
-        return providers;
-    }
-
-    public Date getDestroyTime() {
-        return null;
-    }
+public class MyExceptionMapper implements ExceptionMapper<MyException> {
 
     @Override
-    public ApplicationStatistics snapshot() {
-        // snapshot functionality not yet implemented
-        return this;
+    public Response toResponse(MyException exception) {
+        return Response.ok("mapped").build();
     }
-
 }

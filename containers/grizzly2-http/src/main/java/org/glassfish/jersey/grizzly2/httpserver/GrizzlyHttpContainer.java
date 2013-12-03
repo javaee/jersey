@@ -53,10 +53,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
@@ -95,8 +96,10 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(GrizzlyHttpContainer.class.getName()), Level.FINEST);
 
-    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {}).getType();
-    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {}).getType();
+    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {
+    }).getType();
+    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
+    }).getType();
 
     /**
      * Referencing factory for Grizzly request.
@@ -350,12 +353,14 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
     @Override
     public void reload(ResourceConfig configuration) {
+        this.containerListener.onShutdown(this);
         appHandler = new ApplicationHandler(configuration);
         appHandler.registerAdditionalBinders(new HashSet<Binder>() {{
             add(new GrizzlyBinder());
         }});
         this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
         containerListener.onReload(this);
+        containerListener.onStartup(this);
     }
 
     @Override

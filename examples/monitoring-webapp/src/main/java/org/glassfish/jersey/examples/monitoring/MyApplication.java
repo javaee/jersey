@@ -37,74 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.examples.monitoring;
 
-package org.glassfish.jersey.server.internal.monitoring;
-
-import java.util.Date;
-import java.util.Set;
+import javax.ws.rs.ApplicationPath;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.monitoring.ApplicationStatistics;
+import org.glassfish.jersey.server.ServerProperties;
 
 /**
- * Application statistics.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class ApplicationStatisticsImpl implements ApplicationStatistics {
-    private final ResourceConfig resourceConfig;
-    private final Date startTime;
-    private final Set<Class<?>> registeredClasses;
-    private final Set<Object> registeredInstances;
-    private final Set<Class<?>> providers;
+@ApplicationPath("/rest/*")
+public class MyApplication extends ResourceConfig {
 
-    /**
-     * Create a new application statistics instance.
-     * @param resourceConfig Resource config of the application being monitored.
-     * @param startTime Start time of the application (when initialization was finished).
-     * @param registeredClasses Registered resource classes.
-     * @param registeredInstances Registered resource instances.
-     * @param providers Registered providers.
-     */
-    ApplicationStatisticsImpl(ResourceConfig resourceConfig, Date startTime,
-                              Set<Class<?>> registeredClasses,
-                              Set<Object> registeredInstances, Set<Class<?>> providers) {
-        this.resourceConfig = resourceConfig;
-        this.startTime = startTime;
-
-        this.registeredClasses = registeredClasses;
-        this.registeredInstances = registeredInstances;
-        this.providers = providers;
+    public MyApplication() {
+        register(MyExceptionMapper.class);
+        setApplicationName("MonitoringExample");
+        register(MyResource.class);
+        property(ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, true);
     }
-
-    public ResourceConfig getResourceConfig() {
-        return resourceConfig;
-    }
-
-    public Date getStartTime() {
-        return startTime;
-    }
-
-    public Set<Class<?>> getRegisteredClasses() {
-        return registeredClasses;
-    }
-
-    public Set<Object> getRegisteredInstances() {
-        return registeredInstances;
-    }
-
-    public Set<Class<?>> getProviders() {
-        return providers;
-    }
-
-    public Date getDestroyTime() {
-        return null;
-    }
-
-    @Override
-    public ApplicationStatistics snapshot() {
-        // snapshot functionality not yet implemented
-        return this;
-    }
-
 }

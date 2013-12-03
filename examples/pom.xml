@@ -92,6 +92,7 @@
         <module>managed-client</module>
         <module>managed-client-webapp</module>
         <module>managed-client-simple-webapp</module>
+        <module>monitoring-webapp</module>
         <module>multipart-webapp</module>
         <module>osgi-helloworld-webapp</module>
         <module>osgi-http-service</module>

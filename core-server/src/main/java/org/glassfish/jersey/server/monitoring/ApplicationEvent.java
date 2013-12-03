@@ -69,7 +69,17 @@ public interface ApplicationEvent {
          */
         INITIALIZATION_START,
         /**
-         * Initialization of the application has finished and application is ready to handle requests now.
+         * Initialization of {@link org.glassfish.jersey.server.ApplicationHandler jersey application} is
+         * finished but the server might not be started and ready yet to serve requests (this will be
+         * indicated by the {@link #INITIALIZATION_FINISHED} event). This event indicates only that the
+         * environment is ready (all providers are registered, application is configured, etc.).
+         *
+         * @since 2.5
+         */
+        INITIALIZATION_APP_FINISHED,
+        /**
+         * Initialization of the application has finished, server is started and application is ready
+         * to handle requests now.
          */
         INITIALIZATION_FINISHED,
         /**

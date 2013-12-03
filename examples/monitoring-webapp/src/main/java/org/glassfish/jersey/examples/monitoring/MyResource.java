@@ -37,74 +37,61 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.examples.monitoring;
 
-package org.glassfish.jersey.server.internal.monitoring;
-
-import java.util.Date;
-import java.util.Set;
-
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.monitoring.ApplicationStatistics;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.Produces;
 
 /**
- * Application statistics.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class ApplicationStatisticsImpl implements ApplicationStatistics {
-    private final ResourceConfig resourceConfig;
-    private final Date startTime;
-    private final Set<Class<?>> registeredClasses;
-    private final Set<Object> registeredInstances;
-    private final Set<Class<?>> providers;
+@Path("resource")
+public class MyResource {
 
-    /**
-     * Create a new application statistics instance.
-     * @param resourceConfig Resource config of the application being monitored.
-     * @param startTime Start time of the application (when initialization was finished).
-     * @param registeredClasses Registered resource classes.
-     * @param registeredInstances Registered resource instances.
-     * @param providers Registered providers.
-     */
-    ApplicationStatisticsImpl(ResourceConfig resourceConfig, Date startTime,
-                              Set<Class<?>> registeredClasses,
-                              Set<Object> registeredInstances, Set<Class<?>> providers) {
-        this.resourceConfig = resourceConfig;
-        this.startTime = startTime;
-
-        this.registeredClasses = registeredClasses;
-        this.registeredInstances = registeredInstances;
-        this.providers = providers;
+    @GET
+    public String testGet() {
+        return "get";
     }
 
-    public ResourceConfig getResourceConfig() {
-        return resourceConfig;
+    @POST
+    public String testPost() {
+        return "post";
     }
 
-    public Date getStartTime() {
-        return startTime;
+    @GET
+    @Path("sub")
+    public String testSubGet() {
+        try {
+            Thread.sleep(500 + ((int)(Math.random() * 1000)));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ProcessingException(e);
+        }
+        return "sub";
     }
 
-    public Set<Class<?>> getRegisteredClasses() {
-        return registeredClasses;
+    @GET
+    @Path("exception")
+    public String testException() {
+        throw new MyException("test");
     }
 
-    public Set<Object> getRegisteredInstances() {
-        return registeredInstances;
+    @POST
+    @Path("sub2")
+    @Produces("text/html")
+    @Consumes("text/plain")
+    public String testSu2bPost(String entity) {
+        return "post";
     }
 
-    public Set<Class<?>> getProviders() {
-        return providers;
-    }
-
-    public Date getDestroyTime() {
-        return null;
-    }
-
-    @Override
-    public ApplicationStatistics snapshot() {
-        // snapshot functionality not yet implemented
-        return this;
+    @Path("locator")
+    public SubResource getSubResource() {
+        return new SubResource();
     }
 
 }
