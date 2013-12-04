@@ -57,7 +57,6 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
-import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.Feature;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
@@ -306,7 +305,7 @@ public class Providers {
      * @param contract   service provider contract.
      * @param comparator comparator to be used for sorting the returned providers.
      * @return set of all available service provider instances for the contract ordered using the given
-     *         {@link Comparator comparator}.
+     * {@link Comparator comparator}.
      */
     public static <T> Iterable<T> getAllProviders(ServiceLocator locator, Class<T> contract, Comparator<T> comparator) {
         List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
@@ -554,11 +553,42 @@ public class Providers {
     }
 
     /**
+     * Ensure the supplied implementation classes implement the expected contract.
+     *
+     * @param contract        contract that is expected to be implemented by the implementation classes.
+     * @param implementations contract implementations.
+     * @throws java.lang.IllegalArgumentException in case any of the implementation classes does not
+     *                                            implement the expected contract.
+     */
+    public static void ensureContract(Class<?> contract, Class<?>... implementations) {
+        if (implementations == null || implementations.length <= 0) {
+            return;
+        }
+
+        StringBuilder invalidClassNames = new StringBuilder();
+        for (Class<?> impl : implementations) {
+            if (!contract.isAssignableFrom(impl)) {
+                if (invalidClassNames.length() > 0) {
+                    invalidClassNames.append(", ");
+                }
+                invalidClassNames.append(impl.getName());
+            }
+        }
+
+        if (invalidClassNames.length() > 0) {
+            throw new IllegalArgumentException(LocalizationMessages.INVALID_SPI_CLASSES(
+                    contract.getName(),
+                    invalidClassNames.toString()));
+        }
+
+    }
+
+    /**
      * Inject {@code providerInstances}. The method iterates through {@code providerInstances}
      * and initializes injectable fields of each instance using {@code serviceLocator}.
      *
      * @param providerInstances Iterable of provider instances to be injected.
-     * @param serviceLocator Service locator.
+     * @param serviceLocator    Service locator.
      */
     public static <T> void injectProviders(Iterable<T> providerInstances, ServiceLocator serviceLocator) {
         for (T providerInstance : providerInstances) {
