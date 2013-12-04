@@ -386,6 +386,22 @@ class ServerRuntime {
             return response;
         }
 
+        /**
+         * Process {@code throwable} by using exception mappers and generating the mapped
+         * response if possible.
+         * <p>
+         * Note about logging:
+         * <ul>
+         * <li>
+         * we do not log exceptions that are mapped by ExceptionMappers.
+         * </li><li>
+         * All other exceptions are logged: WebApplicationExceptions with entities,
+         *      exceptions that were unsuccessfully mapped
+         * </li>
+         * </ul>
+         * </p>
+         * @param throwable Exception to be processed.
+         */
         public void process(Throwable throwable) {
             request.getRequestEventBuilder().setException(throwable, RequestEvent.ExceptionCause.ORIGINAL);
             request.triggerEvent(RequestEvent.Type.ON_EXCEPTION);
@@ -434,6 +450,8 @@ class ServerRuntime {
 
         @SuppressWarnings("unchecked")
         private Response mapException(final Throwable originalThrowable) throws Throwable {
+            LOGGER.log(Level.FINER, LocalizationMessages.EXCEPTION_MAPPING_START(), originalThrowable);
+
             Throwable throwable = originalThrowable;
             boolean inMappable = false;
             boolean mappingNotFound = false;
@@ -443,20 +461,16 @@ class ServerRuntime {
                     inMappable = true;
                 } else if (inMappable || throwable instanceof WebApplicationException) {
                     Response waeResponse = null;
-                    Throwable cause = throwable;
 
                     if (throwable instanceof WebApplicationException) {
                         final WebApplicationException webApplicationException = (WebApplicationException) throwable;
-                        cause = webApplicationException.getCause();
+
                         waeResponse = webApplicationException.getResponse();
                         if (waeResponse.hasEntity()) {
+                            LOGGER.log(Level.FINE, LocalizationMessages
+                                    .EXCEPTION_MAPPING_WAE_ENTITY(waeResponse.getStatus()), throwable);
                             return waeResponse;
                         }
-                    }
-
-                    // Log cause of WebApplicationException.
-                    if (cause != null) {
-                        LOGGER.log(Level.WARNING, LocalizationMessages.WEB_APPLICATION_EXCEPTION_CAUSE(), cause);
                     }
 
                     final long timestamp = tracingLogger.timestamp(ServerTraceEvent.EXCEPTION_MAPPING);
@@ -490,6 +504,9 @@ class ServerRuntime {
                     }
 
                     if (waeResponse != null) {
+                        LOGGER.log(Level.FINE, LocalizationMessages
+                                .EXCEPTION_MAPPING_WAE_NO_ENTITY(waeResponse.getStatus()), throwable);
+
                         return waeResponse;
                     }
 
