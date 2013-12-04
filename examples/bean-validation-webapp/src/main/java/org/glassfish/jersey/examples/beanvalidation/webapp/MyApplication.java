@@ -55,6 +55,7 @@ import org.glassfish.jersey.examples.beanvalidation.webapp.resource.ContactCardR
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.validation.ValidationConfig;
 import org.glassfish.jersey.server.validation.internal.InjectingConstraintValidatorFactory;
 
@@ -75,6 +76,8 @@ public class MyApplication extends ResourceConfig {
         // Providers - JSON.
         register(MoxyJsonFeature.class);
         register(JsonConfiguration.class);
+
+        property(ServerProperties.LOGGING_MAPPABLE_EXCEPTION_DISABLE, true);
     }
 
     /**
