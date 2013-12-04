@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,19 +43,20 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.text.ParseException;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
+import org.glassfish.jersey.media.multipart.internal.LocalizationMessages;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.HeadersFactory;
 import org.glassfish.jersey.message.internal.ParameterizedHeader;
 
 /**
- * A mutable model representing a body part nested inside a MIME MultiPart
- * entity.
+ * A mutable model representing a body part nested inside a MIME MultiPart entity.
  *
  * @author Craig McClanahan
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -115,44 +116,44 @@ public class BodyPart {
      * Returns the entity object to be unmarshalled from a request, or to be
      * marshalled on a response.
      *
-     * @throws IllegalStateException if this method is called on a {@link MultiPart} instance; access the underlying {@link
-     * BodyPart}s instead
+     * @return an entity of this body part.
+     * @throws IllegalStateException if this method is called on a {@link MultiPart} instance; access the underlying
+     * {@link BodyPart}s instead
      */
     public Object getEntity() {
         return this.entity;
     }
 
     /**
-     * Set the entity object to be unmarshalled from a request, or to be
-     * marshalled on a response.
+     * Set the entity object to be unmarshalled from a request, or to be marshalled on a response.
      *
      * @param entity the new entity object.
-     * @throws IllegalStateException if this method is called on a {@link MultiPart} instance; access the underlying {@link
-     * BodyPart}s instead
+     * @throws IllegalStateException if this method is called on a {@link MultiPart} instance; access the underlying
+     * {@link BodyPart}s instead
      */
     public void setEntity(Object entity) {
         this.entity = entity;
     }
 
     /**
-     * Returns a mutable map of HTTP header value(s) for this {@link BodyPart},
-     * keyed by the header name. Key comparisons in the returned map must be
-     * case-insensitive.
+     * Returns a mutable map of HTTP header value(s) for this {@link BodyPart}, keyed by the header name. Key comparisons in
+     * the returned map must be case-insensitive.
      * <p/>
-     * Note: MIME specifications says only headers that match
-     * {@code Content-*} should be included on a {@link BodyPart}.
+     * Note: MIME specifications says only headers that match {@code Content-*} should be included on a {@link BodyPart}.
+     *
+     * @return mutable map of HTTP header values.
      */
     public MultivaluedMap<String, String> getHeaders() {
         return this.headers;
     }
 
-
     /**
-     * Returns an immutable map of parameterized HTTP header value(s) for this
-     * {@link BodyPart}, keyed by header name. Key comparisons in the
-     * returned map must be case-insensitive. If you wish to modify the
-     * headers map for this {@link BodyPart}, modify the map returned by
-     * {@code getHeaders()} instead.
+     * Returns an immutable map of parameterized HTTP header value(s) for this {@link BodyPart},
+     * keyed by header name. Key comparisons in the returned map must be case-insensitive. If you wish to modify the headers
+     * map for this {@link BodyPart}, modify the map returned by {@code getHeaders()} instead.
+     *
+     * @return immutable map of HTTP header values.
+     * @throws ParseException if an un-expected/in-correct value is found during parsing the headers.
      */
     public MultivaluedMap<String, ParameterizedHeader> getParameterizedHeaders() throws ParseException {
         return new ImmutableMultivaluedMap<String, ParameterizedHeader>(new ParameterizedHeadersMap(headers));
@@ -164,8 +165,7 @@ public class BodyPart {
      * The "Content-Disposition" header, if present, will be parsed.
      *
      * @return the content disposition, will be null if not present.
-     * @throws IllegalArgumentException if the content disposition header
-     *                                  cannot be parsed.
+     * @throws IllegalArgumentException if the content disposition header cannot be parsed.
      */
     public ContentDisposition getContentDisposition() {
         if (contentDisposition == null) {
@@ -263,10 +263,10 @@ public class BodyPart {
     }
 
     /**
-     * Builder pattern method to return this {@link BodyPart} after
-     * additional configuration.
+     * Builder pattern method to return this {@link BodyPart} after additional configuration.
      *
      * @param entity entity to set for this {@link BodyPart}.
+     * @return body-part instance.
      */
     public BodyPart entity(Object entity) {
         setEntity(entity);
@@ -274,41 +274,40 @@ public class BodyPart {
     }
 
     /**
-     * Returns the entity after appropriate conversion to the requested
-     * type. This is useful only when the containing {@link MultiPart}
-     * instance has been received, which causes the {@code providers} property
-     * to have been set.
+     * Returns the entity after appropriate conversion to the requested type. This is useful only when the containing
+     * {@link MultiPart} instance has been received, which causes the {@code providers} property to have been set.
      *
      * @param clazz desired class into which the entity should be converted.
+     * @return entity after appropriate conversion to the requested type.
+     *
+     * @throws ProcessingException if an IO error arises during reading an entity.
      * @throws IllegalArgumentException if no {@link MessageBodyReader} can be found to perform the requested conversion.
-     * @throws IllegalStateException if this method is called when the {@code providers} property has not been set or
-     * when the entity instance is not the unconverted content of the body part entity.
+     * @throws IllegalStateException if this method is called when the {@code providers} property has not been set or when the
+     * entity instance is not the unconverted content of the body part entity.
      */
     public <T> T getEntityAs(Class<T> clazz) {
-        if ((entity == null) || !(entity instanceof BodyPartEntity)) {
-            throw new IllegalStateException("Entity instance does not contain the unconverted content");
+        if (entity == null || !(entity instanceof BodyPartEntity)) {
+            throw new IllegalStateException(LocalizationMessages.ENTITY_HAS_WRONG_TYPE());
         }
 
-        Annotation annotations[] = new Annotation[0];
-        MessageBodyReader<T> reader = messageBodyWorkers.getMessageBodyReader(clazz, clazz, annotations, mediaType);
-
+        final Annotation[] annotations = new Annotation[0];
+        final MessageBodyReader<T> reader = messageBodyWorkers.getMessageBodyReader(clazz, clazz, annotations, mediaType);
         if (reader == null) {
-            throw new IllegalArgumentException("No available MessageBodyReader for class " + clazz.getName()
-                    + " and media type " + mediaType);
+            throw new IllegalArgumentException(LocalizationMessages.NO_AVAILABLE_MBR(clazz, mediaType));
         }
 
         try {
             return reader.readFrom(clazz, clazz, annotations, mediaType, headers, ((BodyPartEntity) entity).getInputStream());
-        } catch (IOException e) {
-            return null; // Can not happen.
+        } catch (final IOException ioe) {
+            throw new ProcessingException(LocalizationMessages.ERROR_READING_ENTITY(String.class), ioe);
         }
     }
 
     /**
-     * Builder pattern method to return this {@link BodyPart} after
-     * additional configuration.
+     * Builder pattern method to return this {@link BodyPart} after additional configuration.
      *
      * @param type media type to set for this {@link BodyPart}.
+     * @return body-part instance.
      */
     public BodyPart type(MediaType type) {
         setMediaType(type);
@@ -320,14 +319,19 @@ public class BodyPart {
      * additional configuration.
      *
      * @param contentDisposition content disposition to set for this {@link BodyPart}.
+     * @return body-part instance.
      */
     public BodyPart contentDisposition(ContentDisposition contentDisposition) {
         setContentDisposition(contentDisposition);
         return this;
     }
 
+    /**
+     * Set message body workers used to transform an entity stream into particular Java type.
+     *
+     * @param messageBodyWorkers message body workers.
+     */
     public void setMessageBodyWorkers(MessageBodyWorkers messageBodyWorkers) {
         this.messageBodyWorkers = messageBodyWorkers;
     }
-
 }

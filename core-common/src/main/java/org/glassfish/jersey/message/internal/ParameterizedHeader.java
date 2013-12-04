@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,13 +45,11 @@ import java.util.Map;
 
 /**
  * A general parameterized header.
- * <p>
- * The header consists of a value and zero or more parameters. A value consists
- * of zero or more tokens and separators up to but not including a ';' separator
- * if present. The tokens and separators of a value may be separated by zero or
- * more white space, which is ignored and is not considered part of the value.
- * The value is separated from the parameters with a ';'. Each parameter is
- * separated with a ';'.
+ * <p/>
+ * The header consists of a value and zero or more parameters. A value consists of zero or more tokens and separators up to but
+ * not including a ';' separator if present. The tokens and separators of a value may be separated by zero or more white space,
+ * which is ignored and is not considered part of the value. The value is separated from the parameters with a ';'. Each
+ * parameter is separated with a ';'.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -61,11 +59,23 @@ public class ParameterizedHeader {
     private String value;
     private Map<String, String> parameters;
 
-    public ParameterizedHeader(String header) throws ParseException {
+    /**
+     * Create a parameterized header from given string value.
+     *
+     * @param header header to create parameterized header from.
+     * @throws ParseException if an un-expected/in-correct value is found during parsing the header.
+     */
+    public ParameterizedHeader(final String header) throws ParseException {
         this(HttpHeaderReader.newInstance(header));
     }
 
-    public ParameterizedHeader(HttpHeaderReader reader) throws ParseException {
+    /**
+     * Create a parameterized header from given {@link HttpHeaderReader http header reader}.
+     *
+     * @param reader reader to initialize new parameterized header from.
+     * @throws ParseException if an un-expected/in-correct value is found during parsing the header.
+     */
+    public ParameterizedHeader(final HttpHeaderReader reader) throws ParseException {
         reader.hasNext();
 
         value = "";

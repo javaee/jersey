@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,10 @@ package org.glassfish.jersey.media.multipart;
 
 import java.text.ParseException;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.media.multipart.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.MediaTypes;
 
 /**
@@ -96,9 +98,9 @@ public class FormDataBodyPart extends BodyPart {
      * Instantiates an unnamed new {@link FormDataBodyPart} with {@code mediaType} of {@code text/plain}
      * and setting the flag for applying the fix for erroneous file name value if content disposition header of
      * messages coming from MS Internet Explorer (see <a href="http://java.net/jira/browse/JERSEY-759">JERSEY-759</a>).
-     * @param fileNameFix If set to {@code true}, header parser will not treat backslash as an escape character
-     *                    when retrieving the value of {@code filename} parameter of
-     *                    {@code Content-Disposition} header.
+     *
+     * @param fileNameFix If set to {@code true}, header parser will not treat backslash as an escape character when retrieving
+     * the value of {@code filename} parameter of {@code Content-Disposition} header.
      */
     public FormDataBodyPart(boolean fileNameFix) {
         super();
@@ -205,8 +207,7 @@ public class FormDataBodyPart extends BodyPart {
      * only instances of {@link FormDataContentDisposition} can be obtained.
      *
      * @return the content disposition.
-     * @throws IllegalArgumentException if the content disposition header
-     *                                  cannot be parsed.
+     * @throws IllegalArgumentException if the content disposition header cannot be parsed.
      */
     @Override
     public ContentDisposition getContentDisposition() {
@@ -216,7 +217,7 @@ public class FormDataBodyPart extends BodyPart {
                 try {
                     contentDisposition = new FormDataContentDisposition(scd, fileNameFix);
                 } catch (ParseException ex) {
-                    throw new IllegalArgumentException("Error parsing content disposition: " + scd, ex);
+                    throw new IllegalArgumentException(LocalizationMessages.ERROR_PARSING_CONTENT_DISPOSITION(scd), ex);
                 }
             }
         }
@@ -259,56 +260,50 @@ public class FormDataBodyPart extends BodyPart {
      * @param name the control name.
      */
     public void setName(String name) {
-        if(name == null) {
-            throw new IllegalArgumentException("Name can not be null.");
+        if (name == null) {
+            throw new IllegalArgumentException(LocalizationMessages.CONTROL_NAME_CANNOT_BE_NULL());
         }
 
         if (getFormDataContentDisposition() == null) {
             FormDataContentDisposition contentDisposition;
-            contentDisposition = FormDataContentDisposition.name(name)
-                .build();
+            contentDisposition = FormDataContentDisposition.name(name).build();
             super.setContentDisposition(contentDisposition);
         } else {
-            FormDataContentDisposition formDataContentDisposition = FormDataContentDisposition.name(name)
-                    .fileName(contentDisposition.getFileName())
-                    .creationDate(contentDisposition.getCreationDate())
-                    .modificationDate(contentDisposition.getModificationDate())
-                    .readDate(contentDisposition.getReadDate())
-                    .size(contentDisposition.getSize())
-                    .build();
+            FormDataContentDisposition formDataContentDisposition = FormDataContentDisposition.name(name).fileName
+                    (contentDisposition.getFileName()).creationDate(contentDisposition.getCreationDate()).modificationDate
+                    (contentDisposition.getModificationDate()).readDate(contentDisposition.getReadDate()).size
+                    (contentDisposition.getSize()).build();
             super.setContentDisposition(formDataContentDisposition);
         }
     }
 
-
     /**
-     * Gets the field value for this body part. This should be called
-     * only on body parts representing simple field values.
+     * Gets the field value for this body part. This should be called only on body parts representing simple field values.
      *
      * @return the simple field value.
+     * @throws ProcessingException if an IO error arises during reading the value.
      * @throws IllegalStateException if called on a body part with a media type other than {@code text/plain}
      */
     public String getValue() {
         if (!MediaTypes.typeEqual(MediaType.TEXT_PLAIN_TYPE, getMediaType())) {
-            throw new IllegalStateException("Media type is not text/plain");
+            throw new IllegalStateException(LocalizationMessages.MEDIA_TYPE_NOT_TEXT_PLAIN());
         }
 
         if (getEntity() instanceof BodyPartEntity) {
-            return getEntityAs(String.class);
+            return getValueAs(String.class);
         } else {
             return (String) getEntity();
         }
     }
 
     /**
-     * Gets the field value after appropriate conversion to the requested
-     * type. This is useful only when the containing {@link FormDataMultiPart}
-     * instance has been received, which causes the {@code providers}
-     * property to have been set.
+     * Gets the field value after appropriate conversion to the requested type. This is useful only when the containing {@link
+     * FormDataMultiPart} instance has been received, which causes the {@code providers} property to have been set.
      *
      * @param <T> the type of the field value.
      * @param clazz Desired class into which the field value should be converted.
      * @return the field value.
+     * @throws ProcessingException if an IO error arises during reading an entity.
      * @throws IllegalArgumentException if no {@code MessageBodyReader} can be found to perform the requested conversion.
      * @throws IllegalStateException if this method is called when the {@code providers} property has not been set or when
      * the entity instance is not the unconverted content of the body part entity.
@@ -326,7 +321,7 @@ public class FormDataBodyPart extends BodyPart {
      */
     public void setValue(String value) {
         if (!MediaType.TEXT_PLAIN_TYPE.equals(getMediaType())) {
-            throw new IllegalStateException("Media type is not text/plain");
+            throw new IllegalStateException(LocalizationMessages.MEDIA_TYPE_NOT_TEXT_PLAIN());
         }
         setEntity(value);
     }

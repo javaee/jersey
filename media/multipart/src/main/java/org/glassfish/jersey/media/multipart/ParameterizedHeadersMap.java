@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,21 +52,28 @@ import org.glassfish.jersey.message.internal.ParameterizedHeader;
 /**
  * A map of MIME headers with parametrized values.
  * <p/>
- * An implementation of {@link MultivaluedMap} where keys are instances of
- * String and are compared ignoring case and values are instances of 
- * {@link ParameterizedHeader}.
+ * An implementation of {@link MultivaluedMap} where keys are instances of String and are compared ignoring case and values are
+ * instances of {@link ParameterizedHeader}.
  *
  * @author Craig McClanahan
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-/* package */ class ParameterizedHeadersMap
-        extends StringKeyIgnoreCaseMultivaluedMap<ParameterizedHeader> {
+/* package */ class ParameterizedHeadersMap extends StringKeyIgnoreCaseMultivaluedMap<ParameterizedHeader> {
 
+    /**
+     * Create new parameterized headers map.
+     */
     public ParameterizedHeadersMap() {
     }
 
-    public ParameterizedHeadersMap(MultivaluedMap<String, String> headers) throws ParseException {
-        for (Map.Entry<String,List<String>> entry : headers.entrySet()) {
+    /**
+     * Create new parameterized headers map from given headers.
+     *
+     * @param headers headers to initialize this map from.
+     * @throws ParseException if an un-expected/in-correct value is found during parsing the headers.
+     */
+    public ParameterizedHeadersMap(final MultivaluedMap<String, String> headers) throws ParseException {
+        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
             List<ParameterizedHeader> list = new ArrayList<ParameterizedHeader>(entry.getValue().size());
             for (String value : entry.getValue()) {
                 list.add(new ParameterizedHeader(value));
