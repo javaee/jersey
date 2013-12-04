@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,10 +70,10 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.MultiPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -183,7 +183,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     }
 
     @Test
-    public void testProducesFormDataResource() {
+    public void testProducesFormDataResource() throws Exception {
         final Invocation.Builder request = target().path("ProducesFormDataResource").request("multipart/form-data");
 
         FormDataMultiPart result = request.get(FormDataMultiPart.class);
@@ -245,7 +245,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @PUT
         @Consumes("multipart/form-data")
         @Produces("text/plain")
-        public Response get(FormDataMultiPart multiPart) {
+        public Response get(FormDataMultiPart multiPart) throws IOException {
             if (!(multiPart.getBodyParts().size() == 3)) {
                 return Response.ok("FAILED:  Number of body parts is " + multiPart.getBodyParts().size() + " instead of 3").build();
             }
@@ -368,7 +368,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
                 @FormDataParam("foo") FormDataContentDisposition fooDisp,
                 @FormDataParam("foo") FormDataBodyPart fooPart,
                 @FormDataParam("baz") FormDataContentDisposition bazDisp,
-                @FormDataParam("baz") FormDataBodyPart bazPart) {
+                @FormDataParam("baz") FormDataBodyPart bazPart) throws IOException {
 
             assertNotNull(fooDisp);
             assertNotNull(fooPart);
@@ -563,9 +563,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @PUT
         @Consumes("multipart/form-data")
         @Produces("text/plain")
-        public String put(
-                @FormDataParam("submit") FormDataBodyPart bean
-                ) {
+        public String put(@FormDataParam("submit") FormDataBodyPart bean) throws IOException {
             assertNotNull(bean);
             assertNull(bean.getHeaders().getFirst("Content-Type"));
             assertEquals("upload", bean.getValue());

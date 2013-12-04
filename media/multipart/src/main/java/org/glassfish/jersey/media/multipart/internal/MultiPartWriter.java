@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,7 +50,6 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -60,6 +59,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.Providers;
+
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
@@ -73,8 +74,8 @@ import org.glassfish.jersey.media.multipart.MultiPart;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@Produces("multipart/*")
 @Singleton
+@Produces("multipart/*")
 public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
 
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
@@ -133,7 +134,7 @@ public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
 
         // Verify that there is at least one body part.
         if ((entity.getBodyParts() == null) || (entity.getBodyParts().size() < 1)) {
-            throw new WebApplicationException(new IllegalArgumentException("Must specify at least one body part"));
+            throw new IllegalArgumentException(LocalizationMessages.MUST_SPECIFY_BODY_PART());
         }
 
         // If our entity is not nested, make sure the MIME-Version header is set.
@@ -172,7 +173,7 @@ public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
             // Write the headers for this body part
             final MediaType bodyMediaType = bodyPart.getMediaType();
             if (bodyMediaType == null) {
-                throw new WebApplicationException(new IllegalArgumentException("Missing body part media type"));
+                throw new IllegalArgumentException(LocalizationMessages.MISSING_MEDIA_TYPE_OF_BODY_PART());
             }
 
             final MultivaluedMap<String, String> bodyHeaders = bodyPart.getHeaders();
@@ -207,8 +208,7 @@ public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
             // Write the entity for this body part
             Object bodyEntity = bodyPart.getEntity();
             if (bodyEntity == null) {
-                throw new WebApplicationException(
-                        new IllegalArgumentException("Missing body part entity of type '" + bodyMediaType + "'"));
+                throw new IllegalArgumentException(LocalizationMessages.MISSING_ENTITY_OF_BODY_PART(bodyMediaType));
             }
 
             Class bodyClass = bodyEntity.getClass();
@@ -224,11 +224,7 @@ public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
                     bodyMediaType);
 
             if (bodyWriter == null) {
-                throw new WebApplicationException(
-                        new IllegalArgumentException(
-                        "No MessageBodyWriter for body part of type '" +
-                        bodyEntity.getClass().getName() + "' and media type '" +
-                        bodyMediaType + "'"));
+                throw new IllegalArgumentException(LocalizationMessages.NO_AVAILABLE_MBW(bodyClass, mediaType));
             }
 
             bodyWriter.writeTo(
