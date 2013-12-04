@@ -149,5 +149,8 @@ public abstract class ExecutorsFactory<REQUEST> {
      */
     public abstract ExecutorService getRespondingExecutor(REQUEST request);
 
-
+    /**
+     * Closes all underlying executors.
+     */
+    public abstract void shutdown();
 }

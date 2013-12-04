@@ -100,4 +100,10 @@ class ServerExecutorsFactory extends ExecutorsFactory<ContainerRequest> {
     public ExecutorService getRespondingExecutor(ContainerRequest request) {
         return respondingExecutor;
     }
+
+    @Override
+    public void shutdown() {
+        requestingExecutor.shutdownNow();
+        respondingExecutor.shutdownNow();
+    }
 }

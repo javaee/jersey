@@ -110,4 +110,10 @@ public class TestExecutorsFactory extends ExecutorsFactory<String> {
             }).in(Singleton.class);
         }
     }
+
+    @Override
+    public void shutdown() {
+        requestingExecutor.shutdownNow();
+        respondingExecutor.shutdownNow();
+    }
 }
