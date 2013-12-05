@@ -52,6 +52,41 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.5">
+        <title>Migrating from Jersey 2.4.1 to 2.5</title>
+
+        <para>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                    <emphasis>Client chunked encoding behaviour changed:</emphasis>
+                    The client uses chunked encoding (streaming) for serialization of the entity as a default option. Buffering
+                    of the entity was used before the 2.5 release by default. The size of the chunk can still be controlled
+                    by &jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE; but this property no longer
+                    controls whether the chunked encoding will be used. In order to control whether the entity
+                    will be buffered or chunked encoding will utilized use the property
+                        &jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING;. The behaviour is not fully unified
+                    yet and is dependent on
+                    the &jersey.client.Connector; that is used in the &jaxrs.client.Client;.
+                    &jersey.client.HttpUrlConnector;
+                    still uses
+                    buffering as default options due to bugs in <literal>HttpURLConnection</literal>. Also
+                    &jersey.jetty.JettyConnector; currently does not support chunked encoding at all.
+                </para></listitem>
+                <listitem><para>
+                    The &jersey.server.ContainerLifecycleListener; invokes event <literal>onStartup</literal>
+                    and <literal>onShutdown</literal> also when application is being started or stopped because of
+                    application redeploy. The interface was marked as a Beta now.
+                </para></listitem>
+                <listitem><para>
+                    The monitoring statistics method <literal>ApplicationStatistics.getDestroyTime()</literal>
+                    is deprecated and returns always null. Use &jersey.server.ContainerLifecycleListener; to
+                    listen on application destroy and get the destroy time.
+                </para></listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
     <section xml:id="mig-2.4.1">
         <title>Migrating from Jersey 2.4 to 2.4.1</title>
 

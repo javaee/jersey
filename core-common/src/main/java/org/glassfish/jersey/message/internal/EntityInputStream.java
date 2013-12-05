@@ -179,20 +179,21 @@ class EntityInputStream extends InputStream {
         }
 
         try {
-            try {
-                if (input.available() > 0) {
-                    return false;
-                }
-            } catch (IOException ioe) {
-                // NOOP. Try other approaches as this can fail on WLS when "chunked" transfer encoding is used.
-            }
-
+            // Try #markSupported first - #available on WLS waits until socked timeout is reached when chunked encoding is used.
             if (input.markSupported()) {
                 input.mark(1);
                 int i = input.read();
                 input.reset();
                 return i == -1;
             } else {
+                try {
+                    if (input.available() > 0) {
+                        return false;
+                    }
+                } catch (IOException ioe) {
+                    // NOOP. Try other approaches as this can fail on WLS.
+                }
+
                 int b = input.read();
                 if (b == -1) {
                     return true;

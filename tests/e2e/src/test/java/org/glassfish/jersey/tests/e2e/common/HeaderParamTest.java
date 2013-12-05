@@ -39,6 +39,9 @@
 */
 package org.glassfish.jersey.tests.e2e.common;
 
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -48,18 +51,19 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class HeaderParamTest extends JerseyTest {
+
     @Override
     protected Application configure() {
         return new ResourceConfig(MyResource.class, LoggingFilter.class);
@@ -67,6 +71,7 @@ public class HeaderParamTest extends JerseyTest {
 
     @Path("resource")
     public static class MyResource {
+
         @GET
         public String get(@HeaderParam("hello") List<String> headers) {
             return headers.size() + ":" + headers;
@@ -74,11 +79,31 @@ public class HeaderParamTest extends JerseyTest {
     }
 
     @Test
-    @Ignore("see https://java.net/jira/browse/JERSEY-2164")
-    public void test() {
-        Response response = target().path("resource").request()
-                .header("hello", "world").header("hello", "universe").get();
-        assertEquals(200, response.getStatus());
-        assertEquals("2:[world, universe]", response.readEntity(String.class));
+    public void testHeaderListSingleHeader() throws Exception {
+        Response response = target().path("resource").request().header("hello", "world").header("hello", "universe").get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("1:[world,universe]"));
+    }
+
+    /**
+     * Check that multi value http headers are correctly read by the server.
+     */
+    @Test
+    public void testHeaderListMultipleHeaders() throws Exception {
+        final URL url = new URL(getBaseUri().toString() + "resource");
+        final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Accept", "text/plain");
+        connection.setRequestProperty("hello", "world");
+        connection.addRequestProperty("hello", "universe");
+
+        connection.setDoOutput(false);
+        connection.connect();
+
+        assertThat(connection.getResponseCode(), equalTo(200));
+        assertThat(ReaderWriter.readFromAsString(new InputStreamReader(connection.getInputStream())),
+                equalTo("2:[world, universe]"));
     }
 }

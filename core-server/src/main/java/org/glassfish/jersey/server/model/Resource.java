@@ -308,6 +308,26 @@ public final class Resource implements Routed, ResourceModelComponent {
             return builder;
         }
 
+
+        /**
+         * Add a new method model that is a copy of the given {@code resourceMethod}.
+         * <p/>
+         * The returned builder is automatically bound to the the resource. It is
+         * not necessary to invoke the {@link ResourceMethod.Builder#build() build()}
+         * method on the method builder after setting all the data. This will be
+         * done automatically when the resource is built.
+         *
+         * @param resourceMethod The resource method based on which the new method builder
+         *                       should be created.
+         *
+         * @return a new resource method builder.
+         */
+        public ResourceMethod.Builder addMethod(ResourceMethod resourceMethod) {
+            ResourceMethod.Builder builder = new ResourceMethod.Builder(this, resourceMethod);
+            methodBuilders.add(builder);
+            return builder;
+        }
+
         /**
          * Add a new child resource to the resource.
          * <p/>

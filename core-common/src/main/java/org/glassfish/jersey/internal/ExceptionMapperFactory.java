@@ -48,6 +48,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.inject.Inject;
@@ -191,24 +192,52 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         return null;
     }
 
-    private Class getType(Class<? extends ExceptionMapper> c) {
-        Class _c = c;
-        while (_c != Object.class) {
-            Type[] ts = _c.getGenericInterfaces();
-            for (Type t : ts) {
-                if (t instanceof ParameterizedType) {
-                    ParameterizedType pt = (ParameterizedType) t;
-                    if (pt.getRawType() == ExceptionMapper.class
-                            || pt.getRawType() == ExtendedExceptionMapper.class) {
-                        return getResolvedType(pt.getActualTypeArguments()[0], c, _c);
-                    }
-                }
+    /**
+     * Get exception type for given exception mapper class.
+     *
+     * @param clazz class to get exception type for.
+     * @return exception type for given class.
+     */
+    private Class getType(final Class<? extends ExceptionMapper> clazz) {
+        Class clazzHolder = clazz;
+
+        while (clazzHolder != Object.class) {
+            Class type = getTypeFromInterface(clazzHolder, clazz);
+            if (type != null) {
+                return type;
             }
 
-            _c = _c.getSuperclass();
+            clazzHolder = clazzHolder.getSuperclass();
         }
 
-        // This statement will never be reached
+        throw new ProcessingException(LocalizationMessages.ERROR_FINDING_EXCEPTION_MAPPER_TYPE(clazz));
+    }
+
+    /**
+     * Iterate through interface hierarchy of {@code clazz} and get exception type for given class.
+     *
+     * @param clazz class to inspect.
+     * @return exception type for given class or {@code null} if the class doesn't implement {@code ExceptionMapper}.
+     */
+    private Class getTypeFromInterface(Class<?> clazz, final Class<? extends ExceptionMapper> original) {
+        final Type[] types = clazz.getGenericInterfaces();
+
+        for (final Type type : types) {
+            if (type instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) type;
+                if (pt.getRawType() == ExceptionMapper.class
+                        || pt.getRawType() == ExtendedExceptionMapper.class) {
+                    return getResolvedType(pt.getActualTypeArguments()[0], original, clazz);
+                }
+            } else if (type instanceof Class<?>) {
+                clazz = (Class<?>) type;
+
+                if (ExceptionMapper.class.isAssignableFrom(clazz)) {
+                    return getTypeFromInterface(clazz, original);
+                }
+            }
+        }
+
         return null;
     }
 

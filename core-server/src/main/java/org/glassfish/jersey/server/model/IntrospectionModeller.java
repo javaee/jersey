@@ -310,7 +310,7 @@ final class IntrospectionModeller {
                             .nameBindings(defaultNameBindings)
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod())
-                            .validateUsing(am.getDeclaredMethod());
+                            .handlingMethod(am.getDeclaredMethod());
 
             introspectAsyncFeatures(am, methodBuilder);
         }
@@ -336,7 +336,7 @@ final class IntrospectionModeller {
                             .nameBindings(defaultNameBindings)
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod())
-                            .validateUsing(am.getDeclaredMethod());
+                            .handlingMethod(am.getDeclaredMethod());
 
             introspectAsyncFeatures(am, methodBuilder);
         }
@@ -357,7 +357,7 @@ final class IntrospectionModeller {
             builder.addMethod()
                     .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                     .handledBy(handlerClass, am.getMethod())
-                    .validateUsing(am.getDeclaredMethod());
+                    .handlingMethod(am.getDeclaredMethod());
         }
     }
 }

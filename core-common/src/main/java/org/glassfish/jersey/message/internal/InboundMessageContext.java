@@ -847,6 +847,8 @@ public class InboundMessageContext {
         MediaType mediaType = getMediaType();
         mediaType = mediaType == null ? MediaType.APPLICATION_OCTET_STREAM_TYPE : mediaType;
 
+
+        boolean shouldClose = !buffered;
         try {
             T t = (T) workers.readFrom(
                     rawType,
@@ -859,12 +861,15 @@ public class InboundMessageContext {
                     entityContent.hasContent() ? readerInterceptors.get() : Collections.<ReaderInterceptor>emptyList(),
                     translateNce);
 
-            if (!buffered && !(t instanceof Closeable) && !(t instanceof Source)) {
-                entityContent.close();
-            }
+            shouldClose = shouldClose && !(t instanceof Closeable) && !(t instanceof Source);
+
             return t;
         } catch (IOException ex) {
             throw new ProcessingException(LocalizationMessages.ERROR_READING_ENTITY_FROM_INPUT_STREAM(), ex);
+        } finally {
+            if (shouldClose) {
+                entityContent.close();
+            }
         }
     }
 

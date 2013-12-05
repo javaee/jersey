@@ -88,14 +88,16 @@
 
     <build>
         <plugins>
-<!--              Maven Exec Plug-In: http://mojo.codehaus.org/exec-maven-plugin/
+            <plugin>
+                <groupId>com.sun.istack</groupId>
+                <artifactId>maven-istack-commons-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <configuration>
-                    <mainClass>org.glassfish.jersey.examples.httptrace.App</mainClass>
-                </configuration>
-            </plugin>-->
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <inherited>true</inherited>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

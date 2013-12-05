@@ -45,8 +45,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
@@ -66,7 +69,9 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import javax.annotation.Priority;
 
-import org.glassfish.jersey.message.internal.HeadersFactory;
+import org.glassfish.jersey.internal.util.collection.StringIgnoreCaseKeyComparator;
+
+import com.google.common.collect.Sets;
 
 /**
  * Universal logging filter.
@@ -87,6 +92,16 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     private static final String REQUEST_PREFIX = "> ";
     private static final String RESPONSE_PREFIX = "< ";
     private static final String ENTITY_LOGGER_PROPERTY = LoggingFilter.class.getName() + ".entityLogger";
+
+    private static final Comparator<Map.Entry<String,List<String>>> COMPARATOR =
+            new Comparator<Map.Entry<String, List<String>>>() {
+
+                @Override
+                public int compare(final Map.Entry<String, List<String>> o1, final Map.Entry<String, List<String>> o2) {
+                    return StringIgnoreCaseKeyComparator.SINGLETON.compare(o1.getKey(), o2.getKey());
+                }
+            };
+
     //
     @SuppressWarnings("NonConstantLogger")
     private final Logger logger;
@@ -157,9 +172,9 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     }
 
     private void printPrefixedHeaders(StringBuilder b, long id, final String prefix, MultivaluedMap<String, String> headers) {
-        for (Map.Entry<String, List<String>> e : headers.entrySet()) {
-            List<?> val = e.getValue();
-            String header = e.getKey();
+        for (final Map.Entry<String, List<String>> headerEntry : getSortedHeaders(headers.entrySet())) {
+            List<?> val = headerEntry.getValue();
+            String header = headerEntry.getKey();
 
             if (val.size() == 1) {
                 prefixId(b, id).append(prefix).append(header).append(": ").append(val.get(0)).append("\n");
@@ -176,6 +191,12 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
                 prefixId(b, id).append(prefix).append(header).append(": ").append(sb.toString()).append("\n");
             }
         }
+    }
+
+    private Set<Map.Entry<String, List<String>>> getSortedHeaders(final Set<Map.Entry<String, List<String>>> headers) {
+        final TreeSet<Map.Entry<String, List<String>>> sortedHeaders = Sets.newTreeSet(COMPARATOR);
+        sortedHeaders.addAll(headers);
+        return sortedHeaders;
     }
 
     private InputStream logInboundEntity(StringBuilder b, InputStream stream) throws IOException {
@@ -200,8 +221,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         StringBuilder b = new StringBuilder();
 
         printRequestLine(b, id, context.getMethod(), context.getUri());
-        // TODO: change to context.getStringHeaders() once the method is added to the API
-        printPrefixedHeaders(b, id, REQUEST_PREFIX, HeadersFactory.asStringHeaders(context.getHeaders()));
+        printPrefixedHeaders(b, id, REQUEST_PREFIX, context.getStringHeaders());
 
         if (printEntity && context.hasEntity()) {
             OutputStream stream = new LoggingStream(b, context.getEntityStream());
@@ -249,8 +269,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         StringBuilder b = new StringBuilder();
 
         printResponseLine(b, id, responseContext.getStatus());
-        // TODO: change to context.getStringHeaders() once the method is added to the API
-        printPrefixedHeaders(b, id, RESPONSE_PREFIX, HeadersFactory.asStringHeaders(responseContext.getHeaders()));
+        printPrefixedHeaders(b, id, RESPONSE_PREFIX, responseContext.getStringHeaders());
 
         if (printEntity && responseContext.hasEntity()) {
             OutputStream stream = new LoggingStream(b, responseContext.getEntityStream());

@@ -74,6 +74,10 @@ public interface ApplicationStatistics {
      * Get the time when application destroy (stop) has been finished.
      *
      * @return Destroy time.
+     *
+     * @deprecated deprecated since 2.5 (destroy time will always be {@code null}). Use
+     * {@link org.glassfish.jersey.server.spi.ContainerLifecycleListener#onShutdown(org.glassfish.jersey.server.spi.Container)}
+     * to listen on the destroy.
      */
     public Date getDestroyTime();
 

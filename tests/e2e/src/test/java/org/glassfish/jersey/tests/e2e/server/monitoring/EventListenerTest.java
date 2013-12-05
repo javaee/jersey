@@ -106,7 +106,7 @@ public class EventListenerTest extends JerseyTest {
                 case INITIALIZATION_START:
                     this.appEventInitStart = event;
                     break;
-                case INITIALIZATION_FINISHED:
+                case INITIALIZATION_APP_FINISHED:
                     this.appEventInitFinished = event;
                     break;
             }

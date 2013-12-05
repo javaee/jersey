@@ -62,13 +62,16 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
+import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.internal.ModelHelper;
 import org.glassfish.jersey.server.model.internal.ModelProcessorUtil;
 import org.glassfish.jersey.server.mvc.Template;
+import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.google.common.collect.Lists;
 
@@ -264,12 +267,53 @@ class TemplateModelProcessor implements ModelProcessor {
      * @return enhanced resource model.
      */
     private ResourceModel processModel(final ResourceModel resourceModel, final boolean subResourceModel) {
-        ResourceModel.Builder newModelBuilder = new ResourceModel.Builder(resourceModel, subResourceModel);
+        ResourceModel.Builder newModelBuilder = processTemplateAnnotatedInvocables(resourceModel, subResourceModel);
 
         for (RuntimeResource resource : resourceModel.getRuntimeResourceModel().getRuntimeResources()) {
             ModelProcessorUtil.enhanceResource(resource, newModelBuilder, getEnhancingMethods(resource));
         }
+
         return newModelBuilder.build();
+    }
+
+    /**
+     * Process all {@link Invocable invocables} and defines
+     * {@link org.glassfish.jersey.server.model.Invocable#getRoutingResponseType() routing response types}
+     * as {@link Viewable} for all methods annotated with {@link Template}.
+     *
+     * @param resourceModel resource model to process.
+     * @param subResourceModel determines whether the resource model represents sub-resource.
+     * @return enhanced resource model.
+     *
+     * @return Modified resource model.
+     */
+    private ResourceModel.Builder processTemplateAnnotatedInvocables(ResourceModel resourceModel,
+                                                                     final boolean subResourceModel) {
+        ResourceModel.Builder modelBuilder = new ResourceModel.Builder(subResourceModel);
+        for (Resource resource : resourceModel.getResources()) {
+            Resource newResource = processResource(resource);
+            modelBuilder.addResource(newResource);
+        }
+        return modelBuilder;
+    }
+
+    private Resource processResource(Resource resource) {
+        Resource.Builder resourceBuilder = Resource.builder(resource.getPath());
+        for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
+            ResourceMethod.Builder builder = resourceBuilder.addMethod(resourceMethod);
+            if (resourceMethod.getInvocable().getHandlingMethod().isAnnotationPresent(Template.class)) {
+                builder.routingResponseType(Viewable.class);
+            }
+        }
+        if (resource.getResourceLocator() != null) {
+            resourceBuilder.addMethod(resource.getResourceLocator());
+        }
+
+        for (Resource child : resource.getChildResources()) {
+            resourceBuilder.addChildResource(processResource(child));
+        }
+        return resourceBuilder.build();
+
     }
 
     /**

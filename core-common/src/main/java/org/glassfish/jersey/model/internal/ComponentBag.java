@@ -621,6 +621,19 @@ public class ComponentBag {
     }
 
     /**
+     * Clear and initialize the component registrations from given bag instance.
+     *
+     * @param bag component bag to initialize this one with.
+     */
+    public void loadFrom(final ComponentBag bag) {
+        clear();
+
+        this.classes.addAll(bag.classes);
+        this.instances.addAll(bag.instances);
+        this.models.putAll(bag.models);
+    }
+
+    /**
      * Immutable version of {@link org.glassfish.jersey.model.internal.ComponentBag}.
      *
      * @author Marek Potociar (marek.potociar at oracle.com)

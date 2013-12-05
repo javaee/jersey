@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.grizzly.connector;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -60,6 +61,7 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.JerseyClient;
+import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
@@ -82,6 +84,10 @@ import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
 
 /**
  * The transport using the AsyncHttpClient.
+ * <p>
+ * This connector uses {@link RequestEntityProcessing#CHUNKED chunked encoding} as a default setting. This can
+ * be overriden by the {@link ClientProperties#REQUEST_ENTITY_PROCESSING}.
+ * </p>
  *
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
@@ -333,16 +339,38 @@ public class GrizzlyConnector implements Connector {
 
         builder.setFollowRedirects(requestContext.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
 
-        final com.ning.http.client.Request.EntityWriter entity = this.getHttpEntity(requestContext);
-
-        if (entity != null) {
-            builder = builder.setBody(entity);
+        if (requestContext.hasEntity()) {
+            Boolean enableBuffering = requestContext.resolveProperty(ClientProperties.REQUEST_ENTITY_PROCESSING,
+                    RequestEntityProcessing.class) == RequestEntityProcessing.BUFFERED;
+            if (enableBuffering) {
+                byte[] entityBytes = bufferEntity(requestContext);
+                builder = builder.setBody(entityBytes);
+            } else {
+                builder.setBody(getEntityWriter(requestContext));
+            }
         }
 
         com.ning.http.client.Request result = builder.build();
         writeOutBoundHeaders(requestContext.getHeaders(), result);
 
         return result;
+    }
+
+    private byte[] bufferEntity(ClientRequest requestContext) {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
+        requestContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+
+            @Override
+            public OutputStream getOutputStream(int contentLength) throws IOException {
+                return baos;
+            }
+        });
+        try {
+            requestContext.writeEntity();
+        } catch (IOException e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_BUFFERING_ENTITY(), e);
+        }
+        return baos.toByteArray();
     }
 
     private static void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers,
@@ -364,13 +392,7 @@ public class GrizzlyConnector implements Connector {
         }
     }
 
-    private com.ning.http.client.Request.EntityWriter getHttpEntity(final ClientRequest requestContext) {
-        final Object entity = requestContext.getEntity();
-
-        if (entity == null) {
-            return null;
-        }
-
+    private com.ning.http.client.Request.EntityWriter getEntityWriter(final ClientRequest requestContext) {
         return new com.ning.http.client.Request.EntityWriter() {
             @Override
             public void writeEntity(final OutputStream out) throws IOException {

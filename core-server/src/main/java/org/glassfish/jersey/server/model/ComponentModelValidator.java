@@ -90,11 +90,8 @@ import com.google.common.collect.Lists;
 public final class ComponentModelValidator {
 
     private final List<ResourceModelIssue> issueList = Lists.newLinkedList();
-    private final ServiceLocator locator;
 
     public ComponentModelValidator(ServiceLocator locator) {
-        this.locator = locator;
-
         validators = Lists.newArrayList();
         validators.add(new ResourceValidator());
         validators.add(new RuntimeResourceModelValidator(locator.getService(MessageBodyWorkers.class)));

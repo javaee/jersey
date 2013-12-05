@@ -131,11 +131,11 @@ class ServerScopeProvider extends CommonScopeProvider {
      */
     protected Set<String> getFilteringScopes(final Method resourceMethod, final Class<?> resourceClass) {
         // Method annotations first.
-        Set<String> scope = getFilteringScopes(resourceMethod.getDeclaredAnnotations());
+        Set<String> scope = getFilteringScopes(resourceMethod.getAnnotations());
 
         // Class annotations second.
         if (scope.isEmpty()) {
-            scope = getFilteringScopes(resourceClass.getDeclaredAnnotations());
+            scope = getFilteringScopes(resourceClass.getAnnotations());
         }
 
         return scope;

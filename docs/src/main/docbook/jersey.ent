@@ -296,6 +296,7 @@
 <!ENTITY jersey.client.ClientProperties.READ_TIMEOUT "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#READ_TIMEOUT'>ClientProperties.READ_TIMEOUT</link>" >
 <!ENTITY jersey.client.ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#SUPPRESS_HTTP_COMPLIANCE_VALIDATION'>ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION</link>" >
 <!ENTITY jersey.client.ClientProperties.USE_ENCODING "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#USE_ENCODING'>ClientProperties.USE_ENCODING</link>" >
+<!ENTITY jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#REQUEST_ENTITY_PROCESSING'>ClientProperties.REQUEST_ENTITY_PROCESSING</link>" >
 <!ENTITY jersey.client.ContentEncoder "<link xlink:href='&jersey.javadoc.path;/common/spi/ContentEncoder.html'>ContentEncoder</link>">
 <!ENTITY jersey.client.CsrfProtectionFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/CsrfProtectionFilter.html'>CsrfProtectionFilter</link>">
 <!ENTITY jersey.client.EncodingFeature "<link xlink:href='&jersey.javadoc.path;/client/filter/EncodingFeature.html'>EncodingFeature</link>">
@@ -349,6 +350,7 @@
 <!ENTITY jersey.media.multipart.StreamDataBodyPart "<link xlink:href='&jersey.javadoc.path;/multipart/file/StreamDataBodyPart.html'>StreamDataBodyPart</link>" >
 
 <!ENTITY jersey.server.ChunkedOutput "<link xlink:href='&jersey.javadoc.path;/server/ChunkedOuptut.html'>ChunkedOutput</link>">
+<!ENTITY jersey.server.ContainerLifecycleListener "<link xlink:href='&jersey.javadoc.path;/server/spi/ContainerLifecycleListener.html'>ContainerLifecycleListener</link>">
 <!ENTITY jersey.server.HttpMethodOverrideFilter "<link xlink:href='&jersey.javadoc.path;/server/filter/HttpMethodOverrideFilter.html'>HttpMethodOverrideFilter</link>">
 <!ENTITY jersey.server.JSONP "<link xlink:href='&jersey.javadoc.path;/server/JSONP.html'>@JSONP</link>">
 <!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.path;/server/model/ModelProcessor.html'>ModelProcessor</link>">
@@ -381,6 +383,8 @@
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlFeature.html'>WadlFeature</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
 <!ENTITY jersey.server.WadlGeneratorConfig "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGeneratorConfig.html'>WadlGeneratorConfig</link>">
+
+
 
 <!ENTITY jersey.message.MessageProperties "<link xlink:href='&jersey.javadoc.path;/message/MessageProperties.html'>MessageProperties</link>">
 <!ENTITY jersey.message.MessageBodyWorkers "<link xlink:href='&jersey.javadoc.path;/message/MessageBodyWorkers.html'>MessageBodyWorkers</link>">
@@ -476,6 +480,7 @@
 <!ENTITY jersey.github.jettison.example.path "<link xlink:href='&jersey.github.examples.path;/json-jettison'>JSON Jettison example</link>">
 <!ENTITY jersey.github.json.processing.example.path "<link xlink:href='&jersey.github.examples.path;/json-processing-webapp'>JSON Processing example</link>">
 <!ENTITY jersey.github.json.with.padding.example.path "<link xlink:href='&jersey.github.examples.path;/json-with-padding'>JSON with Padding example</link>">
+<!ENTITY jersey.github.monitoring.example.path "<link xlink:href='&jersey.github.examples.path;/monitoring-webapp'>Monitoring webapp example</link>">
 <!ENTITY jersey.github.moxy.json.example.path "<link xlink:href='&jersey.github.examples.path;/json-moxy'>JSON MOXy example</link>">
 <!ENTITY jersey.github.multipart.example.path "<link xlink:href='&jersey.github.examples.path;/multipart-webapp'>multipart-webapp example</link>">
 <!ENTITY jersey.github.mvc.example.path "<link xlink:href='&jersey.github.examples.path;/bookstore-webapp'>MVC (Bookstore) example</link>">
@@ -747,6 +752,8 @@
 
 <!ENTITY lit.jersey.server.spi.ComponentProvider "<literal>ComponentProvider</literal>">
 <!ENTITY lit.jersey.server.spi.ContainerProvider "<literal>ContainerProvider</literal>">
+
+<!ENTITY lit.jersey.server.ContainerLifecycleListener "<literal>ContainerLifecycleListener</literal>">
 
 <!ENTITY lit.jersey.client.oauth1.AccessToken "<literal>AccessToken</literal>">
 <!ENTITY lit.jersey.client.oauth1.ConsumerCredentials "<literal>ConsumerCredentials</literal>">

@@ -1,0 +1,142 @@
+<!--
+  ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+  ~
+  ~ Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+  ~
+  ~ The contents of this file are subject to the terms of either the GNU
+  ~ General Public License Version 2 only ("GPL") or the Common Development
+  ~ and Distribution License("CDDL") (collectively, the "License").  You
+  ~ may not use this file except in compliance with the License.  You can
+  ~ obtain a copy of the License at
+  ~ http://glassfish.java.net/public/CDDL+GPL_1_1.html
+  ~ or packager/legal/LICENSE.txt.  See the License for the specific
+  ~ language governing permissions and limitations under the License.
+  ~
+  ~ When distributing the software, include this License Header Notice in each
+  ~ file and include the License file at packager/legal/LICENSE.txt.
+  ~
+  ~ GPL Classpath Exception:
+  ~ Oracle designates this particular file as subject to the "Classpath"
+  ~ exception as provided by Oracle in the GPL Version 2 section of the License
+  ~ file that accompanied this code.
+  ~
+  ~ Modifications:
+  ~ If applicable, add the following below the License Header, with the fields
+  ~ enclosed by brackets [] replaced by your own identifying information:
+  ~ "Portions Copyright [year] [name of copyright owner]"
+  ~
+  ~ Contributor(s):
+  ~ If you wish your version of this file to be governed by only the CDDL or
+  ~ only the GPL Version 2, indicate your decision by adding "[Contributor]
+  ~ elects to include this software in this distribution under the [CDDL or GPL
+  ~ Version 2] license."  If you don't indicate a single choice of license, a
+  ~ recipient has the option to distribute your version of this file under
+  ~ either the CDDL, the GPL Version 2 or to extend the choice of license to
+  ~ its licensees as provided above.  However, if you add GPL Version 2 code
+  ~ and therefore, elected the GPL Version 2 license, then the option applies
+  ~ only if the new code is made subject to such option by the copyright
+  ~ holder.
+  -->
+<html>
+<head>
+    <!-- Bootstrap -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-lg-offset-2 col-lg-8">
+            <header class="page-header">
+                <h1>Monitoring JMX MBean sample</h1>
+            </header>
+            <p>
+                To test monitoring JMX MBeans run
+                <a href="http://docs.oracle.com/javase/6/docs/technotes/guides/management/jconsole.html">JConsole</a>
+                (type "jconsole" in the command line) and attach to the process of application server
+                to which the sample is deployed. If you use Jetty (default option), then connect to the process
+                which has jetty in the name (e.g. "org.codehaus.plexus.classworlds.launcher.Launcher jetty:run").
+                Then open tab MBeans and look for <b>org.glassfish.jersey</b> group. There you can find MBeans with
+                statistics information about the deployed application. Go to for example to <b>Uris/resource/MethodTimes/attribues</b>.
+            </p>
+            <p>
+                <b>Make some requests</b> to the deployed application in order to modify statistics. These are available URIs:
+            </p>
+            <h2>Root resource</h2>
+            <table class="table">
+                <tr>
+                    <th>URI</th>
+                    <th>HTTP Method</th>
+                    <th>Consumes / Produces</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><a href="rest/resource">rest/resource</a></td>
+                    <td>GET</td>
+                    <td>*/*</td>
+                    <td>Simple GET resource</td>
+                </tr>
+                <tr>
+                    <td>rest/resource</td>
+                    <td>POST</td>
+                    <td>*/*</td>
+                    <td>Simple POST resource</td>
+                </tr>
+                <tr>
+                    <td><a href="rest/resource/sub">rest/resource/sub</a></td>
+                    <td>GET</td>
+                    <td>*/*</td>
+                    <td>GET resource that takes random time to process (500...1500 ms)</td>
+                </tr>
+                <tr>
+                    <td>rest/resource/sub2</td>
+                    <td>POST</td>
+                    <td>Consumes: text/plain; Produces: text/html</td>
+                    <td>Simple POST resource</td>
+                </tr>
+
+                <tr>
+                    <td><a href="rest/resource/exception">rest/resource/exception</a></td>
+                    <td>GET</td>
+                    <td>*/*</td>
+                    <td>Throws exception which is mapped by the exception mapper (modifies exception statistics under Global/ExceptionMapper)</td>
+                </tr>
+                <tr>
+                    <td>rest/resource/locator</td>
+                    <td>GET</td>
+                    <td></td>
+                    <td>Sub resource locator that returns <b>SubResource</b> (see below)</td>
+                </tr>
+
+            </table>
+
+            <h2>SubResource</h2>
+            <table class="table">
+                <tr>
+                    <th>URI</th>
+                    <th>HTTP Method</th>
+                    <th>Consumes / Produces</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>.../in-subresource (e.g. <a href="rest/resource/locator/in-subresource">rest/resource/locator/in-subresource</a>)</td>
+                    <td>GET</td>
+                    <td>*/*</td>
+                    <td>Simple GET resource (MBean will be added once you reach this URI).</td>
+                </tr>
+                <tr>
+                    <td>.../locator (e.g. <a href="rest/resource/locator/locator/locator/in-subresource">rest/resource/locator/locator/locator/in-subresource</a></td>
+                    <td>GET</td>
+                    <td></td>
+                    <td>Sub resource locator that recursively returns this SubResource (you can call recursively locator many times using this method and always new URI will be added to statistics)</td>
+
+                </tr>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+
+</body>
+</html>

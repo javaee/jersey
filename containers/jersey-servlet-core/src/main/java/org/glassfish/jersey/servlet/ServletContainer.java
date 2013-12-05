@@ -563,9 +563,11 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     @Override
     public void reload(ResourceConfig configuration) {
         try {
+            containerListener.onShutdown(this);
             webComponent = new WebComponent(webComponent.webConfig, configuration);
-            containerListener.onReload(this);
             containerListener = ConfigHelper.getContainerLifecycleListener(webComponent.appHandler);
+            containerListener.onReload(this);
+            containerListener.onStartup(this);
         } catch (ServletException ex) {
             logger.log(Level.SEVERE, "Reload failed", ex);
         }

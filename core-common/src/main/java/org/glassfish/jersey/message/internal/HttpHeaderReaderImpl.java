@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,18 @@ package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
 
-import static org.glassfish.jersey.message.internal.GrammarUtil.*;
+import org.glassfish.jersey.internal.LocalizationMessages;
+
+import static org.glassfish.jersey.message.internal.GrammarUtil.COMMENT;
+import static org.glassfish.jersey.message.internal.GrammarUtil.CONTROL;
+import static org.glassfish.jersey.message.internal.GrammarUtil.QUOTED_STRING;
+import static org.glassfish.jersey.message.internal.GrammarUtil.SEPARATOR;
+import static org.glassfish.jersey.message.internal.GrammarUtil.TOKEN;
+import static org.glassfish.jersey.message.internal.GrammarUtil.filterToken;
+import static org.glassfish.jersey.message.internal.GrammarUtil.getType;
+import static org.glassfish.jersey.message.internal.GrammarUtil.isSeparator;
+import static org.glassfish.jersey.message.internal.GrammarUtil.isToken;
+import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
 
 /**
  * Concrete internal implementation of pull-based HTTP reader.
@@ -100,11 +111,11 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
 
         if (start == index) {
             // no token between separators
-            throw new ParseException("No characters between the separators "
-                    + "'" + startSeparator + "' and '" + endSeparator + "'", index);
+            throw new ParseException(LocalizationMessages.HTTP_HEADER_NO_CHARS_BETWEEN_SEPARATORS(startSeparator, endSeparator),
+                    index);
         } else if (index == length) {
             // no end separator
-            throw new ParseException("No end separator '" + endSeparator + "'", index);
+            throw new ParseException(LocalizationMessages.HTTP_HEADER_NO_END_SEPARATOR(endSeparator), index);
         }
 
         event = Event.Token;
@@ -162,7 +173,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
         }
 
         if (index >= length) {
-            throw new ParseException("End of header", index);
+            throw new ParseException(LocalizationMessages.HTTP_HEADER_END_OF_HEADER(), index);
         }
 
         return header.charAt(index);
@@ -190,7 +201,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
                 return Event.QuotedString;
             case COMMENT:
                 if (!processComments) {
-                    throw new ParseException("Comments are not allowed", index);
+                    throw new ParseException(LocalizationMessages.HTTP_HEADER_COMMENTS_NOT_ALLOWED(), index);
                 }
 
                 processComment();
@@ -205,7 +216,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
                 return Event.Control;
             default:
                 // White space
-                throw new ParseException("White space not allowed", index);
+                throw new ParseException(LocalizationMessages.HTTP_HEADER_WHITESPACE_NOT_ALLOWED(), index);
         }
     }
 
@@ -213,9 +224,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
         boolean filter = false;
         int nesting;
         int start;
-        for (start = ++index, nesting = 1;
-                nesting > 0 && index < length;
-                index++) {
+        for (start = ++index, nesting = 1; nesting > 0 && index < length; index++) {
             char c = header.charAt(index);
             if (c == '\\') {
                 index++;
@@ -229,12 +238,10 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
             }
         }
         if (nesting != 0) {
-            throw new ParseException("Unbalanced comments", index);
+            throw new ParseException(LocalizationMessages.HTTP_HEADER_UNBALANCED_COMMENTS(), index);
         }
 
-        value = (filter)
-                ? filterToken(header, start, index - 1)
-                : header.substring(start, index - 1);
+        value = (filter) ? filterToken(header, start, index - 1) : header.substring(start, index - 1);
     }
 
     private void processQuotedString(boolean preserveBackslash) throws ParseException {
@@ -247,15 +254,13 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.*;
             } else if (c == '\r') {
                 filter = true;
             } else if (c == '"') {
-                value = (filter)
-                        ? filterToken(header, start, index, preserveBackslash)
-                        : header.substring(start, index);
+                value = (filter) ? filterToken(header, start, index, preserveBackslash) : header.substring(start, index);
 
                 index++;
                 return;
             }
         }
 
-        throw new ParseException("Unbalanced quoted string", index);
+        throw new ParseException(LocalizationMessages.HTTP_HEADER_UNBALANCED_QUOTED(), index);
     }
 }

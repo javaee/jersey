@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.spi;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 
+import org.glassfish.jersey.Beta;
 import org.glassfish.jersey.spi.Contract;
 
 /**
@@ -52,10 +53,12 @@ import org.glassfish.jersey.spi.Contract;
  */
 @Contract
 @ConstrainedTo(RuntimeType.SERVER)
+@Beta
 public interface ContainerLifecycleListener {
 
     /**
-     * Invoked at the {@link Container container} start-up.
+     * Invoked at the {@link Container container} start-up. This method is invoked even
+     * when application is reloaded and new instance of application has started.
      *
      * @param container container that has been started.
      */
@@ -69,7 +72,8 @@ public interface ContainerLifecycleListener {
     public void onReload(Container container);
 
     /**
-     * Invoke at the {@link Container container} shut-down.
+     * Invoke at the {@link Container container} shut-down. This method is invoked even before
+     * the application is being stopped as a part of reload.
      *
      * @param container container that has been shut down.
      */

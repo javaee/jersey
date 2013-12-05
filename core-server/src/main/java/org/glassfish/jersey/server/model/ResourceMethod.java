@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.model;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -151,9 +152,11 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         // Invocable
         private Class<?> handlerClass;
         private Object handlerInstance;
+        private Method definitionMethod;
+
         private Method handlingMethod;
-        private Method validateMethod;
         private boolean encodedParams;
+        private Type routingResponseType;
         // NameBound
         private final Collection<Class<? extends Annotation>> nameBindings;
 
@@ -188,6 +191,31 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.encodedParams = false;
 
             this.nameBindings = Sets.newLinkedHashSet();
+        }
+
+
+        /* package */ Builder(final Resource.Builder parent, ResourceMethod originalMethod) {
+            this.parent = parent;
+            this.consumedTypes = Sets.newLinkedHashSet(originalMethod.getConsumedTypes());
+            this.producedTypes = Sets.newLinkedHashSet(originalMethod.getProducedTypes());
+            this.suspended = originalMethod.isSuspendDeclared();
+            this.suspendTimeout = originalMethod.getSuspendTimeout();
+            this.suspendTimeoutUnit = originalMethod.getSuspendTimeoutUnit();
+            this.nameBindings = originalMethod.getNameBindings();
+            this.httpMethod = originalMethod.getHttpMethod();
+            this.managedAsync = originalMethod.isManagedAsyncDeclared();
+
+            Invocable invocable = originalMethod.getInvocable();
+            this.handlingMethod = invocable.getHandlingMethod();
+            this.encodedParams = false;
+            this.routingResponseType = invocable.getRoutingResponseType();
+            Method handlerMethod = invocable.getDefinitionMethod();
+            MethodHandler handler = invocable.getHandler();
+            if (handler.isClassBased()) {
+                handledBy(handler.getHandlerClass(), handlerMethod);
+            } else {
+                handledBy(handler.getHandlerInstance(), handlerMethod);
+            }
         }
 
         /**
@@ -358,14 +386,16 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          * Define a resource method handler binding.
          *
          * @param handlerClass concrete resource method handler class.
-         * @param method       handling method.
+         * @param method       method that will be executed as a resource method. The parameters initializes
+         *                     {@link org.glassfish.jersey.server.model.Invocable#getDefinitionMethod() invocable
+         *                     definition method}.
          * @return updated builder object.
          */
         public Builder handledBy(Class<?> handlerClass, Method method) {
             this.handlerInstance = null;
 
             this.handlerClass = handlerClass;
-            this.handlingMethod = method;
+            this.definitionMethod = method;
 
             return this;
         }
@@ -381,7 +411,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.handlerClass = null;
 
             this.handlerInstance = handlerInstance;
-            this.handlingMethod = method;
+            this.definitionMethod = method;
 
             return this;
         }
@@ -407,13 +437,32 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         }
 
         /**
-         * Define a method that should be used during resource bean validation phase.
+         * Define a specific method of the handling class that will be executed. If the method
+         * is not defined then the method will be equal to the method initialized by
+         * one of the {@code handledBy()} builder methods.
          *
-         * @param validateMethod method used for validation purposes.
+         * @param handlingMethod specific handling method.
          * @return updated builder object.
          */
-        public Builder validateUsing(final Method validateMethod) {
-            this.validateMethod = validateMethod;
+        public Builder handlingMethod(final Method handlingMethod) {
+            this.handlingMethod = handlingMethod;
+
+            return this;
+        }
+
+        /**
+         * Define the response entity type used during the routing for
+         * selection of the resource methods. If this method is not called then
+         * the {@link Invocable#getRoutingResponseType()} will be equal to
+         * {@link org.glassfish.jersey.server.model.Invocable#getResponseType()} which
+         * is the default configuration state.
+         *
+         * @param routingResponseType Routing response type.
+         * @return updated builder object.
+         * @see org.glassfish.jersey.server.model.Invocable#getRoutingResponseType()
+         */
+        public Builder routingResponseType(Type routingResponseType) {
+            this.routingResponseType = routingResponseType;
 
             return this;
         }
@@ -451,11 +500,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
                 handler = MethodHandler.create(handlerInstance);
             }
 
-            if (validateMethod == null) {
-                return Invocable.create(handler, handlingMethod, encodedParams);
-            } else {
-                return Invocable.create(handler, handlingMethod, validateMethod, encodedParams);
-            }
+            return Invocable.create(handler, definitionMethod, handlingMethod, encodedParams, routingResponseType);
         }
     }
 

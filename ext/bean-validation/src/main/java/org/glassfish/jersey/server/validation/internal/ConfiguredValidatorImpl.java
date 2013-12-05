@@ -128,17 +128,15 @@ class ConfiguredValidatorImpl implements ConfiguredValidator {
 
         if (resourceMethod != null
                 && configuration.getBootstrapConfiguration().isExecutableValidationEnabled()) {
-            final Method validationMethod = resourceMethod.getValidateMethod();
+            final Method handlingMethod = resourceMethod.getHandlingMethod();
 
             // Resource method validation - input parameters.
-            final Method handlingMethod = resourceMethod.getHandlingMethod();
-            final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
-                    validationMethod.getParameterTypes());
+            final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(handlingMethod.getName(),
+                    handlingMethod.getParameterTypes());
 
             if (methodDescriptor != null
-                    && methodDescriptor.hasConstrainedParameters()
-                    && validateOnExecutionHandler.validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
-                constraintViolations.addAll(forExecutables().validateParameters(resource, validationMethod, args));
+                    && methodDescriptor.hasConstrainedParameters()) {
+                constraintViolations.addAll(forExecutables().validateParameters(resource, handlingMethod, args));
             }
         }
 
@@ -151,21 +149,21 @@ class ConfiguredValidatorImpl implements ConfiguredValidator {
     public void validateResult(final Object resource, final Invocable resourceMethod, final Object result) {
         if (configuration.getBootstrapConfiguration().isExecutableValidationEnabled()) {
             final Set<ConstraintViolation<Object>> constraintViolations = Sets.newHashSet();
-            final Method validationMethod = resourceMethod.getValidateMethod();
+            final Method handlingMethod = resourceMethod.getHandlingMethod();
 
             final BeanDescriptor beanDescriptor = getConstraintsForClass(resource.getClass());
-            final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(validationMethod.getName(),
-                    validationMethod.getParameterTypes());
+            final MethodDescriptor methodDescriptor = beanDescriptor.getConstraintsForMethod(handlingMethod.getName(),
+                    handlingMethod.getParameterTypes());
 
-            final Method handlingMethod = resourceMethod.getHandlingMethod();
+            final Method definitionMethod = resourceMethod.getDefinitionMethod();
 
             if (methodDescriptor != null
                     && methodDescriptor.hasConstrainedReturnValue()
-                    && validateOnExecutionHandler.validateMethod(resource.getClass(), handlingMethod, validationMethod)) {
-                constraintViolations.addAll(forExecutables().validateReturnValue(resource, validationMethod, result));
+                    && validateOnExecutionHandler.validateMethod(resource.getClass(), definitionMethod, handlingMethod)) {
+                constraintViolations.addAll(forExecutables().validateReturnValue(resource, handlingMethod, result));
 
                 if (result instanceof Response) {
-                    constraintViolations.addAll(forExecutables().validateReturnValue(resource, validationMethod,
+                    constraintViolations.addAll(forExecutables().validateReturnValue(resource, handlingMethod,
                             ((Response) result).getEntity()));
                 }
             }

@@ -68,7 +68,6 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -549,7 +548,7 @@ final class MethodSelectingRouter implements Router {
                     // and either there is an entity, or we are responding to a HEAD request
                     if (responseContext.getMediaType() == null
                             && (responseContext.hasEntity()
-                                    || HttpMethod.HEAD.equals(responseContext.getRequestContext().getMethod()))) {
+                            || HttpMethod.HEAD.equals(responseContext.getRequestContext().getMethod()))) {
 
                         MediaType effectiveResponseType = determineResponseMediaType(responseContext.getEntityClass(),
                                 responseContext.getEntityType(), methodSelector.selected, acceptableMediaTypes);
@@ -597,8 +596,8 @@ final class MethodSelectingRouter implements Router {
         final Invocable invocable = resourceMethod.getInvocable();
 
         // Entity class can be null when considering HEAD method || empty entity.
-        final Class<?> responseEntityClass = entityClass == null ? invocable.getRawResponseType() : entityClass;
-        final Method handlingMethod = invocable.getValidateMethod();
+        final Class<?> responseEntityClass = entityClass == null ? invocable.getRawRoutingResponseType() : entityClass;
+        final Method handlingMethod = invocable.getHandlingMethod();
 
         CombinedClientServerMediaType selected = null;
 
@@ -637,11 +636,12 @@ final class MethodSelectingRouter implements Router {
                         }
                     }
                 }
-                // Found media type for current writer.
-                if (selected != null) {
-                    return selected.getCombinedMediaType();
-                }
             }
+        }
+
+        // Found media type for current writer.
+        if (selected != null) {
+            return selected.getCombinedMediaType();
         }
 
         // If the media type couldn't be determined, choose pre-selected one and wait whether interceptors change the mediaType
@@ -651,21 +651,21 @@ final class MethodSelectingRouter implements Router {
 
     private boolean isWriteable(final RequestSpecificConsumesProducesAcceptor candidate) {
         final Invocable invocable = candidate.methodAcceptorPair.model.getInvocable();
-        final Class<?> responseType = Primitives.wrap(invocable.getRawResponseType());
+        final Class<?> responseType = Primitives.wrap(invocable.getRawRoutingResponseType());
 
         if (Response.class.isAssignableFrom(responseType)
                 || Void.class.isAssignableFrom(responseType)) {
             return true;
         }
 
-        final Method handlingMethod = invocable.getValidateMethod();
-        final Type genericType = handlingMethod.getGenericReturnType();
+        final Type genericType = invocable.getRoutingResponseType();
 
         final Type genericReturnType = genericType instanceof GenericType ?
-                ReflectionHelper.getTypeArgument(genericType, 0) : genericType;
+                ((GenericType) genericType).getType() : genericType;
 
         for (final MessageBodyWriter writer : workers.getMessageBodyWritersForType(responseType)) {
-            if (writer.isWriteable(responseType, genericReturnType, handlingMethod.getDeclaredAnnotations(),
+            if (writer.isWriteable(responseType, genericReturnType,
+                    invocable.getHandlingMethod().getDeclaredAnnotations(),
                     candidate.produces.getCombinedMediaType())) {
                 return true;
             }
@@ -676,7 +676,7 @@ final class MethodSelectingRouter implements Router {
 
     private boolean isReadable(final RequestSpecificConsumesProducesAcceptor candidate) {
         final Invocable invocable = candidate.methodAcceptorPair.model.getInvocable();
-        final Method handlingMethod = invocable.getValidateMethod();
+        final Method handlingMethod = invocable.getHandlingMethod();
         final Parameter entityParam = getEntityParam(invocable);
 
         if (entityParam == null) {
@@ -685,8 +685,9 @@ final class MethodSelectingRouter implements Router {
             final Class<?> entityType = entityParam.getRawType();
 
             for (final MessageBodyReader reader : workers.getMessageBodyReadersForType(entityType)) {
-                if (reader.isReadable(entityType, handlingMethod.getGenericReturnType(), handlingMethod.getDeclaredAnnotations
-                        (), candidate.consumes.getCombinedMediaType())) {
+                if (reader.isReadable(entityType, entityParam.getType(),
+                        handlingMethod.getDeclaredAnnotations
+                                (), candidate.consumes.getCombinedMediaType())) {
                     return true;
                 }
             }

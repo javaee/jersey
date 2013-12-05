@@ -60,6 +60,7 @@
             <useDefaultExcludes>true</useDefaultExcludes>
             <excludes>
                 <exclude>pom.xml</exclude>
+                <exclude>**/WEB-INF/web.xml</exclude>
                 <exclude>**/target/**</exclude>
                 <exclude>**/*.iml</exclude>
                 <exclude>**/glassfish-web.xml</exclude>
@@ -69,6 +70,10 @@
         <fileSet>
             <directory>${project.basedir}/target/wls-pom-file</directory>
             <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/target/wls-web-xml-file/src/main/webapp/WEB-INF</directory>
+            <outputDirectory>/src/main/webapp/WEB-INF</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/../etc/wls</directory>

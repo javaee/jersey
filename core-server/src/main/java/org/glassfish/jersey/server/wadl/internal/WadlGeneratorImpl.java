@@ -100,7 +100,7 @@ public class WadlGeneratorImpl implements WadlGenerator {
         com.sun.research.ws.wadl.Method wadlMethod =
                 new com.sun.research.ws.wadl.Method();
         wadlMethod.setName(m.getHttpMethod());
-        wadlMethod.setId(m.getInvocable().getHandlingMethod().getName());
+        wadlMethod.setId(m.getInvocable().getDefinitionMethod().getName());
         return wadlMethod;
     }
 

@@ -174,7 +174,7 @@ public class RuntimeResourceModelValidator extends AbstractResourceModelVisitor 
             result.addAll(workers.getMessageBodyWriterMediaTypes(
                     invocable.getRawResponseType(),
                     invocable.getResponseType(),
-                    invocable.getHandlingMethod().getDeclaredAnnotations()));
+                    invocable.getHandlingMethod().getAnnotations()));
         }
         return result.isEmpty() ? StarTypeList : result;
     }

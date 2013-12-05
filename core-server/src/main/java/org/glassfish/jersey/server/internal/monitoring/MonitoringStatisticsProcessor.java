@@ -74,6 +74,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 class MonitoringStatisticsProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(MonitoringStatisticsProcessor.class.getName());
+    public static final int SHUTDOWN_TIMEOUT = 10;
     private final MonitoringEventListener monitoringEventListener;
     private final MonitoringStatisticsImpl.Builder statisticsBuilder;
     private final List<MonitoringStatisticsListener> statisticsCallbackList;
@@ -99,7 +100,6 @@ class MonitoringStatisticsProcessor {
      * into {@link org.glassfish.jersey.server.monitoring.MonitoringStatistics}.
      */
     public void startMonitoringWorker() {
-
         scheduler.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -116,7 +116,7 @@ class MonitoringStatisticsProcessor {
 
                 final MonitoringStatisticsImpl immutableStats = statisticsBuilder.build();
                 final Iterator<MonitoringStatisticsListener> iterator = statisticsCallbackList.iterator();
-                while (iterator.hasNext()) {
+                while (iterator.hasNext() && !Thread.currentThread().isInterrupted()) {
                     MonitoringStatisticsListener monitoringStatisticsListener = iterator.next();
                     try {
                         monitoringStatisticsListener.onStatistics(immutableStats);
@@ -126,7 +126,6 @@ class MonitoringStatisticsProcessor {
                         iterator.remove();
                     }
                 }
-
             }
         }, 0, 500, TimeUnit.MILLISECONDS);
     }
@@ -138,17 +137,9 @@ class MonitoringStatisticsProcessor {
                 case INITIALIZATION_FINISHED:
                 case RELOAD_FINISHED:
                     final ApplicationStatisticsImpl initStatistics = new ApplicationStatisticsImpl(appEvent.getResourceConfig(),
-                            new Date(monitoringEventListener.getApplicationStartTime()), null, appEvent.getRegisteredClasses(),
+                            new Date(monitoringEventListener.getApplicationStartTime()), appEvent.getRegisteredClasses(),
                             appEvent.getRegisteredInstances(), appEvent.getProviders());
                     statisticsBuilder.setApplicationStatisticsImpl(initStatistics);
-                    break;
-
-                case DESTROY_FINISHED:
-                    final ApplicationStatisticsImpl destroyStatistics = new ApplicationStatisticsImpl(appEvent.getResourceConfig(),
-                            new Date(monitoringEventListener.getApplicationStartTime()), null, appEvent.getRegisteredClasses(),
-                            appEvent.getRegisteredInstances(), appEvent.getProviders());
-                    statisticsBuilder.setApplicationStatisticsImpl(destroyStatistics);
-
                     break;
             }
 
@@ -168,7 +159,6 @@ class MonitoringStatisticsProcessor {
 
             mapperStats.addMapping(event.isResponseSuccessfullyMapped(), 1);
         }
-
     }
 
     private void processRequestItems() {
@@ -190,7 +180,6 @@ class MonitoringStatisticsProcessor {
         }
     }
 
-
     private void processResponseCodeEvents() {
         final Queue<Integer> responseEvents = monitoringEventListener.getResponseStatuses();
         Integer code;
@@ -201,5 +190,19 @@ class MonitoringStatisticsProcessor {
 
     }
 
-
+    /**
+     * Stops processing of any further execution of this processor. The internal thread will finish
+     * processing of actual events and will be not executed again. The method finishes after the
+     * internal thread finish its processing loop.
+     *
+     * @throw ProcessingException thrown when waiting for the thread to finish the work is interrupted. In this
+     * case internal listeners will be still shutdown.
+     */
+    void shutDown() throws InterruptedException {
+        scheduler.shutdown();
+        boolean success = scheduler.awaitTermination(SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
+        if (!success) {
+            LOGGER.warning(LocalizationMessages.ERROR_MONITORING_SCHEDULER_DESTROY_TIMEOUT());
+        }
+    }
 }

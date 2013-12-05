@@ -44,7 +44,6 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
-import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 
@@ -58,7 +57,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class MonitoringContainerListener extends AbstractContainerLifecycleListener {
+public class MonitoringContainerListener implements ContainerLifecycleListener {
 
     private volatile ApplicationEvent initFinishedEvent;
     private volatile ApplicationEventListener listener;
@@ -74,6 +73,13 @@ public class MonitoringContainerListener extends AbstractContainerLifecycleListe
     public void init(ApplicationEventListener listener, ApplicationEvent initFinishedEvent) {
         this.listener = listener;
         this.initFinishedEvent = initFinishedEvent;
+    }
+
+    @Override
+    public void onStartup(Container container) {
+        if (listener != null) {
+            listener.onEvent(getApplicationEvent(ApplicationEvent.Type.INITIALIZATION_FINISHED));
+        }
     }
 
     @Override
@@ -93,7 +99,6 @@ public class MonitoringContainerListener extends AbstractContainerLifecycleListe
     @Override
     public void onShutdown(Container container) {
         if (listener != null) {
-
             listener.onEvent(getApplicationEvent(ApplicationEvent.Type.DESTROY_FINISHED));
         }
     }

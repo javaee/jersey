@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.jersey1667;
+package org.glassfish.jersey.tests.integration.jersey1964;
 
 import java.net.ConnectException;
 
@@ -51,8 +51,6 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.glassfish.jersey.tests.integration.jersey1964.Issue1964Resource;
-import org.glassfish.jersey.tests.integration.jersey1964.Jersey1964;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
