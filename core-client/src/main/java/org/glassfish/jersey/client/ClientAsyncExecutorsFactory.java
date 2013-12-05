@@ -42,6 +42,7 @@ package org.glassfish.jersey.client;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.glassfish.jersey.process.internal.ExecutorsFactory;
 import org.glassfish.jersey.spi.RequestExecutorsProvider;
@@ -60,6 +61,43 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ClientAsyncExecutorsFactory extends ExecutorsFactory<ClientRequest> {
+
+    /**
+     * A request executors provider that creates a cached thread pool.
+     */
+    private static class CachedThreadPoolRequestExecutorsProvider implements RequestExecutorsProvider {
+
+        private final ThreadFactory threadFactory;
+
+        private CachedThreadPoolRequestExecutorsProvider(ThreadFactory threadFactory) {
+            this.threadFactory = threadFactory;
+        }
+
+        @Override
+        public ExecutorService getRequestingExecutor() {
+            return Executors.newCachedThreadPool(threadFactory);
+        }
+    }
+
+    /**
+     * A request executors provider that creates a fixed thread pool.
+     */
+    private static class FixedThreadPoolRequestExecutorsProvider implements RequestExecutorsProvider {
+
+        private final ThreadFactory threadFactory;
+        private final int threadPoolSize;
+
+        private FixedThreadPoolRequestExecutorsProvider(ThreadFactory threadFactory, int threadPoolSize) {
+            this.threadFactory = threadFactory;
+            this.threadPoolSize = threadPoolSize;
+        }
+
+        @Override
+        public ExecutorService getRequestingExecutor() {
+            return Executors.newFixedThreadPool(threadPoolSize, threadFactory);
+        }
+    }
+
     private final ExecutorService requestingExecutor;
     private final ExecutorService respondingExecutor;
 
@@ -68,16 +106,14 @@ class ClientAsyncExecutorsFactory extends ExecutorsFactory<ClientRequest> {
      *
      * @param locator Injected HK2 service locator.
      */
-    public ClientAsyncExecutorsFactory(ServiceLocator locator) {
+    public ClientAsyncExecutorsFactory(ServiceLocator locator, int threadPoolSize) {
         super(locator);
-        this.requestingExecutor = getInitialRequestingExecutor(new RequestExecutorsProvider() {
-
-            @Override
-            public ExecutorService getRequestingExecutor() {
-                return Executors.newCachedThreadPool(
-                        new ThreadFactoryBuilder().setNameFormat("jersey-client-async-executor-%d").build());
-            }
-        });
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("jersey-client-async-executor-%d").build();
+        this.requestingExecutor = getInitialRequestingExecutor(
+                threadPoolSize == 0 ? new CachedThreadPoolRequestExecutorsProvider(threadFactory)
+                        : new FixedThreadPoolRequestExecutorsProvider(threadFactory, threadPoolSize)
+        );
         this.respondingExecutor = getInitialRespondingExecutor(new ResponseExecutorsProvider() {
 
             @Override

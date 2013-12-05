@@ -113,7 +113,6 @@ public final class ClientProperties {
      * <p />
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    // TODO add support in default connector (ported from Jersey 1.x);
     public static final String ASYNC_THREADPOOL_SIZE = "jersey.config.client.async.threadPoolSize";
 
     /**
