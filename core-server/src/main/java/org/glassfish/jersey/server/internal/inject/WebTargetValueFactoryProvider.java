@@ -40,11 +40,11 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
-import java.net.URI;
 import java.security.AccessController;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -262,24 +262,27 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
             // no need for try-catch - unlike for @*Param annotations, any issues with @Uri would usually be caused
             // by incorrect server code, so the default runtime exception mapping to 500 is appropriate
             final ExtendedUriInfo uriInfo = getContainerRequest().getUriInfo();
-            URI uri = UriBuilder.fromUri(this.uri).buildFromEncodedMap(Maps.transformValues(
-                    uriInfo.getPathParameters(),
+
+            final Map<String, Object> pathParamValues = Maps.transformValues(uriInfo.getPathParameters(),
                     new Function<List<String>, Object>() {
-                        @Override
-                        public Object apply(List<String> input) {
-                            return input.isEmpty() ? null : input.get(0);
-                        }
-                    }
-            ));
 
-            ManagedClient mc = client.get();
+                @Override
+                public Object apply(List<String> input) {
+                    return input.isEmpty() ? null : input.get(0);
+                }
+            });
+            UriBuilder uriBuilder = UriBuilder.fromUri(this.uri).resolveTemplates(pathParamValues);
 
-            if (!uri.isAbsolute()) {
-                String rootUri = (mc.customBaseUri.isEmpty()) ? uriInfo.getBaseUri().toString() : mc.customBaseUri;
-                uri = UriBuilder.fromUri(rootUri).path(uri.toString()).build();
+            final ManagedClient managedClient = client.get();
+
+            if (!uriBuilder.build().isAbsolute()) {
+                final String customBaseUri = managedClient.customBaseUri;
+                final String rootUri = customBaseUri.isEmpty() ? uriInfo.getBaseUri().toString() : customBaseUri;
+
+                uriBuilder = UriBuilder.fromUri(rootUri).path(uriBuilder.toTemplate());
             }
 
-            return mc.instance.target(uri);
+            return managedClient.instance.target(uriBuilder);
         }
     }
 

@@ -56,8 +56,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.Uri;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -184,15 +185,12 @@ public class UriTest extends AbstractTest {
     public void testGetParam1() throws ExecutionException, InterruptedException {
         initiateWebApplication(Resource2.class);
 
-        try {
-            final ContainerResponse response = apply(
-                    RequestContextBuilder.from("/test/1", "GET").
-                            build()
-            );
-            fail("Execution exception expected.");
-        } catch (ExecutionException ex) {
-            return;
-        }
+        final ContainerResponse response = apply(
+                RequestContextBuilder.from("/test/1", "GET").build()
+        );
+
+        // Uri Templates should not be resolved.
+        assertThat(response.getEntity().toString(), equalTo("http://oracle.com/%7Bparam%7D"));
     }
 
     @Test
@@ -212,15 +210,12 @@ public class UriTest extends AbstractTest {
     public void testGetRelative1() throws ExecutionException, InterruptedException {
         initiateWebApplication(Resource3.class);
 
-        try {
-            final ContainerResponse response = apply(
-                    RequestContextBuilder.from("/test/1", "GET").
-                            build()
-            );
-            fail("Execution exception expected.");
-        } catch (ExecutionException ex) {
-            return;
-        }
+        final ContainerResponse response = apply(
+                RequestContextBuilder.from("/test/1", "GET").build()
+        );
+
+        // Uri Templates should not be resolved.
+        assertThat(response.getEntity().toString(), equalTo("/%7Bparam%7D"));
     }
 
     @Test
@@ -277,5 +272,40 @@ public class UriTest extends AbstractTest {
         );
 
         assertEquals("http://oracle.com/relative", response.getEntity());
+    }
+
+    @Path("test")
+    public static class Resource5 {
+
+        @Uri("http://oracle.com/{template}")
+        WebTarget webTarget1;
+
+        @GET
+        @Path("1")
+        public String doGet1() {
+            return webTarget1.resolveTemplate("template", "foo").getUri().toString();
+        }
+
+        @GET
+        @Path("2")
+        public String doGet2(@Uri("http://oracle.com/{template}") WebTarget webTarget2) {
+            return webTarget2.resolveTemplate("template", "bar").getUri().toString();
+        }
+    }
+
+    @Test
+    public void testResolveTemplateInFieldManagedClient() throws Exception {
+        initiateWebApplication(Resource5.class);
+        final ContainerResponse response = apply(RequestContextBuilder.from("/test/1", "GET").build());
+
+        assertThat(response.getEntity().toString(), equalTo("http://oracle.com/foo"));
+    }
+
+    @Test
+    public void testResolveTemplateInParamManagedClient() throws Exception {
+        initiateWebApplication(Resource5.class);
+        final ContainerResponse response = apply(RequestContextBuilder.from("/test/2", "GET").build());
+
+        assertThat(response.getEntity().toString(), equalTo("http://oracle.com/bar"));
     }
 }
