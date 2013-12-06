@@ -66,6 +66,10 @@ public class EchoParamConstructorResource {
 
     String a;
 
+    // no-arg ctor is required by WLS
+    public EchoParamConstructorResource() {
+    }
+
     @Inject
     public EchoParamConstructorResource(@PathParam("a") String a) {
         this.a = a;
