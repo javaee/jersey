@@ -38,13 +38,77 @@
  * holder.
  */
 
+package org.glassfish.jersey.tests.integration.jersey2031;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
+import org.glassfish.jersey.server.mvc.Template;
+import org.glassfish.jersey.server.mvc.Viewable;
+
 /**
- * Jersey server-side MVC support for servlet containers.
- * <p/>
- * Note: Jersey applications that want to use MVC features should be registered as filters instead of servlets in web.xml (to
- * fully take advantage of {@link org.glassfish.jersey.server.mvc.jsp.JspMvcFeature}). Web.xml-less deployment of an application
- * using MVC is not supported at the moment.
+ * Test resource.
  *
- * @see org.glassfish.jersey.server.mvc.jsp.JspTemplateProcessor
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-package org.glassfish.jersey.server.mvc.jsp;
+@Path("/")
+public class Issue2031Resource {
+
+    private final static Model model;
+    private final static String absolutePath;
+
+    static {
+        absolutePath = "/" + ResolvingClass.class.getName().replaceAll("\\.", "/").replace('$', '/') + "/index.jsp";
+        model = new Model();
+    }
+
+    @GET
+    @Path("viewable-relative")
+    @Produces("text/html")
+    public Viewable viewableRelative() {
+        return new Viewable("index", model, ResolvingClass.class);
+    }
+
+    @GET
+    @Path("viewable-absolute")
+    @Produces("text/html")
+    public Viewable viewableAbsolute() {
+        return new Viewable(absolutePath, model, ResolvingClass.class);
+    }
+
+    @GET
+    @Path("template-relative")
+    @Produces("text/html")
+    @Template(name = "index", resolvingClass = ResolvingClass.class)
+    public Model templateRelative() {
+        return model;
+    }
+
+    @GET
+    @Path("template-absolute")
+    @Produces("text/html")
+    @Template(
+            name = "/org/glassfish/jersey/tests/integration/jersey2031/Issue2031Resource/ResolvingClass/index.jsp",
+            resolvingClass = ResolvingClass.class
+    )
+    public Model templateAbsolute() {
+        return model;
+    }
+
+    public static class ResolvingClass {}
+
+    public static class Model {
+
+        private String index = "index";
+        private String include = "include";
+
+        public String getIndex() {
+            return index;
+        }
+
+        public String getInclude() {
+            return include;
+        }
+    }
+}

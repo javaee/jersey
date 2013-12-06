@@ -49,9 +49,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
+import javax.servlet.jsp.JspContext;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
+
+import org.glassfish.jersey.server.mvc.internal.TemplateHelper;
+import org.glassfish.jersey.server.mvc.jsp.internal.LocalizationMessages;
 
 /**
  * Includes a side JSP file for the {@code resolvingClass} class.
@@ -84,21 +88,15 @@ import javax.servlet.jsp.tagext.SimpleTagSupport;
  */
 public class Include extends SimpleTagSupport {
 
-    private Class<?> resolvingClass;
     private String page;
 
     /**
      * Specifies the name of the JSP to be included.
+     *
+     * @param page page to be included.
      */
     public void setPage(String page) {
         this.page = page;
-    }
-
-    /**
-     * Specifies the resolving class for which JSP will be included.
-     */
-    public void setResolvingClass(Class<?> resolvingClass) {
-        this.resolvingClass = resolvingClass;
     }
 
     private Object getPageObject(String name) {
@@ -106,57 +104,51 @@ public class Include extends SimpleTagSupport {
     }
 
     public void doTag() throws JspException, IOException {
-        Class<?> resolvingClass = (Class<?>) getJspContext().getAttribute("resolvingClass", PageContext.REQUEST_SCOPE);
-        final Class<?> oldResolvingClass = resolvingClass;
-        if (this.resolvingClass != null) {
-            resolvingClass = this.resolvingClass;
-        }
+        final JspContext jspContext = getJspContext();
+        final Class<?> resolvingClass = (Class<?>) jspContext.getAttribute(RequestDispatcherWrapper.RESOLVING_CLASS_ATTRIBUTE_NAME,
+                PageContext.REQUEST_SCOPE);
+        final String basePath = (String) jspContext.getAttribute(RequestDispatcherWrapper.BASE_PATH_ATTRIBUTE_NAME,
+                PageContext.REQUEST_SCOPE);
 
-        ServletConfig cfg = (ServletConfig) getPageObject(PageContext.CONFIG);
-        ServletContext sc = cfg.getServletContext();
+        final ServletConfig servletConfig = (ServletConfig) getPageObject(PageContext.CONFIG);
+        final ServletContext servletContext = servletConfig.getServletContext();
 
-        String basePath = (String) getJspContext().getAttribute("_basePath", PageContext.REQUEST_SCOPE);
-        for (Class c = resolvingClass; c != Object.class; c = c.getSuperclass()) {
-            String name = basePath;
-            if (c != null) {
-                name += "/" + c.getName().replace('.', '/');
-            }
-            name += '/' + page;
+        for (Class<?> clazz = resolvingClass; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            final String template = basePath + TemplateHelper.getAbsolutePath(clazz, page, '/');
 
-            if (sc.getResource(name) != null) {
-                // Tomcat returns a RequestDispatcher even if the JSP file doesn't exist.
-                // so check if the resource exists first.
-                RequestDispatcher disp = sc.getRequestDispatcher(name);
-                if (disp != null) {
-                    getJspContext().setAttribute("resolvingClass", resolvingClass, PageContext.REQUEST_SCOPE);
+            if (servletContext.getResource(template) != null) {
+                // Tomcat returns a RequestDispatcher even if the JSP file doesn't exist so check if the resource exists first.
+                final RequestDispatcher dispatcher = servletContext.getRequestDispatcher(template);
+
+                if (dispatcher != null) {
                     try {
-                        HttpServletRequest request = (HttpServletRequest) getPageObject(PageContext.REQUEST);
-                        disp.include(request, new Wrapper((HttpServletResponse) getPageObject(PageContext.RESPONSE),
-                                new PrintWriter(getJspContext().getOut())));
+                        final HttpServletRequest request = (HttpServletRequest) getPageObject(PageContext.REQUEST);
+                        final HttpServletResponse response = (HttpServletResponse) getPageObject(PageContext.RESPONSE);
+
+                        dispatcher.include(request,
+                                new Wrapper(response,  new PrintWriter(jspContext.getOut())));
                     } catch (ServletException e) {
                         throw new JspException(e);
-                    } finally {
-                        getJspContext().setAttribute("resolvingClass", oldResolvingClass, PageContext.REQUEST_SCOPE);
                     }
                     return;
                 }
             }
         }
 
-        throw new JspException("Unable to find '" + page + "' for " + resolvingClass);
+        throw new JspException(LocalizationMessages.UNABLE_TO_FIND_PAGE_FOR_RESOLVING_CLASS(page, resolvingClass));
     }
 }
 
 class Wrapper extends HttpServletResponseWrapper {
 
-    private final PrintWriter pw;
+    private final PrintWriter writer;
 
-    public Wrapper(HttpServletResponse httpServletResponse, PrintWriter w) {
+    Wrapper(HttpServletResponse httpServletResponse, PrintWriter w) {
         super(httpServletResponse);
-        this.pw = w;
+        this.writer = w;
     }
 
     public PrintWriter getWriter() throws IOException {
-        return pw;
+        return writer;
     }
 }

@@ -38,13 +38,64 @@
  * holder.
  */
 
+package org.glassfish.jersey.tests.integration.jersey2031;
+
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 /**
- * Jersey server-side MVC support for servlet containers.
- * <p/>
- * Note: Jersey applications that want to use MVC features should be registered as filters instead of servlets in web.xml (to
- * fully take advantage of {@link org.glassfish.jersey.server.mvc.jsp.JspMvcFeature}). Web.xml-less deployment of an application
- * using MVC is not supported at the moment.
+ * Reproducer tests for JERSEY-2164.
  *
- * @see org.glassfish.jersey.server.mvc.jsp.JspTemplateProcessor
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-package org.glassfish.jersey.server.mvc.jsp;
+public class Jersey2031ITCase extends JerseyTest {
+
+    @Override
+    protected Application configure() {
+        return new Jersey2031();
+    }
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
+    }
+
+    @Test
+    public void testTemplateRelative() throws Exception {
+        _test("template-relative");
+    }
+
+    @Test
+    public void testTemplateAbsolute() throws Exception {
+        _test("template-absolute");
+    }
+
+    @Test
+    public void testViewableRelative() throws Exception {
+        _test("viewable-relative");
+    }
+
+    @Test
+    public void testViewableAbsolute() throws Exception {
+        _test("viewable-absolute");
+    }
+
+    private void _test(final String path) throws Exception {
+        final Response response = target(path).request("text/html").get();
+        final String page = response.readEntity(String.class);
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(page, containsString("index"));
+        assertThat(page, containsString("include"));
+    }
+}

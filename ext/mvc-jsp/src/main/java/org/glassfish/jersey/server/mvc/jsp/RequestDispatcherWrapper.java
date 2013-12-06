@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.mvc.jsp.internal;
+package org.glassfish.jersey.server.mvc.jsp;
 
 import java.io.IOException;
 
@@ -55,13 +55,14 @@ import org.glassfish.jersey.server.mvc.Viewable;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public final class RequestDispatcherWrapper implements RequestDispatcher {
+final class RequestDispatcherWrapper implements RequestDispatcher {
 
-    private final static String BASE_PATH_ATTRIBUTE_NAME = "_basePath";
-    private final static String MODEL_ATTRIBUTE_NAME = "it";
-    private final static String RESOLVING_CLASS_ATTRIBUTE_NAME = "resolvingClass";
-    private final static String REQUEST_ATTRIBUTE_NAME = "_request";
-    private final static String RESPONSE_ATTRIBUTE_NAME = "_response";
+    final static String BASE_PATH_ATTRIBUTE_NAME = "_basePath";
+    final static String OLD_MODEL_ATTRIBUTE_NAME = "it";
+    final static String MODEL_ATTRIBUTE_NAME = "model";
+    final static String RESOLVING_CLASS_ATTRIBUTE_NAME = "resolvingClass";
+    final static String REQUEST_ATTRIBUTE_NAME = "_request";
+    final static String RESPONSE_ATTRIBUTE_NAME = "_response";
 
     private final RequestDispatcher dispatcher;
 
@@ -90,6 +91,8 @@ public final class RequestDispatcherWrapper implements RequestDispatcher {
         final Object oldResolvingClass = request.getAttribute(RESOLVING_CLASS_ATTRIBUTE_NAME);
 
         request.setAttribute(RESOLVING_CLASS_ATTRIBUTE_NAME, viewable.getResolvingClass());
+
+        request.setAttribute(OLD_MODEL_ATTRIBUTE_NAME, viewable.getModel());
         request.setAttribute(MODEL_ATTRIBUTE_NAME, viewable.getModel());
 
         request.setAttribute(BASE_PATH_ATTRIBUTE_NAME, basePath);

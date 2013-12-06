@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.mvc.jsp.internal;
+package org.glassfish.jersey.server.mvc.jsp;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -69,7 +69,7 @@ import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.internal.DefaultTemplateProcessor;
-import org.glassfish.jersey.server.mvc.jsp.JspProperties;
+import org.glassfish.jersey.server.mvc.jsp.internal.LocalizationMessages;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
 
 import com.google.common.collect.Lists;
@@ -80,7 +80,7 @@ import com.google.common.collect.Lists;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
+final class JspTemplateProcessor extends DefaultTemplateProcessor<String> {
 
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(JspTemplateProcessor.class.getName()), Level.FINEST);

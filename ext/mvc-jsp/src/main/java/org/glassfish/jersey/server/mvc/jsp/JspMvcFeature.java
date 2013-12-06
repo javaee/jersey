@@ -46,7 +46,6 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.server.mvc.MvcFeature;
-import org.glassfish.jersey.server.mvc.jsp.internal.JspTemplateProcessor;
 
 /**
  * {@code JspMvcFeature} used to add MVC ({@link MvcFeature}) and JSP template support to the server.

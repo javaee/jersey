@@ -38,9 +38,20 @@
  * holder.
  */
 
+package org.glassfish.jersey.tests.integration.jersey2031;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.mvc.jsp.JspMvcFeature;
+
 /**
- * Jersey server-side MVC internal classes supporting servlet containers.
+ * JAX-RS application for the JERSEY-2031 reproducer test.
  *
- * @see org.glassfish.jersey.server.mvc.jsp.internal.JspTemplateProcessor
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-package org.glassfish.jersey.server.mvc.jsp.internal;
+public class Jersey2031 extends ResourceConfig {
+
+    public Jersey2031() {
+        register(Issue2031Resource.class);
+        register(JspMvcFeature.class);
+    }
+}
