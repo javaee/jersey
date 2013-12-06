@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -104,8 +105,8 @@ public abstract class JerseyTest {
      * The test container on which the tests would be run.
      */
     private final TestContainer tc;
-    private Client client;
     private final ApplicationHandler application;
+    private final AtomicReference<Client> client = new AtomicReference<Client>(null);
     /**
      * JerseyTest property bag that can be used to configure the test behavior.
      * These properties can be overridden with a system property.
@@ -173,10 +174,6 @@ public abstract class JerseyTest {
         }
     }
 
-    private ResourceConfig getResourceConfig(Application app) {
-        return ResourceConfig.forApplication(app);
-    }
-
     /**
      * Construct a new instance with an application descriptor that defines
      * how the test container is configured.
@@ -224,6 +221,10 @@ public abstract class JerseyTest {
             loggedRuntimeRecords.clear();
             unregisterLogHandler();
         }
+    }
+
+    private ResourceConfig getResourceConfig(Application app) {
+        return ResourceConfig.forApplication(app);
     }
 
     /**
@@ -465,10 +466,7 @@ public abstract class JerseyTest {
      * @return the configured client.
      */
     public Client client() {
-        if (client == null) {
-            client = getClient(tc, application);
-        }
-        return client;
+        return client.get();
     }
 
     /**
@@ -485,6 +483,10 @@ public abstract class JerseyTest {
         }
 
         tc.start();
+        Client old = client.getAndSet(getClient(tc, application));
+        if (old != null) {
+            old.close();
+        }
     }
 
     /**
@@ -500,7 +502,14 @@ public abstract class JerseyTest {
             unregisterLogHandler();
         }
 
-        tc.stop();
+        try {
+            tc.stop();
+        } finally {
+            Client old = client.getAndSet(null);
+            if (old != null) {
+                old.close();
+            }
+        }
     }
 
     private TestContainer getContainer(ApplicationHandler application, TestContainerFactory tcf) {

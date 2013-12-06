@@ -39,15 +39,13 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
-import org.eclipse.jetty.client.util.BasicAuthentication;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
+import java.util.logging.Logger;
 
-import javax.inject.Singleton;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -55,8 +53,16 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
 
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.eclipse.jetty.client.util.BasicAuthentication;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -167,8 +173,10 @@ public class AuthTest extends JerseyTest {
     @Test
     public void testAuthGet() {
         ClientConfig config = new ClientConfig();
-        config.property(JettyClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION, new BasicAuthentication(getBaseUri(), "WallyWorld", "name", "password"));
-        Client client = ClientBuilder.newClient(config.connector(new JettyConnector(config.getConfiguration())));
+        config.property(JettyClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION,
+                new BasicAuthentication(getBaseUri(), "WallyWorld", "name", "password"));
+        config.connectorProvider(new JettyConnectorProvider());
+        Client client = ClientBuilder.newClient(config);
 
         Response response = client.target(getBaseUri()).path(PATH).request().get();
         assertEquals("GET", response.readEntity(String.class));
@@ -178,8 +186,10 @@ public class AuthTest extends JerseyTest {
     @Test
     public void testAuthPost() {
         ClientConfig config = new ClientConfig();
-        config.property(JettyClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION, new BasicAuthentication(getBaseUri(), "WallyWorld", "name", "password"));
-        Client client = ClientBuilder.newClient(config.connector(new JettyConnector(config.getConfiguration())));
+        config.property(JettyClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION,
+                new BasicAuthentication(getBaseUri(), "WallyWorld", "name", "password"));
+        config.connectorProvider(new JettyConnectorProvider());
+        Client client = ClientBuilder.newClient(config);
 
         Response response = client.target(getBaseUri()).path(PATH).request().post(Entity.text("POST"));
         assertEquals("POST", response.readEntity(String.class));
@@ -189,8 +199,10 @@ public class AuthTest extends JerseyTest {
     @Test
     public void testAuthDelete() {
         ClientConfig config = new ClientConfig();
-        config.property(JettyClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION, new BasicAuthentication(getBaseUri(), "WallyWorld", "name", "password"));
-        Client client = ClientBuilder.newClient(config.connector(new JettyConnector(config.getConfiguration())));
+        config.property(JettyClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION,
+                new BasicAuthentication(getBaseUri(), "WallyWorld", "name", "password"));
+        config.connectorProvider(new JettyConnectorProvider());
+        Client client = ClientBuilder.newClient(config);
 
         Response response = client.target(getBaseUri()).path(PATH).request().delete();
         assertEquals(response.getStatus(), 204);

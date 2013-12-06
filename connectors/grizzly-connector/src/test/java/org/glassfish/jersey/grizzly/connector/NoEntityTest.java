@@ -85,7 +85,7 @@ public class NoEntityTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connector(new GrizzlyConnector(config));
+        config.connectorProvider(new GrizzlyConnectorProvider());
     }
 
     @Test

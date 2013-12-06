@@ -40,11 +40,17 @@
 package org.glassfish.jersey.jetty.connector;
 
 /**
- * Configuration options specific to the Client API that utilizes {@link JettyConnector}.
+ * Configuration options specific to the Client API that utilizes {@link JettyConnectorProvider}.
  *
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
-public class JettyClientProperties {
+public final class JettyClientProperties {
+
+    /**
+     * Prevents instantiation.
+     */
+    private JettyClientProperties() {
+    }
 
     /**
      * Support for specifying SSL configuration for HTTPS connections.

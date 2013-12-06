@@ -39,14 +39,11 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.inject.Singleton;
-
 import javax.ws.rs.container.AsyncResponse;
 
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Value;
-import org.glassfish.jersey.process.internal.ExecutorsFactory;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 
@@ -69,7 +66,6 @@ class ProcessingBinder extends AbstractBinder {
                 .to(AsyncResponse.class)
                 .in(RequestScoped.class);
 
-        bind(ServerExecutorsFactory.class).to(new TypeLiteral<ExecutorsFactory<ContainerRequest>>() {
-        }).in(Singleton.class);
+        install(new ServerManagedAsyncExecutorFactory.Binder());
     }
 }

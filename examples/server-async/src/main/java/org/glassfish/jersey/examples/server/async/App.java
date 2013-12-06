@@ -78,7 +78,7 @@ public class App {
                     BASE_URI, ASYNC_MESSAGING_BLOCKING_PATH,
                     BASE_URI, ASYNC_LONG_RUNNING_OP_PATH));
             System.in.read();
-            server.stop();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }

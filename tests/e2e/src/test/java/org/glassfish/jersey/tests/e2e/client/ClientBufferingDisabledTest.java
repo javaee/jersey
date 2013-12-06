@@ -56,9 +56,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.HttpUrlConnector;
-import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -67,9 +65,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- * Tests possibility of disabling buffering of outgoing entity in {@link HttpUrlConnector}.
+ * Tests possibility of disabling buffering of outgoing entity in
+ * {@link org.glassfish.jersey.client.HttpUrlConnectorProvider}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ClientBufferingDisabledTest extends JerseyTest {
 
@@ -108,21 +108,20 @@ public class ClientBufferingDisabledTest extends JerseyTest {
      * {@code HttpURLConnection} buffers the output entity in order to calculate the
      * Content-length request attribute. This cause problems for large entities.
      * <p>
-     * This test uses {@link ClientProperties#HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING} to enable
+     * This test uses {@link HttpUrlConnectorProvider#USE_FIXED_LENGTH_STREAMING} to enable
      * fix length streaming on {@code HttpURLConnection}.
      */
     @Test
-    public void testDisableBufferingWithFixedLength() {
+    public void testDisableBufferingWithFixedLengthViaProperty() {
         postLatch = new CountDownLatch(1);
 
         // This IS sends out 10 chunks and waits whether they were received on the server. This tests
         // whether the buffering is disabled.
         InputStream is = getInputStream();
 
-        ClientConfig clientConfig = new ClientConfig();
-        clientConfig.property(ClientProperties.HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING, true);
-        Connector connector = new HttpUrlConnector(clientConfig);
-        clientConfig.connector(connector);
+        final HttpUrlConnectorProvider connectorProvider = new HttpUrlConnectorProvider();
+        ClientConfig clientConfig = new ClientConfig().connectorProvider(connectorProvider);
+        clientConfig.property(HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING, true);
         Client client = ClientBuilder.newClient(clientConfig);
         final Response response
                 = client.target(getBaseUri()).path("resource")
@@ -130,8 +129,7 @@ public class ClientBufferingDisabledTest extends JerseyTest {
                         Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
         Assert.assertEquals(200, response.getStatus());
         final long count = response.readEntity(long.class);
-        System.out.println(count);
-        Assert.assertEquals(LENGTH, count);
+        Assert.assertEquals("Unexpected content length received.", LENGTH, count);
     }
 
     /**
@@ -139,12 +137,38 @@ public class ClientBufferingDisabledTest extends JerseyTest {
      * {@code HttpURLConnection} buffers the output entity in order to calculate the
      * Content-length request attribute. This cause problems for large entities.
      * <p>
-     * This test uses {@link ClientProperties#HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING} to enable
+     * This test uses {@link HttpUrlConnectorProvider#useFixedLengthStreaming()} to enable
      * fix length streaming on {@code HttpURLConnection}.
+     */
+    @Test
+    public void testDisableBufferingWithFixedLengthViaMethod() {
+        postLatch = new CountDownLatch(1);
+
+        // This IS sends out 10 chunks and waits whether they were received on the server. This tests
+        // whether the buffering is disabled.
+        InputStream is = getInputStream();
+
+        final HttpUrlConnectorProvider connectorProvider = new HttpUrlConnectorProvider()
+                .useFixedLengthStreaming();
+        ClientConfig clientConfig = new ClientConfig().connectorProvider(connectorProvider);
+        Client client = ClientBuilder.newClient(clientConfig);
+        final Response response
+                = client.target(getBaseUri()).path("resource")
+                .request().header(HttpHeaders.CONTENT_LENGTH, LENGTH).post(
+                        Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
+        Assert.assertEquals(200, response.getStatus());
+        final long count = response.readEntity(long.class);
+        Assert.assertEquals("Unexpected content length received.", LENGTH, count);
+    }
+
+    /**
+     * Test that buffering can be disabled with {@link HttpURLConnection}. By default, the
+     * {@code HttpURLConnection} buffers the output entity in order to calculate the
+     * Content-length request attribute. This cause problems for large entities.
      * <p>
      * In Jersey 1.x chunk encoding with {@code HttpURLConnection} was causing bugs
      * which occurred from time to time. This looks to be a case also in Jersey 2.x. This test
-     * failed on some machines. Therefore it is disabled now.
+     * has failed unpredictably on some machines. Therefore it is disabled now.
      * </p>
      */
     @Test
@@ -156,18 +180,17 @@ public class ClientBufferingDisabledTest extends JerseyTest {
         // whether the buffering is disabled.
         InputStream is = getInputStream();
 
-        ClientConfig clientConfig = new ClientConfig();
-        clientConfig.property(ClientProperties.CHUNKED_ENCODING_SIZE, CHUNK);
-        Connector connector = new HttpUrlConnector(clientConfig);
-        clientConfig.connector(connector);
+        final HttpUrlConnectorProvider connectorProvider = new HttpUrlConnectorProvider()
+                .chunkSize(CHUNK);
+        ClientConfig clientConfig = new ClientConfig()
+                .connectorProvider(connectorProvider);
         Client client = ClientBuilder.newClient(clientConfig);
         final Response response
                 = client.target(getBaseUri()).path("resource")
                 .request().post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
         Assert.assertEquals(200, response.getStatus());
         final long count = response.readEntity(long.class);
-        System.out.println(count);
-        Assert.assertEquals(LENGTH, count);
+        Assert.assertEquals("Unexpected content length received.", LENGTH, count);
     }
 
     private InputStream getInputStream() {

@@ -51,12 +51,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.apache.connector.ApacheConnector;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -115,20 +115,15 @@ public class BufferingTest extends JerseyTest {
     }
 
     private ClientConfig getApacheConnectorConfig() {
-        ClientConfig cc = new ClientConfig();
-        cc.connector(new ApacheConnector(cc.getConfiguration()));
-        return cc;
+        return new ClientConfig().connectorProvider(new ApacheConnectorProvider());
     }
 
     private ClientConfig getGrizzlyConnectorConfig() {
-        ClientConfig cc = new ClientConfig();
-        cc.connector(new GrizzlyConnector(cc.getConfiguration()));
-        return cc;
+        return new ClientConfig().connectorProvider(new GrizzlyConnectorProvider());
     }
 
     private ClientConfig getHttpUrlConnectorConfig() {
-        ClientConfig cc = new ClientConfig();
-        return cc;
+        return new ClientConfig();
     }
 
     private void testDefaultOption(ClientConfig cc, RequestEntityProcessing mode) {

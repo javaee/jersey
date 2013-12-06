@@ -39,12 +39,12 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
-import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Assert;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
-import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -56,11 +56,14 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Assert;
 
 /**
  * This is base for tests testing enabling/disabling configuration property
@@ -74,21 +77,25 @@ public abstract class AbstractDisableMetainfServicesLookupTest extends JerseyTes
         final String name = "Jersey";
         {
             Response response = target("/").path(name).request().get();
-            UselessMessage entity = response.readEntity(UselessMessage.class);
-
             Assert.assertEquals(expectedGetResponseCode, response.getStatus());
-            if ( entity != null ) {
-                Assert.assertEquals("Hello " + name, entity.getMessage());
+
+            if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+                UselessMessage entity = response.readEntity(UselessMessage.class);
+                if (entity != null) {
+                    Assert.assertEquals("Hello " + name, entity.getMessage());
+                }
             }
         }
         {
             Entity<UselessMessage> uselessMessageEntity = Entity.entity(new UselessMessage(name), MediaType.TEXT_PLAIN_TYPE);
             Response response = target("/").request().post(uselessMessageEntity);
-            String entity = response.readEntity(String.class);
-
             Assert.assertEquals(expectedPostResponseCode, response.getStatus());
-            if ( entity.length() > 0 ) {
-                Assert.assertEquals(name, entity);
+
+            if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+                String entity = response.readEntity(String.class);
+                if (entity.length() > 0) {
+                    Assert.assertEquals(name, entity);
+                }
             }
         }
     }
@@ -114,6 +121,7 @@ public abstract class AbstractDisableMetainfServicesLookupTest extends JerseyTes
             result.setMessage("Hello " + name);
             return result;
         }
+
         @POST
         public String post(final UselessMessage message) {
             return message.getMessage();

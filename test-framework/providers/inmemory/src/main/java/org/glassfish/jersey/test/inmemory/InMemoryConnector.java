@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.inmemory.internal;
+package org.glassfish.jersey.test.inmemory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -52,6 +52,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -63,13 +65,13 @@ import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -81,37 +83,61 @@ import com.google.common.util.concurrent.MoreExecutors;
  * In-memory client connector.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class InMemoryConnector implements Connector {
-
+class InMemoryConnector implements Connector {
     private static final Logger LOGGER = Logger.getLogger(InMemoryConnector.class.getName());
-    private final ApplicationHandler appHandler;
+
     private final URI baseUri;
+    private final ApplicationHandler appHandler;
 
     /**
-     * Constructor.
-     *
-     * @param baseUri     application base URI.
-     * @param application RequestInvoker instance which represents application.
+     * In-memory client connector provider.
      */
-    public InMemoryConnector(final URI baseUri, final ApplicationHandler application) {
-        this.baseUri = baseUri;
-        this.appHandler = application;
+    static class Provider implements ConnectorProvider {
+        private final URI baseUri;
+        private final ApplicationHandler appHandler;
+
+        /**
+         * Create new in-memory connector provider.
+         *
+         * @param baseUri    application base URI.
+         * @param appHandler RequestInvoker instance which represents application.
+         */
+        Provider(URI baseUri, ApplicationHandler appHandler) {
+            this.baseUri = baseUri;
+            this.appHandler = appHandler;
+        }
+
+        @Override
+        public Connector getConnector(Client client, Configuration config) {
+            return new InMemoryConnector(baseUri, appHandler);
+        }
     }
 
+    /**
+     * Create new in-memory connector.
+     *
+     * @param baseUri    application base URI.
+     * @param appHandler RequestInvoker instance which represents application.
+     */
+    private InMemoryConnector(final URI baseUri, final ApplicationHandler appHandler) {
+        this.baseUri = baseUri;
+        this.appHandler = appHandler;
+    }
 
     /**
      * In memory container response writer.
      */
     public static class InMemoryResponseWriter implements ContainerResponseWriter {
         private MultivaluedMap<String, String> headers;
-        private ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         private boolean committed;
         private Response.StatusType statusInfo;
 
 
         @Override
-        public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext) throws ContainerException {
+        public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext) {
             List<Object> length = Lists.newArrayList();
             length.add(String.valueOf(contentLength));
 
@@ -128,7 +154,7 @@ public class InMemoryConnector implements Connector {
         }
 
         @Override
-        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) {
             throw new UnsupportedOperationException("Async server side invocations are not supported by InMemoryContainer.");
         }
 
@@ -295,6 +321,7 @@ public class InMemoryConnector implements Connector {
         return clientResponse;
     }
 
+    @SuppressWarnings("MagicNumber")
     private ClientResponse tryFollowRedirects(boolean followRedirects, ClientResponse response, ClientRequest request) {
         final int statusCode = response.getStatus();
         if (!followRedirects || statusCode < 302 || statusCode > 307) {
@@ -317,6 +344,6 @@ public class InMemoryConnector implements Connector {
 
     @Override
     public String getName() {
-        return "Jersey InMemory Container Client";
+        return "Jersey InMemory Connector";
     }
 }

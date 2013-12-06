@@ -70,7 +70,7 @@ public class App {
 
             System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...", BASE_URI, ROOT_PATH));
             System.in.read();
-            server.stop();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }

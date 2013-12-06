@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.internal.util.collection;
+
 /**
- * Jersey test framework in-memory provider internal classes.
+ * Lazily initialized {@link Value value}.
+ * <p>
+ * Instances of this interface are initialized lazily during the first call to their
+ * {@link #get() value retrieval method}. Information about the initialization state
+ * of a {@code LazyValue} instance is available via {@link #isInitialized()} method.
+ * </p>
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-package org.glassfish.jersey.test.inmemory.internal;
+public interface LazyValue<T> extends Value<T> {
+    /**
+     * Check if the lazy value has been initialized already (i.e. its {@link #get()} method
+     * has already been called previously) or not.
+     *
+     * @return {@code true} if the lazy value has already been initialized, {@code false} otherwise.
+     */
+    boolean isInitialized();
+}

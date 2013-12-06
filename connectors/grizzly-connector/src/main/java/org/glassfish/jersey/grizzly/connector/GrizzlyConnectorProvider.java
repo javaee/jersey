@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,40 +37,31 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.grizzly.connector;
 
-package org.glassfish.jersey.spi;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configuration;
 
-import java.util.concurrent.ExecutorService;
+import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 
 /**
- * Pluggable provider of {@link java.util.concurrent.ExecutorService executor services} used to run
- * Jersey request and response processing code.
- * <p />
- * When Jersey receives a request for processing, it will use the
- * {@link RequestExecutorsProvider request executor} to run the request
- * pre-processing and request-to-response transformation code. Once the response
- * is available, Jersey will use the {@link #getRespondingExecutor() responding
- * executor} to run the response post-processing code, before the final response
- * is returned to the application layer.
- * <p/>
+ * Connector provider for Grizzly asynchronous HTTP client-based connectors.
  * <p>
- * The custom provider implementing this interface should be registered in the standard way on the server.
- * The client must be created with configuration containing the provider, later registrations will be ignored.
+ * Connectors created by this provider use {@link org.glassfish.jersey.client.RequestEntityProcessing#CHUNKED
+ * chunked encoding} as a default setting. This can be overridden by setting the
+ * {@link org.glassfish.jersey.client.ClientProperties#REQUEST_ENTITY_PROCESSING} property.
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- * @see RequestExecutorsProvider
+ *
+ * @since 2.5
  */
-@Contract
-public interface ResponseExecutorsProvider {
-    /**
-     * Get response processing executor.
-     * <p/>
-     * This method is called only once at Jersey initialization, before the
-     * first request is processed.
-     *
-     * @return response processing executor, or {@code null} if the provider does not supply the executor.
-     */
-    public ExecutorService getRespondingExecutor();
+public class GrizzlyConnectorProvider implements ConnectorProvider {
+    @Override
+    public Connector getConnector(Client client, Configuration config) {
+        return new GrizzlyConnector(client, config);
+    }
+
+
 }

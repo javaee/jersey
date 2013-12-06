@@ -43,7 +43,6 @@ import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
@@ -67,8 +66,6 @@ import static com.google.common.base.Preconditions.checkState;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyClient implements javax.ws.rs.client.Client {
-
-    private static final Logger LOGGER = Logger.getLogger(JerseyClient.class.getName());
 
     private final AtomicBoolean closedFlag = new AtomicBoolean(false);
     private final ClientConfig config;
@@ -124,7 +121,7 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     private UnsafeValue<SSLContext, IllegalStateException> createSslContextProvider() {
         return new UnsafeValue<SSLContext, IllegalStateException>() {
             @Override
-            public SSLContext get() throws IllegalStateException {
+            public SSLContext get() {
                 return SslConfigurator.getDefaultContext();
             }
         };
@@ -169,40 +166,40 @@ public class JerseyClient implements javax.ws.rs.client.Client {
      *
      * @throws IllegalStateException in case the client instance has been closed already.
      */
-    void checkNotClosed() throws IllegalStateException {
+    void checkNotClosed() {
         checkState(!closedFlag.get(), LocalizationMessages.CLIENT_INSTANCE_CLOSED());
     }
 
     @Override
-    public JerseyWebTarget target(String uri) throws IllegalArgumentException, NullPointerException {
+    public JerseyWebTarget target(String uri) {
         checkNotClosed();
         checkNotNull(uri, LocalizationMessages.CLIENT_URI_TEMPLATE_NULL());
         return new JerseyWebTarget(uri, this);
     }
 
     @Override
-    public JerseyWebTarget target(URI uri) throws NullPointerException {
+    public JerseyWebTarget target(URI uri) {
         checkNotClosed();
         checkNotNull(uri, LocalizationMessages.CLIENT_URI_NULL());
         return new JerseyWebTarget(uri, this);
     }
 
     @Override
-    public JerseyWebTarget target(UriBuilder uriBuilder) throws NullPointerException {
+    public JerseyWebTarget target(UriBuilder uriBuilder) {
         checkNotClosed();
         checkNotNull(uriBuilder, LocalizationMessages.CLIENT_URI_BUILDER_NULL());
         return new JerseyWebTarget(uriBuilder, this);
     }
 
     @Override
-    public JerseyWebTarget target(Link link) throws NullPointerException {
+    public JerseyWebTarget target(Link link) {
         checkNotClosed();
         checkNotNull(link, LocalizationMessages.CLIENT_TARGET_LINK_NULL());
         return new JerseyWebTarget(link, this);
     }
 
     @Override
-    public JerseyInvocation.Builder invocation(Link link) throws NullPointerException, IllegalArgumentException {
+    public JerseyInvocation.Builder invocation(Link link) {
         checkNotClosed();
         checkNotNull(link, LocalizationMessages.CLIENT_INVOCATION_LINK_NULL());
         JerseyWebTarget t = new JerseyWebTarget(link, this);

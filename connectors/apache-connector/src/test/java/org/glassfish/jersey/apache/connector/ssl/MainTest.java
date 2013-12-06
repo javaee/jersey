@@ -39,23 +39,27 @@
  */
 package org.glassfish.jersey.apache.connector.ssl;
 
-import com.google.common.io.ByteStreams;
-import org.glassfish.jersey.SslConfigurator;
-import org.glassfish.jersey.apache.connector.ApacheClientProperties;
-import org.glassfish.jersey.apache.connector.ApacheConnector;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.junit.*;
+import java.io.InputStream;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-import java.io.InputStream;
 
+import org.glassfish.jersey.SslConfigurator;
+import org.glassfish.jersey.apache.connector.ApacheClientProperties;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.filter.LoggingFilter;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import com.google.common.io.ByteStreams;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -88,13 +92,11 @@ public class MainTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.SSL_CONFIG, sslConfig);
-        cc.connector(new ApacheConnector(cc));
+        cc.connectorProvider(new ApacheConnectorProvider());
 
         Client client = ClientBuilder.newClient(cc);
         // client basic auth demonstration
         client.register(new HttpBasicAuthFilter("user", "password"));
-
-        System.out.println("Client: GET " + Server.BASE_URI);
 
         WebTarget target = client.target(Server.BASE_URI);
         target.register(new LoggingFilter());
@@ -121,8 +123,7 @@ public class MainTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.SSL_CONFIG, sslConfig);
-
-        cc.connector(new ApacheConnector(cc));
+        cc.connectorProvider(new ApacheConnectorProvider());
 
         Client client = ClientBuilder.newClient(cc);
 
@@ -151,8 +152,7 @@ public class MainTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.SSL_CONFIG, sslConfig);
-
-        cc.connector(new ApacheConnector(cc));
+        cc.connectorProvider(new ApacheConnectorProvider());
 
         Client client = ClientBuilder.newClient(cc);
 

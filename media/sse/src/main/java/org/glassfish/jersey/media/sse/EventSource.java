@@ -119,10 +119,10 @@ import org.glassfish.jersey.internal.util.ExtendedLogger;
  * </p>
  * <p>
  * In case you are using Jersey event source with a Jersey client
- * {@link org.glassfish.jersey.client.ClientConfig#connector(org.glassfish.jersey.client.spi.Connector) configured}
- * to use some other client {@code Connector} implementation able to reliably manage persistent HTTP connections (such as
- * {@code org.glassfish.jersey.grizzly.connector.GrizzlyConnector} or
- * {@code org.glassfish.jersey.apache.connector.ApacheConnector}), or in case you simply need to use persistent
+ * {@link org.glassfish.jersey.client.ClientConfig#connectorProvider(org.glassfish.jersey.client.spi.ConnectorProvider)}
+ * connector provider configured to use some other client {@code ConnectorProvider} implementation able to reliably
+ * manage persistent HTTP connections (such as {@code org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider} or
+ * {@code org.glassfish.jersey.apache.connector.ApacheConnectorProvider}), or in case you simply need to use persistent
  * HTTP connections, you may do so by invoking the {@link Builder#usePersistentConnections() usePersistentConnections()} method
  * on an event source builder prior to creating a new event source instance.
  * </p>
@@ -137,7 +137,7 @@ public class EventSource implements EventListener {
      *
      * @since 2.3
      */
-    public static long RECONNECT_DEFAULT = 500;
+    public static final long RECONNECT_DEFAULT = 500;
 
     private static enum State {
         READY, OPEN, CLOSED
@@ -328,7 +328,7 @@ public class EventSource implements EventListener {
      * @param endpoint SSE streaming endpoint. Must not be {@code null}.
      * @throws NullPointerException in case the supplied web target is {@code null}.
      */
-    public EventSource(final WebTarget endpoint) throws NullPointerException {
+    public EventSource(final WebTarget endpoint) {
         this(endpoint, true);
     }
 
@@ -401,7 +401,7 @@ public class EventSource implements EventListener {
      *
      * @throws IllegalStateException in case the event source has already been opened earlier.
      */
-    public void open() throws IllegalStateException {
+    public void open() {
         if (!state.compareAndSet(State.READY, State.OPEN)) {
             switch (state.get()) {
                 case OPEN:
@@ -519,7 +519,7 @@ public class EventSource implements EventListener {
      * @param timeout the maximum time to wait.
      * @param unit    the time unit of the timeout argument.
      * @return {@code true} if this executor terminated and {@code false} if the timeout elapsed
-     *         before termination or the termination was interrupted.
+     * before termination or the termination was interrupted.
      */
     public boolean close(final long timeout, final TimeUnit unit) {
         shutdown();

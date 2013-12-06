@@ -75,7 +75,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.RequestExecutorsProvider;
+import org.glassfish.jersey.spi.RequestExecutorProvider;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -383,11 +383,16 @@ public class BasicClientTest extends JerseyTest {
         return client.target("http://any.web:888");
     }
 
-    public static class CustomExecutorProvider implements RequestExecutorsProvider {
+    public static class CustomExecutorProvider implements RequestExecutorProvider {
 
         @Override
         public ExecutorService getRequestingExecutor() {
             return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("AsyncRequest").build());
+        }
+
+        @Override
+        public void releaseRequestingExecutor(ExecutorService executor) {
+            executor.shutdownNow();
         }
     }
 

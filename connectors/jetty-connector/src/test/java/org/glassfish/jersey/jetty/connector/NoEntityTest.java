@@ -39,11 +39,7 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
+import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -52,7 +48,13 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.util.logging.Logger;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -82,7 +84,7 @@ public class NoEntityTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
     }
 
     @Test

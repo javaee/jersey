@@ -150,6 +150,6 @@ public class SseTest {
         eventSource.close();
         assertEquals(2, data.size());
 
-        server.stop();
+        server.shutdownNow();
     }
 }

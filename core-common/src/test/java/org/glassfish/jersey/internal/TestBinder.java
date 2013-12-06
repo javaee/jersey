@@ -40,7 +40,6 @@
 package org.glassfish.jersey.internal;
 
 import java.util.Collections;
-import java.util.Set;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Response;
@@ -52,7 +51,6 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.TestExecutorsFactory;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -64,12 +62,12 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 public class TestBinder extends AbstractBinder {
 
-    public static void initProviders(final ServiceLocator locator) throws IllegalStateException {
+    public static void initProviders(final ServiceLocator locator) {
         initProviders(locator, Collections.<Class<?>>emptySet(), Collections.<Object>emptySet());
     }
 
-    public static void initProviders(final ServiceLocator locator, final Set<Class<?>> providerClasses,
-                                     final Set<Object> providerInstances) throws IllegalStateException {
+    public static void initProviders(final ServiceLocator locator, final Iterable<Class<?>> providerClasses,
+                                     final Iterable<Object> providerInstances) {
         final ProviderBinder providerBinder = new ProviderBinder(locator);
         providerBinder.bindClasses(providerClasses);
         providerBinder.bindInstances(providerInstances);
@@ -86,8 +84,7 @@ public class TestBinder extends AbstractBinder {
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),
                 new ContextResolverFactory.Binder(),
-                new JaxrsProviders.Binder(),
-                new TestExecutorsFactory.TestExecutorsBinder());
+                new JaxrsProviders.Binder());
 
         bind(new ExceptionMapper<Throwable>() {
             @Override

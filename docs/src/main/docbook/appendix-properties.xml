@@ -428,7 +428,7 @@
                         <entry>
                             <para>
                                 Asynchronous thread pool size. Default value is not set.
-                                <emphasis>Supported with &jersey.grizzly.GrizzlyConnector; only.</emphasis>.
+                                <emphasis>Supported with &jersey.grizzly.GrizzlyConnectorProvider; only.</emphasis>.
                             </para>
                         </entry>
                     </row>
@@ -465,18 +465,6 @@
                         <entry>
                             <para>
                                 Declares that the client will automatically redirect to the URI declared in 3xx responses. Default value is <literal>true</literal>.
-                            </para>
-                        </entry>
-                    </row>
-                    <row>
-                        <entry><link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND'>ClientProperties
-                            .HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND</link></entry>
-                        <entry><literal>jersey.config.client
-                            .httpUrlConnection.setMethodWorkaround</literal></entry>
-                        <entry>
-                            <para>
-                                Declares that the client will try to set unsupported HTTP method to <literal>HttpURLConnection</literal>
-                                via reflection. Default value is <literal>false</literal>.
                             </para>
                         </entry>
                     </row>
@@ -525,8 +513,8 @@
                         <entry>
                             <para>
                                 URI of a HTTP proxy the client connector should use. Default value is not set.
-                                <emphasis>Currently supported with &jersey.apache.ApacheConnector; and
-                                    &jersey.jetty.JettyConnector; only.</emphasis>
+                                <emphasis>Currently supported with &jersey.apache.ApacheConnectorProvider; and
+                                    &jersey.jetty.JettyConnectorProvider; only.</emphasis>
                             </para>
                         </entry>
                     </row>
@@ -536,8 +524,8 @@
                         <entry>
                             <para>
                                 User name which will be used for HTTP proxy authentication. Default value is not set.
-                                <emphasis>Currently supported with &jersey.apache.ApacheConnector; and
-                                    &jersey.jetty.JettyConnector; only.</emphasis>
+                                <emphasis>Currently supported with &jersey.apache.ApacheConnectorProvider; and
+                                    &jersey.jetty.JettyConnectorProvider; only.</emphasis>
                             </para>
                         </entry>
                     </row>
@@ -547,8 +535,8 @@
                         <entry>
                             <para>
                                 Password which will be used for HTTP proxy authentication. Default value is not set.
-                                <emphasis>Currently supported with &jersey.apache.ApacheConnector; and
-                                    &jersey.jetty.JettyConnector; only.</emphasis>
+                                <emphasis>Currently supported with &jersey.apache.ApacheConnectorProvider; and
+                                    &jersey.jetty.JettyConnectorProvider; only.</emphasis>
                             </para>
                         </entry>
                     </row>

@@ -41,7 +41,7 @@ package org.glassfish.jersey.tests.integration.jersey1604;
 
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.apache.connector.ApacheConnector;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -73,7 +73,7 @@ public class ConnectionCloseITCase extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connector(new ApacheConnector(config));
+        config.connectorProvider(new ApacheConnectorProvider());
     }
 
     @Test

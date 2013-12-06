@@ -118,7 +118,7 @@ public class Server {
     }
 
     protected static void stopServer() {
-        webServer.stop();
+        webServer.shutdownNow();
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

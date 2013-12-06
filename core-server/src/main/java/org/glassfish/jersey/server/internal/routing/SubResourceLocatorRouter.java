@@ -69,6 +69,7 @@ import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
+import org.glassfish.jersey.server.model.ResourceModelComponent;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
@@ -198,12 +199,12 @@ class SubResourceLocatorRouter implements Router {
 
     }
 
-    private void validate(final ResourceModel resourceModel, final boolean ignoreFatalIssues) {
+    private void validate(final ResourceModelComponent component, final boolean ignoreFatalIssues) {
         Errors.process(new Runnable() {
             @Override
             public void run() {
                 final ComponentModelValidator validator = new ComponentModelValidator(locator);
-                validator.validate(resourceModel);
+                validator.validate(component);
 
                 if (Errors.fatalIssuesFound() && !ignoreFatalIssues) {
                     throw new ModelValidationException(LocalizationMessages.ERROR_VALIDATION_SUBRESOURCE(),
@@ -234,7 +235,12 @@ class SubResourceLocatorRouter implements Router {
                 } catch (UndeclaredThrowableException ex) {
                     throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
                 } catch (InvocationTargetException ex) {
-                    throw mapTargetToRuntimeEx(ex.getCause());
+                    final Throwable cause = ex.getCause();
+                    if (cause instanceof WebApplicationException) {
+                        throw (WebApplicationException) cause;
+                    }
+                    // handle all exceptions as potentially mappable (incl. ProcessingException)
+                    throw new MappableException(cause);
                 } catch (Throwable t) {
                     throw new ProcessingException(t);
                 }
@@ -245,13 +251,5 @@ class SubResourceLocatorRouter implements Router {
         return (securityContext instanceof SubjectSecurityContext)
                 ? ((SubjectSecurityContext) securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
 
-    }
-
-    private static RuntimeException mapTargetToRuntimeEx(Throwable throwable) {
-        if (throwable instanceof WebApplicationException) {
-            return (WebApplicationException) throwable;
-        }
-        // handle all exceptions as potentially mappable (incl. ProcessingException)
-        return new MappableException(throwable);
     }
 }

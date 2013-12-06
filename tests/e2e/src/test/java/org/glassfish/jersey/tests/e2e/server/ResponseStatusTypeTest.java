@@ -46,9 +46,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.apache.connector.ApacheConnector;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory;
@@ -132,7 +132,7 @@ public class ResponseStatusTypeTest extends JerseyTest {
 
         @Override
         protected void configureClient(ClientConfig config) {
-            config.connector(new GrizzlyConnector(config));
+            config.connectorProvider(new GrizzlyConnectorProvider());
         }
 
 
@@ -161,7 +161,7 @@ public class ResponseStatusTypeTest extends JerseyTest {
 
         @Override
         protected void configureClient(ClientConfig config) {
-            config.connector(new ApacheConnector(config));
+            config.connectorProvider(new ApacheConnectorProvider());
         }
 
 

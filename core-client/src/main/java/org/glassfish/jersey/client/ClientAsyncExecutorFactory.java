@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,63 +37,51 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.client;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.glassfish.jersey.process.internal.ExecutorsFactory;
-import org.glassfish.jersey.spi.RequestExecutorsProvider;
-import org.glassfish.jersey.spi.ResponseExecutorsProvider;
+import org.glassfish.jersey.process.internal.RequestExecutorFactory;
+import org.glassfish.jersey.spi.RequestExecutorProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * {@link ExecutorsFactory Executors factory} used on the client side for asynchronous request
- * processing.
+ * {@link org.glassfish.jersey.process.internal.RequestExecutorFactory Executors factory}
+ * used on the client side for asynchronous request processing.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientAsyncExecutorsFactory extends ExecutorsFactory<ClientRequest> {
-    private final ExecutorService requestingExecutor;
-    private final ExecutorService respondingExecutor;
+class ClientAsyncExecutorFactory extends RequestExecutorFactory {
 
     /**
      * Creates a new instance.
      *
-     * @param locator Injected HK2 service locator.
+     * @param locator HK2 service locator.
      */
-    public ClientAsyncExecutorsFactory(ServiceLocator locator) {
+    public ClientAsyncExecutorFactory(ServiceLocator locator) {
         super(locator);
-        this.requestingExecutor = getInitialRequestingExecutor(new RequestExecutorsProvider() {
+    }
+
+    @Override
+    protected RequestExecutorProvider getDefaultProvider() {
+        return new RequestExecutorProvider() {
 
             @Override
             public ExecutorService getRequestingExecutor() {
                 return Executors.newCachedThreadPool(
                         new ThreadFactoryBuilder().setNameFormat("jersey-client-async-executor-%d").build());
             }
-        });
-        this.respondingExecutor = getInitialRespondingExecutor(new ResponseExecutorsProvider() {
 
             @Override
-            public ExecutorService getRespondingExecutor() {
-                return MoreExecutors.sameThreadExecutor();
+            public void releaseRequestingExecutor(ExecutorService executor) {
+                executor.shutdownNow();
             }
-        });
+        };
     }
 
-    @Override
-    public ExecutorService getRequestingExecutor(ClientRequest request) {
-        return requestingExecutor;
-    }
-
-    @Override
-    public ExecutorService getRespondingExecutor(ClientRequest request) {
-        return respondingExecutor;
-    }
 }

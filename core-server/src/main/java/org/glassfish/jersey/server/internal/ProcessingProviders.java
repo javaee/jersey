@@ -81,7 +81,7 @@ public class ProcessingProviders {
     private final MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> nameBoundWriterInterceptorsInverse;
     private final Iterable<RankedProvider<ContainerRequestFilter>> globalRequestFilters;
     private final Iterable<ContainerRequestFilter> sortedGlobalRequestFilters;
-    private List<RankedProvider<ContainerRequestFilter>> preMatchFilters;
+    private final List<RankedProvider<ContainerRequestFilter>> preMatchFilters;
     private final Iterable<RankedProvider<ContainerResponseFilter>> globalResponseFilters;
     private final Iterable<ContainerResponseFilter> sortedGlobalResponseFilters;
 

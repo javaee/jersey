@@ -89,7 +89,7 @@ public class MonitoringContainerListener implements ContainerLifecycleListener {
         }
     }
 
-    private ApplicationEventImpl getApplicationEvent(ApplicationEvent.Type type) {
+    private ApplicationEvent getApplicationEvent(ApplicationEvent.Type type) {
         return new ApplicationEventImpl(type,
                 initFinishedEvent.getResourceConfig(), initFinishedEvent.getProviders(),
                 initFinishedEvent.getRegisteredClasses(), initFinishedEvent.getRegisteredInstances(),
@@ -109,7 +109,7 @@ public class MonitoringContainerListener implements ContainerLifecycleListener {
     public static class Binder extends AbstractBinder {
         @Override
         protected void configure() {
-            bind(MonitoringContainerListener.class).to(MonitoringContainerListener.class)
+            bindAsContract(MonitoringContainerListener.class)
                     .to(ContainerLifecycleListener.class).in(Singleton.class);
         }
     }

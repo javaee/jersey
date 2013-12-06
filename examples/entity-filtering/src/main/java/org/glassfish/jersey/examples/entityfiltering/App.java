@@ -72,7 +72,7 @@ public final class App {
 
             System.in.read();
 
-            server.stop();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName())
                     .log(Level.SEVERE, "I/O error occurred during reading from an system input stream.", ex);

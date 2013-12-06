@@ -83,7 +83,7 @@ import com.google.common.collect.Sets;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class Providers {
+public final class Providers {
     private static final Logger LOGGER = Logger.getLogger(Providers.class.getName());
 
     /**
@@ -239,15 +239,41 @@ public class Providers {
     }
 
     /**
-     * Sorts given providers with {@link RankedComparator ranked comparator}.
+     * Sort given providers with {@link RankedComparator ranked comparator}.
+     *
+     * @param comparator comparator to sort the providers with.
+     * @param providers  providers to be sorted.
+     * @param <T>        service provider contract Java type.
+     * @return sorted {@link Iterable iterable} instance containing given providers.
+     *         The returned value is never {@code null}.
+     */
+    @SuppressWarnings("TypeMayBeWeakened")
+    public static <T> Iterable<T> sortRankedProviders(final RankedComparator<T> comparator,
+                                                      final Iterable<RankedProvider<T>> providers) {
+        final List<RankedProvider<T>> rankedProviders = Lists.newArrayList(providers);
+
+        Collections.sort(rankedProviders, comparator);
+
+        return Collections2.transform(rankedProviders, new Function<RankedProvider<T>, T>() {
+            @Override
+            public T apply(final RankedProvider<T> input) {
+                return input.getProvider();
+            }
+        });
+    }
+
+    /**
+     * Merge and sort given providers with {@link RankedComparator ranked comparator}.
      *
      * @param comparator        comparator to sort the providers with.
      * @param providerIterables providers to be sorted.
      * @param <T>               service provider contract Java type.
-     * @return sorted {@link Iterable iterable} instance containing given providers. Return value is never null.
+     * @return merged and sorted {@link Iterable iterable} instance containing given providers.
+     *         The returned value is never {@code null}.
      */
-    public static <T> Iterable<T> sortRankedProviders(final RankedComparator<T> comparator,
-                                                      final Iterable<RankedProvider<T>>... providerIterables) {
+    @SuppressWarnings("TypeMayBeWeakened")
+    public static <T> Iterable<T> mergeAndSortRankedProviders(final RankedComparator<T> comparator,
+                                                              final Iterable<Iterable<RankedProvider<T>>> providerIterables) {
         final List<RankedProvider<T>> rankedProviders = Lists.newArrayList();
 
         for (final Iterable<RankedProvider<T>> providers : providerIterables) {
@@ -320,7 +346,7 @@ public class Providers {
             }
         }
 
-        final ArrayList<T> providerList = new ArrayList<T>(getClasses(providerMap.values()));
+        final List<T> providerList = new ArrayList<T>(getClasses(providerMap.values()));
 
         if (comparator != null) {
             Collections.sort(providerList, comparator);
@@ -513,8 +539,8 @@ public class Providers {
         return (result == null) ? defaultConstraint : result;
     }
 
-    private static List<Class<?>> getImplementedContracts(Class<?> clazz) {
-        List<Class<?>> list = new LinkedList<Class<?>>();
+    private static Iterable<Class<?>> getImplementedContracts(Class<?> clazz) {
+        Collection<Class<?>> list = new LinkedList<Class<?>>();
 
         Collections.addAll(list, clazz.getInterfaces());
 

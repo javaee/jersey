@@ -49,6 +49,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
@@ -60,6 +61,7 @@ import javax.inject.Inject;
 
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.Version;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -225,28 +227,7 @@ public class JerseyClientTest {
 
     @Test
     public void userAgentTest() {
-        final Client customClient = ClientBuilder.newClient(new ClientConfig().connector(new Connector() {
-            @Override
-            public ClientResponse apply(ClientRequest request) throws ProcessingException {
-                throw new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null);
-            }
-
-            @Override
-            public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
-                callback.failure(new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null));
-                return null;
-            }
-
-            @Override
-            public void close() {
-                // nothing
-            }
-
-            @Override
-            public String getName() {
-                return null;
-            }
-        }));
+        final Client customClient = ClientBuilder.newClient(new ClientConfig().connectorProvider(new TestConnector()));
 
         try {
             customClient.target("test").request().get();
@@ -298,5 +279,33 @@ public class JerseyClientTest {
 
         Response resp = client.target("test").request().get();
         assertEquals("Foo", resp.readEntity(String.class));
+    }
+
+    private static class TestConnector implements Connector, ConnectorProvider {
+        @Override
+        public ClientResponse apply(ClientRequest request) throws ProcessingException {
+            throw new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null);
+        }
+
+        @Override
+        public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
+            callback.failure(new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null));
+            return null;
+        }
+
+        @Override
+        public void close() {
+            // nothing
+        }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public Connector getConnector(Client client, Configuration runtimeConfig) {
+            return this;
+        }
     }
 }

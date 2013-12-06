@@ -39,14 +39,9 @@
  */
 package org.glassfish.jersey.grizzly.connector;
 
-import java.net.URI;
-
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -82,13 +77,14 @@ public class HttpHeadersTest extends JerseyTest{
         return new ResourceConfig(HttpHeadersTest.HttpMethodResource.class);
     }
 
+    @Override
+    protected void configureClient(ClientConfig config) {
+        config.connectorProvider(new GrizzlyConnectorProvider());
+    }
+
     @Test
     public void testPost() {
-        final URI u = target().getUri();
-        Client c = ClientBuilder.newClient(new ClientConfig().connector(new GrizzlyConnector(client().getConfiguration())));
-        WebTarget t = c.target(u);
-
-        Response response = t.path("test").request().header("X-CLIENT", "client").post(null);
+        Response response = target("test").request().header("X-CLIENT", "client").post(null);
 
         assertEquals(200, response.getStatus());
         assertTrue(response.hasEntity());

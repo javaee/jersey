@@ -64,8 +64,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.glassfish.jersey.client.HttpUrlConnector.ConnectionFactory;
-
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -128,14 +126,15 @@ public class HttpUrlConnectorTest {
     public void testSSLConnection() {
         JerseyClient client = (JerseyClient) ClientBuilder.newClient();
         ClientRequest request = client.target("https://localhost:8080").request().buildGet().request();
-        ConnectionFactory factory = new ConnectionFactory() {
+        HttpUrlConnectorProvider.ConnectionFactory factory = new HttpUrlConnectorProvider.ConnectionFactory() {
             @Override
             public HttpURLConnection getConnection(URL endpointUrl) throws IOException {
                 HttpURLConnection result = (HttpURLConnection) endpointUrl.openConnection();
                 return wrapNoContentHttps(result);
             }
         };
-        HttpUrlConnector connector = new HttpUrlConnector(client.getConfiguration(), factory);
+        final HttpUrlConnectorProvider connectorProvider = new HttpUrlConnectorProvider().connectionFactory(factory);
+        HttpUrlConnector connector = (HttpUrlConnector) connectorProvider.getConnector(client, client.getConfiguration());
         ClientResponse res = connector.apply(request);
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), res.getStatusInfo().getStatusCode());
         assertEquals(Response.Status.NO_CONTENT.getReasonPhrase(), res.getStatusInfo().getReasonPhrase());
@@ -144,7 +143,7 @@ public class HttpUrlConnectorTest {
     protected HttpURLConnection wrapNoContentHttps(final HttpURLConnection result) {
         if (result instanceof HttpsURLConnection) {
             return new HttpsURLConnection(result.getURL()) {
-                private HttpsURLConnection delegate = (HttpsURLConnection) result;
+                private final HttpsURLConnection delegate = (HttpsURLConnection) result;
 
                 @Override
                 public String getHeaderFieldKey(int n) {

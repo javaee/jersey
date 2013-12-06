@@ -166,13 +166,15 @@ import com.google.common.util.concurrent.MoreExecutors;
  * <p>
  * Client operations are thread safe, the HTTP connection may
  * be shared between different threads.
- * <p/>
+ * </p>
  * <p>
  * If a response entity is obtained that is an instance of {@link Closeable}
  * then the instance MUST be closed after processing the entity to release
  * connection-based resources.
- * <p/>
+ * </p>
+ * <p>
  * The following methods are currently supported: HEAD, GET, POST, PUT, DELETE, OPTIONS, PATCH and TRACE.
+ * </p>
  *
  * @author jorgeluisw@mac.com
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -194,8 +196,8 @@ public class ApacheConnector implements Connector {
     }
 
     private final CloseableHttpClient client;
-    private CookieStore cookieStore = null;
-    private boolean preemptiveBasicAuth = false;
+    private final CookieStore cookieStore;
+    private final boolean preemptiveBasicAuth;
     private final RequestConfig requestConfig;
 
     /**
@@ -203,13 +205,12 @@ public class ApacheConnector implements Connector {
      *
      * @param config client configuration.
      */
-    public ApacheConnector(Configuration config) {
-        Object connectionManager = null;
+    ApacheConnector(Configuration config) {
         Object httpParams = null;
         Object reqConfig = null;
 
         if (config != null) {
-            connectionManager = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
+            Object connectionManager = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
 
             if (connectionManager != null) {
                 if (!(connectionManager instanceof HttpClientConnectionManager)) {
@@ -220,7 +221,6 @@ public class ApacheConnector implements Connector {
                                     connectionManager.getClass().getName(),
                                     HttpClientConnectionManager.class.getName())
                     );
-                    connectionManager = null;
                 }
             }
 
@@ -261,7 +261,8 @@ public class ApacheConnector implements Connector {
 
         RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 
-        int connectTimeout = 0, socketTimeout = 0;
+        int connectTimeout = 0;
+        int socketTimeout = 0;
         boolean ignoreCookies = false;
         if (config != null) {
             connectTimeout = PropertiesHelper.getValue(config.getProperties(), ClientProperties.CONNECT_TIMEOUT, 0);
@@ -309,6 +310,8 @@ public class ApacheConnector implements Connector {
             Boolean preemptiveBasicAuthProperty = (Boolean) config.getProperties()
                     .get(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
             this.preemptiveBasicAuth = (preemptiveBasicAuthProperty != null) ? preemptiveBasicAuthProperty : false;
+        } else {
+            this.preemptiveBasicAuth = false;
         }
 
         if (httpParams != null) {
@@ -348,6 +351,8 @@ public class ApacheConnector implements Connector {
         if (requestConfig.getCookieSpec() == null || !requestConfig.getCookieSpec().equals(CookieSpecs.IGNORE_COOKIES)) {
             this.cookieStore = new BasicCookieStore();
             clientBuilder.setDefaultCookieStore(cookieStore);
+        } else {
+            this.cookieStore = null;
         }
         clientBuilder.setDefaultRequestConfig(requestConfig);
         this.client = clientBuilder.build();
@@ -362,7 +367,7 @@ public class ApacheConnector implements Connector {
         return sslConfigurator != null ? sslConfigurator.createSSLContext() : null;
     }
 
-    protected HttpClientConnectionManager getConnectionManager(final Configuration config, final SSLContext sslContext) {
+    HttpClientConnectionManager getConnectionManager(final Configuration config, final SSLContext sslContext) {
         final Object cmObject = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
 
         // Connection manager from configuration.

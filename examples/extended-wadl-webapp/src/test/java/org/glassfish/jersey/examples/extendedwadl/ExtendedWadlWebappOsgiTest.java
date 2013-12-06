@@ -39,7 +39,27 @@
  */
 package org.glassfish.jersey.examples.extendedwadl;
 
-import org.glassfish.grizzly.http.server.HttpServer;
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.security.AccessController;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Logger;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+
+import javax.inject.Inject;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
 import org.glassfish.jersey.examples.extendedwadl.resources.ItemResource;
 import org.glassfish.jersey.examples.extendedwadl.resources.ItemsResource;
 import org.glassfish.jersey.examples.extendedwadl.resources.MyApplication;
@@ -50,6 +70,9 @@ import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+
+import org.glassfish.grizzly.http.server.HttpServer;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -59,27 +82,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.w3c.dom.Document;
-
-import javax.inject.Inject;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
-import java.net.URI;
-import java.nio.charset.Charset;
-import java.security.AccessController;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.logging.Logger;
-
-import static junit.framework.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
@@ -89,6 +91,8 @@ import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  *
@@ -152,7 +156,6 @@ public class ExtendedWadlWebappOsgiTest {
                 // Grizzly
                 systemPackage("sun.misc"),       // required by grizzly-framework
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-framework").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-rcm").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-server").versionAsInProject(),
 
@@ -163,8 +166,6 @@ public class ExtendedWadlWebappOsgiTest {
                 // tinybundles + required dependencies
                 mavenBundle().groupId("org.ops4j.pax.tinybundles").artifactId("tinybundles").versionAsInProject(),
                 mavenBundle().groupId("biz.aQute.bnd").artifactId("bndlib").versionAsInProject(),
-
-
 
                 // create ad-hoc bundle
                 provision(
@@ -256,7 +257,7 @@ public class ExtendedWadlWebappOsgiTest {
 
         assertFalse(wadl.contains("application.wadl/xsd0.xsd"));
 
-        server.stop();
+        server.shutdownNow();
     }
 
     @Test
@@ -287,7 +288,7 @@ public class ExtendedWadlWebappOsgiTest {
 
         checkWadl(wadl, baseUri);
 
-        server.stop();
+        server.shutdownNow();
     }
 
 

@@ -66,6 +66,8 @@ import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 /**
+ * NOTE: This test is excluded on JDK6 as it requires Servlet 3.1 API that is built against JDK 7.
+ *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
@@ -88,7 +90,7 @@ public class PackageScanningTest {
 
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-sse").versionAsInProject(),
 
-                mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version("3.1-b02"),
+                mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version("3.1.0"),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-servlet").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").
                         versionAsInProject(),
@@ -131,7 +133,6 @@ public class PackageScanningTest {
             Thread.currentThread().setContextClassLoader(originalContextClassLoader);
         }
         // END of workaround - when grizzly updated to more recent version, only the inner line of try clause should remain:
-        // HttpServer server = GrizzlyWebContainerFactory.create(baseUri, ServletContainer.class, initParams);
 
         _testSimpleResource(server);
     }
@@ -140,10 +141,9 @@ public class PackageScanningTest {
         final Client client = ClientBuilder.newClient();
         final String response = client.target(baseUri).path("/simple").request().get(String.class);
 
-        System.out.println("RESULT = " + response);
         assertEquals("OK", response);
 
-        server.stop();
+        server.shutdownNow();
     }
 
 }

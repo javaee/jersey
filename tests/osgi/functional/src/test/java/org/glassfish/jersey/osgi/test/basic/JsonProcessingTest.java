@@ -124,6 +124,6 @@ public class JsonProcessingTest {
         System.out.println("RESULT = " + entity);
         assertEquals(jsonObject, entity);
 
-        server.stop();
+        server.shutdownNow();
     }
 }

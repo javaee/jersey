@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,5 +48,11 @@ package org.glassfish.jersey.internal.util.collection;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public interface UnsafeValue<T, E extends Throwable> {
+    /**
+     * Get the stored value.
+     *
+     * @return stored value.
+     * @throws E in case there was an error while computing the value.
+     */
     public T get() throws E;
 }

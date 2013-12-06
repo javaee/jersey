@@ -47,6 +47,7 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT_ENCODING;
@@ -58,6 +59,7 @@ import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.message.DeflateEncoder;
 import org.glassfish.jersey.message.GZipEncoder;
 
@@ -80,7 +82,7 @@ public class EncodingFilterTest {
                 EncodingFilter.class,
                 GZipEncoder.class,
                 DeflateEncoder.class
-        ).connector(new TestConnector()));
+        ).connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(ACCEPT_ENCODING));
@@ -93,7 +95,7 @@ public class EncodingFilterTest {
                 EncodingFilter.class,
                 GZipEncoder.class,
                 DeflateEncoder.class
-        ).property(ClientProperties.USE_ENCODING, "gzip").connector(new TestConnector()));
+        ).property(ClientProperties.USE_ENCODING, "gzip").connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(ACCEPT_ENCODING));
@@ -103,7 +105,7 @@ public class EncodingFilterTest {
     @Test
     public void testContentEncodingViaFeature() {
         Client client = ClientBuilder.newClient(new ClientConfig()
-                .connector(new TestConnector())
+                .connectorProvider(new TestConnector())
                 .register(new EncodingFeature("gzip", GZipEncoder.class, DeflateEncoder.class)));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
@@ -117,7 +119,7 @@ public class EncodingFilterTest {
                 EncodingFilter.class,
                 GZipEncoder.class,
                 DeflateEncoder.class
-        ).property(ClientProperties.USE_ENCODING, "non-gzip").connector(new TestConnector()));
+        ).property(ClientProperties.USE_ENCODING, "non-gzip").connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(ACCEPT_ENCODING));
@@ -134,7 +136,7 @@ public class EncodingFilterTest {
         final TestInputStream responseStream = new TestInputStream();
 
         Client client = ClientBuilder.newClient(new ClientConfig()
-                .connector(new TestConnector() {
+                .connectorProvider(new TestConnector() {
                     @Override
                     public ClientResponse apply(ClientRequest requestContext) throws ProcessingException {
                         final ClientResponse responseContext = new ClientResponse(Response.Status.OK, requestContext);
@@ -167,7 +169,7 @@ public class EncodingFilterTest {
         final TestInputStream responseStream = new TestInputStream();
 
         Client client = ClientBuilder.newClient(new ClientConfig()
-                .connector(new TestConnector() {
+                .connectorProvider(new TestConnector() {
                     @Override
                     public ClientResponse apply(ClientRequest requestContext) throws ProcessingException {
                         final ClientResponse responseContext = new ClientResponse(Response.Status.OK, requestContext);
@@ -186,7 +188,13 @@ public class EncodingFilterTest {
         }
     }
 
-    private static class TestConnector implements Connector {
+    private static class TestConnector implements Connector, ConnectorProvider {
+
+        @Override
+        public Connector getConnector(Client client, Configuration runtimeConfig) {
+            return this;
+        }
+
         @Override
         public ClientResponse apply(ClientRequest requestContext) {
             final ClientResponse responseContext = new ClientResponse(

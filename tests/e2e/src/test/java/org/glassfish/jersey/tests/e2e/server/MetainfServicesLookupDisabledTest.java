@@ -57,7 +57,6 @@ public class MetainfServicesLookupDisabledTest extends AbstractDisableMetainfSer
         testGet(500, 415);
     }
 
-
     @Override
     protected Application configure() {
         ResourceConfig resourceConfig = (ResourceConfig)super.configure();

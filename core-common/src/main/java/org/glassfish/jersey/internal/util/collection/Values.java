@@ -45,17 +45,27 @@ package org.glassfish.jersey.internal.util.collection;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class Values {
-    private static final Value EMPTY = new Value() {
+    private static final LazyValue EMPTY = new LazyValue() {
         @Override
         public Object get() {
             return null;
         }
+
+        @Override
+        public boolean isInitialized() {
+            return true;
+        }
     };
 
-    private static final UnsafeValue EMPTY_UNSAFE = new UnsafeValue() {
+    private static final LazyUnsafeValue EMPTY_UNSAFE = new LazyUnsafeValue() {
         @Override
         public Object get() {
             return null;
+        }
+
+        @Override
+        public boolean isInitialized() {
+            return true;
         }
     };
 
@@ -191,7 +201,7 @@ public final class Values {
      * @return "throwing" unsafe value provider.
      * @throws NullPointerException in case the supplied throwable instance is {@code null}.
      */
-    public static <T, E extends Throwable> UnsafeValue<T, E> throwing(final E throwable) throws NullPointerException {
+    public static <T, E extends Throwable> UnsafeValue<T, E> throwing(final E throwable) {
         if (throwable == null) {
             throw new NullPointerException("Supplied throwable ");
         }
@@ -250,8 +260,9 @@ public final class Values {
      * @param delegate value provider delegate that will be used to lazily initialize the value provider.
      * @return lazily initialized value provider.
      */
-    public static <T> Value<T> lazy(final Value<T> delegate) {
-        return (delegate == null) ? Values.<T>empty() : new LazyValue<T>(delegate);
+    public static <T> LazyValue<T> lazy(final Value<T> delegate) {
+        //noinspection unchecked
+        return (delegate == null) ? (LazyValue<T>) EMPTY : new LazyValueImpl<T>(delegate);
     }
 
     /**
@@ -290,13 +301,13 @@ public final class Values {
         }
     }
 
-    private static class LazyValue<T> implements Value<T> {
+    private static class LazyValueImpl<T> implements LazyValue<T> {
         private final Object lock;
         private final Value<T> delegate;
 
         private volatile Value<T> value;
 
-        public LazyValue(final Value<T> delegate) {
+        public LazyValueImpl(final Value<T> delegate) {
             this.delegate = delegate;
             this.lock = new Object();
         }
@@ -315,13 +326,17 @@ public final class Values {
             return result.get();
         }
 
+        @Override
+        public boolean isInitialized() {
+            return value != null;
+        }
 
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            return delegate.equals(((LazyValue) o).delegate);
+            return delegate.equals(((LazyValueImpl) o).delegate);
         }
 
         @Override
@@ -359,17 +374,18 @@ public final class Values {
      * @param delegate value provider delegate that will be used to lazily initialize the value provider.
      * @return lazily initialized value provider.
      */
-    public static <T, E extends Throwable> UnsafeValue<T, E> lazy(final UnsafeValue<T, E> delegate) {
-        return (delegate == null) ? Values.<T, E>emptyUnsafe() : new LazyUnsafeValue<T, E>(delegate);
+    public static <T, E extends Throwable> LazyUnsafeValue<T, E> lazy(final UnsafeValue<T, E> delegate) {
+        //noinspection unchecked
+        return (delegate == null) ? (LazyUnsafeValue<T, E>) EMPTY_UNSAFE : new LazyUnsafeValueImpl<T, E>(delegate);
     }
 
-    private static class LazyUnsafeValue<T, E extends Throwable> implements UnsafeValue<T, E> {
+    private static class LazyUnsafeValueImpl<T, E extends Throwable> implements LazyUnsafeValue<T, E> {
         private final Object lock;
         private final UnsafeValue<T, E> delegate;
 
         private volatile UnsafeValue<T, E> value;
 
-        public LazyUnsafeValue(final UnsafeValue<T, E> delegate) {
+        public LazyUnsafeValueImpl(final UnsafeValue<T, E> delegate) {
             this.delegate = delegate;
             this.lock = new Object();
         }
@@ -396,11 +412,16 @@ public final class Values {
         }
 
         @Override
+        public boolean isInitialized() {
+            return value != null;
+        }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            return delegate.equals(((LazyUnsafeValue) o).delegate);
+            return delegate.equals(((LazyUnsafeValueImpl) o).delegate);
         }
 
         @Override

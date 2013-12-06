@@ -103,7 +103,7 @@ public class JaxRsRiBundleTest {
         System.out.println("RESULT = " + response);
         assertEquals("OK", response);
 
-        server.stop();
+        server.shutdownNow();
     }
 
 }

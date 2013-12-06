@@ -82,7 +82,8 @@ public class HttpMethodTest extends JerseyTest {
 
     protected Client createClient() {
         ClientConfig cc = new ClientConfig();
-        return ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        return ClientBuilder.newClient(cc);
     }
 
     protected Client createPoolingClient() {
@@ -91,7 +92,8 @@ public class HttpMethodTest extends JerseyTest {
         connectionManager.setMaxTotal(100);
         connectionManager.setDefaultMaxPerRoute(100);
         cc.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
-        return ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        return ClientBuilder.newClient(cc);
     }
 
     private WebTarget getWebTarget(final Client client) {
@@ -189,12 +191,10 @@ public class HttpMethodTest extends JerseyTest {
 
     @Test
     public void testPostChunked() {
-        ClientConfig cc = new ClientConfig();
-        Client c = ClientBuilder.newClient(cc);
-        Client client = ClientBuilder
-                .newClient(new ClientConfig()
-                        .property(ClientProperties.CHUNKED_ENCODING_SIZE, 1024)
-                        .connector(new ApacheConnector(c.getConfiguration())));
+        ClientConfig cc = new ClientConfig()
+                .property(ClientProperties.CHUNKED_ENCODING_SIZE, 1024)
+                .connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
         WebTarget r = getWebTarget(client);
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));

@@ -39,10 +39,10 @@
  */
 package org.glassfish.jersey.apache.connector;
 
+import java.util.logging.Logger;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
@@ -51,15 +51,10 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 import org.junit.Test;
-
-import java.util.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -91,10 +86,8 @@ public class FollowRedirectsTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
-        Client c = super.getClient(tc, applicationHandler);
-        ClientConfig cc = new ClientConfig().connector(new ApacheConnector(c.getConfiguration()));
-        return ClientBuilder.newClient(cc);
+    protected void configureClient(ClientConfig config) {
+        config.connectorProvider(new ApacheConnectorProvider());
     }
 
     @Test

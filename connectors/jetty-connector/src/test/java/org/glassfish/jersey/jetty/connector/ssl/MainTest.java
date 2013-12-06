@@ -39,23 +39,27 @@
  */
 package org.glassfish.jersey.jetty.connector.ssl;
 
-import com.google.common.io.ByteStreams;
-import org.glassfish.jersey.SslConfigurator;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.jetty.connector.JettyClientProperties;
-import org.glassfish.jersey.jetty.connector.JettyConnector;
-import org.junit.*;
+import java.io.InputStream;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-import java.io.InputStream;
 
+import org.glassfish.jersey.SslConfigurator;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.jetty.connector.JettyClientProperties;
+import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import com.google.common.io.ByteStreams;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -88,8 +92,7 @@ public class MainTest {
 
         ClientConfig config = new ClientConfig();
         config.property(JettyClientProperties.SSL_CONFIG, sslConfig);
-
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
 
         Client client = ClientBuilder.newClient(config);
 
@@ -125,8 +128,7 @@ public class MainTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(JettyClientProperties.SSL_CONFIG, sslConfig);
-
-        cc.connector(new JettyConnector(cc));
+        cc.connectorProvider(new JettyConnectorProvider());
 
         Client client = ClientBuilder.newClient(cc);
 
@@ -157,8 +159,7 @@ public class MainTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(JettyClientProperties.SSL_CONFIG, sslConfig);
-
-        cc.connector(new JettyConnector(cc));
+        cc.connectorProvider(new JettyConnectorProvider());
 
         Client client = ClientBuilder.newClient(cc);
 

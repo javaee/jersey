@@ -62,7 +62,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.media.sse.EventListener;
 import org.glassfish.jersey.media.sse.EventSource;
 import org.glassfish.jersey.media.sse.InboundEvent;
@@ -106,11 +106,10 @@ public class ItemStoreResourceITCase extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.property(ClientProperties.CONNECT_TIMEOUT, 15000);
-        config.property(ClientProperties.READ_TIMEOUT, 2000);
-        config.property(ClientProperties.ASYNC_THREADPOOL_SIZE, MAX_LISTENERS + 1);
-        GrizzlyConnector jerseyClientConnector = new GrizzlyConnector(config);
-        config.connector(jerseyClientConnector);
+        config.property(ClientProperties.CONNECT_TIMEOUT, 15000)
+                .property(ClientProperties.READ_TIMEOUT, 2000)
+                .property(ClientProperties.ASYNC_THREADPOOL_SIZE, MAX_LISTENERS + 1)
+                .connectorProvider(new GrizzlyConnectorProvider());
     }
 
     @Override
@@ -148,6 +147,7 @@ public class ItemStoreResourceITCase extends JerseyTest {
 
             es.register(new EventListener() {
                 @Override
+                @SuppressWarnings("MagicNumber")
                 public void onEvent(InboundEvent inboundEvent) {
                     try {
                         if (inboundEvent.getName() == null) {

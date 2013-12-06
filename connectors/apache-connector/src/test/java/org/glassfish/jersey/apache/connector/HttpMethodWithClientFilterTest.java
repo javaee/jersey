@@ -53,9 +53,10 @@ public class HttpMethodWithClientFilterTest extends HttpMethodTest {
 
     @Override
     protected Client createClient() {
-        ClientConfig cc = new ClientConfig();
-        cc.register(LoggingFilter.class);
-        return ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        ClientConfig cc = new ClientConfig()
+                .register(LoggingFilter.class)
+                .connectorProvider(new ApacheConnectorProvider());
+        return ClientBuilder.newClient(cc);
     }
 
 }

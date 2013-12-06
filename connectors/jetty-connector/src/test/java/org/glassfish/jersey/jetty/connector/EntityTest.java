@@ -39,6 +39,20 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -46,19 +60,8 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainer;
+
 import org.junit.Test;
-
-import javax.ws.rs.*;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 
 
@@ -131,7 +134,7 @@ public class EntityTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
     }
 
     @Override

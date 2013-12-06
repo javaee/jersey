@@ -39,13 +39,8 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.message.GZipEncoder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
+import java.util.Arrays;
+import java.util.logging.Logger;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -56,9 +51,15 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.logging.Logger;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.message.GZipEncoder;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+
+import org.junit.Test;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -87,7 +88,7 @@ public class GZIPContentEncodingTest extends JerseyTest {
     @Override
     protected void configureClient(ClientConfig config) {
         config.register(GZipEncoder.class);
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
     }
 
     @Test
@@ -105,7 +106,7 @@ public class GZIPContentEncodingTest extends JerseyTest {
     public void testPostChunked() {
         ClientConfig config = new ClientConfig();
         config.property(ClientProperties.CHUNKED_ENCODING_SIZE, 1024);
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
         config.register(new LoggingFilter(LOGGER, true));
 
         Client client = ClientBuilder.newClient(config);

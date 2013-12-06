@@ -213,7 +213,7 @@ public class TraceSupportTest extends JerseyTest {
     }
 
     private Client createGrizzlyClient() {
-        return ClientBuilder.newClient(new ClientConfig().connector(new GrizzlyConnector(client().getConfiguration())));
+        return ClientBuilder.newClient(new ClientConfig().connectorProvider(new GrizzlyConnectorProvider()));
     }
 
 

@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.media.sse.EventInput;
 import org.glassfish.jersey.media.sse.EventListener;
 import org.glassfish.jersey.media.sse.EventOutput;
@@ -201,8 +201,7 @@ public class EventOutputTest extends JerseyTest {
         clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 15000);
         clientConfig.property(ClientProperties.READ_TIMEOUT, 0);
         clientConfig.property(ClientProperties.ASYNC_THREADPOOL_SIZE, 8);
-        GrizzlyConnector jerseyClientConnector = new GrizzlyConnector(clientConfig);
-        clientConfig.connector(jerseyClientConnector);
+        clientConfig.connectorProvider(new GrizzlyConnectorProvider());
         Client client = ClientBuilder.newBuilder().withConfig(clientConfig).build();
 
         final CountDownLatch latch = new CountDownLatch(1);

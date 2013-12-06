@@ -126,7 +126,7 @@ public class MultiPartTest {
 
         checkEntity("This is the only segment", (BodyPartEntity) result.getBodyParts().get(0).getEntity());
 
-        server.stop();
+        server.shutdownNow();
     }
 
     private void checkEntity(String expected, BodyPartEntity entity) throws IOException {

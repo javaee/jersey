@@ -54,7 +54,6 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.inmemory.internal.InMemoryConnector;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -64,7 +63,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * Test class for {@link org.glassfish.jersey.test.inmemory.internal.InMemoryConnector}.
+ * Test class for {@link InMemoryConnector}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */

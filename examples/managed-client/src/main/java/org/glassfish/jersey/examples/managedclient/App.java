@@ -70,7 +70,7 @@ public class App {
                     BASE_URI, "public/a",
                     BASE_URI, "public/b"));
             System.in.read();
-            server.stop();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, "Error in the IO container.", ex);
         }

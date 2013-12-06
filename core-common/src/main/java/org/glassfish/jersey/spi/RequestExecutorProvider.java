@@ -37,55 +37,54 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.examples.extendedwadl;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+package org.glassfish.jersey.spi;
 
-import org.glassfish.jersey.examples.extendedwadl.resources.MyApplication;
-import org.glassfish.jersey.grizzly2.servlet.GrizzlyWebContainerFactory;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.servlet.ServletContainer;
-import org.glassfish.jersey.servlet.ServletProperties;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-
+import java.util.concurrent.ExecutorService;
 
 /**
- * Runner for the Jersey extended-wadl-webapp sample.
+ * Pluggable provider of {@link ExecutorService executor service} instance used to run
+ * Jersey request and response processing code.
+ * <p>
+ * During Jersey runtime initialization, Jersey invokes the registered executor provider
+ * to get the {@link #getRequestingExecutor() requesting executor} that will be used
+ * to run the request pre-processing and request-to-response transformation code.
+ * </p>
+ * <p>
+ * The custom provider implementing this interface should be registered in the standard way on the server.
+ * The client must be created with configuration containing the provider, later registrations will be ignored.
+ * </p>
  *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class App {
+@Contract
+public interface RequestExecutorProvider {
+    /**
+     * Get request processing executor.
+     *
+     * This method is called only once at Jersey initialization, before the
+     * first request is processed.
+     *
+     * @return request processing executor. Must not return {@code null}.
+     */
+    public ExecutorService getRequestingExecutor();
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/extended-wadl-webapp");
-    public static final String ROOT_PATH = "/application.wadl";
-
-    public static void main(String[] args) {
-        try {
-            System.out.println("Extended WADL web application example");
-
-            Map<String, String> initParams = new HashMap<String, String>();
-
-            initParams.put(
-                    ServletProperties.JAXRS_APPLICATION_CLASS,
-                    MyApplication.class.getName());
-
-            initParams.put(ServerProperties.WADL_GENERATOR_CONFIG, "org.glassfish.jersey.examples.extendedwadl" +
-                    ".SampleWadlGeneratorConfig");
-
-            final HttpServer server = GrizzlyWebContainerFactory.create(BASE_URI, ServletContainer.class, initParams);
-
-            System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+    /**
+     * Release the executor previously retrieved via {@link #getRequestingExecutor} call.
+     *
+     * This method is called when the Jersey runtime does not need the executor anymore.
+     * After this method has been called, the executor will not be used by the Jersey runtime
+     * anymore.
+     * <p>
+     * The decision how the executor is released is left upon the provider implementation.
+     * In most typical scenarios, the executor may be simply shutdown. However in cases when
+     * the provider is implemented to re-use same executors across multiple components or Jersey
+     * runtimes, the executor release logic may require more sophisticated implementation.
+     * </p>
+     *
+     * @param executor executor instance to be released.
+     * @since 2.5
+     */
+    public void releaseRequestingExecutor(ExecutorService executor);
 }

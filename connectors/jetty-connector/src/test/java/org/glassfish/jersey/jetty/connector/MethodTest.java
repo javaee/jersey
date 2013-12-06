@@ -39,7 +39,15 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
-import javax.ws.rs.*;
+import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -51,10 +59,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -101,7 +105,7 @@ public class MethodTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
     }
 
     @Test

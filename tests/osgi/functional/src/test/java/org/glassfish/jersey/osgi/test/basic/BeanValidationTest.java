@@ -156,7 +156,7 @@ public class BeanValidationTest {
 
         assertEquals(expectedResponseCode, response.getStatus());
 
-        server.stop();
+        server.shutdownNow();
     }
 
 }

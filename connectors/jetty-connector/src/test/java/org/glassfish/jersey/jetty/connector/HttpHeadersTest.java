@@ -39,15 +39,11 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
-import java.net.URI;
 import java.util.logging.Logger;
 
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -90,16 +86,16 @@ public class HttpHeadersTest extends JerseyTest {
         return config;
     }
 
+    @Override
+    protected void configureClient(ClientConfig config) {
+        config.connectorProvider(new JettyConnectorProvider());
+    }
+
     @Test
     public void testPost() {
-        final URI u = target().getUri();
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(client().getConfiguration())));
-        WebTarget t = client.target(u);
-
-        Response response = t.path("test").request().header("X-CLIENT", "client").post(null);
+        Response response = target().path("test").request().header("X-CLIENT", "client").post(null);
 
         assertEquals(200, response.getStatus());
         assertTrue(response.hasEntity());
-        client.close();
     }
 }

@@ -39,22 +39,32 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
+import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 
-import java.util.logging.Logger;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.JerseyClient;
+import org.glassfish.jersey.client.JerseyClientBuilder;
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -85,7 +95,8 @@ public class CookieTest extends JerseyTest {
     @Test
     public void testCookieResource() {
         ClientConfig config = new ClientConfig();
-        Client client = ClientBuilder.newClient(config.connector(new JettyConnector(config.getConfiguration())));
+        config.connectorProvider(new JettyConnectorProvider());
+        Client client = ClientBuilder.newClient(config);
         WebTarget r = client.target(getBaseUri());
 
 
@@ -98,16 +109,18 @@ public class CookieTest extends JerseyTest {
     public void testDisabledCookies() {
         ClientConfig cc = new ClientConfig();
         cc.property(JettyClientProperties.DISABLE_COOKIES, true);
-        Client client = ClientBuilder.newClient(cc.connector(new JettyConnector(cc.getConfiguration())));
+        cc.connectorProvider(new JettyConnectorProvider());
+        JerseyClient client = JerseyClientBuilder.createClient(cc);
         WebTarget r = client.target(getBaseUri());
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
         assertEquals("NO-COOKIE", r.request().get(String.class));
 
-        if (((JettyConnector) cc.getConnector()).getCookieStore() != null) {
-            assertTrue(((JettyConnector) cc.getConnector()).getCookieStore().getCookies().size() == 0);
+        final JettyConnector connector = (JettyConnector) client.getConfiguration().getConnector();
+        if (connector.getCookieStore() != null) {
+            assertTrue(connector.getCookieStore().getCookies().isEmpty());
         } else {
-            assertNull(((JettyConnector) cc.getConnector()).getCookieStore());
+            assertNull(connector.getCookieStore());
         }
         client.close();
     }
@@ -115,15 +128,17 @@ public class CookieTest extends JerseyTest {
     @Test
     public void testCookies() {
         ClientConfig cc = new ClientConfig();
-        Client client = ClientBuilder.newClient(cc.connector(new JettyConnector(cc.getConfiguration())));
+        cc.connectorProvider(new JettyConnectorProvider());
+        JerseyClient client = JerseyClientBuilder.createClient(cc);
         WebTarget r = client.target(getBaseUri());
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
         assertEquals("value", r.request().get(String.class));
 
-        assertNotNull(((JettyConnector) cc.getConnector()).getCookieStore().getCookies());
-        assertEquals(1, ((JettyConnector) cc.getConnector()).getCookieStore().getCookies().size());
-        assertEquals("value", ((JettyConnector) cc.getConnector()).getCookieStore().getCookies().get(0).getValue());
+        final JettyConnector connector = (JettyConnector) client.getConfiguration().getConnector();
+        assertNotNull(connector.getCookieStore().getCookies());
+        assertEquals(1, connector.getCookieStore().getCookies().size());
+        assertEquals("value", connector.getCookieStore().getCookies().get(0).getValue());
         client.close();
     }
 }

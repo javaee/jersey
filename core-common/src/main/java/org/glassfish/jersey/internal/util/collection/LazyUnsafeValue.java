@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,39 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
-package org.glassfish.jersey.spi;
-
-import java.util.concurrent.ExecutorService;
+package org.glassfish.jersey.internal.util.collection;
 
 /**
- * Pluggable provider of {@link ExecutorService executor services} used to run
- * Jersey request and response processing code.
+ * Lazily initialized {@link UnsafeValue unsafe value}.
  * <p>
- * When Jersey receives a request for processing, it will use the
- * {@link #getRequestingExecutor() requesting executor} to run the request
- * pre-processing and request-to-response transformation code.
- * </p>
- * <p>
- * The custom provider implementing this interface should be registered in the standard way on the server.
- * The client must be created with configuration containing the provider, later registrations will be ignored.
+ * Instances of this interface are initialized lazily during the first call to their
+ * {@link #get() value retrieval method}. Information about the initialization state
+ * of a {@code LazyUnsafeValue} instance is available via {@link #isInitialized()} method.
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- * @see ResponseExecutorsProvider
  */
-@Contract
-public interface RequestExecutorsProvider {
+public interface LazyUnsafeValue<T, E extends Throwable> extends UnsafeValue<T, E> {
     /**
-     * Get request processing executor.
-     * <p/>
-     * This method is called only once at Jersey initialization, before the
-     * first request is processed.
+     * Check if the lazy value has been initialized already (i.e. its {@link #get()} method
+     * has already been called previously) or not.
      *
-     * @return request processing executor, or {@code null} if the provider does not supply the executor.
+     * @return {@code true} if the lazy value has already been initialized, {@code false} otherwise.
      */
-    public ExecutorService getRequestingExecutor();
-
-
+    boolean isInitialized();
 }

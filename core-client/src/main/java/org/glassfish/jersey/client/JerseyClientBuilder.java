@@ -66,6 +66,28 @@ public class JerseyClientBuilder extends ClientBuilder {
     private SSLContext sslContext;
 
     /**
+     * Create a new custom-configured {@link JerseyClient} instance.
+     *
+     * @return new configured Jersey client instance.
+     * @since 2.5
+     */
+    public static JerseyClient createClient() {
+        return new JerseyClientBuilder().build();
+    }
+
+    /**
+     * Create a new custom-configured {@link JerseyClient} instance.
+     *
+     * @param configuration data used to provide initial configuration for the new
+     *                      Jersey client instance.
+     * @return new configured Jersey client instance.
+     * @since 2.5
+     */
+    public static JerseyClient createClient(Configuration configuration) {
+        return new JerseyClientBuilder().withConfig(configuration).build();
+    }
+
+    /**
      * Create new Jersey client builder instance.
      */
     public JerseyClientBuilder() {
@@ -128,7 +150,7 @@ public class JerseyClientBuilder extends ClientBuilder {
                     config,
                     Values.lazy(new UnsafeValue<SSLContext, IllegalStateException>() {
                         @Override
-                        public SSLContext get() throws IllegalStateException {
+                        public SSLContext get() {
                             return sslConfiguratorCopy.createSSLContext();
                         }
                     }),

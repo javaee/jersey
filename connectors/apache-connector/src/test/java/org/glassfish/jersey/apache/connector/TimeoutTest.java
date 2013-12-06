@@ -95,7 +95,7 @@ public class TimeoutTest extends JerseyTest {
     @Override
     protected void configureClient(ClientConfig config) {
         config.property(ClientProperties.READ_TIMEOUT, 1000);
-        config.connector(new ApacheConnector(config));
+        config.connectorProvider(new ApacheConnectorProvider());
     }
 
     @Test

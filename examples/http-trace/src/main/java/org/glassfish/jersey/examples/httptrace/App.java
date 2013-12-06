@@ -94,7 +94,7 @@ public class App {
                     BASE_URI, ROOT_PATH_PROGRAMMATIC,
                     BASE_URI, ROOT_PATH_ANNOTATED));
             System.in.read();
-            server.stop();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }

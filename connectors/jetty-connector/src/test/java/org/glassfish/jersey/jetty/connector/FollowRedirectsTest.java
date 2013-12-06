@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
+import java.net.URI;
+import java.util.logging.Logger;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
@@ -55,10 +58,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import java.net.URI;
-import java.util.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -93,14 +92,14 @@ public class FollowRedirectsTest extends JerseyTest {
     @Override
     protected void configureClient(ClientConfig config) {
         config.property(ClientProperties.FOLLOW_REDIRECTS, false);
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
     }
 
     @Test
     public void testDoFollow() {
         final URI u = target().getUri();
         ClientConfig config = new ClientConfig().property(ClientProperties.FOLLOW_REDIRECTS, true);
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
         Client c = ClientBuilder.newClient(config);
         WebTarget t = c.target(u);
         Response r = t.path("test/redirect").request().get();
@@ -128,7 +127,7 @@ public class FollowRedirectsTest extends JerseyTest {
     public void testDontFollowPerRequestOverride() {
         final URI u = target().getUri();
         ClientConfig config = new ClientConfig().property(ClientProperties.FOLLOW_REDIRECTS, true);
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
         Client client = ClientBuilder.newClient(config);
         WebTarget t = client.target(u);
         t.property(ClientProperties.FOLLOW_REDIRECTS, false);

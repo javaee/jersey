@@ -39,6 +39,14 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -61,15 +69,6 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -130,11 +129,6 @@ public class TraceSupportTest extends JerseyTest {
 
         return config.registerResources(resourceBuilder.build());
 
-    }
-
-    @Override
-    protected void configureClient(ClientConfig config) {
-        config.connector(new JettyConnector(config));
     }
 
     private String[] expectedFragmentsProgrammatic = new String[]{
@@ -219,7 +213,7 @@ public class TraceSupportTest extends JerseyTest {
     }
 
     private Client getJettyClient() {
-        return ClientBuilder.newClient(new ClientConfig().connector(new JettyConnector(client().getConfiguration())));
+        return ClientBuilder.newClient(new ClientConfig().connectorProvider(new JettyConnectorProvider()));
     }
 
 

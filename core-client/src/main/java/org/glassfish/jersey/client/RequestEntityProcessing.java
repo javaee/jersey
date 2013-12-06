@@ -54,6 +54,6 @@ public enum RequestEntityProcessing {
     /**
      * Entity will be send as chunked encoded (no Content-length is specified, entity is streamed).
      */
-    CHUNKED;
+    CHUNKED
 
 }

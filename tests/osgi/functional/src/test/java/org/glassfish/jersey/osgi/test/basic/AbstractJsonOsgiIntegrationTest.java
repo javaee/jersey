@@ -90,6 +90,6 @@ public abstract class AbstractJsonOsgiIntegrationTest {
         System.out.println("RESULT = " + result);
         assertTrue(result.contains("Jim"));
 
-        server.stop();
+        server.shutdownNow();
     }
 }

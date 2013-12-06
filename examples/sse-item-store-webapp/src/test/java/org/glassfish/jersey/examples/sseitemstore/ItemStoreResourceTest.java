@@ -61,7 +61,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.apache.connector.ApacheClientProperties;
-import org.glassfish.jersey.apache.connector.ApacheConnector;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.media.sse.EventListener;
@@ -110,7 +110,7 @@ public class ItemStoreResourceTest extends JerseyTest {
         config.register(SseFeature.class)
                 .property(ApacheClientProperties.CONNECTION_MANAGER, cm)
                 .property(ClientProperties.READ_TIMEOUT, 2000)
-                .connector(new ApacheConnector(config));
+                .connectorProvider(new ApacheConnectorProvider());
     }
 
     @Override
@@ -147,6 +147,7 @@ public class ItemStoreResourceTest extends JerseyTest {
             indexQueues.add(indexes);
 
             es.register(new EventListener() {
+                @SuppressWarnings("MagicNumber")
                 @Override
                 public void onEvent(InboundEvent inboundEvent) {
                     try {

@@ -158,7 +158,7 @@ public class JettyConnector implements Connector {
      *
      * @param config client configuration.
      */
-    public JettyConnector(Configuration config) {
+    JettyConnector(Configuration config) {
         SslConfigurator sslConfig = null;
         if (config != null) {
             sslConfig = PropertiesHelper.getValue(config.getProperties(), JettyClientProperties.SSL_CONFIG, SslConfigurator.class);
@@ -462,10 +462,15 @@ public class JettyConnector implements Connector {
     }
 
     private Request buildAsyncRequest(final Request jettyRequest) {
-        final Request request = client.newRequest(jettyRequest.getURI()).method(jettyRequest.method()).content(jettyRequest.getContent()).followRedirects(jettyRequest.isFollowRedirects());
+        final Request request = client.newRequest(jettyRequest.getURI())
+                .method(jettyRequest.method())
+                .content(jettyRequest.getContent())
+                .followRedirects(jettyRequest.isFollowRedirects());
+
         for (HttpField header : jettyRequest.getHeaders()) {
             request.getHeaders().add(header.getName(), header.getValue());
         }
+
         return request;
     }
 

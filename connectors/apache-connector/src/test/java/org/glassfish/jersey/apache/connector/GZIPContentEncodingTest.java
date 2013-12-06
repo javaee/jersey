@@ -82,7 +82,8 @@ public class GZIPContentEncodingTest extends JerseyTest {
     @Test
     public void testPost() {
         ClientConfig cc = new ClientConfig(GZipEncoder.class);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
         WebTarget r = client.target(getBaseUri());
 
         byte[] content = new byte[1024 * 1024];
@@ -97,7 +98,8 @@ public class GZIPContentEncodingTest extends JerseyTest {
     public void testPostChunked() {
         ClientConfig cc = new ClientConfig(GZipEncoder.class);
         cc.property(ClientProperties.CHUNKED_ENCODING_SIZE, 1024);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
 
         WebTarget r = client.target(getBaseUri());
 

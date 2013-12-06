@@ -46,7 +46,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
-import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -57,7 +56,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -79,73 +77,34 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Default client transport connector using {@link HttpURLConnection}.
- * <p>
- * The connector overrides default behaviour of the property {@link ClientProperties#REQUEST_ENTITY_PROCESSING}
- * and uses {@link RequestEntityProcessing#BUFFERED} as the default value. Chunked encoding support on
- * {@code HttpURLConnection} contains bug which cause that request fails unpredictable. The workaround is to
- * define the property {@link ClientProperties#HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING} and define
- * {@code Content-length} for each request.
- * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class HttpUrlConnector implements Connector {
-    private final ConnectionFactory connectionFactory;
-    private final Integer chunkLength;
+class HttpUrlConnector implements Connector {
+    private final HttpUrlConnectorProvider.ConnectionFactory connectionFactory;
+    private final int chunkSize;
     private final boolean fixLengthStreaming;
+    private final boolean setMethodWorkaround;
 
     /**
-     * A factory for {@link HttpURLConnection} instances.
-     * <p>
-     * A factory may be used to create a {@link HttpURLConnection} and configure
-     * it in a custom manner that is not possible using the Client API.
-     * <p>
-     * A factory instance may be registered with the constructor
-     * {@link HttpUrlConnector#HttpUrlConnector(javax.ws.rs.core.Configuration,
-            org.glassfish.jersey.client.HttpUrlConnector.ConnectionFactory)}
-     * Then the {@link HttpUrlConnector} instance may be registered with a {@link JerseyClient}
-     * or {@link JerseyWebTarget} configuration via
-     * {@link ClientConfig#connector(org.glassfish.jersey.client.spi.Connector)}.
-     */
-    public interface ConnectionFactory {
-
-        /**
-         * Get a {@link HttpURLConnection} for a given URL.
-         * <p>
-         * Implementation of the method MUST be thread-safe and MUST ensure that
-         * a dedicated {@link HttpURLConnection} instance is returned for concurrent
-         * requests.
-         *
-         * @param url the endpoint URL.
-         * @return the {@link HttpURLConnection}.
-         * @throws java.io.IOException in case the connection cannot be provided.
-         */
-        public HttpURLConnection getConnection(URL url) throws IOException;
-    }
-
-    /**
-     * Create default {@link HttpURLConnection}-based Jersey client {@link Connector connector}.
+     * Create new {@code HttpUrlConnector} instance.
      *
-     * @param configuration Client configuration.
+     * @param connectionFactory   {@link javax.net.ssl.HttpsURLConnection} factory to be used when creating connections.
+     * @param chunkSize           chunk size to use when using HTTP chunked transfer coding.
+     * @param fixLengthStreaming  specify if the the {@link java.net.HttpURLConnection#setFixedLengthStreamingMode(int)
+     *                            fixed-length streaming mode} on the underlying HTTP URL connection instances should be
+     *                            used when sending requests.
+     * @param setMethodWorkaround specify if the reflection workaround should be used to set HTTP URL connection method
+     *                            name. See {@link HttpUrlConnectorProvider#SET_METHOD_WORKAROUND} for details.
      */
-    public HttpUrlConnector(final Configuration configuration) {
-        this(configuration, null);
-    }
-
-    /**
-     * Create default {@link HttpURLConnection}-based Jersey client {@link Connector connector}.
-     *
-     * @param configuration Client configuration.
-     * @param connectionFactory {@link HttpURLConnection} instance factory.
-     */
-    public HttpUrlConnector(final Configuration configuration, final ConnectionFactory connectionFactory) {
-        this.chunkLength = PropertiesHelper.getValue(configuration.getProperties(),
-                ClientProperties.CHUNKED_ENCODING_SIZE, null, Integer.class);
-
-        this.fixLengthStreaming = PropertiesHelper.getValue(configuration.getProperties(),
-                ClientProperties.HTTP_URL_CONNECTOR_FIX_LENGTH_STREAMING, false, Boolean.class);
-
+    HttpUrlConnector(HttpUrlConnectorProvider.ConnectionFactory connectionFactory,
+                     int chunkSize,
+                     boolean fixLengthStreaming,
+                     boolean setMethodWorkaround) {
         this.connectionFactory = connectionFactory;
+        this.chunkSize = chunkSize;
+        this.fixLengthStreaming = fixLengthStreaming;
+        this.setMethodWorkaround = setMethodWorkaround;
     }
 
     private static InputStream getInputStream(final HttpURLConnection uc) throws IOException {
@@ -153,7 +112,7 @@ public class HttpUrlConnector implements Connector {
             private final UnsafeValue<InputStream, IOException> in = Values.lazy(new UnsafeValue<InputStream, IOException>() {
                 @Override
                 public InputStream get() throws IOException {
-                    if (uc.getResponseCode() < 400) {
+                    if (uc.getResponseCode() < Response.Status.BAD_REQUEST.getStatusCode()) {
                         return uc.getInputStream();
                     } else {
                         InputStream ein = uc.getErrorStream();
@@ -248,20 +207,13 @@ public class HttpUrlConnector implements Connector {
     }
 
     private ClientResponse _apply(final ClientRequest request) throws IOException {
-        final Map<String, Object> configurationProperties = request.getConfiguration().getProperties();
-
         final HttpURLConnection uc;
 
-        final URL endpointUrl = request.getUri().toURL();
-        if (this.connectionFactory == null) {
-            uc = (HttpURLConnection) endpointUrl.openConnection();
-        } else {
-            uc = this.connectionFactory.getConnection(endpointUrl);
-        }
+        uc = this.connectionFactory.getConnection(request.getUri().toURL());
         uc.setDoInput(true);
 
         final String httpMethod = request.getMethod();
-        if (request.resolveProperty(ClientProperties.HTTP_URL_CONNECTION_SET_METHOD_WORKAROUND, false)) {
+        if (request.resolveProperty(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, setMethodWorkaround)) {
             setRequestMethodViaJreBugWorkaround(uc, httpMethod);
         } else {
             uc.setRequestMethod(httpMethod);
@@ -295,12 +247,12 @@ public class HttpUrlConnector implements Connector {
                 if (fixLengthStreaming && length > 0) {
                     uc.setFixedLengthStreamingMode(length);
                 } else if (entityProcessing == RequestEntityProcessing.CHUNKED) {
-                    uc.setChunkedStreamingMode(chunkLength == null ? 4096 : chunkLength);
+                    uc.setChunkedStreamingMode(chunkSize);
                 }
             }
             uc.setDoOutput(true);
 
-            if (httpMethod.equalsIgnoreCase("GET")) {
+            if ("GET".equalsIgnoreCase(httpMethod)) {
                 final Logger logger = Logger.getLogger(HttpUrlConnector.class.getName());
                 if (logger.isLoggable(Level.INFO)) {
                     logger.log(Level.INFO, LocalizationMessages.HTTPURLCONNECTION_REPLACES_GET_WITH_ENTITY());

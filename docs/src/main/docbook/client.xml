@@ -619,30 +619,38 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
 
         <para>
             By default, the transport layer in Jersey is provided by &lit.jdk6.HttpUrlConnection;. This transport is implemented
-            in Jersey via &jersey.client.HttpUrlConnector; that implements Jersey-specific &jersey.client.Connector; SPI.
+            in Jersey via &jersey.client.HttpUrlConnectorProvider; that implements Jersey-specific &jersey.client.Connector; SPI.
             You can implement and/or register your own &lit.jersey.client.Connector; instance to the Jersey
             &lit.jaxrs.client.Client; implementation, that will replace the default &lit.jdk6.HttpUrlConnection;-based
             transport layer. Jersey provides several alternative client transport connector implementations that are ready-to-use.
-            You can use &jersey.apache.ApacheConnector; (add a maven dependency to
+            You can use &jersey.apache.ApacheConnectorProvider; (add a maven dependency to
             <literal>org.glassfish.jersey.connectors:jersey-apache-connector</literal>)
-            or &jersey.grizzly.GrizzlyConnector; (add a maven dependency to
+            or &jersey.grizzly.GrizzlyConnectorProvider; (add a maven dependency to
             <literal>org.glassfish.jersey.connectors:jersey-grizzly-connector</literal>)
-            or &jersey.jetty.JettyConnector;; (add a maven dependency to
-            <literal>org.glassfish.jersey.connectors:jersey-jetty-connector</literal>) alternatively. Please, note again, that
-            the &jersey.client.Connector; SPI is not a feature of JAX-RS but is a Jersey-specific extension API that will only
-            work with Jersey. Following example shows how to setup the custom &lit.jersey.client.Connector; to the Jersey client.
+            or &jersey.jetty.JettyConnectorProvider; (add a maven dependency to
+            <literal>org.glassfish.jersey.connectors:jersey-jetty-connector</literal>) alternatively.
+        </para>
+        <para>
+            As indicated earlier, &jersey.client.Connector; and &jersey.client.ConnectorProvider; contracts are Jersey-specific
+            extension APIs that would only work with Jersey and as such are not part of JAX-RS. Following example shows how to
+            setup the custom Grizzly Asynchronous HTTP Client based &lit.jersey.client.ConnectorProvider; in a Jersey client
+            instance:
 
             <programlisting language="java" linenumbering="numbered">ClientConfig clientConfig = new ClientConfig();
-Connector connector = new GrizzlyConnector(clientConfig);
-clientConfig.connector(connector);
+clientConfig.connectorProvider(new GrizzlyConnectorProvider());
 Client client = ClientBuilder.newClient(clientConfig);</programlisting>
 
             &lit.jaxrs.client.Client; accepts as as a constructor argument a &lit.jaxrs.core.Configurable; instance. Jersey
             implementation of the &lit.jaxrs.core.Configurable; provider for the client is &lit.jersey.client.ClientConfig;.
-            By using the Jersey &lit.jersey.client.ClientConfig; you can configure the custom &lit.jersey.client.Connector;
-            into the &lit.jersey.client.ClientConfig;. The &lit.jersey.grizzly.GrizzlyConnector; is used as a custom connector
-            in the example above. Please note that the connector cannot be registered as a provider
-            using &lit.jaxrs.core.Configurable;<literal>.register(...)</literal> at the moment.
+            By using the Jersey &lit.jersey.client.ClientConfig; you can configure the custom
+            &lit.jersey.client.ConnectorProvider;
+            into the &lit.jersey.client.ClientConfig;. The &lit.jersey.grizzly.GrizzlyConnectorProvider; is used as a custom
+            connector provider in the example above. Please note that the connector provider cannot be registered as a provider
+            using &lit.jaxrs.core.Configurable;<literal>.register(...)</literal>. Also, please note that in this API has changed
+            in Jersey 2.5, where the &lit.jersey.client.ConnectorProvider; SPI has been introduced in order to decouple client
+            initialization from the connector instantiation. Starting with Jersey 2.5 it is therefore not possible to directly
+            register &lit.jersey.client.Connector; instances in the Jersey &jersey.client.ClientConfig;. The new
+            &lit.jersey.client.ConnectorProvider; SPI must be used instead to configure a custom client-side transport connector.
         </para>
     </section>
 
@@ -747,8 +755,9 @@ Client client = ClientBuilder.newBuilder().sslContext(sslContext).build();</prog
         </important>
 
         <para>
-            Currently the default connector &lit.jersey.client.HttpUrlConnector; based on &lit.jdk6.HttpUrlConnection; implements
-            support for SSL defined by JAX-RS configuration discussed in this sample.
+            Currently the default connector provider &jersey.client.HttpUrlConnectorProvider; provides connectors based on
+            &lit.jdk6.HttpUrlConnection; which implement support for SSL defined by JAX-RS configuration discussed in this
+            example.
         </para>
 
         <section>

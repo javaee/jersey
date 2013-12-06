@@ -49,7 +49,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.client.ChunkedInput;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -80,12 +80,12 @@ public class ChunkedInputOutputITCase extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.property(ClientProperties.CONNECT_TIMEOUT, 15000);
-        config.property(ClientProperties.READ_TIMEOUT, 5000);
-        config.property(ClientProperties.ASYNC_THREADPOOL_SIZE, MAX_LISTENERS + 1);
-        GrizzlyConnector jerseyClientConnector = new GrizzlyConnector(config);
-        config.connector(jerseyClientConnector);
         config.register(App.createMoxyJsonResolver());
+
+        config.property(ClientProperties.CONNECT_TIMEOUT, 15000)
+                .property(ClientProperties.READ_TIMEOUT, 5000)
+                .property(ClientProperties.ASYNC_THREADPOOL_SIZE, MAX_LISTENERS + 1)
+                .connectorProvider(new GrizzlyConnectorProvider());
     }
 
     @Override

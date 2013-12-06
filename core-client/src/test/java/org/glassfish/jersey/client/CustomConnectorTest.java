@@ -44,10 +44,12 @@ import java.util.concurrent.Future;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -57,7 +59,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class CustomConnectorTest {
 
-    public static class NullConnector implements Connector {
+    public static class NullConnector implements Connector, ConnectorProvider {
 
         @Override
         public ClientResponse apply(ClientRequest request) {
@@ -78,11 +80,16 @@ public class CustomConnectorTest {
         public String getName() {
             return null;
         }
+
+        @Override
+        public Connector getConnector(Client client, Configuration runtimeConfig) {
+            return this;
+        }
     }
 
     @Test
     public void testNullConnector() {
-        Client client = ClientBuilder.newClient(new ClientConfig().connector(new NullConnector()).getConfiguration());
+        Client client = ClientBuilder.newClient(new ClientConfig().connectorProvider(new NullConnector()).getConfiguration());
         try {
             client.target(UriBuilder.fromUri("/").build()).request().get();
         } catch (ProcessingException ce) {

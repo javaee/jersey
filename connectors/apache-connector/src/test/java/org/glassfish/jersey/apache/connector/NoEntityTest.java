@@ -84,7 +84,7 @@ public class NoEntityTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connector(new ApacheConnector(config));
+        config.connectorProvider(new ApacheConnectorProvider());
     }
 
     @Test

@@ -72,7 +72,7 @@ class ClientRuntime {
     private final ExtendedConfig config;
 
     private final RequestScope requestScope;
-    private final ClientAsyncExecutorsFactory asyncExecutorsFactory;
+    private final ClientAsyncExecutorFactory asyncExecutorsFactory;
 
     private final ServiceLocator locator;
 
@@ -98,7 +98,7 @@ class ClientRuntime {
         this.connector = connector;
 
         this.requestScope = locator.getService(RequestScope.class);
-        this.asyncExecutorsFactory = new ClientAsyncExecutorsFactory(locator);
+        this.asyncExecutorsFactory = new ClientAsyncExecutorFactory(locator);
 
         this.locator = locator;
     }
@@ -114,7 +114,7 @@ class ClientRuntime {
      * @param callback asynchronous response callback.
      */
     public void submit(final ClientRequest request, final ResponseCallback callback) {
-        submit(asyncExecutorsFactory.getRequestingExecutor(request), new Runnable() {
+        submit(asyncExecutorsFactory.getExecutor(), new Runnable() {
 
             @Override
             public void run() {
@@ -123,7 +123,7 @@ class ClientRuntime {
 
                     @Override
                     public void response(final ClientResponse response) {
-                        submit(asyncExecutorsFactory.getRespondingExecutor(request), currentScopeInstance, new Runnable() {
+                        requestScope.runInScope(currentScopeInstance, new Runnable() {
                             @Override
                             public void run() {
                                 final ClientResponse processedResponse;
@@ -174,18 +174,9 @@ class ClientRuntime {
         });
     }
 
-    private Future<?> submit(final ExecutorService executor, final RequestScope.Instance scopeInstance, final Runnable task) {
-        return executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                requestScope.runInScope(scopeInstance, task);
-            }
-        });
-    }
-
     private ClientRequest addUserAgent(ClientRequest clientRequest, String connectorName) {
         if (!clientRequest.getHeaders().containsKey(HttpHeaders.USER_AGENT)) {
-            if (connectorName != null && !connectorName.equals("")) {
+            if (connectorName != null && !connectorName.isEmpty()) {
                 clientRequest.getHeaders().put(HttpHeaders.USER_AGENT, Arrays.<Object>asList(String.format("Jersey/%s (%s)",
                         Version.getVersion(), connectorName)));
             } else {
@@ -210,7 +201,7 @@ class ClientRuntime {
      * @return client response.
      * @throws javax.ws.rs.ProcessingException in case of an invocation failure.
      */
-    public ClientResponse invoke(final ClientRequest request) throws ProcessingException {
+    public ClientResponse invoke(final ClientRequest request) {
         ClientResponse response;
         try {
             try {
@@ -249,7 +240,11 @@ class ClientRuntime {
      * Close the client runtime and release the underlying transport connector.
      */
     public void close() {
-        connector.close();
+        try {
+            connector.close();
+        } finally {
+            asyncExecutorsFactory.close();
+        }
     }
 
     /**
@@ -258,5 +253,14 @@ class ClientRuntime {
     public void preInitialize() {
         // pre-initialize MessageBodyWorkers
         locator.getService(MessageBodyWorkers.class);
+    }
+
+    /**
+     * Runtime connector.
+     *
+     * @return runtime connector.
+     */
+    public Connector getConnector() {
+        return connector;
     }
 }

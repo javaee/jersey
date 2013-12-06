@@ -71,7 +71,7 @@ public class App {
 
             System.out.println(String.format("Application started.%nHit enter to stop it..."));
             System.in.read();
-            server.stop();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }

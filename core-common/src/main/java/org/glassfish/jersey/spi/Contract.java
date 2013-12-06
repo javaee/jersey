@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -14,7 +14,7 @@
  *
  * When distributing the software, include this License Header Notice in each
  * file and include the License file at packager/legal/LICENSE.txt.
- *
+
  * GPL Classpath Exception:
  * Oracle designates this particular file as subject to the "Classpath"
  * exception as provided by Oracle in the GPL Version 2 section of the License
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.spi;
 
 import java.lang.annotation.Documented;
@@ -51,9 +50,9 @@ import java.lang.annotation.Target;
  *
  * All proprietary Jersey extension APIs are annotated with the {@code &#064;Contract} annotation.
  * <p>
- * Similarly, each custom (i.e. not JAX-RS or Jersey) provider contract that must be annotated with this
+ * Similarly, any custom (i.e. not JAX-RS or Jersey) extension provider contract must be annotated with this
  * annotation otherwise concrete service classes implementing the provider contract would not be recognized
- * and treated by Jersey as provider services.
+ * and treated as extension service provider by Jersey runtime.
  * </p>
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)

@@ -52,6 +52,8 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.JerseyClient;
+import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -86,7 +88,8 @@ public class CookieTest extends JerseyTest {
     @Test
     public void testCookieResource() {
         ClientConfig cc = new ClientConfig();
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
         WebTarget r = client.target(getBaseUri());
 
 
@@ -98,30 +101,34 @@ public class CookieTest extends JerseyTest {
     public void testDisabledCookies() {
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.DISABLE_COOKIES, true);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        JerseyClient client = JerseyClientBuilder.createClient(cc);
         WebTarget r = client.target(getBaseUri());
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
         assertEquals("NO-COOKIE", r.request().get(String.class));
 
-        if (((ApacheConnector) cc.getConnector()).getCookieStore() != null) {
-            assertTrue(((ApacheConnector) cc.getConnector()).getCookieStore().getCookies().size() == 0);
+        final ApacheConnector connector = (ApacheConnector) client.getConfiguration().getConnector();
+        if (connector.getCookieStore() != null) {
+            assertTrue(connector.getCookieStore().getCookies().isEmpty());
         } else {
-            assertNull(((ApacheConnector) cc.getConnector()).getCookieStore());
+            assertNull(connector.getCookieStore());
         }
     }
 
     @Test
     public void testCookies() {
         ClientConfig cc = new ClientConfig();
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        JerseyClient client = JerseyClientBuilder.createClient(cc);
         WebTarget r = client.target(getBaseUri());
 
         assertEquals("NO-COOKIE", r.request().get(String.class));
         assertEquals("value", r.request().get(String.class));
 
-        assertNotNull(((ApacheConnector) cc.getConnector()).getCookieStore().getCookies());
-        assertEquals(1, ((ApacheConnector) cc.getConnector()).getCookieStore().getCookies().size());
-        assertEquals("value", ((ApacheConnector) cc.getConnector()).getCookieStore().getCookies().get(0).getValue());
+        final ApacheConnector connector = (ApacheConnector) client.getConfiguration().getConnector();
+        assertNotNull(connector.getCookieStore().getCookies());
+        assertEquals(1, connector.getCookieStore().getCookies().size());
+        assertEquals("value", connector.getCookieStore().getCookies().get(0).getValue());
     }
 }

@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.httpsclientservergrizzly;
 
 import javax.ws.rs.client.Client;
@@ -49,10 +48,10 @@ import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.HttpUrlConnector;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 
 import org.junit.After;
 import org.junit.Before;
@@ -64,7 +63,7 @@ import static org.junit.Assert.assertTrue;
  * This test class starts the grizzly server and then client performs several SSL (https)
  * requests where different scenarios are tested (SSL Client authentication, missing truststore
  * configuration, etc.). Server is a Grizzly server configured for SSL support and client
- * uses both, {@link HttpUrlConnector} and {@link GrizzlyConnector}.
+ * uses both, {@link HttpUrlConnectorProvider} and {@link GrizzlyConnectorProvider}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
@@ -91,10 +90,7 @@ public class MainTest {
     }
 
     private ClientConfig getGrizzlyConfig() {
-        final ClientConfig clientConfig = new ClientConfig();
-        final GrizzlyConnector grizzlyConnector = new GrizzlyConnector(clientConfig);
-        clientConfig.connector(grizzlyConnector);
-        return clientConfig;
+        return new ClientConfig().connectorProvider(new GrizzlyConnectorProvider());
     }
 
     @Test
@@ -104,9 +100,7 @@ public class MainTest {
     }
 
     private ClientConfig getHttpUrlConnectorConfig() {
-        final ClientConfig clientConfig = new ClientConfig();
-        clientConfig.connector(new HttpUrlConnector(clientConfig));
-        return clientConfig;
+        return new ClientConfig().connectorProvider(new HttpUrlConnectorProvider());
     }
 
     /**

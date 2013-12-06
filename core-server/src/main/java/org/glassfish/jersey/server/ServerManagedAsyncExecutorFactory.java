@@ -37,77 +37,86 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
-package org.glassfish.jersey.process.internal;
+package org.glassfish.jersey.server;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.spi.RequestExecutorsProvider;
-import org.glassfish.jersey.spi.ResponseExecutorsProvider;
+import org.glassfish.jersey.process.internal.RequestExecutorFactory;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.spi.RequestExecutorProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * {@link ExecutorsFactory Executors factory} used in tests.
+ * {@link org.glassfish.jersey.process.internal.RequestExecutorFactory Executors factory}
+ * used on the server side for managed asynchronous request invocations.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class TestExecutorsFactory extends ExecutorsFactory<String> {
-    private final ExecutorService requestingExecutor;
-    private final ExecutorService respondingExecutor;
-
+class ServerManagedAsyncExecutorFactory extends RequestExecutorFactory implements ContainerLifecycleListener {
 
     /**
-     * Creates a new test factory instance.
+     * Server managed asynchronous request executor factory injection binder.
+     */
+    static class Binder extends AbstractBinder {
+
+        @Override
+        protected void configure() {
+            bind(ServerManagedAsyncExecutorFactory.class)
+                    .to(RequestExecutorFactory.class)
+                    .to(ContainerLifecycleListener.class)
+                    .in(Singleton.class);
+        }
+    }
+
+    /**
+     * Creates a new instance.
      *
-     * @param serviceLocator Injected HK2 service locator.
+     * @param locator HK2 service locator.
      */
     @Inject
-    public TestExecutorsFactory(ServiceLocator serviceLocator) {
-        super(serviceLocator);
-        this.requestingExecutor = getInitialRequestingExecutor(new RequestExecutorsProvider() {
+    public ServerManagedAsyncExecutorFactory(ServiceLocator locator) {
+        super(locator);
+    }
+
+    @Override
+    protected RequestExecutorProvider getDefaultProvider() {
+        return new RequestExecutorProvider() {
 
             @Override
             public ExecutorService getRequestingExecutor() {
-                return MoreExecutors.sameThreadExecutor();
+                return Executors.newCachedThreadPool(
+                        new ThreadFactoryBuilder().setNameFormat("jersey-server-managed-async-executor-%d").build());
             }
-        });
-        this.respondingExecutor = getInitialRespondingExecutor(new ResponseExecutorsProvider() {
 
             @Override
-            public ExecutorService getRespondingExecutor() {
-                return MoreExecutors.sameThreadExecutor();
+            public void releaseRequestingExecutor(ExecutorService executor) {
+                executor.shutdownNow();
             }
-        });
-
+        };
     }
 
     @Override
-    public ExecutorService getRequestingExecutor(String request) {
-        return requestingExecutor;
+    public void onStartup(Container container) {
+        // do nothing
     }
 
     @Override
-    public ExecutorService getRespondingExecutor(String containerRequest) {
-        return respondingExecutor;
+    public void onReload(Container container) {
+        // do nothing
     }
 
-    /**
-     * {@link org.glassfish.hk2.utilities.Binder HK2 Binder} registering
-     * {@link TestExecutorsFactory server executor factory}.
-     */
-    public static class TestExecutorsBinder extends AbstractBinder {
-        @Override
-        protected void configure() {
-            bind(TestExecutorsFactory.class).to(new TypeLiteral<ExecutorsFactory<String>>() {
-            }).in(Singleton.class);
-        }
+    @Override
+    public void onShutdown(Container container) {
+        close();
     }
 }

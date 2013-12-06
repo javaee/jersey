@@ -39,18 +39,19 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
+import java.util.logging.Logger;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+
 import org.junit.Test;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -71,7 +72,7 @@ public class AuthFilterTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connector(new JettyConnector(config));
+        config.connectorProvider(new JettyConnectorProvider());
     }
 
     @Test

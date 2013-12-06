@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.server;
 
+import java.util.ArrayList;
+
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
@@ -71,7 +73,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
-    private ServiceLocator locator;
+    private final ServiceLocator locator;
     private final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters;
     private final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters;
     private final Provider<RespondingContext> respondingContextFactory;
@@ -140,8 +142,12 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
         if (postMatching) {
             // post-matching
             RoutingContext rc = locator.getService(RoutingContext.class);
-            sortedRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(), requestFilters,
-                    rc.getBoundRequestFilters());
+            final ArrayList<Iterable<RankedProvider<ContainerRequestFilter>>> rankedProviders =
+                    new ArrayList<Iterable<RankedProvider<ContainerRequestFilter>>>(2);
+            rankedProviders.add(requestFilters);
+            rankedProviders.add(rc.getBoundRequestFilters());
+            sortedRequestFilters = Providers.mergeAndSortRankedProviders(
+                    new RankedComparator<ContainerRequestFilter>(), rankedProviders);
 
             requestContext.getRequestEventBuilder().setContainerRequestFilters(sortedRequestFilters);
             requestContext.triggerEvent(RequestEvent.Type.REQUEST_MATCHED);
@@ -212,11 +218,12 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
             RoutingContext rc = locator.getService(RoutingContext.class);
 
-            Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.sortRankedProviders(
-                    new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING),
-                    filters,
-                    rc.getBoundResponseFilters()
-            );
+            final ArrayList<Iterable<RankedProvider<ContainerResponseFilter>>> rankedProviders =
+                    new ArrayList<Iterable<RankedProvider<ContainerResponseFilter>>>(2);
+            rankedProviders.add(filters);
+            rankedProviders.add(rc.getBoundResponseFilters());
+            Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.mergeAndSortRankedProviders(
+                    new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), rankedProviders);
 
             final ContainerRequest request = responseContext.getRequestContext();
             request.getRequestEventBuilder().setContainerResponseFilters(sortedResponseFilters);

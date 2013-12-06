@@ -104,6 +104,6 @@ public class BasicOsgiIntegrationTest {
 
         assertEquals("OK", result);
 
-        server.stop();
+        server.shutdownNow();
     }
 }
