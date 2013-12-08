@@ -592,50 +592,6 @@
                         <message>JERSEY-${project.version}</message>
                     </configuration>
                 </plugin>
-                <!-- Groovy-maven integration plugin for using Spock test framework -->
-                <plugin>
-                    <groupId>org.codehaus.gmaven</groupId>
-                    <artifactId>gmaven-plugin</artifactId>
-                    <version>${gmaven.version}</version>
-                    <configuration>
-                        <providerSelection>2.0</providerSelection>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>gmaven-compile</id>
-                            <goals>
-                                <goal>compile</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>gmaven-testCompile</id>
-                            <goals>
-                                <goal>testCompile</goal>
-                            </goals>
-                            <configuration>
-                                <skip>${skip.tests}</skip>
-                            </configuration>
-                        </execution>
-                    </executions>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.codehaus.gmaven.runtime</groupId>
-                            <artifactId>gmaven-runtime-2.0</artifactId>
-                            <version>${gmaven.version}</version>
-                            <exclusions>
-                                <exclusion>
-                                    <groupId>org.codehaus.groovy</groupId>
-                                    <artifactId>groovy-all</artifactId>
-                                </exclusion>
-                            </exclusions>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.codehaus.groovy</groupId>
-                            <artifactId>groovy-all</artifactId>
-                            <version>${groovy.version}</version>
-                        </dependency>
-                    </dependencies>
-                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -1295,33 +1251,15 @@
                 <groupId>org.ops4j.pax.web</groupId>
                 <artifactId>pax-web-jetty-bundle</artifactId>
                 <version>${pax-web-version}</version>
+                <!--<version>0.7.1</version>-->
             </dependency>
             <dependency>
                 <groupId>org.ops4j.pax.web</groupId>
                 <artifactId>pax-web-extender-war</artifactId>
+                <!--<version>0.7.1</version>-->
                 <version>${pax-web-version}</version>
             </dependency>
 
-            <!-- Mandatory dependencies for using Spock test framework -->
-            <dependency>
-                <groupId>org.spockframework</groupId>
-                <artifactId>spock-core</artifactId>
-                <version>${spock.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <!-- Optional dependencies for using Spock test framework -->
-            <dependency> <!-- enables mocking of classes (in addition to interfaces) -->
-                <groupId>cglib</groupId>
-                <artifactId>cglib-nodep</artifactId>
-                <version>${cglib.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency> <!-- enables mocking of classes without default constructor (together with CGLIB) -->
-                <groupId>org.objenesis</groupId>
-                <artifactId>objenesis</artifactId>
-                <version>${objenesis.version}</version>
-                <scope>test</scope>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -1392,10 +1330,5 @@
         <weld.version>2.0.0.Final</weld.version>
         <gae.version>1.8.0</gae.version>
         <pax-web-version>0.7.4</pax-web-version><!-- TODO: UPGRADE! -->
-        <spock.version>0.7-groovy-2.0</spock.version>
-        <objenesis.version>1.2</objenesis.version>
-        <cglib.version>2.2.2</cglib.version>
-        <gmaven.version>1.5</gmaven.version>
-        <groovy.version>2.2.1</groovy.version>
     </properties>
 </project>

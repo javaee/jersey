@@ -70,19 +70,6 @@
             <artifactId>jetty-continuation</artifactId>
         </dependency>
 
-        <!-- test -->
-        <dependency>
-            <groupId>org.spockframework</groupId>
-            <artifactId>spock-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib-nodep</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.objenesis</groupId>
-            <artifactId>objenesis</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
@@ -102,10 +89,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <inherited>true</inherited>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.gmaven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-            </plugin>
+
         </plugins>
 
         <resources>
