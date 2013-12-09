@@ -47,19 +47,27 @@ package org.glassfish.jersey.internal.util;
  * @since 2.3
  */
 public class JdkVersion implements Comparable<JdkVersion> {
+
     private static final boolean IS_UNSAFE_SUPPORTED;
 
     static {
-
-        boolean isUnsafeFound;
+        boolean unsafeSupported;
 
         try {
-            isUnsafeFound = Class.forName("sun.misc.Unsafe") != null;
+            // Look for sun.misc.Unsafe.
+            unsafeSupported = Class.forName("sun.misc.Unsafe") != null;
+
+            // Check environment availability.
+            // Google App Engine (see https://developers.google.com/appengine/docs/java/#Java_The_environment).
+            unsafeSupported &= System.getProperty("com.google.appengine.runtime.environment") == null;
         } catch (Throwable t) {
-            isUnsafeFound = false;
+            // Make Unsafe not supported if either:
+            // - sun.misc.Unsafe not found.
+            // - we're not granted to read the property (* is not enough).
+            unsafeSupported = false;
         }
 
-        IS_UNSAFE_SUPPORTED = isUnsafeFound;
+        IS_UNSAFE_SUPPORTED = unsafeSupported;
     }
 
     private static final JdkVersion UNKNOWN_VERSION = new JdkVersion(-1, -1, -1, -1);
@@ -72,10 +80,7 @@ public class JdkVersion implements Comparable<JdkVersion> {
 
     // ------------------------------------------------------------ Constructors
 
-    private JdkVersion(final int major,
-                       final int minor,
-                       final int maintenance,
-                       final int update) {
+    private JdkVersion(final int major, final int minor, final int maintenance, final int update) {
         this.major = major;
         this.minor = minor;
         this.maintenance = maintenance;
