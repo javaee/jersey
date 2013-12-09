@@ -41,6 +41,7 @@ package org.glassfish.jersey.apache.connector;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -74,11 +75,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.ClientConnectionRequest;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.conn.ManagedClientConnection;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.impl.conn.BasicClientConnectionManager;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
 import org.junit.Test;
@@ -146,7 +148,7 @@ public class HelloWorldTest extends JerseyTest {
 
     @Test
     public void testAsyncClientRequests() throws InterruptedException {
-        ClientConnectionManager connectionManager = new PoolingClientConnectionManager();
+        HttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
         Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
@@ -491,6 +493,21 @@ public class HelloWorldTest extends JerseyTest {
                                     @Override
                                     public void abortConnection() throws IOException {
                                         wrappedConnection.abortConnection();
+                                    }
+
+                                    @Override
+                                    public String getId() {
+                                        return wrappedConnection.getId();
+                                    }
+
+                                    @Override
+                                    public void bind(Socket socket) throws IOException {
+                                        wrappedConnection.bind(socket);
+                                    }
+
+                                    @Override
+                                    public Socket getSocket() {
+                                        return wrappedConnection.getSocket();
                                     }
                                 };
                             }
