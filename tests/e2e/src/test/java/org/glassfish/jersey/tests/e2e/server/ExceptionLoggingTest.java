@@ -150,4 +150,5 @@ public class ExceptionLoggingTest extends JerseyTest {
 
         assertEquals(getLastLoggedRecord().getThrown().getMessage(), "test");
     }
+
 }
