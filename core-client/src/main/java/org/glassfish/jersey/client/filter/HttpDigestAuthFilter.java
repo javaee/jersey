@@ -55,13 +55,14 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
@@ -71,6 +72,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
+
+import javax.inject.Inject;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
@@ -201,6 +204,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
     public void filter(ClientRequestContext requestContext) throws IOException {
 
         final List<Object> digestSchemeHeaders = requestContext.getHeaders().get(HEADER_DIGEST_SCHEME);
+
         DigestScheme digestScheme = null;
 
         if (digestSchemeHeaders != null && digestSchemeHeaders.size() > 0) {
@@ -253,13 +257,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
                 // assemble authentication request and resend it
 
-                // TODO: change after JERSEY-2079 is fixed
-                // explanation: requestContext.getClient() currently returns the client instance from which
-                //              the WebTarget was created and Invocation was initiated. It contains only
-                //              providers registered to the client instance and not any provider
-                //              registered to the WebTarget or Invocation. The client should be build
-                //              based on latest configuration. This should be provided by fixing the issue above.
-                Client client = requestContext.getClient();
+                Client client = ClientBuilder.newClient(requestContext.getConfiguration());
                 String method = requestContext.getMethod();
                 MediaType mediaType = requestContext.getMediaType();
                 URI lUri = requestContext.getUri();
@@ -269,7 +267,14 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
                 Invocation.Builder builder = resourceTarget.request(mediaType);
                 builder.headers(requestContext.getHeaders());
                 builder.header(HEADER_DIGEST_SCHEME, digestScheme);
-                Invocation invocation = builder.build(method);
+
+                Invocation invocation;
+                if (requestContext.getEntity() == null) {
+                    invocation = builder.build(method);
+                } else {
+                    invocation = builder.build(method,
+                            Entity.entity(requestContext.getEntity(), requestContext.getMediaType()));
+                }
 
                 Response nextResponse = invocation.invoke();
 
@@ -379,20 +384,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
             ha1 = md5(username, ds.getRealm(), new String(password));
         }
 
-        String ha2;
-        if (ds.getQop() == QOP.AUTH_INT && requestContext.hasEntity()) {
-            Object entity = requestContext.getEntity();
-            if (entity instanceof String) {
-                ha2 = md5(
-                        requestContext.getMethod(),
-                        uri,
-                        md5((String) entity));
-            } else {
-                throw new IOException("Entity of class " + entity.getClass().toString() + " not supported");
-            }
-        } else {
-            ha2 = md5(requestContext.getMethod(), uri);
-        }
+        String ha2 = md5(requestContext.getMethod(), uri);
 
         String response;
         if (ds.getQop().equals(QOP.UNSPECIFIED)) {
@@ -509,8 +501,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
     private enum QOP {
 
         UNSPECIFIED(null),
-        AUTH("auth"),
-        AUTH_INT("auth-int");
+        AUTH("auth");
+
         private final String qop;
 
         QOP(String qop) {
@@ -526,10 +518,10 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
             if (val == null || val.isEmpty()) {
                 return QOP.UNSPECIFIED;
             }
-            if (val.contains("auth-int")) {
-                return QOP.AUTH_INT;
+            if (val.contains("auth")) {
+                return QOP.AUTH;
             }
-            return QOP.AUTH;
+            throw new UnsupportedOperationException(LocalizationMessages.DIGEST_FILTER_QOP_UNSUPPORTED(val));
         }
     }
 
@@ -590,7 +582,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
         }
 
         public int incrementCounter() {
-            return nc++;
+            return ++nc;
         }
 
         public String getNonce() {

@@ -75,6 +75,7 @@
         <module>jersey-2176</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
+        <module>security-digest</module>
         <module>servlet-2.5-autodiscovery-1</module>
         <module>servlet-2.5-autodiscovery-2</module>
         <module>servlet-2.5-inflector-1</module>

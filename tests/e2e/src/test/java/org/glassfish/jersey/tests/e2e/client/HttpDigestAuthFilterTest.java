@@ -82,7 +82,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
     private static final String DIGEST_TEST_NONCE = "eDePFNeJBAA=a874814ec55647862b66a747632603e5825acd39";
     private static final String DIGEST_TEST_REALM = "test";
     private static final String DIGEST_TEST_DOMAIN = "/auth-digest/";
-    private static int ncExpected = 0;
+    private static int ncExpected = 1;
 
     @Override
     protected Application configure() {
@@ -222,7 +222,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 
         WebTarget resource = client.target(getBaseUri()).path(path);
 
-        ncExpected = 0;
+        ncExpected = 1;
         Response r1 = resource.request().get();
         Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.OK);
     }
@@ -237,15 +237,15 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 
         WebTarget resource = client.target(getBaseUri()).path("auth-digest");
 
-        ncExpected = 0;
+        ncExpected = 1;
         Response r1 = resource.request().get();
         Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.OK);
 
-        ncExpected = 1;
+        ncExpected = 2;
         Response r2 = resource.request().get();
         Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.OK);
 
-        ncExpected = 2;
+        ncExpected = 3;
         Response r3 = resource.request().get();
         Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.OK);
 
@@ -260,7 +260,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 
         WebTarget resource = client.target(getBaseUri()).path("auth-digest");
 
-        ncExpected = 0;
+        ncExpected = 1;
         Response r1 = resource.request().get();
         Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.UNAUTHORIZED);
     }
