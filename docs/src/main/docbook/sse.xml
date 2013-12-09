@@ -173,17 +173,20 @@
         <para>
             Before you start working with Jersey SSE, in order to add support for SSE you need to include the dependency to the
             <emphasis>SSE media type module</emphasis>:
-            <programlisting xml:id="sse.dependency" language="xml" linenumbering="numbered"><![CDATA[<dependency>
+            <example xml:id="sse.dependency">
+                <title>Add <literal>jersey-media-sse</literal> dependency.</title>
+                <programlisting language="xml" linenumbering="numbered"><![CDATA[<dependency>
     <groupId>org.glassfish.jersey.media</groupId>
     <artifactId>jersey-media-sse</artifactId>
 </dependency>]]></programlisting>
+            </example>
             Then you need register &jersey.sse.SseFeature;. The &lit.jersey.sse.SseFeature; is a feature that can be registered
             for both, the client and the server.
         </para>
         <para>
             &lit.jersey.sse.SseFeature; adds new supported entity (representation) Java types, namely &jersey.sse.OutboundEvent;
             for the outbound server events and &jersey.sse.InboundEvent; for inbound client events. These types are serialized by
-            &jersey.sse.OutboundEventWriter; and de-serialized by &jersey.sse.InboundEventReader;.
+            &lit.jersey.sse.OutboundEventWriter; and de-serialized by &lit.jersey.sse.InboundEventReader;.
             There is no restriction for a media type used in individual event messages; however the media type used for a SSE
             stream as whole is <emphasis>"text/event-stream"</emphasis> and this media type should be set on messages that
             are used to serve SSE events (for example on the server side using &jaxrs.Produces; on the method that returns an

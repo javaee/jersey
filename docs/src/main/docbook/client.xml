@@ -448,7 +448,7 @@ invocationBuilder.header("some-header", "true");</programlisting>
                 request properties which are properties in a batch of several requests and use the generic JAX-RS
                 &lit.jaxrs.client.Invocation; API to invoke the batch of requests without actually knowing all the details
                 (such as request HTTP method, configuration etc.). Any properties set on an invocation instance can be read
-                during the request processing. For example, in a custom &jaxrs.client.RequestFilter; you can call
+                during the request processing. For example, in a custom &jaxrs.client.ClientRequestFilter; you can call
                 <literal>getProperty()</literal> method on the supplied &jaxrs.client.ClientRequestContext; to read a request
                 property. Note that these request properties are different from the configuration properties set on
                 &lit.jaxrs.core.Configurable;. As mentioned earlier, an &lit.jaxrs.client.Invocation; instance provides generic

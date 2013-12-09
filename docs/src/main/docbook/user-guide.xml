@@ -57,7 +57,7 @@
         <para>
             This is user guide for Jersey &version;. We are trying to keep it up to date as we add new features.
             When reading the user guide, please consult also our
-            <link xlink:href="&jersey.javadoc.path;/index.html">Jersey API documentation</link> as an additional source
+            <link xlink:href="&jersey.javadoc.root.path;/index.html">Jersey API documentation</link> as an additional source
             of information about Jersey features and API.
         </para>
         <para>
