@@ -930,6 +930,12 @@
             </dependency>
 
             <dependency>
+                <groupId>javax.transaction</groupId>
+                <artifactId>javax.transaction-api</artifactId>
+                <version>${jta.api.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>14.0.1</version>
@@ -1316,6 +1322,7 @@
         <jsonp.jaxrs.version>1.0</jsonp.jaxrs.version>
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
+        <jta.api.version>1.2</jta.api.version>
         <mimepull.version>1.9.3</mimepull.version>
         <moxy.version>2.5.0</moxy.version>
         <mustache.version>0.8.12</mustache.version>

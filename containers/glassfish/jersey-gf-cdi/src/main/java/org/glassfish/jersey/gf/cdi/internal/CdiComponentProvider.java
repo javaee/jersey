@@ -43,6 +43,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +59,7 @@ import javax.annotation.Priority;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.AfterTypeDiscovery;
 import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedCallable;
 import javax.enterprise.inject.spi.AnnotatedConstructor;
@@ -70,9 +72,21 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+
+import javax.inject.Inject;
 import javax.inject.Qualifier;
+import javax.inject.Singleton;
+import javax.interceptor.AroundInvoke;
+import javax.interceptor.Interceptor;
+import javax.interceptor.InvocationContext;
+
 import javax.naming.InitialContext;
+
+import javax.transaction.Transactional;
+
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -82,8 +96,10 @@ import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.hk2.utilities.cache.Cache;
 import org.glassfish.hk2.utilities.cache.Computable;
+
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.ComponentProvider;
@@ -107,6 +123,8 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
      * Name to be used when binding CDI injectee skipping class analyzer to HK2 service locator.
      */
     public static final String CDI_CLASS_ANALYZER = "CdiInjecteeSkippingClassAnalyzer";
+
+    static final String TRANSACTIONAL_WAE = "org.glassfish.jersey.cdi.transactional.wae";
 
     private ServiceLocator locator;
     private BeanManager beanManager;
@@ -341,6 +359,13 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @Override
     public void done() {
         bindHk2ClassAnalyzer();
+        bindWaeRestoringExceptionMapper();
+    }
+
+    private void bindWaeRestoringExceptionMapper() {
+        final DynamicConfiguration dc = Injections.getConfiguration(locator);
+        Injections.addBinding(Injections.newBinder(TransactionalExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class), dc);
+        dc.commit();
     }
 
     private boolean isCdiComponent(Class<?> component) {
@@ -363,8 +388,41 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     @SuppressWarnings("unused")
-    private void beforeBeanDiscovery(@Observes BeforeBeanDiscovery bbd, BeanManager bm) {
-        bbd.addAnnotatedType(bm.createAnnotatedType(JaxRsParamProducer.class));
+    private void afterTypeDiscovery(@Observes AfterTypeDiscovery afterTypeDiscovery) {
+        final List<Class<?>> interceptors = afterTypeDiscovery.getInterceptors();
+        interceptors.add(WebApplicationExceptionPreservingInterceptor.class);
+    }
+
+    @SuppressWarnings("unused")
+    private void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager beanManager) {
+        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(JaxRsParamProducer.class));
+        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(WebApplicationExceptionPreservingInterceptor.class));
+    }
+
+    /**
+     * Transactional interceptor to help retain {@link WebApplicationException}
+     * thrown by transactional beans.
+     */
+    @Priority(Interceptor.Priority.PLATFORM_BEFORE + 199)
+    @Interceptor
+    @Transactional
+    public static final class WebApplicationExceptionPreservingInterceptor {
+
+        @Inject BeanManager beanManager;
+
+        @AroundInvoke
+        public Object intercept(InvocationContext ic) throws Exception {
+            try {
+                return ic.proceed();
+            } catch (WebApplicationException wae) {
+                final CdiComponentProvider extension = beanManager.getExtension(CdiComponentProvider.class);
+                final ContainerRequest jerseyRequest = extension.locator.getService(ContainerRequest.class);
+                if (jerseyRequest != null) {
+                    jerseyRequest.setProperty(TRANSACTIONAL_WAE, wae);
+                }
+                throw wae;
+            }
+        }
     }
 
     @SuppressWarnings("unused")
