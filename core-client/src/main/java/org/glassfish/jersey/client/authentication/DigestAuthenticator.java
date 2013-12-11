@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,10 +37,9 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.filter;
+package org.glassfish.jersey.client.authentication;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -50,150 +49,59 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
-import javax.ws.rs.client.ClientResponseFilter;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.Provider;
-
-import javax.inject.Inject;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
- * Client filter providing HTTP Digest Authentication with preemptive
- * authentication support.
- * <p>
- * This filter is deprecated. Use {@link org.glassfish.jersey.client.authentication.HttpAuthenticationFeature} instead.
- * </p>
- * <p>
- * This filter is the main class that adds a support for Http Digest Authentication on the client.
- * In order to use this filter, create an instance of the filter and register it to the {@link Client client}.
- * </p>
- * <p>
- * Example:
- * <pre>
- * // create a filter instance and initiate it with username and password
- * final HttpDigestAuthFilter digestFilter = new HttpDigestAuthFilter("adam", "pwd87654");
- *
- * // register the filter into the client (in this case using ClientBuilder)
- * Client client = ClientBuilder.newBuilder().register(digestFilter).build();
- *
- * // make request (authentication will be managed by filter during the request if needed)
- * final Response response = client.target("http://example.com/users/adam/age").request().get();
- * </pre>
- * </p>
- * <p>
- * Filter firstly tries to perform request without authentication. If authentication is needed and
- * 401 status code is returned, filter use information from {@code WWW-Authenticate} header to
- * construct the digest header and retries the request with {@code Authentication} header. The
- * {@code Authentication} header will be stored for the current URI and used next time with {@code nonce}
- * value increased (if nonce is defined). The number of cached URIs can be defined by a
- * property {@link ClientProperties#DIGESTAUTH_URI_CACHE_SIZELIMIT}.
- * </p>
- *
- * <p>
- * Note: The filter must be registered only into the {@code Client}. Filter will not work
- * correctly when it is registered to {@link WebTarget}, {@link Invocation.Builder} or
- * {@link Invocation}.
- * </p>
+ * Implementation of Digest Http Authentication method (RFC 2617).
  *
  * @author raphael.jolivet@gmail.com
  * @author Stefan Katerkamp (stefan@katerkamp.de)
- * @since 2.3
- * @deprecated since 2.5: use {@link org.glassfish.jersey.client.authentication.HttpAuthenticationFeature} instead.
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-@Provider
-public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponseFilter {
+final class DigestAuthenticator {
+    private static final Logger logger = Logger.getLogger(DigestAuthenticator.class.getName());
 
-    @Inject
-    private Configuration config;
-    private static final Logger logger = Logger.getLogger(HttpDigestAuthFilter.class.getName());
-
-    private static final Charset CHARACTER_SET = Charset.forName("iso-8859-1");
-
-    private static final String HEADER_DIGEST_SCHEME = "jersey-digest-filter-digest-scheme";
     private static final char[] HEX_ARRAY = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s*=\\s*(\"([^\"]+)\"|(\\w+))\\s*,?\\s*");
     private static final int CLIENT_NONCE_BYTE_COUNT = 4;
-    private static final int MAXIMUM_DIGEST_CACHE_SIZE = 1000;
 
     private final SecureRandom randomGenerator;
-    private final String username;
-    private final byte[] password;
+    private final HttpAuthenticationFilter.Credentials credentials;
 
     private final Map<URI, DigestScheme> digestCache;
 
-    /**
-     * Create a new HTTP Basic Authentication filter using provided {@code username}
-     * and {@code password} string credentials. The string {@code password} will be internally
-     * stored as a byte array, so that using this constructor does introduce the security risk
-     * of keeping password as a reference to {@code String}.
-     *
-     * @param username user name
-     * @param password password
-     */
-    public HttpDigestAuthFilter(String username, String password) {
-        this(username, (password != null) ? password.getBytes(CHARACTER_SET) : new byte[0]);
-    }
 
     /**
-     * Create a new HTTP Basic Authentication filter using provided {@code username}
-     * and {@code password} credentials.
+     * Create a new instance initialized from credentials and configuration.
      *
-     * @param username user name
-     * @param password password byte array
+     * @param credentials Credentials. Can be {@code null} if there are no default credentials.
+     * @param limit Maximum number of URIs that should be kept in the cache containing URIs and their
+     *              {@link org.glassfish.jersey.client.authentication.DigestAuthenticator.DigestScheme}.
      */
-    private HttpDigestAuthFilter(String username, byte[] password) {
-        if (username == null) {
-            username = "";
-        }
-        if (password == null) {
-            password = new byte[0];
-        }
-        this.username = username;
-        this.password = password;
+    DigestAuthenticator(HttpAuthenticationFilter.Credentials credentials, final int limit) {
+        this.credentials = credentials;
 
-        // TODO: Clean up null check of field config. This is a workaround for a bug
-        // which leaves filter instances without injection.
-        // See issue https://java.net/jira/browse/JERSEY-2067
-        int limit = MAXIMUM_DIGEST_CACHE_SIZE;
-        if (config != null) {
-            limit = PropertiesHelper.getValue(config.getProperties(),
-                    ClientProperties.DIGESTAUTH_URI_CACHE_SIZELIMIT, MAXIMUM_DIGEST_CACHE_SIZE);
-            if (limit < 1) {
-                limit = MAXIMUM_DIGEST_CACHE_SIZE;
-            }
-        }
-
-        final int mapSize = limit;
         digestCache = Collections.synchronizedMap(
-                new LinkedHashMap<URI, DigestScheme>(mapSize) {
+                new LinkedHashMap<URI, DigestScheme>(limit) {
                     // use id as it is an anonymous inner class with changed behaviour
                     private static final long serialVersionUID = 2546245625L;
 
                     @Override
                     protected boolean removeEldestEntry(Map.Entry eldest) {
-                        return size() > mapSize;
+                        return size() > limit;
                     }
                 });
 
@@ -204,97 +112,67 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
         }
     }
 
-    @Override
-    public void filter(ClientRequestContext requestContext) throws IOException {
-
-        final List<Object> digestSchemeHeaders = requestContext.getHeaders().get(HEADER_DIGEST_SCHEME);
-
-        DigestScheme digestScheme = null;
-
-        if (digestSchemeHeaders != null && digestSchemeHeaders.size() > 0) {
-            // Digest scheme is stored in the header. It means this request is a request
-            // initiated from digest filter as a recovery from 401 UNAUTHORIZED response.
-            final Object digestHeaderObject = digestSchemeHeaders.get(0);
-            if (digestHeaderObject instanceof DigestScheme) {
-                digestScheme = (DigestScheme) digestHeaderObject;
-            }
-            requestContext.getHeaders().remove(HEADER_DIGEST_SCHEME);
-        }
-
-        if (digestScheme == null) {
-            // There is already a digest scheme for this URI -> we try to use it
-            digestScheme = digestCache.get(requestContext.getUri());
-        }
-
+    /**
+     * Process request and add authentication information if possible.
+     *
+     * @param request Request context.
+     * @return {@code true} if authentication information was added.
+     * @throws IOException When error with encryption occurs.
+     */
+    boolean filterRequest(ClientRequestContext request) throws IOException {
+        DigestScheme digestScheme = digestCache.get(request.getUri());
         if (digestScheme != null) {
-            String authLine = createNextAuthToken(digestScheme, requestContext); // increments nc
-            requestContext.getHeaders().add(HttpHeaders.AUTHORIZATION, authLine);
-        }
-
-        if (logger.isLoggable(Level.FINEST)) {
-            if (requestContext.getHeaderString(HttpHeaders.AUTHORIZATION) != null) {
-                logger.log(Level.FINEST, "Client Request: {0}", requestContext.getHeaderString(HttpHeaders.AUTHORIZATION));
+            HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
+                    this.credentials, HttpAuthenticationFilter.Type.DIGEST);
+            if (cred != null) {
+                request.getHeaders().add(HttpHeaders.AUTHORIZATION, createNextAuthToken(digestScheme, request, cred));
+                return true;
             }
         }
+        return false;
     }
 
-    @Override
-    public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
 
-        if (logger.isLoggable(Level.FINEST)) {
-            if (responseContext.getHeaderString(HttpHeaders.WWW_AUTHENTICATE) != null) {
-                logger.log(Level.FINEST, "Server Response: {0} {1}", new Object[]{responseContext.getStatus(),
-                        responseContext.getHeaderString(HttpHeaders.WWW_AUTHENTICATE)});
-            }
-        }
+    /**
+     * Process response and repeat the request if digest authentication is requested. When request is repeated
+     * the response will be modified to contain new response information.
+     *
+     * @param request Request context.
+     * @param response Response context (will be updated with newest response data if the request was repeated).
+     * @return {@code true} if response does not require authentication or if authentication is required,
+     *                  new request was done with digest authentication information and authentication was successful.
+     *
+     * @throws IOException When error with encryption occurs.
+     */
+    public boolean filterResponse(ClientRequestContext request, ClientResponseContext response) throws IOException {
 
-        if (Response.Status.fromStatusCode(responseContext.getStatus()) == Status.UNAUTHORIZED) {
+        if (Response.Status.fromStatusCode(response.getStatus()) == Response.Status.UNAUTHORIZED) {
 
-            DigestScheme digestScheme = parseAuthHeaders(responseContext.getHeaders().get(HttpHeaders.WWW_AUTHENTICATE));
+
+            DigestScheme digestScheme = parseAuthHeaders(response.getHeaders().get(HttpHeaders.WWW_AUTHENTICATE));
             if (digestScheme == null) {
-                return;
+                return false;
             }
 
-            if (digestScheme.isStale() || !digestCache.containsKey(requestContext.getUri())) {
-
-                digestCache.put(requestContext.getUri(), digestScheme);
-
-                // assemble authentication request and resend it
-
-                Client client = ClientBuilder.newClient(requestContext.getConfiguration());
-                String method = requestContext.getMethod();
-                MediaType mediaType = requestContext.getMediaType();
-                URI lUri = requestContext.getUri();
-
-                WebTarget resourceTarget = client.target(lUri);
-
-                Invocation.Builder builder = resourceTarget.request(mediaType);
-                builder.headers(requestContext.getHeaders());
-                builder.header(HEADER_DIGEST_SCHEME, digestScheme);
-
-                Invocation invocation;
-                if (requestContext.getEntity() == null) {
-                    invocation = builder.build(method);
-                } else {
-                    invocation = builder.build(method,
-                            Entity.entity(requestContext.getEntity(), requestContext.getMediaType()));
-                }
-
-                Response nextResponse = invocation.invoke();
-
-                if (nextResponse == null) {
-                    return;
-                }
-                if (nextResponse.hasEntity()) {
-                    responseContext.setEntityStream(nextResponse.readEntity(InputStream.class));
-                }
-                MultivaluedMap<String, String> headers = responseContext.getHeaders();
-                headers.clear();
-                headers.putAll(nextResponse.getStringHeaders());
-                responseContext.setStatus(nextResponse.getStatus());
+            // assemble authentication request and resend it
+            HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
+                    this.credentials, HttpAuthenticationFilter.Type.DIGEST);
+            if (cred == null) {
+                throw new RuntimeException(LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_DIGEST());
             }
+
+            boolean success = HttpAuthenticationFilter.repeatRequest(request, response,
+                    createNextAuthToken(digestScheme, request, cred));
+            if (success) {
+                digestCache.put(request.getUri(), digestScheme);
+            } else {
+                digestCache.remove(request.getUri());
+            }
+            return success;
         }
+        return true;
     }
+
 
     /**
      * Parse digest header.
@@ -367,11 +245,11 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
      * @return digest authentication token string
      * @throws IOException
      */
-    private String createNextAuthToken(DigestScheme ds, ClientRequestContext requestContext) throws IOException {
-
+    private String createNextAuthToken(DigestScheme ds, ClientRequestContext requestContext,
+                                       HttpAuthenticationFilter.Credentials credentials) throws IOException {
         StringBuilder sb = new StringBuilder(100);
         sb.append("Digest ");
-        append(sb, "username", username);
+        append(sb, "username", credentials.getUsername());
         append(sb, "realm", ds.getRealm());
         append(sb, "nonce", ds.getNonce());
         append(sb, "opaque", ds.getOpaque());
@@ -383,9 +261,9 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
 
         String ha1;
         if (ds.getAlgorithm().equals(Algorithm.MD5_SESS)) {
-            ha1 = md5(md5(username, ds.getRealm(), new String(password)));
+            ha1 = md5(md5(credentials.getUsername(), ds.getRealm(), new String(credentials.getPassword())));
         } else {
-            ha1 = md5(username, ds.getRealm(), new String(password));
+            ha1 = md5(credentials.getUsername(), ds.getRealm(), new String(credentials.getPassword()));
         }
 
         String ha2 = md5(requestContext.getMethod(), uri);
@@ -463,6 +341,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
         return new String(hexChars);
     }
 
+
     /**
      * Colon separated value MD5 hash.
      *
@@ -485,7 +364,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
         } catch (NoSuchAlgorithmException ex) {
             throw new IOException(ex.getMessage());
         }
-        md.update(sb.toString().getBytes(CHARACTER_SET), 0, sb.length());
+        md.update(sb.toString().getBytes(HttpAuthenticationFilter.CHARACTER_SET), 0, sb.length());
         byte[] md5hash = md.digest();
         return bytesToHex(md5hash);
     }
@@ -501,6 +380,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
         randomGenerator.nextBytes(bytes);
         return bytesToHex(bytes);
     }
+
 
     private enum QOP {
 
@@ -529,11 +409,11 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
         }
     }
 
-    private enum Algorithm {
+    enum Algorithm {
 
         UNSPECIFIED(null),
-        MD5("md5"),
-        MD5_SESS("md5-sess");
+        MD5("MD5"),
+        MD5_SESS("MD5-sess");
         private final String md;
 
         Algorithm(String md) {
@@ -550,7 +430,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
                 return Algorithm.UNSPECIFIED;
             }
             val = val.trim();
-            if (val.contains("md5-sess")) {
+            if (val.contains(MD5_SESS.md) || val.contains(MD5_SESS.md.toLowerCase())) {
                 return MD5_SESS;
             }
             return MD5;
@@ -570,7 +450,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
         private final boolean stale;
         private volatile int nc;
 
-        public DigestScheme(String realm,
+
+        DigestScheme(String realm,
                             String nonce,
                             String opaque,
                             QOP qop,

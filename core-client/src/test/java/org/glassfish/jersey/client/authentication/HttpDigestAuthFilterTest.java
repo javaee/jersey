@@ -37,28 +37,29 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.client.filter;
+package org.glassfish.jersey.client.authentication;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
-import org.glassfish.jersey.client.filter.HttpDigestAuthFilter.DigestScheme;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.authentication.DigestAuthenticator.DigestScheme;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 /**
  * @author raphael.jolivet@gmail.com
- * @author Stefan Katerkamp (stefan@katerkamp.de
+ * @author Stefan Katerkamp (stefan@katerkamp.de)
  */
 public class HttpDigestAuthFilterTest {
 
     @Test
     public void testParseHeaders1() throws Exception // no digest scheme
     {
-        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         DigestScheme ds = (DigestScheme) method.invoke(f,
                 Arrays.asList(new String[]{
@@ -72,8 +73,8 @@ public class HttpDigestAuthFilterTest {
     @Test
     public void testParseHeaders2() throws Exception // Two concurrent schemes
     {
-        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         DigestScheme ds = (DigestScheme) method.invoke(f,
                 Arrays.asList(new String[]{
@@ -88,8 +89,8 @@ public class HttpDigestAuthFilterTest {
     @Test
     public void testParseHeaders3() throws Exception // Complex case, with comma inside value
     {
-        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         DigestScheme ds = (DigestScheme) method.invoke(f,
                 Arrays.asList(new String[]{
@@ -104,8 +105,8 @@ public class HttpDigestAuthFilterTest {
     @Test
     public void testParseHeaders4() throws Exception // Spaces
     {
-        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         DigestScheme ds = (DigestScheme) method.invoke(f,
                 Arrays.asList(new String[]{
@@ -121,17 +122,18 @@ public class HttpDigestAuthFilterTest {
     @Test
     public void testParseHeaders5() throws Exception // Mix of quotes and  non-quotes
     {
-        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         DigestScheme ds = (DigestScheme) method.invoke(f,
                 Arrays.asList(new String[]{
-                        "    digest realm =   \"tata\"  ,  opaque =bar ,nonce=\"foo, bar\""
+                        "    digest realm =   \"tata\"  ,  opaque =bar ,nonce=\"foo, bar\",   algorithm=md5"
                 }));
 
         Assert.assertNotNull(ds);
         Assert.assertEquals("tata", ds.getRealm());
         Assert.assertEquals("foo, bar", ds.getNonce());
         Assert.assertEquals("bar", ds.getOpaque());
+        Assert.assertEquals("MD5", ds.getAlgorithm().name());
     }
 }

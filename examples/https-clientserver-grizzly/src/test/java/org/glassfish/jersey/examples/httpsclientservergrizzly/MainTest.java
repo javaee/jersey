@@ -49,7 +49,7 @@ import javax.net.ssl.SSLContext;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 
@@ -118,7 +118,7 @@ public class MainTest {
                 .sslContext(sslContext).build();
 
         // client basic auth demonstration
-        client.register(new HttpBasicAuthFilter("user", "password"));
+        client.register(HttpAuthenticationFeature.basic("user", "password"));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 

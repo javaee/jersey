@@ -277,7 +277,8 @@ public final class ClientProperties {
 
     /**
      * The property defines the size of digest cache in the
-     * {@link org.glassfish.jersey.client.filter.HttpDigestAuthFilter}. Cache contains authentication
+     * {@link org.glassfish.jersey.client.authentication.HttpAuthenticationFeature#digest()}  digest filter}.
+     * Cache contains authentication
      * schemes for different request URIs.
      * <p\>
      * The value MUST be an instance of {@link java.lang.Integer} and it must be

@@ -46,7 +46,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -77,14 +77,14 @@ public class AuthFilterTest extends JerseyTest {
 
     @Test
     public void testAuthGetWithClientFilter() {
-        client().register(new HttpBasicAuthFilter("name", "password"));
+        client().register(HttpAuthenticationFeature.basic("name", "password"));
         Response response = target("test/filter").request().get();
         assertEquals("GET", response.readEntity(String.class));
     }
 
     @Test
     public void testAuthPostWithClientFilter() {
-        client().register(new HttpBasicAuthFilter("name", "password"));
+        client().register(HttpAuthenticationFeature.basic("name", "password"));
         Response response = target("test/filter").request().post(Entity.text("POST"));
         assertEquals("POST", response.readEntity(String.class));
     }
@@ -92,7 +92,7 @@ public class AuthFilterTest extends JerseyTest {
 
     @Test
     public void testAuthDeleteWithClientFilter() {
-        client().register(new HttpBasicAuthFilter("name", "password"));
+        client().register(HttpAuthenticationFeature.basic("name", "password"));
         Response response = target("test/filter").request().delete();
         assertEquals(204, response.getStatus());
     }

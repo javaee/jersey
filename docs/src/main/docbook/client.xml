@@ -663,7 +663,8 @@ Client client = ClientBuilder.newClient(clientConfig);</programlisting>
             Filters can read/modify the request URI, headers and entity or read/modify the response status, headers and entity.
         </para>
         <para>
-            Jersey contains the following useful client-side filters that you may want to use in your applications:
+            Jersey contains the following useful client-side filters (and features registering filters)
+            that you may want to use in your applications:
 
             <simplelist>
                 <member>&jersey.client.CsrfProtectionFilter;: Cross-site request forgery protection filter (adds
@@ -672,9 +673,9 @@ Client client = ClientBuilder.newClient(clientConfig);</programlisting>
                     &jersey.client.ContentEncoder;s to encode and decode the communication. The encoding/decoding is performed
                     in interceptor (you don't need to register this interceptor). Check the javadoc of the
                     &jersey.client.EncodingFeature; in order to use it.</member>
-                <member>&jersey.client.HttpBasicAuthFilter;: HTTP Basic Authentication filter (see <xref linkend="ssl" />
+                <member>&jersey.client.HttpAuthenticationFeature;: HTTP Authentication Feature
+                    (see <xref linkend="ssl" />
                     below).</member>
-                <member>&jersey.client.HttpDigestAuthFilter;: HTTP Digest Authentication filter.</member>
             </simplelist>
 
             Note that these features are provided by Jersey, but since they use and implement JAX-RS API, the features should
@@ -761,26 +762,83 @@ Client client = ClientBuilder.newBuilder().sslContext(sslContext).build();</prog
         </para>
 
         <section>
-            <title>HTTP Basic Authentication Support</title>
-            <para>
-                Jersey contains a filter that allows client to authenticate to servers which requires HTTP Basic Authentication.
-                Use &jersey.client.HttpBasicAuthFilter; to add authentication header to requests initiated from from the client.
-                See the example of how to configure and register the filter:
-                <programlisting linenumbering="numbered"
-                            language="java">client.register(new HttpBasicAuthFilter("Homer", "SecretPassword"));</programlisting>
-            </para>
-        </section>
+            <title>Http Authentication Support</title>
+            <para>Jersey supports Basic and Digest HTTP Authentication.</para>
+            <important>
+                <para>
+                    In version prior to Jersey 2.5 the support was
+                    provided by <literal>org.glassfish.jersey.client.filter.HttpBasicAuthFilter</literal>
+                    and <literal>org.glassfish.jersey.client.filter.HttpDigestAuthFilter</literal>. Since Jersey
+                    2.5 these filters are deprecated and both authentication methods are provided by single &lit.jaxrs.core.Feature;
+                    &jersey.client.HttpAuthenticationFeature;.
+                </para>
+            </important>
 
-        <section>
-            <title>HTTP Digest Authentication Support</title>
             <para>
-                Jersey contains a filter that allows client to authenticate to servers which requires HTTP Digest Authentication.
-                Use &jersey.client.HttpDigestAuthFilter; to add authentication header to requests initiated from from the client.
-                See the example of how to configure and register the filter:
-                <programlisting linenumbering="numbered"
-                            language="java">client.register(new HttpDigestAuthFilter("Homer", "SecretPassword"));</programlisting>
+                In order to enable http authentication support in Jersey client register
+                the &jersey.client.HttpAuthenticationFeature;. This feature can provide both authentication methods, digest
+                and basic. Feature can work in the following modes:
             </para>
-        </section>
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        <emphasis>BASIC:</emphasis> Basic preemptive authentication. In preemptive mode the authentication information
+                          is send always with each HTTP request. This mode is more usual than the following non-preemptive mode
+                          (if you require BASIC authentication you will probably use this preemptive mode). This mode must
+                          be combined with usage of SSL/TLS as the password is send only BASE64 encoded.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <emphasis>BASIC NON-PREEMPTIVE:</emphasis>Basic non-preemptive authentication. In non-preemptive mode the
+                          authentication information is added only when server refuses the request with <literal>401</literal> status code and
+                          then the request is repeated with authentication information. This mode has negative impact on the performance.
+                          The advantage is that it does not send credentials when they are not needed. This mode must
+                          be combined with usage of SSL/TLS as the password is send only BASE64 encoded.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <emphasis>DIGEST:</emphasis> Http digest authentication. Does not require usage of SSL/TLS.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <emphasis>UNIVERSAL:</emphasis> Combination of basic and digest authentication. The feature works in non-preemptive
+                          mode which means that it sends requests without authentication information. If <literal>401</literal> status
+                          code is returned, the request is repeated and an appropriate authentication is used based on the
+                          authentication requested in the response (defined in <literal>WWW-Authenticate</literal> HTTP header. The feature
+                          remembers which authentication requests were successful for given URI and next time tries to preemptively
+                          authenticate against this URI with latest successful authentication method.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+
+            <para>
+                To initialize the feature use static methods and builder of this feature. Example of building the feature in
+                 Basic authentication mode:
+                <programlisting language="java" linenumbering="numbered">HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("user", "superSecretPassword");</programlisting>
+            </para>
+            <para>
+                Example of building the feature in basic non-preemptive mode:
+                <programlisting language="java" linenumbering="numbered">HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder()
+    .nonPreemptive().credentials("user", "superSecretPassword").build();</programlisting>
+            </para>
+            <para>
+                You can also build the feature without any default credentials:
+                <programlisting language="java" linenumbering="numbered">HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder().build();</programlisting>
+                In this case you need to supply username and password for each request using request properties:
+                <programlisting language="java" linenumbering="numbered">Response response = client.target("http://localhost:8080/rest/homer/contact").request()
+    .property(HTTP_AUTHENTICATION_BASIC_USERNAME, "homer")
+    .property(HTTP_AUTHENTICATION_BASIC_PASSWORD, "p1swd745").get();</programlisting>
+                This allows you to reuse the same client for authenticating with many different credentials.
+            </para>
+            <para>
+                See javadoc of the &jersey.client.HttpAuthenticationFeature; for more details.
+            </para>
+    </section>
+
 
     </section>
 </chapter>

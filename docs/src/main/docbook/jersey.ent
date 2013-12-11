@@ -273,11 +273,10 @@
 <!ENTITY jersey.client.ClientConfig "<link xlink:href='&jersey.javadoc.path;/client/ClientConfig.html'>ClientConfig</link>">
 <!ENTITY jersey.client.ClientProperties "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html'>ClientProperties</link>">
 <!ENTITY jersey.client.EncodingFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/EncodingFilter.html'>EncodingFilter</link>">
-<!ENTITY jersey.client.HttpBasicAuthFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/HttpBasicAuthFilter.html'>HttpBasicAuthFilter</link>">
-<!ENTITY jersey.client.HttpDigestAuthFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/HttpDigestAuthFilter.html'>HttpDigestAuthFilter</link>">
 <!ENTITY jersey.client.HttpUrlConnectorProvider "<link xlink:href='&jersey.javadoc.path;/client/HttpUrlConnector.html'>HttpUrlConnectorProvider</link>">
 <!ENTITY jersey.client.HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING "<link xlink:href='&jersey.javadoc.path;/client/HttpUrlConnectorProvider.html#USE_FIXED_LENGTH_STREAMING'>HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING</link>">
 <!ENTITY jersey.client.HttpUrlConnectorProvider.SET_METHOD_WORKAROUND "<link xlink:href='&jersey.javadoc.path;/client/HttpUrlConnectorProvider.html#SET_METHOD_WORKAROUND'>HttpUrlConnector.SET_METHOD_WORKAROUND</link>" >
+<!ENTITY jersey.client.HttpAuthenticationFeature "<link xlink:href='&jersey.javadoc.path;/client/authentication/HttpAuthenticationFeature.html'>HttpAuthenticationFeature</link>">
 <!ENTITY jersey.client.ClientProperties.ASYNC_THREADPOOL_SIZE "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#ASYNC_THREADPOOL_SIZE'>ClientProperties.ASYNC_THREADPOOL_SIZE</link>" >
 <!ENTITY jersey.client.ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#BUFFER_RESPONSE_ENTITY_ON_EXCEPTION'>ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION</link>" >
 <!ENTITY jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html#CHUNKED_ENCODING_SIZE'>ClientProperties.CHUNKED_ENCODING_SIZE</link>" >
@@ -663,9 +662,8 @@
 <!ENTITY lit.jersey.client.ClientConfig "<literal>ClientConfig</literal>">
 <!ENTITY lit.jersey.client.ContentEncoder "<literal>ContentEncoder</literal>">
 <!ENTITY lit.jersey.client.CsrfProtectionFilter "<literal>CsrfProtectionFilter</literal>">
-<!ENTITY lit.jersey.client.HttpBasicAuthFilter "<literal>HttpBasicAuthFilter</literal>">
-<!ENTITY lit.jersey.client.HttpDigestAuthFilter "<literal>HttpDigestAuthFilter</literal>">
 <!ENTITY lit.jersey.client.HttpUrlConnectorProvider "<literal>HttpUrlConnectorProvider</literal>">
+<!ENTITY lit.jersey.client.HttpAuthenticationFeature "<literal>HttpAuthenticationFeature</literal>">
 <!ENTITY lit.jersey.client.EncodingFeature "<literal>EncodingFeature</literal>">
 
 <!ENTITY lit.jersey.message.MessageProperties "<literal>MessageProperties</literal>">

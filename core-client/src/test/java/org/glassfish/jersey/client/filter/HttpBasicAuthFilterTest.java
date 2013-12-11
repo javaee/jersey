@@ -53,6 +53,7 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
@@ -70,7 +71,7 @@ public class HttpBasicAuthFilterTest {
 
     @Test
     public void testGet() {
-        Client client = ClientBuilder.newClient(new ClientConfig(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"))
+        Client client = ClientBuilder.newClient(new ClientConfig(HttpAuthenticationFeature.basic("Uzivatelske jmeno", "Heslo"))
                 .connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
@@ -80,7 +81,7 @@ public class HttpBasicAuthFilterTest {
 
     @Test
     public void testBlankUsernamePassword() {
-        Client client = ClientBuilder.newClient(new ClientConfig(new HttpBasicAuthFilter(null, (String) null))
+        Client client = ClientBuilder.newClient(new ClientConfig(HttpAuthenticationFeature.basic("", ""))
                 .connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();

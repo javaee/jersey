@@ -61,7 +61,8 @@
                 <itemizedlist>
                     <listitem><para>
                         <emphasis>Client chunked encoding configuration behaviour has changed:</emphasis>
-                    </para><para>
+                    </para>
+                        <para>
                         Jersey client uses chunked encoding (streaming) for serialization of the entity as a default option.
                         Before Jersey 2.5 release entity buffering has been used by default. The size of the chunk can still
                         be controlled by &jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE; property, this property
@@ -133,6 +134,11 @@
                         from <literal>jersey.config.server.mvc.caching.mustache.enabled</literal> to
                         <literal>jersey.config.server.mvc.caching.mustache</literal>.
                     </para></listitem>
+                    <listitem><para>
+                        Authentication filters <literal>org.glassfish.jersey.client.filter.HttpBasicAuthFilter</literal>
+                        and <literal>org.glassfish.jersey.client.filter.HttpDigestAuthFilter</literal>
+                        were deprecated and replaced by &jersey.client.HttpAuthenticationFeature;.
+                    </para></listitem>
                 </itemizedlist>
             </para>
         </section>
@@ -167,6 +173,7 @@
                 </itemizedlist>
             </para>
         </section>
+
     </section>
 
     <section xml:id="mig-2.4.1">

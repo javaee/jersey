@@ -40,12 +40,15 @@
 package org.glassfish.jersey.tests.e2e.client;
 
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -57,7 +60,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.filter.HttpDigestAuthFilter;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -152,6 +155,8 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
             }
         }
 
+        private static final Charset CHARACTER_SET = Charset.forName("iso-8859-1");
+
         /**
          * Colon separated value MD5 hash. Call md5 method of the filter.
          *
@@ -159,20 +164,44 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
          * @return M5 hash string
          */
         static String md5(String... tokens) {
-            HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
-            String md5String = null;
-            try {
-                if (md5 == null) {
-                    md5 = HttpDigestAuthFilter.class.getDeclaredMethod("md5", String[].class);
-                    md5.setAccessible(true);
+            StringBuilder sb = new StringBuilder(100);
+            for (String token : tokens) {
+                if (sb.length() > 0) {
+                    sb.append(':');
                 }
-                md5String = (String) md5.invoke(f, new Object[]{tokens});
-            } catch (Exception ex) {
-                logger.log(Level.SEVERE, null, ex);
+                sb.append(token);
             }
-            return md5String;
 
+            MessageDigest md;
+            try {
+                md = MessageDigest.getInstance("MD5");
+            } catch (NoSuchAlgorithmException ex) {
+                throw new ProcessingException(ex.getMessage());
+            }
+            md.update(sb.toString().getBytes(CHARACTER_SET), 0, sb.length());
+            byte[] md5hash = md.digest();
+            return bytesToHex(md5hash);
         }
+
+        /**
+         * Convert bytes array to hex string.
+         *
+         * @param bytes array of bytes
+         * @return hex string
+         */
+        private static String bytesToHex(byte[] bytes) {
+            char[] hexChars = new char[bytes.length * 2];
+            int v;
+            for (int j = 0; j < bytes.length; j++) {
+                v = bytes[j] & 0xFF;
+                hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+                hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+            }
+            return new String(hexChars);
+        }
+
+        private static final char[] HEX_ARRAY = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
 
         /**
          * Get a value of the Digest Auth Header.
@@ -218,7 +247,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
         ClientConfig jerseyConfig = new ClientConfig();
 
         Client client = ClientBuilder.newClient(jerseyConfig);
-        client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
+        client = client.register(HttpAuthenticationFeature.digest(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
 
         WebTarget resource = client.target(getBaseUri()).path(path);
 
@@ -233,7 +262,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
         ClientConfig jerseyConfig = new ClientConfig();
 
         Client client = ClientBuilder.newClient(jerseyConfig);
-        client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
+        client = client.register(HttpAuthenticationFeature.digest(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
 
         WebTarget resource = client.target(getBaseUri()).path("auth-digest");
 
@@ -256,7 +285,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
         ClientConfig jerseyConfig = new ClientConfig();
 
         Client client = ClientBuilder.newClient(jerseyConfig);
-        client = client.register(new HttpDigestAuthFilter(DIGEST_TEST_LOGIN, DIGEST_TEST_INVALIDPASS));
+        client = client.register(HttpAuthenticationFeature.digest(DIGEST_TEST_LOGIN, DIGEST_TEST_INVALIDPASS));
 
         WebTarget resource = client.target(getBaseUri()).path("auth-digest");
 

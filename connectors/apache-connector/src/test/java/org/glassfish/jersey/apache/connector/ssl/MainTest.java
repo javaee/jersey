@@ -50,7 +50,7 @@ import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.filter.LoggingFilter;
 
 import org.junit.After;
@@ -96,7 +96,7 @@ public class MainTest {
 
         Client client = ClientBuilder.newClient(cc);
         // client basic auth demonstration
-        client.register(new HttpBasicAuthFilter("user", "password"));
+        client.register(HttpAuthenticationFeature.basic("user", "password"));
 
         WebTarget target = client.target(Server.BASE_URI);
         target.register(new LoggingFilter());
