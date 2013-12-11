@@ -39,14 +39,22 @@
  */
 package org.glassfish.jersey.client.proxy;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class WebResourceFactoryTest extends JerseyTest {
     private MyResourceIfc resource;
@@ -94,4 +102,94 @@ public class WebResourceFactoryTest extends JerseyTest {
     public void testSubResource() {
         assertEquals("Got it!", resource.getSubResource().getMyBean().name);
     }
+
+    @Test
+    public void testQueryParamsAsList() {
+        List<String> list = new ArrayList<String>();
+        list.add("a");
+        list.add("bb");
+        list.add("ccc");
+
+        assertEquals("3:[a, bb, ccc]", resource.getByNameList(list));
+    }
+
+    @Test
+    public void testQueryParamsAsSet() {
+        Set<String> set = new HashSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.getByNameSet(set);
+        checkSet(result);
+    }
+
+    @Test
+    public void testQueryParamsAsSortedSet() {
+        SortedSet<String> set = new TreeSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.getByNameSortedSet(set);
+        assertEquals("3:[a, bb, ccc]", result);
+    }
+
+    /**
+     * This cannot work with jersey now. Server side parses header params only if they are send as more
+     * lines in the request. Jersey has currently no possibility to do so. See JERSEY-2263.
+     */
+    @Test
+    @Ignore("See issue JERSEY-2263")
+    public void testHeaderParamsAsList() {
+        List<String> list = new ArrayList<String>();
+        list.add("a");
+        list.add("bb");
+        list.add("ccc");
+
+        assertEquals("3:[a, bb, ccc]", resource.getByNameHeaderList(list));
+    }
+
+
+    @Test
+    public void testMatrixParamsAsList() {
+        List<String> list = new ArrayList<String>();
+        list.add("a");
+        list.add("bb");
+        list.add("ccc");
+
+        assertEquals("3:[a, bb, ccc]", resource.getByNameMatrixList(list));
+    }
+
+
+    @Test
+    public void testMatrixParamsAsSet() {
+        Set<String> set = new HashSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.getByNameMatrixSet(set);
+        checkSet(result);
+    }
+
+
+    @Test
+    public void testMatrixParamsAsSortedSet() {
+        SortedSet<String> set = new TreeSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.getByNameMatrixSortedSet(set);
+        assertEquals("3:[a, bb, ccc]", result);
+    }
+
+    private void checkSet(String result) {
+        assertTrue(result.startsWith("3:["));
+        assertTrue(result.contains("a"));
+        assertTrue(result.contains("bb"));
+        assertTrue(result.contains("ccc"));
+    }
+
 }
