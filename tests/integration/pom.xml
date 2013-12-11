@@ -73,6 +73,7 @@
         <module>jersey-2160</module>
         <module>jersey-2164</module>
         <module>jersey-2176</module>
+        <module>jersey-2184</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
         <module>security-digest</module>

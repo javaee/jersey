@@ -37,51 +37,44 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
+package org.glassfish.jersey.tests.integration.jersey2184;
 
-import org.junit.Test;
-
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.Context;
+import java.util.HashSet;
+import java.util.Set;
 
-import java.net.URI;
-
-import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the servlet3-webapp example.
- * Integration test launched by maven-jetty-plugin
+ * Test Application subclass for JERSEY-2184 integration test.
  *
+ * Tests the ability to inject {@link ServletContext} into application subclass constructor
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class Servlet3WebappITCase extends JerseyTest {
+public class App extends Application {
 
-    @Override
-    protected Application configure() {
-        enable(TestProperties.LOG_TRAFFIC);
-        return new Application(); // dummy Application instance for test framework
+    /** constructor-injected servletContext */
+    private ServletContext ctx;
+
+    public App(@Context ServletContext servletContext) {
+        this.ctx = servletContext;
     }
 
     @Override
-    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
-        return new ExternalTestContainerFactory();
-    }
+    public Set<Class<?>> getClasses() {
+        HashSet<Class<?>> classes = new HashSet<Class<?>>();
+        String dynamicClassName = ctx.getInitParameter("dynamicClassName");
+        Class<?> clazz = null;
+        if (classes.isEmpty()) {
+            try {
+                clazz = Class.forName(dynamicClassName);
+            } catch (ClassNotFoundException e) { } // swallow the exception - if class is not loaded, the integration test will fail
 
-    @Override
-    protected URI getBaseUri() {
-        return UriBuilder.fromUri(super.getBaseUri()).path("animals").build();
-    }
-
-    @Test
-    public void testClientStringResponse() {
-        String s = target().path("dog").request().get(String.class);
-        assertEquals("Woof!", s);
-
-        s = target().path("cat").request().get(String.class);
-        assertEquals("Miaow!", s);
+            if (clazz != null) {
+                classes.add(clazz);
+            }
+        }
+        return classes;
     }
 }

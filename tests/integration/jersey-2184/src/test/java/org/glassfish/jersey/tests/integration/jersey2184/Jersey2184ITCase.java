@@ -37,33 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.tests.integration.jersey2184;
+
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-
 import org.junit.Test;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
-
 import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the servlet3-webapp example.
- * Integration test launched by maven-jetty-plugin
+ * Tests the JERSEY-2184 fix (the ability to inject ServletContext into application subclass constructor).
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class Servlet3WebappITCase extends JerseyTest {
+public class Jersey2184ITCase extends JerseyTest {
 
     @Override
     protected Application configure() {
         enable(TestProperties.LOG_TRAFFIC);
-        return new Application(); // dummy Application instance for test framework
+        return new Application();  // dummy Application instance for the test framework - will no be used.
     }
 
     @Override
@@ -73,15 +72,17 @@ public class Servlet3WebappITCase extends JerseyTest {
 
     @Override
     protected URI getBaseUri() {
-        return UriBuilder.fromUri(super.getBaseUri()).path("animals").build();
+        return UriBuilder.fromUri(super.getBaseUri()).path("zoo").build();
     }
 
+    /**
+     * Tests if {@link javax.servlet.ServletContext} has been correctly injected into {@link App} constructor parameter;
+     * The resource under this URL is being loaded dynamically based on a context parameter in the web.xml,
+     * so if injection fails, the resource will not be available.
+     */
     @Test
-    public void testClientStringResponse() {
-        String s = target().path("dog").request().get(String.class);
-        assertEquals("Woof!", s);
-
-        s = target().path("cat").request().get(String.class);
-        assertEquals("Miaow!", s);
+    public void testInjection() {
+        String s = target().path("monkey").request().get(String.class);
+        assertEquals("Oooh!", s);
     }
 }

@@ -269,7 +269,24 @@ public final class ApplicationHandler {
      *                    will be used to configure the new Jersey application handler.
      */
     public ApplicationHandler(Application application) {
-        this.locator = Injections.createLocator(new ServerBinder(application.getProperties()), new ApplicationBinder());
+        this(application, null);
+    }
+
+    /**
+     * Create a new Jersey server-side application handler configured by an instance
+     * of a {@link ResourceConfig} and a custom {@link Binder}.
+     *
+     * @param application an instance of a JAX-RS {@code Application} (sub-)class that
+     *                    will be used to configure the new Jersey application handler.
+     * @param customBinder additional custom bindings used during {@link ServiceLocator} creation
+     */
+    public ApplicationHandler(Application application, Binder customBinder) {
+        if (customBinder == null) {
+            this.locator = Injections.createLocator(new ServerBinder(application.getProperties()), new ApplicationBinder());
+        } else {
+            this.locator = Injections.createLocator(new ServerBinder(application.getProperties()), new ApplicationBinder(),
+                                                    customBinder);
+        }
         locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
         this.application = application;
