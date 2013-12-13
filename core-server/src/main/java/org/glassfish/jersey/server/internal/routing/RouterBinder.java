@@ -41,8 +41,6 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.regex.Pattern;
 
-import javax.ws.rs.container.ResourceInfo;
-
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.uri.PathPattern;
@@ -92,7 +90,6 @@ public class RouterBinder extends AbstractBinder {
 
         bindAsContract(UriRoutingContext.class)
                 .to(RoutingContext.class)
-                .to(ResourceInfo.class)
                 .to(ExtendedUriInfo.class)
                 .in(RequestScoped.class);
 
