@@ -42,11 +42,14 @@ package org.glassfish.jersey.client.oauth1;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
+
+import javax.annotation.Priority;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.glassfish.jersey.client.oauth1.internal.LocalizationMessages;
 import org.glassfish.jersey.message.MessageBodyWorkers;
@@ -66,6 +69,7 @@ import org.glassfish.jersey.oauth1.signature.OAuth1SignatureException;
  *
  * @since 2.3
  */
+@Priority(Priorities.AUTHORIZATION)
 class OAuth1ClientFilter implements ClientRequestFilter {
 
     @Inject

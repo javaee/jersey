@@ -223,7 +223,7 @@ public class MyBeanMessageBodyWriter implements MessageBodyWriter<MyBean> {
                 <para>
                     Parameters <literal>type</literal> and <literal>genericType</literal> both define the entity,
                     where <literal>type</literal> is a raw Java type
-                    (for example, a <literal>java.util.List</literal> class> and <literal>genericType</literal> is a
+                    (for example, a <literal>java.util.List</literal> class) and <literal>genericType</literal> is a
                     &jdk6.ParameterizedType; including generic information (for example <literal>List&lt;String&gt;</literal>).
                 </para>
                 <para>

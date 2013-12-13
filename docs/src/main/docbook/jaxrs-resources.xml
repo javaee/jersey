@@ -855,7 +855,7 @@ public class ItemResource {
                             This can happen when a resource is a sub resource is returned more times during the matching. In this
                             situation only on instance will server the requests.</entry></row>
                     <row><entry>Per-lookup scope</entry><entry>@PerLookup</entry>
-                        <entry>org.glassfish.jersey.process.internal.RequestScoped</entry>
+                        <entry>org.glassfish.hk2.api.PerLookup</entry>
                         <entry>In this scope
                             the resource instance is created every time it is needed for the processing even it handles
                             the same request.</entry></row>
