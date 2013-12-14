@@ -46,10 +46,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
+import javax.annotation.Priority;
 
 import javax.inject.Inject;
 
 import javax.inject.Provider;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Configuration;
@@ -73,6 +75,7 @@ import org.glassfish.jersey.server.oauth1.internal.OAuthServerRequest;
  * @author Paul C. Bryan <pbryan@sun.com>
  * @author Martin Matula
  */
+@Priority(Priorities.AUTHENTICATION)
 class OAuth1ServerFilter implements ContainerRequestFilter {
 
     /** OAuth Server */
