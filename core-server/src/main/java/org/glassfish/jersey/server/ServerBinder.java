@@ -43,6 +43,7 @@ import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
@@ -168,6 +169,11 @@ class ServerBinder extends AbstractBinder {
         bindFactory(ReferencingFactory.<UriInfo>referenceFactory()).to(new TypeLiteral<Ref<UriInfo>>() {
         }).in(RequestScoped.class);
 
+        bindFactory(ResourceInfoReferencingFactory.class).to(ResourceInfo.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(ReferencingFactory.<ResourceInfo>referenceFactory()).to(new TypeLiteral<Ref<ResourceInfo>>() {
+        }).in(RequestScoped.class);
+
         bindFactory(HttpHeadersReferencingFactory.class).to(HttpHeaders.class)
                 .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
         bindFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).to(new TypeLiteral<Ref<HttpHeaders>>() {
@@ -190,6 +196,14 @@ class ServerBinder extends AbstractBinder {
     private static class UriInfoReferencingFactory extends ReferencingFactory<UriInfo> {
         @Inject
         public UriInfoReferencingFactory(Provider<Ref<UriInfo>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    @SuppressWarnings("JavaDoc")
+    private static class ResourceInfoReferencingFactory extends ReferencingFactory<ResourceInfo> {
+        @Inject
+        public ResourceInfoReferencingFactory(Provider<Ref<ResourceInfo>> referenceFactory) {
             super(referenceFactory);
         }
     }
