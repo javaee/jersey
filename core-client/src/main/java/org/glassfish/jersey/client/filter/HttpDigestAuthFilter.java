@@ -528,8 +528,8 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
     private enum Algorithm {
 
         UNSPECIFIED(null),
-        MD5("md5"),
-        MD5_SESS("md5-sess");
+        MD5("MD5"),
+        MD5_SESS("MD5-sess");
         private final String md;
 
         Algorithm(String md) {
@@ -546,7 +546,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
                 return Algorithm.UNSPECIFIED;
             }
             val = val.trim();
-            if (val.contains("md5-sess")) {
+            if (val.contains("MD5-sess")) {
                 return MD5_SESS;
             }
             return MD5;
