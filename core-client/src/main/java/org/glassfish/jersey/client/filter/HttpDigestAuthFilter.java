@@ -525,7 +525,7 @@ public class HttpDigestAuthFilter implements ClientRequestFilter, ClientResponse
         }
     }
 
-    private enum Algorithm {
+    protected enum Algorithm {
 
         UNSPECIFIED(null),
         MD5("MD5"),

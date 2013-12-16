@@ -134,4 +134,22 @@ public class HttpDigestAuthFilterTest {
         Assert.assertEquals("foo, bar", ds.getNonce());
         Assert.assertEquals("bar", ds.getOpaque());
     }
+    
+    @Test
+    public void testParseHeaders6() throws Exception
+    {
+        HttpDigestAuthFilter f = new HttpDigestAuthFilter("foo", "bar");
+        Method method = HttpDigestAuthFilter.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+                        "Digest realm=\"tada\",domain=\"/management\",nonce=\"foo, bar\",opaque=\"bar\",algorithm=MD5"
+                }));
+
+        Assert.assertNotNull(ds);
+        Assert.assertEquals("tada", ds.getRealm());
+        Assert.assertEquals("foo, bar", ds.getNonce());
+        Assert.assertEquals("bar", ds.getOpaque());
+        Assert.assertEquals(HttpDigestAuthFilter.Algorithm.MD5, ds.getAlgorithm());
+    }
 }
