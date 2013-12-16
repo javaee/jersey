@@ -54,11 +54,12 @@ import javax.ws.rs.core.HttpHeaders;
  * @since 2.3
  */
 class OAuth2ClientFilter implements ClientRequestFilter {
-    private final String accessToken;
 
+    private final String accessToken;
 
     /**
      * Create a new filter with predefined access token.
+     *
      * @param accessToken Access token.
      */
     public OAuth2ClientFilter(String accessToken) {
@@ -72,7 +73,6 @@ class OAuth2ClientFilter implements ClientRequestFilter {
     public OAuth2ClientFilter() {
         this.accessToken = null;
     }
-
 
     @Override
     public void filter(ClientRequestContext request) throws IOException {

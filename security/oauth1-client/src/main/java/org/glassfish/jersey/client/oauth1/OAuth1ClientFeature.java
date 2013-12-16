@@ -42,7 +42,13 @@ package org.glassfish.jersey.client.oauth1;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
+import javax.inject.Inject;
+
+import org.glassfish.jersey.oauth1.signature.OAuth1Parameters;
+import org.glassfish.jersey.oauth1.signature.OAuth1Secrets;
 import org.glassfish.jersey.oauth1.signature.OAuth1SignatureFeature;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * OAuth1 client filter feature registers the support for performing authenticated requests to the
@@ -72,24 +78,33 @@ import org.glassfish.jersey.oauth1.signature.OAuth1SignatureFeature;
  */
 final class OAuth1ClientFeature implements Feature {
 
+    private final OAuth1Parameters parameters;
+    private final OAuth1Secrets secrets;
 
-    private final OAuth1ClientFilter filter;
-
+    @Inject
+    private ServiceLocator config;
 
     /**
      * Create a new feature.
      *
-     * @param filter The Oauth filter that should be used in request processing.
+     * @param parameters OAuth parameters.
+     * @param secrets OAuth client/token secret.
      */
-    OAuth1ClientFeature(OAuth1ClientFilter filter) {
-        this.filter = filter;
+    OAuth1ClientFeature(final OAuth1Parameters parameters, final OAuth1Secrets secrets) {
+        this.parameters = parameters;
+        this.secrets = secrets;
     }
-
 
     @Override
     public boolean configure(FeatureContext context) {
+        System.out.println(config);
+
         context.register(OAuth1SignatureFeature.class);
-        context.register(filter);
+        context.register(OAuth1ClientFilter.class);
+
+        context.property(OAuth1ClientSupport.OAUTH_PROPERTY_OAUTH_PARAMETERS, parameters);
+        context.property(OAuth1ClientSupport.OAUTH_PROPERTY_OAUTH_SECRETS, secrets);
+
         return true;
     }
 }

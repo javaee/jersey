@@ -42,29 +42,40 @@ package org.glassfish.jersey.client.filter;
 
 import java.io.IOException;
 
-import javax.inject.Inject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Response;
 
+import javax.inject.Inject;
+
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
- * Tests injections into filters.
+ * Tests injections into provider instances.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ClientFilterInjectionTest {
+public class ClientProviderInstanceInjectionTest {
 
     public static class MyInjectee {
+
+        private final String value;
+
+        public MyInjectee(final String value) {
+            this.value = value;
+        }
+
         public String getSomething() {
-            return "something";
+            return value;
         }
     }
 
@@ -72,37 +83,51 @@ public class ClientFilterInjectionTest {
 
         @Override
         protected void configure() {
-            bindAsContract(MyInjectee.class);
+            bind(new MyInjectee("hello"));
         }
     }
 
     public static class MyFilter implements ClientRequestFilter {
+
+        private final Object field;
+
         @Inject
         private MyInjectee myInjectee;
 
-        private final String field;
-
-        public MyFilter(String field) {
+        public MyFilter(Object field) {
             this.field = field;
         }
 
         @Override
         public void filter(ClientRequestContext requestContext) throws IOException {
-            assertNotNull(myInjectee);
-            requestContext.abortWith(Response.ok(myInjectee.getSomething() + "," + field).build());
+            requestContext.abortWith(Response.ok(myInjectee + "," + field).build());
+        }
+    }
+
+    public static class MyFilterFeature implements Feature {
+
+        @Inject
+        private ServiceLocator locator;
+
+        @Override
+        public boolean configure(final FeatureContext context) {
+            context.register(new MyFilter(locator));
+            return true;
         }
     }
 
     /**
-     * Tests that instance of the filter will be correctly injected. In this case, {@link MyInjectee}
-     * should be injected into an instance of {@link MyFilter}.
+     * Tests that instance of a feature or other provider will not be injected on the client-side.
      */
     @Test
     public void test() {
-        final Client client = ClientBuilder.newBuilder().register(new MyFilter("hello"))
-                .register(new MyInjecteeBinder()).build();
+        final Client client = ClientBuilder.newBuilder()
+                .register(new MyFilterFeature())
+                .register(new MyInjecteeBinder())
+                .build();
         final Response response = client.target("http://foo.bar").request().get();
+
         assertEquals(200, response.getStatus());
-        assertEquals("something,hello", response.readEntity(String.class));
+        assertEquals("null,null", response.readEntity(String.class));
     }
 }
