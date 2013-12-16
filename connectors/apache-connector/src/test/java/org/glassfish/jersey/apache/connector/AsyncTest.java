@@ -37,8 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jetty.connector;
+package org.glassfish.jersey.apache.connector;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -62,6 +66,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Asynchronous connector test.
@@ -168,9 +173,8 @@ public class AsyncTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        // TODO: fails with true on request - should be fixed by resolving JERSEY-2273
-        config.register(new LoggingFilter(LOGGER, false));
-        config.connectorProvider(new JettyConnectorProvider());
+        config.register(new LoggingFilter(LOGGER, true));
+        config.connectorProvider(new ApacheConnectorProvider());
     }
 
     /**
@@ -191,15 +195,50 @@ public class AsyncTest extends JerseyTest {
         final Future<Response> rf2 = target(PATH).request().async().post(Entity.text("2"));
         final Future<Response> rf3 = target(PATH).request().async().post(Entity.text("3"));
         // get() waits for the response
-        final String r1 = rf1.get().readEntity(String.class);
-        final String r2 = rf2.get().readEntity(String.class);
-        final String r3 = rf3.get().readEntity(String.class);
 
+        // workaround for AHC default connection manager limitation of
+        // only 2 open connections per host that may intermittently block
+        // the test
+        final CountDownLatch latch = new CountDownLatch(3);
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+
+        final Future<String> r1 = executor.submit(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                try {
+                    return rf1.get().readEntity(String.class);
+                } finally {
+                    latch.countDown();
+                }
+            }
+        });
+        final Future<String> r2 = executor.submit(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                try {
+                    return rf2.get().readEntity(String.class);
+                } finally {
+                    latch.countDown();
+                }
+            }
+        });
+        final Future<String> r3 = executor.submit(new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                try {
+                    return rf3.get().readEntity(String.class);
+                } finally {
+                    latch.countDown();
+                }
+            }
+        });
+
+        assertTrue("Waiting for results has timed out.", latch.await(5, TimeUnit.SECONDS));
         final long toc = System.currentTimeMillis();
 
-        assertEquals("DONE-1", r1);
-        assertEquals("DONE-2", r2);
-        assertEquals("DONE-3", r3);
+        assertEquals("DONE-1", r1.get());
+        assertEquals("DONE-2", r2.get());
+        assertEquals("DONE-3", r3.get());
 
         assertThat("Async processing took too long.", toc - tic, Matchers.lessThan(3 * AsyncResource.OPERATION_DURATION));
     }

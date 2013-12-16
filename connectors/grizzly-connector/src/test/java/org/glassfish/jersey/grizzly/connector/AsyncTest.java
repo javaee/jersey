@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jetty.connector;
+package org.glassfish.jersey.grizzly.connector;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -168,9 +168,8 @@ public class AsyncTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        // TODO: fails with true on request - should be fixed by resolving JERSEY-2273
-        config.register(new LoggingFilter(LOGGER, false));
-        config.connectorProvider(new JettyConnectorProvider());
+        config.register(new LoggingFilter(LOGGER, true));
+        config.connectorProvider(new GrizzlyConnectorProvider());
     }
 
     /**

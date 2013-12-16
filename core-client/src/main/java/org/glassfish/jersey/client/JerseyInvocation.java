@@ -652,7 +652,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return requestScope.runInScope(new Producer<Response>() {
             @Override
             public Response call() throws ProcessingException {
-                return new ScopedJaxrsResponse(runtime.invoke(requestContext), requestScope);
+                return new InboundJaxrsResponse(runtime.invoke(requestContext), requestScope);
             }
         });
     }
@@ -708,7 +708,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
-                responseFuture.set(new ScopedJaxrsResponse(response, scope));
+                responseFuture.set(new InboundJaxrsResponse(response, scope));
             }
 
             @Override
@@ -753,12 +753,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     private <T> T translate(ClientResponse response, RequestScope scope, Class<T> responseType)
             throws ProcessingException {
         if (responseType == Response.class) {
-            return responseType.cast(new ScopedJaxrsResponse(response, scope));
+            return responseType.cast(new InboundJaxrsResponse(response, scope));
         }
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
             try {
-                return new InboundJaxrsResponse(response).readEntity(responseType);
+                return response.readEntity(responseType);
             } catch (ProcessingException ex) {
                 throw ex;
             } catch (WebApplicationException ex) {
@@ -767,7 +767,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 throw new ProcessingException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
             }
         } else {
-            throw convertToException(new ScopedJaxrsResponse(response, scope));
+            throw convertToException(new InboundJaxrsResponse(response, scope));
         }
     }
 
@@ -805,12 +805,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             throws ProcessingException {
         if (responseType.getRawType() == Response.class) {
             //noinspection unchecked
-            return (T) new ScopedJaxrsResponse(response, scope);
+            return (T) new InboundJaxrsResponse(response, scope);
         }
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
             try {
-                return new InboundJaxrsResponse(response).readEntity(responseType);
+                return response.readEntity(responseType);
             } catch (ProcessingException ex) {
                 throw ex;
             } catch (WebApplicationException ex) {
@@ -819,7 +819,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 throw new ProcessingException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
             }
         } else {
-            throw convertToException(new ScopedJaxrsResponse(response, scope));
+            throw convertToException(new InboundJaxrsResponse(response, scope));
         }
     }
 
@@ -840,15 +840,15 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 public void completed(ClientResponse response, RequestScope scope) {
                     final T result;
                     if (callbackParamClass == Response.class) {
-                        result = callbackParamClass.cast(new ScopedJaxrsResponse(response, scope));
+                        result = callbackParamClass.cast(new InboundJaxrsResponse(response, scope));
                         responseFuture.set(result);
                         callback.completed(result);
                     } else if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
-                        result = new InboundJaxrsResponse(response).readEntity(new GenericType<T>(callbackParamType));
+                        result = response.readEntity(new GenericType<T>(callbackParamType));
                         responseFuture.set(result);
                         callback.completed(result);
                     } else {
-                        failed(convertToException(new ScopedJaxrsResponse(response, scope)));
+                        failed(convertToException(new InboundJaxrsResponse(response, scope)));
                     }
                 }
 

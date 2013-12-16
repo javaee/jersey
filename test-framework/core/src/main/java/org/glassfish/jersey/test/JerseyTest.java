@@ -58,6 +58,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -119,9 +120,9 @@ public abstract class JerseyTest {
     private final Map<String, String> forcedPropertyMap = Maps.newHashMap();
 
     private Handler logHandler;
-    private List<LogRecord> loggedStartupRecords = Lists.newArrayList();
-    private List<LogRecord> loggedRuntimeRecords = Lists.newArrayList();
-    private Map<Logger, Level> logLevelMap = Maps.newIdentityHashMap();
+    private final List<LogRecord> loggedStartupRecords = Lists.newArrayList();
+    private final List<LogRecord> loggedRuntimeRecords = Lists.newArrayList();
+    private final Map<Logger, Level> logLevelMap = Maps.newIdentityHashMap();
 
     /**
      * An extending class must implement the {@link #configure()} method to
@@ -484,9 +485,7 @@ public abstract class JerseyTest {
 
         tc.start();
         Client old = client.getAndSet(getClient(tc, application));
-        if (old != null) {
-            old.close();
-        }
+        close(old);
     }
 
     /**
@@ -506,9 +505,7 @@ public abstract class JerseyTest {
             tc.stop();
         } finally {
             Client old = client.getAndSet(null);
-            if (old != null) {
-                old.close();
-            }
+            close(old);
         }
     }
 
@@ -715,5 +712,52 @@ public abstract class JerseyTest {
             };
         }
         return logHandler;
+    }
+
+    /**
+     * Utility method that safely closes a response without throwing an exception.
+     *
+     * @param responses responses to close. Each response may be {@code null}.
+     * @since 2.5
+     */
+    public final void close(final Response... responses) {
+        if (responses == null || responses.length == 0) {
+            return;
+        }
+
+        for (Response response : responses) {
+            if (response == null) {
+                continue;
+            }
+            try {
+                response.close();
+            } catch (Throwable t) {
+                LOGGER.log(Level.WARNING, "Error closing a response.", t);
+            }
+        }
+    }
+
+    /**
+     * Utility method that safely closes a client instance without throwing an exception.
+     *
+     * @param clients client instances to close. Each instance may be {@code null}.
+     * @since 2.5
+     */
+    public final void close(final Client... clients) {
+        if (clients == null || clients.length == 0) {
+            return;
+        }
+
+        for (Client c : clients) {
+            if (c == null) {
+                continue;
+            }
+            try {
+                c.close();
+            } catch (Throwable t) {
+                LOGGER.log(Level.WARNING, "Error closing a client instance.", t);
+            }
+
+        }
     }
 }

@@ -213,6 +213,7 @@ public class JettyConnector implements Connector {
         this.cookieStore = client.getCookieStore();
     }
 
+    @SuppressWarnings("ChainOfInstanceofChecks")
     private static URI getProxyUri(final Object proxy) {
         if (proxy instanceof URI) {
             return (URI) proxy;
@@ -228,6 +229,7 @@ public class JettyConnector implements Connector {
      *
      * @return the {@link HttpClient}.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public HttpClient getHttpClient() {
         return client;
     }
@@ -270,7 +272,7 @@ public class JettyConnector implements Connector {
         }
     }
 
-    private void processResponseHeaders(final HttpFields respHeaders, final ClientResponse jerseyResponse) {
+    private static void processResponseHeaders(final HttpFields respHeaders, final ClientResponse jerseyResponse) {
         for (HttpField header : respHeaders) {
             final String headerName = header.getName();
             final MultivaluedMap<String, String> headers = jerseyResponse.getHeaders();
@@ -292,10 +294,10 @@ public class JettyConnector implements Connector {
         public void close() throws IOException {
             super.close();
         }
-    }
 
-    private static InputStream getInputStream(final ContentResponse response) throws IOException {
-        return new ByteArrayInputStream(response.getContent());
+        private static InputStream getInputStream(final ContentResponse response) throws IOException {
+            return new ByteArrayInputStream(response.getContent());
+        }
     }
 
     private Request translateRequest(final ClientRequest clientRequest) {
@@ -406,8 +408,7 @@ public class JettyConnector implements Connector {
             });
             final AtomicReference<ClientResponse> jerseyResponse = new AtomicReference<ClientResponse>();
             final ByteBufferInputStream entityStream = new ByteBufferInputStream();
-            buildAsyncRequest(jettyRequest)
-                    .send(new Response.Listener.Empty() {
+            jettyRequest.send(new Response.Listener.Empty() {
 
                         @Override
                         public void onHeaders(Response jettyResponse) {
@@ -461,20 +462,7 @@ public class JettyConnector implements Connector {
         return Futures.immediateFailedFuture(failure);
     }
 
-    private Request buildAsyncRequest(final Request jettyRequest) {
-        final Request request = client.newRequest(jettyRequest.getURI())
-                .method(jettyRequest.method())
-                .content(jettyRequest.getContent())
-                .followRedirects(jettyRequest.isFollowRedirects());
-
-        for (HttpField header : jettyRequest.getHeaders()) {
-            request.getHeaders().add(header.getName(), header.getValue());
-        }
-
-        return request;
-    }
-
-    private ClientResponse translateResponse(final ClientRequest jerseyRequest,
+    private static ClientResponse translateResponse(final ClientRequest jerseyRequest,
                                              final org.eclipse.jetty.client.api.Response jettyResponse,
                                              final NonBlockingInputStream entityStream) {
         final ClientResponse jerseyResponse = new ClientResponse(Statuses.from(jettyResponse.getStatus()), jerseyRequest);

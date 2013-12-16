@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jetty.connector;
+package org.glassfish.jersey.tests.e2e.client.httpurlconnector;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +54,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -168,9 +169,8 @@ public class AsyncTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        // TODO: fails with true on request - should be fixed by resolving JERSEY-2273
-        config.register(new LoggingFilter(LOGGER, false));
-        config.connectorProvider(new JettyConnectorProvider());
+        config.register(new LoggingFilter(LOGGER, true));
+        config.connectorProvider(new HttpUrlConnectorProvider());
     }
 
     /**
