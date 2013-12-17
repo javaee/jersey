@@ -113,9 +113,13 @@ public class UriComponent {
          */
         QUERY,
         /**
-         * The URI query component type that is a query parameter.
+         * The URI query component type that is a query parameter, space character is encoded as {@code +}.
          */
         QUERY_PARAM,
+        /**
+         * The URI query component type that is a query parameter, space character is encoded as {@code %20}.
+         */
+        QUERY_PARAM_SPACE_ENCODED,
         /**
          * The URI fragment component type.
          */
@@ -400,12 +404,14 @@ public class UriComponent {
 
         tables[Type.QUERY.ordinal()] = initEncodingTable(l);
 
-        tables[Type.FRAGMENT.ordinal()] = tables[Type.QUERY.ordinal()];
-
         tables[Type.QUERY_PARAM.ordinal()] = initEncodingTable(l);
         tables[Type.QUERY_PARAM.ordinal()]['='] = false;
         tables[Type.QUERY_PARAM.ordinal()]['+'] = false;
         tables[Type.QUERY_PARAM.ordinal()]['&'] = false;
+
+        tables[Type.QUERY_PARAM_SPACE_ENCODED.ordinal()] = tables[Type.QUERY_PARAM.ordinal()];
+
+        tables[Type.FRAGMENT.ordinal()] = tables[Type.QUERY.ordinal()];
 
         return tables;
     }
