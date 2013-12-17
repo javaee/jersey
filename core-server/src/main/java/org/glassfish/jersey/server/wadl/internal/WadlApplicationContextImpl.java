@@ -52,7 +52,9 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.namespace.QName;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.ExtendedResourceContext;
@@ -79,6 +81,10 @@ import com.sun.research.ws.wadl.Resources;
 public class WadlApplicationContextImpl implements WadlApplicationContext {
 
     private static final Logger LOGGER = Logger.getLogger(WadlApplicationContextImpl.class.getName());
+
+    static final String WADL_JERSEY_NAMESPACE = "http://jersey.java.net/";
+    public static final JAXBElement extendedElement = new JAXBElement<String>(
+            new QName(WADL_JERSEY_NAMESPACE, "extended", "jersey"), String.class, "true");
 
     @Context
     private ExtendedResourceContext resourceContext;
@@ -128,13 +134,13 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         } finally {
             AccessController.doPrivileged(ReflectionHelper.setContextClassLoaderPA(contextClassLoader));
         }
-        
+
         jaxbContext = jaxbContextCandidate;
     }
 
     @Override
-    public ApplicationDescription getApplication(UriInfo uriInfo) {
-        ApplicationDescription applicationDescription = getWadlBuilder()
+    public ApplicationDescription getApplication(UriInfo uriInfo, boolean detailedWadl) {
+        ApplicationDescription applicationDescription = getWadlBuilder(detailedWadl, uriInfo)
                 .generate(resourceContext.getResourceModel().getRootResources());
         final Application application = applicationDescription.getApplication();
         for (Resources resources : application.getResources()) {
@@ -148,15 +154,18 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
 
     @Override
     public Application getApplication(UriInfo info,
-                                      org.glassfish.jersey.server.model.Resource resource) {
+                                      org.glassfish.jersey.server.model.Resource resource, boolean detailedWadl) {
 
         // Get the root application description
         //
 
-        ApplicationDescription description = getApplication(info);
+        ApplicationDescription description = getApplication(info, detailedWadl);
 
         WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
-        Application application = new WadlBuilder(wadlGenerator).generate(description, resource);
+        Application application = new WadlBuilder(wadlGenerator, detailedWadl, info).generate(description, resource);
+        if (application == null) {
+            return null;
+        }
 
         for (Resources resources : application.getResources()) {
             resources.setBase(info.getBaseUri().toString());
@@ -184,8 +193,9 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         return jaxbContext;
     }
 
-    private WadlBuilder getWadlBuilder() {
-        return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator(serviceLocator)) : null);
+    private WadlBuilder getWadlBuilder(boolean detailedWadl, UriInfo uriInfo) {
+        return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator(serviceLocator),
+                detailedWadl, uriInfo) : null);
     }
 
     @Override

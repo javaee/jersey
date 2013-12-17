@@ -345,7 +345,8 @@
                                             return "On this path the resource with " + resource.getResourceMethods().size()
                                                 + " methods is deployed.";
                                         }
-                                        }).produces(MediaType.TEXT_PLAIN);
+                                        }).produces(MediaType.TEXT_PLAIN)
+                                          .extended(true); // extended means: not part of core RESTful API
 
                                 // we add to the model new resource which is a combination of the old resource enhanced
                                 // by the OPTIONS method

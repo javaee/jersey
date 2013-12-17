@@ -159,6 +159,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         private Type routingResponseType;
         // NameBound
         private final Collection<Class<? extends Annotation>> nameBindings;
+        private boolean extended;
 
         /**
          * Create a resource method builder.
@@ -209,6 +210,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.handlingMethod = invocable.getHandlingMethod();
             this.encodedParams = false;
             this.routingResponseType = invocable.getRoutingResponseType();
+            this.extended = originalMethod.isExtended();
             Method handlerMethod = invocable.getDefinitionMethod();
             MethodHandler handler = invocable.getHandler();
             if (handler.isClassBased()) {
@@ -468,12 +470,36 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         }
 
         /**
+         * Get the flag indicating whether the resource method is extended or is a core of exposed RESTful API.
+         * The method defines the
+         * flag available at {@link org.glassfish.jersey.server.model.ResourceMethod#isExtended()}.
+         * <p>
+         * Extended resource model components are helper components that are not considered as a core of a
+         * RESTful API. These can be for example {@code OPTIONS} {@link ResourceMethod resource methods}
+         * added by {@link org.glassfish.jersey.server.model.ModelProcessor model processors}
+         * or {@code application.wadl} resource producing the WADL. Both resource are rather supportive
+         * than the core of RESTful API.
+         * </p>
+         *
+         * @param extended If {@code true} then resource method is marked as extended.
+         * @return updated builder object.
+         * @see org.glassfish.jersey.server.model.ExtendedResource
+         *
+         * @since 2.5.1
+         */
+        public Builder extended(boolean extended) {
+            this.extended = extended;
+            return this;
+        }
+
+        /**
          * Build the resource method model and register it with the parent
          * {@link Resource.Builder Resource.Builder}.
          *
          * @return new resource method model.
          */
         public ResourceMethod build() {
+
             final Data methodData = new Data(
                     httpMethod,
                     consumedTypes,
@@ -483,7 +509,8 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
                     suspendTimeout,
                     suspendTimeoutUnit,
                     createInvocable(),
-                    nameBindings);
+                    nameBindings,
+                    parent.isExtended() || extended);
 
             parent.onBuildMethod(this, methodData);
 
@@ -525,6 +552,8 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         // NameBound
         private final Collection<Class<? extends Annotation>> nameBindings;
 
+        private final boolean extended;
+
         private Data(final String httpMethod,
                      final Collection<MediaType> consumedTypes,
                      final Collection<MediaType> producedTypes,
@@ -532,7 +561,8 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
                      final long suspendTimeout,
                      final TimeUnit suspendTimeoutUnit,
                      final Invocable invocable,
-                     final Collection<Class<? extends Annotation>> nameBindings) {
+                     final Collection<Class<? extends Annotation>> nameBindings,
+                     final boolean extended) {
             this.managedAsync = managedAsync;
             this.type = JaxrsType.classify(httpMethod);
 
@@ -546,6 +576,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
             this.suspendTimeoutUnit = suspendTimeoutUnit;
 
             this.nameBindings = Collections.unmodifiableCollection(Lists.newArrayList(nameBindings));
+            this.extended = extended;
         }
 
         /**
@@ -632,6 +663,15 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          */
         /* package */ Invocable getInvocable() {
             return invocable;
+        }
+
+        /**
+         * Get the flag indicating whether the resource method is extended or is a core of exposed RESTful API.
+         *
+         * @return {@code true} if resource is extended.
+         */
+        /* package */ boolean isExtended() {
+            return extended;
         }
 
         /**
@@ -740,6 +780,29 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
      */
     public Invocable getInvocable() {
         return data.getInvocable();
+    }
+
+    /**
+     * Get the flag indicating whether the resource method is extended or is a core of exposed RESTful API.
+     * <p>
+     * Extended resource model components are helper components that are not considered as a core of a
+     * RESTful API. These can be for example {@code OPTIONS} {@link ResourceMethod resource methods}
+     * added by {@link org.glassfish.jersey.server.model.ModelProcessor model processors}
+     * or {@code application.wadl} resource producing the WADL. Both resource are rather supportive
+     * than the core of RESTful API.
+     * </p>
+     * <p>
+     * If not set the resource will not be defined as extended by default.
+     * </p>
+
+     *
+     * @return {@code true} if the method is extended.
+     * @see org.glassfish.jersey.server.model.ExtendedResource
+     *
+     * @since 2.5.1
+     */
+    public boolean isExtended() {
+        return data.extended;
     }
 
 

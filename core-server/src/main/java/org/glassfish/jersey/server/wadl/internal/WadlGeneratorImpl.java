@@ -69,6 +69,7 @@ import com.sun.research.ws.wadl.Response;
  */
 public class WadlGeneratorImpl implements WadlGenerator {
 
+
     @Override
     public String getRequiredJaxbContextPath() {
         final String name = Application.class.getName();
@@ -101,6 +102,9 @@ public class WadlGeneratorImpl implements WadlGenerator {
                 new com.sun.research.ws.wadl.Method();
         wadlMethod.setName(m.getHttpMethod());
         wadlMethod.setId(m.getInvocable().getDefinitionMethod().getName());
+        if (m.isExtended()) {
+            wadlMethod.getAny().add(WadlApplicationContextImpl.extendedElement);
+        }
         return wadlMethod;
     }
 
@@ -179,12 +183,20 @@ public class WadlGeneratorImpl implements WadlGenerator {
     }
 
     @Override
-    public Resource createResource(org.glassfish.jersey.server.model.Resource r, String path) {
+    public Resource createResource(org.glassfish.jersey.server.model.Resource resource, String path) {
         Resource wadlResource = new Resource();
-        if (path != null)
+        if (path != null) {
             wadlResource.setPath(path);
-        else if (r.getPath() != null)
-            wadlResource.setPath(r.getPath());
+        } else if (resource.getPath() != null) {
+            wadlResource.setPath(resource.getPath());
+        }
+
+        if (resource.isExtended()) {
+
+
+            wadlResource.getAny().add(WadlApplicationContextImpl.extendedElement);
+        }
+
         return wadlResource;
     }
 

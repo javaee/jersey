@@ -63,6 +63,7 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -107,7 +108,8 @@ public class ExtendedWadlWebappTest extends JerseyTest {
      */
     @Test
     public void testExtendedWadl() throws Exception {
-        String wadl = target().path("application.wadl").request(MediaTypes.WADL).get(String.class);
+        String wadl = target().path("application.wadl")
+                .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).get(String.class);
 
         LOGGER.fine(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
@@ -119,7 +121,8 @@ public class ExtendedWadlWebappTest extends JerseyTest {
 
     @Test
     public void testWadlOptionsMethod() throws Exception {
-        String wadl = target().path("items").request(MediaTypes.WADL).options(String.class);
+        String wadl = target().path("items")
+                .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).options(String.class);
 
         LOGGER.fine(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);

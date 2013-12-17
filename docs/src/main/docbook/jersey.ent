@@ -379,6 +379,7 @@
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlFeature.html'>WadlFeature</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
 <!ENTITY jersey.server.WadlGeneratorConfig "<link xlink:href='&jersey.javadoc.path;/server/wadl/config/WadlGeneratorConfig.html'>WadlGeneratorConfig</link>">
+<!ENTITY jersey.server.ExtendedResource "<link xlink:href='&jersey.javadoc.path;/server/model/ExtendedResource.html'>@ExtendedResource</link>">
 
 <!ENTITY jersey.message.MessageProperties "<link xlink:href='&jersey.javadoc.path;/message/MessageProperties.html'>MessageProperties</link>">
 <!ENTITY jersey.message.MessageBodyWorkers "<link xlink:href='&jersey.javadoc.path;/message/MessageBodyWorkers.html'>MessageBodyWorkers</link>">
@@ -750,6 +751,7 @@
 <!ENTITY lit.jersey.server.spi.ContainerProvider "<literal>ContainerProvider</literal>">
 
 <!ENTITY lit.jersey.server.ContainerLifecycleListener "<literal>ContainerLifecycleListener</literal>">
+<!ENTITY lit.jersey.server.ExtendedResource "<literal>@ExtendedResource</literal>">
 
 <!ENTITY lit.jersey.client.oauth1.AccessToken "<literal>AccessToken</literal>">
 <!ENTITY lit.jersey.client.oauth1.ConsumerCredentials "<literal>ConsumerCredentials</literal>">
