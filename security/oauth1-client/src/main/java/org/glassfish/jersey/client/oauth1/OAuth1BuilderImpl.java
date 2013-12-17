@@ -46,7 +46,7 @@ import org.glassfish.jersey.oauth1.signature.OAuth1Parameters;
 import org.glassfish.jersey.oauth1.signature.OAuth1Secrets;
 
 /**
- * Oauth 1 client builder default implementation.
+ * OAuth 1 client builder default implementation.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @since 2.3
@@ -56,7 +56,6 @@ class OAuth1BuilderImpl implements OAuth1Builder {
     private final OAuth1Parameters params;
     private final OAuth1Secrets secrets;
     private ConsumerCredentials consumerCredentials;
-
 
     /**
      * Create a new builder instance.
@@ -114,7 +113,6 @@ class OAuth1BuilderImpl implements OAuth1Builder {
         secrets.setConsumerSecret(consumerCredentials.getConsumerSecret());
     }
 
-
     @Override
     public FlowBuilder authorizationFlow(String requestTokenUri, String accessTokenUri, String authorizationUri) {
         defineCredentialsParams();
@@ -125,6 +123,7 @@ class OAuth1BuilderImpl implements OAuth1Builder {
      * OAuth 1 client filter feature builder default implementation.
      */
     static class FilterBuilderImpl implements FilterFeatureBuilder {
+
         private final OAuth1Parameters params;
         private final OAuth1Secrets secrets;
         private AccessToken accessToken;
@@ -140,7 +139,6 @@ class OAuth1BuilderImpl implements OAuth1Builder {
             this.secrets = secrets;
         }
 
-
         @Override
         public FilterFeatureBuilder accessToken(AccessToken accessToken) {
             this.accessToken = accessToken;
@@ -153,8 +151,7 @@ class OAuth1BuilderImpl implements OAuth1Builder {
                 params.setToken(accessToken.getToken());
                 secrets.setTokenSecret(accessToken.getAccessTokenSecret());
             }
-            OAuth1ClientFilter filter = new OAuth1ClientFilter(params, secrets);
-            return new OAuth1ClientFeature(filter);
+            return new OAuth1ClientFeature(params, secrets);
         }
     }
 }

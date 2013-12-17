@@ -517,5 +517,10 @@ public class OAuth1Parameters extends HashMap<String, String> {
         request.addHeaderValue(AUTHORIZATION_HEADER, buf.toString());
         return this;
     }
+
+    @Override
+    public OAuth1Parameters clone() {
+        return (OAuth1Parameters) super.clone();
+    }
 }
 

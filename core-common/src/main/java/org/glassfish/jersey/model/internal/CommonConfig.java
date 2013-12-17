@@ -659,7 +659,11 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             if (feature == null) {
                 feature = locator.create(registration.getFeatureClass());
             } else {
-                locator.inject(feature);
+                // Disable injection of Feature instances on the client-side. Instances may be registered into multiple
+                // web-targets which means that injecting anything into these instances is not safe.
+                if (!RuntimeType.CLIENT.equals(type)) {
+                    locator.inject(feature);
+                }
             }
 
             if (enabledFeatures.contains(feature)) {

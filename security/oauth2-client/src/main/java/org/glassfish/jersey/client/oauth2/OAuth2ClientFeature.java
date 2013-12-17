@@ -65,15 +65,16 @@ import javax.ws.rs.core.FeatureContext;
  *           .property(OAUTH2_PROPERTY_ACCESS_TOKEN, "6ab45ab465e46f54d771a").get();
  * </pre>
  *
- *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @since 2.3
  */
 class OAuth2ClientFeature implements Feature {
+
     private final OAuth2ClientFilter filter;
 
     /**
      * Create a new feature initialized for the access token.
+     *
      * @param accessToken Access token.
      */
     public OAuth2ClientFeature(String accessToken) {
@@ -92,6 +93,7 @@ class OAuth2ClientFeature implements Feature {
 
     /**
      * Create a new feature with the given {@code filter}.
+     *
      * @param filter Filter instance.
      */
     OAuth2ClientFeature(OAuth2ClientFilter filter) {
