@@ -53,6 +53,8 @@
     <packaging>jar</packaging>
     <name>jersey-examples-moxy</name>
 
+    <description>Jersey XML MOXy example.</description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>

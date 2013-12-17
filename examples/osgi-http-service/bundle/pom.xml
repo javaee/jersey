@@ -55,6 +55,8 @@
     <name>jersey-examples-osgi-http-service-bundle</name>
     <packaging>jar</packaging>
 
+    <description>OSGi HttpService example bundle</description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>

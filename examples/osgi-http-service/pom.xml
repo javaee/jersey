@@ -55,6 +55,8 @@
     <name>jersey-examples-osgi-http-service</name>
     <packaging>pom</packaging>
 
+    <description>OSGi HttpService example</description>
+
     <modules>
         <module>bundle</module>
         <module>functional-test</module>

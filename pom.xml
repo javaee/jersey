@@ -182,6 +182,11 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.glassfish.jersey.tools.plugins</groupId>
+                    <artifactId>jersey-doc-modulelist-maven-plugin</artifactId>
+                    <version>1.0-SNAPSHOT</version>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>1.3.1</version>
@@ -595,6 +600,19 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.glassfish.jersey.tools.plugins</groupId>
+                <artifactId>jersey-doc-modulelist-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <outputFileName>docs/src/main/docbook/modules.xml</outputFileName>
+                    <templateFileName>docs/src/main/docbook/inc/modules.src</templateFileName>
+                    <tableHeaderFileName>docs/src/main/docbook/inc/modules_table_header.src</tableHeaderFileName>
+                    <tableFooterFileName>docs/src/main/docbook/inc/modules_table_footer.src</tableFooterFileName>
+                    <tableRowFileName>docs/src/main/docbook/inc/modules_table_row.src</tableRowFileName>
+                    <outputUnmatched>false</outputUnmatched>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>

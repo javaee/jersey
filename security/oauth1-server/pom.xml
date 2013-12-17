@@ -50,6 +50,10 @@
     <artifactId>oauth1-server</artifactId>
     <packaging>jar</packaging>
 
+    <description>
+        Module that adds an OAuth 1 support to Jersey server
+    </description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>

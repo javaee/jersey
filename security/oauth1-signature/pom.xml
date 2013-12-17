@@ -50,6 +50,8 @@
     <artifactId>oauth1-signature</artifactId>
     <packaging>jar</packaging>
 
+    <description>OAuth1 signature module</description>
+
     <build>
         <plugins>
             <plugin>

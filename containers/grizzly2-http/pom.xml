@@ -53,6 +53,8 @@
     <packaging>jar</packaging>
     <name>jersey-container-grizzly2-http</name>
 
+    <description>Grizzly 2 Http Container.</description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.hk2.external</groupId>

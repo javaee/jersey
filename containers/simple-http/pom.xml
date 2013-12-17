@@ -52,6 +52,8 @@
     <packaging>jar</packaging>
     <name>jersey-container-simple-http</name>
 
+    <description>Simple Http Container</description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.hk2.external</groupId>

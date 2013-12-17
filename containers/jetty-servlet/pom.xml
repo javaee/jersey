@@ -55,6 +55,8 @@
     <packaging>jar</packaging>
     <name>jersey-container-jetty-servlet</name>
 
+    <description>Jetty Servlet Container</description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>

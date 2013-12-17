@@ -49,6 +49,9 @@
 
     <artifactId>oauth2-client</artifactId>
 
+    <description>
+        Module that adds an OAuth 2 support to Jersey client
+    </description>
     <build>
         <plugins>
             <plugin>

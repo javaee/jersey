@@ -54,6 +54,8 @@
     <artifactId>lib-bundle</artifactId>
     <name>jersey-examples-osgi-helloworld-webapp-lib</name>
 
+    <description>OSGi Helloworld Webapp - lib bundle</description>
+
     <dependencies>
         <dependency>
             <groupId>javax.ws.rs</groupId>

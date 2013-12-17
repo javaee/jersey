@@ -1,0 +1,8 @@
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/%LINK_PATH/dependencies.html">
+    %NAME
+</link>
+</entry>
+<entry>%DESCRIPTION</entry>
+</row>

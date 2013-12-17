@@ -54,6 +54,8 @@
     <packaging>jar</packaging>
     <name>jersey-container-jetty-http</name>
 
+    <description>Jetty Http Container</description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.hk2.external</groupId>

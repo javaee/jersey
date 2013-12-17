@@ -50,6 +50,8 @@
     <packaging>war</packaging>
     <artifactId>oauth2-client-google-webapp</artifactId>
 
+    <description>Google API data retrieving example using OAuth2 for authentication and authorization</description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.security</groupId>

@@ -53,6 +53,8 @@
     <packaging>jar</packaging>
     <name>jersey-container-grizzly2-servlet</name>
 
+    <description>Grizzly 2 Servlet Container.</description>
+
     <dependencies>
         <dependency>
             <groupId>javax.servlet</groupId>

@@ -23,6 +23,7 @@
 .war
 .zip
 .dat
+/docs/src/main/docbook/inc/*.src
 jaxb.index
 /MANIFEST.MF
 /META-INF/services/

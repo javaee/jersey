@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,58 +40,21 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<!DOCTYPE section [<!ENTITY % ents SYSTEM "jersey.ent"> %ents;]>
+<section xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="modules">
+    <title>List of modules</title>
 
-    <parent>
-        <groupId>org.glassfish.jersey.containers</groupId>
-        <artifactId>project</artifactId>
-        <version>2.5-SNAPSHOT</version>
-    </parent>
-
-    <artifactId>jersey-container-jdk-http</artifactId>
-    <packaging>jar</packaging>
-    <name>jersey-container-jdk-http</name>
-
-    <description>JDK Http Container</description>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>com.sun.istack</groupId>
-                <artifactId>maven-istack-commons-plugin</artifactId>
-                <inherited>true</inherited>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <inherited>true</inherited>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <inherited>true</inherited>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-        </plugins>
-
-        <resources>
-            <resource>
-                <directory>${basedir}/src/main/java</directory>
-                <includes>
-                    <include>META-INF/**/*</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>${basedir}/src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
-    </build>
-</project>
+    <para>The following chapters provide an overview of all Jersey modules
+        and their dependencies with links to the respective binaries (follow a link
+        on a module name to get complete set of downloadable dependencies).
+    </para>
+    %CONTENT
+</section>
