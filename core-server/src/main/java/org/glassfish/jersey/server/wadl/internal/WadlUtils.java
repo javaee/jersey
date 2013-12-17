@@ -41,8 +41,10 @@
 package org.glassfish.jersey.server.wadl.internal;
 
 import java.io.InputStream;
+import java.util.List;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.UriInfo;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -64,6 +66,13 @@ import org.xml.sax.SAXException;
  *
  */
 public class WadlUtils {
+
+
+    /**
+     * Name of the query parameter that allows generation of full WADL including
+     * {@link org.glassfish.jersey.server.model.ExtendedResource extended resource}.
+     */
+    public static final String DETAILED_WADL_QUERY_PARAM = "detail";
 
     /**
      * Unmarshal a jaxb bean into a type of {@code resultClass} from the given {@code inputStream}.
@@ -94,4 +103,26 @@ public class WadlUtils {
         final Object result = unmarshaller.unmarshal(source);
         return resultClass.cast(result);
     }
+
+    /**
+     * Return {@code true} if generation of full WADL with
+     * {@link org.glassfish.jersey.server.model.ExtendedResource extended resources} is requested.
+     *
+     * @param uriInfo URI info of the request.
+     * @return {@code true} if full detailed WADL should be generated; false otherwise.
+     */
+    public static boolean isDetailedWadlRequested(UriInfo uriInfo) {
+        final List<String> simple = uriInfo.getQueryParameters().get(DETAILED_WADL_QUERY_PARAM);
+
+        if (simple != null) {
+            if (simple.size() == 0) {
+                return true;
+            }
+
+            final String value = simple.get(0).trim();
+            return value.isEmpty() || value.toUpperCase().equals("TRUE");
+        }
+        return false;
+    }
+
 }

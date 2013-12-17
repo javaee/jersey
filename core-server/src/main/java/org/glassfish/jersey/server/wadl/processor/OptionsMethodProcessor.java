@@ -124,11 +124,11 @@ public class OptionsMethodProcessor implements ModelProcessor {
 
     @Override
     public ResourceModel processResourceModel(ResourceModel resourceModel, Configuration configuration) {
-        return ModelProcessorUtil.enhanceResourceModel(resourceModel, false, methodList).build();
+        return ModelProcessorUtil.enhanceResourceModel(resourceModel, false, methodList, true).build();
     }
 
     @Override
     public ResourceModel processSubResource(ResourceModel subResourceModel, Configuration configuration) {
-        return ModelProcessorUtil.enhanceResourceModel(subResourceModel, true, methodList).build();
+        return ModelProcessorUtil.enhanceResourceModel(subResourceModel, true, methodList, true).build();
     }
 }

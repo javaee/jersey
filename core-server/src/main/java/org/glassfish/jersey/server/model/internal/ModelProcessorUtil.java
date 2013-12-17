@@ -263,19 +263,23 @@ public class ModelProcessorUtil {
      * @param subResourceModel {@code true} if the {@code resourceModel} to be enhanced is a sub resource model, {@code false}
      *                                     if it is application resource model.
      * @param methods List of enhancing methods.
+     * @param extendedFlag This flag will initialize the property
+     *                  {@link org.glassfish.jersey.server.model.ResourceMethod#isExtended()}.
+     *
      * @return New resource model builder enhanced by {@code methods}.
      */
     public static ResourceModel.Builder enhanceResourceModel(ResourceModel resourceModel, boolean subResourceModel,
-                                                             List<Method> methods) {
+                                                             List<Method> methods, boolean extendedFlag) {
         ResourceModel.Builder newModelBuilder = new ResourceModel.Builder(resourceModel, subResourceModel);
 
         for (RuntimeResource resource : resourceModel.getRuntimeResourceModel().getRuntimeResources()) {
-            enhanceResource(resource, newModelBuilder, methods);
+            enhanceResource(resource, newModelBuilder, methods, extendedFlag);
         }
         return newModelBuilder;
     }
 
-    public static void enhanceResource(RuntimeResource resource, ResourceModel.Builder newModelBuilder, List<Method> methods) {
+    public static void enhanceResource(RuntimeResource resource, ResourceModel.Builder newModelBuilder,
+                                       List<Method> methods, boolean extended) {
         final Resource firstResource = resource.getResources().get(0);
 
         if (methodsSuitableForResource(firstResource, methods)) {
@@ -313,6 +317,7 @@ public class ModelProcessorUtil {
                     } else {
                         methodBuilder.handledBy(method.inflectorClass);
                     }
+                    methodBuilder.extended(extended);
 
                     final Resource newResource = resourceBuilder.build();
                     if (parentResource != null) {
@@ -327,7 +332,7 @@ public class ModelProcessorUtil {
         }
 
         for (RuntimeResource child : resource.getChildRuntimeResources()) {
-            enhanceResource(child, newModelBuilder, methods);
+            enhanceResource(child, newModelBuilder, methods, extended);
         }
     }
 

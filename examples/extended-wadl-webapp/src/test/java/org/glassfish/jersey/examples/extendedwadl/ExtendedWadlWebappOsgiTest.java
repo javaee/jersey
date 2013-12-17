@@ -70,6 +70,7 @@ import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
@@ -280,7 +281,8 @@ public class ExtendedWadlWebappOsgiTest {
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
         final Client client = ClientBuilder.newClient();
 
-        String wadl = client.target(baseUri).path("items").request(MediaTypes.WADL).options(String.class);
+        String wadl = client.target(baseUri).path("items").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                .request(MediaTypes.WADL).options(String.class);
 
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",

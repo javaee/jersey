@@ -144,6 +144,8 @@ public final class Resource implements Routed, ResourceModelComponent {
         private final Set<Class<?>> handlerClasses;
         private final Set<Object> handlerInstances;
 
+        private final boolean extended;
+
         /**
          * Create a new immutable resource data holder from the supplied parameters.
          *
@@ -154,15 +156,18 @@ public final class Resource implements Routed, ResourceModelComponent {
          * @param childResources   child sub-resources.
          * @param handlerClasses   handler classes handling the resource methods.
          * @param handlerInstances handler instances handling the resource methods.
+         * @param extended
          */
         private Data(
                 final List<String> names,
                 final String path,
                 final List<ResourceMethod.Data> resourceMethods,
                 final ResourceMethod.Data locator,
-                final List<Resource.Data> childResources,
+                final List<Data> childResources,
                 final Set<Class<?>> handlerClasses,
-                final Set<Object> handlerInstances) {
+                final Set<Object> handlerInstances, boolean extended) {
+
+            this.extended = extended;
 
             this.names = immutableCopy(names);
             this.path = path;
@@ -209,6 +214,8 @@ public final class Resource implements Routed, ResourceModelComponent {
         private final Set<Object> handlerInstances;
 
         private final Resource.Builder parentResource;
+
+        private boolean extended;
 
 
         private Builder(final Resource.Builder parentResource) {
@@ -370,6 +377,43 @@ public final class Resource implements Routed, ResourceModelComponent {
             return this;
         }
 
+
+        /**
+         * Set the flag indicating whether the resource is extended or is a core of exposed RESTful API.
+         * The method defines the
+         * flag available at {@link org.glassfish.jersey.server.model.Resource#isExtended()}.
+         * <p>
+         * Extended resource model components are helper components that are not considered as a core of a
+         * RESTful API. These can be for example {@code OPTIONS} {@link ResourceMethod resource methods}
+         * added by {@link org.glassfish.jersey.server.model.ModelProcessor model processors}
+         * or {@code application.wadl} resource producing the WADL. Both resource are rather supportive
+         * than the core of RESTful API.
+         * </p>
+         * <p>
+         * If not set the resource will not be defined as extended by default.
+         * </p>
+         *
+         * @param extended If {@code true} then resource is marked as extended.
+         * @return updated builder object.
+         * @see org.glassfish.jersey.server.model.ExtendedResource
+         *
+         * @since 2.5.1
+         */
+        public Builder extended(boolean extended) {
+            this.extended = extended;
+            return this;
+        }
+
+
+        /**
+         * Get the flag indicating whether the resource method is extended or is a core of exposed RESTful API.
+         *
+         * @return {@code true} if the method is extended.
+         */
+        /* package */ boolean isExtended() {
+            return extended;
+        }
+
         private Builder mergeWith(final Resource.Data resourceData) {
             this.resourceMethods.addAll(resourceData.resourceMethods);
             this.childResources.addAll(resourceData.childResources);
@@ -514,6 +558,10 @@ public final class Resource implements Routed, ResourceModelComponent {
         }
 
         private Data buildResourceData() {
+            if (parentResource != null && parentResource.isExtended()) {
+                this.extended = true;
+            }
+
             processMethodBuilders();
             processChildResourceBuilders();
 
@@ -525,6 +573,11 @@ public final class Resource implements Routed, ResourceModelComponent {
                 instances.addAll(childResource.handlerInstances);
             }
 
+            if (areAllMembersExtended(mergedChildResources)) {
+                extended = true;
+            }
+
+
             final Data resourceData = new Data(
                     names,
                     path,
@@ -532,12 +585,31 @@ public final class Resource implements Routed, ResourceModelComponent {
                     resourceLocator,
                     mergedChildResources,
                     classes,
-                    instances);
+                    instances, extended);
 
             if (parentResource != null) {
                 parentResource.onBuildChildResource(this, resourceData);
             }
             return resourceData;
+        }
+
+        private boolean areAllMembersExtended(List<Data> mergedChildResources) {
+            boolean allExtended = true;
+            for (ResourceMethod.Data resourceMethod : resourceMethods) {
+                if (!resourceMethod.isExtended()) {
+                    allExtended = false;
+                }
+            }
+            if (resourceLocator != null && !resourceLocator.isExtended()) {
+                allExtended = false;
+            }
+
+            for (Data childResource : mergedChildResources) {
+                if (!childResource.extended) {
+                    allExtended = false;
+                }
+            }
+            return allExtended;
         }
 
         /**
@@ -910,6 +982,25 @@ public final class Resource implements Routed, ResourceModelComponent {
         } else {
             visitor.visitChildResource(this);
         }
+    }
+
+    /**
+     * Get the flag indicating whether the resource is extended or is a core of exposed RESTful API.
+     * <p>
+     * Extended resource model components are helper components that are not considered as a core of a
+     * RESTful API. These can be for example {@code OPTIONS} {@link ResourceMethod resource methods}
+     * added by {@link org.glassfish.jersey.server.model.ModelProcessor model processors}
+     * or {@code application.wadl} resource producing the WADL. Both resource are rather supportive
+     * than the core of RESTful API.
+     * </p>
+     *
+     * @return {@code true} if the resource is extended.
+     * @see org.glassfish.jersey.server.model.ExtendedResource
+     *
+     * @since 2.5.1
+     */
+    public boolean isExtended() {
+        return data.extended;
     }
 
     @Override

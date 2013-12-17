@@ -61,7 +61,11 @@ import org.glassfish.jersey.spi.Contract;
  * before processor with a higher priority). The highest possible priority (Integer.MAX_VALUE) is used for
  * model processor which enhance resource models by the default OPTIONS method defined by JAX-RS specification and therefore
  * this priority should not be used.
- *
+ * <p/>
+ * Note that if model processor adds a resources that are intended to be supportive resources like
+ * {@code OPTIONS} method providing information about the resource, it should properly define the
+ * {@link org.glassfish.jersey.server.model.ResourceMethod#isExtended() extended} flag of such a new method.
+ * See {@link org.glassfish.jersey.server.model.ExtendedResource} for more information.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *

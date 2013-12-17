@@ -46,6 +46,8 @@ import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Configuration;
@@ -270,7 +272,7 @@ class TemplateModelProcessor implements ModelProcessor {
         ResourceModel.Builder newModelBuilder = processTemplateAnnotatedInvocables(resourceModel, subResourceModel);
 
         for (RuntimeResource resource : resourceModel.getRuntimeResourceModel().getRuntimeResources()) {
-            ModelProcessorUtil.enhanceResource(resource, newModelBuilder, getEnhancingMethods(resource));
+            ModelProcessorUtil.enhanceResource(resource, newModelBuilder, getEnhancingMethods(resource), false);
         }
 
         return newModelBuilder.build();
