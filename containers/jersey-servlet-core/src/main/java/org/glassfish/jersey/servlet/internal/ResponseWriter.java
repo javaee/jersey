@@ -118,12 +118,12 @@ public class ResponseWriter implements ContainerResponseWriter {
         try {
             // Suspend the servlet.
             asyncExt.suspend();
-
-            // Suspend the internal request timeout handler.
-            return requestTimeoutHandler.suspend(timeOut, timeUnit, timeoutHandler);
         } catch (IllegalStateException ex) {
+            LOGGER.log(Level.WARNING, LocalizationMessages.SERVLET_REQUEST_SUSPEND_FAILED(), ex);
             return false;
         }
+        // Suspend the internal request timeout handler.
+        return requestTimeoutHandler.suspend(timeOut, timeUnit, timeoutHandler);
     }
 
     @Override
