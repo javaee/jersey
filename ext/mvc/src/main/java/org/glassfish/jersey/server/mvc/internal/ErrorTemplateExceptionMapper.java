@@ -40,10 +40,6 @@
 
 package org.glassfish.jersey.server.mvc.internal;
 
-import javax.ws.rs.ext.Provider;
-
-import javax.inject.Singleton;
-
 import org.glassfish.jersey.server.mvc.spi.AbstractErrorTemplateMapper;
 
 /**
@@ -52,7 +48,5 @@ import org.glassfish.jersey.server.mvc.spi.AbstractErrorTemplateMapper;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @since 2.3
  */
-@Provider
-@Singleton
 public class ErrorTemplateExceptionMapper extends AbstractErrorTemplateMapper<Exception> {
 }

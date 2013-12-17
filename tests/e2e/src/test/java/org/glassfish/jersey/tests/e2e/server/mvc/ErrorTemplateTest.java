@@ -74,8 +74,6 @@ public class ErrorTemplateTest extends JerseyTest {
                 .register(TestViewProcessor.class);
     }
 
-    public static class CustomResolvingClass {}
-
     @Path("/")
     public static class ErrorTemplateResource {
 
@@ -96,28 +94,6 @@ public class ErrorTemplateTest extends JerseyTest {
         @Path("methodAbsolutePath")
         @ErrorTemplate(name = "/org/glassfish/jersey/tests/e2e/server/mvc/ErrorTemplateTest/ErrorTemplateResource/absolute")
         public String methodAbsolutePath() {
-            throw new RuntimeException("ErrorTemplate");
-        }
-
-        @GET
-        @Path("methodResolvingClass")
-        @ErrorTemplate(resolvingClass = CustomResolvingClass.class)
-        public String methodResolvingClass() {
-            throw new RuntimeException("ErrorTemplate");
-        }
-
-        @GET
-        @Path("methodRelativePathResolvingClass")
-        @ErrorTemplate(name = "relative", resolvingClass = CustomResolvingClass.class)
-        public String methodRelativePathResolvingClass() {
-            throw new RuntimeException("ErrorTemplate");
-        }
-
-        @GET
-        @Path("methodAbsolutePathResolvingClass")
-        @ErrorTemplate(name = "/org/glassfish/jersey/tests/e2e/server/mvc/ErrorTemplateTest/ErrorTemplateResource/absolute",
-                resolvingClass = CustomResolvingClass.class)
-        public String methodAbsolutePathResolvingClass() {
             throw new RuntimeException("ErrorTemplate");
         }
 
@@ -171,24 +147,6 @@ public class ErrorTemplateTest extends JerseyTest {
 
         props = new Properties();
         props.load(target.path("methodAbsolutePath").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ErrorTemplateTest/ErrorTemplateResource/absolute.testp",
-                props.getProperty("path"));
-        assertEquals("java.lang.RuntimeException: ErrorTemplate", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodResolvingClass").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ErrorTemplateTest/CustomResolvingClass/index.testp",
-                props.getProperty("path"));
-        assertEquals("java.lang.RuntimeException: ErrorTemplate", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodRelativePathResolvingClass").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ErrorTemplateTest/CustomResolvingClass/relative.testp",
-                props.getProperty("path"));
-        assertEquals("java.lang.RuntimeException: ErrorTemplate", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodAbsolutePathResolvingClass").request().get(InputStream.class));
         assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ErrorTemplateTest/ErrorTemplateResource/absolute.testp",
                 props.getProperty("path"));
         assertEquals("java.lang.RuntimeException: ErrorTemplate", props.getProperty("model"));

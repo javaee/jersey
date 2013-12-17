@@ -81,6 +81,9 @@ public @interface Template {
      * If the value is {@code Object.class} then the resolving class will be obtained from the last matched resource.
      * <p/>
      * Defaults to {@link Object}.
+     *
+     * @deprecated This attribute is obsolete and will be removed in the future releases. There is no replacement.
      */
+    @Deprecated
     Class<?> resolvingClass() default Object.class;
 }

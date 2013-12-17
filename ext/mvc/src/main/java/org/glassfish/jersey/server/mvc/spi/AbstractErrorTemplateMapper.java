@@ -43,6 +43,7 @@ package org.glassfish.jersey.server.mvc.spi;
 import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Invocable;
@@ -66,6 +67,7 @@ import org.glassfish.jersey.spi.ExtendedExceptionMapper;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @since 2.3
  */
+@Singleton
 public abstract class AbstractErrorTemplateMapper<T extends Throwable> implements ExtendedExceptionMapper<T> {
 
     @Inject
@@ -110,11 +112,12 @@ public abstract class AbstractErrorTemplateMapper<T extends Throwable> implement
     @Override
     public final Response toResponse(final T throwable) {
         final ErrorTemplate error = getErrorTemplate();
-        final Class<?> resolvingClass = error.resolvingClass() == Object.class ? null : error.resolvingClass();
         final String templateName = "".equals(error.name()) ? "index" : error.name();
 
-        return Response.status(getErrorStatus(throwable)).entity(new Viewable(templateName, getErrorModel(throwable),
-                resolvingClass)).build();
+        return Response
+                .status(getErrorStatus(throwable))
+                .entity(new Viewable(templateName, getErrorModel(throwable)))
+                .build();
     }
 
     /**

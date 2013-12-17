@@ -40,13 +40,13 @@
 
 package org.glassfish.jersey.server.mvc.jsp;
 
-import org.glassfish.jersey.server.mvc.MvcProperties;
-
 /**
  * Jersey MVC JSP configuration properties.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @deprecated Use properties from {@link org.glassfish.jersey.server.mvc.jsp.JspMvcFeature} instead.
  */
+@Deprecated
 public final class JspProperties {
 
     /**
@@ -54,7 +54,7 @@ public final class JspProperties {
      * <p></p>
      * If this property is not set then the base path will be the root path of the Web Pages.
      */
-    public static final String TEMPLATES_BASE_PATH = MvcProperties.TEMPLATE_BASE_PATH + ".jsp";
+    public static final String TEMPLATES_BASE_PATH = JspMvcFeature.TEMPLATES_BASE_PATH;
 
     /**
      * Prevent initialization.
