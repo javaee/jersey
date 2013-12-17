@@ -115,7 +115,7 @@ public class LoggingFilterTest extends JerseyTest {
     private LogRecord getLoggingFilterResponseLogRecord() {
         for (final LogRecord record : getLoggedRecords()) {
             if(LoggingFilter.class.getName().equals(record.getLoggerName())
-                    && record.getMessage().contains("Response")) {
+                    && record.getMessage().contains("response")) {
                 return record;
             }
         }

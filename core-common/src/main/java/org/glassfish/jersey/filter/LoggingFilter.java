@@ -93,7 +93,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
     private static final String RESPONSE_PREFIX = "< ";
     private static final String ENTITY_LOGGER_PROPERTY = LoggingFilter.class.getName() + ".entityLogger";
 
-    private static final Comparator<Map.Entry<String,List<String>>> COMPARATOR =
+    private static final Comparator<Map.Entry<String, List<String>>> COMPARATOR =
             new Comparator<Map.Entry<String, List<String>>>() {
 
                 @Override
@@ -101,6 +101,8 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
                     return StringIgnoreCaseKeyComparator.SINGLETON.compare(o1.getKey(), o2.getKey());
                 }
             };
+
+    private static final int DEFAULT_MAX_ENTITY_SIZE = 8 * 1024;
 
     //
     @SuppressWarnings("NonConstantLogger")
@@ -122,20 +124,21 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
      * Create a logging filter with custom logger and custom settings of entity
      * logging.
      *
-     * @param logger the logger to log requests and responses.
-     * @param printEntity if true, entity will be logged as well up to the default maxEntitySize, which is 10KB
+     * @param logger      the logger to log requests and responses.
+     * @param printEntity if true, entity will be logged as well up to the default maxEntitySize, which is 8KB
      */
+    @SuppressWarnings("BooleanParameter")
     public LoggingFilter(Logger logger, boolean printEntity) {
         this.logger = logger;
         this.printEntity = printEntity;
-        this.maxEntitySize = 10 * 1024;
+        this.maxEntitySize = DEFAULT_MAX_ENTITY_SIZE;
     }
 
     /**
      * Creates a logging filter with custom logger and entity logging turned on, but potentially limiting the size
      * of entity to be buffered and logged.
      *
-     * @param logger the logger to log requests and responses.
+     * @param logger        the logger to log requests and responses.
      * @param maxEntitySize maximum number of entity bytes to be logged (and buffered) - if the entity is larger,
      *                      logging filter will print (and buffer in memory) only the specified number of bytes
      *                      and print "...more..." string at the end.
@@ -157,15 +160,19 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         return b;
     }
 
-    private void printRequestLine(StringBuilder b, long id, String method, URI uri) {
-        prefixId(b, id).append(NOTIFICATION_PREFIX).append("LoggingFilter - Request received on thread ").append(Thread.currentThread().getName()).append("\n");
+    private void printRequestLine(StringBuilder b, String note, long id, String method, URI uri) {
+        prefixId(b, id).append(NOTIFICATION_PREFIX)
+                .append(note)
+                .append(" on thread ").append(Thread.currentThread().getName())
+                .append("\n");
         prefixId(b, id).append(REQUEST_PREFIX).append(method).append(" ").
                 append(uri.toASCIIString()).append("\n");
     }
 
-    private void printResponseLine(StringBuilder b, long id, int status) {
-        prefixId(b, id).append(NOTIFICATION_PREFIX).
-                append("LoggingFilter - Response received on thread ").append(Thread.currentThread().getName()).append("\n");
+    private void printResponseLine(StringBuilder b, String note, long id, int status) {
+        prefixId(b, id).append(NOTIFICATION_PREFIX)
+                .append(note)
+                .append(" on thread ").append(Thread.currentThread().getName()).append("\n");
         prefixId(b, id).append(RESPONSE_PREFIX).
                 append(Integer.toString(status)).
                 append("\n");
@@ -217,10 +224,10 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
 
     @Override
     public void filter(ClientRequestContext context) throws IOException {
-        long id = this._id.incrementAndGet();
+        final long id = this._id.incrementAndGet();
         StringBuilder b = new StringBuilder();
 
-        printRequestLine(b, id, context.getMethod(), context.getUri());
+        printRequestLine(b, "Sending client request", id, context.getMethod(), context.getUri());
         printPrefixedHeaders(b, id, REQUEST_PREFIX, context.getStringHeaders());
 
         if (printEntity && context.hasEntity()) {
@@ -235,10 +242,10 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
 
     @Override
     public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
-        long id = this._id.incrementAndGet();
+        final long id = this._id.incrementAndGet();
         StringBuilder b = new StringBuilder();
 
-        printResponseLine(b, id, responseContext.getStatus());
+        printResponseLine(b, "Client response received", id, responseContext.getStatus());
         printPrefixedHeaders(b, id, RESPONSE_PREFIX, responseContext.getHeaders());
 
         if (printEntity && responseContext.hasEntity()) {
@@ -250,10 +257,10 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
 
     @Override
     public void filter(ContainerRequestContext context) throws IOException {
-        long id = this._id.incrementAndGet();
+        final long id = this._id.incrementAndGet();
         StringBuilder b = new StringBuilder();
 
-        printRequestLine(b, id, context.getMethod(), context.getUriInfo().getRequestUri());
+        printRequestLine(b, "Server has received a request", id, context.getMethod(), context.getUriInfo().getRequestUri());
         printPrefixedHeaders(b, id, REQUEST_PREFIX, context.getHeaders());
 
         if (printEntity && context.hasEntity()) {
@@ -265,10 +272,10 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-        long id = this._id.incrementAndGet();
+        final long id = this._id.incrementAndGet();
         StringBuilder b = new StringBuilder();
 
-        printResponseLine(b, id, responseContext.getStatus());
+        printResponseLine(b, "Server responded with a response", id, responseContext.getStatus());
         printPrefixedHeaders(b, id, RESPONSE_PREFIX, responseContext.getStringHeaders());
 
         if (printEntity && responseContext.hasEntity()) {

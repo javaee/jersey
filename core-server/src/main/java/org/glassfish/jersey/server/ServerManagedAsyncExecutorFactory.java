@@ -89,7 +89,7 @@ class ServerManagedAsyncExecutorFactory extends RequestExecutorFactory implement
     }
 
     @Override
-    protected RequestExecutorProvider getDefaultProvider() {
+    protected RequestExecutorProvider getDefaultProvider(Object... initArgs) {
         return new RequestExecutorProvider() {
 
             @Override

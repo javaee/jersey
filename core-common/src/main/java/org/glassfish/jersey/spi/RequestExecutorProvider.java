@@ -44,7 +44,7 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * Pluggable provider of {@link ExecutorService executor service} instance used to run
- * Jersey request and response processing code.
+ * different parts of Jersey request and response processing code.
  * <p>
  * During Jersey runtime initialization, Jersey invokes the registered executor provider
  * to get the {@link #getRequestingExecutor() requesting executor} that will be used

@@ -82,8 +82,10 @@ public abstract class RequestExecutorFactory {
      * Creates new instance.
      *
      * @param locator Injected HK2 locator.
+     * @param args    additional arguments that will be passed into the
+     *                {@link #getDefaultProvider(Object...)} when/if invoked.
      */
-    public RequestExecutorFactory(final ServiceLocator locator) {
+    public RequestExecutorFactory(final ServiceLocator locator, Object... args) {
         final Iterator<RequestExecutorProvider> providersIterator =
                 Providers.getAllProviders(locator, RequestExecutorProvider.class).iterator();
         if (providersIterator.hasNext()) {
@@ -101,7 +103,7 @@ public abstract class RequestExecutorFactory {
                 }
             }
         } else {
-            executorProvider = getDefaultProvider();
+            executorProvider = getDefaultProvider(args);
             if (LOGGER.isLoggable(Level.CONFIG)) {
                 LOGGER.config(LocalizationMessages.USING_DEFAULT_REQUEST_EXECUTOR_PROVIDER(
                         executorProvider.getClass().getName()));
@@ -127,12 +129,16 @@ public abstract class RequestExecutorFactory {
      * Concrete implementations of this class are expected to provide implementation of this
      * method. Note that since the method is used from the {@code RequestExecutorFactory} constructor,
      * the implementation of this method must not rely on initialization of any non-static fields
-     * of the overriding sub-class.
+     * of the overriding sub-class. Instead, the necessary initialization arguments may be passed
+     * via super constructor.
      * </p>
      *
+     * @param initArgs initialization arguments passed via
+     *                 {@link #RequestExecutorFactory(org.glassfish.hk2.api.ServiceLocator, Object...) constructor}
+     *                 of this class.
      * @return default request executor provider to be used if no custom provider has been registered.
      */
-    protected abstract RequestExecutorProvider getDefaultProvider();
+    protected abstract RequestExecutorProvider getDefaultProvider(Object... initArgs);
 
     /**
      * Get the request processing executor using the underlying {@link RequestExecutorProvider} configured

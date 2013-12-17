@@ -106,8 +106,7 @@ public class BasicClientTest extends JerseyTest {
     @Test
     public void testCustomExecutorsAsync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
-        jerseyConfig.register
-                (CustomExecutorProvider.class).register(ThreadInterceptor.class);
+        jerseyConfig.register(CustomExecutorProvider.class).register(ThreadInterceptor.class);
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestAsync(client);
     }
@@ -115,8 +114,7 @@ public class BasicClientTest extends JerseyTest {
     @Test
     public void testCustomExecutorsInstanceAsync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
-        jerseyConfig.register
-                (new CustomExecutorProvider()).register(ThreadInterceptor.class);
+        jerseyConfig.register(new CustomExecutorProvider()).register(ThreadInterceptor.class);
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestAsync(client);
     }
@@ -125,8 +123,7 @@ public class BasicClientTest extends JerseyTest {
     @Test
     public void testCustomExecutorsSync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
-        jerseyConfig.register
-                (CustomExecutorProvider.class).register(ThreadInterceptor.class);
+        jerseyConfig.register(CustomExecutorProvider.class).register(ThreadInterceptor.class);
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestSync(client);
     }
@@ -135,8 +132,7 @@ public class BasicClientTest extends JerseyTest {
     @Test
     public void testCustomExecutorsInstanceSync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
-        jerseyConfig.register
-                (new CustomExecutorProvider()).register(ThreadInterceptor.class);
+        jerseyConfig.register(new CustomExecutorProvider()).register(ThreadInterceptor.class);
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestSync(client);
     }

@@ -41,7 +41,10 @@ package org.glassfish.jersey.client;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.logging.Logger;
 
+import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.process.internal.RequestExecutorFactory;
 import org.glassfish.jersey.spi.RequestExecutorProvider;
 
@@ -57,24 +60,46 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ClientAsyncExecutorFactory extends RequestExecutorFactory {
+    private static final Logger LOGGER = Logger.getLogger(ClientAsyncExecutorFactory.class.getName());
 
     /**
      * Creates a new instance.
      *
-     * @param locator HK2 service locator.
+     * @param locator               HK2 service locator.
+     * @param defaultThreadPoolSize size of the default executor thread pool (if used).
+     *                              Zero or negative values are ignored and a
+     *                              {@link java.util.concurrent.Executors#newCachedThreadPool() cached thread pool}
+     *                              is created in such case instead.
      */
-    public ClientAsyncExecutorFactory(ServiceLocator locator) {
-        super(locator);
+    public ClientAsyncExecutorFactory(ServiceLocator locator, int defaultThreadPoolSize) {
+        super(locator, defaultThreadPoolSize);
     }
 
     @Override
-    protected RequestExecutorProvider getDefaultProvider() {
+    protected RequestExecutorProvider getDefaultProvider(final Object... initArgs) {
+
         return new RequestExecutorProvider() {
 
             @Override
             public ExecutorService getRequestingExecutor() {
-                return Executors.newCachedThreadPool(
-                        new ThreadFactoryBuilder().setNameFormat("jersey-client-async-executor-%d").build());
+                int poolSize = 0;
+                if (initArgs != null && initArgs.length > 0 && initArgs[0] instanceof Integer) {
+                    poolSize = (Integer)initArgs[0];
+                    if (poolSize <= 0) {
+                        LOGGER.config(LocalizationMessages.IGNORED_ASYNC_THREADPOOL_SIZE(poolSize));
+                    }
+                }
+
+                final ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                        .setNameFormat("jersey-client-async-executor-%d")
+                        .build();
+
+                if (poolSize > 0) {
+                    LOGGER.config(LocalizationMessages.USING_FIXED_ASYNC_THREADPOOL(poolSize));
+                    return Executors.newFixedThreadPool(poolSize, threadFactory);
+                } else {
+                    return Executors.newCachedThreadPool(threadFactory);
+                }
             }
 
             @Override
@@ -83,5 +108,4 @@ class ClientAsyncExecutorFactory extends RequestExecutorFactory {
             }
         };
     }
-
 }

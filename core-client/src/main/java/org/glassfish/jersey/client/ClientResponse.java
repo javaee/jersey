@@ -44,12 +44,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.annotation.Annotation;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
@@ -202,4 +204,195 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
                 .add("reason", status.getReasonPhrase())
                 .toString();
     }
+
+    /**
+     * Get the message entity Java instance. Returns {@code null} if the message
+     * does not contain an entity body.
+     * <p>
+     * If the entity is represented by an un-consumed {@link InputStream input stream}
+     * the method will return the input stream.
+     * </p>
+     *
+     * @return the message entity or {@code null} if message does not contain an
+     *         entity body (i.e. when {@link #hasEntity()} returns {@code false}).
+     * @throws IllegalStateException if the entity was previously fully consumed
+     *                               as an {@link InputStream input stream}, or
+     *                               if the response has been {@link #close() closed}.
+     * @see javax.ws.rs.core.Response#getEntity()
+     * @since 2.5
+     */
+    public Object getEntity() throws IllegalStateException {
+        // TODO implement some advanced caching support?
+        return getEntityStream();
+    }
+
+    /**
+     * Read the message entity input stream as an instance of specified Java type
+     * using a {@link javax.ws.rs.ext.MessageBodyReader} that supports mapping the
+     * message entity stream onto the requested type.
+     * <p>
+     * Method throws an {@link ProcessingException} if the content of the
+     * message cannot be mapped to an entity of the requested type and
+     * {@link IllegalStateException} in case the entity is not backed by an input
+     * stream or if the original entity input stream has already been consumed
+     * without {@link #bufferEntity() buffering} the entity data prior consuming.
+     * </p>
+     * <p>
+     * A message instance returned from this method will be cached for
+     * subsequent retrievals via {@link #getEntity()}. Unless the supplied entity
+     * type is an {@link java.io.InputStream input stream}, this method automatically
+     * {@link #close() closes} the an unconsumed original response entity data stream
+     * if open. In case the entity data has been buffered, the buffer will be reset
+     * prior consuming the buffered data to enable subsequent invocations of
+     * {@code readEntity(...)} methods on this response.
+     * </p>
+     *
+     * @param <T>        entity instance Java type.
+     * @param entityType the type of entity.
+     * @return the message entity; for a zero-length response entities returns a corresponding
+     *         Java object that represents zero-length data. In case no zero-length representation
+     *         is defined for the Java type, a {@link ProcessingException} wrapping the
+     *         underlying {@link javax.ws.rs.core.NoContentException} is thrown.
+     * @throws ProcessingException   if the content of the message cannot be
+     *                               mapped to an entity of the requested type.
+     * @throws IllegalStateException if the entity is not backed by an input stream,
+     *                               the response has been {@link #close() closed} already,
+     *                               or if the entity input stream has been fully consumed already and has
+     *                               not been buffered prior consuming.
+     * @see javax.ws.rs.ext.MessageBodyReader
+     * @see javax.ws.rs.core.Response#readEntity(Class)
+     * @since 2.5
+     */
+    public <T> T readEntity(Class<T> entityType) throws ProcessingException, IllegalStateException {
+        return readEntity(entityType, requestContext.getPropertiesDelegate());
+    }
+
+    /**
+     * Read the message entity input stream as an instance of specified Java type
+     * using a {@link javax.ws.rs.ext.MessageBodyReader} that supports mapping the
+     * message entity stream onto the requested type.
+     * <p>
+     * Method throws an {@link ProcessingException} if the content of the
+     * message cannot be mapped to an entity of the requested type and
+     * {@link IllegalStateException} in case the entity is not backed by an input
+     * stream or if the original entity input stream has already been consumed
+     * without {@link #bufferEntity() buffering} the entity data prior consuming.
+     * </p>
+     * <p>
+     * A message instance returned from this method will be cached for
+     * subsequent retrievals via {@link #getEntity()}. Unless the supplied entity
+     * type is an {@link java.io.InputStream input stream}, this method automatically
+     * {@link #close() closes} the an unconsumed original response entity data stream
+     * if open. In case the entity data has been buffered, the buffer will be reset
+     * prior consuming the buffered data to enable subsequent invocations of
+     * {@code readEntity(...)} methods on this response.
+     * </p>
+     *
+     * @param <T>        entity instance Java type.
+     * @param entityType the type of entity; may be generic.
+     * @return the message entity; for a zero-length response entities returns a corresponding
+     *         Java object that represents zero-length data. In case no zero-length representation
+     *         is defined for the Java type, a {@link ProcessingException} wrapping the
+     *         underlying {@link javax.ws.rs.core.NoContentException} is thrown.
+     * @throws ProcessingException   if the content of the message cannot be
+     *                               mapped to an entity of the requested type.
+     * @throws IllegalStateException if the entity is not backed by an input stream,
+     *                               the response has been {@link #close() closed} already,
+     *                               or if the entity input stream has been fully consumed already and has
+     *                               not been buffered prior consuming.
+     * @see javax.ws.rs.ext.MessageBodyReader
+     * @see javax.ws.rs.core.Response#readEntity(javax.ws.rs.core.GenericType)
+     * @since 2.5
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T readEntity(GenericType<T> entityType) throws ProcessingException, IllegalStateException {
+        return (T) readEntity(entityType.getRawType(), entityType.getType(), requestContext.getPropertiesDelegate());
+    }
+
+    /**
+     * Read the message entity input stream as an instance of specified Java type
+     * using a {@link javax.ws.rs.ext.MessageBodyReader} that supports mapping the
+     * message entity stream onto the requested type.
+     * <p>
+     * Method throws an {@link ProcessingException} if the content of the
+     * message cannot be mapped to an entity of the requested type and
+     * {@link IllegalStateException} in case the entity is not backed by an input
+     * stream or if the original entity input stream has already been consumed
+     * without {@link #bufferEntity() buffering} the entity data prior consuming.
+     * </p>
+     * <p>
+     * A message instance returned from this method will be cached for
+     * subsequent retrievals via {@link #getEntity()}. Unless the supplied entity
+     * type is an {@link java.io.InputStream input stream}, this method automatically
+     * {@link #close() closes} the an unconsumed original response entity data stream
+     * if open. In case the entity data has been buffered, the buffer will be reset
+     * prior consuming the buffered data to enable subsequent invocations of
+     * {@code readEntity(...)} methods on this response.
+     * </p>
+     *
+     * @param <T>         entity instance Java type.
+     * @param entityType  the type of entity.
+     * @param annotations annotations that will be passed to the {@link javax.ws.rs.ext.MessageBodyReader}.
+     * @return the message entity; for a zero-length response entities returns a corresponding
+     *         Java object that represents zero-length data. In case no zero-length representation
+     *         is defined for the Java type, a {@link ProcessingException} wrapping the
+     *         underlying {@link javax.ws.rs.core.NoContentException} is thrown.
+     * @throws ProcessingException   if the content of the message cannot be
+     *                               mapped to an entity of the requested type.
+     * @throws IllegalStateException if the entity is not backed by an input stream,
+     *                               the response has been {@link #close() closed} already,
+     *                               or if the entity input stream has been fully consumed already and has
+     *                               not been buffered prior consuming.
+     * @see javax.ws.rs.ext.MessageBodyReader
+     * @see javax.ws.rs.core.Response#readEntity(Class, java.lang.annotation.Annotation[])
+     * @since 2.5
+     */
+    public <T> T readEntity(Class<T> entityType, Annotation[] annotations) throws ProcessingException, IllegalStateException {
+        return readEntity(entityType, annotations, requestContext.getPropertiesDelegate());
+    }
+
+    /**
+     * Read the message entity input stream as an instance of specified Java type
+     * using a {@link javax.ws.rs.ext.MessageBodyReader} that supports mapping the
+     * message entity stream onto the requested type.
+     * <p>
+     * Method throws an {@link ProcessingException} if the content of the
+     * message cannot be mapped to an entity of the requested type and
+     * {@link IllegalStateException} in case the entity is not backed by an input
+     * stream or if the original entity input stream has already been consumed
+     * without {@link #bufferEntity() buffering} the entity data prior consuming.
+     * </p>
+     * <p>
+     * A message instance returned from this method will be cached for
+     * subsequent retrievals via {@link #getEntity()}. Unless the supplied entity
+     * type is an {@link java.io.InputStream input stream}, this method automatically
+     * {@link #close() closes} the an unconsumed original response entity data stream
+     * if open. In case the entity data has been buffered, the buffer will be reset
+     * prior consuming the buffered data to enable subsequent invocations of
+     * {@code readEntity(...)} methods on this response.
+     * </p>
+     *
+     * @param <T>         entity instance Java type.
+     * @param entityType  the type of entity; may be generic.
+     * @param annotations annotations that will be passed to the {@link javax.ws.rs.ext.MessageBodyReader}.
+     * @return the message entity; for a zero-length response entities returns a corresponding
+     *         Java object that represents zero-length data. In case no zero-length representation
+     *         is defined for the Java type, a {@link ProcessingException} wrapping the
+     *         underlying {@link javax.ws.rs.core.NoContentException} is thrown.
+     * @throws ProcessingException   if the content of the message cannot be
+     *                               mapped to an entity of the requested type.
+     * @throws IllegalStateException if the entity is not backed by an input stream,
+     *                               the response has been {@link #close() closed} already,
+     *                               or if the entity input stream has been fully consumed already and has
+     *                               not been buffered prior consuming.
+     * @see javax.ws.rs.ext.MessageBodyReader
+     * @see javax.ws.rs.core.Response#readEntity(javax.ws.rs.core.GenericType, java.lang.annotation.Annotation[])
+     * @since 2.5
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations)
+            throws ProcessingException, IllegalStateException {
+        return (T) readEntity(entityType.getRawType(), entityType.getType(), annotations, requestContext.getPropertiesDelegate());
+    }
+
 }

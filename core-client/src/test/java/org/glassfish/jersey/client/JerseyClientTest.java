@@ -156,17 +156,17 @@ public class JerseyClientTest {
     public void testRegisterNullOrEmptyContracts() {
         final TestProvider provider = new TestProvider();
 
-        client.register(TestProvider.class,  (Class<?>[]) null);
+        client.register(TestProvider.class, (Class<?>[]) null);
         assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
 
-        client.register(provider,  (Class<?>[]) null);
+        client.register(provider, (Class<?>[]) null);
         assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
         assertFalse(client.getConfiguration().isRegistered(provider));
 
-        client.register(TestProvider.class,  new Class[0]);
+        client.register(TestProvider.class, new Class[0]);
         assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
 
-        client.register(provider,  new Class[0]);
+        client.register(provider, new Class[0]);
         assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
         assertFalse(client.getConfiguration().isRegistered(provider));
     }
@@ -242,6 +242,38 @@ public class JerseyClientTest {
         }
     }
 
+    /**
+     * JERSEY-2189 reproducer.
+     */
+    @Test
+    public void customUserAgentTest() {
+        final Client customClient = ClientBuilder.newClient(new ClientConfig().connectorProvider(new TestConnector()));
+
+        try {
+            customClient.target("test").request().header(HttpHeaders.USER_AGENT, null).get();
+        } catch (Exception e) {
+            assertEquals("[null]", e.getMessage());
+        }
+
+        try {
+            customClient.target("test").request().header(HttpHeaders.USER_AGENT, null).async().get();
+        } catch (Exception e) {
+            assertEquals("[null]", e.getCause().getMessage());
+        }
+
+        try {
+            customClient.target("test").request().header(HttpHeaders.USER_AGENT, "custom").get();
+        } catch (Exception e) {
+            assertEquals("custom", e.getMessage());
+        }
+
+        try {
+            customClient.target("test").request().header(HttpHeaders.USER_AGENT, "custom").async().get();
+        } catch (Exception e) {
+            assertEquals("custom", e.getCause().getMessage());
+        }
+    }
+
     public static interface CustomContract {
         public String getFoo();
     }
@@ -284,12 +316,14 @@ public class JerseyClientTest {
     private static class TestConnector implements Connector, ConnectorProvider {
         @Override
         public ClientResponse apply(ClientRequest request) throws ProcessingException {
-            throw new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null);
+            final Object agent = request.getHeaders().getFirst(HttpHeaders.USER_AGENT);
+            throw new ProcessingException((agent == null) ? "[null]" : agent.toString());
         }
 
         @Override
         public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
-            callback.failure(new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null));
+            final Object agent = request.getHeaders().getFirst(HttpHeaders.USER_AGENT);
+            callback.failure(new ProcessingException((agent == null) ? "[null]" : agent.toString()));
             return null;
         }
 
