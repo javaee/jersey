@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.monitoring.ApplicationMXBean;
 import org.glassfish.jersey.server.monitoring.ApplicationStatistics;
 
@@ -95,7 +96,15 @@ public class ApplicationMXBeanImpl implements ApplicationMXBean {
         this.applicationClass = resourceConfig.getApplication().getClass().getName();
         this.configurationProperties = Maps.newHashMap();
         for (Map.Entry<String, Object> entry : resourceConfig.getProperties().entrySet()) {
-            configurationProperties.put(entry.getKey(), entry.getValue().toString());
+            final Object value = entry.getValue();
+            String stringValue;
+            try {
+                stringValue = (value == null) ? "[null]" : value.toString();
+            } catch (Exception e) { // See JERSEY-2053: Sometimes toString() throws exception...
+                stringValue = LocalizationMessages.PROPERTY_VALUE_TOSTRING_THROWS_EXCEPTION(
+                        e.getClass().getName(), e.getMessage());
+            }
+            configurationProperties.put(entry.getKey(), stringValue);
         }
         this.startTime = new Date(applicationStatistics.getStartTime().getTime());
 
