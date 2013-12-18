@@ -59,6 +59,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -183,6 +184,7 @@ public class AsyncTest extends JerseyTest {
      * @throws Exception in case of a test error.
      */
     @Test
+    @Ignore // test unstable on hudson slaves, JERSEY-2280
     public void testAsyncPost() throws Exception {
         final long tic = System.currentTimeMillis();
 
