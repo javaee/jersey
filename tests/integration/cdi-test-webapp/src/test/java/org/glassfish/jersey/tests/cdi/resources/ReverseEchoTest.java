@@ -68,7 +68,6 @@ public class ReverseEchoTest extends CdiTest {
     };
 
     final String in, out;
-    final WebTarget reverseService;
 
     /**
      * Construct instance with the above test data injected.
@@ -79,11 +78,11 @@ public class ReverseEchoTest extends CdiTest {
     public ReverseEchoTest(String in, String out) {
         this.in = in;
         this.out = out;
-        this.reverseService = target().path("reverse").queryParam("s", in);
     }
 
     @Test
     public void testGet() {
+        WebTarget reverseService = target().path("reverse").queryParam("s", in);
         String s = reverseService.request().get(String.class);
         assertThat(s, equalTo(out));
     }

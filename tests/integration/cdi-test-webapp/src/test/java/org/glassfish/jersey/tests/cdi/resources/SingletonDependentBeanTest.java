@@ -41,15 +41,15 @@ package org.glassfish.jersey.tests.cdi.resources;
 
 import java.util.Arrays;
 import java.util.List;
+
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
-import static org.junit.matchers.JUnitMatchers.containsString;
 
 /**
  * Test for the application scoped managed bean resource.
@@ -68,7 +68,6 @@ public class SingletonDependentBeanTest extends CdiTest {
     };
 
     final String p, x;
-    final WebTarget singleton;
 
     /**
      * Construct instance with the above test data injected.
@@ -79,11 +78,11 @@ public class SingletonDependentBeanTest extends CdiTest {
     public SingletonDependentBeanTest(String p, String x) {
         this.p = p;
         this.x = x;
-        this.singleton = target().path("jcdibean/dependent/singleton").path(p).queryParam("x", x);
     }
 
     @Test
     public void testGet() {
+        final WebTarget singleton = target().path("jcdibean/dependent/singleton").path(p).queryParam("x", x);
         String s = singleton.request().get(String.class);
         assertThat(s, containsString(singleton.getUri().toString()));
         assertThat(s, containsString(String.format("p=%s", p)));
@@ -93,7 +92,7 @@ public class SingletonDependentBeanTest extends CdiTest {
     @Test
     public void testCounter() {
 
-        final WebTarget counter = singleton.path("counter");
+        final WebTarget counter = target().path("jcdibean/dependent/singleton").path(p).queryParam("x", x).path("counter");
 
         String c10 = counter.request().get(String.class);
         assertThat(c10, containsString("10"));
@@ -111,7 +110,7 @@ public class SingletonDependentBeanTest extends CdiTest {
 
     @Test
     public void testException() {
-        final WebTarget exception = singleton.path("exception");
+        final WebTarget exception = target().path("jcdibean/dependent/singleton").path(p).queryParam("x", x).path("exception");
         assertThat(exception.request().get().readEntity(String.class), containsString("JDCIBeanDependentException"));
     }
 }
