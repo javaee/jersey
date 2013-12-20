@@ -719,7 +719,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                            List<MbrModel> models,
                                                            PropertiesDelegate propertiesDelegate) {
 
-        List<MbrModel> readers = mbrLookupCache.get(new ModelLookupKey(c, mediaType));
+        // Making a new mediatype with parameters stripped. Otherwise the cache can fill up 
+        // just because the mediatype objects have unique parameters
+        MediaType mediaTypeKey = new MediaType(mediaType.getType(), mediaType.getSubtype()); 
+        List<MbrModel> readers = mbrLookupCache.get(new ModelLookupKey(c, mediaTypeKey));
         if (readers == null) {
             readers = new ArrayList<MbrModel>();
 
@@ -729,7 +732,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             }
             Collections.sort(readers, new WorkerComparator<MessageBodyReader>(c, mediaType));
-            mbrLookupCache.put(new ModelLookupKey(c, mediaType), readers);
+            mbrLookupCache.put(new ModelLookupKey(c, mediaTypeKey), readers);
         }
 
         if (readers.isEmpty()) {
@@ -832,7 +835,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                            List<MbwModel> models,
                                                            PropertiesDelegate propertiesDelegate) {
 
-        List<MbwModel> writers = mbwLookupCache.get(new ModelLookupKey(c, mediaType));
+        // Making a new mediatype with parameters stripped. Otherwise the cache can fill up 
+        // just because the mediatype objects have unique parameters
+        MediaType mediaTypeKey = new MediaType(mediaType.getType(), mediaType.getSubtype()); 
+        List<MbwModel> writers = mbwLookupCache.get(new ModelLookupKey(c, mediaTypeKey));
         if (writers == null) {
 
             writers = new ArrayList<MbwModel>();
@@ -843,7 +849,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             }
             Collections.sort(writers, new WorkerComparator<MessageBodyWriter>(c, mediaType));
-            mbwLookupCache.put(new ModelLookupKey(c, mediaType), writers);
+            mbwLookupCache.put(new ModelLookupKey(c, mediaTypeKey), writers);
         }
 
         if (writers.isEmpty()) {
