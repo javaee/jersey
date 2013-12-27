@@ -101,7 +101,7 @@ public final class FreemarkerMvcFeature implements Feature {
      *
      * @since 2.5
      */
-    public static final String TEMPLATE_OBJECT_FACTORY = MvcFeature.TEMPLATE_OBJECT_FACTORY + ".mustache";
+    public static final String TEMPLATE_OBJECT_FACTORY = MvcFeature.TEMPLATE_OBJECT_FACTORY + ".freemarker";
 
     @Override
     public boolean configure(final FeatureContext context) {
