@@ -104,7 +104,7 @@
             </properties>
         </profile>
         <profile>
-            <id>examples-source-zip</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>
@@ -114,6 +114,13 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

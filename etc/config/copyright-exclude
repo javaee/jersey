@@ -45,3 +45,4 @@ truststore_server
 /core-server/etc
 bootstrap
 build.readme
+/tests/e2e/entity/multipart-testcase.txt

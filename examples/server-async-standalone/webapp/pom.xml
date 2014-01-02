@@ -66,7 +66,7 @@
 
     <profiles>
         <profile>
-            <id>examples-source-zip</id>
+            <id>release</id>
             <!-- do not create source zip bundles -->
             <build>
                 <plugins>

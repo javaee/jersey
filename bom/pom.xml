@@ -279,7 +279,7 @@
 
     <profiles>
         <profile>
-            <id>maven-project-info-reports-plugin</id>
+            <id>project-info</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>

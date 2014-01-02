@@ -132,7 +132,7 @@
             </properties>
         </profile>
         <profile>
-            <id>examples-source-zip</id>
+            <id>release</id>
             <!-- do not create source zip bundles -->
             <build>
                 <plugins>
@@ -141,6 +141,13 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <configuration>
                             <skipAssembly>true</skipAssembly>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
                         </configuration>
                     </plugin>
                 </plugins>
