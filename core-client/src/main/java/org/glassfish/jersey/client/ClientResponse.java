@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -76,6 +77,7 @@ import com.google.common.collect.Sets;
 public class ClientResponse extends InboundMessageContext implements ClientResponseContext {
     private Response.StatusType status;
     private final ClientRequest requestContext;
+    private URI uri;
 
     /**
      * Create new Jersey client response context initialized from a JAX-RS {@link Response response}.
@@ -167,6 +169,23 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
     }
 
     /**
+     * Get the URI of the final request.
+     * <p>
+     * This value might differ from {@link #getRequestContext()#getUri()} if the
+     * client has followed redirections.
+     * 
+     * @return the absolute uri of the requested resource, following any redirections
+     * @see ClientProperties#FOLLOW_REDIRECTS
+     * @since 2.6
+     */
+    public URI getUri() {
+        if (uri == null) {
+            return getRequestContext().getUri();
+        }
+        return uri;
+    }
+    
+    /**
      * Get the associated client request context paired with this response context.
      *
      * @return associated client request context.
@@ -189,7 +208,7 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
                     return link;
                 }
 
-                return Link.fromLink(link).baseUri(requestContext.getUri()).build();
+                return Link.fromLink(link).baseUri(getUri()).build();
             }
         }));
     }
@@ -393,6 +412,19 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
     public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations)
             throws ProcessingException, IllegalStateException {
         return (T) readEntity(entityType.getRawType(), entityType.getType(), annotations, requestContext.getPropertiesDelegate());
+    }
+
+    /**
+     * Set the URI of the final request.
+     * <p>
+     * This value might differ from {@link #getRequestContext()#getUri()} if the
+     * client has followed redirections.
+     * 
+     * @param uri the absolute uri of the requested resource, following any redirections
+     * @since 2.6
+     */
+    public void setUri(URI uri) {
+        this.uri = uri;
     }
 
 }

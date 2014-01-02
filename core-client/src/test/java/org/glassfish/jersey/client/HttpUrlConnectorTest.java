@@ -39,12 +39,15 @@
  */
 package org.glassfish.jersey.client;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.SocketTimeoutException;
+import java.net.URI;
 import java.net.URL;
 import java.security.Permission;
 import java.security.Principal;
@@ -52,6 +55,10 @@ import java.security.cert.Certificate;
 import java.util.List;
 import java.util.Map;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSocketFactory;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -59,15 +66,9 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSocketFactory;
-
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Various tests for the default client connector.
@@ -95,6 +96,24 @@ public class HttpUrlConnectorTest {
     @Test
     public void testConnectionTimeoutWithEntity() {
         _testInvocationTimeout(createNonRoutableTarget().request().buildPost(Entity.text("does not matter")));
+    }
+
+    @Test
+    public void testRedirection() throws Exception {
+        JerseyClient client = (JerseyClient) ClientBuilder.newClient();
+        ClientRequest request = client.target("https://localhost:8080/").request().buildGet().request();
+        HttpUrlConnectorProvider.ConnectionFactory factory = new HttpUrlConnectorProvider.ConnectionFactory() {
+            @Override
+            public HttpURLConnection getConnection(URL endpointUrl) throws IOException {
+                HttpURLConnection result = (HttpURLConnection) endpointUrl.openConnection();
+                return wrapNoContentHttps(result);
+            }
+        };
+        final HttpUrlConnectorProvider connectorProvider = new HttpUrlConnectorProvider().connectionFactory(factory);
+        HttpUrlConnector connector = (HttpUrlConnector) connectorProvider.getConnector(client, client.getConfiguration());
+        ClientResponse res = connector.apply(request);
+        assertEquals(URI.create("https://localhost:8080/"), res.getRequestContext().getUri());
+        assertEquals(URI.create("https://localhost:8080/redirected/here"), res.getUri());
     }
 
     private void _testInvocationTimeout(Invocation invocation) {
@@ -125,7 +144,7 @@ public class HttpUrlConnectorTest {
     @Test
     public void testSSLConnection() {
         JerseyClient client = (JerseyClient) ClientBuilder.newClient();
-        ClientRequest request = client.target("https://localhost:8080").request().buildGet().request();
+        ClientRequest request = client.target("https://localhost:8080/").request().buildGet().request();
         HttpUrlConnectorProvider.ConnectionFactory factory = new HttpUrlConnectorProvider.ConnectionFactory() {
             @Override
             public HttpURLConnection getConnection(URL endpointUrl) throws IOException {
@@ -355,6 +374,9 @@ public class HttpUrlConnectorTest {
 
                 @Override
                 public int getResponseCode() throws IOException {
+                    // Pretend we redirected for testRedirection
+                    url = new URL("https://localhost:8080/redirected/here");
+                    // and fake the status code to prevent actual connection
                     return Response.Status.NO_CONTENT.getStatusCode();
                 }
 
@@ -370,7 +392,8 @@ public class HttpUrlConnectorTest {
 
                 @Override
                 public URL getURL() {
-                    return delegate.getURL();
+                    // used by testRedirection
+                    return url;
                 }
 
                 @Override
