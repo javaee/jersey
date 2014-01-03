@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,6 +58,8 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 @ConstrainedTo(RuntimeType.SERVER)
 public final class JspMvcFeature implements Feature {
 
+    private final static String SUFFIX = ".jsp";
+
     /**
      * {@link String} property defining the base path to JSP templates. If set, the value of the property is added in front
      * of the template name defined in:
@@ -73,7 +75,7 @@ public final class JspMvcFeature implements Feature {
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + ".jsp";
+    public static final String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + SUFFIX;
 
     @Override
     public boolean configure(final FeatureContext context) {
