@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,19 +40,16 @@
 package org.glassfish.jersey.test;
 
 import java.net.URI;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -119,4 +116,20 @@ public class JerseyTestTest {
 
         assertEquals(myJerseyTest.getTestContainerFactory().getClass(), MyTestContainerFactory.class);
     }
+
+    @Test
+    public void testOverridePortNumber() {
+        MyJerseyTest myJerseyTest = new MyJerseyTest();
+        int newPort = TestProperties.DEFAULT_CONTAINER_PORT + 1;
+        myJerseyTest.forceSet(TestProperties.CONTAINER_PORT, Integer.toString(newPort));
+
+        assertEquals(newPort, myJerseyTest.getPort());
+    }
+
+    @Test
+    public void testThatDefaultContainerPortIsUsed() {
+        MyJerseyTest myJerseyTest = new MyJerseyTest();
+        assertEquals(TestProperties.DEFAULT_CONTAINER_PORT, myJerseyTest.getPort());
+    }
+
 }
