@@ -721,7 +721,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         // Making a new mediatype with parameters stripped. Otherwise the cache can fill up 
         // just because the mediatype objects have unique parameters
-        MediaType mediaTypeKey = new MediaType(mediaType.getType(), mediaType.getSubtype()); 
+    	MediaType mediaTypeKey = mediaType;
+    	if (mediaType != null) {
+    		mediaTypeKey = new MediaType(mediaType.getType(), mediaType.getSubtype());
+    	}
         List<MbrModel> readers = mbrLookupCache.get(new ModelLookupKey(c, mediaTypeKey));
         if (readers == null) {
             readers = new ArrayList<MbrModel>();
@@ -837,7 +840,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         // Making a new mediatype with parameters stripped. Otherwise the cache can fill up 
         // just because the mediatype objects have unique parameters
-        MediaType mediaTypeKey = new MediaType(mediaType.getType(), mediaType.getSubtype()); 
+    	MediaType mediaTypeKey = mediaType;
+    	if (mediaType != null) {
+    		mediaTypeKey = new MediaType(mediaType.getType(), mediaType.getSubtype());
+    	}
         List<MbwModel> writers = mbwLookupCache.get(new ModelLookupKey(c, mediaTypeKey));
         if (writers == null) {
 
