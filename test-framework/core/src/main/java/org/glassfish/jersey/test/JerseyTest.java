@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -574,7 +574,7 @@ public abstract class JerseyTest {
      * @return The HTTP port of the URI
      */
     protected final int getPort() {
-        final String value = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(TestProperties.CONTAINER_PORT));
+        final String value = getProperty(TestProperties.CONTAINER_PORT);
         if (value != null) {
 
             try {
