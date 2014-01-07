@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,8 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
 @ConstrainedTo(RuntimeType.SERVER)
 public final class FreemarkerMvcFeature implements Feature {
 
+    private final static String SUFFIX = ".freemarker";
+
     /**
      * {@link String} property defining the base path to Freemarker templates. If set, the value of the property is added in front
      * of the template name defined in:
@@ -73,7 +75,7 @@ public final class FreemarkerMvcFeature implements Feature {
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public final static String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + ".freemarker";
+    public final static String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + SUFFIX;
 
     /**
      * If {@code true} then enable caching of Freemarker templates to avoid multiple compilation.
@@ -84,7 +86,7 @@ public final class FreemarkerMvcFeature implements Feature {
      *
      * @since 2.5
      */
-    public static final String CACHE_TEMPLATES = MvcFeature.CACHE_TEMPLATES + ".freemarker";
+    public static final String CACHE_TEMPLATES = MvcFeature.CACHE_TEMPLATES + SUFFIX;
 
     /**
      * Property used to pass user-configured {@link freemarker.template.Configuration configuration} able to create
@@ -101,7 +103,7 @@ public final class FreemarkerMvcFeature implements Feature {
      *
      * @since 2.5
      */
-    public static final String TEMPLATE_OBJECT_FACTORY = MvcFeature.TEMPLATE_OBJECT_FACTORY + ".mustache";
+    public static final String TEMPLATE_OBJECT_FACTORY = MvcFeature.TEMPLATE_OBJECT_FACTORY + SUFFIX;
 
     @Override
     public boolean configure(final FeatureContext context) {
