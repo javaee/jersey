@@ -1,0 +1,343 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<html>
+<head>
+    <title>Sparklines Example</title>
+</head>
+<body>
+<h1>Sparklines Example</h1>
+
+<p>This example is inspired by Joe Gregorio's <a href="http://bitworking.org/projects/sparklines/">Sparkline</a>
+    Generator Web Application. For more about the concept of sparklines
+    read <a href="http://en.wikipedia.org/wiki/Sparkline">here</a>.</p>
+
+<h2>Contents</h2>
+
+<p>The example consists of one web resource implemented by the
+    following:
+</p>
+<dl>
+    <dt><code>org.glassfish.jersey.examples.sparklines.SparklinesResource</code></dt>
+    <dd>
+        This Java class returns the a PNG image of a sparkline calculated
+        for a given set of query parameters.
+    </dd>
+</dl>
+<p>
+    The example makes use of classes to parse query parameters, a message
+    body writer to write an image in the PNG format, and makes use of
+    entity tags and performs precondition checking to support not
+    modified responses.
+</p>
+
+<p>
+    The mapping of the URI path space is presented in the following table:
+</p>
+<table border="1">
+    <tr>
+        <th>
+            <p>URI path</p>
+        </th>
+        <th>
+            <p>Resource class</p>
+        </th>
+        <th>
+            <p>HTTP methods</p>
+        </th>
+        <th>
+            <p>Description</p>
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <p>discrete</p>
+        </td>
+        <td>
+            <p>SparklinesResource</p>
+        </td>
+        <td>
+            <p>GET</p>
+        </td>
+        <td>
+            <p>Plot a sparkline as discrete vertical bars, one per data value.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>smooth</p>
+        </td>
+        <td>
+            <p>SparklinesResource</p>
+        </td>
+        <td>
+            <p>GET</p>
+        </td>
+        <td>
+            <p>Plot a sparkline as continuous line.</p>
+        </td>
+    </tr>
+</table>
+<p><br/><br/>
+</p>
+
+<p>For either URI path the following query parameters can be
+    declared:</p>
+<table border="1">
+    <tr>
+        <th>
+            <p>Query parameter</p>
+        </th>
+        <th>
+            <p>Default Value</p>
+        </th>
+        <th>
+            <p>Description</p>
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <p>d</p>
+        </td>
+        <td>
+            <p><br/>
+            </p>
+        </td>
+        <td>
+            <p>A comma separated list of integer values that represents the
+                input data to plot as a sparkline.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>limits</p>
+        </td>
+        <td>
+            <p>0,100</p>
+        </td>
+        <td>
+            <p>The valid range of the input data in "d".</p>
+        </td>
+    </tr>
+</table>
+<p><br/><br/>
+</p>
+
+<p>The "smooth" URI path can have following query parameters:</p>
+<table border="1">
+    <tr>
+        <th>
+            <p>Query parameter</p>
+        </th>
+        <th>
+            <p>Default Value</p>
+        </th>
+        <th>
+            <p>Description</p>
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <p>min-m</p>
+        </td>
+        <td>
+            <p>true</p>
+        </td>
+        <td>
+            <p>If true then a marker is placed at the smallest value in the
+                input data.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>max-m</p>
+        </td>
+        <td>
+            <p>true</p>
+        </td>
+        <td>
+            <p>If true then a marker is placed at the largest value in the
+                input data.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>last-m</p>
+        </td>
+        <td>
+            <p>true</p>
+        </td>
+        <td>
+            <p>If true then a marker is placed at the last value in the input
+                data.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>min-color</p>
+        </td>
+        <td>
+            <p>blue</p>
+        </td>
+        <td>
+            <p>The colour of the marker placed at the smallest value in the
+                input data</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>max-color</p>
+        </td>
+        <td>
+            <p>green</p>
+        </td>
+        <td>
+            <p>The colour of the marker placed at the largest value in the
+                input data.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>last-color</p>
+        </td>
+        <td>
+            <p>red</p>
+        </td>
+        <td>
+            <p>The colour of the marker placed at the last value in the input
+                data.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>step</p>
+        </td>
+        <td>
+            <p>2</p>
+        </td>
+        <td>
+            <p>The horizontal distance, in pixels, between each plot of a data
+                value.</p>
+        </td>
+    </tr>
+</table>
+<p><br/><br/>
+</p>
+
+<p>The "discrete" URI path can have following query parameters:</p>
+<table border="1">
+    <tr>
+        <th>
+            <p>Query parameter</p>
+        </th>
+        <th>
+            <p>Default Value</p>
+        </th>
+        <th>
+            <p>Description</p>
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <p>width</p>
+        </td>
+        <td>
+            <p>2</p>
+        </td>
+        <td>
+            <p>The width, in pixels, of each plot of a virtual bar for each
+                data value.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>upper</p>
+        </td>
+        <td>
+            <p>50</p>
+        </td>
+        <td>
+            <p>Data values &gt;= upper will be coloured in "upper-color"
+                otherwse data values will be colured in "lower-color"</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>upper-color</p>
+        </td>
+        <td>
+            <p>red</p>
+        </td>
+        <td>
+            <p>The colour for data values &gt;= "upper"</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>lower-color</p>
+        </td>
+        <td>
+            <p>gray</p>
+        </td>
+        <td>
+            <p>The colour for data values &lt; upper</p>
+        </td>
+    </tr>
+</table>
+<p><br/><br/>
+</p>
+
+<h2>Running the Example</h2>
+
+<p>Run the example as follows:</p>
+
+<p>run
+</p>
+<blockquote><code>mvn compile exec:java</code></blockquote>
+<p>From a web browser, visit:</p>
+<blockquote>
+    <code>
+        <a href="http://localhost:9998/sparklines/discrete?d=88,84,82,92,82,86,66,82,44,64,66,88,96,80,24,26,14,0,0,26,8,6,6,24,52,66,36,6,10,14,30">
+            http://localhost:9998/sparklines/discrete?d=88,84,82,92,82,86,66,82,44,64,66,88,96,80,24,26,14,0,0,26,8,6,6,24,52,66,36,6,10,14,30
+        </a></code></blockquote>
+</body>
+</html>

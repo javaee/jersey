@@ -103,14 +103,15 @@
         <module>server-async-managed</module>
         <module>server-async-standalone</module>
         <module>server-sent-events</module>
+        <module>servlet3-webapp</module>
         <module>simple-console</module>
         <module>shortener-webapp</module>
+        <module>sparklines</module>
         <module>sse-item-store-webapp</module>
         <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
         <module>webapp-example-parent</module>
         <module>xml-moxy</module>
-        <module>servlet3-webapp</module>
     </modules>
 
     <dependencyManagement>
