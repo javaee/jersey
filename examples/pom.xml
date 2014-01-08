@@ -72,6 +72,7 @@
         <module>exception-mapping</module>
         <module>freemarker-webapp</module>
         <module>flight-mgmt-webapp</module>
+        <module>groovy</module>
         <module>helloworld</module>
         <module>helloworld-programmatic</module>
         <module>helloworld-pure-jax-rs</module>
