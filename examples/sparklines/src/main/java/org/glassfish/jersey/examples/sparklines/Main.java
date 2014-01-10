@@ -39,37 +39,79 @@
  */
 package org.glassfish.jersey.examples.sparklines;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.ServerConfiguration;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import org.glassfish.grizzly.http.server.HttpServer;
-
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.ext.RuntimeDelegate;
 import java.io.IOException;
-import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author Paul Sandoz
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static final String WEB_ROOT = "/webroot/";
+    public static final String APP_PATH = "/sparklines/";
+    public static final int PORT = 9998;
+
+    public static HttpServer startServer(String webRootPath) {
+        final HttpServer server = new HttpServer();
+        final NetworkListener listener = new NetworkListener("grizzly", "localhost", PORT);
+
+        server.addListener(listener);
+
+        final ServerConfiguration config = server.getServerConfiguration();
+        // add handler for serving static content
+        config.addHttpHandler(new CLStaticHttpHandler(Main.class.getClassLoader(), WEB_ROOT), APP_PATH);
+
+        // add handler for serving JAX-RS resources
+        config.addHttpHandler(RuntimeDelegate.getInstance().createEndpoint(createResourceConfig(), GrizzlyHttpContainer.class),
+                APP_PATH);
+
         try {
-            final String baseUri = "http://localhost:9998/sparklines/";
+            // Start the server.
+            server.start();
+        } catch (Exception ex) {
+            throw new ProcessingException("Exception thrown when trying to start grizzly server", ex);
+        }
 
-            ResourceConfig rc = new ResourceConfig(SparklinesResource.class);
+        return server;
+    }
 
-            System.out.println("Starting grizzly...");
-            final HttpServer httpServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(baseUri), rc);
-            System.out.println(String.format("Jersey app started with WADL available at %sapplication.wadl\n" +
-                    "Try out %sdiscrete?d=88,84,82,92,82,86,66,82,44,64,66,88,96,80,24,26,14,0,0,26,8,6,6,24,52,66,36,6,10,14,30\n" +
-                    "Hit enter to stop it...", baseUri, baseUri));
+
+    public static void main(String[] args) {
+
+        try {
+            final HttpServer server = startServer(args.length >= 1 ? args[0] : null);
+            System.out.println(String.format("Application started.\n" +
+                    "Access it at %s\n" +
+                    "Hit enter to stop it...",
+                    getAppUri()));
             System.in.read();
-            httpServer.shutdownNow();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
 
+    public static String getAppUri() {
+        return String.format("http://localhost:%s%s", PORT, APP_PATH);
+    }
+
+    /**
+     * Create Jersey server-side application resource configuration.
+     *
+     * @return Jersey server-side application configuration.
+     */
+    public static ResourceConfig createResourceConfig() {
+        return new ResourceConfig().registerClasses(SparklinesResource.class);
     }
 }
