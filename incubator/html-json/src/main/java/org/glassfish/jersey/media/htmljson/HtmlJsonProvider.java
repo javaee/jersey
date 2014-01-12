@@ -56,18 +56,12 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.client.WebTarget;
 import net.java.html.BrwsrCtx;
 
-import org.apidesign.html.json.spi.JSONCall;
-import org.apidesign.html.json.spi.Transfer;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 
 import net.java.html.json.Model;
 import net.java.html.json.Models;
 import net.java.html.json.Property;
-import org.apidesign.html.context.spi.Contexts;
 
 /**
  * Implementation of Jersey's message body reader and writer that
@@ -107,11 +101,10 @@ import org.apidesign.html.context.spi.Contexts;
  */
 @ServiceProviders({
         @ServiceProvider(service = MessageBodyWriter.class),
-        @ServiceProvider(service = MessageBodyReader.class),
-        @ServiceProvider(service = Contexts.Provider.class)
+        @ServiceProvider(service = MessageBodyReader.class)
 })
 public final class HtmlJsonProvider
-implements MessageBodyWriter, MessageBodyReader<Object>, Contexts.Provider, Transfer {
+implements MessageBodyWriter, MessageBodyReader<Object> {
 
     private static final Logger LOG = Logger.getLogger(HtmlJsonProvider.class.getName());
 
@@ -146,40 +139,5 @@ implements MessageBodyWriter, MessageBodyReader<Object>, Contexts.Provider, Tran
                            InputStream in) throws IOException, WebApplicationException {
         BrwsrCtx def = BrwsrCtx.findDefault(HtmlJsonProvider.class);
         return Models.parse(def, type, in);
-    }
-
-    @Override
-    public void fillContext(Contexts.Builder context, Class<?> requestor) {
-        context.register(Transfer.class, this, 49);
-    }
-
-    @Override
-    public void extract(Object jsonObject, String[] props, Object[] values) {
-        if (jsonObject instanceof JSONObject) {
-            JSONObject obj = (JSONObject) jsonObject;
-            for (int i = 0; i < props.length; i++) {
-                try {
-                    values[i] = obj.has(props[i]) ? obj.get(props[i]) : null;
-                } catch (JSONException ex) {
-                    LOG.log(Level.SEVERE, "Can't read " + props[i] + " from " + jsonObject, ex);
-                }
-            }
-        }
-    }
-
-    @Override
-    public Object toJSON(InputStream is) throws IOException {
-        try {
-            InputStreamReader r = new InputStreamReader(is, "UTF-8");
-            JSONTokener t = new JSONTokener(r);
-            return new JSONObject(t);
-        } catch (JSONException ex) {
-            throw new IOException(ex);
-        }
-    }
-
-    @Override
-    public void loadJSON(JSONCall call) {
-        throw new UnsupportedOperationException();
     }
 }
