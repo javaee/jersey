@@ -77,9 +77,9 @@
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apidesign.html</groupId>
+            <groupId>org.netbeans.html</groupId>
             <artifactId>net.java.html.json</artifactId>
-            <version>0.3.1</version>
+            <version>0.7-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>

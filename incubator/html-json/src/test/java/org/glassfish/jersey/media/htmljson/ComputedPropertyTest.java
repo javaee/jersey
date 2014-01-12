@@ -83,7 +83,7 @@ public class ComputedPropertyTest extends AbstractTypeTester {
     @Test public void askForFullName() {
         WebTarget target = target("empty/fullName");
         
-        Person p = new Person(net.java.html.json.Context.EMPTY);
+        Person p = new Person();
         p.setFirstName("Jaroslav");
         p.setLastName("Tulach");
         

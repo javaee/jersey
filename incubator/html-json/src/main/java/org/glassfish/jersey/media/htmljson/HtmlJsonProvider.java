@@ -54,9 +54,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.client.WebTarget;
+import net.java.html.BrwsrCtx;
 
-import org.apidesign.html.json.spi.ContextBuilder;
-import org.apidesign.html.json.spi.ContextProvider;
 import org.apidesign.html.json.spi.JSONCall;
 import org.apidesign.html.json.spi.Transfer;
 import org.json.JSONException;
@@ -65,10 +64,10 @@ import org.json.JSONTokener;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 
-import net.java.html.json.Context;
 import net.java.html.json.Model;
 import net.java.html.json.Models;
 import net.java.html.json.Property;
+import org.apidesign.html.context.spi.Contexts;
 
 /**
  * Implementation of Jersey's message body reader and writer that
@@ -109,18 +108,12 @@ import net.java.html.json.Property;
 @ServiceProviders({
         @ServiceProvider(service = MessageBodyWriter.class),
         @ServiceProvider(service = MessageBodyReader.class),
-        @ServiceProvider(service = ContextProvider.class)
+        @ServiceProvider(service = Contexts.Provider.class)
 })
 public final class HtmlJsonProvider
-        implements MessageBodyWriter, MessageBodyReader<Object>, ContextProvider, Transfer {
+implements MessageBodyWriter, MessageBodyReader<Object>, Contexts.Provider, Transfer {
 
     private static final Logger LOG = Logger.getLogger(HtmlJsonProvider.class.getName());
-    private static final Context CONTEXT;
-
-    static {
-        HtmlJsonProvider w = new HtmlJsonProvider();
-        CONTEXT = ContextBuilder.create().withTransfer(w).build();
-    }
 
     @Override
     public boolean isWriteable(Class type, Type type1, Annotation[] antns, MediaType mt) {
@@ -151,12 +144,13 @@ public final class HtmlJsonProvider
                            Type type1, Annotation[] antns, MediaType mt,
                            MultivaluedMap<String, String> mm,
                            InputStream in) throws IOException, WebApplicationException {
-        return Models.parse(CONTEXT, type, in);
+        BrwsrCtx def = BrwsrCtx.findDefault(HtmlJsonProvider.class);
+        return Models.parse(def, type, in);
     }
 
     @Override
-    public Context findContext(Class<?> requestor) {
-        return CONTEXT;
+    public void fillContext(Contexts.Builder context, Class<?> requestor) {
+        context.register(Transfer.class, this, 49);
     }
 
     @Override
