@@ -141,6 +141,7 @@ public class Injections {
 
         final ServiceLocator result = factory.create(name, parent, generator);
 
+        result.setNeutralContextClassLoader(false);
         ServiceLocatorUtilities.enablePerThreadScope(result);
 
         for (Binder binder : binders) {

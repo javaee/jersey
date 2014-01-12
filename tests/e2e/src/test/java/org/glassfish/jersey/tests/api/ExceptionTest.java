@@ -128,8 +128,8 @@ public class ExceptionTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.property(ClientProperties.FOLLOW_REDIRECTS, false);
+    protected void configureClient(ClientConfig config) {
+        config.property(ClientProperties.FOLLOW_REDIRECTS, false);
     }
 
     static final URI testUri = UriBuilder.fromUri("http://jersey.java.net").build();

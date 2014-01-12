@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -92,7 +92,7 @@ public class App {
                     BASE_URI, ROOT_PATH_ANNOTATED_INSTANCE, "?q1=<value_1>&q2=<value_2>&q2=<value_3>",
                     BASE_URI, ROOT_PATH_ANNOTATED_METHOD, "?q1=<value_1>&q2=<value_2>&q2=<value_3>"));
             System.in.read();
-            server.stop();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }

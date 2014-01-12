@@ -42,20 +42,28 @@ package org.glassfish.jersey.test.inmemory;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- * Test class for {@link org.glassfish.jersey.test.inmemory.internal.InMemoryConnector}.
+ * Test class for {@link InMemoryConnector}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
@@ -70,14 +78,14 @@ public class InMemoryContainerTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        return new ResourceConfig(Resource.class);
+        return new ResourceConfig(TestResource.class, Resource1956.class, Resource2091.class, Resource2030.class);
     }
 
     /**
      * Test resource class.
      */
-    @Path("one")
-    public static class Resource {
+    @Path("test")
+    public static class TestResource {
 
         /**
          * Test resource method.
@@ -95,19 +103,16 @@ public class InMemoryContainerTest extends JerseyTest {
         }
     }
 
-    /**
-     * Tests {@link org.glassfish.jersey.test.inmemory.internal.InMemoryConnector In-Memory Client Transport}.
-     */
     @Test
-    public void testInMemoryContainerClient() {
-        final Response response = client().target(UriBuilder.fromUri(getBaseUri()).path("one").build()).request().get();
+    public void testInMemoryConnectorGet() {
+        final Response response = target("test").request().get();
 
         assertTrue(response.getStatus() == 200);
     }
 
     @Test
-    public void testInMemoryContainerClientPost() {
-        final Response response = client().target(UriBuilder.fromUri(getBaseUri()).path("one").build()).request().post(
+    public void testInMemoryConnnectorPost() {
+        final Response response = target("test").request().post(
                 Entity.entity("entity", MediaType.TEXT_PLAIN_TYPE));
 
         assertTrue(response.getStatus() == 200);
@@ -115,12 +120,91 @@ public class InMemoryContainerTest extends JerseyTest {
     }
 
     /**
-     * Tests In-Memory Container.
+     * Reproducer resource for JERSEY-1956.
+     */
+    @Path("1956")
+    public static class Resource1956 {
+        @GET
+        @Produces(MediaType.APPLICATION_JSON)
+        @Path("get-json")
+        public String getJson(@Context HttpHeaders headers) throws Exception {
+            String agent = headers.getHeaderString(HttpHeaders.USER_AGENT);
+            return "{\"agent\": \"" + agent + "\"}";
+        }
+    }
+
+    /**
+     * Reproducer resource for JERSEY-2091.
+     */
+    @Path("2091")
+    public static class Resource2091 {
+        @POST
+        @Produces(MediaType.TEXT_PLAIN)
+        @Path("post-dummy-header")
+        public String postHeader(@Context HttpHeaders headers) throws Exception {
+            return "post-" + headers.getHeaderString("dummy-header");
+        }
+    }
+
+    /**
+     * Reproducer resource for JERSEY-2030.
+     */
+    @Path("2030")
+    public static class Resource2030 {
+        @GET
+        @Produces(MediaType.TEXT_PLAIN)
+        public void asyncGet(@Suspended final AsyncResponse asyncResponse) {
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    asyncResponse.resume("resumed");
+                }
+            }).start();
+        }
+    }
+
+    /**
+     * Reproducer for JERSEY-1956.
      */
     @Test
-    public void testInMemoryContainerTarget() {
-        final Response response = target().path("one").request().get();
+    public void testAcceptNotStripped() {
+        Response response;
+        response = target("1956/get-json").request(MediaType.TEXT_PLAIN).get();
+        assertThat(response.getStatus(), equalTo(Response.Status.NOT_ACCEPTABLE.getStatusCode()));
 
-        assertTrue(response.getStatus() == 200);
+        response = target("1956/get-json").request(MediaType.APPLICATION_JSON).header(HttpHeaders.USER_AGENT, "test").get();
+        assertThat(response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+        assertThat(response.readEntity(String.class), equalTo("{\"agent\": \"test\"}"));
+    }
+
+    /**
+     * Reproducer for JERSEY-2091.
+     */
+    @Test
+    public void testHeadersMakeItThroughForEntityLessRequest() {
+        Response response =
+                target("2091/post-dummy-header").request(MediaType.TEXT_PLAIN).header("dummy-header", "bummer").post(null);
+        assertThat(response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+        assertThat(response.readEntity(String.class), equalTo("post-bummer"));
+    }
+
+    /**
+     * Reproducer for JERSEY-2030.
+     */
+    @Test
+    public void testAsyncMethodsNotSupported() {
+        try {
+            target("2030").request(MediaType.TEXT_PLAIN).get();
+            fail("ProcessingException expected.");
+        } catch (ProcessingException ex) {
+            assertThat(ex.getStackTrace()[0].getClassName(),
+                    equalTo(InMemoryConnector.InMemoryResponseWriter.class.getName()));
+        }
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,8 @@ import org.glassfish.jersey.server.ResourceFinder;
  */
 public final class JarFileScanner implements ResourceFinder {
 
+    private final static Logger LOGGER = Logger.getLogger(JarFileScanner.class.getName());
+
     private final JarInputStream jarInputStream;
     private final String parent;
     private final boolean recursive;
@@ -65,11 +67,10 @@ public final class JarFileScanner implements ResourceFinder {
      * Create new JAR file scanner.
      *
      * @param inputStream JAR file input stream
-     * @param parent      JAR file entry prefix.
-     * @param recursive   if ({@code true} the packages will be scanned recursively together with
-     *                    any nested packages, if {@code false} only the explicitly listed packages
-     *                    will be scanned.
-     * @throws IOException
+     * @param parent JAR file entry prefix.
+     * @param recursive if ({@code true} the packages will be scanned recursively together with any nested packages, if
+     * {@code false} only the explicitly listed packages will be scanned.
+     * @throws IOException if wrapping given input stream into {@link JarInputStream} failed.
      */
     public JarFileScanner(InputStream inputStream, String parent, boolean recursive) throws IOException {
         this.jarInputStream = new JarInputStream(inputStream);
@@ -101,10 +102,10 @@ public final class JarFileScanner implements ResourceFinder {
                     }
                 } while (true);
             } catch (IOException e) {
-                Logger.getLogger(JarFileScanner.class.getName()).log(Level.CONFIG, "Unable to read the next jar entry.", e);
+                LOGGER.log(Level.CONFIG, "Unable to read the next jar entry.", e);
                 return false;
             } catch (SecurityException e) {
-                Logger.getLogger(JarFileScanner.class.getName()).log(Level.CONFIG, "Unable to read the next jar entry.", e);
+                LOGGER.log(Level.CONFIG, "Unable to read the next jar entry.", e);
                 return false;
             }
         }
@@ -113,7 +114,7 @@ public final class JarFileScanner implements ResourceFinder {
             try {
                 jarInputStream.close();
             } catch (IOException e) {
-                Logger.getLogger(JarFileScanner.class.getName()).log(Level.FINE, "Unable to close jar file.", e);
+                LOGGER.log(Level.FINE, "Unable to close jar file.", e);
             }
 
             return false;
@@ -139,13 +140,59 @@ public final class JarFileScanner implements ResourceFinder {
     }
 
     @Override
-    public InputStream open() {
-        return jarInputStream;
+    public void reset() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void reset() {
-        throw new UnsupportedOperationException();
+    public InputStream open() {
+        return new InputStream() {
+
+            @Override
+            public int read() throws IOException {
+                return jarInputStream.read();
+            }
+
+            @Override
+            public int read(byte[] bytes) throws IOException {
+                return jarInputStream.read(bytes);
+            }
+
+            @Override
+            public int read(byte[] bytes, int i, int i2) throws IOException {
+                return jarInputStream.read(bytes, i, i2);
+            }
+
+            @Override
+            public long skip(long l) throws IOException {
+                return jarInputStream.skip(l);
+            }
+
+            @Override
+            public int available() throws IOException {
+                return jarInputStream.available();
+            }
+
+            @Override
+            public void close() throws IOException {
+                jarInputStream.closeEntry();
+            }
+
+            @Override
+            public synchronized void mark(int i) {
+                jarInputStream.mark(i);
+            }
+
+            @Override
+            public synchronized void reset() throws IOException {
+                jarInputStream.reset();
+            }
+
+            @Override
+            public boolean markSupported() {
+                return jarInputStream.markSupported();
+            }
+        };
     }
 }
 

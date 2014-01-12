@@ -55,29 +55,32 @@
     <section xml:id="checkout">
         <title>Checking Out the Source</title>
         <para>
-            Jersey source code is available in a Git repository you can browse at
-            <link xlink:href="http://java.net/projects/jersey/sources/code/show">http://java.net/projects/jersey/sources/code/show</link>.
+            Jersey source code is available on GitHub. You can browse the sources at
+            <link xlink:href="https://github.com/jersey/jersey">https://github.com/jersey/jersey</link>.
         </para>
         <para>
-            In case you are not familiar with Git, we recommend reading on of the many "Getting Started with Git" articles
+            In case you are not familiar with Git, we recommend reading some of the many "Getting Started with Git" articles
             you can find on the web. For example this
             <link xlink:href="http://refcardz.dzone.com/refcardz/getting-started-git">DZone RefCard</link>.
         </para>
-        <para>
-            Before you can clone Jersey repository you have to sign up for a
-            <link xlink:href="http://java.net">java.net</link>
-            account. Once you are registered, you have to add an SSH key to your java.net profile - see this article on how
-            to do that:
-            <link xlink:href="http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab">http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab</link>
-        </para>
+        <!--<para>-->
+            <!--Before you can clone Jersey repository you have to sign up for a-->
+            <!--<link xlink:href="http://java.net">java.net</link>-->
+            <!--account. Once you are registered, you have to add an SSH key to your java.net profile - see this article on how-->
+            <!--to do that:-->
+            <!--<link xlink:href="http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab">http://java.net/projects/help/pages/ProfileSettings#SSH_Keys_Tab</link>-->
+        <!--</para>-->
         <para>
             To clone the Jersey repository you can execute the following command on the command-line
             (provided you have a command-line Git client installed on your machine):
-            <programlisting language="bash" linenumbering="unnumbered">git clone ssh://&lt;your_java_net_id&gt;@java.net/jersey~code</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">git clone git://github.com/jersey/jersey.git</programlisting>
+            This creates read-only copy of Jersey workspace. If you want to contribute, please use "pull request":
+            <link xlink:href="https://help.github.com/articles/creating-a-pull-request">https://help.github.com/articles/creating-a-pull-request</link>.
         </para>
         <para>
             Milestones and releases of Jersey are tagged. You can list the tags by executing the standard Git command in the repository directory:
-            <programlisting language="bash" linenumbering="unnumbered">git tag -l</programlisting>
+            <programlisting language="bash" linenumbering="unnumbered">git tag -l</programlisting> or by visiting
+            <link xlink:href="https://github.com/jersey/jersey/tags">https://github.com/jersey/jersey/tags</link>.
         </para>
     </section>
 
@@ -85,15 +88,15 @@
         <title>Building the Source</title>
         <para>
             Jersey source code requires Java SE 6 or greater. The build is based on Maven.
-            Maven 3 or greater is recommended. Also it is recommended you use the following
-            Maven options when building the workspace (can be set in MAVENT_OPTS environment
+            Maven 3 or greater is highly recommended. Also it is recommended you use the following
+            Maven options when building the workspace (can be set in <literal>MAVEN_OPTS</literal> environment
             variable):
             <programlisting language="bash" linenumbering="unnumbered">-Xmx1048m -XX:PermSize=64M -XX:MaxPermSize=128M</programlisting>
         </para>
         <para>
             It is recommended to build all of Jersey after you cloned the source code repository.
             To do that execute the following commands in the directory where jersey source repository
-            was cloned (typically the directory named "jersey~code"):
+            was cloned (typically the directory named "jersey"):
             <programlisting language="bash" linenumbering="unnumbered">mvn -Dmaven.test.skip=true clean install</programlisting>
             This command will build Jersey, but skip the test execution.
             If you don't want to skip the tests, execute the following instead:
@@ -106,13 +109,13 @@
         <title>Testing</title>
         <para>
             Jersey contains many tests. Unit tests are in the individual Jersey modules,
-            integration and end-to-end tests are in jersey~code/tests directory.
+            integration and end-to-end tests are in <literal>jersey/tests/e2e</literal> directory.
             You can run tests related to a particular area using the following command:
             <programlisting language="bash" linenumbering="unnumbered">mvn -Dtest=&lt;pattern&gt; test</programlisting>
             where
             <literal>pattern</literal>
-            may be a comma separated set of names matching
-            tests.
+            may be a comma separated set of names matching tests classes or individual methods (like
+            <literal>LinkTest#testDelimiters</literal>).
         </para>
     </section>
     <section xml:id="netbeans-build">

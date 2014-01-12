@@ -41,16 +41,19 @@
 package org.glassfish.jersey.client;
 
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -58,6 +61,8 @@ import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.api.ServiceLocator;
+
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Client-side request processing runtime.
@@ -72,7 +77,7 @@ class ClientRuntime {
     private final ExtendedConfig config;
 
     private final RequestScope requestScope;
-    private final ClientAsyncExecutorsFactory asyncExecutorsFactory;
+    private final ClientAsyncExecutorFactory asyncExecutorsFactory;
 
     private final ServiceLocator locator;
 
@@ -98,7 +103,10 @@ class ClientRuntime {
         this.connector = connector;
 
         this.requestScope = locator.getService(RequestScope.class);
-        this.asyncExecutorsFactory = new ClientAsyncExecutorsFactory(locator);
+
+        int asyncThreadPoolSize = PropertiesHelper.getValue(config.getProperties(), ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
+        asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
+        this.asyncExecutorsFactory = new ClientAsyncExecutorFactory(locator, asyncThreadPoolSize);
 
         this.locator = locator;
     }
@@ -114,53 +122,59 @@ class ClientRuntime {
      * @param callback asynchronous response callback.
      */
     public void submit(final ClientRequest request, final ResponseCallback callback) {
-        submit(asyncExecutorsFactory.getRequestingExecutor(request), new Runnable() {
+        submit(asyncExecutorsFactory.getExecutor(), new Runnable() {
 
             @Override
             public void run() {
-                final RequestScope.Instance currentScopeInstance = requestScope.referenceCurrent();
-                final AsyncConnectorCallback connectorCallback = new AsyncConnectorCallback() {
-
-                    @Override
-                    public void response(final ClientResponse response) {
-                        submit(asyncExecutorsFactory.getRespondingExecutor(request), currentScopeInstance, new Runnable() {
-                            @Override
-                            public void run() {
-                                final ClientResponse processedResponse;
-                                try {
-                                    processedResponse = Stages.process(response, responseProcessingRoot);
-                                } catch (Throwable throwable) {
-                                    failure(throwable);
-                                    return;
-                                }
-                                try {
-                                    callback.completed(processedResponse, requestScope);
-                                } finally {
-                                    currentScopeInstance.release();
-                                }
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void failure(Throwable failure) {
-                        try {
-                            callback.failed(failure instanceof ProcessingException ?
-                                    (ProcessingException) failure : new ProcessingException(failure));
-                        } finally {
-                            currentScopeInstance.release();
-                        }
-                    }
-                };
+                ClientRequest processedRequest;
                 try {
-                    connector.apply(addUserAgent(Stages.process(request, requestProcessingRoot), connector.getName()), connectorCallback);
+                    processedRequest = Stages.process(request, requestProcessingRoot);
+                    processedRequest = addUserAgent(processedRequest, connector.getName());
                 } catch (AbortException aborted) {
-                    connectorCallback.response(aborted.getAbortResponse());
+                    processResponse(aborted.getAbortResponse(), callback);
+                    return;
+                }
+
+                try {
+                    final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
+                    final AsyncConnectorCallback connectorCallback = new AsyncConnectorCallback() {
+
+                        @Override
+                        public void response(final ClientResponse response) {
+                            responseFuture.set(response);
+                        }
+
+                        @Override
+                        public void failure(Throwable failure) {
+                            responseFuture.setException(failure);
+                        }
+                    };
+                    connector.apply(processedRequest, connectorCallback);
+
+                    processResponse(responseFuture.get(), callback);
+                } catch (ExecutionException e) {
+                    processFailure(e.getCause(), callback);
                 } catch (Throwable throwable) {
-                    connectorCallback.failure(throwable);
+                    processFailure(throwable, callback);
                 }
             }
         });
+    }
+
+    private void processResponse(final ClientResponse response, final ResponseCallback callback) {
+        final ClientResponse processedResponse;
+        try {
+            processedResponse = Stages.process(response, responseProcessingRoot);
+        } catch (Throwable throwable) {
+            processFailure(throwable, callback);
+            return;
+        }
+        callback.completed(processedResponse, requestScope);
+    }
+
+    private void processFailure(Throwable failure, final ResponseCallback callback) {
+        callback.failed(failure instanceof ProcessingException ?
+                (ProcessingException) failure : new ProcessingException(failure));
     }
 
     private Future<?> submit(final ExecutorService executor, final Runnable task) {
@@ -172,25 +186,23 @@ class ClientRuntime {
         });
     }
 
-    private Future<?> submit(final ExecutorService executor, final RequestScope.Instance scopeInstance, final Runnable task) {
-        return executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                requestScope.runInScope(scopeInstance, task);
-            }
-        });
-    }
-
     private ClientRequest addUserAgent(ClientRequest clientRequest, String connectorName) {
-        if (!clientRequest.getHeaders().containsKey(HttpHeaders.USER_AGENT)) {
-            if (connectorName != null && !connectorName.equals("")) {
-                clientRequest.getHeaders().put(HttpHeaders.USER_AGENT, Arrays.<Object>asList(String.format("Jersey/%s (%s)",
-                        Version.getVersion(), connectorName)));
+        final MultivaluedMap<String, Object> headers = clientRequest.getHeaders();
+        if (headers.containsKey(HttpHeaders.USER_AGENT)) {
+            // Check for explicitly set null value and if set, then remove the header - see JERSEY-2189
+            if (clientRequest.getHeaderString(HttpHeaders.USER_AGENT) == null) {
+                headers.remove(HttpHeaders.USER_AGENT);
+            }
+        } else {
+            if (connectorName != null && !connectorName.isEmpty()) {
+                headers.put(HttpHeaders.USER_AGENT,
+                        Arrays.<Object>asList(String.format("Jersey/%s (%s)", Version.getVersion(), connectorName)));
             } else {
-                clientRequest.getHeaders().put(HttpHeaders.USER_AGENT, Arrays.<Object>asList(String.format("Jersey/%s",
-                        Version.getVersion())));
+                headers.put(HttpHeaders.USER_AGENT,
+                        Arrays.<Object>asList(String.format("Jersey/%s", Version.getVersion())));
             }
         }
+
         return clientRequest;
     }
 
@@ -208,7 +220,7 @@ class ClientRuntime {
      * @return client response.
      * @throws javax.ws.rs.ProcessingException in case of an invocation failure.
      */
-    public ClientResponse invoke(final ClientRequest request) throws ProcessingException {
+    public ClientResponse invoke(final ClientRequest request) {
         ClientResponse response;
         try {
             try {
@@ -247,7 +259,11 @@ class ClientRuntime {
      * Close the client runtime and release the underlying transport connector.
      */
     public void close() {
-        connector.close();
+        try {
+            connector.close();
+        } finally {
+            asyncExecutorsFactory.close();
+        }
     }
 
     /**
@@ -256,5 +272,14 @@ class ClientRuntime {
     public void preInitialize() {
         // pre-initialize MessageBodyWorkers
         locator.getService(MessageBodyWorkers.class);
+    }
+
+    /**
+     * Runtime connector.
+     *
+     * @return runtime connector.
+     */
+    public Connector getConnector() {
+        return connector;
     }
 }

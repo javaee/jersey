@@ -23,6 +23,7 @@
 .war
 .zip
 .dat
+/docs/src/main/docbook/inc/*.src
 jaxb.index
 /MANIFEST.MF
 /META-INF/services/
@@ -45,3 +46,4 @@ truststore_server
 /core-server/etc
 bootstrap
 build.readme
+/tests/e2e/entity/multipart-testcase.txt

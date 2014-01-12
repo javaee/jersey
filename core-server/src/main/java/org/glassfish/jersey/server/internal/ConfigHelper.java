@@ -60,6 +60,12 @@ import com.google.common.collect.Iterables;
 public final class ConfigHelper {
 
     /**
+     * Prevents instantiation.
+     */
+    private ConfigHelper() {
+    }
+
+    /**
      * Provides a single ContainerLifecycleListener instance based on the {@link ApplicationHandler application} configuration.
      * This method looks for providers implementing {@link ContainerLifecycleListener} interface and aggregates them into
      * a single umbrella listener instance that is returned.

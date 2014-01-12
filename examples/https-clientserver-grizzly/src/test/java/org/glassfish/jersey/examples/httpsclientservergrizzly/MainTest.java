@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.httpsclientservergrizzly;
 
 import javax.ws.rs.client.Client;
@@ -45,9 +44,14 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import javax.net.ssl.SSLContext;
+
 import org.glassfish.jersey.SslConfigurator;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 
 import org.junit.After;
 import org.junit.Before;
@@ -56,9 +60,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * This test class starts the grizzly server and then client performs several SSL (https)
+ * requests where different scenarios are tested (SSL Client authentication, missing truststore
+ * configuration, etc.). Server is a Grizzly server configured for SSL support and client
+ * uses both, {@link HttpUrlConnectorProvider} and {@link GrizzlyConnectorProvider}.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
 public class MainTest {
+    private static final String TRUSTORE_CLIENT_FILE = "./truststore_client";
+    private static final String TRUSTSTORE_CLIENT_PWD = "asdfgh";
+    private static final String KEYSTORE_CLIENT_FILE = "./keystore_client";
+    private static final String KEYSTORE_CLIENT_PWD = "asdfgh";
 
     @Before
     public void setUp() throws Exception {
@@ -70,22 +83,42 @@ public class MainTest {
         Server.stopServer();
     }
 
+    @Test
+    public void testSSLWithBasicAndSSLAuthGrizzlyConnector() {
+        final ClientConfig clientConfig = getGrizzlyConfig();
+        _testSSLWithBasicAndSSLAuth(clientConfig);
+    }
+
+    private ClientConfig getGrizzlyConfig() {
+        return new ClientConfig().connectorProvider(new GrizzlyConnectorProvider());
+    }
+
+    @Test
+    public void testSSLWithBasicAndSSLAuthHttpUrlConnector() {
+        final ClientConfig clientConfig = getHttpUrlConnectorConfig();
+        _testSSLWithBasicAndSSLAuth(clientConfig);
+    }
+
+    private ClientConfig getHttpUrlConnectorConfig() {
+        return new ClientConfig().connectorProvider(new HttpUrlConnectorProvider());
+    }
+
     /**
      * Test to see that the correct Http status is returned.
      */
-    @Test
-    public void testSSLWithAuth() {
+    private void _testSSLWithBasicAndSSLAuth(ClientConfig clientConfig) {
         SslConfigurator sslConfig = SslConfigurator.newInstance()
-                .trustStoreFile("./truststore_client")
-                .trustStorePassword("asdfgh")
+                .trustStoreFile(TRUSTORE_CLIENT_FILE)
+                .trustStorePassword(TRUSTSTORE_CLIENT_PWD)
+                .keyStoreFile(KEYSTORE_CLIENT_FILE)
+                .keyPassword(KEYSTORE_CLIENT_PWD);
 
-                .keyStoreFile("./keystore_client")
-                .keyPassword("asdfgh");
-
-        Client client = ClientBuilder.newBuilder().sslContext(sslConfig.createSSLContext()).build();
+        final SSLContext sslContext = sslConfig.createSSLContext();
+        Client client = ClientBuilder.newBuilder().withConfig(clientConfig)
+                .sslContext(sslContext).build();
 
         // client basic auth demonstration
-        client.register(new HttpBasicAuthFilter("user", "password"));
+        client.register(HttpAuthenticationFeature.basic("user", "password"));
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
@@ -96,29 +129,44 @@ public class MainTest {
         assertEquals(200, response.getStatus());
     }
 
+
+    @Test
+    public void testWithoutBasicAuthHttpUrlConnector() {
+        _testWithoutBasicAuth(getHttpUrlConnectorConfig());
+    }
+
+    @Test
+    public void testWithoutBasicAuthGrizzlyConnector() {
+        _testWithoutBasicAuth(getGrizzlyConfig());
+    }
+
     /**
      * Test to see that HTTP 401 is returned when client tries to GET without
      * proper credentials.
      */
-    @Test
-    public void testHTTPBasicAuth1() {
+    private void _testWithoutBasicAuth(ClientConfig clientConfig) {
         SslConfigurator sslConfig = SslConfigurator.newInstance()
-                .trustStoreFile("./truststore_client")
-                .trustStorePassword("asdfgh")
+                .trustStoreFile(TRUSTORE_CLIENT_FILE)
+                .trustStorePassword(TRUSTSTORE_CLIENT_PWD)
+                .keyStoreFile(KEYSTORE_CLIENT_FILE)
+                .keyPassword(KEYSTORE_CLIENT_PWD);
 
-                .keyStoreFile("./keystore_client")
-                .keyPassword("asdfgh");
-
-        Client client = ClientBuilder.newBuilder().sslContext(sslConfig.createSSLContext()).build();
+        Client client = ClientBuilder.newBuilder().withConfig(clientConfig).sslContext(sslConfig
+                .createSSLContext()).build();
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
         WebTarget target = client.target(Server.BASE_URI);
         target.register(new LoggingFilter());
 
-        Response response;
+        Response response = null;
 
-        response = target.path("/").request().get(Response.class);
+        try {
+            response = target.path("/").request().get(Response.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
 
         assertEquals(401, response.getStatus());
     }
@@ -127,13 +175,14 @@ public class MainTest {
      * Test to see that SSLHandshakeException is thrown when client don't have
      * trusted key.
      */
-    @Test
-    public void testSSLAuth1() {
+    private void _testWithoutSSLAuthentication(ClientConfig clientConfig) {
         SslConfigurator sslConfig = SslConfigurator.newInstance()
-                .trustStoreFile("./truststore_client")
-                .trustStorePassword("asdfgh");
+                .trustStoreFile(TRUSTORE_CLIENT_FILE)
+                .trustStorePassword(TRUSTSTORE_CLIENT_PWD);
 
-        Client client = ClientBuilder.newBuilder().sslContext(sslConfig.createSSLContext()).build();
+        Client client = ClientBuilder.newBuilder()
+                .withConfig(clientConfig)
+                .sslContext(sslConfig.createSSLContext()).build();
 
         System.out.println("Client: GET " + Server.BASE_URI);
 
@@ -151,5 +200,15 @@ public class MainTest {
         assertTrue(caught);
         // solaris throws java.net.SocketException instead of SSLHandshakeException
         // assertTrue(msg.contains("SSLHandshakeException"));
+    }
+
+    @Test
+    public void testWithoutSSLAuthenticationGrizzly() {
+        _testWithoutSSLAuthentication(getGrizzlyConfig());
+    }
+
+    @Test
+    public void testWithoutSSLAuthenticationHttpUrlConnector() {
+        _testWithoutSSLAuthentication(getHttpUrlConnectorConfig());
     }
 }

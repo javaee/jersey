@@ -128,7 +128,8 @@ class EntityInputStream extends InputStream {
      * a runtime {@link javax.ws.rs.ProcessingException} is thrown.
      * </p>
      *
-     * @throws javax.ws.rs.ProcessingException in case the reset operation on the underlying entity input stream failed.
+     * @throws javax.ws.rs.ProcessingException
+     *          in case the reset operation on the underlying entity input stream failed.
      */
     @Override
     public void reset() {
@@ -146,7 +147,8 @@ class EntityInputStream extends InputStream {
      * a runtime {@link javax.ws.rs.ProcessingException} is thrown.
      * </p>
      *
-     * @throws javax.ws.rs.ProcessingException in case the close operation on the underlying entity input stream failed.
+     * @throws javax.ws.rs.ProcessingException
+     *          in case the close operation on the underlying entity input stream failed.
      */
     @Override
     public void close() throws ProcessingException {
@@ -177,14 +179,21 @@ class EntityInputStream extends InputStream {
         }
 
         try {
-            if (input.available() > 0) {
-                return false;
-            } else if (input.markSupported()) {
+            // Try #markSupported first - #available on WLS waits until socked timeout is reached when chunked encoding is used.
+            if (input.markSupported()) {
                 input.mark(1);
                 int i = input.read();
                 input.reset();
                 return i == -1;
             } else {
+                try {
+                    if (input.available() > 0) {
+                        return false;
+                    }
+                } catch (IOException ioe) {
+                    // NOOP. Try other approaches as this can fail on WLS.
+                }
+
                 int b = input.read();
                 if (b == -1) {
                     return true;
@@ -215,6 +224,15 @@ class EntityInputStream extends InputStream {
         if (closed) {
             throw new IllegalStateException(LocalizationMessages.ERROR_ENTITY_STREAM_CLOSED());
         }
+    }
+
+    /**
+     * Get the closed status of this input stream.
+     *
+     * @return {@code true} if the stream has been closed, {@code false} otherwise.
+     */
+    public boolean isClosed() {
+        return closed;
     }
 
     /**

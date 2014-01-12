@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -107,7 +107,8 @@ public class AuthTest extends JerseyTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider).property(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION, true);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
 
         WebTarget r = client.target(getBaseUri());
         assertEquals("GET", r.request().get(String.class));
@@ -122,8 +123,10 @@ public class AuthTest extends JerseyTest {
         );
 
         ClientConfig cc = new ClientConfig();
-        cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider).property(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION, true);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider)
+                .property(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION, true);
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
 
         WebTarget r = client.target(getBaseUri());
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
@@ -227,7 +230,8 @@ public class AuthTest extends JerseyTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
         WebTarget r = client.target(getBaseUri()).path("test");
 
         assertEquals("GET", r.request().get(String.class));
@@ -236,8 +240,9 @@ public class AuthTest extends JerseyTest {
     @Test
     public void testAuthGetWithClientFilter() {
         ClientConfig cc = new ClientConfig();
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        client.register(new HttpBasicAuthFilter("name", "password"));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        client.register(HttpAuthenticationFeature.basic("name", "password"));
         WebTarget r = client.target(getBaseUri()).path("test/filter");
 
         assertEquals("GET", r.request().get(String.class));
@@ -255,7 +260,8 @@ public class AuthTest extends JerseyTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
         WebTarget r = client.target(getBaseUri()).path("test");
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
@@ -264,10 +270,10 @@ public class AuthTest extends JerseyTest {
     @Test
     public void testAuthPostWithClientFilter() {
         ClientConfig cc = new ClientConfig();
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        client.register(new HttpBasicAuthFilter("name", "password"));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        client.register(HttpAuthenticationFeature.basic("name", "password"));
         WebTarget r = client.target(getBaseUri()).path("test/filter");
-
 
         assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
     }
@@ -281,7 +287,8 @@ public class AuthTest extends JerseyTest {
         );
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
         WebTarget r = client.target(getBaseUri()).path("test");
 
         Response response = r.request().delete();
@@ -291,8 +298,9 @@ public class AuthTest extends JerseyTest {
     @Test
     public void testAuthDeleteWithClientFilter() {
         ClientConfig cc = new ClientConfig();
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
-        client.register(new HttpBasicAuthFilter("name", "password"));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        client.register(HttpAuthenticationFeature.basic("name", "password"));
         WebTarget r = client.target(getBaseUri()).path("test/filter");
 
         Response response = r.request().delete();
@@ -308,7 +316,8 @@ public class AuthTest extends JerseyTest {
         );
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
 
         WebTarget r = client.target(getBaseUri()).path("test");
 
@@ -328,7 +337,8 @@ public class AuthTest extends JerseyTest {
 
         ClientConfig cc = new ClientConfig();
         cc.property(ApacheClientProperties.CREDENTIALS_PROVIDER, credentialsProvider);
-        Client client = ClientBuilder.newClient(cc.connector(new ApacheConnector(cc.getConfiguration())));
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
         WebTarget r = client.target(getBaseUri()).path("test");
 
 

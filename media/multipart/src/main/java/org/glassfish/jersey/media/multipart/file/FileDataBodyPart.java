@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,9 +51,8 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
  * An extension of {@link FormDataBodyPart} for associating
  * {@link File} File as a body part entity.
  * <p/>
- * This class may be used to create body parts that a file attachments.
- * Where appropriate the Content-Disposition parameters and Content-Type header
- * will be derived from the file.
+ * This class may be used to create body parts that contains a file attachments.
+ * Appropriate Content-Disposition parameters and Content-Type header will be derived from the file.
  *
  * @author Imran M Yousuf (imran at smartitengineering.com)
  * @author Paul Sandoz (paul.sandoz at oracle.com)

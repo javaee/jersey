@@ -45,7 +45,6 @@ import java.util.logging.Logger;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.test.inmemory.internal.InMemoryConnector;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
@@ -69,7 +68,7 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
 
         @Override
         public ClientConfig getClientConfig() {
-            return new ClientConfig().connector(new InMemoryConnector(baseUri, appHandler));
+            return new ClientConfig().connectorProvider(new InMemoryConnector.Provider(baseUri, appHandler));
         }
 
         @Override

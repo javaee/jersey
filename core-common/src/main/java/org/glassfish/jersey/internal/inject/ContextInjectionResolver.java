@@ -96,7 +96,7 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
 
         ActiveDescriptor<?> ad = serviceLocator.getInjecteeDescriptor(newInjectee);
         if (ad != null) {
-            final ServiceHandle handle = serviceLocator.getServiceHandle(ad);
+            final ServiceHandle handle = serviceLocator.getServiceHandle(ad, newInjectee);
 
             if (isHk2Factory) {
                 return asFactory(handle);

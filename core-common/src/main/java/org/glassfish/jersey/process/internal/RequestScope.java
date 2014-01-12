@@ -150,6 +150,7 @@ public class RequestScope implements Context<RequestScoped> {
 
     @Override
     public <U> U findOrCreate(ActiveDescriptor<U> activeDescriptor, ServiceHandle<?> root) {
+
         final Instance instance = current();
 
         U retVal = instance.get(activeDescriptor);

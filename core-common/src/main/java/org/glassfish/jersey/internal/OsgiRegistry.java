@@ -44,6 +44,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -62,6 +66,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
@@ -84,6 +90,7 @@ import org.osgi.framework.SynchronousBundleListener;
  * does not work in this case within OSGi.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public final class OsgiRegistry implements SynchronousBundleListener {
 
@@ -107,7 +114,8 @@ public final class OsgiRegistry implements SynchronousBundleListener {
      */
     public static synchronized OsgiRegistry getInstance() {
         if (instance == null) {
-            final ClassLoader classLoader = ReflectionHelper.class.getClassLoader();
+
+            final ClassLoader classLoader = AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(ReflectionHelper.class));
             if (classLoader instanceof BundleReference) {
                 BundleContext context = FrameworkUtil.getBundle(OsgiRegistry.class).getBundleContext();
                 if (context != null) { // context could be still null if the current bundle has not been started
@@ -123,7 +131,9 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         final ServiceFinder.ServiceIteratorProvider defaultIterator = new ServiceFinder.DefaultServiceIteratorProvider();
 
         @Override
-        public <T> Iterator<T> createIterator(final Class<T> serviceClass, final String serviceName, ClassLoader loader, boolean ignoreOnClassNotFound) {
+        public <T> Iterator<T> createIterator(
+                final Class<T> serviceClass, final String serviceName, ClassLoader loader, boolean ignoreOnClassNotFound) {
+
             final List<Class<?>> providerClasses = locateAllProviders(serviceName);
             if (!providerClasses.isEmpty()) {
                 return new Iterator<T>() {
@@ -135,6 +145,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
                         return it.hasNext();
                     }
 
+                    @SuppressWarnings("unchecked")
                     @Override
                     public T next() {
                         Class<T> nextClass = (Class<T>) it.next();
@@ -142,7 +153,8 @@ public final class OsgiRegistry implements SynchronousBundleListener {
                             return nextClass.newInstance();
                         } catch (Exception ex) {
                             ServiceConfigurationError sce = new ServiceConfigurationError(serviceName + ": "
-                                    + LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextClass.getName(), serviceClass, ex.getLocalizedMessage()));
+                                    + LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(
+                                    nextClass.getName(), serviceClass, ex.getLocalizedMessage()));
                             sce.initCause(ex);
                             throw sce;
                         }
@@ -158,7 +170,8 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         }
 
         @Override
-        public <T> Iterator<Class<T>> createClassIterator(Class<T> service, String serviceName, ClassLoader loader, boolean ignoreOnClassNotFound) {
+        public <T> Iterator<Class<T>> createClassIterator(
+                Class<T> service, String serviceName, ClassLoader loader, boolean ignoreOnClassNotFound) {
             final List<Class<?>> providerClasses = locateAllProviders(serviceName);
             if (!providerClasses.isEmpty()) {
                 return new Iterator<Class<T>>() {
@@ -190,33 +203,38 @@ public final class OsgiRegistry implements SynchronousBundleListener {
 
         private final String spi;
         private final URL spiRegistryUrl;
+        private final String spiRegistryUrlString;
         private final Bundle bundle;
 
         BundleSpiProvidersLoader(final String spi, final URL spiRegistryUrl, final Bundle bundle) {
             this.spi = spi;
             this.spiRegistryUrl = spiRegistryUrl;
+            this.spiRegistryUrlString = spiRegistryUrl.toExternalForm();
             this.bundle = bundle;
         }
 
         @Override
         public List<Class<?>> call() throws Exception {
+            BufferedReader reader = null;
+
             try {
                 if (LOGGER.isLoggable(Level.FINEST)) {
                     LOGGER.log(Level.FINEST, "Loading providers for SPI: {0}", spi);
                 }
-                final BufferedReader br = new BufferedReader(new InputStreamReader(spiRegistryUrl.openStream(), "UTF-8"));
+                reader = new BufferedReader(new InputStreamReader(spiRegistryUrl.openStream(), "UTF-8"));
                 String providerClassName;
+
                 final List<Class<?>> providerClasses = new ArrayList<Class<?>>();
-                while ((providerClassName = br.readLine()) != null) {
+                while ((providerClassName = reader.readLine()) != null) {
                     if (providerClassName.trim().length() == 0) {
                         continue;
                     }
                     if (LOGGER.isLoggable(Level.FINEST)) {
                         LOGGER.log(Level.FINEST, "SPI provider: {0}", providerClassName);
                     }
-                    providerClasses.add(bundle.loadClass(providerClassName));
+                    providerClasses.add(loadClass(bundle, providerClassName));
                 }
-                br.close();
+
                 return providerClasses;
             } catch (Exception e) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.EXCEPTION_CAUGHT_WHILE_LOADING_SPI_PROVIDERS(), e);
@@ -224,29 +242,36 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             } catch (Error e) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.ERROR_CAUGHT_WHILE_LOADING_SPI_PROVIDERS(), e);
                 throw e;
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException ioe) {
+                        LOGGER.log(Level.FINE, "Error closing SPI registry stream:" + spiRegistryUrl, ioe);
+                    }
+                }
             }
         }
 
         @Override
         public String toString() {
-            return spiRegistryUrl.toString();
+            return spiRegistryUrlString;
         }
 
         @Override
         public int hashCode() {
-            return spiRegistryUrl.hashCode();
+            return spiRegistryUrlString.hashCode();
         }
 
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof BundleSpiProvidersLoader) {
-                return spiRegistryUrl.equals(((BundleSpiProvidersLoader) obj).spiRegistryUrl);
+                return spiRegistryUrlString.equals(((BundleSpiProvidersLoader) obj).spiRegistryUrlString);
             } else {
                 return false;
             }
         }
     }
-
 
     @Override
     public void bundleChanged(BundleEvent event) {
@@ -271,15 +296,21 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         }
     }
 
+    /**
+     * Get URLs of resources from a given package.
+     *
+     * @param packagePath package.
+     * @param classLoader resource class loader.
+     * @return URLs of the located resources.
+     */
     @SuppressWarnings("unchecked")
     public Enumeration<URL> getPackageResources(final String packagePath, final ClassLoader classLoader) {
         List<URL> result = new LinkedList<URL>();
-        classToBundleMapping.clear();
 
         for (Bundle bundle : bundleContext.getBundles()) {
             // Look for resources at the given <packagePath> and at WEB-INF/classes/<packagePath> in case a WAR is being examined.
             for (String bundlePackagePath : new String[]{packagePath, "WEB-INF/classes/" + packagePath}) {
-                final Enumeration<URL> enumeration = (Enumeration<URL>) bundle.findEntries(bundlePackagePath, "*", false);
+                final Enumeration<URL> enumeration = findEntries(bundle, bundlePackagePath, "*", false);
 
                 if (enumeration != null) {
                     while (enumeration.hasMoreElements()) {
@@ -296,7 +327,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             }
 
             // Now interested only in .jar provided by current bundle.
-            final Enumeration<URL> jars = bundle.findEntries("/", "*.jar", true);
+            final Enumeration<URL> jars = findEntries(bundle, "/", "*.jar", true);
             if (jars != null) {
                 while (jars.hasMoreElements()) {
                     final URL jar = jars.nextElement();
@@ -361,7 +392,7 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         if (bundle == null) {
             throw new ClassNotFoundException(className);
         }
-        return bundle.loadClass(className);
+        return loadClass(bundle, className);
     }
 
     /**
@@ -376,9 +407,9 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         final String path = bundleName.substring(0, lastDotIndex).replace('.', '/');
         final String propertiesName = bundleName.substring(lastDotIndex + 1, bundleName.length()) + ".properties";
         for (Bundle bundle : bundleContext.getBundles()) {
-            final Enumeration entries = bundle.findEntries(path, propertiesName, false);
+            final Enumeration<URL> entries = findEntries(bundle, path, propertiesName, false);
             if (entries != null && entries.hasMoreElements()) {
-                final URL entryUrl = (URL) entries.nextElement();
+                final URL entryUrl = entries.nextElement();
                 try {
                     return new PropertyResourceBundle(entryUrl.openStream());
                 } catch (IOException ex) {
@@ -444,10 +475,10 @@ public final class OsgiRegistry implements SynchronousBundleListener {
             lock.writeLock().unlock();
         }
 
-        Enumeration e = bundle.findEntries("META-INF/services/", "*", false);
+        Enumeration<URL> e = findEntries(bundle, "META-INF/services/", "*", false);
         if (e != null) {
             while (e.hasMoreElements()) {
-                final URL u = (URL) e.nextElement();
+                final URL u = e.nextElement();
                 final String url = u.toString();
                 if (url.endsWith("/")) {
                     continue;
@@ -475,5 +506,35 @@ public final class OsgiRegistry implements SynchronousBundleListener {
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    private static Class<?> loadClass(final Bundle bundle, final String className) throws ClassNotFoundException {
+        try {
+            return AccessController.doPrivileged(new PrivilegedExceptionAction<Class<?>>() {
+                @Override
+                public Class<?> run() throws ClassNotFoundException {
+                    return bundle.loadClass(className);
+                }
+            });
+        } catch (PrivilegedActionException ex) {
+            final Exception originalException = ex.getException();
+            if (originalException instanceof ClassNotFoundException) {
+                throw (ClassNotFoundException) originalException;
+            } else if (originalException instanceof RuntimeException) {
+                throw (RuntimeException) originalException;
+            } else {
+                throw new ProcessingException(originalException);
+            }
+        }
+    }
+
+    private static Enumeration<URL> findEntries(final Bundle bundle, final String path, final String fileNamePattern, final boolean recursive) {
+        return AccessController.doPrivileged(new PrivilegedAction<Enumeration<URL>>() {
+            @SuppressWarnings("unchecked")
+            @Override
+            public Enumeration<URL> run() {
+                return bundle.findEntries(path, fileNamePattern, recursive);
+            }
+        });
     }
 }

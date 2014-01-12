@@ -39,40 +39,60 @@
  */
 package org.glassfish.jersey.examples.osgihttpservice.test;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
+
+import javax.inject.Inject;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.UriBuilder;
-
-import org.ops4j.pax.exam.Inject;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 import static org.junit.Assert.assertEquals;
-import static org.ops4j.pax.exam.CoreOptions.equinox;
-import static org.ops4j.pax.exam.CoreOptions.felix;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.wrappedBundle;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
 
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public abstract class AbstractHttpServiceTest {
+
+    @Inject BundleContext bundleContext;
+
+    /** maximum waiting time for runtime initialization and Jersey deployment */
+    public static final long MAX_WAITING_SECONDS =  10L;
+
+    /** Latch for blocking the testing thread until the runtime is ready and Jersey deployed */
+    final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+    private static final int port = getProperty("jersey.config.test.container.port", 8080);
+    private static final String CONTEXT = "/jersey-http-service";
+    private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT).build();
+    private static final String BundleLocationProperty = "jersey.bundle.location";
+
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractHttpServiceTest.class.getName());
 
     public abstract List<Option> httpServiceProviderOptions();
     public abstract List<Option> osgiRuntimeOptions();
@@ -93,13 +113,6 @@ public abstract class AbstractHttpServiceTest {
                 // do not remove the following line
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
 
-                repositories("http://repo1.maven.org/maven2",
-                        "http://repository.apache.org/content/groups/snapshots-group",
-                        "http://repository.ops4j.org/maven2",
-                        "http://svn.apache.org/repos/asf/servicemix/m2-repo",
-                        "http://repository.springsource.com/maven/bundles/release",
-                        "http://repository.springsource.com/maven/bundles/external",
-                        "http://maven.java.net/content/repositories/snapshots/"),
                 // uncomment for logging (do not remove the following two lines)
                 // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
                 // mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
@@ -108,7 +121,7 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
 
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn"),
-                mavenBundle().groupId("org.osgi").artifactId("org.osgi.compendium").versionAsInProject(),
+                junitBundles(),
 
                 // Google Guava
                 mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
@@ -135,7 +148,7 @@ public abstract class AbstractHttpServiceTest {
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").versionAsInProject()
         ));
 
-        final String localRepository = System.getProperty("localRepository");
+        final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
         if (localRepository != null) {
             options = new ArrayList<Option>(options);
             options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
@@ -144,27 +157,16 @@ public abstract class AbstractHttpServiceTest {
         return options;
     }
 
-
-    public List<Option> felixOptions() {
-        return Arrays.asList(options(
-                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.eventadmin").versionAsInProject(),
-                felix()));
-    }
-
-    public List<Option> equinoxOptions() {
-        return Arrays.asList(options(
-                mavenBundle().groupId("org.eclipse.equinox").artifactId("event").versionAsInProject(),
-                equinox()));
-    }
-
     public List<Option> grizzlyOptions() {
         return Arrays.asList(options(
-                mavenBundle().groupId("com.sun.grizzly.osgi").artifactId("grizzly-httpservice-bundle").versionAsInProject()));
+                mavenBundle().groupId("com.sun.grizzly.osgi").artifactId("grizzly-httpservice-bundle").versionAsInProject()
+        ));
     }
 
     public List<Option> jettyOptions() {
         return Arrays.asList(options(
-                mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-jetty-bundle").versionAsInProject()));
+                mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-jetty-bundle").versionAsInProject(),
+                mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-extender-war").versionAsInProject()));
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -172,7 +174,7 @@ public abstract class AbstractHttpServiceTest {
 
         @Override
         public void handleEvent(Event event) {
-            semaphore.release();
+            countDownLatch.countDown();
         }
 
         public WebEventHandler(String handlerName) {
@@ -185,14 +187,6 @@ public abstract class AbstractHttpServiceTest {
         }
     }
 
-    final Semaphore semaphore = new Semaphore(0);
-
-    private static final int port = getProperty("jersey.config.test.container.port", 8080);
-    private static final String CONTEXT = "/jersey-http-service";
-    private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT).build();
-    private static final String BundleLocationProperty = "jersey.bundle.location";
-
-    @Inject BundleContext bundleContext;
 
     @SuppressWarnings("UnusedDeclaration")
     @Configuration
@@ -207,23 +201,48 @@ public abstract class AbstractHttpServiceTest {
     }
 
     public void defaultMandatoryBeforeMethod() {
+        LOGGER.fine("Registering event handler for jersey/test/DEPLOYED");
         bundleContext.registerService(EventHandler.class.getName(), new WebEventHandler("Deploy Handler"), getHandlerServiceProperties("jersey/test/DEPLOYED"));
     }
 
     public void defaultHttpServiceTestMethod() throws Exception {
-        bundleContext.installBundle(System.getProperty(BundleLocationProperty)).start();
+        // log the list of bundles and result of the attempt to start
+        StringBuilder sb = new StringBuilder();
+        sb.append("-- Bundle list -- \n");
+        for (Bundle b : bundleContext.getBundles()) {
+            sb.append(String.format("%1$5s", "[" + b.getBundleId() + "]")).append(" ")
+                    .append(String.format("%1$-70s", b.getSymbolicName())).append(" | ")
+                    .append(String.format("%1$-20s", b.getVersion())).append(" |");
+            try {
+                b.start();
+                sb.append(" STARTED  | ");
+            } catch (BundleException e) {
+                sb.append(" *FAILED* | ").append(e.getMessage());
+            }
+            sb.append(b.getLocation()).append("\n");
+        }
+        sb.append("-- \n\n");
+        LOGGER.fine(sb.toString());
 
-        semaphore.acquire();  // wait till the servlet gets really registered
+        // start the example bundle
+        bundleContext.installBundle(
+                AccessController.doPrivileged(PropertiesHelper.getSystemProperty(BundleLocationProperty))
+        ).start();
+
+        LOGGER.fine("Waiting for jersey/test/DEPLOYED event with timeout " + MAX_WAITING_SECONDS + " seconds...");
+        if (!countDownLatch.await(MAX_WAITING_SECONDS, TimeUnit.SECONDS)) {
+            throw new TimeoutException("The event jersey/test/DEPLOYED did not arrive in "
+                                        + MAX_WAITING_SECONDS
+                                        + " seconds. Waiting timed out.");
+        }
+
 
         Client c = ClientBuilder.newClient();
-
         final WebTarget target = c.target(baseUri);
 
-        String result;
+        String result = target.path("/status").request().build("GET").invoke().readEntity(String.class);
 
-        result = target.path("/status").request().build("GET").invoke().readEntity(String.class);
-
-        System.out.println("JERSEY RESULT = " + result);
+        LOGGER.info("JERSEY RESULT = " + result);
         assertEquals("active", result);
     }
 
@@ -231,7 +250,7 @@ public abstract class AbstractHttpServiceTest {
         if (null == varName) {
             return defaultValue;
         }
-        String varValue = System.getProperty(varName);
+        String varValue = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(varName));
         if (null != varValue) {
             try {
                 return Integer.parseInt(varValue);

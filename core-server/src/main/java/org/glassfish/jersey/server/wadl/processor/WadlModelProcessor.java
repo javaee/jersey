@@ -52,6 +52,7 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;
@@ -69,6 +70,7 @@ import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.server.model.internal.ModelProcessorUtil;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlResource;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 
 import com.google.common.collect.Lists;
 
@@ -103,7 +105,7 @@ public class WadlModelProcessor implements ModelProcessor {
             return resourceModel;
         }
 
-        final ResourceModel.Builder builder = ModelProcessorUtil.enhanceResourceModel(resourceModel, false, methodList);
+        final ResourceModel.Builder builder = ModelProcessorUtil.enhanceResourceModel(resourceModel, false, methodList, true);
 
         // Do not add WadlResource if already present in the classes (i.e. added during scanning).
         if (!configuration.getClasses().contains(WadlResource.class)) {
@@ -131,10 +133,17 @@ public class WadlModelProcessor implements ModelProcessor {
 
             final RuntimeResource resource = extendedUriInfo.getMatchedRuntimeResources().get(0);
             // TODO: support multiple resources, see ignored tests in WadlResourceTest.Wadl8Test
-            final Application wadlApplication = wadlApplicationContext.getApplication(
-                    containerRequestContext.getUriInfo(),
-                    resource.getResources().get(0));
+            final UriInfo uriInfo = containerRequestContext.getUriInfo();
 
+            final Application wadlApplication = wadlApplicationContext.getApplication(uriInfo,
+                    resource.getResources().get(0), WadlUtils.isDetailedWadlRequested(uriInfo));
+
+            if (wadlApplication == null) {
+                // wadlApplication can be null if limited WADL is requested and all content
+                // of wadlApplication is invisible in limited WADL
+                return Response.status(Response.Status.NOT_FOUND).build();
+
+            }
 
             byte[] bytes;
             try {
@@ -163,6 +172,6 @@ public class WadlModelProcessor implements ModelProcessor {
         if (disabled) {
             return resourceModel;
         }
-        return ModelProcessorUtil.enhanceResourceModel(resourceModel, true, methodList).build();
+        return ModelProcessorUtil.enhanceResourceModel(resourceModel, true, methodList, true).build();
     }
 }

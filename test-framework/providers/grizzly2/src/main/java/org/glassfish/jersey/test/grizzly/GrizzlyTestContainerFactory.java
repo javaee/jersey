@@ -96,7 +96,7 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.log(Level.INFO, "Stopping GrizzlyTestContainer...");
             }
-            this.server.stop();
+            this.server.shutdownNow();
         }
     }
 

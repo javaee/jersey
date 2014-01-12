@@ -96,10 +96,10 @@ public class ContactCardTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(final ClientConfig clientConfig) {
-        super.configureClient(clientConfig);
+    protected void configureClient(final ClientConfig config) {
+        super.configureClient(config);
 
-        clientConfig.register(MoxyJsonFeature.class);
+        config.register(MoxyJsonFeature.class);
     }
 
     @Override

@@ -1,1 +1,1 @@
-org.glassfish.jersey.gf.ejb.EjbComponentProvider
+org.glassfish.jersey.gf.ejb.internal.EjbComponentProvider

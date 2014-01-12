@@ -59,6 +59,7 @@ import javax.inject.Singleton;
 import javax.xml.bind.Marshaller;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.model.ExtendedResource;
 import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 
 import com.sun.research.ws.wadl.Application;
@@ -69,11 +70,14 @@ import com.sun.research.ws.wadl.Application;
  */
 @Singleton
 @Path("application.wadl")
+@ExtendedResource
 public final class WadlResource {
 
     public static final String HTTPDATEFORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
 
-    private URI lastBaseUri;
+    private volatile URI lastBaseUri;
+    private volatile boolean lastDetailedWadl;
+
     private byte[] wadlXmlRepresentation;
     private String lastModified;
 
@@ -85,6 +89,10 @@ public final class WadlResource {
         this.lastModified = new SimpleDateFormat(HTTPDATEFORMAT).format(new Date());
     }
 
+    private boolean isCached(UriInfo uriInfo, boolean detailedWadl) {
+        return (lastBaseUri != null && lastBaseUri.equals(uriInfo.getBaseUri()) && lastDetailedWadl == detailedWadl);
+    }
+
     @Produces({"application/vnd.sun.wadl+xml", "application/xml"})
     @GET
     public synchronized Response getWadl(@Context UriInfo uriInfo) {
@@ -93,12 +101,15 @@ public final class WadlResource {
                 return Response.status(Response.Status.NOT_FOUND).build();
             }
 
-            if ((wadlXmlRepresentation == null) || ((lastBaseUri != null) && !lastBaseUri.equals(uriInfo.getBaseUri()))) {
+            final boolean detailedWadl = WadlUtils.isDetailedWadlRequested(uriInfo);
+            if ((wadlXmlRepresentation == null) || (!isCached(uriInfo, detailedWadl))) {
                 this.lastBaseUri = uriInfo.getBaseUri();
+                lastDetailedWadl = detailedWadl;
                 this.lastModified = new SimpleDateFormat(HTTPDATEFORMAT).format(new Date());
 
-                ApplicationDescription applicationDescription =
-                        wadlContext.getApplication(uriInfo);
+                ApplicationDescription applicationDescription = wadlContext.getApplication(uriInfo,
+                        detailedWadl);
+
                 Application application = applicationDescription.getApplication();
 
                 try {
@@ -119,6 +130,7 @@ public final class WadlResource {
         }
     }
 
+
     @Produces({"application/xml"})
     @GET
     @Path("{path}")
@@ -132,7 +144,7 @@ public final class WadlResource {
             }
 
             ApplicationDescription applicationDescription =
-                    wadlContext.getApplication(uriInfo);
+                    wadlContext.getApplication(uriInfo, WadlUtils.isDetailedWadlRequested(uriInfo));
 
             // Fail is we don't have any metadata for this path
             ApplicationDescription.ExternalGrammar externalMetadata = applicationDescription.getExternalGrammar(path);
@@ -149,4 +161,5 @@ public final class WadlResource {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_RESOURCE_EXTERNAL_GRAMMAR(), e);
         }
     }
+
 }

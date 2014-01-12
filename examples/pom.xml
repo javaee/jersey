@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey</groupId>
         <artifactId>project</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.6-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.examples</groupId>
@@ -58,6 +58,7 @@
     <description>Jersey examples</description>
 
     <modules>
+        <module>assemblies</module>
         <module>bean-validation-webapp</module>
         <module>bookmark</module>
         <module>bookmark-em</module>
@@ -65,13 +66,17 @@
         <module>cdi-webapp</module>
         <module>clipboard</module>
         <module>clipboard-programmatic</module>
+        <module>entity-filtering</module>
+        <module>entity-filtering-security</module>
         <module>extended-wadl-webapp</module>
         <module>exception-mapping</module>
         <module>freemarker-webapp</module>
+        <module>flight-mgmt-webapp</module>
         <module>helloworld</module>
         <module>helloworld-programmatic</module>
         <module>helloworld-pure-jax-rs</module>
         <module>helloworld-webapp</module>
+        <module>helloworld-spring-webapp</module>
         <module>http-trace</module>
         <module>https-clientserver-grizzly</module>
         <module>https-server-glassfish</module>
@@ -87,15 +92,21 @@
         <module>managed-client</module>
         <module>managed-client-webapp</module>
         <module>managed-client-simple-webapp</module>
+        <module>monitoring-webapp</module>
         <module>multipart-webapp</module>
         <module>osgi-helloworld-webapp</module>
         <module>osgi-http-service</module>
+        <module>oauth-client-twitter</module>
+        <module>oauth2-client-google-webapp</module>
         <module>reload</module>
         <module>server-async</module>
         <module>server-async-managed</module>
         <module>server-async-standalone</module>
         <module>server-sent-events</module>
+        <module>servlet3-webapp</module>
         <module>simple-console</module>
+        <module>shortener-webapp</module>
+        <module>sparklines</module>
         <module>sse-item-store-webapp</module>
         <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
@@ -122,17 +133,26 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
+                    <dependencies>
+                        <!-- Contains shared Jersey example assembly descriptors-->
+                        <dependency>
+                            <groupId>org.glassfish.jersey.examples</groupId>
+                            <artifactId>assemblies</artifactId>
+                            <version>${project.version}</version>
+                        </dependency>
+                    </dependencies>
                     <executions>
                         <execution>
                             <id>assemble-src-zip</id>
                             <phase>package</phase>
                             <goals>
-                                <goal>attached</goal>
+                                <goal>single</goal>
                             </goals>
                             <configuration>
-                                <descriptors>
-                                    <descriptor>../etc/project-src-assembly.xml</descriptor>
-                                </descriptors>
+                                <descriptorRefs>
+                                    <!-- Reference to a descriptor in org.glassfish.jersey.examples:assemblies module -->
+                                    <descriptorRef>src-zip</descriptorRef>
+                                </descriptorRefs>
                             </configuration>
                         </execution>
                     </executions>
@@ -151,4 +171,5 @@
             </plugins>
         </pluginManagement>
     </build>
+
 </project>

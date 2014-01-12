@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,13 +39,24 @@
  */
 package org.glassfish.jersey.tests.e2e.entity;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -53,39 +64,107 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class MultipartTest extends JerseyTest {
+
     @Path("/")
     public static class MultipartResource {
+
         @POST
+        @Path("filename")
         @Consumes(MediaType.MULTIPART_FORM_DATA)
         @Produces(MediaType.TEXT_PLAIN)
-        public String post(FormDataMultiPart entity) {
+        public String filename(FormDataMultiPart entity) {
             return entity.getField("text").getValue() + entity.getField("file").getContentDisposition().getFileName();
+        }
+
+        @POST
+        @Path("mbr")
+        @Consumes(MediaType.MULTIPART_FORM_DATA)
+        @Produces(MediaType.TEXT_PLAIN)
+        public Response mbr(final FormDataMultiPart entity) {
+            entity.getField("text").getValueAs(MultipartResource.class);
+
+            return Response.ok("ko").build();
+        }
+    }
+
+    public static class MessageBodyProvider implements MessageBodyReader<MultipartResource>, MessageBodyWriter<MultipartResource> {
+
+        @Override
+        public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                                  final MediaType mediaType) {
+            return true;
+        }
+
+        @Override
+        public MultipartResource readFrom(final Class<MultipartResource> type, final Type genericType,
+                                          final Annotation[] annotations, final MediaType mediaType,
+                                          final MultivaluedMap<String, String> httpHeaders,
+                                          final InputStream entityStream) throws IOException, WebApplicationException {
+            throw new IOException("IOE");
+        }
+
+        @Override
+        public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                                   final MediaType mediaType) {
+            return true;
+        }
+
+        @Override
+        public long getSize(final MultipartResource multipartResource, final Class<?> type, final Type genericType,
+                            final Annotation[] annotations, final MediaType mediaType) {
+            return -1;
+        }
+
+        @Override
+        public void writeTo(final MultipartResource multipartResource, final Class<?> type, final Type genericType,
+                            final Annotation[] annotations, final MediaType mediaType,
+                            final MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream)
+                throws IOException, WebApplicationException {
+
+            throw new IOException("IOE");
         }
     }
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(MultipartResource.class).register(new MultiPartFeature());
+        return new ResourceConfig(MultipartResource.class, MessageBodyProvider.class).register(new MultiPartFeature());
     }
 
     @Test
     public void testFileNameInternetExplorer() throws Exception {
-        assertEquals("bhhklbpom.xml", target().request()
+        final InputStream entity = getClass().getResourceAsStream("multipart-testcase.txt");
+        final Response response = target("filename")
+                .request()
                 .header("User-Agent", "Mozilla/5.0 (Windows; U; MSIE 7.0; Windows NT 6.0; en-US)")
-                .post(Entity.entity(getClass().getResourceAsStream("multipart-testcase.txt"),
-                        "multipart/form-data; boundary=---------------------------7dc941520888"), String.class));
+                .post(Entity.entity(entity, "multipart/form-data; boundary=---------------------------7dc941520888"));
+
+        assertThat(response.readEntity(String.class), equalTo("bhhklbpom.xml"));
     }
 
     @Test
     public void testFileName() throws Exception {
-        assertEquals("bhhklbC:javaprojectsmultipart-testcasepom.xml", target().request()
-                .post(Entity.entity(getClass().getResourceAsStream("multipart-testcase.txt"),
-                        "multipart/form-data; boundary=---------------------------7dc941520888"), String.class));
+        final InputStream entity = getClass().getResourceAsStream("multipart-testcase.txt");
+        final Response response = target("filename")
+                .request()
+                .post(Entity.entity(entity, "multipart/form-data; boundary=---------------------------7dc941520888"));
+
+        assertThat(response.readEntity(String.class), equalTo("bhhklbC:javaprojectsmultipart-testcasepom.xml"));
+    }
+
+    @Test
+    public void testMbrExceptionServer() throws Exception {
+        final InputStream entity = getClass().getResourceAsStream("multipart-testcase.txt");
+        final Response response = target("mbr")
+                .request()
+                .post(Entity.entity(entity, "multipart/form-data; boundary=---------------------------7dc941520888"));
+
+        assertThat(response.getStatus(), equalTo(500));
     }
 }

@@ -39,16 +39,15 @@
  */
 package org.glassfish.jersey.server;
 
+import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ReaderInterceptor;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
-import org.glassfish.jersey.internal.inject.RequestInjectee;
-import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
-import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
@@ -74,13 +73,14 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
     @Inject
     private Provider<UriRoutingContext> uriRoutingCtxProvider;
     @Inject
-    private UriInfoInjectee uriInfoInjectee;
+    private Provider<Ref<UriInfo>> uriInfoRef;
     @Inject
-    private HttpHeadersInjectee httpHeadersInjectee;
+    private Provider<Ref<ResourceInfo>> resourceInfoRef;
     @Inject
-    private RequestInjectee requestInjectee;
+    private Provider<Ref<HttpHeaders>> httpHeadersRef;
     @Inject
-    private SecurityContextInjectee securityContextInjectee;
+    private Provider<Ref<Request>> requestRef;
+
 
     /**
      * Initialize the request references using the incoming request and register
@@ -103,7 +103,8 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
 
         final UriRoutingContext uriRoutingCtx = uriRoutingCtxProvider.get();
 
-        containerRequest.setUriInfo(uriRoutingCtx);
+        containerRequest.setUriRoutingContext(uriRoutingCtx);
+        containerRequest.getRequestEventBuilder().setExtendedUriInfo(uriRoutingCtx);
 
         containerRequest.setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
             @Override
@@ -113,11 +114,10 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
         });
 
         // JAX-RS proxies initialization
-        uriInfoInjectee.set(uriRoutingCtx);
-        httpHeadersInjectee.set(containerRequest);
-        requestInjectee.set(containerRequest);
-        securityContextInjectee.setRequest(containerRequest);
-
+        requestRef.get().set(containerRequest);
+        uriInfoRef.get().set(uriRoutingCtx);
+        resourceInfoRef.get().set(uriRoutingCtx);
+        httpHeadersRef.get().set(containerRequest);
 
         return containerRequest;
     }

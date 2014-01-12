@@ -42,12 +42,18 @@ package org.glassfish.jersey.examples.extendedwadl;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.security.AccessController;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Logger;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import javax.inject.Inject;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -59,32 +65,34 @@ import org.glassfish.jersey.examples.extendedwadl.resources.ItemsResource;
 import org.glassfish.jersey.examples.extendedwadl.resources.MyApplication;
 import org.glassfish.jersey.examples.extendedwadl.util.Examples;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.ops4j.pax.swissbox.tinybundles.core.TinyBundles;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.w3c.dom.Document;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.ops4j.pax.exam.CoreOptions.felix;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.rawPaxRunnerOption;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.repositories;
+import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
-import aQute.lib.osgi.Constants;
 import static junit.framework.Assert.assertEquals;
 
 /**
@@ -92,9 +100,15 @@ import static junit.framework.Assert.assertEquals;
  * @author Naresh
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ExtendedWadlWebappOsgiTest {
+
+    @Inject
+    BundleContext bundleContext;
+
+    private final static Logger LOGGER = Logger.getLogger(ExtendedWadlWebappOsgiTest.class.getName());
 
     private static final URI baseUri = UriBuilder.
             fromUri("http://localhost").
@@ -103,38 +117,19 @@ public class ExtendedWadlWebappOsgiTest {
 
     @Configuration
     public static Option[] configuration() {
-        return options(
+        List<Option> options = Arrays.asList(options(
                 // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
-
                 systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
-
-                rawPaxRunnerOption("clean"),
-
-                // define maven repositories
-                repositories("http://repo1.maven.org/maven2",
-                        "http://repository.apache.org/content/groups/snapshots-group",
-                        "http://repository.ops4j.org/maven2",
-                        "http://svn.apache.org/repos/asf/servicemix/m2-repo",
-                        "http://repository.springsource.com/maven/bundles/release",
-                        "http://repository.springsource.com/maven/bundles/external",
-                        "http://maven.java.net/content/repositories/snapshots"),
-
-                // log
-                // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
-                // mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
-
-                // felix config admin
-                // mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.4"),
-
-                // felix preference service
-                // mavenBundle("org.apache.felix", "org.apache.felix.prefs","1.0.2"),
-
 
                 // javax.annotation must go first!
                 mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
 
                 // Google Guava
                 mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
+
+                junitBundles(),
+
+                mavenBundle("org.ops4j.pax.url", "pax-url-mvn"),
 
                 // HK2
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-api").versionAsInProject(),
@@ -160,39 +155,51 @@ public class ExtendedWadlWebappOsgiTest {
                 mavenBundle().groupId("javax.validation").artifactId("validation-api").versionAsInProject(),
 
                 // Grizzly
-                systemPackage("sun.misc"),
+                systemPackage("sun.misc"),       // required by grizzly-framework
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-framework").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-rcm").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-server").versionAsInProject(),
 
                 // Jersey Grizzly
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http")
                         .versionAsInProject(),
-                provision(TinyBundles.newBundle()
-                        .add(MyApplication.class)
-                        .add(ItemResource.class)
-                        .add(ItemsResource.class)
-                        .add(Examples.class)
-                        .add(SampleWadlGeneratorConfig.class)
-                        .add(Item.class)
-                        .add(Items.class)
-                        .add(ObjectFactory.class)
-                        .add("application-doc.xml", ClassLoader.getSystemResourceAsStream("application-doc.xml"))
-                        .add("application-grammars.xml", ClassLoader.getSystemResourceAsStream("application-grammars.xml"))
-                        .add("resourcedoc.xml", ClassLoader.getSystemResourceAsStream("resourcedoc.xml"))
-                        .set(Constants.EXPORT_PACKAGE, MyApplication.class.getPackage().getName() + "," + SampleWadlGeneratorConfig.class.getPackage().getName())
-                        .set(Constants.IMPORT_PACKAGE, "*")
-                        .set(Constants.BUNDLE_SYMBOLICNAME, "webapp").build(TinyBundles.withBnd())),
-                // start felix framework
-                felix());
+
+                // tinybundles + required dependencies
+                mavenBundle().groupId("org.ops4j.pax.tinybundles").artifactId("tinybundles").versionAsInProject(),
+                mavenBundle().groupId("biz.aQute.bnd").artifactId("bndlib").versionAsInProject(),
+
+                // create ad-hoc bundle
+                provision(
+                        bundle()
+                                .add(MyApplication.class)
+                                .add(ItemResource.class)
+                                .add(ItemsResource.class)
+                                .add(Examples.class)
+                                .add(SampleWadlGeneratorConfig.class)
+                                .add(Item.class)
+                                .add(Items.class)
+                                .add(ObjectFactory.class)
+                                .add("application-doc.xml", ClassLoader.getSystemResourceAsStream("application-doc.xml"))
+                                .add("application-grammars.xml", ClassLoader.getSystemResourceAsStream("application-grammars.xml"))
+                                .add("resourcedoc.xml", ClassLoader.getSystemResourceAsStream("resourcedoc.xml"))
+                                .set("Export-Package", MyApplication.class.getPackage().getName() + "," + SampleWadlGeneratorConfig.class.getPackage().getName())
+                                .set("DynamicImport-Package", "*")
+                                .set("Bundle-SymbolicName", "webapp").build())
+            )
+        );
+        final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
+        if (localRepository != null) {
+            options = new ArrayList<Option>(options);
+            options.add(systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepository));
+        }
+        return options.toArray(new Option[options.size()]);
     }
 
 
     ResourceConfig createResourceConfig() {
         final ResourceConfig resourceConfig = new ResourceConfig(new MyApplication().getClasses());
-        resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG,
-                SampleWadlGeneratorConfig.class.getName());
+        resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG, SampleWadlGeneratorConfig.class.getName());
+
         return resourceConfig;
     }
 
@@ -204,15 +211,46 @@ public class ExtendedWadlWebappOsgiTest {
     @Test
     public void testExtendedWadl() throws Exception {
 
-        final ResourceConfig resourceConfig = createResourceConfig();
+        // TODO - temporary workaround
+        // This is a workaround related to issue JERSEY-2093; grizzly (1.9.5) needs to have the correct context
+        // classloader set
+        ClassLoader myClassLoader = this.getClass().getClassLoader();
 
+        for (Bundle bundle : bundleContext.getBundles()) {
+            if ("webapp".equals(bundle.getSymbolicName())) {
+                myClassLoader = bundle.loadClass("org.glassfish.jersey.examples.extendedwadl.resources.MyApplication").getClassLoader();
+                break;
+            }
+        }
+
+        Thread.currentThread().setContextClassLoader(myClassLoader);
+        // END of workaround - the entire block can be deleted after grizzly is updated to recent version
+
+        // List all the OSGi bundles
+        StringBuilder sb = new StringBuilder();
+        sb.append("-- Bundle list -- \n");
+        for (Bundle b : bundleContext.getBundles()) {
+            sb.append(String.format("%1$5s", "[" + b.getBundleId() + "]")).append(" ")
+                    .append(String.format("%1$-70s", b.getSymbolicName())).append(" | ")
+                    .append(String.format("%1$-20s", b.getVersion())).append(" |");
+            try {
+                b.start();
+                sb.append(" STARTED  | ");
+            } catch (BundleException e) {
+                sb.append(" *FAILED* | ").append(e.getMessage());
+            }
+            sb.append(b.getLocation()).append("\n");
+        }
+        sb.append("-- \n\n");
+        LOGGER.fine(sb.toString());
+
+        final ResourceConfig resourceConfig = createResourceConfig();
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
         final Client client = ClientBuilder.newClient();
-
         final Response response = client.target(baseUri).path("application.wadl").request(MediaTypes.WADL).buildGet().invoke();
 
         String wadl = response.readEntity(String.class);
-        System.out.println("RESULT = " + wadl);
+        LOGGER.info("RESULT = " + wadl);
 
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
@@ -220,24 +258,39 @@ public class ExtendedWadlWebappOsgiTest {
 
         assertFalse(wadl.contains("application.wadl/xsd0.xsd"));
 
-        server.stop();
+        server.shutdownNow();
     }
 
     @Test
     public void testWadlOptionsMethod() throws Exception {
+        // TODO - temporary workaround
+        // This is a workaround related to issue JERSEY-2093; grizzly (1.9.5) needs to have the correct context
+        // classloader set
+        ClassLoader myClassLoader = this.getClass().getClassLoader();
+        for (Bundle bundle : bundleContext.getBundles()) {
+            if ("webapp".equals(bundle.getSymbolicName())) {
+                myClassLoader = bundle.loadClass("org.glassfish.jersey.examples.extendedwadl.resources.MyApplication").getClassLoader();
+                break;
+            }
+        }
+
+        Thread.currentThread().setContextClassLoader(myClassLoader);
+        // END of workaround; The entire block can be removed after grizzly is migrated to more recent version
 
         final ResourceConfig resourceConfig = createResourceConfig();
-
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
         final Client client = ClientBuilder.newClient();
 
-        String wadl = client.target(baseUri).path("items").request(MediaTypes.WADL).options(String.class);
+        String wadl = client.target(baseUri).path("items").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                .request(MediaTypes.WADL).options(String.class);
 
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));
+
         checkWadl(wadl, baseUri);
-        server.stop();
+
+        server.shutdownNow();
     }
 
 

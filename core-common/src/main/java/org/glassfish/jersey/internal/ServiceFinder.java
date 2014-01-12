@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,6 +47,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.ReflectPermission;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -192,6 +194,10 @@ public final class ServiceFinder<T> implements Iterable<T> {
         }
     }
 
+    private static ClassLoader _getContextClassLoader() {
+        return AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA());
+    }
+
     /**
      * Locates and incrementally instantiates the available providers of a
      * given service using the given class loader.
@@ -280,7 +286,7 @@ public final class ServiceFinder<T> implements Iterable<T> {
     public static <T> ServiceFinder<T> find(Class<T> service)
             throws ServiceConfigurationError {
         return find(service,
-                Thread.currentThread().getContextClassLoader(),
+                _getContextClassLoader(),
                 false);
     }
 
@@ -306,7 +312,7 @@ public final class ServiceFinder<T> implements Iterable<T> {
     public static <T> ServiceFinder<T> find(Class<T> service,
                                             boolean ignoreOnClassNotFound) throws ServiceConfigurationError {
         return find(service,
-                Thread.currentThread().getContextClassLoader(),
+                _getContextClassLoader(),
                 ignoreOnClassNotFound);
     }
 
@@ -322,7 +328,7 @@ public final class ServiceFinder<T> implements Iterable<T> {
      * @return the service finder
      */
     public static ServiceFinder<?> find(String serviceName) throws ServiceConfigurationError {
-        return new ServiceFinder<Object>(Object.class, serviceName, Thread.currentThread().getContextClassLoader(), false);
+        return new ServiceFinder<Object>(Object.class, serviceName, _getContextClassLoader(), false);
     }
 
     /**
@@ -545,32 +551,36 @@ public final class ServiceFinder<T> implements Iterable<T> {
                 nextName = pending.next();
                 if (ignoreOnClassNotFound) {
                     try {
-                        ReflectionHelper.classForNameWithException(nextName, loader);
+                        AccessController.doPrivileged(ReflectionHelper.classForNameWithExceptionPEA(nextName, loader));
                     } catch (ClassNotFoundException ex) {
-                        // Provider implementation not found
-                        if (LOGGER.isLoggable(Level.CONFIG)) {
-                            LOGGER.log(Level.CONFIG,
-                                    LocalizationMessages.PROVIDER_NOT_FOUND(nextName, service));
+                        handleClassNotFoundException();
+                    } catch (PrivilegedActionException pae) {
+                        final Throwable thrown = pae.getException();
+                        if (thrown instanceof ClassNotFoundException) {
+                            handleClassNotFoundException();
+                        } else if (thrown instanceof NoClassDefFoundError) {
+                            // Dependent class of provider not found
+                            if (LOGGER.isLoggable(Level.CONFIG)) {
+                                // This assumes that ex.getLocalizedMessage() returns
+                                // the name of a dependent class that is not found
+                                LOGGER.log(Level.CONFIG,
+                                        LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_NOT_FOUND(
+                                        thrown.getLocalizedMessage(), nextName, service));
+                            }
+                            nextName = null;
+                        } else if (thrown instanceof ClassFormatError) {
+                            // Dependent class of provider not found
+                            if (LOGGER.isLoggable(Level.CONFIG)) {
+                                LOGGER.log(Level.CONFIG,
+                                        LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_FORMAT_ERROR(
+                                        thrown.getLocalizedMessage(), nextName, service));
+                            }
+                            nextName = null;
+                        } else if (thrown instanceof RuntimeException) {
+                            throw (RuntimeException)thrown;
+                        } else {
+                            throw new IllegalStateException(thrown);
                         }
-                        nextName = null;
-                    } catch (NoClassDefFoundError ex) {
-                        // Dependent class of provider not found
-                        if (LOGGER.isLoggable(Level.CONFIG)) {
-                            // This assumes that ex.getLocalizedMessage() returns
-                            // the name of a dependent class that is not found
-                            LOGGER.log(Level.CONFIG,
-                                    LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_NOT_FOUND(
-                                            ex.getLocalizedMessage(), nextName, service));
-                        }
-                        nextName = null;
-                    } catch (ClassFormatError ex) {
-                        // Dependent class of provider not found
-                        if (LOGGER.isLoggable(Level.CONFIG)) {
-                            LOGGER.log(Level.CONFIG,
-                                    LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_FORMAT_ERROR(
-                                            ex.getLocalizedMessage(), nextName, service));
-                        }
-                        nextName = null;
                     }
                 }
             }
@@ -579,6 +589,15 @@ public final class ServiceFinder<T> implements Iterable<T> {
 
         public void remove() {
             throw new UnsupportedOperationException();
+        }
+
+        private void handleClassNotFoundException() {
+            // Provider implementation not found
+            if (LOGGER.isLoggable(Level.CONFIG)) {
+                LOGGER.log(Level.CONFIG,
+                        LocalizationMessages.PROVIDER_NOT_FOUND(nextName, service));
+            }
+            nextName = null;
         }
     }
 
@@ -601,22 +620,38 @@ public final class ServiceFinder<T> implements Iterable<T> {
             String cn = nextName;
             nextName = null;
             try {
-                return ReflectionHelper.classForNameWithException(cn, loader);
+
+                Class<T> tClass = AccessController.doPrivileged(ReflectionHelper.<T>classForNameWithExceptionPEA(cn, loader));
+
+                if (LOGGER.isLoggable(Level.FINEST)) {
+                    LOGGER.log(Level.FINEST, "Loading next class: " + tClass.getName());
+                }
+
+                return tClass;
+
             } catch (ClassNotFoundException ex) {
                 fail(serviceName,
                         LocalizationMessages.PROVIDER_NOT_FOUND(cn, service));
-            } catch (NoClassDefFoundError ex) {
-                fail(serviceName,
-                        LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_NOT_FOUND(
-                                ex.getLocalizedMessage(), cn, service));
-            } catch (ClassFormatError ex) {
-                fail(serviceName,
-                        LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_FORMAT_ERROR(
-                                ex.getLocalizedMessage(), cn, service));
-            } catch (Exception x) {
-                fail(serviceName,
-                        LocalizationMessages.PROVIDER_CLASS_COULD_NOT_BE_LOADED(cn, service, x.getLocalizedMessage()),
-                        x);
+            } catch (PrivilegedActionException pae) {
+
+                final Throwable thrown = pae.getCause();
+
+                if (thrown instanceof ClassNotFoundException) {
+                    fail(serviceName,
+                            LocalizationMessages.PROVIDER_NOT_FOUND(cn, service));
+                } else if (thrown instanceof NoClassDefFoundError) {
+                    fail(serviceName,
+                            LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_NOT_FOUND(
+                            thrown.getLocalizedMessage(), cn, service));
+                } else if (thrown instanceof ClassFormatError) {
+                    fail(serviceName,
+                            LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_FORMAT_ERROR(
+                            thrown.getLocalizedMessage(), cn, service));
+                } else {
+                    fail(serviceName,
+                            LocalizationMessages.PROVIDER_CLASS_COULD_NOT_BE_LOADED(cn, service, thrown.getLocalizedMessage()),
+                            thrown);
+                }
             }
 
             return null;    /* This cannot happen */
@@ -651,19 +686,29 @@ public final class ServiceFinder<T> implements Iterable<T> {
                 }
                 nextName = pending.next();
                 try {
-                    t = service.cast(ReflectionHelper.classForNameWithException(nextName, loader).newInstance());
-                } catch (ClassNotFoundException ex) {
+                    t = service.cast(AccessController.doPrivileged(
+                            ReflectionHelper.classForNameWithExceptionPEA(nextName, loader)).newInstance());
+
+                } catch (InstantiationException ex) {
                     if (ignoreOnClassNotFound) {
-                        // Provider implementation not found
-                        if (LOGGER.isLoggable(Level.WARNING)) {
-                            LOGGER.log(Level.WARNING,
-                                    LocalizationMessages.PROVIDER_NOT_FOUND(nextName, service));
+                        if (LOGGER.isLoggable(Level.CONFIG)) {
+                            LOGGER.log(Level.CONFIG,
+                                    LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextName, service,
+                                    ex.getLocalizedMessage()));
                         }
                         nextName = null;
                     } else {
                         fail(serviceName,
-                                LocalizationMessages.PROVIDER_NOT_FOUND(nextName, service));
+                                LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextName, service, ex.getLocalizedMessage()),
+                                ex);
                     }
+                } catch (IllegalAccessException ex) {
+                    fail(serviceName,
+                            LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextName, service, ex.getLocalizedMessage()),
+                            ex);
+
+                } catch (ClassNotFoundException ex) {
+                    handleClassNotFoundException();
                 } catch (NoClassDefFoundError ex) {
                     // Dependent class of provider not found
                     if (ignoreOnClassNotFound) {
@@ -672,7 +717,7 @@ public final class ServiceFinder<T> implements Iterable<T> {
                             // the name of a dependent class that is not found
                             LOGGER.log(Level.CONFIG,
                                     LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_NOT_FOUND(
-                                            ex.getLocalizedMessage(), nextName, service));
+                                    ex.getLocalizedMessage(), nextName, service));
                         }
                         nextName = null;
                     } else {
@@ -680,37 +725,30 @@ public final class ServiceFinder<T> implements Iterable<T> {
                                 LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_NOT_FOUND(ex.getLocalizedMessage(), nextName, service),
                                 ex);
                     }
-                } catch (ClassFormatError ex) {
-                    // Dependent class of provider not found
-                    if (ignoreOnClassNotFound) {
-                        if (LOGGER.isLoggable(Level.CONFIG)) {
-                            LOGGER.log(Level.CONFIG,
-                                    LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_FORMAT_ERROR(
-                                            ex.getLocalizedMessage(), nextName, service));
+
+                } catch (PrivilegedActionException pae) {
+                    final Throwable cause = pae.getCause();
+                    if (cause instanceof ClassNotFoundException) {
+                        handleClassNotFoundException();
+                    } else if (cause instanceof ClassFormatError) {
+                        // Dependent class of provider not found
+                        if (ignoreOnClassNotFound) {
+                            if (LOGGER.isLoggable(Level.CONFIG)) {
+                                LOGGER.log(Level.CONFIG,
+                                        LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_FORMAT_ERROR(
+                                        cause.getLocalizedMessage(), nextName, service));
+                            }
+                            nextName = null;
+                        } else {
+                            fail(serviceName,
+                                    LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_FORMAT_ERROR(cause.getLocalizedMessage(), nextName, service),
+                                    cause);
                         }
-                        nextName = null;
                     } else {
                         fail(serviceName,
-                                LocalizationMessages.DEPENDENT_CLASS_OF_PROVIDER_FORMAT_ERROR(ex.getLocalizedMessage(), nextName, service),
-                                ex);
+                                LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextName, service, cause.getLocalizedMessage()),
+                                cause);
                     }
-                }  catch (InstantiationException ex) {
-                    if (ignoreOnClassNotFound) {
-                        if (LOGGER.isLoggable(Level.CONFIG)) {
-                            LOGGER.log(Level.CONFIG,
-                                    LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextName, service,
-                                            ex.getLocalizedMessage()));
-                        }
-                        nextName = null;
-                    } else {
-                        fail(serviceName,
-                                LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextName, service, ex.getLocalizedMessage()),
-                                ex);
-                    }
-                } catch (Exception ex) {
-                    fail(serviceName,
-                            LocalizationMessages.PROVIDER_COULD_NOT_BE_CREATED(nextName, service, ex.getLocalizedMessage()),
-                            ex);
                 }
             }
             return true;
@@ -722,7 +760,24 @@ public final class ServiceFinder<T> implements Iterable<T> {
                 throw new NoSuchElementException();
             }
             nextName = null;
+            if (LOGGER.isLoggable(Level.FINEST)) {
+                LOGGER.log(Level.FINEST, "Loading next object: " + t.getClass().getName());
+            }
             return t;
+        }
+
+        private void handleClassNotFoundException() throws ServiceConfigurationError {
+            if (ignoreOnClassNotFound) {
+                // Provider implementation not found
+                if (LOGGER.isLoggable(Level.CONFIG)) {
+                    LOGGER.log(Level.CONFIG,
+                            LocalizationMessages.PROVIDER_NOT_FOUND(nextName, service));
+                }
+                nextName = null;
+            } else {
+                fail(serviceName,
+                        LocalizationMessages.PROVIDER_NOT_FOUND(nextName, service));
+            }
         }
     }
 

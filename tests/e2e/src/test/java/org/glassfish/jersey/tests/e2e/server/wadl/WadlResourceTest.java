@@ -99,6 +99,7 @@ import org.glassfish.jersey.server.wadl.WadlGenerator;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig;
 import org.glassfish.jersey.server.wadl.config.WadlGeneratorDescription;
 import org.glassfish.jersey.server.wadl.internal.WadlGeneratorImpl;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.tests.e2e.entity.JaxbBean;
@@ -123,11 +124,12 @@ import static junit.framework.Assert.assertTrue;
  * @author mh124079
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 @RunWith(Suite.class)
 @Suite.SuiteClasses({WadlResourceTest.Wadl1Test.class, WadlResourceTest.Wadl2Test.class, WadlResourceTest.Wadl3Test.class,
-        WadlResourceTest.Wadl5Test.class, WadlResourceTest.Wadl7Test.class, WadlResourceTest.Wadl8Test.class})
+        WadlResourceTest.Wadl5Test.class, WadlResourceTest.Wadl7Test.class, WadlResourceTest.Wadl8Test.class,
+        WadlResourceTest.Wadl9Test.class})
 public class WadlResourceTest {
     private static Document extractWadlAsDocument(Response response) throws ParserConfigurationException, SAXException,
             IOException {
@@ -304,8 +306,10 @@ public class WadlResourceTest {
         @Test
         public void testGetWadl() throws Exception {
 //            File tmpFile = target("application.wadl").request().get(File.class);
-            File tmpFile = target("application.wadl").request().get(File.class);
-            final String str = target("application.wadl").request().get(String.class);
+            File tmpFile = target("application.wadl").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                    .request().get(File.class);
+            final String str = target("application.wadl").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                    .request().get(String.class);
 
             DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
             bf.setNamespaceAware(true);
@@ -368,7 +372,7 @@ public class WadlResourceTest {
         public void testLastModifiedGET() {
             final WebTarget target = target("/application.wadl");
 
-            Response r = target.request().get(Response.class);
+            Response r = target.queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request().get(Response.class);
             assertTrue(r.getHeaders().containsKey("Last-modified"));
         }
 
@@ -376,7 +380,7 @@ public class WadlResourceTest {
         public void testLastModifiedOPTIONS() {
             final WebTarget target = target("/widgets/3/verbose");
 
-            Response r = target.request(MediaTypes.WADL).options();
+            Response r = target.queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).options();
             System.out.println(r.readEntity(String.class));
             assertTrue(r.getHeaders().containsKey("Last-modified"));
         }
@@ -385,7 +389,8 @@ public class WadlResourceTest {
         public void testOptionsResourceWadl() throws ParserConfigurationException, XPathExpressionException, IOException,
                 SAXException {
             // test WidgetsResource
-            Response response = target("/widgets").request(MediaTypes.WADL).options();
+            Response response = target("/widgets").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                    .request(MediaTypes.WADL).options();
             Assert.assertEquals(200, response.getStatus());
 //            System.out.println(response.readEntity(String.class));
             File tmpFile = response.readEntity(File.class);
@@ -436,7 +441,8 @@ public class WadlResourceTest {
                     ":representation)", d, XPathConstants.STRING);
             assertEquals("1", val);
 
-            response = target("/foo").request(MediaTypes.WADL).options();
+            response = target("/foo").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                    .request(MediaTypes.WADL).options();
             Assert.assertEquals(200, response.getStatus());
             tmpFile = response.readEntity(File.class);
             b = bf.newDocumentBuilder();
@@ -461,7 +467,8 @@ public class WadlResourceTest {
                 XPathExpressionException {
 
             // test WidgetsResource
-            File tmpFile = target("/widgets/3/verbose").request(MediaTypes.WADL).options(File.class);
+            File tmpFile = target("/widgets/3/verbose").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                    .request(MediaTypes.WADL).options(File.class);
             DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
             bf.setNamespaceAware(true);
             bf.setValidating(false);
@@ -491,7 +498,8 @@ public class WadlResourceTest {
         public void testOptionsSubResourceWadl() throws ParserConfigurationException, SAXException, IOException,
                 XPathExpressionException {
             // test WidgetsResource
-            File tmpFile = target("/widgets/3").request(MediaTypes.WADL).options(File.class);
+            File tmpFile = target("/widgets/3").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
+                    .request(MediaTypes.WADL).options(File.class);
             DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
             bf.setNamespaceAware(true);
             bf.setValidating(false);
@@ -1068,7 +1076,8 @@ public class WadlResourceTest {
 
         @Test
         public void testRecursive2() throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
-            Document d = extractWadlAsDocument(target("/application.wadl").request().get());
+            Document d = extractWadlAsDocument(target("/application.wadl")
+                    .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request().get());
 
             XPath xp = XPathFactory.newInstance().newXPath();
             xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
@@ -1349,4 +1358,37 @@ public class WadlResourceTest {
             Assert.assertEquals("postTemplateB", result);
         }
     }
+
+
+    /**
+     * Tests usage of property {@link ServerProperties#METAINF_SERVICES_LOOKUP_DISABLE}.
+     */
+    public static class Wadl9Test extends JerseyTest {
+
+        @Path("wadl9test")
+        public static class Resource {
+
+            @GET
+            public String foo() {
+                return "foo";
+            }
+
+        } // class Resource
+
+        @Override
+        protected Application configure() {
+            ResourceConfig resourceConfig = new ResourceConfig(Resource.class);
+            resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
+
+            return resourceConfig;
+        }
+
+        @Test
+        public void testEmptyWadlResult() throws Exception {
+            Response response = target("/application.wadl").request().get();
+            assertTrue(response.getStatus() == 404);
+        }
+
+    } // class Wadl9Test
+
 }

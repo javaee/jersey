@@ -40,13 +40,13 @@
 
 package org.glassfish.jersey.server.mvc.freemarker;
 
-import org.glassfish.jersey.server.mvc.MvcProperties;
-
 /**
  * Jersey MVC Freemarker configuration properties.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @deprecated Use properties from {@link org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature} instead.
  */
+@Deprecated
 public final class FreemarkerProperties {
 
     /**
@@ -55,7 +55,7 @@ public final class FreemarkerProperties {
      * <p/>
      * If this property is not set then the base path will be the root path.
      */
-    public final static String TEMPLATES_BASE_PATH = MvcProperties.TEMPLATE_BASE_PATH + ".freemarker";
+    public final static String TEMPLATES_BASE_PATH = FreemarkerMvcFeature.TEMPLATES_BASE_PATH;
 
     /**
      * Prevent initialization.

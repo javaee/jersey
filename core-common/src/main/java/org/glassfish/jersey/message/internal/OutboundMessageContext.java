@@ -73,6 +73,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
@@ -636,18 +637,7 @@ public class OutboundMessageContext {
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
     public void setEntity(Object entity) {
-        setEntityAndType(entity);
-    }
-
-    private void setEntityAndType(Object entity) {
-        final GenericType genericType;
-        if (entity instanceof GenericEntity) {
-            genericType = new GenericType(((GenericEntity) entity).getType());
-        } else {
-            genericType = (entity == null) ? null : new GenericType(entity.getClass());
-        }
-
-        setEntity(entity, genericType);
+        setEntity(entity, ReflectionHelper.genericTypeFor(entity));
     }
 
     /**
@@ -658,7 +648,7 @@ public class OutboundMessageContext {
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
     public void setEntity(Object entity, Annotation[] annotations) {
-        setEntityAndType(entity);
+        setEntity(entity, ReflectionHelper.genericTypeFor(entity));
         setEntityAnnotations(annotations);
     }
 
@@ -749,7 +739,7 @@ public class OutboundMessageContext {
      * @return entity annotations.
      */
     public Annotation[] getEntityAnnotations() {
-        return entityAnnotations;
+        return entityAnnotations.clone();
     }
 
     /**

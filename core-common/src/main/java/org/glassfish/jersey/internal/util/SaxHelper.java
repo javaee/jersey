@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.internal.util;
 
+import java.security.AccessController;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.SAXParserFactory;
 
@@ -49,7 +51,8 @@ import javax.xml.parsers.SAXParserFactory;
  */
 public final class SaxHelper {
 
-    private SaxHelper() {}
+    private SaxHelper() {
+    }
 
     /**
      * Determines whether the given SAX {@code parserFactory} is from XDK package or not.
@@ -72,12 +75,10 @@ public final class SaxHelper {
     }
 
     private static boolean isXdkFactory(final Object factory, final String className) {
-        try {
-            final Class<?> xdkFactoryClass = Class.forName(className);
-            return xdkFactoryClass.isAssignableFrom(factory.getClass());
-        } catch (ClassNotFoundException e) {
-            // Ignore this.
+        final Class<?> xdkFactoryClass = AccessController.doPrivileged(ReflectionHelper.classForNamePA(className, null));
+        if (xdkFactoryClass == null) {
+            return false;
         }
-        return false;
+        return xdkFactoryClass.isAssignableFrom(factory.getClass());
     }
 }

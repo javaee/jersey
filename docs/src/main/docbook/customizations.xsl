@@ -52,9 +52,9 @@
         <xsl:element name="div">
             <xsl:attribute name="style">float:right</xsl:attribute>
             <xsl:element name="a">
-                <xsl:attribute name="href">http://jersey.java.net</xsl:attribute>
+                <xsl:attribute name="href">https://jersey.java.net</xsl:attribute>
                 <xsl:element name="img">
-                    <xsl:attribute name="src">http://jersey.java.net/images/Jersey_yellow.png</xsl:attribute>
+                    <xsl:attribute name="src">https://jersey.java.net/images/jersey_logo.png</xsl:attribute>
                 </xsl:element>
             </xsl:element>
         </xsl:element>
@@ -71,21 +71,21 @@
 
     <xsl:template name="user.footer.content">
         <xsl:element name="link">
-            <xsl:attribute name="href">http://jersey.java.net/sh/shCore.css</xsl:attribute>
+            <xsl:attribute name="href">https://jersey.java.net/sh/shCore.css</xsl:attribute>
             <xsl:attribute name="rel">stylesheet</xsl:attribute>
             <xsl:attribute name="type">text/css</xsl:attribute>
         </xsl:element>
         <xsl:element name="link">
-            <xsl:attribute name="href">http://jersey.java.net/sh/shThemeDefault.css</xsl:attribute>
+            <xsl:attribute name="href">https://jersey.java.net/sh/shThemeDefault.css</xsl:attribute>
             <xsl:attribute name="rel">stylesheet</xsl:attribute>
             <xsl:attribute name="type">text/css</xsl:attribute>
         </xsl:element>
         <xsl:element name="script">
-            <xsl:attribute name="src">http://jersey.java.net/sh/shCore.js</xsl:attribute>
+            <xsl:attribute name="src">https://jersey.java.net/sh/shCore.js</xsl:attribute>
             <xsl:attribute name="type">text/javascript</xsl:attribute>
         </xsl:element>
         <xsl:element name="script">
-            <xsl:attribute name="src">http://jersey.java.net/sh/shAutoloader.js</xsl:attribute>
+            <xsl:attribute name="src">https://jersey.java.net/sh/shAutoloader.js</xsl:attribute>
             <xsl:attribute name="type">text/javascript</xsl:attribute>
         </xsl:element>
         <xsl:element name="script">
@@ -96,7 +96,7 @@
                   ;
 
               for(var i = 0; i &lt; args.length; i++)
-                  result.push(args[i].replace('@', 'http://jersey.java.net/sh/'));
+                  result.push(args[i].replace('@', 'https://jersey.java.net/sh/'));
 
               return result
             };

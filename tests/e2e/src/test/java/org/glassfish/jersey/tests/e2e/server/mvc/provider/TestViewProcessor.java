@@ -43,11 +43,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
+import java.util.Collection;
 
 import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
+import org.glassfish.jersey.server.validation.ValidationError;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -84,8 +86,22 @@ public class TestViewProcessor implements TemplateProcessor<String> {
         ps.print(templateReference);
         ps.println();
         ps.print("model=");
-        ps.print(viewable.getModel().toString());
+        ps.print(getModel(viewable.getModel()));
         ps.println();
+    }
+
+    private String getModel(final Object model) {
+        if (model instanceof Collection) {
+            StringBuilder builder = new StringBuilder();
+            for (final Object object : (Collection)model) {
+                builder.append(getModel(object)).append(',');
+            }
+            return builder.delete(builder.length() - 1, builder.length()).toString();
+        } else if (model instanceof ValidationError) {
+            final ValidationError error = (ValidationError) model;
+            return error.getMessageTemplate() + "_" + error.getPath() + "_" + error.getInvalidValue();
+        }
+        return model.toString();
     }
 
     protected String getExtension() {

@@ -44,6 +44,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.AccessController;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -60,6 +61,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Utility class, which helps to configure {@link SSLContext} instances.
@@ -327,7 +329,7 @@ public final class SslConfigurator {
 
     private SslConfigurator(boolean readSystemProperties) {
         if (readSystemProperties) {
-            retrieve(System.getProperties());
+            retrieve(AccessController.doPrivileged(PropertiesHelper.getSystemProperties()));
         }
     }
 
@@ -434,7 +436,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator keyStorePassword(char[] password) {
-        this.keyStorePass = password;
+        this.keyStorePass = password.clone();
         return this;
     }
 
@@ -456,7 +458,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator keyPassword(char[] password) {
-        this.keyPass = password;
+        this.keyPass = password.clone();
         return this;
     }
 
@@ -488,7 +490,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator trustStoreBytes(byte[] payload) {
-        this.trustStoreBytes = payload;
+        this.trustStoreBytes = payload.clone();
         this.trustStoreFile = null;
         this.trustStore = null;
         return this;
@@ -522,7 +524,7 @@ public final class SslConfigurator {
      * @return updated SSL configurator instance.
      */
     public SslConfigurator keyStoreBytes(byte[] payload) {
-        this.keyStoreBytes = payload;
+        this.keyStoreBytes = payload.clone();
         this.keyStoreFile = null;
         this.keyStore = null;
         return this;
@@ -686,8 +688,8 @@ public final class SslConfigurator {
         if (_keyStore != null) {
             String kmfAlgorithm = keyManagerFactoryAlgorithm;
             if (kmfAlgorithm == null) {
-                kmfAlgorithm = System.getProperty(
-                        KEY_MANAGER_FACTORY_ALGORITHM, KeyManagerFactory.getDefaultAlgorithm());
+                kmfAlgorithm = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(
+                        KEY_MANAGER_FACTORY_ALGORITHM, KeyManagerFactory.getDefaultAlgorithm()));
             }
             try {
                 if (keyManagerFactoryProvider != null) {
@@ -761,8 +763,8 @@ public final class SslConfigurator {
         if (_trustStore != null) {
             String tmfAlgorithm = trustManagerFactoryAlgorithm;
             if (tmfAlgorithm == null) {
-                tmfAlgorithm = System.getProperty(
-                        TRUST_MANAGER_FACTORY_ALGORITHM, TrustManagerFactory.getDefaultAlgorithm());
+                tmfAlgorithm = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(
+                        TRUST_MANAGER_FACTORY_ALGORITHM, TrustManagerFactory.getDefaultAlgorithm()));
             }
 
             try {

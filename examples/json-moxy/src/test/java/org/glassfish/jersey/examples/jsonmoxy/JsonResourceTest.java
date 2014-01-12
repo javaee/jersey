@@ -66,8 +66,8 @@ public class JsonResourceTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(new App.JsonMoxyConfigurationContextResolver());
+    protected void configureClient(ClientConfig config) {
+        config.register(App.createMoxyJsonResolver());
     }
 
     @Test

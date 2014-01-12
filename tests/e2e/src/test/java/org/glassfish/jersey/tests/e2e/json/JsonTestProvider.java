@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.e2e.json;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -87,7 +88,7 @@ public abstract class JsonTestProvider {
                         put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
                         put("http://example.com", "example");
                         put("http://test.jaxb.com", "jaxb");
-                    }}).build();
+                    }}).serializeAsArray("singleItemList").build();
 
             setFeature(new JettisonFeature());
             setConfiguration(jsonConfiguration);

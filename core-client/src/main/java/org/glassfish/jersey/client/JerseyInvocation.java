@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
@@ -74,6 +75,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.process.internal.RequestScope;
 
@@ -86,6 +88,8 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyInvocation implements javax.ws.rs.client.Invocation {
+
+    private static final Logger LOGGER = Logger.getLogger(JerseyInvocation.class.getName());
 
     private final ClientRequest requestContext;
 
@@ -116,13 +120,30 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     }
 
     private void validateHttpMethodAndEntity(ClientRequest request) {
+        boolean suppressExceptions;
+        suppressExceptions = PropertiesHelper.isProperty(
+                request.getConfiguration().getProperty(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION));
+
+        final Object shcvProperty = request.getProperty(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION);
+        if (shcvProperty != null) { // override global configuration with request-specific
+            suppressExceptions = PropertiesHelper.isProperty(shcvProperty);
+        }
+
         final String method = request.getMethod();
 
         final EntityPresence entityPresence = METHODS.get(method.toUpperCase());
         if (entityPresence == EntityPresence.MUST_BE_NULL && request.hasEntity()) {
-            throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NOT_NULL(method));
+            if (suppressExceptions) {
+                LOGGER.warning(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NOT_NULL(method));
+            } else {
+                throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NOT_NULL(method));
+            }
         } else if (entityPresence == EntityPresence.MUST_BE_PRESENT && !request.hasEntity()) {
-            throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NULL(method));
+            if (suppressExceptions) {
+                LOGGER.warning(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NULL(method));
+            } else {
+                throw new IllegalStateException(LocalizationMessages.ERROR_HTTP_METHOD_ENTITY_NULL(method));
+            }
         }
     }
 
@@ -631,7 +652,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return requestScope.runInScope(new Producer<Response>() {
             @Override
             public Response call() throws ProcessingException {
-                return new ScopedJaxrsResponse(runtime.invoke(requestContext), requestScope);
+                return new InboundJaxrsResponse(runtime.invoke(requestContext), requestScope);
             }
         });
     }
@@ -687,7 +708,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
-                responseFuture.set(new ScopedJaxrsResponse(response, scope));
+                responseFuture.set(new InboundJaxrsResponse(response, scope));
             }
 
             @Override
@@ -732,12 +753,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     private <T> T translate(ClientResponse response, RequestScope scope, Class<T> responseType)
             throws ProcessingException {
         if (responseType == Response.class) {
-            return responseType.cast(new ScopedJaxrsResponse(response, scope));
+            return responseType.cast(new InboundJaxrsResponse(response, scope));
         }
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
             try {
-                return new InboundJaxrsResponse(response).readEntity(responseType);
+                return response.readEntity(responseType);
             } catch (ProcessingException ex) {
                 throw ex;
             } catch (WebApplicationException ex) {
@@ -746,7 +767,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 throw new ProcessingException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
             }
         } else {
-            throw convertToException(new ScopedJaxrsResponse(response, scope));
+            throw convertToException(new InboundJaxrsResponse(response, scope));
         }
     }
 
@@ -784,12 +805,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             throws ProcessingException {
         if (responseType.getRawType() == Response.class) {
             //noinspection unchecked
-            return (T) new ScopedJaxrsResponse(response, scope);
+            return (T) new InboundJaxrsResponse(response, scope);
         }
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
             try {
-                return new InboundJaxrsResponse(response).readEntity(responseType);
+                return response.readEntity(responseType);
             } catch (ProcessingException ex) {
                 throw ex;
             } catch (WebApplicationException ex) {
@@ -798,7 +819,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 throw new ProcessingException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
             }
         } else {
-            throw convertToException(new ScopedJaxrsResponse(response, scope));
+            throw convertToException(new InboundJaxrsResponse(response, scope));
         }
     }
 
@@ -819,15 +840,15 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 public void completed(ClientResponse response, RequestScope scope) {
                     final T result;
                     if (callbackParamClass == Response.class) {
-                        result = callbackParamClass.cast(new ScopedJaxrsResponse(response, scope));
+                        result = callbackParamClass.cast(new InboundJaxrsResponse(response, scope));
                         responseFuture.set(result);
                         callback.completed(result);
                     } else if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
-                        result = new InboundJaxrsResponse(response).readEntity(new GenericType<T>(callbackParamType));
+                        result = response.readEntity(new GenericType<T>(callbackParamType));
                         responseFuture.set(result);
                         callback.completed(result);
                     } else {
-                        failed(convertToException(new ScopedJaxrsResponse(response, scope)));
+                        failed(convertToException(new InboundJaxrsResponse(response, scope)));
                     }
                 }
 
@@ -871,6 +892,10 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     private ProcessingException convertToException(Response response) {
         try {
+            // Buffer and close entity input stream (if any) to prevent
+            // leaking connections (see JERSEY-2157).
+            response.bufferEntity();
+
             WebApplicationException webAppException;
             final int statusCode = response.getStatus();
             final Response.Status status = Response.Status.fromStatusCode(statusCode);

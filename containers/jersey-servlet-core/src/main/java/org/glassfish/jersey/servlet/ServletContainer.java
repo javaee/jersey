@@ -63,6 +63,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -143,6 +144,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class ServletContainer extends HttpServlet implements Filter, Container {
 
@@ -286,7 +288,12 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             absoluteUriBuilder = UriBuilder.fromUri(requestURL.toString());
         } catch (IllegalArgumentException iae) {
             final Response.Status badRequest = Response.Status.BAD_REQUEST;
-            response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            if (webComponent.configSetStatusOverSendError) {
+                response.reset();
+                response.setStatus(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            } else {
+                response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            }
             return;
         }
 
@@ -300,9 +307,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
          * We need to work around this and not use getPathInfo
          * for the decodedPath.
          */
-        final String decodedBasePath = (pathInfo != null)
-                ? request.getContextPath() + servletPath + "/"
-                : request.getContextPath() + "/";
+        final String decodedBasePath = request.getContextPath() + servletPath + "/";
 
         final String encodedBasePath = UriComponent.encode(decodedBasePath,
                 UriComponent.Type.PATH);
@@ -328,7 +333,12 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                     build();
         } catch (UriBuilderException ex) {
             final Response.Status badRequest = Response.Status.BAD_REQUEST;
-            response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            if (webComponent.configSetStatusOverSendError) {
+                response.reset();
+                response.setStatus(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            } else {
+                response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+            }
             return;
         }
 
@@ -409,7 +419,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         try {
             doFilter((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse, filterChain);
         } catch (ClassCastException e) {
-            throw new ServletException("non-HTTP request or response");
+            throw new ServletException("non-HTTP request or response", e);
         }
     }
 
@@ -565,9 +575,11 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     @Override
     public void reload(ResourceConfig configuration) {
         try {
+            containerListener.onShutdown(this);
             webComponent = new WebComponent(webComponent.webConfig, configuration);
-            containerListener.onReload(this);
             containerListener = ConfigHelper.getContainerLifecycleListener(webComponent.appHandler);
+            containerListener.onReload(this);
+            containerListener.onStartup(this);
         } catch (ServletException ex) {
             logger.log(Level.SEVERE, "Reload failed", ex);
         }

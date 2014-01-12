@@ -43,13 +43,22 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.security.PrivilegedAction;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import javax.inject.Inject;
+import javax.validation.ValidationException;
 
+import org.glassfish.jersey.message.internal.TracingLogger;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.SubjectSecurityContext;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
@@ -67,6 +76,9 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
     @Inject
     private javax.inject.Provider<ConfiguredValidator> validatorProvider;
 
+    @Inject
+    private javax.inject.Provider<ContainerRequest> request;
+
     private final Method method;
     private final InvocationHandler methodHandler;
 
@@ -79,16 +91,21 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param methodHandler  method invocation handler.
      */
     AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler) {
-        this.method = resourceMethod.getHandlingMethod();
+        this.method = resourceMethod.getDefinitionMethod();
         this.methodHandler = methodHandler;
 
         this.resourceMethod = resourceMethod;
     }
 
     @Override
-    public final Response dispatch(Object resource, Request request) throws ProcessingException {
-        // TODO measure time spent in invocation
-        return doDispatch(resource, request);
+    public final Response dispatch(Object resource, ContainerRequest request) throws ProcessingException {
+        Response response = null;
+        try {
+            response = doDispatch(resource, request);
+        } finally {
+            TracingLogger.getInstance(request).log(ServerTraceEvent.DISPATCH_RESPONSE, response);
+        }
+        return response;
     }
 
     /**
@@ -99,7 +116,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param request  request to be dispatched.
      * @return response for the dispatched request.
      * @throws ProcessingException in case of a processing error.
-     * @see ResourceMethodDispatcher#dispatch(java.lang.Object, javax.ws.rs.core.Request)
+     * @see ResourceMethodDispatcher#dispatch(Object, org.glassfish.jersey.server.ContainerRequest)
      */
     protected abstract Response doDispatch(Object resource, Request request) throws ProcessingException;
 
@@ -113,7 +130,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @throws ProcessingException (possibly {@link MappableException mappable})
      *                             container exception in case the invocation failed.
      */
-    final Object invoke(Object resource, Object... args) throws ProcessingException {
+    final Object invoke(final Object resource, final Object... args) throws ProcessingException {
         try {
             final ConfiguredValidator validator = validatorProvider.get();
 
@@ -122,7 +139,37 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
                 validator.validateResourceAndInputParams(resource, resourceMethod, args);
             }
 
-            final Object invocationResult = methodHandler.invoke(resource, method, args);
+            final ContainerRequest containerRequest = request.get();
+
+            final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
+                @Override
+                public Object run() {
+                    final TracingLogger tracingLogger = TracingLogger.getInstance(containerRequest);
+                    final long timestamp = tracingLogger.timestamp(ServerTraceEvent.METHOD_INVOKE);
+                    try {
+
+                        return methodHandler.invoke(resource, method, args);
+
+                    } catch (IllegalAccessException ex) {
+                        throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+                    } catch (IllegalArgumentException ex) {
+                        throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+                    } catch (UndeclaredThrowableException ex) {
+                        throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+                    } catch (InvocationTargetException ex) {
+                        throw mapTargetToRuntimeEx(ex.getCause());
+                    } catch (Throwable t) {
+                        throw new ProcessingException(t);
+                    } finally {
+                        tracingLogger.logDuration(ServerTraceEvent.METHOD_INVOKE, timestamp, resource, method);
+                    }
+                }
+            };
+
+            final SecurityContext securityContext = containerRequest.getSecurityContext();
+
+            final Object invocationResult = (securityContext instanceof SubjectSecurityContext) ?
+                    ((SubjectSecurityContext) securityContext).doAsSubject(invokeMethodAction) : invokeMethodAction.run();
 
             // Validate response entity.
             if (validator != null) {
@@ -130,22 +177,17 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
             }
 
             return invocationResult;
-        } catch (IllegalAccessException ex) {
-            throw new ProcessingException("Resource Java method invocation error.", ex);
-        } catch (InvocationTargetException ex) {
-            final Throwable cause = ex.getCause();
-            // exception cause potentially mappable
-            throw new MappableException(cause);
-        } catch (UndeclaredThrowableException ex) {
-            throw new ProcessingException("Resource Java method invocation error.", ex);
-        } catch (ProcessingException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            // exception potentially mappable
+        } catch (ValidationException ex) { // handle validation exceptions -> potentially mappable
             throw new MappableException(ex);
-        } catch (Throwable t) {
-            throw new ProcessingException(t);
         }
+    }
+
+    private static RuntimeException mapTargetToRuntimeEx(Throwable throwable) {
+        if (throwable instanceof WebApplicationException) {
+            return (WebApplicationException) throwable;
+        }
+        // handle all exceptions as potentially mappable (incl. ProcessingException)
+        return new MappableException(throwable);
     }
 
     @Override

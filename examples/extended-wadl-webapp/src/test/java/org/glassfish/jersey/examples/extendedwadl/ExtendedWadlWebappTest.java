@@ -43,6 +43,7 @@ package org.glassfish.jersey.examples.extendedwadl;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.logging.Logger;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
@@ -62,6 +63,7 @@ import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -77,6 +79,8 @@ import static junit.framework.Assert.assertEquals;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class ExtendedWadlWebappTest extends JerseyTest {
+
+    private static final Logger LOGGER = Logger.getLogger(ExtendedWadlWebappTest.class.getName());
 
     @Override
     protected Application configure() {
@@ -104,9 +108,10 @@ public class ExtendedWadlWebappTest extends JerseyTest {
      */
     @Test
     public void testExtendedWadl() throws Exception {
-        String wadl = target().path("application.wadl").request(MediaTypes.WADL).get(String.class);
+        String wadl = target().path("application.wadl")
+                .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).get(String.class);
 
-        System.out.println(wadl);
+        LOGGER.fine(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));
@@ -116,9 +121,10 @@ public class ExtendedWadlWebappTest extends JerseyTest {
 
     @Test
     public void testWadlOptionsMethod() throws Exception {
-        String wadl = target().path("items").request(MediaTypes.WADL).options(String.class);
+        String wadl = target().path("items")
+                .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).options(String.class);
 
-        System.out.println(wadl);
+        LOGGER.fine(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",
                 wadl.contains("This is a paragraph"));

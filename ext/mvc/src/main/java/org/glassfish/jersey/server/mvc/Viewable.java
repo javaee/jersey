@@ -114,7 +114,9 @@ public class Viewable {
      * @param resolvingClass the class to use to resolve the template name if the template is not absolute,
      * if {@code null} then the resolving class will be obtained from the last matching resource.
      * @throws IllegalArgumentException if the template name is {@code null}.
+     * @deprecated The resolvingClass is obsolete and will be removed in the future releases. There is no replacement.
      */
+    @Deprecated
     public Viewable(String templateName, Object model, Class<?> resolvingClass) throws IllegalArgumentException {
         if (templateName == null) {
             throw new IllegalArgumentException(LocalizationMessages.TEMPLATE_NAME_MUST_NOT_BE_NULL());

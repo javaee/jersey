@@ -48,7 +48,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.grizzly.connector.GrizzlyConnector;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -149,6 +149,6 @@ public class TraceSupportTest extends JerseyTest {
     }
 
     private Client getGrizzlyClient() {
-        return ClientBuilder.newClient(new ClientConfig().connector(new GrizzlyConnector(client().getConfiguration())));
+        return ClientBuilder.newClient(new ClientConfig().connectorProvider(new GrizzlyConnectorProvider()));
     }
 }

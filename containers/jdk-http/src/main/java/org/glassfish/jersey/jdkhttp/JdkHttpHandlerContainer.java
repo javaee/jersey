@@ -206,17 +206,29 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
 
     @Override
     public void reload(ResourceConfig configuration) {
+        containerListener.onShutdown(this);
         appHandler = new ApplicationHandler(configuration);
-        containerListener.onReload(this);
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
+        containerListener.onReload(this);
+        containerListener.onStartup(this);
     }
 
     /**
-     * Inform this container that the server was started. This method must be implicitly called after
-     * the server containing this container is started.
+     * Inform this container that the server has been started.
+     *
+     * This method must be implicitly called after the server containing this container is started.
      */
     void onServerStart() {
         this.containerListener.onStartup(this);
+    }
+
+    /**
+     * Inform this container that the server is being stopped.
+     *
+     * This method must be implicitly called before the server containing this container is stopped.
+     */
+    void onServerStop() {
+        this.containerListener.onShutdown(this);
     }
 
     private final static class ResponseWriter implements ContainerResponseWriter {

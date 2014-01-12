@@ -45,6 +45,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -117,7 +118,7 @@ public class DetermineContentLengthTest extends JerseyTest {
         @POST
         @Consumes("text/plain")
         @Produces("text/plain")
-        public String testLength(String entity, @HeaderParam(HttpHeaders.CONTENT_LENGTH) String length) {
+        public String testLength(String entity, @DefaultValue("-1") @HeaderParam(HttpHeaders.CONTENT_LENGTH) String length) {
             return length;
         }
     }
@@ -175,9 +176,9 @@ public class DetermineContentLengthTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.property(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, BUFFER_SIZE);
-        clientConfig.register(DoubleInterceptor.class);
+    protected void configureClient(ClientConfig config) {
+        config.property(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, BUFFER_SIZE);
+        config.register(DoubleInterceptor.class);
     }
 
     @Test

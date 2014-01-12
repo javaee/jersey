@@ -103,10 +103,10 @@ public class BasicValidationTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(final ClientConfig clientConfig) {
-        super.configureClient(clientConfig);
-        clientConfig.register(ContactBeanProvider.class);
-        clientConfig.register(MoxyXmlFeature.class);
+    protected void configureClient(final ClientConfig config) {
+        super.configureClient(config);
+        config.register(ContactBeanProvider.class);
+        config.register(MoxyXmlFeature.class);
     }
 
     @Consumes("application/contactBean")
@@ -449,6 +449,8 @@ public class BasicValidationTest extends JerseyTest {
     @Test
     public void testValidBeanParamNegative() throws Exception {
         final ContactBean contactBean = new ContactBean();
+        // Add value to pass @OneContact constraint but fails on @Pattern constraint defined on getter.
+        contactBean.setPhone("12");
         final Response response = testBean("validBeanParam", contactBean);
 
         assertEquals(400, response.getStatus());

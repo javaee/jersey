@@ -39,9 +39,12 @@
  */
 package org.glassfish.jersey.uri.internal;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +74,31 @@ import static org.junit.Assert.fail;
 public class JerseyUriBuilderTest {
 
     public JerseyUriBuilderTest() {
+    }
+
+    // Reproducer for JERSEY-2036
+    @Test
+    public void testReplaceNonAsciiQueryParam()
+            throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
+        URL url = new URL("http://example.com/getMyName?néme=t");
+        String query = url.getQuery();
+
+        UriBuilder builder = UriBuilder.fromPath(url.getPath())
+                .scheme(url.getProtocol())
+                .host(url.getHost())
+                .port(url.getPort())
+                .replaceQuery(query)
+                .fragment(url.getRef());
+
+        // Replace QueryParam.
+        String parmName = "néme";
+        String value = "value";
+
+        builder.replaceQueryParam(parmName, value);
+
+        final URI result = builder.build();
+        final URI expected = new URI("http://example.com/getMyName?néme=value");
+        assertEquals(expected.toASCIIString(), result.toASCIIString());
     }
 
     @Test

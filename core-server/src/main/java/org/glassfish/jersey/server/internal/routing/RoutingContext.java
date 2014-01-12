@@ -106,7 +106,7 @@ public interface RoutingContext extends ResourceInfo {
      * </p>
      *
      * @param resourceTemplate resource URI template that should be pushed.
-     * @param methodTemplate (sub-resource) method or locator URI template that should be pushed.
+     * @param methodTemplate   (sub-resource) method or locator URI template that should be pushed.
      */
     public void pushTemplates(UriTemplate resourceTemplate, UriTemplate methodTemplate);
 
@@ -145,7 +145,7 @@ public interface RoutingContext extends ResourceInfo {
 
     /**
      * Set the matched request to response inflector.
-     *
+     * <p/>
      * This method can be used in a non-terminal stage to set the inflector that
      * can be retrieved and processed by a subsequent stage.
      *
@@ -165,7 +165,7 @@ public interface RoutingContext extends ResourceInfo {
      * Get all bound request filters applicable to this request.
      *
      * @return All bound (dynamically or by name) request filters applicable to the matched inflector (or an empty
-     * collection if no inflector matched yet).
+     *         collection if no inflector matched yet).
      */
     public Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters();
 
@@ -174,7 +174,7 @@ public interface RoutingContext extends ResourceInfo {
      * This is populated once the right resource method is matched.
      *
      * @return All bound (dynamically or by name) response filters applicable to the matched inflector (or an empty
-     * collection if no inflector matched yet).
+     *         collection if no inflector matched yet).
      */
     public Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters();
 
@@ -183,7 +183,7 @@ public interface RoutingContext extends ResourceInfo {
      * This is populated once the right resource method is matched.
      *
      * @return All reader interceptors applicable to the matched inflector (or an empty
-     * collection if no inflector matched yet).
+     *         collection if no inflector matched yet).
      */
     public Iterable<ReaderInterceptor> getBoundReaderInterceptors();
 
@@ -191,7 +191,7 @@ public interface RoutingContext extends ResourceInfo {
      * Get all writer interceptors applicable to this request.
      *
      * @return All writer interceptors applicable to the matched inflector (or an empty
-     * collection if no inflector matched yet).
+     *         collection if no inflector matched yet).
      */
     public Iterable<WriterInterceptor> getBoundWriterInterceptors();
 
@@ -205,13 +205,11 @@ public interface RoutingContext extends ResourceInfo {
     public void setMatchedResourceMethod(ResourceMethod resourceMethod);
 
     /**
-     * Set the matched {@link Resource resource or child resource}. This method needs to be called only if the resource was
-     * matched. This method should be called only setting for final resource which contains matched resource method
-     * and not for setting resources which contains sub resource locators invoked during matching.
+     * Push the matched {@link ResourceMethod sub resource locator method}.
      *
-     * @param resource Resource that was matched.
+     * @param resourceLocator Sub resource locator method.
      */
-    public void setMatchedResource(Resource resource);
+    public void pushMatchedLocator(ResourceMethod resourceLocator);
 
     /**
      * Push a matched {@link RuntimeResource runtime resource} that was visited during matching phase. This method must
@@ -220,4 +218,14 @@ public interface RoutingContext extends ResourceInfo {
      * @param runtimeResource Runtime resource that was matched during matching.
      */
     public void pushMatchedRuntimeResource(RuntimeResource runtimeResource);
+
+    /**
+     * Push {@link Resource sub resource} returned from a sub resource locator method. The pushed
+     * {@code subResourceFromLocator} is the final model of a sub resource which is already enhanced by
+     * {@link org.glassfish.jersey.server.model.ModelProcessor model processors} and
+     * validated.
+     *
+     * @param subResourceFromLocator Resource constructed from result of sub resource locator method.
+     */
+    public void pushLocatorSubResource(Resource subResourceFromLocator);
 }

@@ -149,8 +149,8 @@ public class AutoDiscoverableTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(final ClientConfig clientConfig) {
-        clientConfig.property(PROPERTY, true);
+    protected void configureClient(final ClientConfig config) {
+        config.property(PROPERTY, true);
     }
 
     @Test

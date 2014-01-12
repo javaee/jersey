@@ -9,7 +9,7 @@ bundles, run:
 To build examples and generate individual example project source ZIP bundles,
 run the build with "examples-source-zip" profile enabled:
 
-  > mvn clean install -P examples-source-zip
+  > mvn clean install -P release
 
 
 Some examples contain tests that depend on external container to be up and

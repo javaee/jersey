@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,7 @@
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>project</artifactId>
     <packaging>pom</packaging>
-    <version>2.1-SNAPSHOT</version>
+    <version>2.6-SNAPSHOT</version>
     <name>jersey</name>
     <description>
         Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339)
@@ -144,6 +144,16 @@
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
+        <developer>
+            <name>Libor Kramolis</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Adam Lindenthal</name>
+            <organization>Oracle Corporation</organization>
+            <organizationUrl>http://www.oracle.com</organizationUrl>
+        </developer>
     </developers>
 
     <!--contributors></contributors-->
@@ -171,6 +181,31 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.glassfish.jersey.tools.plugins</groupId>
+                    <artifactId>jersey-doc-modulelist-maven-plugin</artifactId>
+                    <version>1.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>1.3.1</version>
+                    <executions>
+                        <execution>
+                            <id>enforce-versions</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <requireJavaVersion>
+                                        <version>${java.version}</version>
+                                    </requireJavaVersion>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
@@ -225,8 +260,8 @@
                     <version>2.5.1</version>
                     <inherited>true</inherited>
                     <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
                         <compilerArguments>
                             <Werror />
                             <!-- TODO work towards eliminating all warnings in order to be able to enable the -Xlint option -->
@@ -251,13 +286,14 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.13</version>
                     <configuration>
-                      <argLine>-Xmx1024m</argLine>
+                        <argLine>-Xmx1024m</argLine>
+                        <skipTests>${skip.tests}</skipTests>
                     </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.3</version>
+                    <version>2.4</version>
                     <configuration>
                         <tarLongFileMode>gnu</tarLongFileMode>
                     </configuration>
@@ -265,22 +301,23 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>2.7</version>
+                    <version>2.8</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>2.9</version>
                     <configuration>
-                        <doctitle>Jersey ${project.version} API Documentation</doctitle>
+                        <doctitle>Jersey ${jersey.version} API Documentation</doctitle>
+                        <windowtitle>Jersey ${jersey.version} API</windowtitle>
                         <bottom>
-                            <![CDATA[Copyright &#169; 2007-2013,
+                            <![CDATA[Copyright &#169; 2007-2014,
                                 <a href="http://www.oracle.com">Oracle</a>
                                 and/or its affiliates.
                                 All Rights Reserved. Use is subject to license terms.]]>
                         </bottom>
                         <links>
-                            <link>http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs</link>
+                            <link>http://jax-rs-spec.java.net/nonav/2.0/apidocs</link>
                             <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
                         </links>
                     </configuration>
@@ -297,13 +334,13 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>2.1.2</version>
+                    <version>2.2.1</version>
                     <executions>
                         <execution>
                             <id>attach-sources</id>
                             <phase>package</phase>
                             <goals>
-                                <goal>jar</goal>
+                                <goal>jar-no-fork</goal>
                             </goals>
                         </execution>
                     </executions>
@@ -320,20 +357,27 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.4</version>
+                    <!--
+                        mvn release:prepare -DreleaseVersion=<release-version> -DdevelopmentVersion=<next-dev-version> -Dtag=<release-version> \
+                            -Prelease
+
+                        mvn release:perform -DconnectionUrl="scm:git:file://<path-to-local-repo>" \
+                            -Prelease,skip-tests
+                    -->
                     <configuration>
                         <mavenExecutorId>forked-path</mavenExecutorId>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <preparationGoals>clean install</preparationGoals>
                         <pushChanges>false</pushChanges>
                         <useReleaseProfile>false</useReleaseProfile>
-                        <arguments>${release.arguments}</arguments>
+                        <arguments>${release.tests.args} ${release.arguments}</arguments>
                     </configuration>
                 </plugin>
 
                 <plugin>
                     <groupId>org.ops4j.pax.exam</groupId>
                     <artifactId>maven-paxexam-plugin</artifactId>
-                    <version>${pax-exam-version}</version>
+                    <version>${paxexam-mvn-plugin-version}</version>
                     <executions>
                         <execution>
                             <id>generate-config</id>
@@ -351,7 +395,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.2</version>
+                    <version>3.3</version>
                     <configuration>
                         <generateProjectInfo>false</generateProjectInfo>
                         <generateReports>true</generateReports>
@@ -403,17 +447,40 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>findbugs-maven-plugin</artifactId>
-                    <version>2.4.0</version>
+                    <version>${findbugs.version}</version>
                     <configuration>
                         <skip>${findbugs.skip}</skip>
                         <threshold>${findbugs.threshold}</threshold>
-                        <excludeFilterFile>${findbugs.exclude}</excludeFilterFile>
+                        <excludeFilterFile>
+                            ${findbugs.common},${findbugs.exclude}
+                        </excludeFilterFile>
+                        <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+                        <!-- findbugs detector configuration -->
+                        <jvmArgs>-Dfindbugs.glassfish.logging.validLoggerPrefixes=${findbugs.glassfish.logging.validLoggerPrefixes}</jvmArgs>
+                        <plugins>
+                            <plugin>
+                                <groupId>org.glassfish.findbugs</groupId>
+                                <artifactId>findbugs-logging-detectors</artifactId>
+                                <version>${findbugs.glassfish.version}</version>
+                            </plugin>
+                        </plugins>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.glassfish.findbugs</groupId>
+                            <artifactId>findbugs</artifactId>
+                            <version>${findbugs.glassfish.version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>2.6</version>
+                    <version>2.16</version>
+                    <configuration>
+                        <skipTests>${skip.tests}</skipTests>
+                        <skipITs>${skip.tests}</skipITs>
+                    </configuration>
                     <executions>
                         <execution>
                             <goals>
@@ -426,7 +493,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.3</version>
+                    <version>2.4</version>
                     <configuration>
                         <failOnMissingWebXml>false</failOnMissingWebXml>
                     </configuration>
@@ -507,10 +574,54 @@
                 <plugin>
                     <groupId>org.eclipse.jetty</groupId>
                     <artifactId>jetty-maven-plugin</artifactId>
-                    <version>9.0.0.v20130308</version>
+                    <version>9.0.5.v20130815</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.glassfish.build</groupId>
+                    <artifactId>gfnexus-maven-plugin</artifactId>
+                    <version>0.16</version>
+                    <configuration>
+                        <stagingRepos>
+                            <stagingRepo>
+                                <!--
+                                    The reference artifact used to identify the right staging repository
+                                -->
+                                <ref>org.glassfish.jersey:project:${project.version}:pom</ref>
+                                <profile>com.sun.jersey</profile>
+                            </stagingRepo>
+                        </stagingRepos>
+                        <!--
+                            Temporary till there is a jersey promotion profile
+                        -->
+                        <promotionProfile>glassfish-integration</promotionProfile>
+                        <message>JERSEY-${project.version}</message>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.glassfish.jersey.tools.plugins</groupId>
+                <artifactId>jersey-doc-modulelist-maven-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <outputFileName>docs/src/main/docbook/modules.xml</outputFileName>
+                    <templateFileName>docs/src/main/docbook/inc/modules.src</templateFileName>
+                    <tableHeaderFileName>docs/src/main/docbook/inc/modules_table_header.src</tableHeaderFileName>
+                    <tableFooterFileName>docs/src/main/docbook/inc/modules_table_footer.src</tableFooterFileName>
+                    <tableRowFileName>docs/src/main/docbook/inc/modules_table_row.src</tableRowFileName>
+                    <outputUnmatched>false</outputUnmatched>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+        </plugins>
         <extensions>
             <extension>
                 <groupId>org.glassfish</groupId>
@@ -522,54 +633,15 @@
 
     <profiles>
         <profile>
-            <id>incubator</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <modules>
-                <module>incubator</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>attach-src</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>attach-src-and-docs</id>
+            <!-- Use it with release-perform goal to skip another test run. -->
+            <id>skip-tests</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>all-tests</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <modules>
-                <module>tests</module>
-            </modules>
+            <properties>
+                <skip.release.tests>-Dmaven.test.skip=true -Dskip.tests=true</skip.release.tests>
+                <skip.tests>true</skip.tests>
+            </properties>
         </profile>
         <profile>
             <id>release</id>
@@ -659,7 +731,7 @@
             </repositories>
         </profile>
         <profile>
-            <id>maven-project-info-reports-plugin</id>
+            <id>project-info</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>
@@ -668,7 +740,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-project-info-reports-plugin</artifactId>
-                        <version>2.6</version>
+                        <version>2.7</version>
                         <reportSets>
                             <reportSet>
                                 <reports>
@@ -695,13 +767,25 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
-                <version>2.5.2</version>
+                <version>${findbugs.version}</version>
                 <reportSets>
                     <reportSet>
                         <configuration>
                             <skip>${findbugs.skip}</skip>
                             <threshold>${findbugs.threshold}</threshold>
-                            <excludeFilterFile>${findbugs.exclude}</excludeFilterFile>
+                            <excludeFilterFile>
+                                ${findbugs.common},${findbugs.exclude}
+                            </excludeFilterFile>
+                            <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+                            <!-- findbugs detector configuration -->
+                            <jvmArgs>-Dfindbugs.glassfish.logging.validLoggerPrefixes=${findbugs.glassfish.logging.validLoggerPrefixes}</jvmArgs>
+                            <plugins>
+                                <plugin>
+                                    <groupId>org.glassfish.findbugs</groupId>
+                                    <artifactId>findbugs-logging-detectors</artifactId>
+                                    <version>${findbugs.glassfish.version}</version>
+                                </plugin>
+                            </plugins>
                         </configuration>
                         <reports>
                             <report>findbugs</report>
@@ -716,20 +800,23 @@
                 <!-- Run this plugin report sets only in the main Jersey pom -->
                 <inherited>false</inherited>
                 <configuration>
-                    <doctitle>Jersey ${project.version} API Documentation</doctitle>
+                    <doctitle>Jersey ${jersey.version} API Documentation</doctitle>
+                    <windowtitle>Jersey ${jersey.version} API</windowtitle>
                     <bottom>
-                        <![CDATA[Copyright &#169; 2007-2013,
+                        <![CDATA[Copyright &#169; 2007-2014,
                             <a href="http://www.oracle.com">Oracle</a>
                             and/or its affiliates.
                             All Rights Reserved. Use is subject to license terms.]]>
                     </bottom>
+                    <!-- TODO: add 'javax.ws.rs*' to excludePackageNames whenever links works. -->
                     <excludePackageNames>
                         com.sun.ws.rs.ext:*.examples.*:*.internal.*:*.tests.*
                     </excludePackageNames>
                     <stylesheetfile>${javadoc.stylesheet}</stylesheetfile>
+                    <!-- TODO: links still not working :-( -->
                     <links>
-                        <link>http://jax-rs-spec.java.net/nonav/2.0-SNAPSHOT/apidocs</link>
-                        <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
+                        <link>http://jax-rs-spec.java.net/nonav/2.0/apidocs</link>
+                        <link>http://hk2.java.net/${hk2.version}/apidocs</link>
                     </links>
                 </configuration>
                 <reportSets>
@@ -808,9 +895,12 @@
 
         <module>examples</module>
         <module>ext</module>
+        <module>incubator</module>
         <module>media</module>
         <module>security</module>
         <module>test-framework</module>
+
+        <module>tests</module>
         <!--module>tools</module-->
     </modules>
 
@@ -855,6 +945,12 @@
                 <groupId>javax.enterprise</groupId>
                 <artifactId>cdi-api</artifactId>
                 <version>${cdi.api.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.transaction</groupId>
+                <artifactId>javax.transaction-api</artifactId>
+                <version>${jta.api.version}</version>
             </dependency>
 
             <dependency>
@@ -919,17 +1015,40 @@
                 <artifactId>grizzly-websockets</artifactId>
                 <version>${grizzly2.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.glassfish.grizzly</groupId>
                 <artifactId>grizzly-http-client</artifactId>
-                <version>1.3</version>
+                <version>${grizzly.client.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.2.3</version>
+                <version>${httpclient.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-client</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-webapp</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-continuation</artifactId>
+                <version>${jetty.version}</version>
             </dependency>
 
             <dependency>
@@ -972,7 +1091,7 @@
             <dependency>
                 <groupId>org.eclipse.persistence</groupId>
                 <artifactId>org.eclipse.persistence.antlr</artifactId>
-                <version>2.3.2</version>
+                <version>${moxy.version}</version>
             </dependency>
 
             <dependency>
@@ -1027,6 +1146,21 @@
                 <scope>provided</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.framework</artifactId>
+                <version>4.2.1</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.eventadmin</artifactId>
+                <version>1.2.2</version>
+                <scope>test</scope>
+            </dependency>
+
+
             <!-- HV OSGi dependencies. -->
             <dependency>
                 <groupId>org.jboss.logging</groupId>
@@ -1057,7 +1191,7 @@
             <dependency>
                 <groupId>org.glassfish</groupId>
                 <artifactId>jsonp-jaxrs</artifactId>
-                <version>${jsonp.ri.version}</version>
+                <version>${jsonp.jaxrs.version}</version>
             </dependency>
 
             <!-- Test scope -->
@@ -1077,14 +1211,14 @@
 
             <dependency>
                 <groupId>org.ops4j.pax.exam</groupId>
-                <artifactId>pax-exam-junit</artifactId>
+                <artifactId>pax-exam-junit4</artifactId>
                 <version>${pax-exam-version}</version>
                 <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.ops4j.pax.exam</groupId>
-                <artifactId>pax-exam-container-default</artifactId>
+                <artifactId>pax-exam-container-forked</artifactId>
                 <version>${pax-exam-version}</version>
                 <scope>test</scope>
             </dependency>
@@ -1092,28 +1226,28 @@
             <dependency>
                 <groupId>org.ops4j.pax.exam</groupId>
                 <artifactId>pax-exam-junit-extender-impl</artifactId>
-                <version>${pax-exam-version}</version>
+                <version>1.2.4</version>
                 <scope>test</scope>
             </dependency>
 
             <dependency>
-                <groupId>org.ops4j.pax.swissbox</groupId>
-                <artifactId>pax-swissbox-tinybundles</artifactId>
-                <version>${pax-swissbox-version}</version>
+                <groupId>org.ops4j.pax.exam</groupId>
+                <artifactId>pax-exam-link-mvn</artifactId>
+                <version>${pax-exam-version}</version>
                 <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty</artifactId>
-                <version>${jetty-version}</version>
+                <version>${jetty.plugin.version}</version>
                 <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
-                <version>${jetty-version}</version>
+                <version>${jetty.plugin.version}</version>
                 <scope>test</scope>
             </dependency>
 
@@ -1130,26 +1264,62 @@
                 <version>4.11</version>
                 <scope>test</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest-library</artifactId>
+                <version>${hamcrest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.ops4j.pax.web</groupId>
+                <artifactId>pax-web-jetty-bundle</artifactId>
+                <version>${pax-web-version}</version>
+                <!--<version>0.7.1</version>-->
+            </dependency>
+            <dependency>
+                <groupId>org.ops4j.pax.web</groupId>
+                <artifactId>pax-web-extender-war</artifactId>
+                <!--<version>0.7.1</version>-->
+                <version>${pax-web-version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
     <properties>
         <findbugs.skip>false</findbugs.skip>
         <findbugs.threshold>Low</findbugs.threshold>
-        <findbugs.exclude>exclude-common.xml</findbugs.exclude>
+        <findbugs.common>exclude-common.xml</findbugs.common>
+        <findbugs.exclude />
+        <findbugs.glassfish.logging.validLoggerPrefixes>
+            javax.enterprise
+        </findbugs.glassfish.logging.validLoggerPrefixes>
+        <java.version>1.6</java.version>
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <release.tests.args>-Dmaven.test.skip=false</release.tests.args>
+        <skip.tests>false</skip.tests>
         <xdk.absolute.path />
 
         <!-- Dependency versions -->
+        <jersey.version>${project.version}</jersey.version>
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
         <ejb.version>3.2</ejb.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
-        <grizzly2.version>2.3.1</grizzly2.version>
-        <hk2.version>2.1.88</hk2.version>
-        <jackson.version>1.9.11</jackson.version>
+        <findbugs.glassfish.version>1.3</findbugs.glassfish.version>
+        <findbugs.version>2.5.2</findbugs.version>
+        <freemarker.version>2.3.20</freemarker.version>
+        <gae.version>1.8.4</gae.version>
+        <grizzly.client.version>1.6</grizzly.client.version>
+        <grizzly2.version>2.3.8</grizzly2.version>
+        <hamcrest.version>1.3</hamcrest.version>
+        <hk2.version>2.2.0-b21</hk2.version>
+        <jackson.version>1.9.13</jackson.version>
+        <jackson2.version>2.2.3</jackson2.version>
         <javax.annotation.version>1.2</javax.annotation.version>
         <javax.annotation.bundle.version>1.2</javax.annotation.bundle.version>
         <javax.el.version>2.2.4</javax.el.version>
@@ -1162,20 +1332,27 @@
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <jersey1.version>1.17</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>
-        <jetty-version>6.1.22</jetty-version>
+        <jetty.plugin.version>6.1.22</jetty.plugin.version>
+        <jetty.version>9.0.6.v20130930</jetty.version>
         <jetty-servlet-api-25-version>6.1.14</jetty-servlet-api-25-version>
         <jsonp.api.version>1.0</jsonp.api.version>
-        <jsonp.ri.version>1.0</jsonp.ri.version>
+        <jsonp.ri.version>1.0.2</jsonp.ri.version>
+        <jsonp.jaxrs.version>1.0</jsonp.jaxrs.version>
         <jsp.version>2.0</jsp.version>
         <jstl.version>1.2</jstl.version>
-        <mimepull.version>1.8</mimepull.version>
-        <moxy.version>2.5.0-M13</moxy.version>
+        <jta.api.version>1.2</jta.api.version>
+        <mimepull.version>1.9.3</mimepull.version>
+        <moxy.version>2.5.0</moxy.version>
+        <mustache.version>0.8.12</mustache.version>
         <osgi.version>4.2.0</osgi.version>
-        <pax-exam-version>1.2.3</pax-exam-version>
-        <pax-swissbox-version>1.3.1</pax-swissbox-version>
+        <pax-exam-version>3.2.0</pax-exam-version>
+        <pax-web-version>0.7.4</pax-web-version><!-- TODO: UPGRADE! -->
+        <paxexam-mvn-plugin-version>1.2.4</paxexam-mvn-plugin-version>
         <servlet2.version>2.4</servlet2.version>
-        <servlet3.version>3.1.0</servlet3.version>
-        <simple.version>5.0.4</simple.version>
+        <servlet3.version>3.0.1</servlet3.version>
+        <simple.version>5.1.4</simple.version>
+        <spring3.version>3.2.3.RELEASE</spring3.version>
+        <httpclient.version>4.3.1</httpclient.version>
         <validation.api.version>1.1.0.Final</validation.api.version>
         <weld.version>2.0.0.Final</weld.version>
     </properties>

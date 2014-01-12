@@ -83,7 +83,7 @@ import com.google.common.collect.Sets;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class Providers {
+public final class Providers {
     private static final Logger LOGGER = Logger.getLogger(Providers.class.getName());
 
     /**
@@ -239,15 +239,41 @@ public class Providers {
     }
 
     /**
-     * Sorts given providers with {@link RankedComparator ranked comparator}.
+     * Sort given providers with {@link RankedComparator ranked comparator}.
+     *
+     * @param comparator comparator to sort the providers with.
+     * @param providers  providers to be sorted.
+     * @param <T>        service provider contract Java type.
+     * @return sorted {@link Iterable iterable} instance containing given providers.
+     *         The returned value is never {@code null}.
+     */
+    @SuppressWarnings("TypeMayBeWeakened")
+    public static <T> Iterable<T> sortRankedProviders(final RankedComparator<T> comparator,
+                                                      final Iterable<RankedProvider<T>> providers) {
+        final List<RankedProvider<T>> rankedProviders = Lists.newArrayList(providers);
+
+        Collections.sort(rankedProviders, comparator);
+
+        return Collections2.transform(rankedProviders, new Function<RankedProvider<T>, T>() {
+            @Override
+            public T apply(final RankedProvider<T> input) {
+                return input.getProvider();
+            }
+        });
+    }
+
+    /**
+     * Merge and sort given providers with {@link RankedComparator ranked comparator}.
      *
      * @param comparator        comparator to sort the providers with.
      * @param providerIterables providers to be sorted.
      * @param <T>               service provider contract Java type.
-     * @return sorted {@link Iterable iterable} instance containing given providers. Return value is never null.
+     * @return merged and sorted {@link Iterable iterable} instance containing given providers.
+     *         The returned value is never {@code null}.
      */
-    public static <T> Iterable<T> sortRankedProviders(final RankedComparator<T> comparator,
-                                                      final Iterable<RankedProvider<T>>... providerIterables) {
+    @SuppressWarnings("TypeMayBeWeakened")
+    public static <T> Iterable<T> mergeAndSortRankedProviders(final RankedComparator<T> comparator,
+                                                              final Iterable<Iterable<RankedProvider<T>>> providerIterables) {
         final List<RankedProvider<T>> rankedProviders = Lists.newArrayList();
 
         for (final Iterable<RankedProvider<T>> providers : providerIterables) {
@@ -305,7 +331,7 @@ public class Providers {
      * @param contract   service provider contract.
      * @param comparator comparator to be used for sorting the returned providers.
      * @return set of all available service provider instances for the contract ordered using the given
-     *         {@link Comparator comparator}.
+     * {@link Comparator comparator}.
      */
     public static <T> Iterable<T> getAllProviders(ServiceLocator locator, Class<T> contract, Comparator<T> comparator) {
         List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
@@ -320,7 +346,7 @@ public class Providers {
             }
         }
 
-        final ArrayList<T> providerList = new ArrayList<T>(getClasses(providerMap.values()));
+        final List<T> providerList = new ArrayList<T>(getClasses(providerMap.values()));
 
         if (comparator != null) {
             Collections.sort(providerList, comparator);
@@ -513,8 +539,8 @@ public class Providers {
         return (result == null) ? defaultConstraint : result;
     }
 
-    private static List<Class<?>> getImplementedContracts(Class<?> clazz) {
-        List<Class<?>> list = new LinkedList<Class<?>>();
+    private static Iterable<Class<?>> getImplementedContracts(Class<?> clazz) {
+        Collection<Class<?>> list = new LinkedList<Class<?>>();
 
         Collections.addAll(list, clazz.getInterfaces());
 
@@ -550,6 +576,51 @@ public class Providers {
             }
         }
         return false;
+    }
+
+    /**
+     * Ensure the supplied implementation classes implement the expected contract.
+     *
+     * @param contract        contract that is expected to be implemented by the implementation classes.
+     * @param implementations contract implementations.
+     * @throws java.lang.IllegalArgumentException in case any of the implementation classes does not
+     *                                            implement the expected contract.
+     */
+    public static void ensureContract(Class<?> contract, Class<?>... implementations) {
+        if (implementations == null || implementations.length <= 0) {
+            return;
+        }
+
+        StringBuilder invalidClassNames = new StringBuilder();
+        for (Class<?> impl : implementations) {
+            if (!contract.isAssignableFrom(impl)) {
+                if (invalidClassNames.length() > 0) {
+                    invalidClassNames.append(", ");
+                }
+                invalidClassNames.append(impl.getName());
+            }
+        }
+
+        if (invalidClassNames.length() > 0) {
+            throw new IllegalArgumentException(LocalizationMessages.INVALID_SPI_CLASSES(
+                    contract.getName(),
+                    invalidClassNames.toString()));
+        }
+
+    }
+
+    /**
+     * Inject {@code providerInstances}. The method iterates through {@code providerInstances}
+     * and initializes injectable fields of each instance using {@code serviceLocator}.
+     *
+     * @param providerInstances Iterable of provider instances to be injected.
+     * @param serviceLocator    Service locator.
+     */
+    public static <T> void injectProviders(Iterable<T> providerInstances, ServiceLocator serviceLocator) {
+        for (T providerInstance : providerInstances) {
+            serviceLocator.inject(providerInstance);
+        }
+
     }
 
     private static boolean findFirstProviderContract(Class<?> clazz) {

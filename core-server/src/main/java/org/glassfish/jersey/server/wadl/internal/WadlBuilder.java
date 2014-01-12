@@ -49,6 +49,8 @@ import java.util.Set;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import javax.xml.namespace.QName;
 
@@ -57,7 +59,6 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
-import org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator;
 
 import com.sun.research.ws.wadl.Application;
 import com.sun.research.ws.wadl.Doc;
@@ -82,13 +83,15 @@ import com.sun.research.ws.wadl.Response;
 public class WadlBuilder {
 
     private WadlGenerator _wadlGenerator;
+    private final UriInfo uriInfo;
 
-    public WadlBuilder() {
-        this(new WadlGeneratorJAXBGrammarGenerator());
-    }
+    private final boolean detailedWadl;
 
-    public WadlBuilder(WadlGenerator wadlGenerator) {
+
+    public WadlBuilder(WadlGenerator wadlGenerator, boolean detailedWadl, UriInfo uriInfo) {
+        this.detailedWadl = detailedWadl;
         _wadlGenerator = wadlGenerator;
+        this.uriInfo = uriInfo;
     }
 
     /**
@@ -103,11 +106,15 @@ public class WadlBuilder {
         // for each resource
         for (org.glassfish.jersey.server.model.Resource r : resources) {
             Resource wadlResource = generateResource(r, r.getPath());
+            if (wadlResource == null) {
+                continue;
+            }
             wadlResources.getResource().add(wadlResource);
         }
         wadlApplication.getResources().add(wadlResources);
 
         addVersion(wadlApplication);
+        addHint(wadlApplication);
 
         // Build any external grammars
 
@@ -139,6 +146,9 @@ public class WadlBuilder {
             Application wadlApplication = _wadlGenerator.createApplication();
             Resources wadlResources = _wadlGenerator.createResources();
             Resource wadlResource = generateResource(resource, null);
+            if (wadlResource == null) {
+                return null;
+            }
             wadlResources.getResource().add(wadlResource);
             wadlApplication.getResources().add(wadlResources);
 
@@ -159,16 +169,45 @@ public class WadlBuilder {
     private void addVersion(Application wadlApplication) {
         // Include Jersey version as doc element with generatedBy attribute
         Doc d = new Doc();
-        d.getOtherAttributes().put(new QName("http://jersey.java.net/", "generatedBy", "jersey"),
+        d.getOtherAttributes().put(new QName(WadlApplicationContextImpl.WADL_JERSEY_NAMESPACE, "generatedBy", "jersey"),
                 Version.getBuildId());
-        wadlApplication.getDoc().add(0, d);
+
+        wadlApplication.getDoc().add(d);
+    }
+
+    private void addHint(Application wadlApplication) {
+        // TODO: this not-null check is here only because of unit tests
+        if (uriInfo != null) {
+            Doc d = new Doc();
+
+            String message;
+
+            if (detailedWadl) {
+                final String uriWithoutQueryParam = UriBuilder.fromUri(uriInfo.getRequestUri()).replaceQuery("").build().toString();
+                message = LocalizationMessages.WADL_DOC_EXTENDED_WADL(WadlUtils.DETAILED_WADL_QUERY_PARAM, uriWithoutQueryParam);
+            } else {
+                final String uriWithQueryParam = UriBuilder.fromUri(uriInfo.getRequestUri())
+                        .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").build().toString();
+
+                message = LocalizationMessages.WADL_DOC_SIMPLE_WADL(WadlUtils.DETAILED_WADL_QUERY_PARAM, uriWithQueryParam);
+            }
+
+            d.getOtherAttributes().put(new QName(WadlApplicationContextImpl.WADL_JERSEY_NAMESPACE, "hint", "jersey"), message);
+            wadlApplication.getDoc().add(d);
+
+        }
     }
 
     private com.sun.research.ws.wadl.Method generateMethod(org.glassfish.jersey.server.model.Resource r,
                                                            final Map<String, Param> wadlResourceParams,
                                                            final org.glassfish.jersey.server.model.ResourceMethod m) {
         try {
+            if (!detailedWadl && m.isExtended()) {
+                return null;
+            }
             com.sun.research.ws.wadl.Method wadlMethod = _wadlGenerator.createMethod(r, m);
+
+
             // generate the request part
             Request wadlRequest = generateRequest(r, m, wadlResourceParams);
             if (wadlRequest != null) {
@@ -323,6 +362,10 @@ public class WadlBuilder {
     private Resource generateResource(final org.glassfish.jersey.server.model.Resource resource, String path,
                                       Set<org.glassfish.jersey.server.model.Resource> visitedResources) {
         try {
+
+            if (!detailedWadl && resource.isExtended()) {
+                return null;
+            }
             Resource wadlResource = _wadlGenerator.createResource(resource, path);
 
             // prevent infinite recursion
@@ -345,11 +388,16 @@ public class WadlBuilder {
                         // for example in the case the return type of the sub resource locator is Object
                         builder = org.glassfish.jersey.server.model.Resource.builder().path(resource.getPath());
                     }
-                    org.glassfish.jersey.server.model.Resource subResource =
-                            builder.build();
+                    org.glassfish.jersey.server.model.Resource subResource = builder.build();
 
                     Resource wadlSubResource = generateResource(subResource,
                             resource.getPath(), visitedResources);
+                    if (wadlSubResource == null) {
+                        return null;
+                    }
+                    if (locator.isExtended()) {
+                        wadlSubResource.getAny().add(WadlApplicationContextImpl.extendedElement);
+                    }
 
                     for (Parameter param : locator.getInvocable().getParameters()) {
                         Param wadlParam = generateParam(resource, locator, param);
@@ -368,8 +416,12 @@ public class WadlBuilder {
             Map<String, Param> wadlResourceParams = new HashMap<String, Param>();
             // for each resource method
             for (org.glassfish.jersey.server.model.ResourceMethod method : resource.getResourceMethods()) {
+                if (!detailedWadl && method.isExtended()) {
+                    continue;
+                }
                 com.sun.research.ws.wadl.Method wadlMethod = generateMethod(resource, wadlResourceParams, method);
                 wadlResource.getMethodOrResource().add(wadlMethod);
+
             }
             // add method parameters that are associated with the resource PATH template
             for (Param wadlParam : wadlResourceParams.values()) {
@@ -384,6 +436,9 @@ public class WadlBuilder {
             for (org.glassfish.jersey.server.model.Resource childResource : resource.getChildResources()) {
                 Resource childWadlResource = generateResource(childResource, childResource.getPath(),
                         visitedResources);
+                if (childWadlResource == null) {
+                    continue;
+                }
                 wadlResource.getMethodOrResource().add(childWadlResource);
             }
 
@@ -393,7 +448,6 @@ public class WadlBuilder {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_BUILDER_GENERATION_RESOURCE_PATH(resource, path), e);
         }
     }
-
 
     private List<Response> generateResponses(org.glassfish.jersey.server.model.Resource r, final ResourceMethod m) {
         try {

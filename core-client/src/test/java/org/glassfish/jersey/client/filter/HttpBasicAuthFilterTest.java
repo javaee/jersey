@@ -45,6 +45,7 @@ import java.util.concurrent.Future;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -52,8 +53,10 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.util.Base64;
 
 import org.junit.Test;
@@ -68,8 +71,8 @@ public class HttpBasicAuthFilterTest {
 
     @Test
     public void testGet() {
-        Client client = ClientBuilder.newClient(new ClientConfig(new HttpBasicAuthFilter("Uzivatelske jmeno", "Heslo"))
-                .connector(new TestConnector()));
+        Client client = ClientBuilder.newClient(new ClientConfig(HttpAuthenticationFeature.basic("Uzivatelske jmeno", "Heslo"))
+                .connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
 
@@ -78,15 +81,21 @@ public class HttpBasicAuthFilterTest {
 
     @Test
     public void testBlankUsernamePassword() {
-        Client client = ClientBuilder.newClient(new ClientConfig(new HttpBasicAuthFilter(null, (String) null))
-                .connector(new TestConnector()));
+        Client client = ClientBuilder.newClient(new ClientConfig(HttpAuthenticationFeature.basic("", ""))
+                .connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
         Response r = invBuilder.get();
 
         assertEquals("Basic " + Base64.encodeAsString(":"), r.getHeaderString(HttpHeaders.AUTHORIZATION));
     }
 
-    private static class TestConnector implements Connector {
+    private static class TestConnector implements Connector, ConnectorProvider {
+
+        @Override
+        public Connector getConnector(Client client, Configuration runtimeConfig) {
+            return this;
+        }
+
         @Override
         public ClientResponse apply(ClientRequest requestContext) {
             final ClientResponse responseContext = new ClientResponse(

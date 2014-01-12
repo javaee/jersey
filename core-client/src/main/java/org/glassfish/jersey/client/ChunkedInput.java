@@ -128,11 +128,13 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                             // found chunk delimiter
                             break;
                         }
-                    } else if (dPos > 0) {
-                        buffer.write(delimiterBuffer, 0, dPos - 1);
-                        dPos = 0;
+                    } else {
+                        if (dPos > 0) {
+                            buffer.write(delimiterBuffer, 0, dPos);
+                            dPos = 0;
+                        }
+                        buffer.write(b);
                     }
-                    buffer.write(b);
                 }
             } while (data != -1 && buffer.size() == 0);
 
@@ -259,7 +261,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
 
     @Override
     public void close() {
-        if (!closed.compareAndSet(false, true)) {
+        if (closed.compareAndSet(false, true)) {
             if (inputStream != null) {
                 try {
                     inputStream.close();
@@ -305,7 +307,6 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                 close();
             } else {
                 ByteArrayInputStream chunkStream = new ByteArrayInputStream(chunk);
-                //noinspection unchecked
                 // TODO: add interceptors: interceptors are used in ChunkedOutput, so the stream should
                 // be intercepted in the ChunkedInput too. Interceptors cannot be easily added to the readFrom
                 // method as they should wrap the stream before it is processed by ChunkParser. Also please check todo

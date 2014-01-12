@@ -69,6 +69,7 @@ import com.google.common.util.concurrent.SettableFuture;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class ResponseWriter implements ContainerResponseWriter {
 
@@ -76,6 +77,12 @@ public class ResponseWriter implements ContainerResponseWriter {
 
     private final HttpServletResponse response;
     private final boolean useSetStatusOn404;
+    /**
+     * Cached value of configuration property
+     * {@link org.glassfish.jersey.server.ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR}.
+     * If {@code true} method {@link HttpServletResponse#setStatus} is used over {@link HttpServletResponse#sendError}.
+     */
+    private final boolean configSetStatusOverSendError;
     private final SettableFuture<ContainerResponse> responseContext;
     private final AsyncContextDelegate asyncExt;
 
@@ -84,17 +91,21 @@ public class ResponseWriter implements ContainerResponseWriter {
     /**
      * Creates a new instance to write a single Jersey response.
      *
-     * @param useSetStatusOn404   true if status should be written explicitly when 404 is returned
-     * @param response            original HttpResponseRequest
-     * @param asyncExt            delegate to use for async features implementation
-     * @param timeoutTaskExecutor Jersey runtime executor used for background execution of timeout
-     *                            handling tasks.
+     * @param useSetStatusOn404            true if status should be written explicitly when 404 is returned
+     * @param configSetStatusOverSendError if {@code true} method {@link HttpServletResponse#setStatus} is used over
+     *                                     {@link HttpServletResponse#sendError}
+     * @param response                     original HttpResponseRequest
+     * @param asyncExt                     delegate to use for async features implementation
+     * @param timeoutTaskExecutor          Jersey runtime executor used for background execution of timeout
+     *                                     handling tasks.
      */
     public ResponseWriter(final boolean useSetStatusOn404,
+                          final boolean configSetStatusOverSendError,
                           final HttpServletResponse response,
                           final AsyncContextDelegate asyncExt,
                           final ScheduledExecutorService timeoutTaskExecutor) {
         this.useSetStatusOn404 = useSetStatusOn404;
+        this.configSetStatusOverSendError = configSetStatusOverSendError;
         this.response = response;
         this.asyncExt = asyncExt;
         this.responseContext = SettableFuture.create();
@@ -107,12 +118,12 @@ public class ResponseWriter implements ContainerResponseWriter {
         try {
             // Suspend the servlet.
             asyncExt.suspend();
-
-            // Suspend the internal request timeout handler.
-            return requestTimeoutHandler.suspend(timeOut, timeUnit, timeoutHandler);
         } catch (IllegalStateException ex) {
+            LOGGER.log(Level.WARNING, LocalizationMessages.SERVLET_REQUEST_SUSPEND_FAILED(), ex);
             return false;
         }
+        // Suspend the internal request timeout handler.
+        return requestTimeoutHandler.suspend(timeOut, timeUnit, timeoutHandler);
     }
 
     @Override
@@ -171,7 +182,7 @@ public class ResponseWriter implements ContainerResponseWriter {
     @Override
     public void commit() {
         try {
-            if (!response.isCommitted()) {
+            if (!configSetStatusOverSendError && !response.isCommitted()) {
                 final ContainerResponse responseContext = getResponseContext();
                 final int status = responseContext.getStatus();
                 if (status >= 400 && !(useSetStatusOn404 && status == 404)) {
@@ -183,7 +194,9 @@ public class ResponseWriter implements ContainerResponseWriter {
                             response.sendError(status, reason);
                         }
                     } catch (IOException ex) {
-                        throw new ContainerException("I/O exception occurred while sending [" + status + "] error response.", ex);
+                        throw new ContainerException(
+                                LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(status, reason!=null?reason:"--"),
+                                ex);
                     }
                 }
             }
@@ -197,13 +210,19 @@ public class ResponseWriter implements ContainerResponseWriter {
         try {
             if (!response.isCommitted()) {
                 try {
-                    response.reset();
-                    response.sendError(500, "Request failed.");
+                    if (configSetStatusOverSendError) {
+                        response.reset();
+                        response.setStatus(500, "Request failed.");
+                    } else {
+                        response.sendError(500, "Request failed.");
+                    }
                 } catch (IllegalStateException ex) {
                     // a race condition externally committing the response can still occur...
                     LOGGER.log(Level.FINER, "Unable to reset failed response.", ex);
                 } catch (IOException ex) {
-                    throw new ContainerException("I/O exception occurred while sending 'Request failed.' error response.", ex);
+                    throw new ContainerException(
+                            LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(500, "Request failed."),
+                            ex);
                 } finally {
                     asyncExt.complete();
                 }

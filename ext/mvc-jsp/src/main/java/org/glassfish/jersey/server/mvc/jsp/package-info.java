@@ -39,12 +39,12 @@
  */
 
 /**
- * MVC support for servlet containers.
+ * Jersey server-side MVC support for servlet containers.
  * <p/>
  * Note: Jersey applications that want to use MVC features should be registered as filters instead of servlets in web.xml (to
- * fully take advantage of {@link JspMvcFeature}). Web.xml-less deployment of an application using MVC is not supported at the
- * moment.
+ * fully take advantage of {@link org.glassfish.jersey.server.mvc.jsp.JspMvcFeature}). Web.xml-less deployment of an application
+ * using MVC is not supported at the moment.
  *
- * @see org.glassfish.jersey.server.mvc.jsp.internal.JspTemplateProcessor
+ * @see org.glassfish.jersey.server.mvc.jsp.JspTemplateProcessor
  */
 package org.glassfish.jersey.server.mvc.jsp;

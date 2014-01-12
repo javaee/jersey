@@ -124,14 +124,14 @@ public abstract class AbstractTypeTester extends JerseyTest {
      * and adds them to the client configuration (unless constrained to server side).
      */
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.register(RequestEntityInterceptor.class);
+    protected void configureClient(ClientConfig config) {
+        config.register(RequestEntityInterceptor.class);
 
         for (Class<?> cls : getClass().getDeclaredClasses()) {
             if (cls.getAnnotation(Provider.class) != null) {
                 final ConstrainedTo constrainedTo = cls.getAnnotation(ConstrainedTo.class);
                 if (constrainedTo == null || constrainedTo.value() == RuntimeType.CLIENT) {
-                    clientConfig.register(cls);
+                    config.register(cls);
                 }
             }
         }

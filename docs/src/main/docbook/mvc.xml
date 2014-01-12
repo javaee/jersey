@@ -1,0 +1,797 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents;]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="mvc">
+    <title>MVC Templates</title>
+
+    <para>
+        Jersey provides an extension to support the Model-View-Controller (MVC) design pattern.
+        In the context of Jersey components, the Controller from the MVC pattern corresponds to a resource class or method,
+        the View to a template bound to the resource class or method, and the model to a Java object (or a Java bean) returned
+        from a resource method (Controller).
+    </para>
+
+    <note>
+        <para>
+            Some of the passages/examples from this chapter have been taken from
+            <link xlink:href="https://blogs.oracle.com/sandoz/entry/mvcj">MVCJ</link> blog article written by Paul Sandoz.
+        </para>
+    </note>
+
+    <para>
+        In Jersey 2, the base MVC API consists of two classes (<literal>org.glassfish.jersey.server.mvc</literal> package)
+        that can be used to bind model to view (template), namely &jersey.server.mvc.Viewable; and &jersey.server.mvc.Template;.
+        These classes determine which approach (explicit/implicit) you would be taking when working with Jersey MVC
+        templating support.
+    </para>
+
+    <section>
+        <title>Viewable</title>
+
+        <para>
+            In this approach a resource method explicitly returns a reference to a view template and the data model to be
+            used. For this purpose the &jersey.server.mvc.Viewable; class has been introduced in Jersey 1 and is also
+            present (under a different package) in Jersey 2. A simple example of usage can be seen in
+            <xref linkend="mvc.example.viewable.simple"/>.
+
+            <example xml:id="mvc.example.viewable.simple">
+                <title>Using &lit.jersey.server.mvc.Viewable; in a resource class</title>
+
+                <programlisting language="java">package com.example;
+
+@Path("foo")
+public class Foo {
+
+    @GET
+    public Viewable get() {
+        return new Viewable("index.foo", "FOO");
+    }
+}</programlisting>
+            </example>
+        </para>
+        <para>
+            In this example, the <literal>Foo</literal> JAX-RS resource class is the controller and the
+            &lit.jersey.server.mvc.Viewable; instance encapsulates the provided data model (<literal>FOO</literal> string)
+            and a named reference to the associated view template (<literal>index.foo</literal>).
+        </para>
+        <tip>
+            <para>
+                All HTTP methods may return &lit.jersey.server.mvc.Viewable; instances. Thus a &lit.http.POST; method may
+                return a template reference to a template that produces a view as a result of processing an
+                HTML &jaxrs.core.Form;.
+            </para>
+        </tip>
+    </section>
+
+    <section>
+        <title>@Template</title>
+
+        <section>
+            <title>Annotating Resource methods</title>
+
+            <para>
+                There is no need to use &lit.jersey.server.mvc.Viewable; every time you want to bind a model to a template. To
+                make the resource method more readable (and to avoid verbose wrapping of a template reference and model into
+                &lit.jersey.server.mvc.Viewable;) you can simply annotate a resource method with &jersey.server.mvc.Template;
+                annotation. An updated example, using &lit.jersey.server.mvc.Template;, from previous section is shown in
+                <xref linkend="mvc.example.template.simple"/> example.
+
+                <example xml:id="mvc.example.template.simple">
+                    <title>Using &lit.jersey.server.mvc.Template; on a resource method</title>
+
+                    <programlisting language="java">package com.example;
+
+@Path("foo")
+public class Foo {
+
+    @GET
+    @Template("index.foo")
+    public String get() {
+        return "FOO";
+    }
+}</programlisting>
+                </example>
+            </para>
+            <para>
+                In this example, the <literal>Foo</literal> JAX-RS resource class is still the controller as in previous
+                section but the MVC model is now represented by the return value of annotated resource method.
+            </para>
+            <para>
+                The processing of such a method is then essentially the same as if the return type of the method was an
+                instance of the &jersey.server.mvc.Viewable; class. If a method is annotated with
+                &lit.jersey.server.mvc.Template; and is also returning a
+                &lit.jersey.server.mvc.Viewable; instance then the values from the
+                &lit.jersey.server.mvc.Viewable; instance take precedence over those defined in the annotation. Producible
+                media types are for both cases, &lit.jersey.server.mvc.Viewable; and &lit.jersey.server.mvc.Template;,
+                determined by the method or class level &lit.jaxrs.Produces; annotation.
+            </para>
+        </section>
+
+        <section>
+            <title>Annotating Resource classes</title>
+
+            <para>
+                A resource class can have templates implicitly associated with it via &jersey.server.mvc.Template; annotation.
+                For example, take a look at the resource class listing in <xref linkend="mvc.example.implicit.class"/>.
+
+                <example xml:id="mvc.example.implicit.class">
+                    <title>Using &lit.jersey.server.mvc.Template; on a resource class</title>
+
+                    <programlisting language="java">@Path("foo")
+@Template
+public class Foo {
+
+    public String getFoo() {
+        return "FOO";
+    }
+}</programlisting>
+                </example>
+            </para>
+            <para>
+                The example relies on Jersey MVC conventions a lot and requires more explanation as such. First of all, you may
+                have noticed that there is no resource method defined in this JAX-RS resource. Also, there is no template
+                reference defined.
+                In this case, since the &lit.jersey.server.mvc.Template; annotation placed on the resource class does not
+                contain any information, the default relative template reference <literal>index</literal> will be used (for more
+                on this topic see <xref linkend="mvc.references"/>).
+                As for the missing resource methods, a default &lit.jaxrs.GET; method will be automatically generated by Jersey
+                for the <literal>Foo</literal> resource (which is the MVC Controller now). The implementation of the generated
+                resource method performs the equivalent of the following explicit resource method:
+
+                <programlisting language="java">@GET
+public Viewable get() {
+    return new Viewable("index", this);
+}</programlisting>
+
+                You can see that the resource class serves in this case also as the model. Producible media types are determined
+                based on the &lit.jaxrs.Produces; annotation declared on the resource class, if any.
+
+                <note>
+                    <para>
+                        In case of "resource class"-based implicit MVC view templates, the controller is also the model. In such
+                        case the template reference <literal>index</literal> is special, it is the template reference
+                        associated with the controller instance itself.
+                    </para>
+                </note>
+            </para>
+            <para>
+                In the following example, the MVC controller represented by a JAX-RS &lit.jaxrs.GET; sub-resource method,
+                is also generated in the resource class annotated with &lit.jersey.server.mvc.Template;:
+
+                <programlisting language="java">@GET
+@Path("{implicit-view-path-parameter}")
+public Viewable get(@PathParameter("{implicit-view-path-parameter}") String template) {
+    return new Viewable(template, this);
+}</programlisting>
+
+                This allows Jersey to support also implicit sub-resource templates. For example, a JAX-RS resource at path
+                <literal>foo/bar</literal> will try to use relative template reference <literal>bar</literal> that resolves to an
+                absolute template reference <literal>/com/foo/Foo/bar</literal>.
+            </para>
+            <para>
+                In other words, a HTTP &lit.http.GET; request to a <literal>/foo/bar</literal> would be handled by this
+                auto-generated method in the <literal>Foo</literal> resource and would delegate the request to a registered
+                template processor supports processing of the absolute template reference
+                <literal>/com/foo/Foo/bar</literal>, where the model is still an instance of the same JAX-RS resource class
+                <literal>Foo</literal>.
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="mvc.references">
+        <title>Absolute vs. Relative template reference</title>
+
+        <para>
+            As discussed in the previous section, both &jersey.server.mvc.Template; and &jersey.server.mvc.Viewable; provide means
+            to define a reference to a template. We will now discuss how these values are interpreted and how the concrete
+            template is found.
+        </para>
+
+        <section>
+            <title>Relative template reference</title>
+
+            <para>
+                Relative reference is any path that does not start with a leading '<literal>/</literal>' (slash) character (i.e.
+                <literal>index.foo</literal>). This kind of references is resolved into absolute ones by pre-pending a given value
+                with a fully qualified name of the last matched resource.
+            </para>
+            <para>
+                Consider the <xref linkend="mvc.example.implicit.class">example</xref> from the previous section,
+                the template name reference <literal>index</literal> is a relative value that Jersey will resolve to its
+                absolute template reference using a fully qualified class name of <literal>Foo</literal> (more on resolving
+                relative template name to the absolute one can be found in the JavaDoc of &jersey.server.mvc.Viewable; class),
+                which, in our case, is:
+                <programlisting language="java" linenumbering="unnumbered">"/com/foo/Foo/index"</programlisting>
+            </para>
+            <para>
+                Jersey will then search all the registered template processors (see <xref linkend="mvc.spi"/>) to find a template
+                processor that can resolve the absolute template reference further to a "processable" template reference. If
+                a template processor is found then the "processable" template is processed using the supplied data model.
+            </para>
+
+            <note>
+                <para>
+                    If none or empty template reference is provided (either in &lit.jersey.server.mvc.Viewable; or via
+                    &lit.jersey.server.mvc.Template;) then the <literal>index</literal> reference is assumed and all further
+                    processing is done for this value.
+                </para>
+            </note>
+        </section>
+
+        <section>
+            <title>Absolute template reference</title>
+
+            <para>
+                Let's change the resource &lit.http.GET; method in our <literal>Foo</literal> resource a little:
+
+                <example xml:id="mvc.example.viewable.absolutePath">
+                    <title>Using absolute path to template in &lit.jersey.server.mvc.Viewable;</title>
+
+                    <programlisting language="java">@GET
+public Viewable get() {
+    return new Viewable("/index", "FOO");
+}</programlisting>
+                </example>
+
+                In this case, since the template reference begins with <literal>"/"</literal>, Jersey will consider the reference
+                to be absolute already and will not attempt to absolutize it again. The reference will be used "as is" when
+                resolving it to a "processable" template reference as described earlier.
+            </para>
+            <para>
+                Absolute template references start with leading '<literal>/</literal>' (i.e. <literal>/com/example/index.foo</literal>)
+                character and are not further resolved (with respect to the resolving resource class) which means that the
+                template is looked for at the provided path directly.
+            </para>
+            <para>
+                Note, however, that template processors for custom templating engines may modify (and the supported ones do)
+                absolute template reference by pre-pending 'base template path' (if defined) and appending template suffix (i.e.
+                <literal>foo</literal>) if the suffix is not provided in the reference.
+            </para>
+            <para>
+                For example assume that we want to use Mustache templates for our views and we have defined 'base template path'
+                as <literal>pages</literal>. For the absolute template reference <literal>/com/example/Foo/index</literal> the template
+                processor will transform the reference into the following path: <literal>/pages/com/example/Foo/index.mustache</literal>.
+            </para>
+        </section>
+    </section>
+
+    <section>
+        <title>Handling errors with MVC</title>
+
+        <para>
+            In addition to &jersey.server.mvc.Template; a &jersey.server.mvc.ErrorTemplate; annotation has been introduced in
+            Jersey 2.3. The purpose of this annotation is to bind the model to an error view in case an exception has been raised during
+            processing of a request. This is true for any exception thrown after the resource matching phase (i.e. this not only
+            applies to JAX-RS resources but providers and even Jersey runtime as well). The model in this case is the thrown exception
+            itself.
+        </para>
+        <para>
+            <xref linkend="mvc.example.error.simple"/> shows how to use &lit.jersey.server.mvc.ErrorTemplate; on a resource method.
+            If all goes well with the method processing, then the <literal>/short-link</literal> template is used to as page sent
+            to the user. Otherwise if an exception is raised then the <literal>/error-form</literal> template is shown to the user.
+        </para>
+        <example xml:id="mvc.example.error.simple">
+                    <title>Using &lit.jersey.server.mvc.ErrorTemplate; on a resource method</title>
+
+                    <programlisting language="java">@POST
+@Produces({"text/html”})
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+@Template(name = "/short-link")
+@ErrorTemplate(name = "/error-form")
+public ShortenedLink createLink(@FormParam("link") final String link) {
+    // ...
+}</programlisting>
+        </example>
+        <para>
+            Note that &jersey.server.mvc.ErrorTemplate; can be used on a resource class or a resource method to merely handle
+            error states. There is no need to use &jersey.server.mvc.Template; or &jersey.server.mvc.Viewable; with it.
+        </para>
+        <para>
+            The annotation is handled by custom &jaxrs.ext.ExceptionMapper; which creates an instance of
+            &lit.jersey.server.mvc.Viewable; that is further processed by Jersey. This exception mapper is registered automatically
+            with a &lit.jersey.server.mvc.MvcFeature;.
+        </para>
+
+        <section>
+            <title>MVC &amp; Bean Validation</title>
+
+            <para>
+                &lit.jersey.server.mvc.ErrorTemplate; can be used in also with Bean Validation to display specific error pages in
+                case the validation of input/output values fails for some reason. Everything works as described above except the
+                model is not the thrown exception but rather a list of &jersey.ext.ValidationError;s. This list can be iterated in
+                the template and all the validation errors can be shown to the user in a desirable way.
+            </para>
+            <example xml:id="mvc.example.error.bv">
+                    <title>Using &lit.jersey.server.mvc.ErrorTemplate; with Bean Validation</title>
+
+                    <programlisting language="java">@POST
+@Produces({"text/html”})
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+@Template(name = "/short-link”) @ErrorTemplate(name = "/error-form")
+@Valid
+public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) {
+    // ...
+}</programlisting>
+            </example>
+            <example xml:id="mvc.example.error.bv.jsp">
+                    <title>Iterating through &lit.jersey.ext.ValidationError; in JSP</title>
+
+                    <programlisting language="xml"><![CDATA[<c:forEach items="${model}" var="error">
+    ${error.message} "<strong>${error.invalidValue}</strong>"<br/>
+</c:forEach>]]></programlisting>
+            </example>
+            <para>
+                Support for Bean Validation in Jersey MVC Templates is provided by a <literal>jersey-mvc-bean-validation</literal>
+                extension module. The JAX-RS &jaxrs.core.Feature; provided by this module
+                (<literal>MvcBeanValidationFeature</literal>) has to be registered in order to use this
+                functionality (see <xref linkend="mvc.registration"/>).
+            </para>
+            <para>
+                Maven users can find this module at coordinates
+
+                <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-mvc-bean-validation&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                and for non-Maven users the list of dependencies is available at &jersey-mvc-bean-validation;.
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="mvc.registration">
+        <title>Registration and Configuration</title>
+
+        <para>
+            To use the capabilities of Jersey MVC templating support in your JAX-RS/Jersey application you need to register
+            specific JAX-RS &jaxrs.core.Feature;s provided by the MVC modules. For <literal>jersey-mvc</literal> module it is
+            &jersey.server.mvc.MvcFeature; for others it could be, for example, &jersey.server.mvc.FreemarkerMvcFeature;
+            (<literal>jersey-mvc-freemarker</literal>).
+
+            <example>
+                <title>Registering &lit.jersey.server.mvc.MvcFeature;</title>
+                <programlisting language="java">new ResourceConfig()
+    .register(org.glassfish.jersey.server.mvc.MvcFeature.class)
+    // Further configuration of ResourceConfig.
+    .register( ... );</programlisting>
+            </example>
+
+            <example>
+                <title>Registering &lit.jersey.server.mvc.FreemarkerMvcFeature;</title>
+                <programlisting language="java">new ResourceConfig()
+    .register(org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature.class)
+    // Further configuration of ResourceConfig.
+    .register( ... );</programlisting>
+            </example>
+
+            <note>
+                <para>
+                    Modules that uses capabilities of the base Jersey MVC module register &lit.jersey.server.mvc.MvcFeature;
+                    automatically, so you don't need to register this feature explicitly in your code.
+                </para>
+            </note>
+        </para>
+
+        <para>
+            Almost all of the MVC modules are further configurable and either contain a <literal>*Properties</literal>
+            (e.g. <literal>FreemarkerMvcProperties</literal>) class describing all the available properties which could be
+            set in a JAX-RS &lit.jaxrs.core.Application; / &lit.jersey.server.ResourceConfig;. Alternatively, the properties
+            are listed directly in the module <literal>*Feature</literal> class.
+
+            <example xml:id="mvc.ex.rc.properties">
+                <title>Setting <literal>MvcProperties.TEMPLATE_BASE_PATH</literal> value in &lit.jersey.server.ResourceConfig;</title>
+
+                <programlisting language="java">new ResourceConfig()
+    .property(MvcProperties.TEMPLATE_BASE_PATH, "templates")
+    .register(MvcFeature.class)
+    // Further configuration of ResourceConfig.
+    .register( ... );</programlisting>
+            </example>
+
+            <example xml:id="mvc.ex.web.xml.properties">
+                <title>Setting <literal>FreemarkerMvcProperties.TEMPLATE_BASE_PATH</literal> value in <literal>web.xml</literal></title>
+                <programlisting language="xml"><![CDATA[<servlet>
+    <servlet-name>org.glassfish.jersey.examples.freemarker.MyApplication</servlet-name>
+    <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+    <init-param>
+        <param-name>javax.ws.rs.Application</param-name>
+        <param-value>org.glassfish.jersey.examples.freemarker.MyApplication</param-value>
+    </init-param>
+    <init-param>
+        <param-name>jersey.config.server.mvc.templateBasePath.freemarker</param-name>
+        <param-value>freemarker</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+</servlet>]]></programlisting>
+            </example>
+        </para>
+    </section>
+
+    <section>
+        <title>Supported templating engines</title>
+
+        <para>
+            Jersey provides extension modules that enable support for several templating engines. This section lists all the
+            supported engines and their modules as well as discusses any module-specific details.
+        </para>
+
+        <section>
+            <title>Mustache</title>
+
+            <para>
+                An integration module for <link xlink:href="https://github.com/spullara/mustache.java">Mustache</link>-based
+                templating engine.
+            </para>
+
+            <para>
+                Mustache template processor resolves absolute template references to processable template references represented
+                as Mustache templates as follows:
+            </para>
+
+            <procedure>
+                <title>Resolving Mustache template reference</title>
+                <step>
+                    <para>
+                        if the absolute template reference does not end in <literal>.mustache</literal> append this suffix to the
+                        reference; and
+                    </para>
+                </step>
+                <step>
+                    <para>
+                        if <literal>ServletContext.getResource</literal>, <literal>Class.getResource</literal> or
+                        <literal>File.exists</literal>returns a non-&lit.null; value for the reference then
+                        return the reference as the processable template reference otherwise return &lit.null;
+                        (to indicate the absolute reference has not been resolved by the Mustache template processor).
+                    </para>
+                </step>
+            </procedure>
+            <para>
+                Thus the absolute template reference <literal>/com/foo/Foo/index</literal> would be resolved as
+                <literal>/com/foo/Foo/index.mustache</literal>, provided there exists a
+                <literal>/com/foo/Foo/index.mustache</literal>
+                Mustache template in the application.
+            </para>
+            <para>
+                Available configuration properties:
+
+                <itemizedlist>
+                    <listitem>
+                        <para><literal>MustacheMvcFeature.TEMPLATE_BASE_PATH</literal> -
+                            <literal>jersey.config.server.mvc.templateBasepath.mustache</literal></para>
+                        <para>The base path where Mustache templates are located.</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>MustacheMvcFeature.CACHE_TEMPLATES</literal> -
+                            <literal>jersey.config.server.mvc.caching.mustache</literal></para>
+                        <para>Enables caching of Mustache templates to avoid multiple compilation.</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>MustacheMvcFeature.TEMPLATE_OBJECT_FACTORY</literal> -
+                            <literal>jersey.config.server.mvc.factory.mustache</literal></para>
+                        <para>Property used to pass user-configured <literal>MustacheFactory</literal>.</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                Maven users can find this module at coordinates
+
+                <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-mvc-mustache&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                and for non-Maven users the list of dependencies is available at &jersey-mvc-mustache;.
+            </para>
+        </section>
+
+        <section>
+            <title>Freemarker</title>
+
+            <para>
+                An integration module for <link xlink:href="http://freemarker.org/">Freemarker</link>-based templating engine.
+            </para>
+
+            <para>
+                Freemarker template processor resolves absolute template references to processable template references represented
+                as Freemarker templates as follows:
+            </para>
+
+            <procedure>
+                <title>Resolving Freemarker template reference</title>
+                <step>
+                    <para>
+                        if the absolute template reference does not end in <literal>.ftl</literal> append this suffix to the
+                        reference; and
+                    </para>
+                </step>
+                <step>
+                    <para>
+                        if <literal>ServletContext.getResource</literal>, <literal>Class.getResource</literal> or
+                        <literal>File.exists</literal>returns a non-&lit.null; value for the reference then
+                        return the reference as the processable template reference otherwise return &lit.null;
+                        (to indicate the absolute reference has not been resolved by the Freemarker template processor).
+                    </para>
+                </step>
+            </procedure>
+            <para>
+                Thus the absolute template reference <literal>/com/foo/Foo/index</literal> would be resolved to
+                <literal>/com/foo/Foo/index.ftl</literal>, provided there exists a <literal>/com/foo/Foo/index.ftl</literal>
+                Freemarker template in the application.
+            </para>
+            <para>
+                Jersey will assign the model instance to an attribute named <literal>model</literal>.
+                So it is possible to reference the <literal>foo</literal> key from the provided <literal>Map</literal> (MVC Model)
+                resource from the Freemarker template as follows:
+
+                <programlisting language="xml" linenumbering="unnumbered"><![CDATA[<h1>${model.foo}</h1>]]></programlisting>
+            </para>
+            <para>
+                Available configuration properties:
+
+                <itemizedlist>
+                    <listitem>
+                        <para><literal>FreemarkerMvcFeature.TEMPLATE_BASE_PATH</literal> -
+                            <literal>jersey.config.server.mvc.templateBasepath.freemarker</literal></para>
+                        <para>The base path where Freemarker templates are located.</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>FreemarkerMvcFeature.CACHE_TEMPLATES</literal> -
+                            <literal>jersey.config.server.mvc.caching.freemarker</literal></para>
+                        <para>Enables caching of Freemarker templates to avoid multiple compilation.</para>
+                    </listitem>
+                    <listitem>
+                        <para><literal>FreemarkerMvcFeature.TEMPLATE_OBJECT_FACTORY</literal> -
+                            <literal>jersey.config.server.mvc.factory.freemarker</literal></para>
+                        <para>Property used to pass user-configured <literal>FreemarkerFactory</literal>.</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                Maven users can find this module at coordinates
+
+                <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-mvc-freemarker&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                and for non-Maven users the list of dependencies is available at &jersey-mvc-freemarker;.
+            </para>
+        </section>
+
+        <section>
+            <title>JSP</title>
+
+            <para>
+                An integration module for JSP-based templating engine.
+            </para>
+
+            <important>
+                <title>Limitations of Jersey JSP MVC Templates</title>
+                <para>
+                    Jersey web applications that want to use JSP templating support should be registered as Servlet
+                    filters rather than Servlets in the application's <literal>web.xml</literal>. The
+                    <literal>web.xml</literal>-less deployment style introduced in Servlet 3.0 is not supported at the moment
+                    for web applications that require use of Jersey MVC templating support.
+                </para>
+            </important>
+
+            <para>
+                JSP template processor resolves absolute template references to processable template references represented as JSP
+                pages as follows:
+            </para>
+
+            <procedure>
+                <title>Resolving JSP template reference</title>
+                <step>
+                    <para>
+                        if the absolute template reference does not end in <literal>.jsp</literal> append this suffix to the
+                        reference; and
+                    </para>
+                </step>
+                <step>
+                    <para>
+                        if <literal>ServletContext.getResource</literal> returns a non-&lit.null; value for the reference then
+                        return the reference as the processable template reference otherwise return &lit.null;
+                        (to indicate the absolute reference has not been resolved by the JSP template processor).
+                    </para>
+                </step>
+            </procedure>
+            <para>
+                Thus the absolute template reference <literal>/com/foo/Foo/index</literal> would be resolved to
+                <literal>/com/foo/Foo/index.jsp</literal>, provided there exists a <literal>/com/foo/Foo/index.jsp</literal>
+                JSP page in the web application.
+            </para>
+            <para>
+                Jersey will assign the model instance to the attribute named <literal>model</literal> or <literal>it</literal>.
+                So it is possible to reference the <literal>foo</literal> property on the <literal>Foo</literal> resource
+                from the JSP template as follows:
+
+                <programlisting language="xml" linenumbering="unnumbered"><![CDATA[<h1>${model.foo}</h1>]]></programlisting>
+
+                or
+
+                <programlisting language="xml" linenumbering="unnumbered"><![CDATA[<h1>${it.foo}</h1>]]></programlisting>
+            </para>
+            <para>
+                To include another JSP page in the currently processed one a custom <literal>include</literal> tag can be used.
+                Mandatory parameter <literal>page</literal> represents a relative template name which would be absolutized using
+                the same resolving resource class as the parent JSP page template.
+
+                <example>
+                    <title>Including JSP page into JSP page</title>
+                    <programlisting language="xml"><![CDATA[<%@page contentType="text/html"%>
+<%@page pageEncoding="UTF-8"%>
+
+<%@taglib prefix="rbt" uri="urn:org:glassfish:jersey:servlet:mvc" %>
+
+<html>
+    <body>
+
+    <rbt:include page="include.jsp"/>
+
+    </body>
+</html>]]></programlisting>
+                </example>
+            </para>
+            <para>
+                Available configuration properties:
+
+                <itemizedlist>
+                    <listitem>
+                        <para><literal>JspMvcFeature.TEMPLATE_BASE_PATH</literal> -
+                            <literal>jersey.config.server.mvc.templateBasepath.jsp</literal></para>
+                        <para>The base path where JSP templates are located.</para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+            <para>
+                Maven users can find this module at coordinates
+
+                <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-mvc-jsp&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                and for non-Maven users the list of dependencies is available at &jersey-mvc-jsp;.
+            </para>
+        </section>
+    </section>
+
+    <section xml:id="mvc.spi">
+        <title>Writing Custom Templating Engines</title>
+
+        <para>
+            To add support for other (custom) templating engines into Jersey MVC Templating facility, you need to implement the
+            &jersey.server.mvc.TemplateProcessor; and register this class into your application.
+
+            <tip>
+                <para>
+                    When writing template processors it is recommend that you use an appropriate unique suffix for the
+                    processable template references, in which case it is then possible to easily support mixing of multiple
+                    templating engines in a single application without conflicts.
+                </para>
+            </tip>
+
+            <example>
+                <title>Custom &jersey.server.mvc.TemplateProcessor;</title>
+
+                <programlisting language="java"><![CDATA[@Provider
+class MyTemplateProcessor implements TemplateProcessor<String> {
+
+    @Override
+    public String resolve(String path, final MediaType mediaType) {
+        final String extension = ".testp";
+
+        if (!path.endsWith(extension)) {
+            path = path + extension;
+        }
+
+        final URL u = this.getClass().getResource(path);
+        return u == null ? null : path;
+    }
+
+    @Override
+    public void writeTo(String templateReference,
+                        Viewable viewable,
+                        MediaType mediaType,
+                        OutputStream out) throws IOException {
+        final PrintStream ps = new PrintStream(out);
+        ps.print("path=");
+        ps.print(templateReference);
+        ps.println();
+        ps.print("model=");
+        ps.print(viewable.getModel().toString());
+        ps.println();
+    }
+
+}]]></programlisting>
+            </example>
+
+            <example>
+                <title>Registering custom &jersey.server.mvc.TemplateProcessor;</title>
+                <programlisting language="java">new ResourceConfig()
+    .register(MyTemplateProcessor.class)
+    // Further configuration of ResourceConfig.
+    .register( ... );</programlisting>
+            </example>
+        </para>
+
+        <note>
+            <para>
+                In a typical set-up projects using the Jersey MVC templating support would depend on the base module that
+                provides the API and SPI and a single templating engine module for the templating engine of your choice.
+                These modules need to be mentioned explicitly in your &lit.pom.xml; file.
+            </para>
+        </note>
+
+        <para>
+            If you want to use just templating API infrastructure provided by Jersey for the MVC templating support in order to
+            implement your custom support for a templating engine other than the ones provided by Jersey,
+            you will need to add the base &jersey-mvc; module into the list of your dependencies:
+
+            <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-mvc&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+        </para>
+    </section>
+
+    <section>
+        <title>Other Examples</title>
+
+        <para>To see an example of MVC (JSP) templating support in Jersey refer to the &jersey.github.mvc.example.path;.</para>
+    </section>
+</chapter>

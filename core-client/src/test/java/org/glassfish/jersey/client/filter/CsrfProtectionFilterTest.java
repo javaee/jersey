@@ -45,6 +45,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -54,6 +55,7 @@ import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +73,7 @@ public class CsrfProtectionFilterTest {
     @Before
     public void setUp() {
         Client client = ClientBuilder.newClient(new ClientConfig(CsrfProtectionFilter.class)
-                .connector(new TestConnector()));
+                .connectorProvider(new TestConnector()));
         invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
     }
 
@@ -87,7 +89,13 @@ public class CsrfProtectionFilterTest {
         assertNotNull(r.getHeaderString(CsrfProtectionFilter.HEADER_NAME));
     }
 
-    private static class TestConnector implements Connector {
+    private static class TestConnector implements Connector, ConnectorProvider {
+
+        @Override
+        public Connector getConnector(Client client, Configuration runtimeConfig) {
+            return this;
+        }
+
         @Override
         public ClientResponse apply(ClientRequest requestContext) {
             final ClientResponse responseContext = new ClientResponse(

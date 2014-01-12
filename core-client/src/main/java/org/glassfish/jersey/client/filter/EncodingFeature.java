@@ -43,6 +43,7 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.spi.ContentEncoder;
 
 /**
@@ -56,14 +57,14 @@ import org.glassfish.jersey.spi.ContentEncoder;
  */
 public class EncodingFeature implements Feature {
     private final String useEncoding;
-    private final Class<? extends ContentEncoder>[] encodingProviders;
+    private final Class<?>[] encodingProviders;
 
     /**
      * Create a new instance of the feature.
      *
      * @param encodingProviders Encoding providers to be registered in the client configuration.
      */
-    public EncodingFeature(Class<? extends ContentEncoder>... encodingProviders) {
+    public EncodingFeature(Class<?>... encodingProviders) {
         this(null, encodingProviders);
     }
 
@@ -73,10 +74,12 @@ public class EncodingFeature implements Feature {
      * properties at the time when this feature gets enabled, the provided value will be used.
      *
      * @param useEncoding Default value of {@link ClientProperties#USE_ENCODING} property.
-     * @param encoders Encoders to be registered in the client configuration.
+     * @param encoders    Encoders to be registered in the client configuration.
      */
-    public EncodingFeature(String useEncoding, Class<? extends ContentEncoder>... encoders) {
+    public EncodingFeature(String useEncoding, Class<?>... encoders) {
         this.useEncoding = useEncoding;
+
+        Providers.ensureContract(ContentEncoder.class, encoders);
         this.encodingProviders = encoders;
     }
 
@@ -89,7 +92,7 @@ public class EncodingFeature implements Feature {
                 context.property(ClientProperties.USE_ENCODING, useEncoding);
             }
         }
-        for (Class<? extends ContentEncoder> provider : encodingProviders) {
+        for (Class<?> provider : encodingProviders) {
             context.register(provider);
         }
         boolean enable = useEncoding != null || encodingProviders.length > 0;

@@ -210,7 +210,7 @@ public class ResourceMergeTest {
 
         final Resource.Builder root2 = Resource.builder("root");
         root2.addChildResource("child").addMethod("DELETE").handledBy(new MyInflector());
-        root2.addChildResource("child").addMethod(null).handledBy(new MyInflector());
+        root2.addChildResource("child").addMethod((String) null).handledBy(new MyInflector());
 
         final ResourceBag.Builder builder = new ResourceBag.Builder();
         builder.registerProgrammaticResource(root.build());

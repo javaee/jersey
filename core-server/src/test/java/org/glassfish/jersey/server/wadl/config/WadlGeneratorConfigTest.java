@@ -47,8 +47,7 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.ServerBinder;
+import org.glassfish.jersey.server.ServerLocatorFactory;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.wadl.WadlGenerator;
@@ -87,7 +86,7 @@ public class WadlGeneratorConfigTest {
                 generator(generator2).
                 build();
 
-        final ServiceLocator locator = getServiceLocator();
+        final ServiceLocator locator = ServerLocatorFactory.createLocator();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
 
         Assert.assertEquals(MyWadlGenerator2.class, wadlGenerator.getClass());
@@ -96,7 +95,7 @@ public class WadlGeneratorConfigTest {
 
     @Test
     public void testBuildWadlGeneratorFromDescriptions() {
-        final ServiceLocator locator = getServiceLocator();
+        final ServiceLocator locator = ServerLocatorFactory.createLocator();
         final String propValue = "bar";
         WadlGeneratorConfig config = WadlGeneratorConfig.generator(MyWadlGenerator.class).
                 prop("foo", propValue).
@@ -135,7 +134,7 @@ public class WadlGeneratorConfigTest {
             }
         }
 
-        final ServiceLocator locator = getServiceLocator();
+        final ServiceLocator locator = ServerLocatorFactory.createLocator();
 
         WadlGeneratorConfig config = new MyWadlGeneratorConfig();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
@@ -294,7 +293,7 @@ public class WadlGeneratorConfigTest {
                 generator(MyWadlGenerator3.class).
                 prop("foo", "string").
                 prop("bar", new Bar()).build();
-        final ServiceLocator locator = getServiceLocator();
+        final ServiceLocator locator = ServerLocatorFactory.createLocator();
         WadlGenerator wadlGenerator = config.createWadlGenerator(locator);
 
         Assert.assertEquals(MyWadlGenerator3.class, wadlGenerator.getClass());
@@ -304,10 +303,4 @@ public class WadlGeneratorConfigTest {
         Assert.assertEquals(g.foo.s, "string");
         Assert.assertNotNull(g.bar);
     }
-
-
-    private ServiceLocator getServiceLocator() {
-        return Injections.createLocator(new ServerBinder());
-    }
-
 }

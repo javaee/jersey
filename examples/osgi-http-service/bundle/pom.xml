@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>osgi-http-service</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.6-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.examples.osgi-http-service</groupId>
@@ -55,25 +55,22 @@
     <name>jersey-examples-osgi-http-service-bundle</name>
     <packaging>jar</packaging>
 
+    <description>OSGi HttpService example bundle</description>
+
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <scope>provided</scope>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.http.bundle</artifactId>
+            <version>2.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.http.bundle</artifactId>
-            <version>2.0.4</version>
+            <artifactId>org.apache.felix.eventadmin</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -99,7 +96,7 @@
 
     <profiles>
         <profile>
-            <id>examples-source-zip</id>
+            <id>release</id>
             <!-- do not create source zip bundles -->
             <build>
                 <plugins>

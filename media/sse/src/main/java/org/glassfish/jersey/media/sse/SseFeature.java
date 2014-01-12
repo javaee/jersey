@@ -58,6 +58,21 @@ public class SseFeature implements Feature {
      * Server sent events media type.
      */
     public static final MediaType SERVER_SENT_EVENTS_TYPE = MediaType.valueOf(SERVER_SENT_EVENTS);
+    /**
+     * A "reconnection not set" value for the SSE reconnect delay set via {@code retry} field.
+     *
+     * @since 2.3
+     */
+    public static long RECONNECT_NOT_SET = -1;
+
+    /**
+     * {@code "Last-Event-ID"} HTTP request header name as defined by
+     * <a href="http://www.w3.org/TR/eventsource/#last-event-id">SSE specification</a>.
+     *
+     * @since 2.3
+     */
+    public static final String LAST_EVENT_ID_HEADER = "Last-Event-ID";
+
 
     @Override
     public boolean configure(FeatureContext context) {

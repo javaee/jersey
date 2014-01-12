@@ -54,9 +54,6 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
-
-import javax.inject.Provider;
 
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -64,8 +61,8 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Test cases for injected {@link ResourceInfo} in filters.
@@ -77,26 +74,26 @@ public class ResourceInfoTest {
 
     public static class MyRequestFilter implements ContainerRequestFilter {
         @Context
-        Provider<ResourceInfo> resourceInfo;
+        ResourceInfo resourceInfo;
 
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
             requestContext.getHeaders().add("MyRequestFilter-called", "called");
-            requestContext.getHeaders().add("MyRequestFilter-class", resourceInfo.get().getResourceClass().getSimpleName());
-            requestContext.getHeaders().add("MyRequestFilter-method", resourceInfo.get().getResourceMethod().getName());
+            requestContext.getHeaders().add("MyRequestFilter-class", resourceInfo.getResourceClass().getSimpleName());
+            requestContext.getHeaders().add("MyRequestFilter-method", resourceInfo.getResourceMethod().getName());
         }
     }
 
 
     public static class MyResponseFilter implements ContainerResponseFilter {
         @Context
-        Provider<ResourceInfo> resourceInfo;
+        ResourceInfo resourceInfo;
 
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             responseContext.getHeaders().add("MyResponseFilter-called", "called");
-            final Class<?> resourceClass = resourceInfo.get().getResourceClass();
-            final Method resourceMethod = resourceInfo.get().getResourceMethod();
+            final Class<?> resourceClass = resourceInfo.getResourceClass();
+            final Method resourceMethod = resourceInfo.getResourceMethod();
             responseContext.getHeaders().add("MyResponseFilter-class", resourceClass == null ? "<null>"
                     : resourceClass.getSimpleName());
             responseContext.getHeaders().add("MyResponseFilter-method", resourceMethod == null ? "<null>"
@@ -107,12 +104,12 @@ public class ResourceInfoTest {
     @PreMatching
     public static class MyPrematchingFilter implements ContainerRequestFilter {
         @Context
-        Provider<ResourceInfo> resourceInfo;
+        ResourceInfo resourceInfo;
 
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
-            Assert.assertNull(resourceInfo.get().getResourceClass());
-            Assert.assertNull(resourceInfo.get().getResourceMethod());
+            assertNull(resourceInfo.getResourceClass());
+            assertNull(resourceInfo.getResourceMethod());
         }
     }
 
@@ -121,7 +118,7 @@ public class ResourceInfoTest {
     public static class MyResource {
         @GET
         public String get(@Context ContainerRequestContext request) {
-            Assert.assertEquals("called", request.getHeaderString("MyRequestFilter-called"));
+            assertEquals("called", request.getHeaderString("MyRequestFilter-called"));
             final String className = "MyResource";
             final String methodName = "get";
             assertRequestHeader(request, className, methodName);
@@ -131,15 +128,13 @@ public class ResourceInfoTest {
         @GET
         @Path("get-child")
         public String getChild(@Context ContainerRequestContext request) {
-            final MultivaluedMap<String, String> headers = request.getHeaders();
             assertRequestHeader(request, "MyResource", "getChild");
             return "get-child";
         }
 
 
         @POST
-        public String post(@Context ContainerRequestContext request, String entity) {
-            final MultivaluedMap<String, String> headers = request.getHeaders();
+        public String post(@Context ContainerRequestContext request) {
             assertRequestHeader(request, "MyResource", "post");
             return "post";
         }
@@ -148,8 +143,6 @@ public class ResourceInfoTest {
         public Class<SubResource> getSubResource() {
             return SubResource.class;
         }
-
-        ;
     }
 
     @Path("info")
@@ -173,15 +166,14 @@ public class ResourceInfoTest {
     }
 
     private static void assertRequestHeader(ContainerRequestContext request, String className, String methodName) {
-        Assert.assertEquals("called", request.getHeaderString("MyRequestFilter-called"));
-        Assert.assertEquals(className, request.getHeaderString("MyRequestFilter-class"));
-        Assert.assertEquals(methodName, request.getHeaderString("MyRequestFilter-method"));
+        assertEquals("called", request.getHeaderString("MyRequestFilter-called"));
+        assertEquals(className, request.getHeaderString("MyRequestFilter-class"));
+        assertEquals(methodName, request.getHeaderString("MyRequestFilter-method"));
     }
 
     public static class SubResource {
         @GET
         public String getFromSubResource(@Context ContainerRequestContext request) {
-            final MultivaluedMap<String, String> headers = request.getHeaders();
             assertRequestHeader(request, "SubResource", "getFromSubResource");
             return "get-sub-resource";
         }
@@ -192,7 +184,6 @@ public class ResourceInfoTest {
 
         @GET
         public String getAnother(@Context ContainerRequestContext request) {
-            final MultivaluedMap<String, String> headers = request.getHeaders();
             assertRequestHeader(request, "MyAnotherResource", "getAnother");
             return "get-another";
         }
@@ -202,8 +193,8 @@ public class ResourceInfoTest {
     public void testGet() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = getApplication();
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("get", response.getEntity());
         assertResponseHeaders(response, "MyResource", "get");
     }
 
@@ -212,12 +203,12 @@ public class ResourceInfoTest {
     public void testGetMultiple() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = getApplication();
         ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("get", response.getEntity());
         assertResponseHeaders(response, "MyResource", "get");
         response = handler.apply(RequestContextBuilder.from("/resource/get-child", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get-child", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("get-child", response.getEntity());
         assertResponseHeaders(response, "MyResource", "getChild");
     }
 
@@ -230,8 +221,8 @@ public class ResourceInfoTest {
     public void testGetChild() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = getApplication();
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource/get-child", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get-child", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("get-child", response.getEntity());
 
         final String className = "MyResource";
         final String methodName = "getChild";
@@ -240,9 +231,9 @@ public class ResourceInfoTest {
     }
 
     private void assertResponseHeaders(ContainerResponse response, String className, String methodName) {
-        Assert.assertEquals("called", response.getHeaders().get("MyResponseFilter-called").get(0));
-        Assert.assertEquals(className, response.getHeaders().get("MyResponseFilter-class").get(0));
-        Assert.assertEquals(methodName, response.getHeaders().get("MyResponseFilter-method").get(0));
+        assertEquals("called", response.getHeaders().get("MyResponseFilter-called").get(0));
+        assertEquals(className, response.getHeaders().get("MyResponseFilter-class").get(0));
+        assertEquals(methodName, response.getHeaders().get("MyResponseFilter-method").get(0));
     }
 
     @Test
@@ -250,8 +241,8 @@ public class ResourceInfoTest {
         ApplicationHandler handler = getApplication();
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "POST").entity("entity")
                 .build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("post", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("post", response.getEntity());
         assertResponseHeaders(response, "MyResource", "post");
     }
 
@@ -259,8 +250,8 @@ public class ResourceInfoTest {
     public void testGetAnotherResource() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = getApplication();
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource-another", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get-another", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("get-another", response.getEntity());
         assertResponseHeaders(response, "MyAnotherResource", "getAnother");
     }
 
@@ -268,8 +259,8 @@ public class ResourceInfoTest {
     public void testGetSubResource() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = getApplication();
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource/locator", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get-sub-resource", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("get-sub-resource", response.getEntity());
         assertResponseHeaders(response, "SubResource", "getFromSubResource");
     }
 
@@ -278,8 +269,8 @@ public class ResourceInfoTest {
     public void testInfoGet() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = getApplication();
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/info", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get-info", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("get-info", response.getEntity());
         assertResponseHeaders(response, "ResourceTestingInfo", "getInfo");
     }
 
@@ -287,8 +278,8 @@ public class ResourceInfoTest {
     public void testInfoGetChild() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = getApplication();
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/info/child", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("get-info-child", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("get-info-child", response.getEntity());
         assertResponseHeaders(response, "ResourceTestingInfo", "getChildInfo");
     }
 
@@ -296,7 +287,7 @@ public class ResourceInfoTest {
     public void test404() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = getApplication();
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/NOT_FOUND", "GET").build()).get();
-        Assert.assertEquals(404, response.getStatus());
+        assertEquals(404, response.getStatus());
         assertResponseHeaders(response, "<null>", "<null>");
     }
 

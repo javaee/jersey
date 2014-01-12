@@ -40,27 +40,33 @@
 package org.glassfish.jersey.test;
 
 import java.net.URI;
+import java.security.AccessController;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
@@ -100,8 +106,8 @@ public abstract class JerseyTest {
      * The test container on which the tests would be run.
      */
     private final TestContainer tc;
-    private Client client;
     private final ApplicationHandler application;
+    private final AtomicReference<Client> client = new AtomicReference<Client>(null);
     /**
      * JerseyTest property bag that can be used to configure the test behavior.
      * These properties can be overridden with a system property.
@@ -114,9 +120,9 @@ public abstract class JerseyTest {
     private final Map<String, String> forcedPropertyMap = Maps.newHashMap();
 
     private Handler logHandler;
-    private List<LogRecord> loggedStartupRecords = Lists.newArrayList();
-    private List<LogRecord> loggedRuntimeRecords = Lists.newArrayList();
-    private Map<Logger, Level> logLevelMap = Maps.newIdentityHashMap();
+    private final List<LogRecord> loggedStartupRecords = Lists.newArrayList();
+    private final List<LogRecord> loggedRuntimeRecords = Lists.newArrayList();
+    private final Map<Logger, Level> logLevelMap = Maps.newIdentityHashMap();
 
     /**
      * An extending class must implement the {@link #configure()} method to
@@ -128,7 +134,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest() throws TestContainerException {
         ResourceConfig config = getResourceConfig(configure());
-        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class, null, RuntimeType.SERVER));
 
         if (isLogRecordingEnabled()) {
             registerLogHandler();
@@ -156,7 +162,7 @@ public abstract class JerseyTest {
         setTestContainerFactory(testContainerFactory);
 
         ResourceConfig config = getResourceConfig(configure());
-        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class, null, RuntimeType.SERVER));
         if (isLogRecordingEnabled()) {
             registerLogHandler();
         }
@@ -167,10 +173,6 @@ public abstract class JerseyTest {
             loggedRuntimeRecords.clear();
             unregisterLogHandler();
         }
-    }
-
-    private ResourceConfig getResourceConfig(Application app) {
-        return ResourceConfig.forApplication(app);
     }
 
     /**
@@ -185,7 +187,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest(Application jaxrsApplication) throws TestContainerException {
         ResourceConfig config = getResourceConfig(jaxrsApplication);
-        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class, null, RuntimeType.SERVER));
         if (isLogRecordingEnabled()) {
             registerLogHandler();
         }
@@ -209,7 +211,7 @@ public abstract class JerseyTest {
      */
     public JerseyTest(Class<? extends Application> jaxrsApplicationClass) throws TestContainerException {
         ResourceConfig config = ResourceConfig.forApplicationClass(jaxrsApplicationClass);
-        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class));
+        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class, null, RuntimeType.SERVER));
         if (isLogRecordingEnabled()) {
             registerLogHandler();
         }
@@ -220,6 +222,10 @@ public abstract class JerseyTest {
             loggedRuntimeRecords.clear();
             unregisterLogHandler();
         }
+    }
+
+    private ResourceConfig getResourceConfig(Application app) {
+        return ResourceConfig.forApplication(app);
     }
 
     /**
@@ -298,8 +304,14 @@ public abstract class JerseyTest {
         forcedPropertyMap.put(propertyName, value);
     }
 
-    protected boolean isEnabled(String featureName) {
-        return Boolean.valueOf(getProperty(featureName));
+    /**
+     * Check if the Jersey test boolean property (flag) has been set to {@code true}.
+     *
+     * @param propertyName name of the Jersey test boolean property.
+     * @return {@code true} if the test property has been enabled, {@code false} otherwise.
+     */
+    protected final boolean isEnabled(String propertyName) {
+        return Boolean.valueOf(getProperty(propertyName));
     }
 
     private String getProperty(String propertyName) {
@@ -307,9 +319,9 @@ public abstract class JerseyTest {
             return forcedPropertyMap.get(propertyName);
         }
 
-        final Properties sysprops = System.getProperties();
-        if (sysprops.containsKey(propertyName)) {
-            return sysprops.getProperty(propertyName);
+        final Properties systemProperties = AccessController.doPrivileged(PropertiesHelper.getSystemProperties());
+        if (systemProperties.containsKey(propertyName)) {
+            return systemProperties.getProperty(propertyName);
         }
 
         if (propertyMap.containsKey(propertyName)) {
@@ -394,13 +406,16 @@ public abstract class JerseyTest {
 
                     }
                 } else {
-                    try {
-                        testContainerFactoryClass = Class.forName(tcfClassName).asSubclass(TestContainerFactory.class);
-                    } catch (ClassNotFoundException ex) {
+                    final Class<Object> tfClass = AccessController.doPrivileged(ReflectionHelper.classForNamePA(tcfClassName, null));
+                    if (tfClass == null) {
                         throw new TestContainerException(
                                 "The default test container factory class name, "
                                         + tcfClassName
-                                        + ", cannot be loaded", ex);
+                                        + ", cannot be loaded");
+                    }
+                    try {
+                        testContainerFactoryClass =
+                                tfClass.asSubclass(TestContainerFactory.class);
                     } catch (ClassCastException ex) {
                         throw new TestContainerException(
                                 "The default test container factory class, "
@@ -452,10 +467,7 @@ public abstract class JerseyTest {
      * @return the configured client.
      */
     public Client client() {
-        if (client == null) {
-            client = getClient(tc, application);
-        }
-        return client;
+        return client.get();
     }
 
     /**
@@ -472,6 +484,8 @@ public abstract class JerseyTest {
         }
 
         tc.start();
+        Client old = client.getAndSet(getClient(tc, application));
+        close(old);
     }
 
     /**
@@ -487,7 +501,12 @@ public abstract class JerseyTest {
             unregisterLogHandler();
         }
 
-        tc.stop();
+        try {
+            tc.stop();
+        } finally {
+            Client old = client.getAndSet(null);
+            close(old);
+        }
     }
 
     private TestContainer getContainer(ApplicationHandler application, TestContainerFactory tcf) {
@@ -532,9 +551,11 @@ public abstract class JerseyTest {
      * Can be overridden by subclasses to conveniently configure the client instance
      * used by the test.
      *
-     * @param clientConfig Client configuration that can be modified to configure the client.
+     * Default implementation of the method is "no-op".
+     *
+     * @param config Jersey test client configuration that can be modified before the client is created.
      */
-    protected void configureClient(ClientConfig clientConfig) {
+    protected void configureClient(ClientConfig config) {
         // nothing
     }
 
@@ -553,7 +574,7 @@ public abstract class JerseyTest {
      * @return The HTTP port of the URI
      */
     protected final int getPort() {
-        final String value = System.getProperty(TestProperties.CONTAINER_PORT);
+        final String value = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(TestProperties.CONTAINER_PORT));
         if (value != null) {
 
             try {
@@ -691,5 +712,52 @@ public abstract class JerseyTest {
             };
         }
         return logHandler;
+    }
+
+    /**
+     * Utility method that safely closes a response without throwing an exception.
+     *
+     * @param responses responses to close. Each response may be {@code null}.
+     * @since 2.5
+     */
+    public final void close(final Response... responses) {
+        if (responses == null || responses.length == 0) {
+            return;
+        }
+
+        for (Response response : responses) {
+            if (response == null) {
+                continue;
+            }
+            try {
+                response.close();
+            } catch (Throwable t) {
+                LOGGER.log(Level.WARNING, "Error closing a response.", t);
+            }
+        }
+    }
+
+    /**
+     * Utility method that safely closes a client instance without throwing an exception.
+     *
+     * @param clients client instances to close. Each instance may be {@code null}.
+     * @since 2.5
+     */
+    public final void close(final Client... clients) {
+        if (clients == null || clients.length == 0) {
+            return;
+        }
+
+        for (Client c : clients) {
+            if (c == null) {
+                continue;
+            }
+            try {
+                c.close();
+            } catch (Throwable t) {
+                LOGGER.log(Level.WARNING, "Error closing a client instance.", t);
+            }
+
+        }
     }
 }

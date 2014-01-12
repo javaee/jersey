@@ -116,5 +116,9 @@
     The command above creates a Servlet 3.x compliant WAR located in the target directory. The WAR can be then deployed to your
     Servlet 3.x compliant container.
 </p>
+
+<h2>Running Test Client</h2>
+<p>After deploying the application into a Servlet 3.x compliant container, you can run the attached test by executing:</p>
+<code>mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.external.ExternalTestContainerFactory -Djersey.config.test.container.port=&lt;port&gt;</code>
 </body>
 </html>

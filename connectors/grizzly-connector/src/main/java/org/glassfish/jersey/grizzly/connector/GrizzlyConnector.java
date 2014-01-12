@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.grizzly.connector;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -48,10 +49,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -59,18 +60,23 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
+import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
+import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
-
-import org.glassfish.grizzly.http.client.Version;
 
 import com.google.common.util.concurrent.SettableFuture;
 
-import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import com.ning.http.client.HttpResponseBodyPart;
+import com.ning.http.client.HttpResponseHeaders;
+import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Request;
 import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
@@ -79,17 +85,18 @@ import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
  * The transport using the AsyncHttpClient.
  *
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class GrizzlyConnector implements Connector {
-
-    private AsyncHttpClient client;
+class GrizzlyConnector implements Connector {
+    private final AsyncHttpClient grizzlyClient;
 
     /**
-     * Create the new Grizzly async client connector.
+     * Create new connector based on Grizzly asynchronous client library.
      *
-     * @param config client configuration.
+     * @param client Jersey client instance to create the connector for.
+     * @param config Jersey client runtime configuration to be used to configure the connector parameters.
      */
-    public GrizzlyConnector(Configuration config) {
+    GrizzlyConnector(Client client, Configuration config) {
         AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
 
         ExecutorService executorService;
@@ -114,64 +121,141 @@ public class GrizzlyConnector implements Connector {
             builder.setExecutorService(executorService);
         }
 
-        AsyncHttpClientConfig asyncClientConfig = builder.setAllowPoolingConnection(true).build();
-        this.client = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(asyncClientConfig), asyncClientConfig);
+        builder.setAllowPoolingConnection(true);
+        if (client.getSslContext() != null) {
+            builder.setSSLContext(client.getSslContext());
+        }
+        if (client.getHostnameVerifier() != null) {
+            builder.setHostnameVerifier(client.getHostnameVerifier());
+        }
+        AsyncHttpClientConfig asyncClientConfig = builder.build();
+
+        this.grizzlyClient = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(asyncClientConfig), asyncClientConfig);
     }
 
     /*
      * Sends the {@link javax.ws.rs.core.Request} via Grizzly transport and returns the {@link javax.ws.rs.core.Response}.
      */
     @Override
-    public ClientResponse apply(ClientRequest requestContext) {
-        com.ning.http.client.Response connectorResponse;
+    public ClientResponse apply(final ClientRequest request) {
+        final Request connectorRequest = translate(request);
+
+        final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
+        final ByteBufferInputStream entityStream = new ByteBufferInputStream();
+        final AtomicBoolean futureSet = new AtomicBoolean(false);
 
         try {
-            com.ning.http.client.Request connectorRequest = translate(requestContext);
-            Future<com.ning.http.client.Response> respFuture = client.executeRequest(connectorRequest);
-            connectorResponse = respFuture.get();
+            grizzlyClient.executeRequest(connectorRequest, new AsyncHandler<Void>() {
+                private volatile HttpResponseStatus status = null;
+
+                @Override
+                public STATE onStatusReceived(final HttpResponseStatus responseStatus) throws Exception {
+                    status = responseStatus;
+                    return STATE.CONTINUE;
+                }
+
+                @Override
+                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                    if (!futureSet.compareAndSet(false, true)) {
+                        return STATE.ABORT;
+                    }
+
+                    responseFuture.set(translate(request, this.status, headers, entityStream));
+                    return STATE.CONTINUE;
+                }
+
+                @Override
+                public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                    entityStream.put(bodyPart.getBodyByteBuffer());
+                    return STATE.CONTINUE;
+                }
+
+                @Override
+                public Void onCompleted() throws Exception {
+                    entityStream.closeQueue();
+                    return null;
+                }
+
+                @Override
+                public void onThrowable(Throwable t) {
+                    entityStream.closeQueue(t);
+
+                    if (futureSet.compareAndSet(false, true)) {
+                        t = t instanceof IOException ? new ProcessingException(t.getMessage(), t) : t;
+                        responseFuture.setException(t);
+                    }
+                }
+            });
+
+            return responseFuture.get();
+        } catch (IOException ex) {
+            throw new ProcessingException(ex.getMessage(), ex.getCause());
         } catch (ExecutionException ex) {
             Throwable e = ex.getCause() == null ? ex : ex.getCause();
             throw new ProcessingException(e.getMessage(), e);
         } catch (InterruptedException ex) {
             throw new ProcessingException(ex.getMessage(), ex);
-        } catch (IOException ex) {
-            throw new ProcessingException(ex.getMessage(), ex);
         }
-
-        return translate(requestContext, connectorResponse);
     }
 
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
         final Request connectorRequest = translate(request);
+        final ByteBufferInputStream entityStream = new ByteBufferInputStream();
+        final AtomicBoolean callbackInvoked = new AtomicBoolean(false);
 
         Throwable failure;
         try {
-            return client.executeRequest(connectorRequest, new AsyncCompletionHandler<ClientResponse>() {
+            return grizzlyClient.executeRequest(connectorRequest, new AsyncHandler<Void>() {
+                private volatile HttpResponseStatus status = null;
+
                 @Override
-                public ClientResponse onCompleted(com.ning.http.client.Response connectorResponse) throws Exception {
-                    final ClientResponse response = translate(request, connectorResponse);
-                    try {
-                        return response;
-                    } finally {
-                        callback.response(response);
+                public STATE onStatusReceived(final HttpResponseStatus responseStatus) throws Exception {
+                    status = responseStatus;
+                    return STATE.CONTINUE;
+                }
+
+                @Override
+                public STATE onHeadersReceived(HttpResponseHeaders headers) throws Exception {
+                    if (!callbackInvoked.compareAndSet(false, true)) {
+                        return STATE.ABORT;
                     }
+
+                    callback.response(translate(request, this.status, headers, entityStream));
+                    return STATE.CONTINUE;
+                }
+
+                @Override
+                public STATE onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {
+                    entityStream.put(bodyPart.getBodyByteBuffer());
+                    return STATE.CONTINUE;
+                }
+
+                @Override
+                public Void onCompleted() throws Exception {
+                    entityStream.closeQueue();
+                    return null;
                 }
 
                 @Override
                 public void onThrowable(Throwable t) {
-                    t = t instanceof IOException ? new ProcessingException(t.getMessage(), t) : t;
-                    callback.failure(t);
+                    entityStream.closeQueue(t);
+
+                    if (callbackInvoked.compareAndSet(false, true)) {
+                        t = t instanceof IOException ? new ProcessingException(t.getMessage(), t) : t;
+                        callback.failure(t);
+                    }
                 }
             });
         } catch (IOException ex) {
-            failure = ex;
-            callback.failure(new ProcessingException(ex.getMessage(), ex.getCause()));
+            failure = new ProcessingException(ex.getMessage(), ex.getCause());
         } catch (Throwable t) {
             failure = t;
-            callback.failure(t);
         }
 
+        if (callbackInvoked.compareAndSet(false, true)) {
+            callback.failure(failure);
+        }
         final SettableFuture<Object> errorFuture = SettableFuture.create();
         errorFuture.setException(failure);
         return errorFuture;
@@ -179,40 +263,39 @@ public class GrizzlyConnector implements Connector {
 
     @Override
     public void close() {
-        client.close();
+        grizzlyClient.close();
     }
 
-    private ClientResponse translate(ClientRequest requestContext, final com.ning.http.client.Response original) {
+    private ClientResponse translate(final ClientRequest requestContext,
+                                     final HttpResponseStatus status,
+                                     final HttpResponseHeaders headers,
+                                     final NonBlockingInputStream entityStream) {
 
         final ClientResponse responseContext = new ClientResponse(new Response.StatusType() {
             @Override
             public int getStatusCode() {
-                return original.getStatusCode();
+                return status.getStatusCode();
             }
 
             @Override
             public Response.Status.Family getFamily() {
-                return Response.Status.Family.familyOf(original.getStatusCode());
+                return Response.Status.Family.familyOf(status.getStatusCode());
             }
 
             @Override
             public String getReasonPhrase() {
-                return original.getStatusText();
+                return status.getStatusText();
             }
         }, requestContext);
 
-        for (Map.Entry<String, List<String>> entry : original.getHeaders().entrySet()) {
+        for (Map.Entry<String, List<String>> entry : headers.getHeaders().entrySet()) {
             for (String value : entry.getValue()) {
                 // TODO value.toString?
                 responseContext.getHeaders().add(entry.getKey(), value);
             }
         }
 
-        try {
-            responseContext.setEntityStream(original.getResponseBodyAsStream());
-        } catch (IOException e) {
-            Logger.getLogger(GrizzlyConnector.class.getName()).log(Level.SEVERE, null, e);
-        }
+        responseContext.setEntityStream(entityStream);
 
         return responseContext;
     }
@@ -223,19 +306,41 @@ public class GrizzlyConnector implements Connector {
 
         RequestBuilder builder = new RequestBuilder(strMethod).setUrl(uri.toString());
 
-        builder.setFollowRedirects(PropertiesHelper.getValue(requestContext.getConfiguration().getProperties(), ClientProperties.FOLLOW_REDIRECTS,
-                true));
+        builder.setFollowRedirects(requestContext.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
 
-        final com.ning.http.client.Request.EntityWriter entity = this.getHttpEntity(requestContext);
-
-        if (entity != null) {
-            builder = builder.setBody(entity);
+        if (requestContext.hasEntity()) {
+            Boolean enableBuffering = requestContext.resolveProperty(ClientProperties.REQUEST_ENTITY_PROCESSING,
+                    RequestEntityProcessing.class) == RequestEntityProcessing.BUFFERED;
+            if (enableBuffering) {
+                byte[] entityBytes = bufferEntity(requestContext);
+                builder = builder.setBody(entityBytes);
+            } else {
+                builder.setBody(getEntityWriter(requestContext));
+            }
         }
 
         com.ning.http.client.Request result = builder.build();
         writeOutBoundHeaders(requestContext.getHeaders(), result);
 
         return result;
+    }
+
+    @SuppressWarnings("MagicNumber")
+    private byte[] bufferEntity(ClientRequest requestContext) {
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream(512);
+        requestContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+
+            @Override
+            public OutputStream getOutputStream(int contentLength) throws IOException {
+                return baos;
+            }
+        });
+        try {
+            requestContext.writeEntity();
+        } catch (IOException e) {
+            throw new ProcessingException(LocalizationMessages.ERROR_BUFFERING_ENTITY(), e);
+        }
+        return baos.toByteArray();
     }
 
     private static void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers,
@@ -257,14 +362,7 @@ public class GrizzlyConnector implements Connector {
         }
     }
 
-    private com.ning.http.client.Request.EntityWriter getHttpEntity(final ClientRequest requestContext) {
-        final Object entity = requestContext.getEntity();
-
-        if (entity == null) {
-            return null;
-        }
-
-
+    private com.ning.http.client.Request.EntityWriter getEntityWriter(final ClientRequest requestContext) {
         return new com.ning.http.client.Request.EntityWriter() {
             @Override
             public void writeEntity(final OutputStream out) throws IOException {
@@ -282,6 +380,6 @@ public class GrizzlyConnector implements Connector {
 
     @Override
     public String getName() {
-        return String.format("Grizzly Http Client %d.%d", Version.MAJOR_VERSION, Version.MINOR_VERSION);
+        return String.format("Async HTTP Grizzly Connector %s", Version.getVersion());
     }
 }

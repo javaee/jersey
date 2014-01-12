@@ -39,7 +39,8 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.ws.rs.WebApplicationException;
+import java.util.ArrayList;
+
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
@@ -48,14 +49,17 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -69,7 +73,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
-    private ServiceLocator locator;
+    private final ServiceLocator locator;
     private final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters;
     private final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters;
     private final Provider<RespondingContext> respondingContextFactory;
@@ -93,8 +97,8 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
          * to the responseFilters parameter.
          * </p>
          *
-         * @param requestFilters list of global (unbound) request filters (either pre or post match - depending on the
-         *                       stage being created).
+         * @param requestFilters  list of global (unbound) request filters (either pre or post match - depending on the
+         *                        stage being created).
          * @param responseFilters list of global response filters (for pre-match stage) or {@code null} (for post-match
          *                        stage).
          * @return new container filtering stage.
@@ -111,9 +115,9 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
      * Injection constructor.
      *
      * @param respondingContextFactory responding context factory.
-     * @param locator HK2 service locator.
-     * @param requestFilters global request filters (pre or post match).
-     * @param responseFilters global response filters or {@code null}.
+     * @param locator                  HK2 service locator.
+     * @param requestFilters           global request filters (pre or post match).
+     * @param responseFilters          global response filters or {@code null}.
      */
     private ContainerFilteringStage(
             Provider<RespondingContext> respondingContextFactory,
@@ -132,50 +136,80 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
     public Continuation<ContainerRequest> apply(ContainerRequest requestContext) {
         Iterable<ContainerRequestFilter> sortedRequestFilters;
 
-        if (responseFilters == null) {
-            // post-matching (response filter stage is pushed in pre-matching phase, so that if pre-matching filter
-            // throws exception, response filters get still invoked)
+        final boolean postMatching = responseFilters == null;
+
+        final TracingLogger tracingLogger = TracingLogger.getInstance(requestContext);
+        if (postMatching) {
+            // post-matching
             RoutingContext rc = locator.getService(RoutingContext.class);
-            sortedRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(), requestFilters,
-                    rc.getBoundRequestFilters());
+            final ArrayList<Iterable<RankedProvider<ContainerRequestFilter>>> rankedProviders =
+                    new ArrayList<Iterable<RankedProvider<ContainerRequestFilter>>>(2);
+            rankedProviders.add(requestFilters);
+            rankedProviders.add(rc.getBoundRequestFilters());
+            sortedRequestFilters = Providers.mergeAndSortRankedProviders(
+                    new RankedComparator<ContainerRequestFilter>(), rankedProviders);
+
+            requestContext.getRequestEventBuilder().setContainerRequestFilters(sortedRequestFilters);
+            requestContext.triggerEvent(RequestEvent.Type.REQUEST_MATCHED);
+
         } else {
-            // pre-matching
-            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, locator));
+            // pre-matching (response filter stage is pushed in pre-matching phase, so that if pre-matching filter
+            // throws exception, response filters get still invoked)
+            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, locator, tracingLogger));
             sortedRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(), requestFilters);
         }
 
-        for (ContainerRequestFilter filter : sortedRequestFilters) {
-            try {
-                filter.filter(requestContext);
-            } catch (WebApplicationException wae) {
-                throw wae;
-            } catch (Exception exception) {
-                throw new MappableException(exception);
-            }
+        final TracingLogger.Event summaryEvent =
+                (postMatching ? ServerTraceEvent.REQUEST_FILTER_SUMMARY : ServerTraceEvent.PRE_MATCH_SUMMARY);
+        final long timestamp = tracingLogger.timestamp(summaryEvent);
+        int processedCount = 0;
+        try {
+            final TracingLogger.Event filterEvent = (postMatching ? ServerTraceEvent.REQUEST_FILTER : ServerTraceEvent.PRE_MATCH);
+            for (ContainerRequestFilter filter : sortedRequestFilters) {
+                final long filterTimestamp = tracingLogger.timestamp(filterEvent);
+                try {
+                    filter.filter(requestContext);
+                } catch (Exception exception) {
+                    throw new MappableException(exception);
+                } finally {
+                    processedCount++;
+                    tracingLogger.logDuration(filterEvent, filterTimestamp, filter);
+                }
 
-            final Response abortResponse = requestContext.getAbortResponse();
-            if (abortResponse != null) {
-                // abort accepting & return response
-                return Continuation.of(requestContext, Stages.asStage(
-                        new Endpoint() {
-                            @Override
-                            public ContainerResponse apply(
-                                    final ContainerRequest requestContext) {
-                                return new ContainerResponse(requestContext, abortResponse);
-                            }
-                        }));
+                final Response abortResponse = requestContext.getAbortResponse();
+                if (abortResponse != null) {
+                    // abort accepting & return response
+                    return Continuation.of(requestContext, Stages.asStage(
+                            new Endpoint() {
+                                @Override
+                                public ContainerResponse apply(
+                                        final ContainerRequest requestContext) {
+                                    return new ContainerResponse(requestContext, abortResponse);
+                                }
+                            }));
+                }
             }
+        } finally {
+            if (postMatching) {
+                requestContext.triggerEvent(RequestEvent.Type.REQUEST_FILTERED);
+            }
+            tracingLogger.logDuration(summaryEvent, timestamp, processedCount);
         }
+
         return Continuation.of(requestContext, getDefaultNext());
     }
 
     private static class ResponseFilterStage extends AbstractChainableStage<ContainerResponse> {
         private final Iterable<RankedProvider<ContainerResponseFilter>> filters;
         private final ServiceLocator locator;
+        private final TracingLogger tracingLogger;
 
-        private ResponseFilterStage(Iterable<RankedProvider<ContainerResponseFilter>> filters, ServiceLocator locator) {
+        private ResponseFilterStage(Iterable<RankedProvider<ContainerResponseFilter>> filters,
+                                    ServiceLocator locator,
+                                    TracingLogger tracingLogger) {
             this.filters = filters;
             this.locator = locator;
+            this.tracingLogger = tracingLogger;
         }
 
         @Override
@@ -184,18 +218,34 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
 
             RoutingContext rc = locator.getService(RoutingContext.class);
 
-            Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.sortRankedProviders(
-                    new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), filters, rc.getBoundResponseFilters()
-            );
+            final ArrayList<Iterable<RankedProvider<ContainerResponseFilter>>> rankedProviders =
+                    new ArrayList<Iterable<RankedProvider<ContainerResponseFilter>>>(2);
+            rankedProviders.add(filters);
+            rankedProviders.add(rc.getBoundResponseFilters());
+            Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.mergeAndSortRankedProviders(
+                    new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), rankedProviders);
 
-            for (ContainerResponseFilter filter : sortedResponseFilters) {
-                try {
-                    filter.filter(responseContext.getRequestContext(), responseContext);
-                } catch (WebApplicationException wae) {
-                    throw wae;
-                } catch (Exception ex) {
-                    throw new MappableException(ex);
+            final ContainerRequest request = responseContext.getRequestContext();
+            request.getRequestEventBuilder().setContainerResponseFilters(sortedResponseFilters);
+            request.triggerEvent(RequestEvent.Type.RESP_FILTERS_START);
+
+            final long timestamp = tracingLogger.timestamp(ServerTraceEvent.RESPONSE_FILTER_SUMMARY);
+            int processedCount = 0;
+            try {
+                for (ContainerResponseFilter filter : sortedResponseFilters) {
+                    final long filterTimestamp = tracingLogger.timestamp(ServerTraceEvent.RESPONSE_FILTER);
+                    try {
+                        filter.filter(request, responseContext);
+                    } catch (Exception ex) {
+                        throw new MappableException(ex);
+                    } finally {
+                        processedCount++;
+                        tracingLogger.logDuration(ServerTraceEvent.RESPONSE_FILTER, filterTimestamp, filter);
+                    }
                 }
+            } finally {
+                request.triggerEvent(RequestEvent.Type.RESP_FILTERS_FINISHED);
+                tracingLogger.logDuration(ServerTraceEvent.RESPONSE_FILTER_SUMMARY, timestamp, processedCount);
             }
 
             return Continuation.of(responseContext, getDefaultNext());

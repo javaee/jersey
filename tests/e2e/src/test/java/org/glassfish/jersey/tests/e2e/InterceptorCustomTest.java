@@ -45,9 +45,9 @@ import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
@@ -91,8 +91,8 @@ public class InterceptorCustomTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(final ClientConfig clientConfig) {
-        clientConfig.
+    protected void configureClient(final ClientConfig config) {
+        config.
                 register(GZIPReaderTestInterceptor.class).
                 register(GZIPWriterTestInterceptor.class).
                 register(PlusOneWriterInterceptor.class).

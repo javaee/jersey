@@ -51,16 +51,16 @@
       <h2>Contents</h2>
       <p>The example consists of three Java classes and one HTML file:</p>
       <dl>
-          <dt><code>com.sun.ws.rest.sample.console.Main</code></dt>
+          <dt><code>org.glassfish.jersey.examples.console.App</code></dt>
           <dd>Contains the main function which starts and stops the HTTP server.</dd>
-          <dt><code>com.sun.jersey.samples.console.resource.Colours</code></dt>
+          <dt><code>org.glassfish.jersey.examples.console.resources.Colours</code></dt>
           <dd>A resource class that can produce two different representations of a 
           list of colors. The list can be filtered by a client-supplied query 
           parameter.
           The resource references the Form resource using the 
           Path annotation declared on the Colours.getColours method.          
           </dd>
-          <dt><code>com.sun.jersey.samples.console.resource.Form</code></dt>
+          <dt><code>org.glassfish.jersey.examples.console.FormResource</code></dt>
           <dd>A resource class that produces a form in response to an HTTP GET,
           processes the content of the form when submitted, and produces a
           table of the submitted values in respose to the form being posted.</dd>

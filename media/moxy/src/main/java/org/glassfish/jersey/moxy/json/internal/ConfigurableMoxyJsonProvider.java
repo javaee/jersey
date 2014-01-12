@@ -43,6 +43,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.security.AccessController;
 import java.util.Map;
 import java.util.Set;
 
@@ -59,6 +60,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 
 import org.eclipse.persistence.internal.core.helper.CoreClassConstants;
@@ -71,13 +73,6 @@ import com.google.common.collect.Sets;
 
 /**
  * Jersey specific {@link MOXyJsonProvider} that can be configured via {@code ContextResolver<JsonMoxyConfiguration>} instance.
- * <p/>
- * Note: Pre-configured default values
- * <ul>
- *     <li>Attribute prefix - {@code @}</li>
- *     <li>Value wrapper - {@code $}</li>
- *     <li>Namespace separator - {@code :}</li>
- * </ul>
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
@@ -95,9 +90,8 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     private static Set<String> getPropertyNames(final Class<?> propertiesClass) {
         final Set<String> propertyNames = Sets.newHashSet();
 
-        for (final Field field : propertiesClass.getDeclaredFields()) {
+        for (final Field field : AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(propertiesClass))) {
             if (String.class == field.getType()
-                    && field.isAccessible()
                     && Modifier.isStatic(field.getModifiers())) {
                 try {
                     propertyNames.add((String) field.get(null));
@@ -121,9 +115,6 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
     private MoxyJsonConfig getGlobalConfig() {
         if (globalConfig == null) {
             globalConfig = new MoxyJsonConfig()
-                    .setAttributePrefix("@")
-                    .setValueWrapper("$")
-                    .setNamespaceSeparator(':')
                     .setMarshallerProperties(getConfigProperties(config, MARSHALLER_PROPERTY_NAMES))
                     .setUnmarshallerProperties(getConfigProperties(config, UNMARSHALLER_PROPERTY_NAMES));
         }

@@ -55,24 +55,37 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.process.internal.RequestScope;
+
 import com.google.common.base.Objects;
 
 /**
- * Implementation of an inbound JAX-RS response message.
+ * Implementation of an inbound client-side JAX-RS {@link Response} message.
+ * <p>
+ * This response delegates method calls to the underlying
+ * {@link org.glassfish.jersey.client.ClientResponse client response context} and
+ * ensures that all request-scoped method invocations are run in the proper request scope.
+ * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class InboundJaxrsResponse extends Response {
 
     private final ClientResponse context;
+    private final RequestScope scope;
+    private final RequestScope.Instance scopeInstance;
 
     /**
-     * Create new inbound JAX-RS response message.
+     * Create new scoped client response.
      *
      * @param context jersey client response context.
+     * @param scope   request scope instance.
      */
-    public InboundJaxrsResponse(ClientResponse context) {
+    public InboundJaxrsResponse(final ClientResponse context, final RequestScope scope) {
         this.context = context;
+        this.scope = scope;
+        this.scopeInstance = scope.referenceCurrent();
     }
 
     @Override
@@ -87,37 +100,51 @@ class InboundJaxrsResponse extends Response {
 
     @Override
     public Object getEntity() throws IllegalStateException {
-        // TODO implement some advanced caching support?
-        return context.getEntityStream();
+        return context.getEntity();
     }
 
     @Override
-    public <T> T readEntity(Class<T> entityType) throws ProcessingException, IllegalStateException {
-        return context.readEntity(entityType, context.getRequestContext().getPropertiesDelegate());
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T> T readEntity(GenericType<T> entityType) throws ProcessingException, IllegalStateException {
-        return (T) context.readEntity(
-                entityType.getRawType(),
-                entityType.getType(),
-                context.getRequestContext().getPropertiesDelegate());
-    }
-
-    @Override
-    public <T> T readEntity(Class<T> entityType, Annotation[] annotations) throws ProcessingException, IllegalStateException {
-        return context.readEntity(entityType, annotations, context.getRequestContext().getPropertiesDelegate());
+    public <T> T readEntity(final Class<T> entityType) throws ProcessingException, IllegalStateException {
+        return scope.runInScope(scopeInstance, new Producer<T>() {
+            @Override
+            public T call() {
+                return context.readEntity(entityType);
+            }
+        });
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T readEntity(GenericType<T> entityType, Annotation[] annotations) throws ProcessingException, IllegalStateException {
-        return (T) context.readEntity(
-                entityType.getRawType(),
-                entityType.getType(),
-                annotations,
-                context.getRequestContext().getPropertiesDelegate());
+    public <T> T readEntity(final GenericType<T> entityType) throws ProcessingException, IllegalStateException {
+        return scope.runInScope(scopeInstance, new Producer<T>() {
+            @Override
+            public T call() {
+                return context.readEntity(entityType);
+            }
+        });
+    }
+
+    @Override
+    public <T> T readEntity(final Class<T> entityType, final Annotation[] annotations)
+            throws ProcessingException, IllegalStateException {
+        return scope.runInScope(scopeInstance, new Producer<T>() {
+            @Override
+            public T call() {
+                return context.readEntity(entityType, annotations);
+            }
+        });
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T readEntity(final GenericType<T> entityType, final Annotation[] annotations)
+            throws ProcessingException, IllegalStateException {
+        return scope.runInScope(scopeInstance, new Producer<T>() {
+            @Override
+            public T call() {
+                return context.readEntity(entityType, annotations);
+            }
+        });
     }
 
     @Override
@@ -132,7 +159,11 @@ class InboundJaxrsResponse extends Response {
 
     @Override
     public void close() throws ProcessingException {
-        context.close();
+        try {
+            context.close();
+        } finally {
+            scopeInstance.release();
+        }
     }
 
     @Override

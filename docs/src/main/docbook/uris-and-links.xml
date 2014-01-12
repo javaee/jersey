@@ -55,92 +55,160 @@
     <section>
         <title>Building URIs</title>
 
-        <para>A very important aspects of REST is hyperlinks, URIs, in
-            representations that clients can use to transition the Web service to new
-            application states (this is otherwise known as "hypermedia as the engine
-            of application state"). HTML forms present a good example of this in
-            practice.
+        <para>
+            A very important aspect of REST is hyperlinks, URIs, in representations that clients can use to transition the
+            Web service to new application states (this is otherwise known as "hypermedia as the engine of application state").
+            HTML forms present a good example of this in practice.
         </para>
 
-        <para>Building URIs and building them safely is not easy with
-            <link xlink:href="http://docs.oracle.com/javase/1.5.0/docs/api/java/net/URI.html">java.net.URI</link>,
-            which is why JAX-RS has the &jaxrs.core.UriBuilder; class that makes it simple and easy to build URIs safely.
-        </para>
-
-        <para>&jaxrs.core.UriBuilder; can be used to build new URIs or build from existing URIs. For resource
+        <para>
+            Building URIs and building them safely is not easy with &jdk6.URI;, which is why JAX-RS has the
+            &jaxrs.core.UriBuilder; class that makes it simple and easy to build URIs safely.
+            &lit.jaxrs.core.UriBuilder; can be used to build new URIs or build from existing URIs. For resource
             classes it is more than likely that URIs will be built from the base URI the web service is deployed at
             or from the request URI. The class &jaxrs.core.UriInfo; provides such information (in addition to further
             information, see next section).
         </para>
 
-        <para>The following example shows URI building with &jaxrs.core.UriInfo; and &jaxrs.core.UriBuilder;
-            from the bookmark sample:
-        </para>
+        <para>The following example shows URI building with &lit.jaxrs.core.UriInfo; and &lit.jaxrs.core.UriBuilder;
+            from the bookmark example:
 
-        <para>
             <example>
                 <title>URI building</title>
                 <programlisting language="java" linenumbering="numbered">@Path("/users/")
-                    public class UsersResource {
+public class UsersResource {
 
-                    @Context UriInfo uriInfo;
+    @Context
+    UriInfo uriInfo;
 
-                    ...
+    ...
 
-                    @GET
-                    @Produces("application/json")
-                    public JSONArray getUsersAsJsonArray() {
-                    JSONArray uriArray = new JSONArray();
-                    for (UserEntity userEntity : getUsers()) {
-                    UriBuilder ub = uriInfo.getAbsolutePathBuilder();
-                    URI userUri = ub.
+    @GET
+    @Produces("application/json")
+    public JSONArray getUsersAsJsonArray() {
+        JSONArray uriArray = new JSONArray();
+        for (UserEntity userEntity : getUsers()) {
+            UriBuilder ub = uriInfo.getAbsolutePathBuilder();
+            URI userUri = ub.
                     path(userEntity.getUserid()).
                     build();
-                    uriArray.put(userUri.toASCIIString());
-                    }
-                    return uriArray;
-                    }
-                    }
-                </programlisting>
+            uriArray.put(userUri.toASCIIString());
+        }
+        return uriArray;
+    }
+}</programlisting>
             </example>
+
+            &lit.jaxrs.core.UriInfo; is obtained using the @Context annotation, and in this particular example injection onto
+            the field of the root resource class is performed, previous examples showed the use of @Context on resource method
+            parameters.
         </para>
 
-        <para>&jaxrs.core.UriInfo; is obtained using the @Context annotation, and in this particular example injection onto
-            the field of the root resource class is performed, previous examples showed the use of @Context on resource method parameters.
-        </para>
-
-        <para>&jaxrs.core.UriInfo; can be used to obtain URIs and associated &jaxrs.core.UriBuilder; instances for
+        <para>
+            &lit.jaxrs.core.UriInfo; can be used to obtain URIs and associated &lit.jaxrs.core.UriBuilder; instances for
             the following URIs: the base URI the application is deployed at; the request URI; and the absolute path URI, which
             is the request URI minus any query components.
         </para>
 
-        <para>The
-            <literal>getUsersAsJsonArray</literal>
-            method constructs a
-            JSONArrray where each element is a URI identifying a specific user
-            resource. The URI is built from the absolute path of the request URI by
+        <para>
+            The <literal>getUsersAsJsonArray</literal> method constructs a <literal>JSONArrray</literal>, where each element
+            is a URI identifying a specific user resource. The URI is built from the absolute path of the request URI by
             calling
             <link xlink:href="&jax-rs.javadoc.path;/core/UriInfo.html#getAbsolutePathBuilder()">UriInfo.getAbsolutePathBuilder()</link>.
-            A new path segment is added, which is the user ID, and then the URI is
-            built. Notice that it is not necessary to worry about the inclusion of '/'
-            characters or that the user ID may contain characters that need to be
-            percent encoded. UriBuilder takes care of such details.
+            A new path segment is added, which is the user ID, and then the URI is built. Notice that it is not necessary to
+            worry about the inclusion of <literal>'/'</literal> characters or that the user ID may contain characters that need
+            to be percent encoded. &lit.jaxrs.core.UriBuilder; takes care of such details.
         </para>
 
-        <para>&jaxrs.core.UriBuilder; can be used to build/replace query or matrix parameters. URI templates can also be declared,
-            for example the following will build the URI "http://localhost/segment?name=value":
-        </para>
+        <para>&lit.jaxrs.core.UriBuilder; can be used to build/replace query or matrix parameters. URI templates can also be
+            declared, for example the following will build the URI <literal>"http://localhost/segment?name=value"</literal>:
 
-        <para>
             <example>
                 <title>Building URIs using query parameters</title>
-                <programlisting language="java" linenumbering="numbered">UriBuilder.fromUri("http://localhost/").
-                    path("{a}").
-                    queryParam("name", "{value}").
-                    build("segment", "value");
-                </programlisting>
+                <programlisting language="java" linenumbering="numbered">UriBuilder.fromUri("http://localhost/")
+    .path("{a}")
+    .queryParam("name", "{value}")
+    .build("segment", "value");</programlisting>
             </example>
         </para>
     </section>
 
+    <section>
+        <title>Resolve and Relativize</title>
+
+        <para>JAX-RS 2.0 introduced additional URI resolution and relativization methods in the &lit.jaxrs.core.UriBuilder;:
+
+            <itemizedlist>
+                <listitem><para><link xlink:href="&jax-rs.javadoc.path;/core/UriInfo.html#resolve(java.net.URI)">UriInfo.resolve(java.net.URI)</link></para></listitem>
+                <listitem><para><link xlink:href="&jax-rs.javadoc.path;/core/UriInfo.html#relativize(java.net.URI)">UriInfo.relativize(java.net.URI)</link></para></listitem>
+                <listitem><para><link xlink:href="&jax-rs.javadoc.path;/core/UriBuilder.html#resolveTemplate(java.lang.String, java.lang.Object)">UriBuilder.resolveTemplate(...)</link> (various arguments)</para></listitem>
+            </itemizedlist>
+
+            Resolve and relativize methods in &jaxrs.core.UriInfo; are essentially counterparts to the methods listed above -
+            <link xlink:href="&jax-rs.javadoc.path;/core/UriInfo.html#resolve(java.net.URI)">UriInfo.resolve(java.net.URI)</link>
+            resolves given relative URI to an absolute URI using application context URI as the base URI;
+            <link xlink:href="&jax-rs.javadoc.path;/core/UriInfo.html#relativize(java.net.URI)">UriInfo.relativize(java.net.URI)</link>
+            then transforms an absolute URI to a relative one, using again the applications context URI as the base URI.
+        </para>
+
+        <para>
+            &lit.jaxrs.core.UriBuilder; also introduces a set of methods that provide ways of resolving URI templates by replacing
+            individual templates with a provided value(s). A short example:
+
+            <programlisting language="java" linenumbering="numbered">final URI uri = UriBuilder.fromUri("http://{host}/{path}?q={param}")
+    .resolveTemplate("host", "localhost")
+    .resolveTemplate("path", "myApp")
+    .resolveTemplate("param", "value").build();
+
+uri.toString(); // returns "http://localhost/myApp?q=value"</programlisting>
+
+            See the &jaxrs.core.UriBuilder; javadoc for more details.
+        </para>
+    </section>
+
+    <section>
+        <title>Link</title>
+
+        <para>
+            JAX-RS 2.0 introduces &jaxrs.core.Link; class, which serves as a representation of Web Link defined in
+            <link xlink:href="http://tools.ietf.org/html/rfc5988">RFC 5988</link>.
+            The JAX-RS &lit.jaxrs.core.Link; class adds API support for providing additional metadata in HTTP messages,
+            for example, if you are consuming a REST interface of a public library, you might have a resource returning
+            description of a single book. Then you can include links to related resources, such as a book category,
+            author, etc. to make the produced response concise but complete at the same time. Clients are then able to
+            query all the additional information they are interested in and are not forced to consume details they are
+            not interested in. At the same time, this approach relieves the server resources as only the information that
+            is truly requested is being served to the clients.
+        </para>
+
+        <para>
+            A &lit.jaxrs.core.Link; can be serialized to an HTTP message (tyically a response) as additional HTTP header
+            (there might be multiple &lit.jaxrs.core.Link; headers provided, thus multiple links can be served in a single
+            message). Such HTTP header may look like:
+            <screen language="text" linenumbering="unnumbered">Link: &lt;http://example.com/TheBook/chapter2&gt;; rel="prev"; title="previous chapter"</screen>
+        </para>
+
+        <para>
+            Producing and consuming Links with JAX-RS API is demonstrated in the following example:
+
+            <programlisting language="java" linenumbering="unnumbered">// server side - adding links to a response:
+Response r = Response.ok().
+    link("http://oracle.com", "parent").
+    link(new URI("http://jersey.java.net"), "framework").
+    build();
+
+...
+
+// client-side processing:
+final Response response = target.request().get();
+
+URI u = response.getLink("parent").getUri();
+URI u = response.getLink("framework").getUri();</programlisting>
+        </para>
+        <para>
+            Instances of &lit.jaxrs.core.Link; can be also created directly by invoking one of the factory methods on the
+            &jaxrs.core.Link; API that returns a &jaxrs.core.Link.Builder; that can be used to configure and produce new
+            links.
+        </para>
+    </section>
 </chapter>

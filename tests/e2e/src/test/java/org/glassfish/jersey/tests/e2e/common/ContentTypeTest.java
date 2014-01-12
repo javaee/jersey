@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,6 +51,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.logging.Logger;
 
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -65,6 +66,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
@@ -75,6 +77,7 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -94,7 +97,7 @@ public class ContentTypeTest extends JerseyTest {
     public static class ContentTypeResource {
 
         @POST
-        @Produces(value = "text/plain")
+        @Produces("text/plain")
         @SuppressWarnings("UnusedParameters")
         public void postTest(final String str) {
             // Ignore to generate response 204 - NoContent.
@@ -107,6 +110,13 @@ public class ContentTypeTest extends JerseyTest {
         public String changeContentTypeTest(String echo) {
             return echo;
         }
+
+        @POST
+        @Path("null-content")
+        public String process(@HeaderParam(HttpHeaders.CONTENT_TYPE) String mediaType, @Context ContainerRequest request) {
+            return mediaType + "-" + request.hasEntity();
+        }
+
     }
 
     @Retention(RetentionPolicy.RUNTIME)
@@ -252,4 +262,11 @@ public class ContentTypeTest extends JerseyTest {
         assertEquals(MediaType.TEXT_PLAIN_TYPE, response.getMediaType());
     }
 
+    @Test
+    public void testEmptyPostRequestWithContentType() {
+        String response = target().path("ContentType/null-content").request("text/plain")
+                .post(Entity.entity(null, "foo/bar"), String.class);
+
+        assertEquals("foo/bar-false", response);
+    }
 }

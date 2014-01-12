@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -48,12 +48,14 @@
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>project</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>osgi-http-service</artifactId>
     <name>jersey-examples-osgi-http-service</name>
     <packaging>pom</packaging>
+
+    <description>OSGi HttpService example</description>
 
     <modules>
         <module>bundle</module>
@@ -62,7 +64,7 @@
 
     <profiles>
         <profile>
-            <id>examples-source-zip</id>
+            <id>release</id>
             <build>
                 <plugins>
                     <plugin>

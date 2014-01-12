@@ -53,8 +53,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -85,8 +86,9 @@ public class TimeoutTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.connector(new GrizzlyConnector(clientConfig)).property(ClientProperties.READ_TIMEOUT, 1000);
+    protected void configureClient(ClientConfig config) {
+        config.property(ClientProperties.READ_TIMEOUT, 1000);
+        config.connectorProvider(new GrizzlyConnectorProvider());
     }
 
     @Test
@@ -101,10 +103,8 @@ public class TimeoutTest extends JerseyTest {
         try {
             target("test/timeout").request().get();
         } catch (ProcessingException e) {
-            if (!(e.getCause() instanceof TimeoutException)) {
-                e.printStackTrace();
-                fail();
-            }
+            assertThat("Unexpected processing exception cause",
+                    e.getCause(), instanceOf(TimeoutException.class));
         }
     }
 }

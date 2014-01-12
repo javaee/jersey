@@ -41,6 +41,7 @@ package org.glassfish.jersey.tests.e2e.json;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.AccessController;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,6 +58,7 @@ import javax.ws.rs.ext.Provider;
 
 import javax.xml.bind.JAXBContext;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.process.Inflector;
@@ -230,11 +232,12 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     private static boolean isRunningOnJdk7() {
-        return System.getProperty("java.version").startsWith("1.7");
+        return AccessController.doPrivileged(PropertiesHelper.getSystemProperty("java.version")).startsWith("1.7");
     }
 
     private static boolean isMoxyJaxbProvider() {
-        return "org.eclipse.persistence.jaxb.JAXBContextFactory".equals(System.getProperty("javax.xml.bind.JAXBContext"));
+        return "org.eclipse.persistence.jaxb.JAXBContextFactory".equals(
+                AccessController.doPrivileged(PropertiesHelper.getSystemProperty("javax.xml.bind.JAXBContext")));
     }
 
     /**

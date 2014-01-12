@@ -77,7 +77,7 @@ public interface WadlApplicationContext {
      *           WADL application.
      * @return the application description, the contents may be modified.
      */
-    ApplicationDescription getApplication(UriInfo ui);
+    ApplicationDescription getApplication(UriInfo ui, boolean detailedWadl);
 
 
     /**
@@ -89,7 +89,7 @@ public interface WadlApplicationContext {
      * @return the application for this resource
      */
     Application getApplication(UriInfo info,
-                               org.glassfish.jersey.server.model.Resource resource);
+                               org.glassfish.jersey.server.model.Resource resource, boolean detailedWadl);
 
     /**
      * Get the default JAXB context associated with the {@link WadlGenerator}

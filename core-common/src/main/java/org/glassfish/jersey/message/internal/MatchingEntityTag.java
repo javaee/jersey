@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,15 +42,18 @@ package org.glassfish.jersey.message.internal;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.Set;
+
 import javax.ws.rs.core.EntityTag;
+
+import org.glassfish.jersey.internal.LocalizationMessages;
 
 /**
  * A matching entity tag.
  * <p>
  * Note that this type and it's super type cannot be used to create request
- * header values for <code>If-Match</code> and <code>If-None-Match</code>
- * of the form <code>If-Match: *</code> or <code>If-None-Match: *</code> as
- * <code>*</code> is not a valid entity tag.
+ * header values for {@code If-Match} and {@code If-None-Match}
+ * of the form {@code If-Match: *} or {@code If-None-Match: *} as
+ * {@code *} is not a valid entity tag.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -58,20 +61,40 @@ import javax.ws.rs.core.EntityTag;
 public class MatchingEntityTag extends EntityTag {
 
     /**
-     * An empty set that corresponds to <code>If-Match: *</code> or
-     * <code>If-None-Match: *</code>.
+     * An empty set that corresponds to {@code If-Match: *} or {@code If-None-Match: *}.
      */
     public static final Set<MatchingEntityTag> ANY_MATCH = Collections.emptySet();
 
-    private MatchingEntityTag(String value) {
+    /**
+     * Create new strongly validating entity tag.
+     *
+     * @param value ETag header value.
+     */
+    public MatchingEntityTag(String value) {
         super(value, false);
     }
 
-    private MatchingEntityTag(String value, boolean weak) {
+    /**
+     * Create new matching entity tag.
+     *
+     * @param value ETag header value.
+     * @param weak should be set to false, if strong validation is required,
+     *            otherwise should be set to true.
+     */
+    public MatchingEntityTag(String value, boolean weak) {
         super(value, weak);
     }
 
+    /**
+     * Create new matching entity tag out of provided header reader.
+     *
+     * @param reader HTTP header content reader.
+     * @return a new matching entity tag.
+     * @throws ParseException in case the header could not be parsed.
+     */
     public static MatchingEntityTag valueOf(HttpHeaderReader reader) throws ParseException {
+        final String tagString = reader.getRemainder();
+
         HttpHeaderReader.Event e = reader.next(false);
         if (e == HttpHeaderReader.Event.QuotedString) {
             return new MatchingEntityTag(reader.getEventValue());
@@ -83,6 +106,6 @@ public class MatchingEntityTag extends EntityTag {
             }
         }
 
-        throw new ParseException("Error parsing entity tag", reader.getIndex());
+        throw new ParseException(LocalizationMessages.ERROR_PARSING_ENTITY_TAG(tagString), reader.getIndex());
     }
 }

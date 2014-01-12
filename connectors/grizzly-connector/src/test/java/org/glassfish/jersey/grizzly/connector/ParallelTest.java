@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,13 @@
  */
 package org.glassfish.jersey.grizzly.connector;
 
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,9 +60,11 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
-import org.junit.Ignore;
+import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+
+import static junit.framework.Assert.assertTrue;
 
 /**
  * Tests the parallel execution of multiple requests.
@@ -63,18 +72,21 @@ import static org.junit.Assert.assertEquals;
  * @author Stepan Kopriva (stepan.kopriva at oracle.com)
  */
 public class ParallelTest extends JerseyTest {
+    private static final Logger LOGGER = Logger.getLogger(ParallelTest.class.getName());
 
-    private static final int numberOfThreads = 5;
+    private static final int PARALLEL_CLIENTS = 10;
     private static final String PATH = "test";
-    private static AtomicInteger receivedCounter = new AtomicInteger(0);
-    private static AtomicInteger resourceCounter = new AtomicInteger(0);
+    private static final AtomicInteger receivedCounter = new AtomicInteger(0);
+    private static final AtomicInteger resourceCounter = new AtomicInteger(0);
+    private static final CyclicBarrier startBarrier = new CyclicBarrier(PARALLEL_CLIENTS + 1);
+    private static final CountDownLatch doneLatch = new CountDownLatch(PARALLEL_CLIENTS);
 
     @Path(PATH)
     public static class MyResource {
 
         @GET
         public String get() {
-            this.sleep();
+            sleep();
             resourceCounter.addAndGet(1);
             return "GET";
         }
@@ -88,56 +100,58 @@ public class ParallelTest extends JerseyTest {
         }
     }
 
-    private static enum Method {
-
-        GET, PUT, POST
-    }
-
-    private class ResourceThread extends Thread {
-
-        private WebTarget target;
-        private String path;
-        private Method method;
-
-        public ResourceThread(WebTarget target, String path, Method method) {
-            this.target = target;
-            this.path = path;
-            this.method = method;
-        }
-
-        @Override
-        public void run() {
-            Response response;
-            response = target.path(path).request().get();
-            assertEquals("GET", response.getEntity().toString());
-            receivedCounter.addAndGet(1);
-        }
-    }
-
     @Override
     protected Application configure() {
         return new ResourceConfig(ParallelTest.MyResource.class);
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.connector(new GrizzlyConnector(clientConfig));
+    protected void configureClient(ClientConfig config) {
+        config.connectorProvider(new GrizzlyConnectorProvider());
     }
 
-    @Ignore
     @Test
-    public void testParallel() {
-        for (int i = 1; i <= numberOfThreads; i++) {
-            ResourceThread rt = new ResourceThread(target(), PATH, Method.GET);
-            rt.start();
-        }
+    public void testParallel() throws BrokenBarrierException, InterruptedException, TimeoutException {
+        final ScheduledExecutorService executor = Executors.newScheduledThreadPool(PARALLEL_CLIENTS);
 
         try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(ParallelTest.class.getName()).log(Level.SEVERE, null, ex);
+            final WebTarget target = target();
+            for (int i = 1; i <= PARALLEL_CLIENTS; i++) {
+                final int id = i;
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            startBarrier.await();
+                            Response response;
+                            response = target.path(PATH).request().get();
+                            assertEquals("GET", response.readEntity(String.class));
+                            receivedCounter.incrementAndGet();
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                            LOGGER.log(Level.WARNING, "Client thread " + id + " interrupted.", ex);
+                        } catch (BrokenBarrierException ex) {
+                            LOGGER.log(Level.INFO, "Client thread " + id + " failed on broken barrier.", ex);
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                            LOGGER.log(Level.WARNING, "Client thread " + id + " failed on unexpected exception.", t);
+                        } finally {
+                            doneLatch.countDown();
+                        }
+                    }
+                });
+            }
+
+            startBarrier.await(1, TimeUnit.SECONDS);
+
+            assertTrue("Waiting for clients to finish has timed out.", doneLatch.await(5, TimeUnit.SECONDS));
+
+            assertEquals("Resource counter", PARALLEL_CLIENTS, resourceCounter.get());
+
+            assertEquals("Received counter", PARALLEL_CLIENTS, receivedCounter.get());
+        } finally {
+            executor.shutdownNow();
+            Assert.assertTrue("Executor termination", executor.awaitTermination(5, TimeUnit.SECONDS));
         }
-        int result = receivedCounter.get();
-        assertEquals(numberOfThreads, result);
     }
 }

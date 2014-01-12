@@ -90,9 +90,11 @@ class ValidateOnExecutionTraversableResolver implements TraversableResolver {
                                final Class<?> rootBeanType,
                                final Path pathToTraversableObject,
                                final ElementType elementType) {
-        // Make sure a getter method is validated on a resource class.
+        // Make sure only getters on entities are validated (not getters on resource classes).
         final Class<?> traversableObjectClass = traversableObject.getClass();
-        if (validateExecutable && ElementType.METHOD.equals(elementType)) {
+        final boolean isEntity = !rootBeanType.equals(traversableObjectClass);
+
+        if (isEntity && validateExecutable && ElementType.METHOD.equals(elementType)) {
             final String propertyName = traversableProperty.getName();
             final String propertyKey = traversableObjectClass.getName() + "#" + propertyName;
 
@@ -147,13 +149,13 @@ class ValidateOnExecutionTraversableResolver implements TraversableResolver {
         final String isGetter = "is" + getterPropertyName;
         final String getGetter = "get" + getterPropertyName;
 
-        for (final Method method : clazz.getDeclaredMethods()) {
+        for (final Method method : AccessController.doPrivileged(ReflectionHelper.getDeclaredMethodsPA(clazz))) {
             final String methodName = method.getName();
 
             if ((methodName.equals(isGetter) || methodName.equals(getGetter))
                     && ReflectionHelper.isGetter(method)
                     && (propertyType == null || propertyType.isAssignableFrom(method.getReturnType()))) {
-                return ReflectionHelper.findMethodOnClass(clazz, method);
+                return AccessController.doPrivileged(ReflectionHelper.findMethodOnClassPA(clazz, method));
             }
         }
 

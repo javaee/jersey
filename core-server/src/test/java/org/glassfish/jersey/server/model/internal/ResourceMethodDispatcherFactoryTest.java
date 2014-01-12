@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,8 +46,7 @@ import java.util.concurrent.ExecutionException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.ServerBinder;
+import org.glassfish.jersey.server.ServerLocatorFactory;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -69,7 +68,7 @@ public class ResourceMethodDispatcherFactoryTest {
 
     @Before
     public void setupApplication() {
-        ServiceLocator locator = Injections.createLocator(new ServerBinder());
+        ServiceLocator locator = ServerLocatorFactory.createLocator();
 
         rmdf = locator.getService(ResourceMethodDispatcherFactory.class);
         rmihf = locator.getService(ResourceMethodInvocationHandlerFactory.class);

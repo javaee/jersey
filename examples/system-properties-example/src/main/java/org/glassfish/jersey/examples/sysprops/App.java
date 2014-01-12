@@ -68,7 +68,7 @@ public class App {
                             + "Hit enter to stop it...",
                             BASE_URI + "/properties"));
             System.in.read();
-            server.stop();
+            server.shutdownNow();
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }

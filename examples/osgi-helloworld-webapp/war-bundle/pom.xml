@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -47,13 +47,15 @@
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>osgi-helloworld-webapp</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.6-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
     <artifactId>war-bundle</artifactId>
     <name>jersey-examples-osgi-helloworld-webapp-wab</name>
     <packaging>war</packaging>
+
+    <description>OSGi Helloworld Webapp WAR bundle</description>
 
     <dependencies>
         <dependency>
@@ -67,6 +69,16 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
+            <artifactId>additional-bundle</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
+            <artifactId>alternate-version-bundle</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <scope>provided</scope>
@@ -74,17 +86,13 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
+            <version>2.5</version><!-- the current project's ${servlet2.version} is 2.4 and that's not enough -->
             <scope>provided</scope>
         </dependency>
+
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.eventadmin</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -114,9 +122,30 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-ClassPath>.,WEB-INF/classes</Bundle-ClassPath>
-                        <Import-Package>org.glassfish.jersey.servlet,*</Import-Package>
+                        <Import-Package>
+                            org.glassfish.jersey.servlet,
+                            <!--
+                                This package is exported by two different bundle versions of 'additional-bundle'
+                                - one is in the maven module 'additional-bundle' with the current ${project.version},
+                                - the other one is in the maven module 'alternate-version-bundle' with Bundle-Version 2.2.1
+                                (the names of maven artifacts have to be unique, but the name of bundles
+                                (defined in the maven-bundle-plugin configuration) is the same for both.
+
+                                Both bundles (additional-bundle 2.2.1 and additional-bundle ${project.version} are loaded into
+                                OSGi runtime, so that there are two versions of the same resource available, each one returning
+                                different string as a response. If the import version is changed to [2.2,2.3) as prepared bellow,
+                                the test will fail (the response returned from the alternate version of the bundle is different).
+                                NOTE - to test this, the version has to be restricted from above, otherwise OSGi can choose any of
+                                the two bundles, as version="2.2" actually means "version 2.2. or higher".
+                            -->
+                            org.glassfish.jersey.examples.osgi.helloworld.additional.resource;version="${project.version}",
+                            <!-- org.glassfish.jersey.examples.osgi.helloworld.additional.resource;version="[2.2,2.3)", -->
+                            *
+                        </Import-Package>
                         <Export-Package>
-                            org.glassfish.jersey.examples.osgi.helloworld,org.glassfish.jersey.examples.osgi.helloworld.resource
+                            org.glassfish.jersey.examples.osgi.helloworld,
+                            org.glassfish.jersey.examples.osgi.helloworld.resource,
+                            org.glassfish.jersey.examples.osgi.helloworld.additional.resource
                         </Export-Package>
                         <Embed-Directory>WEB-INF/lib</Embed-Directory>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
@@ -147,7 +176,7 @@
 
     <profiles>
         <profile>
-            <id>examples-source-zip</id>
+            <id>release</id>
             <!-- do not create source zip bundles -->
             <build>
                 <plugins>
@@ -161,6 +190,22 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+          <id>moxy</id>
+          <activation>
+                <property>
+                    <name>moxy</name>
+                </property>
+          </activation>
+          <dependencies>
+                <dependency>
+                    <groupId>org.eclipse.persistence</groupId>
+                    <artifactId>org.eclipse.persistence.moxy</artifactId>
+                    <version>${moxy.version}</version>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+         </profile>
     </profiles>
 
 </project>

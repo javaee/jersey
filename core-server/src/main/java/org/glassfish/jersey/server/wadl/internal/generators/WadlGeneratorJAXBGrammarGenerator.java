@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -169,7 +172,7 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
      * @param arm abstract resource method
      * @return method
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createMethod(org.glassfish.jersey.server.model.Resource,
-     * org.glassfish.jersey.server.model.ResourceMethod)
+     *      org.glassfish.jersey.server.model.ResourceMethod)
      */
     public Method createMethod(org.glassfish.jersey.server.model.Resource ar,
                                org.glassfish.jersey.server.model.ResourceMethod arm) {
@@ -181,7 +184,7 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
      * @param arm abstract resource method
      * @return request
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequest(org.glassfish.jersey.server.model.Resource,
-     * org.glassfish.jersey.server.model.ResourceMethod)
+     *      org.glassfish.jersey.server.model.ResourceMethod)
      */
     public Request createRequest(org.glassfish.jersey.server.model.Resource ar,
                                  org.glassfish.jersey.server.model.ResourceMethod arm) {
@@ -195,7 +198,7 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
      * @param p  parameter
      * @return parameter
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createParam(org.glassfish.jersey.server.model.Resource,
-     * org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.model.Parameter)
+     *      org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.model.Parameter)
      */
     public Param createParam(org.glassfish.jersey.server.model.Resource ar,
                              org.glassfish.jersey.server.model.ResourceMethod am, Parameter p) {
@@ -222,8 +225,8 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
      * @param mt  media type
      * @return respresentation type
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#
-     * createRequestRepresentation
-     * (org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
+     *      createRequestRepresentation
+     *      (org.glassfish.jersey.server.model.Resource, org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
     public Representation createRequestRepresentation(
             org.glassfish.jersey.server.model.Resource ar, org.glassfish.jersey.server.model.ResourceMethod arm, MediaType mt) {
@@ -272,11 +275,11 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
     }
 
     /**
-     * @param resource  abstract resource
+     * @param resource       abstract resource
      * @param resourceMethod abstract resource method
      * @return response
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResponses(org.glassfish.jersey.server.model.Resource,
-     * org.glassfish.jersey.server.model.ResourceMethod)
+     *      org.glassfish.jersey.server.model.ResourceMethod)
      */
     public List<Response> createResponses(org.glassfish.jersey.server.model.Resource resource,
                                           final org.glassfish.jersey.server.model.ResourceMethod resourceMethod) {
@@ -411,12 +414,20 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
 
             return new Resolver() {
 
-                public QName resolve(Class type) {
+                public QName resolve(final Class type) {
 
                     Object parameterClassInstance = null;
                     try {
-                        Constructor<?> defaultConstructor = type.getDeclaredConstructor();
-                        defaultConstructor.setAccessible(true);
+                        final Constructor<?> defaultConstructor =
+                                AccessController.doPrivileged(new PrivilegedExceptionAction<Constructor<?>>() {
+                                    @SuppressWarnings("unchecked")
+                                    @Override
+                                    public Constructor<?> run() throws NoSuchMethodException {
+                                        final Constructor<?> constructor = type.getDeclaredConstructor();
+                                        constructor.setAccessible(true);
+                                        return constructor;
+                                    }
+                                });
                         parameterClassInstance = defaultConstructor.newInstance();
                     } catch (InstantiationException ex) {
                         LOGGER.log(Level.FINE, null, ex);
@@ -428,8 +439,8 @@ public class WadlGeneratorJAXBGrammarGenerator implements WadlGenerator {
                         LOGGER.log(Level.FINE, null, ex);
                     } catch (SecurityException ex) {
                         LOGGER.log(Level.FINE, null, ex);
-                    } catch (NoSuchMethodException ex) {
-                        LOGGER.log(Level.FINE, null, ex);
+                    } catch (PrivilegedActionException ex) {
+                        LOGGER.log(Level.FINE, null, ex.getCause());
                     }
 
                     if (parameterClassInstance == null) {

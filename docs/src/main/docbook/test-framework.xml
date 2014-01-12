@@ -53,5 +53,238 @@
 
     <title>Jersey Test Framework</title>
 
-    <para>TODO: Describe Test Framework</para>
+    <para>
+        Jersey Test Framework originated as an internal tool used for verifying the correct implementation of
+        server-side components. Testing RESTful applications became a more pressing issue with "modern" approaches like
+        test-driven development and users started to look for a tool that could help with designing and running
+        the tests as fast as possible but with many options related to test execution environment.
+    </para>
+
+    <para>
+        Current implementation of Jersey Test Framework supports the following set of features:
+
+        <itemizedlist>
+            <listitem><para>pre-configured client to access deployed application</para></listitem>
+            <listitem><para>support for multiple containers - grizzly, in-memory, jdk, simple, jetty</para></listitem>
+            <listitem><para>able to run against any external container</para></listitem>
+            <listitem><para>automated configurable traffic logging</para></listitem>
+        </itemizedlist>
+
+        Jersey Test Framework is based on JUnit and works almost out-of-the box. It is easy to integrate it
+        within your Maven-based project. While it is usable on all environments where you can run JUnit, we support primarily the
+        Maven-based setups.
+    </para>
+
+    <section>
+        <title>Basics</title>
+
+        <programlisting language="java" linenumbering="numbered">public class SimpleTest extends JerseyTest {
+
+    @Path("hello")
+    public static class HelloResource {
+        @GET
+        public String getHello() {
+            return "Hello World!";
+        }
+    }
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(HelloResource.class);
+    }
+
+    @Test
+    public void test() {
+        final String hello = target("hello").request().get(String.class);
+        assertEquals("Hello World!", hello);
+    }
+}</programlisting>
+
+        <para>
+            If you want to develop a test using Jersey Test Framework, you need to subclass &jersey.test.JerseyTest; and
+            configure the set of resources and/or providers that will be deployed as part of the test application. This short
+            code snippet shows basic resource class <literal>HelloResource</literal> used in tests defined as part of the
+            <literal>SimpleTest</literal> class. The overridden <literal>configure</literal> method returns
+            a &jersey.server.ResourceConfig; of the test application,that contains only the <literal>HelloResource</literal>
+            resource class. &lit.jersey.server.ResourceConfig; is a sub-class of JAX-RS &jaxrs.core.Application;. It is a Jersey
+            convenience class for configuring JAX-RS applications. &lit.jersey.server.ResourceConfig; also implements JAX-RS
+            &jaxrs.core.Configurable; interface to make the application configuration more flexible.
+        </para>
+    </section>
+
+    <section>
+        <title>Supported Containers</title>
+
+        <para>
+            &jersey.test.JerseyTest; supports deploying applications on various containers, all (except the external container
+            wrapper) need to have some "glue" code to be supported. Currently Jersey Test Framework provides support for
+            Grizzly, In-Memory, JDK (<literal>com.sun.net.httpserver.HttpServer</literal>), Simple HTTP container
+            (<literal>org.simpleframework.http</literal>) and Jetty HTTP container (<literal>org.eclipse.jetty</literal>).
+        </para>
+
+        <para>
+            A test container is selected based on various inputs.
+            <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#getTestContainerFactory()">JerseyTest#getTestContainerFactory()</link>
+            is always executed, so if you override it and provide your own version of
+            &jersey.test.spi.TestContainerFactory;, nothing else will be considered.
+            Setting a system variable
+            <link xlink:href="&jersey.javadoc.path;/test/TestProperties.html#CONTAINER_FACTORY">TestProperties#CONTAINER_FACTORY</link>
+            has similar effect. This way you may defer the decision on which containers you want to run your tests
+            from the compile time to the test execution time.
+            Default implementation of &lit.jersey.test.spi.TestContainerFactory; looks for container factories on classpath.
+            If more than one instance is found and there is a Grizzly test container factory among them, it will be used; if not,
+            a warning will be logged and the first found factory will be instantiated.
+        </para>
+
+        <para>
+            Following is a brief description of all containers supported in Jersey Test Framework.
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        Grizzly container can run as a light-weight, plain HTTP container. Almost all Jersey tests are using
+                        Grizzly by default.
+
+                        <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-test-framework-provider-grizzly2&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                    </para>
+                </listitem>
+
+                <listitem>
+                    <para>
+                        In-Memory container is not a real container. It starts Jersey application and directly calls internal
+                        APIs to handle request created by client provided by test framework. There is no network communication
+                        involved. This containers does not support servlet and other container dependent features, but it is
+                        a perfect choice for simple unit tests.
+
+                        <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-test-framework-provider-inmemory&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        <literal>HttpServer</literal> from Oracle JDK is another supported test container.
+
+                        <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-test-framework-provider-jdk-http&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Simple container (<literal>org.simpleframework.http</literal>) is another light-weight HTTP container
+                        that integrates with Jersey and is supported by Jersey Test Framework.
+
+                        <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-test-framework-provider-simple&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Jetty container (<literal>org.eclipse.jetty</literal>) is another high-performance, light-weight HTTP server
+                        that integrates with Jersey and is supported by Jersey Test Framework.
+
+                        <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-test-framework-provider-jetty&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
+    <section>
+        <title>Advanced features</title>
+
+        <section>
+            <title>&lit.jersey.test.JerseyTest; Features</title>
+
+            <para>&lit.jersey.test.JerseyTest; provide
+                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#enable(java.lang.String)">enable(...)</link>,
+                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#forceEnable(java.lang.String)">forceEnable(...)</link>
+                and <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#disable(java.lang.String)">disable(...)</link>
+                methods, that give you control over configuring values of the properties defined and described in the
+                &lit.jersey.test.TestProperties; class. A typical code that overrides the default property values is listed
+                bellow:
+
+                <programlisting language="java" linenumbering="numbered">public class SimpleTest extends JerseyTest {
+    // ...
+
+    @Override
+    protected Application configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
+
+        // ...
+
+    }
+}</programlisting>
+
+                The code in the example above enables test traffic logging (inbound and outbound headers) as well as
+                dumping the HTTP message entity as part of the traffic logging.
+            </para>
+        </section>
+
+
+        <section>
+            <title>External container</title>
+
+            <para>
+                Complicated test scenarios may require fully started containers with complex setup configuration, that is not
+                easily doable with current Jersey container support. To address these use cases, Jersey Test Framework providers
+                general fallback mechanism - an External Test Container Factory. Support of this external container "wrapper" is
+                provided as the following module:
+
+                <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-test-framework-provider-external&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                As indicated, the "container" exposed by this module is just a wrapper or stub, that redirects all request to
+                a configured host and port. Writing tests for this container is same as for any other but you have to provide
+                the information about host and port during the test execution:
+
+                <screen>mvn test -Djersey.test.host=myhost.org -Djersey.config.test.container.port=8080</screen>
+            </para>
+        </section>
+
+        <section>
+            <title>Test Client configuration</title>
+
+            <para>
+                Tests might require some advanced client configuration. This is possible by overriding
+                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#configureClient(org.glassfish.jersey.client.ClientConfig)">configureClient(ClientConfig clientConfig)</link>
+                method. Typical use case for this is registering more providers, such as &jaxrs.ext.MessageBodyReader;s or
+                &jaxrs.ext.MessageBodyWriter;s, or enabling additional features.
+            </para>
+        </section>
+
+        <section>
+            <title>Accessing the logged test records programmatically</title>
+
+            <para>
+                Sometimes you might need to check a logged message as part of your test assertions. For this purpose Jersey Test
+                Framework provides convenient access to the logged records via
+                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#getLastLoggedRecord()">JerseyTest#getLastLoggedRecord()</link>
+                and
+                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#getLoggedRecords()">JerseyTest#getLoggedRecords()</link>
+                methods. Note that this feature is not enabled by default, see
+                <link xlink:href="&jersey.javadoc.path;/test/TestProperties.html#RECORD_LOG_LEVEL">TestProperties#RECORD_LOG_LEVEL</link>
+                for more information.
+            </para>
+        </section>
+    </section>
 </chapter>

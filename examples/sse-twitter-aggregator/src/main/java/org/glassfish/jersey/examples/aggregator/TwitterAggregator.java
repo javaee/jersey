@@ -54,10 +54,10 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.ChunkedInput;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.SslConfigurator;
-import org.glassfish.jersey.client.filter.HttpBasicAuthFilter;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 
@@ -106,7 +106,7 @@ public final class TwitterAggregator implements DataAggregator {
                 final Client client = ClientBuilder.newBuilder().sslContext(sslConfig.createSSLContext()).build();
                 client.property(ClientProperties.CONNECT_TIMEOUT, 2000)
                         .register(new MoxyJsonFeature())
-                        .register(new HttpBasicAuthFilter(App.getTwitterUserName(), App.getTwitterUserPassword()))
+                        .register(HttpAuthenticationFeature.basic(App.getTwitterUserName(), App.getTwitterUserPassword()))
                         .register(GZipEncoder.class);
 
                 final Response response = client.target("https://stream.twitter.com/1.1/statuses/filter.json")

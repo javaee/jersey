@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.DynamicFeature;
@@ -75,6 +76,7 @@ import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
@@ -82,11 +84,14 @@ import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RoutingContext;
 import org.glassfish.jersey.server.model.internal.ResourceMethodDispatcherFactory;
 import org.glassfish.jersey.server.model.internal.ResourceMethodInvocationHandlerFactory;
+import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.hk2.utilities.cache.Cache;
+import org.glassfish.hk2.utilities.cache.Computable;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -138,7 +143,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         /**
          * Build a new resource method invoker instance.
          *
-         * @param method                      resource method model.
+         * @param method              resource method model.
          * @param processingProviders Processing providers.
          * @return new resource method invoker instance.
          */
@@ -165,7 +170,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             Provider<RespondingContext> respondingContextProvider,
             ResourceMethodDispatcher.Provider dispatcherProvider,
             ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
-            ResourceMethod method,
+            final ResourceMethod method,
             ProcessingProviders processingProviders,
             ServiceLocator locator,
             Configuration globalConfig) {
@@ -176,7 +181,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
         this.method = method;
         final Invocable invocable = method.getInvocable();
-        this.dispatcher = dispatcherProvider.create(invocable, invocationHandlerProvider.create(invocable));
+        this.dispatcher = dispatcherProvider.create(invocable,
+                invocationHandlerProvider.create(invocable));
 
         this.resourceMethod = invocable.getHandlingMethod();
         this.resourceClass = invocable.getHandler().getHandlerClass();
@@ -201,7 +207,7 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             });
 
             for (final Class<?> providerClass : providerClasses) {
-                providers.add(locator.create(providerClass));
+                providers.add(locator.createAndInitialize(providerClass));
             }
         }
 
@@ -321,7 +327,9 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         final Object resource = routingContextProvider.get().peekMatchedResource();
 
         if (method.isSuspendDeclared() || method.isManagedAsyncDeclared()) {
-            asyncContextProvider.get().suspend();
+            if (!asyncContextProvider.get().suspend()) {
+                throw new ProcessingException(LocalizationMessages.ERROR_SUSPENDING_ASYNC_REQUEST());
+            }
         }
 
         if (method.isManagedAsyncDeclared()) {
@@ -342,22 +350,29 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
     }
 
-    private Response invoke(ContainerRequest requestContext, Object resource) {
-        Response jaxrsResponse = dispatcher.dispatch(resource, requestContext);
-        if (jaxrsResponse == null) {
-            jaxrsResponse = Response.noContent().build();
+    private static final Cache<Method, Annotation[]> methodAnnotationCache = new Cache<Method, Annotation[]>(new Computable<Method, Annotation[]>() {
+
+        @Override
+        public Annotation[] compute(Method m) {
+            return m.getDeclaredAnnotations();
         }
+    });
+
+    private Response invoke(ContainerRequest requestContext, Object resource) {
+
+        Response jaxrsResponse;
+        requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_START);
 
         respondingContextProvider.get().push(new Function<ContainerResponse, ContainerResponse>() {
             @Override
             public ContainerResponse apply(final ContainerResponse response) {
                 if (response == null) {
-                    return response;
+                    return null;
                 }
 
                 final Invocable invocable = method.getInvocable();
                 final Annotation[] entityAnn = response.getEntityAnnotations();
-                final Annotation[] methodAnn = invocable.getHandlingMethod().getDeclaredAnnotations();
+                final Annotation[] methodAnn = methodAnnotationCache.compute(invocable.getHandlingMethod());
                 if (methodAnn.length > 0) {
                     if (entityAnn.length == 0) {
                         response.setEntityAnnotations(methodAnn);
@@ -382,6 +397,16 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
             }
         });
+
+        try {
+            jaxrsResponse = dispatcher.dispatch(resource, requestContext);
+        } finally {
+            requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_FINISHED);
+        }
+
+        if (jaxrsResponse == null) {
+            jaxrsResponse = Response.noContent().build();
+        }
 
         return jaxrsResponse;
     }

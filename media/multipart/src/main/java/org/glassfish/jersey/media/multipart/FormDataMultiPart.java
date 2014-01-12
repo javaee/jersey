@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.media.multipart.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.MediaTypes;
 
 /**
@@ -188,7 +189,7 @@ public class FormDataMultiPart extends MultiPart {
     @Override
     public void setMediaType(MediaType mediaType) {
         if (!MediaTypes.typeEqual(mediaType, MediaType.MULTIPART_FORM_DATA_TYPE)) {
-            throw new IllegalArgumentException("Cannot change media type of a FormDataMultiPart instance");
+            throw new IllegalArgumentException(LocalizationMessages.FORM_DATA_MULTIPART_CANNOT_CHANGE_MEDIATYPE());
         }
         super.setMediaType(mediaType);
     }

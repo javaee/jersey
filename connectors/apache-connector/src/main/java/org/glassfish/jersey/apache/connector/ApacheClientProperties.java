@@ -40,7 +40,7 @@
 package org.glassfish.jersey.apache.connector;
 
 /**
- * Configuration options specific to the Client API that utilizes {@link ApacheConnector}.
+ * Configuration options specific to the Client API that utilizes {@link ApacheConnectorProvider}.
  *
  * @author jorgeluisw@mac.com
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -48,6 +48,18 @@ package org.glassfish.jersey.apache.connector;
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
 public final class ApacheClientProperties {
+
+    /**
+     * Support for specifying SSL configuration for HTTPS connections.
+     * Used only when making HTTPS requests.
+     * <p/>
+     * The value MUST be an instance of {@link org.glassfish.jersey.SslConfigurator}.
+     * <p/>
+     * A default value is not set.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String SSL_CONFIG = "jersey.config.apache.client.ssl.sslConfig";
 
     /**
      * The credential provider that should be used to retrieve
@@ -60,8 +72,7 @@ public final class ApacheClientProperties {
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String CREDENTIALS_PROVIDER =
-            "jersey.config.apache.client.credentialsProvider";
+    public static final String CREDENTIALS_PROVIDER = "jersey.config.apache.client.credentialsProvider";
 
     /**
      * A value of {@code false} indicates the client should handle cookies
@@ -74,16 +85,14 @@ public final class ApacheClientProperties {
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String DISABLE_COOKIES =
-            "jersey.config.apache.client.handleCookies";
+    public static final String DISABLE_COOKIES = "jersey.config.apache.client.handleCookies";
 
     /**
      * A value of {@code true} indicates that a client should send an
      * authentication request even before the server gives a 401
      * response.
-     * <p/>
-     * This property may only be set when constructing a {@link org.glassfish.jersey.apache.connector.ApacheConnector}
-     * instance.
+     * <p>
+     * This property may only be set prior to constructing Apache connector using {@link ApacheConnectorProvider}.
      * <p/>
      * The value MUST be an instance of {@link java.lang.Boolean}.
      * <p/>
@@ -91,23 +100,21 @@ public final class ApacheClientProperties {
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String PREEMPTIVE_BASIC_AUTHENTICATION =
-            "jersey.config.apache.client.preemptiveBasicAuthentication";
+    public static final String PREEMPTIVE_BASIC_AUTHENTICATION = "jersey.config.apache.client.preemptiveBasicAuthentication";
 
     /**
      * Connection Manager which will be used to create {@link org.apache.http.client.HttpClient}.
      * <p/>
-     * The value MUST be an instance of {@link org.apache.http.conn.ClientConnectionManager}.
+     * The value MUST be an instance of {@link org.apache.http.conn.HttpClientConnectionManager}.
      * <p/>
      * If the property is absent a default Connection Manager will be used
-     * ({@link org.apache.http.impl.conn.BasicClientConnectionManager}).
+     * ({@link org.apache.http.impl.conn.BasicHttpClientConnectionManager}).
      * If you want to use this client in multi-threaded environment, be sure you override default value with
-     * {@link org.apache.http.impl.conn.PoolingClientConnectionManager} instance.
+     * {@link org.apache.http.impl.conn.PoolingHttpClientConnectionManager} instance.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
-    public static final String CONNECTION_MANAGER =
-            "jersey.config.apache.client.connectionManager";
+    public static final String CONNECTION_MANAGER = "jersey.config.apache.client.connectionManager";
 
     /**
      * Http parameters which will be used to create {@link org.apache.http.client.HttpClient}.
@@ -117,9 +124,12 @@ public final class ApacheClientProperties {
      * If the property is absent default http parameters will be used.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link org.glassfish.jersey.apache.connector.ApacheClientProperties#REQUEST_CONFIG} instead.
+     * Will be removed in one of the next releases.
      */
-    public static final String HTTP_PARAMS =
-            "jersey.config.apache.client.httpParams";
+    @Deprecated
+    public static final String HTTP_PARAMS = "jersey.config.apache.client.httpParams";
 
     /**
      * A value of a URI to configure the proxy host and proxy port to proxy
@@ -131,9 +141,12 @@ public final class ApacheClientProperties {
      * If the property absent then no proxy will be utilized.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_URI} instead.
+     * Will be removed in one of the next releases.
      */
-    public static final String PROXY_URI =
-            "jersey.config.apache.client.proxyUri";
+    @Deprecated
+    public static final String PROXY_URI = "jersey.config.apache.client.proxyUri";
 
     /**
      * User name which will be used for proxy authentication.
@@ -143,9 +156,12 @@ public final class ApacheClientProperties {
      * If the property absent then no proxy authentication will be utilized.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_USERNAME} instead.
+     * Will be removed in one of the next releases.
      */
-    public static final String PROXY_USERNAME =
-            "jersey.config.apache.client.proxyUsername";
+    @Deprecated
+    public static final String PROXY_USERNAME = "jersey.config.apache.client.proxyUsername";
 
     /**
      * Password which will be used for proxy authentication.
@@ -155,9 +171,25 @@ public final class ApacheClientProperties {
      * If the property absent then no proxy authentication will be utilized.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_PASSWORD} instead.
+     * Will be removed in one of the next releases.
      */
-    public static final String PROXY_PASSWORD =
-            "jersey.config.apache.client.proxyPassword";
+    @Deprecated
+    public static final String PROXY_PASSWORD = "jersey.config.apache.client.proxyPassword";
+
+    /**
+     * Request configuration for the {@link org.apache.http.client.HttpClient}.
+     * <p/>
+     * The value MUST be an instance of {@link org.apache.http.client.config.RequestConfig}.
+     * <p/>
+     * If the property is absent default request configuration will be used.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     *
+     * @since 2.5
+     */
+    public static final String REQUEST_CONFIG = "jersey.config.apache.client.requestConfig";
 
     private ApacheClientProperties() {
         // prevents instantiation

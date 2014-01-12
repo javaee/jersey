@@ -54,16 +54,16 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.validation.ValidationFeature;
-import org.glassfish.jersey.test.TestProperties;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
@@ -71,17 +71,16 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
  * Basic test of Bean Validation.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class BeanValidationTest {
-
-    private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
 
     private static final String CONTEXT = "/jersey";
 
     private static final URI baseUri = UriBuilder.
             fromUri("http://localhost").
-            port(port).
+            port(Helper.getPort()).
             path(CONTEXT).build();
 
     @Configuration
@@ -89,7 +88,7 @@ public class BeanValidationTest {
         List<Option> options = Helper.getCommonOsgiOptions();
 
         options.addAll(Helper.expandedList(
-                // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
+//                PaxRunnerOptions.vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"), //for debug purposes
 
                 // validation
                 mavenBundle().groupId("org.glassfish.jersey.ext").artifactId("jersey-bean-validation").versionAsInProject(),
@@ -105,24 +104,40 @@ public class BeanValidationTest {
 
     @Test
     public void testBeanValidationResourceFeature() throws Exception {
-        _test(true);
+        _test(400, true, false);
     }
 
     @Test
     public void testBeanValidationResourceAutoDiscovery() throws Exception {
-        _test(false);
+        _test(400, false, false);
     }
 
-    private void _test(final boolean registerFeature) {
+    @Test
+    public void testBeanValidationResourceManualRegistration() throws Exception {
+        _test(400, true, true);
+    }
+
+    @Test
+    public void testBeanValidationResourceNoValidationFeature() throws Exception {
+        _test(204, false, true);
+    }
+
+    protected void _test(final int expectedResponseCode, final boolean registerFeature, final boolean disableMetainfServicesLookup) {
         final ResourceConfig resourceConfig = new ResourceConfig(BeanValidationResource.class);
         if (registerFeature) {
             resourceConfig.register(ValidationFeature.class);
+        }
+        if (disableMetainfServicesLookup) {
+            resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, Boolean.TRUE);
+
+            resourceConfig.register(org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainerProvider.class);
         }
 
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
         final Form form = new Form();
-        form.asMap().add("formParam", "formParam");
+        final String formValue = "formValue";
+        form.asMap().add("formParam", formValue);
 
         final Client client = ClientBuilder.newClient();
         final String entity = client.
@@ -131,8 +146,7 @@ public class BeanValidationTest {
                 request().
                 post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
 
-        System.out.println("RESULT = " + entity);
-        assertEquals("formParam", entity);
+        assertEquals(formValue, entity);
 
         final Response response = client.
                 target(baseUri).
@@ -140,10 +154,9 @@ public class BeanValidationTest {
                 request().
                 post(Entity.entity(new Form(), MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 
-        System.out.println("HTTP RESULT = " + response.getStatus());
-        assertEquals(400, response.getStatus());
+        assertEquals(expectedResponseCode, response.getStatus());
 
-        server.stop();
+        server.shutdownNow();
     }
 
 }

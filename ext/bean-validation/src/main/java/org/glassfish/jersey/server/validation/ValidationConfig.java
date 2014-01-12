@@ -98,7 +98,9 @@ public final class ValidationConfig {
      * If {@code null} is passed, the default message interpolator is used.
      *
      * @param messageInterpolator message interpolator implementation.
+     * @deprecated use {@link #messageInterpolator(javax.validation.MessageInterpolator)} instead.
      */
+    @Deprecated
     public void setMessageInterpolator(final MessageInterpolator messageInterpolator) {
         this.messageInterpolator = messageInterpolator;
     }
@@ -108,7 +110,9 @@ public final class ValidationConfig {
      * If {@code null} is passed, the default traversable resolver is used.
      *
      * @param traversableResolver traversable resolver implementation.
+     * @deprecated use {@link #traversableResolver(javax.validation.TraversableResolver)} instead.
      */
+    @Deprecated
     public void setTraversableResolver(final TraversableResolver traversableResolver) {
         this.traversableResolver = traversableResolver;
     }
@@ -118,7 +122,9 @@ public final class ValidationConfig {
      * If {@code null} is passed, the default constraint validator factory is used.
      *
      * @param constraintValidatorFactory constraint factory implementation.
+     * @deprecated use {@link #constraintValidatorFactory(javax.validation.ConstraintValidatorFactory)} instead.
      */
+    @Deprecated
     public void setConstraintValidatorFactory(final ConstraintValidatorFactory constraintValidatorFactory) {
         this.constraintValidatorFactory = constraintValidatorFactory;
     }
@@ -128,8 +134,54 @@ public final class ValidationConfig {
      * If {@code null} is passed, the default parameter name provider is used.
      *
      * @param parameterNameProvider parameter name provider implementation.
+     * @deprecated use {@link #parameterNameProvider(javax.validation.ParameterNameProvider)} instead.
      */
+    @Deprecated
     public void setParameterNameProvider(final ParameterNameProvider parameterNameProvider) {
         this.parameterNameProvider = parameterNameProvider;
+    }
+
+    /**
+     * Defines the message interpolator.
+     * If {@code null} is passed, the default message interpolator is used.
+     *
+     * @param messageInterpolator message interpolator implementation.
+     */
+    public ValidationConfig messageInterpolator(final MessageInterpolator messageInterpolator) {
+        this.messageInterpolator = messageInterpolator;
+        return this;
+    }
+
+    /**
+     * Defines the traversable resolver.
+     * If {@code null} is passed, the default traversable resolver is used.
+     *
+     * @param traversableResolver traversable resolver implementation.
+     */
+    public ValidationConfig traversableResolver(final TraversableResolver traversableResolver) {
+        this.traversableResolver = traversableResolver;
+        return this;
+    }
+
+    /**
+     * Defines the constraint validator factory.
+     * If {@code null} is passed, the default constraint validator factory is used.
+     *
+     * @param constraintValidatorFactory constraint factory implementation.
+     */
+    public ValidationConfig constraintValidatorFactory(final ConstraintValidatorFactory constraintValidatorFactory) {
+        this.constraintValidatorFactory = constraintValidatorFactory;
+        return this;
+    }
+
+    /**
+     * Defines the parameter name provider.
+     * If {@code null} is passed, the default parameter name provider is used.
+     *
+     * @param parameterNameProvider parameter name provider implementation.
+     */
+    public ValidationConfig parameterNameProvider(final ParameterNameProvider parameterNameProvider) {
+        this.parameterNameProvider = parameterNameProvider;
+        return this;
     }
 }

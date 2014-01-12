@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@
     <parent>
         <groupId>org.glassfish.jersey.examples</groupId>
         <artifactId>project</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>2.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>webapp-example-parent</artifactId>
@@ -96,6 +96,33 @@
                                 </transformationSets>
                             </configuration>
                         </execution>
+                        <execution>
+                            <id>assemble-wls-src-zip</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>transform</goal>
+                            </goals>
+                            <configuration>
+                                <transformationSets>
+                                    <transformationSet>
+                                        <dir>${project.basedir}</dir>
+                                        <includes>
+                                            <include>pom.xml</include>
+                                        </includes>
+                                        <stylesheet>../etc/wls-project-src-pom.xsl</stylesheet>
+                                        <outputDir>${project.build.directory}/wls-pom-file</outputDir>
+                                    </transformationSet>
+                                    <transformationSet>
+                                        <dir>${project.basedir}</dir>
+                                        <includes>
+                                            <include>**/web.xml</include>
+                                        </includes>
+                                        <stylesheet>../etc/wls-project-src-web.xsl</stylesheet>
+                                        <outputDir>${project.build.directory}/wls-web-xml-file</outputDir>
+                                    </transformationSet>
+                                </transformationSets>
+                            </configuration>
+                        </execution>
                     </executions>
                 </plugin>
                 <plugin>
@@ -106,12 +133,26 @@
                             <id>assemble-gf-src-zip</id>
                             <phase>package</phase>
                             <goals>
-                                <goal>attached</goal>
+                                <goal>single</goal>
                             </goals>
                             <configuration>
-                                <descriptors>
-                                    <descriptor>../etc/gf-project-src-assembly.xml</descriptor>
-                                </descriptors>
+                                <descriptorRefs>
+                                    <!-- Reference to a descriptor in org.glassfish.jersey.examples:assemblies module -->
+                                    <descriptorRef>glassfish-src-zip</descriptorRef>
+                                </descriptorRefs>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>assemble-wls-src-zip</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <descriptorRefs>
+                                    <!-- Reference to a descriptor in org.glassfish.jersey.examples:assemblies module -->
+                                    <descriptorRef>weblogic-src-zip</descriptorRef>
+                                </descriptorRefs>
                             </configuration>
                         </execution>
                     </executions>
@@ -127,4 +168,5 @@
             </plugins>
         </pluginManagement>
     </build>
+
 </project>

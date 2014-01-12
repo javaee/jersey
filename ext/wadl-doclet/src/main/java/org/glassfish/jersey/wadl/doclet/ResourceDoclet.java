@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -99,7 +99,6 @@ import com.sun.javadoc.Tag;
  * Created on: Jun 7, 2008<br>
  *
  * @author <a href="mailto:martin.grotzke@freiheit.com">Martin Grotzke</a>
- * @version $Id: ResourceDoclet.java 4615 2011-02-17 18:15:12Z pavel_bucek $
  */
 public class ResourceDoclet {
 
@@ -122,7 +121,7 @@ public class ResourceDoclet {
 
         final String classpath = getOptionArg(root.options(), OPTION_CLASSPATH);
         // LOG.info( "Have classpath: " + classpath );
-        final String[] classpathElements = classpath.split(":");
+        final String[] classpathElements = classpath.split(File.pathSeparator);
 
         final ClassLoader cl = Thread.currentThread().getContextClassLoader();
         final ClassLoader ncl = new Loader(classpathElements,

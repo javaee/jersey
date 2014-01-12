@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,8 +61,8 @@ public class ClipboardTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig c) {
-        c.register(ClipboardDataProvider.ApplicationJson.class).register(ClipboardDataProvider.TextPlain.class);
+    protected void configureClient(ClientConfig config) {
+        config.register(ClipboardDataProvider.ApplicationJson.class).register(ClipboardDataProvider.TextPlain.class);
     }
 
     @Test

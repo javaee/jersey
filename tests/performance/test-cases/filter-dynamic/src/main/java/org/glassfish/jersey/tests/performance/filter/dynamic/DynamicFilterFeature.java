@@ -1,14 +1,14 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
  * and Distribution License("CDDL") (collectively, the "License").  You
  * may not use this file except in compliance with the License.  You can
  * obtain a copy of the License at
- * https://glassfish.dev.java.net/public/CDDL+GPL_1_1.html
+ * http://glassfish.java.net/public/CDDL+GPL_1_1.html
  * or packager/legal/LICENSE.txt.  See the License for the specific
  * language governing permissions and limitations under the License.
  *
@@ -41,7 +41,7 @@ package org.glassfish.jersey.tests.performance.filter.dynamic;
 
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.Provider;
 
 
@@ -53,9 +53,9 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class DynamicFilterFeature implements DynamicFeature {
 
-    public void configure(ResourceInfo resourceInfo, Configurable configurable) {
+    public void configure(ResourceInfo resourceInfo, FeatureContext context) {
         if (DynamicallyBoundFilterResource.class == resourceInfo.getResourceClass()) {
-            configurable.register(DynamicallyBoundFilter.class);
+            context.register(DynamicallyBoundFilter.class);
         }
     }
 

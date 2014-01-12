@@ -44,6 +44,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -294,7 +295,7 @@ public final class AnnotatedMethod implements AnnotatedElement {
             return null;
         }
 
-        m = ReflectionHelper.findMethodOnClass(c, m);
+        m = AccessController.doPrivileged(ReflectionHelper.findMethodOnClassPA(c, m));
         if (m == null) {
             return null;
         }

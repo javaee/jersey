@@ -70,13 +70,14 @@ import com.google.common.collect.Lists;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public final class WriterInterceptorExecutor extends InterceptorExecutor implements WriterInterceptorContext {
+public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor> implements WriterInterceptorContext {
 
     private OutputStream outputStream;
     private final MultivaluedMap<String, Object> headers;
     private Object entity;
 
     private final Iterator<WriterInterceptor> iterator;
+    private int processedCount;
 
     /**
      * Constructs a new executor to write given type to provided {@link InputStream entityStream}.
@@ -99,9 +100,15 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
      * @param writerInterceptors Writer interceptor that are to be used to intercept the writing of an entity. The interceptors
      *                           will be executed in the same order as given in this parameter.
      */
-    public WriterInterceptorExecutor(Object entity, Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                                     MultivaluedMap<String, Object> headers, PropertiesDelegate propertiesDelegate, OutputStream entityStream,
-                                     MessageBodyWorkers workers, Iterable<WriterInterceptor> writerInterceptors) {
+    public WriterInterceptorExecutor(Object entity, Class<?> rawType,
+                                     Type type,
+                                     Annotation[] annotations,
+                                     MediaType mediaType,
+                                     MultivaluedMap<String, Object> headers,
+                                     PropertiesDelegate propertiesDelegate,
+                                     OutputStream entityStream,
+                                     MessageBodyWorkers workers,
+                                     Iterable<WriterInterceptor> writerInterceptors) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
@@ -112,6 +119,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
         effectiveInterceptors.add(new TerminalWriterInterceptor(workers));
 
         this.iterator = effectiveInterceptors.iterator();
+        this.processedCount = 0;
     }
 
     /**
@@ -136,7 +144,13 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
         if (nextInterceptor == null) {
             throw new ProcessingException(LocalizationMessages.ERROR_INTERCEPTOR_WRITER_PROCEED());
         }
-        nextInterceptor.aroundWriteTo(this);
+        traceBefore(nextInterceptor, MsgTraceEvent.WI_BEFORE);
+        try {
+            nextInterceptor.aroundWriteTo(this);
+        } finally {
+            processedCount++;
+            traceAfter(nextInterceptor, MsgTraceEvent.WI_AFTER);
+        }
     }
 
     @Override
@@ -166,6 +180,15 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
     }
 
     /**
+     * Get number of processed interceptors.
+     *
+     * @return number of processed interceptors.
+     */
+    int getProcessedCount() {
+        return processedCount;
+    }
+
+    /**
      * Terminal writer interceptor which choose the appropriate {@link MessageBodyWriter}
      * and writes the entity to the output stream. The order of actions is the following: <br>
      * 1. choose the appropriate {@link MessageBodyWriter} <br>
@@ -173,7 +196,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
      * 3. writes the entity to the output stream <br>
      *
      */
-    private static class TerminalWriterInterceptor implements WriterInterceptor {
+    private class TerminalWriterInterceptor implements WriterInterceptor {
         private final MessageBodyWorkers workers;
 
         public TerminalWriterInterceptor(MessageBodyWorkers workers) {
@@ -184,16 +207,44 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor impleme
         @Override
         @SuppressWarnings("unchecked")
         public void aroundWriteTo(WriterInterceptorContext context) throws WebApplicationException, IOException {
+            processedCount--; //this is not regular interceptor -> count down
 
-            final MessageBodyWriter writer = workers.getMessageBodyWriter(context.getType(), context.getGenericType(),
-                    context.getAnnotations(), context.getMediaType());
-            if (writer == null) {
-                throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYWRITER(
-                        context.getMediaType(), context.getType(), context.getGenericType()));
+            traceBefore(null, MsgTraceEvent.WI_BEFORE);
+            try {
+                final TracingLogger tracingLogger = getTracingLogger();
+                if (tracingLogger.isLogEnabled(MsgTraceEvent.MBW_FIND)) {
+                    tracingLogger.log(MsgTraceEvent.MBW_FIND,
+                            context.getType().getName(),
+                            (context.getGenericType() instanceof Class ?
+                                    ((Class) context.getGenericType()).getName() : context.getGenericType()),
+                            context.getMediaType(), java.util.Arrays.toString(context.getAnnotations()));
+                }
+
+                final MessageBodyWriter writer = workers.getMessageBodyWriter(context.getType(), context.getGenericType(),
+                        context.getAnnotations(), context.getMediaType(), WriterInterceptorExecutor.this);
+
+                if (writer == null) {
+                    throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYWRITER(
+                            context.getMediaType(), context.getType(), context.getGenericType()));
+                }
+                invokeWriteTo(context, writer);
+            } finally {
+                clearLastTracedInterceptor();
+                traceAfter(null, MsgTraceEvent.WI_AFTER);
             }
-            writer.writeTo(context.getEntity(), context.getType(), context.getGenericType(), context.getAnnotations(),
-                    context.getMediaType(), context.getHeaders(), context.getOutputStream());
+        }
+
+        @SuppressWarnings("unchecked")
+        private void invokeWriteTo(WriterInterceptorContext context, MessageBodyWriter writer)
+                throws WebApplicationException, IOException {
+            final TracingLogger tracingLogger = getTracingLogger();
+            final long timestamp = tracingLogger.timestamp(MsgTraceEvent.MBW_WRITE_TO);
+            try {
+                writer.writeTo(context.getEntity(), context.getType(), context.getGenericType(), context.getAnnotations(),
+                        context.getMediaType(), context.getHeaders(), context.getOutputStream());
+            } finally {
+                tracingLogger.logDuration(MsgTraceEvent.MBW_WRITE_TO, timestamp, writer);
+            }
         }
     }
-
 }

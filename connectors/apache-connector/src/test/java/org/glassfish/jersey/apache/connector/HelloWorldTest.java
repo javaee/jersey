@@ -39,11 +39,19 @@
  */
 package org.glassfish.jersey.apache.connector;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.client.Client;
@@ -54,17 +62,36 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import javax.net.ssl.SSLSession;
+
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.apache.http.HttpConnectionMetrics;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.ClientConnectionRequest;
+import org.apache.http.conn.ConnectionPoolTimeoutException;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.ManagedClientConnection;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.impl.conn.BasicClientConnectionManager;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class HelloWorldTest extends JerseyTest {
@@ -82,6 +109,20 @@ public class HelloWorldTest extends JerseyTest {
             return CLICHED_MESSAGE;
         }
 
+        @GET
+        @Produces("text/plain")
+        @Path("error")
+        public Response getError() {
+            return Response.serverError().entity("Error.").build();
+        }
+
+        @GET
+        @Produces("text/plain")
+        @Path("error2")
+        public Response getError2() {
+            return Response.serverError().entity("Error2.").build();
+        }
+
     }
 
     @Override
@@ -92,8 +133,8 @@ public class HelloWorldTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.connector(new ApacheConnector(clientConfig));
+    protected void configureClient(ClientConfig config) {
+        config.connectorProvider(new ApacheConnectorProvider());
     }
 
     @Test
@@ -110,17 +151,24 @@ public class HelloWorldTest extends JerseyTest {
 
     @Test
     public void testAsyncClientRequests() throws InterruptedException {
+        HttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        ClientConfig cc = new ClientConfig();
+        cc.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
+        cc.connectorProvider(new ApacheConnectorProvider());
+        Client client = ClientBuilder.newClient(cc);
+        WebTarget target = client.target(getBaseUri());
         final int REQUESTS = 20;
         final CountDownLatch latch = new CountDownLatch(REQUESTS);
         final long tic = System.currentTimeMillis();
+        final Map<Integer, String> results = new ConcurrentHashMap<Integer, String>();
         for (int i = 0; i < REQUESTS; i++) {
             final int id = i;
-            target().path(ROOT_PATH).request().async().get(new InvocationCallback<Response>() {
+            target.path(ROOT_PATH).request().async().get(new InvocationCallback<Response>() {
                 @Override
                 public void completed(Response response) {
                     try {
                         final String result = response.readEntity(String.class);
-                        assertEquals(HelloWorldResource.CLICHED_MESSAGE, result);
+                        results.put(id, result);
                     } finally {
                         latch.countDown();
                     }
@@ -128,7 +176,8 @@ public class HelloWorldTest extends JerseyTest {
 
                 @Override
                 public void failed(Throwable error) {
-                    error.printStackTrace();
+                    Logger.getLogger(HelloWorldTest.class.getName()).log(Level.SEVERE, "Failed on throwable", error);
+                    results.put(id, "error: " + error.getMessage());
                     latch.countDown();
                 }
             });
@@ -136,6 +185,18 @@ public class HelloWorldTest extends JerseyTest {
         latch.await(10, TimeUnit.SECONDS);
         final long toc = System.currentTimeMillis();
         Logger.getLogger(HelloWorldTest.class.getName()).info("Executed in: " + (toc - tic));
+
+        StringBuilder resultInfo = new StringBuilder("Results:\n");
+        for (int i = 0; i < REQUESTS; i++) {
+            String result = results.get(i);
+            resultInfo.append(i).append(": ").append(result).append('\n');
+        }
+        Logger.getLogger(HelloWorldTest.class.getName()).info(resultInfo.toString());
+
+        for (int i = 0; i < REQUESTS; i++) {
+            String result = results.get(i);
+            assertEquals(HelloWorldResource.CLICHED_MESSAGE, result);
+        }
     }
 
     @Test
@@ -236,9 +297,292 @@ public class HelloWorldTest extends JerseyTest {
 
         Client client = ClientBuilder.newClient(client1.getConfiguration());
         CustomLoggingFilter.preFilterCalled = CustomLoggingFilter.postFilterCalled = 0;
-        String s = target().path(ROOT_PATH).request().get(String.class);
+        String s = client.target(getBaseUri()).path(ROOT_PATH).request().get(String.class);
         assertEquals(HelloWorldResource.CLICHED_MESSAGE, s);
         assertEquals(1, CustomLoggingFilter.preFilterCalled);
         assertEquals(1, CustomLoggingFilter.postFilterCalled);
+    }
+
+    /**
+     * JERSEY-2157 reproducer.
+     *
+     * The test ensures that entities of the error responses which cause
+     * WebApplicationException being thrown by a JAX-RS client are buffered
+     * and that the underlying input connections are automatically released
+     * in such case.
+     */
+    @Test
+    public void testConnectionClosingOnExceptionsForErrorResponses() {
+        final BasicClientConnectionManager cm = new BasicClientConnectionManager();
+        final AtomicInteger connectionCounter = new AtomicInteger(0);
+
+        final ClientConfig config = new ClientConfig().property(ApacheClientProperties.CONNECTION_MANAGER,
+                new ClientConnectionManager() {
+                    @Override
+                    public SchemeRegistry getSchemeRegistry() {
+                        return cm.getSchemeRegistry();
+                    }
+
+                    @Override
+                    public ClientConnectionRequest requestConnection(final HttpRoute route, final Object state) {
+                        connectionCounter.incrementAndGet();
+
+                        final ClientConnectionRequest wrappedRequest = cm.requestConnection(route, state);
+
+                        /**
+                         * To explain the following long piece of code:
+                         *
+                         * All the code does is to just create a wrapper implementations
+                         * for the AHC connection management interfaces.
+                         *
+                         * The only really important piece of code is the
+                         * {@link org.apache.http.conn.ManagedClientConnection#releaseConnection()} implementation,
+                         * where the connectionCounter is decremented when a managed connection instance
+                         * is released by AHC runtime. In our test, this is expected to happen
+                         * as soon as the exception is created for an error response
+                         * (as the error response entity gets buffered in
+                         * {@link org.glassfish.jersey.client.JerseyInvocation#convertToException(javax.ws.rs.core.Response)}).
+                         */
+                        return new ClientConnectionRequest() {
+                            @Override
+                            public ManagedClientConnection getConnection(long timeout, TimeUnit tunit)
+                                    throws InterruptedException, ConnectionPoolTimeoutException {
+
+                                final ManagedClientConnection wrappedConnection = wrappedRequest.getConnection(timeout, tunit);
+
+                                return new ManagedClientConnection() {
+                                    @Override
+                                    public boolean isSecure() {
+                                        return wrappedConnection.isSecure();
+                                    }
+
+                                    @Override
+                                    public HttpRoute getRoute() {
+                                        return wrappedConnection.getRoute();
+                                    }
+
+                                    @Override
+                                    public SSLSession getSSLSession() {
+                                        return wrappedConnection.getSSLSession();
+                                    }
+
+                                    @Override
+                                    public void open(HttpRoute route, HttpContext context, HttpParams params) throws IOException {
+                                        wrappedConnection.open(route, context, params);
+                                    }
+
+                                    @Override
+                                    public void tunnelTarget(boolean secure, HttpParams params) throws IOException {
+                                        wrappedConnection.tunnelTarget(secure, params);
+                                    }
+
+                                    @Override
+                                    public void tunnelProxy(HttpHost next, boolean secure, HttpParams params) throws IOException {
+                                        wrappedConnection.tunnelProxy(next, secure, params);
+                                    }
+
+                                    @Override
+                                    public void layerProtocol(HttpContext context, HttpParams params) throws IOException {
+                                        wrappedConnection.layerProtocol(context, params);
+                                    }
+
+                                    @Override
+                                    public void markReusable() {
+                                        wrappedConnection.markReusable();
+                                    }
+
+                                    @Override
+                                    public void unmarkReusable() {
+                                        wrappedConnection.unmarkReusable();
+                                    }
+
+                                    @Override
+                                    public boolean isMarkedReusable() {
+                                        return wrappedConnection.isMarkedReusable();
+                                    }
+
+                                    @Override
+                                    public void setState(Object state) {
+                                        wrappedConnection.setState(state);
+                                    }
+
+                                    @Override
+                                    public Object getState() {
+                                        return wrappedConnection.getState();
+                                    }
+
+                                    @Override
+                                    public void setIdleDuration(long duration, TimeUnit unit) {
+                                        wrappedConnection.setIdleDuration(duration, unit);
+                                    }
+
+                                    @Override
+                                    public boolean isResponseAvailable(int timeout) throws IOException {
+                                        return wrappedConnection.isResponseAvailable(timeout);
+                                    }
+
+                                    @Override
+                                    public void sendRequestHeader(HttpRequest request) throws HttpException, IOException {
+                                        wrappedConnection.sendRequestHeader(request);
+                                    }
+
+                                    @Override
+                                    public void sendRequestEntity(HttpEntityEnclosingRequest request)
+                                            throws HttpException, IOException {
+                                        wrappedConnection.sendRequestEntity(request);
+                                    }
+
+                                    @Override
+                                    public HttpResponse receiveResponseHeader() throws HttpException, IOException {
+                                        return wrappedConnection.receiveResponseHeader();
+                                    }
+
+                                    @Override
+                                    public void receiveResponseEntity(HttpResponse response) throws HttpException, IOException {
+                                        wrappedConnection.receiveResponseEntity(response);
+                                    }
+
+                                    @Override
+                                    public void flush() throws IOException {
+                                        wrappedConnection.flush();
+                                    }
+
+                                    @Override
+                                    public void close() throws IOException {
+                                        wrappedConnection.close();
+                                    }
+
+                                    @Override
+                                    public boolean isOpen() {
+                                        return wrappedConnection.isOpen();
+                                    }
+
+                                    @Override
+                                    public boolean isStale() {
+                                        return wrappedConnection.isStale();
+                                    }
+
+                                    @Override
+                                    public void setSocketTimeout(int timeout) {
+                                        wrappedConnection.setSocketTimeout(timeout);
+                                    }
+
+                                    @Override
+                                    public int getSocketTimeout() {
+                                        return wrappedConnection.getSocketTimeout();
+                                    }
+
+                                    @Override
+                                    public void shutdown() throws IOException {
+                                        wrappedConnection.shutdown();
+                                    }
+
+                                    @Override
+                                    public HttpConnectionMetrics getMetrics() {
+                                        return wrappedConnection.getMetrics();
+                                    }
+
+                                    @Override
+                                    public InetAddress getLocalAddress() {
+                                        return wrappedConnection.getLocalAddress();
+                                    }
+
+                                    @Override
+                                    public int getLocalPort() {
+                                        return wrappedConnection.getLocalPort();
+                                    }
+
+                                    @Override
+                                    public InetAddress getRemoteAddress() {
+                                        return wrappedConnection.getRemoteAddress();
+                                    }
+
+                                    @Override
+                                    public int getRemotePort() {
+                                        return wrappedConnection.getRemotePort();
+                                    }
+
+                                    @Override
+                                    public void releaseConnection() throws IOException {
+                                        connectionCounter.decrementAndGet();
+                                        wrappedConnection.releaseConnection();
+                                    }
+
+                                    @Override
+                                    public void abortConnection() throws IOException {
+                                        wrappedConnection.abortConnection();
+                                    }
+
+                                    @Override
+                                    public String getId() {
+                                        return wrappedConnection.getId();
+                                    }
+
+                                    @Override
+                                    public void bind(Socket socket) throws IOException {
+                                        wrappedConnection.bind(socket);
+                                    }
+
+                                    @Override
+                                    public Socket getSocket() {
+                                        return wrappedConnection.getSocket();
+                                    }
+                                };
+                            }
+
+                            @Override
+                            public void abortRequest() {
+                                wrappedRequest.abortRequest();
+                            }
+                        };
+                    }
+
+                    @Override
+                    public void releaseConnection(ManagedClientConnection conn, long keepalive, TimeUnit tunit) {
+                        cm.releaseConnection(conn, keepalive, tunit);
+                    }
+
+                    @Override
+                    public void closeExpiredConnections() {
+                        cm.closeExpiredConnections();
+                    }
+
+                    @Override
+                    public void closeIdleConnections(long idletime, TimeUnit tunit) {
+                        cm.closeIdleConnections(idletime, tunit);
+                    }
+
+                    @Override
+                    public void shutdown() {
+                        cm.shutdown();
+                    }
+                });
+        config.connectorProvider(new ApacheConnectorProvider());
+
+        final Client client = ClientBuilder.newClient(config);
+        final WebTarget rootTarget = client.target(getBaseUri()).path(ROOT_PATH);
+
+        // Test that connection is getting closed properly for error responses.
+        try {
+            final String response = rootTarget.path("error").request().get(String.class);
+            fail("Exception expected. Received: " + response);
+        } catch (InternalServerErrorException isee) {
+            // do nothing - connection should be closed properly by now
+        }
+
+        // Fail if the previous connection has not been closed automatically.
+        assertEquals(0, connectionCounter.get());
+
+        try {
+            final String response = rootTarget.path("error2").request().get(String.class);
+            fail("Exception expected. Received: " + response);
+        } catch (InternalServerErrorException isee) {
+            assertEquals("Received unexpected data.", "Error2.", isee.getResponse().readEntity(String.class));
+            // Test buffering:
+            // second read would fail if entity was not buffered
+            assertEquals("Unexpected data in the entity buffer.", "Error2.", isee.getResponse().readEntity(String.class));
+        }
+
+        assertEquals(0, connectionCounter.get());
     }
 }

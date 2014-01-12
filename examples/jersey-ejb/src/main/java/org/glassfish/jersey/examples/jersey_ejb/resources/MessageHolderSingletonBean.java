@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import org.glassfish.jersey.examples.jersey_ejb.entities.Message;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.ejb.Singleton;
 
 /**
@@ -53,7 +54,7 @@ import javax.ejb.Singleton;
 @Singleton
 public class MessageHolderSingletonBean {
 
-    private LinkedList<Message> list = new LinkedList<Message>();
+    private List<Message> list = new CopyOnWriteArrayList<Message>();
     private int maxMessages = 10;
 
     int currentId = 0;
@@ -78,19 +79,19 @@ public class MessageHolderSingletonBean {
         return l;
     }
 
-    private synchronized int getNewId() {
+    private int getNewId() {
         return currentId++;
     }
 
 
-    public synchronized Message addMessage(String msg) {
+    public Message addMessage(String msg) {
         return addMessage(msg, new Date());
     }
 
-    private synchronized Message addMessage(String msg, Date date) {
+    private Message addMessage(String msg, Date date) {
         Message m = new Message(date, msg, getNewId());
 
-        list.addFirst(m);
+        list.add(0, m);
 
         return m;
     }
@@ -108,7 +109,7 @@ public class MessageHolderSingletonBean {
         return null;
     }
 
-    public synchronized boolean deleteMessage(int uniqueId) {
+    public boolean deleteMessage(int uniqueId) {
         int index = 0;
 
         while(index < list.size()) {

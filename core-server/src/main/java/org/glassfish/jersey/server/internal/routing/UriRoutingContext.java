@@ -60,7 +60,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
-import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
@@ -68,6 +68,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
+import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
@@ -104,8 +105,11 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private Inflector<ContainerRequest, ContainerResponse> inflector;
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
     volatile private ResourceMethod matchedResourceMethod = null;
-    volatile private Resource matchedResourceModel = null;
     private final ProcessingProviders processingProviders;
+    private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
+    private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
+
+    private final TracingLogger tracingLogger;
 
     /**
      * Injection constructor.
@@ -114,8 +118,9 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
      * @param processingProviders processing providers.
      */
     @Inject
-    UriRoutingContext(Ref<ContainerRequest> requestContext, ProcessingProviders processingProviders) {
+    UriRoutingContext(ContainerRequest requestContext, ProcessingProviders processingProviders) {
         this.requestContext = requestContext;
+        this.tracingLogger = TracingLogger.getInstance(requestContext);
         this.processingProviders = processingProviders;
     }
 
@@ -127,6 +132,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public void pushMatchedResource(Object resource) {
+        tracingLogger.log(ServerTraceEvent.MATCH_RESOURCE, resource);
         matchedResources.push(resource);
     }
 
@@ -136,10 +142,16 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
+    public void pushMatchedLocator(ResourceMethod resourceLocator) {
+        tracingLogger.log(ServerTraceEvent.MATCH_LOCATOR, resourceLocator.getInvocable().getHandlingMethod());
+        matchedLocators.push(resourceLocator);
+    }
+
+    @Override
     public void pushLeftHandPath() {
         final String rightHandPath = getFinalMatchingGroup();
         final int rhpLength = (rightHandPath != null) ? rightHandPath.length() : 0;
-        final String encodedRequestPath = getAbsolutePath().toString();
+        final String encodedRequestPath = getPath(false);
         // TODO: do we need to cut the starting slash ?
 //        paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
         if (encodedRequestPath.length() != rhpLength) {
@@ -246,21 +258,31 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public void setMatchedResourceMethod(ResourceMethod resourceMethod) {
+        tracingLogger.log(ServerTraceEvent.MATCH_RESOURCE_METHOD, resourceMethod.getInvocable().getHandlingMethod());
         this.matchedResourceMethod = resourceMethod;
     }
 
     @Override
-    public void setMatchedResource(Resource resourceModel) {
-        this.matchedResourceModel = resourceModel;
-    }
-
-    @Override
     public void pushMatchedRuntimeResource(RuntimeResource runtimeResource) {
+        if (tracingLogger.isLogEnabled(ServerTraceEvent.MATCH_RUNTIME_RESOURCE)) {
+            tracingLogger.log(ServerTraceEvent.MATCH_RUNTIME_RESOURCE,
+                    runtimeResource.getResources().get(0).getPath(),
+                    runtimeResource.getResources().get(0).getPathPattern().getRegex(),
+                    matchResults.peek().group()
+                            .substring(0, matchResults.peek().group().length() - getFinalMatchingGroup().length()),
+                    matchResults.peek().group());
+        }
+
         this.matchedRuntimeResources.push(runtimeResource);
     }
 
+    @Override
+    public void pushLocatorSubResource(Resource subResourceFromLocator) {
+        this.locatorSubResources.push(subResourceFromLocator);
+    }
+
     // UriInfo
-    private Ref<ContainerRequest> requestContext;
+    private ContainerRequest requestContext;
 
     private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
         return iterable == null ? Collections.<T>emptyList() : iterable;
@@ -278,7 +300,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI getBaseUri() {
-        return requestContext.get().getBaseUri();
+        return requestContext.getBaseUri();
     }
 
     @Override
@@ -317,12 +339,12 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public String getPath() {
-        return requestContext.get().getPath(true);
+        return requestContext.getPath(true);
     }
 
     @Override
     public String getPath(boolean decode) {
-        return requestContext.get().getPath(decode);
+        return requestContext.getPath(decode);
     }
 
     @Override
@@ -385,7 +407,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public MultivaluedMap<String, String> getQueryParameters() {
-        return getQueryParameters(false);
+        return getQueryParameters(true);
     }
 
     @Override
@@ -412,9 +434,20 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
         }
     }
 
+    /**
+     * Invalidate internal URI component cache views.
+     * <p>
+     * This method needs to be called if request URI information changes.
+     * </p>
+     */
+    public void invalidateUriComponentViews() {
+        this.decodedQueryParamsView = null;
+        this.encodedQueryParamsView = null;
+    }
+
     @Override
     public URI getRequestUri() {
-        return requestContext.get().getRequestUri();
+        return requestContext.getRequestUri();
     }
 
     @Override
@@ -525,9 +558,20 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public Resource getMatchedModelResource() {
-        return matchedResourceModel;
+    public List<ResourceMethod> getMatchedResourceLocators() {
+        return matchedLocators;
     }
+
+    @Override
+    public List<Resource> getLocatorSubResources() {
+        return locatorSubResources;
+    }
+
+    @Override
+    public Resource getMatchedModelResource() {
+        return matchedResourceMethod == null ? null : matchedResourceMethod.getParent();
+    }
+
 
     @Override
     public URI resolve(URI uri) {

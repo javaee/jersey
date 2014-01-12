@@ -102,8 +102,9 @@ public @interface Uri {
      *
      * In case the annotation is used from a JAX-RS resource class, an absolute
      * or relative URI template value may be provided. The template parameter (e.g. {@code {id}})
-     * values are resolved in the context of the enclosing resource class
+     * values are automatically resolved in the context of the enclosing resource class
      * {@link javax.ws.rs.Path path template} as well as the context of the processed request.
+     * Other defined template parameters have to be resolved before invocation of managed web target.
      * For example:
      * <pre>
      * &#64;Path("users/{name}")

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.lang.reflect.ReflectPermission;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.AccessController;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -106,7 +107,7 @@ public class PackageNamesScanner implements ResourceFinder {
      *                  will be scanned.
      */
     public PackageNamesScanner(final String[] packages, final boolean recursive) {
-        this(ReflectionHelper.getContextClassLoader(), Tokenizer.tokenize(packages, Tokenizer.COMMON_DELIMITERS), recursive);
+        this(AccessController.doPrivileged(ReflectionHelper.getContextClassLoaderPA()), Tokenizer.tokenize(packages, Tokenizer.COMMON_DELIMITERS), recursive);
     }
 
     /**
@@ -124,7 +125,7 @@ public class PackageNamesScanner implements ResourceFinder {
      */
     public PackageNamesScanner(final ClassLoader classLoader, final String[] packages, final boolean recursive) {
         this.recursive = recursive;
-        this.packages = packages;
+        this.packages = packages.clone();
         this.classloader = classLoader;
 
         this.finderFactories = new HashMap<String, UriSchemeResourceFinderFactory>();

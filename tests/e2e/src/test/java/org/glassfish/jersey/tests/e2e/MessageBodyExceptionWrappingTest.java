@@ -39,15 +39,25 @@
  */
 package org.glassfish.jersey.tests.e2e;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import static javax.ws.rs.client.Entity.entity;
 
 import javax.xml.transform.stream.StreamSource;
 
@@ -56,11 +66,10 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
- *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class MessageBodyExceptionWrappingTest extends JerseyTest {
 
@@ -72,7 +81,6 @@ public class MessageBodyExceptionWrappingTest extends JerseyTest {
     /**
      * Tests whether fail of message body writer causes throwing exception. Previously the
      * exception was not thrown and 500 status code was returned in the response.
-     *
      */
     @Test
     public void testWrapping() {
@@ -80,27 +88,84 @@ public class MessageBodyExceptionWrappingTest extends JerseyTest {
         StreamSource source = new StreamSource() {
             @Override
             public InputStream getInputStream() {
-                throw new WebApplicationException();
+                throw new WebApplicationException(555);
             }
         };
-        boolean exceptionThrown = false;
         try {
             Response response = resource.request().post(Entity.entity(source, MediaType.TEXT_XML_TYPE));
-            System.out.println(response.getStatus());
-        } catch (Exception e) {
-            exceptionThrown = true;
+            fail("Exception expected, instead response with " + response.getStatus() + " status has been returned.");
+        } catch (ProcessingException e) {
+            assertEquals(WebApplicationException.class, e.getCause().getClass());
+            assertEquals(555, ((WebApplicationException) e.getCause()).getResponse().getStatus());
         }
-
-        assertEquals(true, exceptionThrown);
     }
 
     @Path("test")
     public static class TestResource {
 
         @POST
-        public StreamSource post(StreamSource streamSource) {
-            return streamSource;
+        public String echo(String entity) {
+            return entity;
         }
+    }
+
+    /**
+     * Provider reproducing JERSEY-1990.
+     */
+    @Produces("text/foo")
+    public static class ThrowingUpProvider implements MessageBodyWriter<String>, MessageBodyReader<String> {
+        public volatile int counter = 0;
+
+        public int getInvocationCount() {
+            return counter;
+        }
+
+        @Override
+        public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            counter++;
+            final RuntimeException up = new RuntimeException("lunch");
+            throw up;
+        }
+
+        @Override
+        public long getSize(String s, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            return -1;
+        }
+
+        @Override
+        public void writeTo(String s, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
+                            MultivaluedMap<String, Object> httpHeaders,
+                            OutputStream entityStream) throws IOException, WebApplicationException {
+            throw new UnsupportedOperationException("This method should not have ever been called.");
+        }
+
+        @Override
+        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+            counter++;
+            final RuntimeException up = new RuntimeException("dinner");
+            throw up;
+        }
+
+        @Override
+        public String readFrom(Class<String> type, Type genericType, Annotation[] annotations, MediaType mediaType,
+                               MultivaluedMap<String, String> httpHeaders,
+                               InputStream entityStream) throws IOException, WebApplicationException {
+            throw new UnsupportedOperationException("This method should not have ever been called.");
+        }
+    }
+
+    /**
+     * Reproducer for JERSEY-1990.
+     */
+    @Test
+    public void testMbwHandlingExceptionInIsReadableWritable() {
+        ThrowingUpProvider throwingUpProvider = new ThrowingUpProvider();
+
+        final String response =
+                target("test").register(throwingUpProvider).request("text/foo").post(entity("hello", "text/foo"), String.class);
+
+        assertEquals("hello", response);
+        assertEquals(2, throwingUpProvider.getInvocationCount());
     }
 
 }

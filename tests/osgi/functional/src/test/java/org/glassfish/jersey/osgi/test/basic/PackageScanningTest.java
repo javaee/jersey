@@ -54,28 +54,31 @@ import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.glassfish.jersey.test.TestProperties;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
-@RunWith(JUnit4TestRunner.class)
+/**
+ * NOTE: This test is excluded on JDK6 as it requires Servlet 3.1 API that is built against JDK 7.
+ *
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
+ */
+@RunWith(PaxExam.class)
 public class PackageScanningTest {
-
-    private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
 
     private static final String CONTEXT = "/jersey";
 
     private static final URI baseUri = UriBuilder.
             fromUri("http://localhost").
-            port(port).
+            port(Helper.getPort()).
             path(CONTEXT).build();
 
     @Configuration
@@ -87,7 +90,7 @@ public class PackageScanningTest {
 
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-sse").versionAsInProject(),
 
-                mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version("3.1-b02"),
+                mavenBundle().groupId("javax.servlet").artifactId("javax.servlet-api").version("3.1.0"),
                 mavenBundle().groupId("org.glassfish.grizzly").artifactId("grizzly-http-servlet").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core").
                         versionAsInProject(),
@@ -116,7 +119,20 @@ public class PackageScanningTest {
         initParams.put(
                 ServerProperties.PROVIDER_PACKAGES,
                 SimpleResource.class.getPackage().getName());
-        final HttpServer server = GrizzlyWebContainerFactory.create(baseUri, ServletContainer.class, initParams);
+
+        // TODO - temporary workaround
+        // This is a workaround related to issue JERSEY-2093; grizzly (1.9.5) needs to have the correct context
+        // classloader set
+        ClassLoader myClassLoader = getClass().getClassLoader();
+        ClassLoader originalContextClassLoader = Thread.currentThread().getContextClassLoader();
+        HttpServer server = null;
+        try {
+            Thread.currentThread().setContextClassLoader(myClassLoader);
+            server = GrizzlyWebContainerFactory.create(baseUri, ServletContainer.class, initParams);
+        } finally {
+            Thread.currentThread().setContextClassLoader(originalContextClassLoader);
+        }
+        // END of workaround - when grizzly updated to more recent version, only the inner line of try clause should remain:
 
         _testSimpleResource(server);
     }
@@ -125,10 +141,9 @@ public class PackageScanningTest {
         final Client client = ClientBuilder.newClient();
         final String response = client.target(baseUri).path("/simple").request().get(String.class);
 
-        System.out.println("RESULT = " + response);
         assertEquals("OK", response);
 
-        server.stop();
+        server.shutdownNow();
     }
 
 }

@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.internal.inject;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.security.AccessController;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -160,7 +161,7 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
             }
 
             // Check for static valueOf(String )
-            Method valueOf = ReflectionHelper.getValueOfStringMethod(rawType);
+            Method valueOf = AccessController.doPrivileged(ReflectionHelper.getValueOfStringMethodPA(rawType));
             if (valueOf != null) {
                 try {
                     Object defaultDefaultValue = PrimitiveMapper.primitiveToDefaultValueMap.get(rawType);

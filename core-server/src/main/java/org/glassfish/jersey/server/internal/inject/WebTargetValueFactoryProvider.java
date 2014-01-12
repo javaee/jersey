@@ -40,10 +40,11 @@
 package org.glassfish.jersey.server.internal.inject;
 
 import java.lang.annotation.Annotation;
-import java.net.URI;
+import java.security.AccessController;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -245,7 +246,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
         }
     }
 
-    private static final class WebTargetValueFactory extends AbstractHttpContextValueFactory<WebTarget> {
+    private static final class WebTargetValueFactory extends AbstractContainerRequestValueFactory<WebTarget> {
 
         private final String uri;
         private final Value<ManagedClient> client;
@@ -257,28 +258,31 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
 
 
         @Override
-        protected WebTarget get(HttpContext context) {
+        public WebTarget provide() {
             // no need for try-catch - unlike for @*Param annotations, any issues with @Uri would usually be caused
             // by incorrect server code, so the default runtime exception mapping to 500 is appropriate
-            final ExtendedUriInfo uriInfo = context.getUriInfo();
-            URI uri = UriBuilder.fromUri(this.uri).buildFromEncodedMap(Maps.transformValues(
-                    uriInfo.getPathParameters(),
+            final ExtendedUriInfo uriInfo = getContainerRequest().getUriInfo();
+
+            final Map<String, Object> pathParamValues = Maps.transformValues(uriInfo.getPathParameters(),
                     new Function<List<String>, Object>() {
-                        @Override
-                        public Object apply(List<String> input) {
-                            return input.isEmpty() ? null : input.get(0);
-                        }
-                    }
-            ));
 
-            ManagedClient mc = client.get();
+                @Override
+                public Object apply(List<String> input) {
+                    return input.isEmpty() ? null : input.get(0);
+                }
+            });
+            UriBuilder uriBuilder = UriBuilder.fromUri(this.uri).resolveTemplates(pathParamValues);
 
-            if (!uri.isAbsolute()) {
-                String rootUri = (mc.customBaseUri.isEmpty()) ? uriInfo.getBaseUri().toString() : mc.customBaseUri;
-                uri = UriBuilder.fromUri(rootUri).path(uri.toString()).build();
+            final ManagedClient managedClient = client.get();
+
+            if (!uriBuilder.build().isAbsolute()) {
+                final String customBaseUri = managedClient.customBaseUri;
+                final String rootUri = customBaseUri.isEmpty() ? uriInfo.getBaseUri().toString() : customBaseUri;
+
+                uriBuilder = UriBuilder.fromUri(rootUri).path(uriBuilder.toTemplate());
             }
 
-            return mc.instance.target(uri);
+            return managedClient.instance.target(uriBuilder);
         }
     }
 
@@ -324,11 +328,11 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
     }
 
     @Override
-    protected AbstractHttpContextValueFactory<?> createValueFactory(final Parameter parameter) {
-        return Errors.processWithException(new Producer<AbstractHttpContextValueFactory<?>>() {
+    protected AbstractContainerRequestValueFactory<?> createValueFactory(final Parameter parameter) {
+        return Errors.processWithException(new Producer<AbstractContainerRequestValueFactory<?>>() {
 
             @Override
-            public AbstractHttpContextValueFactory<?> call() {
+            public AbstractContainerRequestValueFactory<?> call() {
                 String targetUriTemplate = parameter.getSourceName();
                 if (targetUriTemplate == null || targetUriTemplate.length() == 0) {
                     // Invalid URI parameter name
@@ -396,7 +400,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
         if (_cc != null) {
             Class<?> cc;
             if (_cc instanceof String) {
-                cc = ReflectionHelper.classForName((String) _cc);
+                cc = AccessController.doPrivileged(ReflectionHelper.classForNamePA((String) _cc));
             } else if (_cc instanceof Class) {
                 cc = (Class<?>) _cc;
             } else {

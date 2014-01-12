@@ -41,17 +41,23 @@ package org.glassfish.jersey.client.spi;
 
 import java.util.concurrent.Future;
 
-import javax.ws.rs.ProcessingException;
-
 import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.process.Inflector;
 
 /**
- * Client transport connector contract.
+ * Client transport connector extension contract.
+ * <p>
+ * Note that unlike most of the other {@link org.glassfish.jersey.spi.Contract Jersey SPI extension contracts},
+ * Jersey {@code Connector} is not a typical runtime extension and as such cannot be directly registered
+ * using a configuration {@code register(...)} method. Jersey client runtime retrieves a {@code Connector}
+ * instance upon Jersey client runtime initialization using a {@link org.glassfish.jersey.client.spi.ConnectorProvider}
+ * registered in {@link org.glassfish.jersey.client.ClientConfig}.
+ * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+// Must not be annotated with @Contract
 public interface Connector extends Inflector<ClientRequest, ClientResponse> {
     /**
      * Synchronously process client request into a response.
@@ -64,7 +70,7 @@ public interface Connector extends Inflector<ClientRequest, ClientResponse> {
      * @throws javax.ws.rs.ProcessingException in case of any invocation failure.
      */
     @Override
-    ClientResponse apply(ClientRequest request) throws ProcessingException;
+    ClientResponse apply(ClientRequest request);
 
     /**
      * Asynchronously process client request into a response.

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -120,6 +120,33 @@ public class UriInfoMatchedUrisTest {
         assertEquals("foobaz", responseContext.getEntity());
 
         responseContext = app.apply(RequestContextBuilder.from("/foo/baz/bar", "GET").build()).get();
+        assertEquals(200, responseContext.getStatus());
+        assertEquals("foobazbar", responseContext.getEntity());
+    }
+
+    /**
+     * Reproducer test for JERSEY-2071.
+     *
+     * @throws Exception in case of test error.
+     */
+    @Test
+    public void testAbsoluteMatchedUris() throws Exception {
+        ApplicationHandler app = createApplication(Resource.class);
+
+        ContainerResponse responseContext;
+        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo", "GET").build()).get();
+        assertEquals(200, responseContext.getStatus());
+        assertEquals("foo", responseContext.getEntity());
+
+        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/bar", "GET").build()).get();
+        assertEquals(200, responseContext.getStatus());
+        assertEquals("foobar", responseContext.getEntity());
+
+        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/baz", "GET").build()).get();
+        assertEquals(200, responseContext.getStatus());
+        assertEquals("foobaz", responseContext.getEntity());
+
+        responseContext = app.apply(RequestContextBuilder.from("http://localhost:8080/", "http://localhost:8080/foo/baz/bar", "GET").build()).get();
         assertEquals(200, responseContext.getStatus());
         assertEquals("foobazbar", responseContext.getEntity());
     }

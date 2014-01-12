@@ -49,6 +49,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
@@ -60,6 +61,7 @@ import javax.inject.Inject;
 
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.Version;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
@@ -154,17 +156,17 @@ public class JerseyClientTest {
     public void testRegisterNullOrEmptyContracts() {
         final TestProvider provider = new TestProvider();
 
-        client.register(TestProvider.class,  (Class<?>[]) null);
+        client.register(TestProvider.class, (Class<?>[]) null);
         assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
 
-        client.register(provider,  (Class<?>[]) null);
+        client.register(provider, (Class<?>[]) null);
         assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
         assertFalse(client.getConfiguration().isRegistered(provider));
 
-        client.register(TestProvider.class,  new Class[0]);
+        client.register(TestProvider.class, new Class[0]);
         assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
 
-        client.register(provider,  new Class[0]);
+        client.register(provider, new Class[0]);
         assertFalse(client.getConfiguration().isRegistered(TestProvider.class));
         assertFalse(client.getConfiguration().isRegistered(provider));
     }
@@ -225,28 +227,7 @@ public class JerseyClientTest {
 
     @Test
     public void userAgentTest() {
-        final Client customClient = ClientBuilder.newClient(new ClientConfig().connector(new Connector() {
-            @Override
-            public ClientResponse apply(ClientRequest request) throws ProcessingException {
-                throw new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null);
-            }
-
-            @Override
-            public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
-                callback.failure(new ProcessingException(request.getHeaders().getFirst(HttpHeaders.USER_AGENT).toString(), null));
-                return null;
-            }
-
-            @Override
-            public void close() {
-                // nothing
-            }
-
-            @Override
-            public String getName() {
-                return null;
-            }
-        }));
+        final Client customClient = ClientBuilder.newClient(new ClientConfig().connectorProvider(new TestConnector()));
 
         try {
             customClient.target("test").request().get();
@@ -258,6 +239,38 @@ public class JerseyClientTest {
             customClient.target("test").request().async().get().get();
         } catch (Exception e) {
             assertEquals("Jersey/" + Version.getVersion(), e.getCause().getMessage());
+        }
+    }
+
+    /**
+     * JERSEY-2189 reproducer.
+     */
+    @Test
+    public void customUserAgentTest() {
+        final Client customClient = ClientBuilder.newClient(new ClientConfig().connectorProvider(new TestConnector()));
+
+        try {
+            customClient.target("test").request().header(HttpHeaders.USER_AGENT, null).get();
+        } catch (Exception e) {
+            assertEquals("[null]", e.getMessage());
+        }
+
+        try {
+            customClient.target("test").request().header(HttpHeaders.USER_AGENT, null).async().get();
+        } catch (Exception e) {
+            assertEquals("[null]", e.getCause().getMessage());
+        }
+
+        try {
+            customClient.target("test").request().header(HttpHeaders.USER_AGENT, "custom").get();
+        } catch (Exception e) {
+            assertEquals("custom", e.getMessage());
+        }
+
+        try {
+            customClient.target("test").request().header(HttpHeaders.USER_AGENT, "custom").async().get();
+        } catch (Exception e) {
+            assertEquals("custom", e.getCause().getMessage());
         }
     }
 
@@ -298,5 +311,35 @@ public class JerseyClientTest {
 
         Response resp = client.target("test").request().get();
         assertEquals("Foo", resp.readEntity(String.class));
+    }
+
+    private static class TestConnector implements Connector, ConnectorProvider {
+        @Override
+        public ClientResponse apply(ClientRequest request) throws ProcessingException {
+            final Object agent = request.getHeaders().getFirst(HttpHeaders.USER_AGENT);
+            throw new ProcessingException((agent == null) ? "[null]" : agent.toString());
+        }
+
+        @Override
+        public Future<?> apply(ClientRequest request, AsyncConnectorCallback callback) {
+            final Object agent = request.getHeaders().getFirst(HttpHeaders.USER_AGENT);
+            callback.failure(new ProcessingException((agent == null) ? "[null]" : agent.toString()));
+            return null;
+        }
+
+        @Override
+        public void close() {
+            // nothing
+        }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public Connector getConnector(Client client, Configuration runtimeConfig) {
+            return this;
+        }
     }
 }

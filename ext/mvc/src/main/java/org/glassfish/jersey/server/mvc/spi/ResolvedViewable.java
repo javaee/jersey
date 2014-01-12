@@ -75,7 +75,7 @@ public final class ResolvedViewable<T> extends Viewable {
      * @param mediaType media type the {@code templateReference} should be transformed into.
      */
     public ResolvedViewable(TemplateProcessor<T> viewProcessor, T templateReference, Viewable viewable, MediaType mediaType) {
-        this(viewProcessor, templateReference, viewable, null, mediaType);
+        this(viewProcessor, templateReference, viewable, viewable.getResolvingClass(), mediaType);
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,15 +72,5 @@ public class SseBroadcaster extends Broadcaster<OutboundEvent> {
      */
     protected SseBroadcaster(final Class<? extends SseBroadcaster> subclass) {
         super(subclass);
-    }
-
-    /**
-     * Register {@link EventOutput} to current {@link SseBroadcaster} instance.
-     *
-     * @param eventOutput {@link EventOutput} to register.
-     * TODO is this needed? Should we instead override the Broadcaster.add and make it's argument generic?
-     */
-    public void add(final EventOutput eventOutput) {
-        super.add(eventOutput);
     }
 }

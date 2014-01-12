@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
@@ -51,14 +54,18 @@ import javax.ws.rs.ext.MessageBodyReader;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
- * Incoming event.
+ * Inbound event.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class InboundEvent {
+    private static final GenericType<String> STRING_AS_GENERIC_TYPE = new GenericType<String>(String.class);
+
     private final String name;
     private final String id;
     private final byte[] data;
+    private final long reconnectDelay;
 
     private final MessageBodyWorkers messageBodyWorkers;
     private final Annotation[] annotations;
@@ -71,7 +78,8 @@ public class InboundEvent {
     static class Builder {
         private String name;
         private String id;
-        private ByteArrayOutputStream dataStream;
+        private long reconnectDelay = SseFeature.RECONNECT_NOT_SET;
+        private final ByteArrayOutputStream dataStream;
 
         private final MessageBodyWorkers workers;
         private final Annotation[] annotations;
@@ -89,10 +97,10 @@ public class InboundEvent {
          *                    Used for {@link javax.ws.rs.ext.MessageBodyReader} lookup.
          * @param headers     response headers. Used for {@link javax.ws.rs.ext.MessageBodyWriter} lookup.
          */
-        Builder(MessageBodyWorkers workers,
-                Annotation[] annotations,
-                MediaType mediaType,
-                MultivaluedMap<String, String> headers) {
+        public Builder(MessageBodyWorkers workers,
+                       Annotation[] annotations,
+                       MediaType mediaType,
+                       MultivaluedMap<String, String> headers) {
             this.workers = workers;
             this.annotations = annotations;
             this.mediaType = mediaType;
@@ -101,38 +109,79 @@ public class InboundEvent {
             this.dataStream = new ByteArrayOutputStream();
         }
 
+        /**
+         * Set inbound event name.
+         *
+         * Value of the received SSE {@code "event"} field.
+         *
+         * @param name {@code "event"} field value.
+         * @return updated builder instance.
+         */
         public Builder name(String name) {
             this.name = name;
             return this;
         }
 
+        /**
+         * Set inbound event identifier.
+         *
+         * Value of the received SSE {@code "id"} field.
+         *
+         * @param id {@code "id"} field value.
+         * @return updated builder instance.
+         */
         public Builder id(String id) {
             this.id = id;
             return this;
         }
 
         /**
-         * Add more incoming event data.
+         * Set reconnection delay (in milliseconds) that indicates how long the event receiver should wait
+         * before attempting to reconnect in case a connection to SSE event source is lost.
+         * <p>
+         * Value of the received SSE {@code "retry"} field.
+         * </p>
+         * @param milliseconds reconnection delay in milliseconds. Negative values un-set the reconnection delay.
+         * @return updated builder instance.
+         * @since 2.3
+         */
+        public Builder reconnectDelay(long milliseconds) {
+            if (milliseconds < 0) {
+                milliseconds = SseFeature.RECONNECT_NOT_SET;
+            }
+            this.reconnectDelay = milliseconds;
+            return this;
+        }
+
+        /**
+         * Add more inbound event data.
          *
          * @param data byte array containing data stored in the incoming event.
+         * @return updated builder instance.
          */
-        public Builder data(byte[] data) {
+        public Builder write(byte[] data) {
             if (data == null || data.length == 0) {
                 return this;
             }
 
             try {
                 this.dataStream.write(data);
-            } catch (IOException e) {
-                this.dataStream = null;
+            } catch (IOException ex) {
+                // ignore - this is not possible with ByteArrayOutputStream
             }
             return this;
         }
 
+        /**
+         * Build a new inbound event instance using the supplied data.
+         *
+         * @return new inbound event instance.
+         */
         public InboundEvent build() {
             return new InboundEvent(
                     name,
                     id,
+                    reconnectDelay,
                     dataStream.toByteArray(),
                     workers,
                     annotations,
@@ -142,14 +191,16 @@ public class InboundEvent {
     }
 
     private InboundEvent(String name,
-                        String id,
-                        byte[] data,
-                        MessageBodyWorkers messageBodyWorkers,
-                        Annotation[] annotations,
-                        MediaType mediaType,
-                        MultivaluedMap<String, String> headers) {
+                         String id,
+                         long reconnectDelay,
+                         byte[] data,
+                         MessageBodyWorkers messageBodyWorkers,
+                         Annotation[] annotations,
+                         MediaType mediaType,
+                         MultivaluedMap<String, String> headers) {
         this.name = name;
         this.id = id;
+        this.reconnectDelay = reconnectDelay;
         this.data = data;
         this.messageBodyWorkers = messageBodyWorkers;
         this.annotations = annotations;
@@ -158,66 +209,165 @@ public class InboundEvent {
     }
 
     /**
-     * Get info about {@link InboundEvent} state.
+     * Get event name.
+     * <p>
+     * Contains value of SSE {@code "event"} field. This field is optional. Method may return {@code null}, if the event
+     * name is not specified.
+     * </p>
      *
-     * @return {@code true} if current instance does not contain data. {@code false} otherwise.
-     */
-    boolean isEmpty() {
-        return data.length == 0;
-    }
-
-    /**
-     * Get the event name.
-     *
-     * @return event name or {@code null} if it is not present.
+     * @return event name, or {@code null} if not set.
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Get event data.
+     * Get event identifier.
+     * <p>
+     * Contains value of SSE {@code "id"} field. This field is optional. Method may return {@code null}, if the event
+     * identifier is not specified.
+     * </p>
      *
-     * @param messageType type of stored data content. Will be used for {@link MessageBodyReader} lookup.
-     * @return object of given type.
-     * @throws IOException when provided type can't be read.
+     * @return event id.
+     * @since 2.3
      */
-    public <T> T getData(Class<T> messageType) throws IOException {
-        return getData(messageType, null);
+    public String getId() {
+        return id;
     }
 
     /**
-     * Get event data.
+     * Get new connection retry time in milliseconds the event receiver should wait before attempting to
+     * reconnect after a connection to the SSE event source is lost.
+     * <p>
+     * Contains value of SSE {@code "retry"} field. This field is optional. Method returns {@link SseFeature#RECONNECT_NOT_SET}
+     * if no value has been set.
+     * </p>
      *
-     * @param messageType type of stored data content. Will be used for {@link MessageBodyReader} lookup.
-     * @param mediaType   {@link MediaType} of incoming data. Will be used for {@link MessageBodyReader} lookup.
-     * @return object of given type.
-     * @throws IOException when provided type can't be read.
+     * @return reconnection delay in milliseconds or {@link SseFeature#RECONNECT_NOT_SET} if no value has been set.
+     * @since 2.3
      */
-    public <T> T getData(Class<T> messageType, MediaType mediaType) throws IOException {
+    public long getReconnectDelay() {
+        return reconnectDelay;
+    }
+
+    /**
+     * Check if the connection retry time has been set in the event.
+     *
+     * @return {@code true} if new reconnection delay has been set in the event, {@code false} otherwise.
+     * @since 2.3
+     */
+    public boolean isReconnectDelaySet() {
+        return reconnectDelay > SseFeature.RECONNECT_NOT_SET;
+    }
+
+    /**
+     * Check if the event is empty (i.e. does not contain any data).
+     *
+     * @return {@code true} if current instance does not contain any data, {@code false} otherwise.
+     */
+    public boolean isEmpty() {
+        return data.length == 0;
+    }
+
+    /**
+     * Get the original event data string {@link String}.
+     *
+     * @return event data de-serialized into a string.
+     * @throws javax.ws.rs.ProcessingException
+     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @since 2.3
+     */
+    public String readData() {
+        return readData(STRING_AS_GENERIC_TYPE, null);
+    }
+
+    /**
+     * Read event data as a given Java type.
+     *
+     * @param type Java type to be used for event data de-serialization.
+     * @return event data de-serialized as an instance of a given type.
+     * @throws javax.ws.rs.ProcessingException
+     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @since 2.3
+     */
+    public <T> T readData(Class<T> type) {
+        return readData(new GenericType<T>(type), null);
+    }
+
+    /**
+     * Read event data as a given generic type.
+     *
+     * @param type generic type to be used for event data de-serialization.
+     * @return event data de-serialized as an instance of a given type.
+     * @throws javax.ws.rs.ProcessingException
+     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @since 2.3
+     */
+    public <T> T readData(GenericType<T> type) {
+        return readData(type, null);
+    }
+
+    /**
+     * Read event data as a given Java type.
+     *
+     * @param messageType Java type to be used for event data de-serialization.
+     * @param mediaType   {@link MediaType media type} to be used for event data de-serialization.
+     * @return event data de-serialized as an instance of a given type.
+     * @throws javax.ws.rs.ProcessingException
+     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @since 2.3
+     */
+    public <T> T readData(Class<T> messageType, MediaType mediaType) {
+        return readData(new GenericType<T>(messageType), mediaType);
+    }
+
+    /**
+     * Read event data as a given generic type.
+     *
+     * @param type generic type to be used for event data de-serialization.
+     * @param mediaType   {@link MediaType media type} to be used for event data de-serialization.
+     * @return event data de-serialized as an instance of a given type.
+     * @throws javax.ws.rs.ProcessingException
+     *          when provided type can't be read. The thrown exception wraps the original cause.
+     * @since 2.3
+     */
+    public <T> T readData(GenericType<T> type, MediaType mediaType) {
         final MediaType effectiveMediaType = mediaType == null ? this.mediaType : mediaType;
-        final MessageBodyReader<T> reader =
-                messageBodyWorkers.getMessageBodyReader(messageType, null, annotations, mediaType);
+        final MessageBodyReader reader =
+                messageBodyWorkers.getMessageBodyReader(type.getRawType(), type.getType(), annotations, mediaType);
         if (reader == null) {
             throw new IllegalStateException(LocalizationMessages.EVENT_DATA_READER_NOT_FOUND());
         }
-        return reader.readFrom(
-                    messageType,
-                    null,
+        return readAndCast(type, effectiveMediaType, reader);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T readAndCast(GenericType<T> type, MediaType effectiveMediaType, MessageBodyReader reader) {
+        try {
+            return (T) reader.readFrom(
+                    type.getRawType(),
+                    type.getType(),
                     annotations,
                     effectiveMediaType,
                     headers,
                     new ByteArrayInputStream(stripLastLineBreak(data)));
+        } catch (IOException ex) {
+            throw new ProcessingException(ex);
+        }
     }
 
     /**
-     * Get event data as {@link String}.
+     * Get the raw event data bytes.
      *
-     * @return event data de-serialized as string.
-     * @throws IOException when provided type can't be read.
+     * @return raw event data bytes. The returned byte array may be empty if the event does not
+     *         contain any data.
      */
-    public String getData() throws IOException {
-        return getData(String.class);
+    public byte[] getRawData() {
+        if (isEmpty()) {
+            return data;
+        }
+
+        return Arrays.copyOf(data, data.length);
     }
 
     @Override
@@ -225,9 +375,9 @@ public class InboundEvent {
         String s;
 
         try {
-            s = getData();
-        } catch (IOException e) {
-            s = "";
+            s = readData();
+        } catch (ProcessingException e) {
+            s = "<Error reading data into a string>";
         }
 
         return "InboundEvent{" +
@@ -243,12 +393,10 @@ public class InboundEvent {
      * @param data data
      * @return updated byte array.
      */
-    private byte[] stripLastLineBreak(byte[] data) {
+    private static byte[] stripLastLineBreak(final byte[] data) {
 
-        if (data.length >= 1 && data[data.length - 1] == '\n') {
-            byte[] newArray = new byte[data.length - 1];
-            System.arraycopy(data, 0, newArray, 0, data.length - 1);
-            data = newArray;
+        if (data.length > 0 && data[data.length - 1] == '\n') {
+            return Arrays.copyOf(data, data.length - 1);
         }
 
         return data;

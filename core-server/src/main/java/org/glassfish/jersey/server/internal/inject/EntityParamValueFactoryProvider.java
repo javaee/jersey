@@ -74,7 +74,7 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider {
         super(mpep, injector, Parameter.Source.ENTITY);
     }
 
-    private static class EntityValueFactory extends AbstractHttpContextValueFactory<Object> {
+    private static class EntityValueFactory extends AbstractContainerRequestValueFactory<Object> {
 
         private final Parameter parameter;
 
@@ -83,8 +83,8 @@ class EntityParamValueFactoryProvider extends AbstractValueFactoryProvider {
         }
 
         @Override
-        protected Object get(HttpContext context) {
-            final ContainerRequest requestContext = context.getRequestContext();
+        public Object provide() {
+            final ContainerRequest requestContext = getContainerRequest();
 
             final Class<?> rawType = parameter.getRawType();
 

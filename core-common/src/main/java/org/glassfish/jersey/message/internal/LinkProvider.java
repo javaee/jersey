@@ -43,6 +43,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.Link;
 
@@ -61,6 +63,8 @@ import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentEx
  */
 @Singleton
 public class LinkProvider implements HeaderDelegateProvider<Link> {
+
+    private static final Logger LOGGER = Logger.getLogger(LinkProvider.class.getName());
 
     @Override
     public boolean supports(Class<?> type) {
@@ -81,21 +85,36 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
      */
     static JerseyLink.Builder initBuilder(JerseyLink.Builder lb, String value) {
         throwIllegalArgumentExceptionIfNull(value, LocalizationMessages.LINK_IS_NULL());
-        StringTokenizer st = new StringTokenizer(value.trim(), "<>;=\"", true);
         try {
-            checkToken(st, "<");
-            lb.uri(st.nextToken().trim());
-            checkToken(st, ">");
-            while (st.hasMoreTokens()) {
-                checkToken(st, ";");
-                String n = st.nextToken().trim();
-                checkToken(st, "=");
-                checkToken(st, "\"");
-                String v = st.nextToken();
-                checkToken(st, "\"");
-                lb.param(n, v);
+            value = value.trim();
+            String params;
+            if (value.startsWith("<")) {
+                int gtIndex = value.indexOf('>');
+                if (gtIndex != -1) {
+                    lb.uri(value.substring(1, gtIndex).trim());
+                    params = value.substring(gtIndex + 1).trim();
+                } else {
+                    throw new IllegalArgumentException("Missing token > in " + value);
+                }
+            } else {
+                throw new IllegalArgumentException("Missing starting token < in " + value);
+            }
+            if (params != null) {
+                StringTokenizer st = new StringTokenizer(params, ";=\"", true);
+                while (st.hasMoreTokens()) {
+                    checkToken(st, ";");
+                    String n = st.nextToken().trim();
+                    checkToken(st, "=");
+                    checkToken(st, "\"");
+                    String v = st.nextToken();
+                    checkToken(st, "\"");
+                    lb.param(n, v);
+                }
             }
         } catch (Throwable e) {
+            if (LOGGER.isLoggable(Level.FINER)) {
+                LOGGER.log(Level.FINER, "Error parsing link value '" + value + "'", e);
+            }
             lb = null;
         }
         if (lb == null) {
@@ -104,13 +123,13 @@ public class LinkProvider implements HeaderDelegateProvider<Link> {
         return lb;
     }
 
-    private static void checkToken(StringTokenizer st, String expected) throws AssertionError {
+    private static void checkToken(StringTokenizer st, String expected) throws IllegalArgumentException {
         String token;
         do {
             token = st.nextToken().trim();
         } while (token.length() == 0);
         if (!token.equals(expected)) {
-            throw new AssertionError("Expected token " + expected + " but found " + token);
+            throw new IllegalArgumentException("Expected token " + expected + " but found " + token);
         }
     }
 

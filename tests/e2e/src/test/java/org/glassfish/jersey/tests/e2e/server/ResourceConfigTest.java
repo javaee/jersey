@@ -157,8 +157,8 @@ public class ResourceConfigTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig c) {
-        c.register(new JettisonFeature());
+    protected void configureClient(ClientConfig config) {
+        config.register(new JettisonFeature());
     }
 
     /**

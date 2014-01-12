@@ -46,12 +46,15 @@ import org.glassfish.jersey.CommonProperties;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public final class ServerProperties {
 
     /**
      * Defines one or more packages that contain application-specific resources and
-     * providers. If the property is set, the specified packages will be scanned for
+     * providers.
+     *
+     * If the property is set, the specified packages will be scanned for
      * JAX-RS root resources (annotated with {@link javax.ws.rs.Path @Path}) and
      * providers (annotated with {@link javax.ws.rs.ext.Provider @Provider}).
      * <p>
@@ -72,7 +75,9 @@ public final class ServerProperties {
     public static final String PROVIDER_PACKAGES = "jersey.config.server.provider.packages";
 
     /**
-     * Sets the recursion strategy for package scanning. The value of {@code true} indicates
+     * Sets the recursion strategy for package scanning.
+     *
+     * The value of {@code true} indicates
      * that the {@link #PROVIDER_PACKAGES list of provided package names} should be scanned
      * recursively including any nested packages. Value of {@code false} indicates that only
      * packages in the list should be scanned. In such case any nested packages will be ignored.
@@ -93,7 +98,9 @@ public final class ServerProperties {
 
     /**
      * Defines class-path that contains application-specific resources and
-     * providers. If the property is set, the specified class-path will be scanned
+     * providers.
+     *
+     * If the property is set, the specified class-path will be scanned
      * for JAX-RS root resources (annotated with {@link javax.ws.rs.Path @Path})
      * and providers (annotated with {@link javax.ws.rs.ext.Provider @Provider}).
      * Each path element MUST be an absolute or relative directory, or a Jar file.
@@ -118,7 +125,9 @@ public final class ServerProperties {
 
     /**
      * Defines one or more class names that implement application-specific resources
-     * and providers. If the property is set, the specified classes will be instantiated
+     * and providers.
+     *
+     * If the property is set, the specified classes will be instantiated
      * and registered as either application JAX-RS root resources (annotated with
      * {@link javax.ws.rs.Path @Path}) or providers (annotated with
      * {@link javax.ws.rs.ext.Provider @Provider}).
@@ -140,6 +149,7 @@ public final class ServerProperties {
 
     /**
      * Defines mapping of URI extensions to media types.
+     *
      * The property is used by {@link org.glassfish.jersey.server.filter.UriConnegFilter}. See it's javadoc for more
      * information on media type mappings.
      * <p>
@@ -160,6 +170,7 @@ public final class ServerProperties {
 
     /**
      * Defines mapping of URI extensions to languages.
+     *
      * The property is used by {@link org.glassfish.jersey.server.filter.UriConnegFilter}. See it's javadoc for more
      * information on language mappings.
      * <p>
@@ -181,10 +192,12 @@ public final class ServerProperties {
 
     /**
      * Defines configuration of HTTP method overriding.
+     *
      * This property is used by {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter} to determine
      * where it should look for method override information (e.g. request header or query parameters).
      * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source} enum lists the allowed property
      * values.
+     * </p>
      * <p>
      * The property value must be an instance of {@link String}, {@code String[]},
      * {@link org.glassfish.jersey.server.filter.HttpMethodOverrideFilter.Source Source} or
@@ -203,12 +216,11 @@ public final class ServerProperties {
 
     /**
      * If set the wadl generator configuration that provides a {@link org.glassfish.jersey.server.wadl.WadlGenerator}.
+     *
+     * If this property is not set the default wadl generator will be used for generating wadl.
      * <p>
      * The type of this property must be a subclass or an instance of a subclass of
      * {@link org.glassfish.jersey.server.wadl.config.WadlGeneratorConfig}.
-     * </p>
-     * <p>
-     * If this property is not set the default wadl generator will be used for generating wadl.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
@@ -218,7 +230,7 @@ public final class ServerProperties {
 
     /**
      * If {@code true} then disable WADL generation.
-     * <p>
+     *
      * By default WADL generation is automatically enabled, if JAXB is
      * present in the classpath and the auto-discovery feature is enabled or if an appropriate {@link javax.ws.rs.core.Feature
      * feature} is enabled.
@@ -236,7 +248,7 @@ public final class ServerProperties {
 
     /**
      * If {@code true} then disable Bean Validation support.
-     * <p>
+     *
      * By default Bean Validation (JSR-349) is automatically enabled, if {@code org.glassfish.jersey.ext::jersey-bean-validation}
      * Jersey module is present in the classpath and the auto-discovery support is not disabled (see
      * {@link #FEATURE_AUTO_DISCOVERY_DISABLE}) or &mdash; in case the Jersey auto-discovery support is disabled &mdash; if the
@@ -262,6 +274,7 @@ public final class ServerProperties {
      * <p>
      * By default this checks is automatically enabled, unless the Bean Validation support is disabled explicitly (see
      * {@link #BV_FEATURE_DISABLE}).
+     * </p>
      * <p>
      * The default value is {@code false}.
      * </p>
@@ -293,7 +306,7 @@ public final class ServerProperties {
 
     /**
      * If {@code true} then disable auto discovery on server.
-     * <p>
+     *
      * By default auto discovery is automatically enabled if global property
      * {@value org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE} is not disabled. If set then the server
      * property value overrides the global property value.
@@ -311,8 +324,28 @@ public final class ServerProperties {
     public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE + ".server";
 
     /**
-     * If {@code true} then disable configuration of Json Processing (JSR-353) feature on server.
+     * An integer value that defines the buffer size used to buffer server-side response entity in order to
+     * determine its size and set the value of HTTP <tt>{@value javax.ws.rs.core.HttpHeaders#CONTENT_LENGTH}</tt> header.
      * <p>
+     * If the entity size exceeds the configured buffer size, the buffering would be cancelled and the entity size
+     * would not be determined. Value less or equal to zero disable the buffering of the entity at all.
+     * </p>
+     * This property can be used on the server side to override the outbound message buffer size value - default or the global
+     * custom value set using the {@value org.glassfish.jersey.CommonProperties#OUTBOUND_CONTENT_LENGTH_BUFFER} global property.
+     * <p>
+     * The default value is <tt>{@value org.glassfish.jersey.message.internal.CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt>.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.2
+     */
+    public static final String OUTBOUND_CONTENT_LENGTH_BUFFER = CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".server";
+
+    /**
+     * If {@code true} then disable configuration of Json Processing (JSR-353) feature on server.
+     *
      * By default Json Processing is automatically enabled if global property
      * {@value org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE} is not disabled. If set then the server
      * property value overrides the global property value.
@@ -328,8 +361,25 @@ public final class ServerProperties {
     public static final String JSON_PROCESSING_FEATURE_DISABLE = CommonProperties.JSON_PROCESSING_FEATURE_DISABLE + ".server";
 
     /**
-     * If {@code true} then disable configuration of MOXy Json feature on server.
+     * If {@code true} then disable META-INF/services lookup on server.
+     *
+     * By default Jersey looks up SPI implementations described by META-INF/services/* files.
+     * Then you can register appropriate provider classes by {@link javax.ws.rs.core.Application}.
      * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @see org.glassfish.jersey.CommonProperties#METAINF_SERVICES_LOOKUP_DISABLE
+     * @since 2.1
+     */
+    public static final String METAINF_SERVICES_LOOKUP_DISABLE = CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE + ".server";
+
+    /**
+     * If {@code true} then disable configuration of MOXy Json feature on server.
+     *
      * By default MOXy Json is automatically enabled if global property
      * {@value org.glassfish.jersey.CommonProperties#MOXY_JSON_FEATURE_DISABLE} is not disabled. If set then the server
      * property value overrides the global property value.
@@ -386,6 +436,143 @@ public final class ServerProperties {
      */
     public static final String RESOURCE_VALIDATION_IGNORE_ERRORS =
             "jersey.config.server.resource.validation.ignoreErrors";
+
+
+    /**
+     * If {@code true} then calculation of monitoring statistics will be enabled.
+     *
+     * This will enable the possibility
+     * of injecting {@link org.glassfish.jersey.server.monitoring.MonitoringStatistics} into resource and providers
+     * and also the registered listeners
+     * implementing {@link org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener} will be called
+     * when statistics are available. Enabling statistics has negative performance impact and therefore should
+     * be enabled only when needed.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @see org.glassfish.jersey.server.monitoring.MonitoringStatistics
+     * @see org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener
+     */
+    public static final String MONITORING_STATISTICS_ENABLED = "jersey.config.server.monitoring.statistics.enabled";
+
+    /**
+     * If {@code true} then Jersey will expose MBeans with monitoring statistics.
+     *
+     * Exposed JMX MBeans are based
+     * on {@link org.glassfish.jersey.server.monitoring.MonitoringStatistics} and therefore when they are enabled,
+     * also the calculation of monitoring statistics needs to be enabled. Therefore if this property is {@link true}
+     * the calculation of monitoring statistics is automatically enabled (the same result as setting the property
+     * {@link #MONITORING_STATISTICS_ENABLED}).
+     * <p/>
+     * Enabling statistics MBeans has negative
+     * performance impact and therefore should be enabled only when needed.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     */
+    public static final String MONITORING_STATISTICS_MBEANS_ENABLED = "jersey.config.server.monitoring.statistics.mbeans.enabled";
+
+    /**
+     * {@link String} property that defines the application name.
+     *
+     * The name is an arbitrary user defined name
+     * which is used to distinguish between Jersey applications in the case that more applications
+     * are deployed on the same runtime (container). The name can be used for example for purposes
+     * of monitoring by JMX when name identifies to which application deployed MBeans belong to.
+     * The name should be unique in the runtime.
+     * <p>
+     * The property is ignored
+     * if the application name is set programmatically by
+     * {@link org.glassfish.jersey.server.ResourceConfig#getApplicationName()}.
+     * </p/>
+     * <p>
+     * There is no default value.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     */
+    public static final String APPLICATION_NAME = "jersey.config.server.application.name";
+
+    /**
+     * Enable tracing support.
+     *
+     * It allows service developer to get diagnostic information about request processing by Jersey.
+     * Those diagnostic/tracing information are returned in response headers ({@code X-Jersey-Tracing-nnn}).
+     * The feature should not be switched on on production environment.
+     *
+     * <p>
+     * Allowed values:
+     * <ul>
+     *     <li>{@code OFF} - tracing support is disabled.</li>
+     *     <li>{@code ON_DEMAND} - tracing support is in 'stand by' mode, it is enabled on demand by existence of request HTTP header</li>
+     *     <li>{@code ALL} - tracing support is enabled for every request.</li>
+     * </ul>
+     * Type of the property value is {@code String}. The default value is {@code "OFF"}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.3
+     */
+    public static final String TRACING = "jersey.config.server.tracing";
+
+    /**
+     * Set level o tracing information.
+     *
+     * The property allows to set application default level o diagnostic information.
+     * Tracing level can be changed for each request by specifying request HTTP header {@code X-Jersey-Tracing-Threshold}.
+     *
+     * <p>
+     * Allowed values:
+     * <ul>
+     *     <li>{@code SUMMARY}</li>
+     *     <li>{@code TRACE}</li>
+     *     <li>{@code VERBOSE}</li>
+     * </ul>
+     * Type of the property value is {@code String}. The default value is {@code "TRACE"}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.3
+     * @see {@link #TRACING}
+     */
+    public static final String TRACING_THRESHOLD = "jersey.config.server.tracing.threshold";
+
+    /**
+     * Whenever response status is {@code 4xx} or {@code 5xx} it is possible to choose between {@code sendError} or
+     * {@code setStatus} on container specific {@code Response} implementation. E.g. on servlet container Jersey
+     * can call {@code HttpServletResponse.setStatus(...)} or {@code HttpServletResponse.sendError(...)}.
+     * <p>
+     * Calling {@code sendError(...)} method usually resets entity, response headers and provide error page for
+     * specified status code (e.g. servlet {@code error-page} configuration).
+     * However if you want to post-process response (e.g. by servlet filter) the only
+     * way to do it is calling {@code setStatus(...)} on container Response object.
+     * </p>
+     * <p>
+     * If property value is {@code true} the method {@code Response.setStatus(...)} is used over default
+     * {@code Response.sendError(...)}.
+     * </p>
+     * <p>
+     * Type of the property value is {@code boolean}. The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.5
+     */
+    public static final String RESPONSE_SET_STATUS_OVER_SEND_ERROR = "jersey.config.server.response.setStatusOverSendError";
 
     private ServerProperties() {
         // prevents instantiation

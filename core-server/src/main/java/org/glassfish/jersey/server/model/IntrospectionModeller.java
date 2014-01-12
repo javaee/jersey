@@ -144,13 +144,19 @@ final class IntrospectionModeller {
             resourceBuilder = Resource.builder();
         }
 
+        boolean extended = false;
+        if (handlerClass.isAnnotationPresent(ExtendedResource.class)) {
+            resourceBuilder.extended(true);
+            extended = true;
+        }
+
         resourceBuilder.name(handlerClass.getName());
 
         addResourceMethods(resourceBuilder, methodList, keepEncodedParams,
-                defaultConsumedTypes, defaultProducedTypes, defaultNameBindings);
+                defaultConsumedTypes, defaultProducedTypes, defaultNameBindings, extended);
         addSubResourceMethods(resourceBuilder, methodList, keepEncodedParams,
-                defaultConsumedTypes, defaultProducedTypes, defaultNameBindings);
-        addSubResourceLocators(resourceBuilder, methodList, keepEncodedParams);
+                defaultConsumedTypes, defaultProducedTypes, defaultNameBindings, extended);
+        addSubResourceLocators(resourceBuilder, methodList, keepEncodedParams, extended);
 
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest(LocalizationMessages.NEW_AR_CREATED_BY_INTROSPECTION_MODELER(
@@ -201,7 +207,7 @@ final class IntrospectionModeller {
     }
 
     private void checkResourceClassFields(final boolean encodedFlag, boolean isInSingleton) {
-        for (Field field : handlerClass.getDeclaredFields()) {
+        for (Field field : AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(handlerClass))) {
             if (field.getDeclaredAnnotations().length > 0) {
                 Parameter p = Parameter.create(
                         handlerClass,
@@ -217,7 +223,6 @@ final class IntrospectionModeller {
             }
         }
     }
-
 
     private List<Method> getAllDeclaredMethods(final Class<?> clazz) {
         final List<Method> result = new LinkedList<Method>();
@@ -300,7 +305,8 @@ final class IntrospectionModeller {
             final boolean encodedParameters,
             final List<MediaType> defaultConsumedTypes,
             final List<MediaType> defaultProducedTypes,
-            final Collection<Class<? extends Annotation>> defaultNameBindings
+            final Collection<Class<? extends Annotation>> defaultNameBindings,
+            final boolean extended
     ) {
         for (AnnotatedMethod am : methodList.withMetaAnnotation(HttpMethod.class).withoutAnnotation(Path.class)) {
             ResourceMethod.Builder methodBuilder =
@@ -311,7 +317,10 @@ final class IntrospectionModeller {
                             .nameBindings(defaultNameBindings)
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod())
-                            .validateUsing(am.getDeclaredMethod());
+                            .handlingMethod(am.getDeclaredMethod())
+                            .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
+
+
 
             introspectAsyncFeatures(am, methodBuilder);
         }
@@ -323,7 +332,8 @@ final class IntrospectionModeller {
             final boolean encodedParameters,
             final List<MediaType> defaultConsumedTypes,
             final List<MediaType> defaultProducedTypes,
-            final Collection<Class<? extends Annotation>> defaultNameBindings
+            final Collection<Class<? extends Annotation>> defaultNameBindings,
+            final boolean extended
     ) {
 
         for (AnnotatedMethod am : methodList.withMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
@@ -337,7 +347,9 @@ final class IntrospectionModeller {
                             .nameBindings(defaultNameBindings)
                             .nameBindings(am.getAnnotations())
                             .handledBy(handlerClass, am.getMethod())
-                            .validateUsing(am.getDeclaredMethod());
+                            .handlingMethod(am.getDeclaredMethod())
+                            .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
+
 
             introspectAsyncFeatures(am, methodBuilder);
         }
@@ -346,7 +358,8 @@ final class IntrospectionModeller {
     private void addSubResourceLocators(
             Resource.Builder resourceBuilder,
             MethodList methodList,
-            boolean encodedParameters) {
+            boolean encodedParameters,
+            final boolean extended) {
 
         for (AnnotatedMethod am : methodList.withoutMetaAnnotation(HttpMethod.class).withAnnotation(Path.class)) {
             final String path = am.getAnnotation(Path.class).value();
@@ -358,7 +371,8 @@ final class IntrospectionModeller {
             builder.addMethod()
                     .encodedParameters(encodedParameters || am.isAnnotationPresent(Encoded.class))
                     .handledBy(handlerClass, am.getMethod())
-                    .validateUsing(am.getDeclaredMethod());
+                    .handlingMethod(am.getDeclaredMethod())
+                    .extended(extended || am.isAnnotationPresent(ExtendedResource.class));
         }
     }
 }

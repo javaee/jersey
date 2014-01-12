@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,9 +42,6 @@ package org.glassfish.jersey.internal.util.collection;
 import java.util.List;
 
 import javax.ws.rs.core.AbstractMultivaluedMap;
-
-import org.glassfish.jersey.internal.util.KeyComparatorLinkedHashMap;
-import org.glassfish.jersey.internal.util.StringIgnoreCaseKeyComparator;
 
 /**
  * Multivalued map with String keys that are compared with each other using the case insensitive method.

@@ -145,7 +145,21 @@ public class PropertiesHelperTest {
         Assert.assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key + ".client", String.class));
         Assert.assertNull(PropertiesHelper.getValue(properties, key, String.class));
         Assert.assertNull(PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, String.class));
-        Assert.assertNull(PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, String.class));
         Assert.assertEquals("55", PropertiesHelper.getValue(properties, key, "55", String.class));
     }
+
+    /**
+     * There is a value but of different type and no way how to transform.
+     */
+    @Test
+    public void testGetValueNoTransformation() {
+        Map<String, Object> properties = Maps.newHashMap();
+        final String key = "my.property";
+        properties.put(key, Boolean.TRUE);
+
+        Assert.assertNull(PropertiesHelper.getValue(properties, key, Integer.class));
+        //look at System.out, there is a message:
+        //      WARNING: There is no way how to transform value "true" [java.lang.Boolean] to type [java.lang.Integer].
+    }
+
 }

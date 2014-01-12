@@ -75,7 +75,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.spi.RequestExecutorsProvider;
+import org.glassfish.jersey.spi.RequestExecutorProvider;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -106,8 +106,7 @@ public class BasicClientTest extends JerseyTest {
     @Test
     public void testCustomExecutorsAsync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
-        jerseyConfig.register
-                (CustomExecutorProvider.class).register(ThreadInterceptor.class);
+        jerseyConfig.register(CustomExecutorProvider.class).register(ThreadInterceptor.class);
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestAsync(client);
     }
@@ -115,8 +114,7 @@ public class BasicClientTest extends JerseyTest {
     @Test
     public void testCustomExecutorsInstanceAsync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
-        jerseyConfig.register
-                (new CustomExecutorProvider()).register(ThreadInterceptor.class);
+        jerseyConfig.register(new CustomExecutorProvider()).register(ThreadInterceptor.class);
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestAsync(client);
     }
@@ -125,8 +123,7 @@ public class BasicClientTest extends JerseyTest {
     @Test
     public void testCustomExecutorsSync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
-        jerseyConfig.register
-                (CustomExecutorProvider.class).register(ThreadInterceptor.class);
+        jerseyConfig.register(CustomExecutorProvider.class).register(ThreadInterceptor.class);
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestSync(client);
     }
@@ -135,8 +132,7 @@ public class BasicClientTest extends JerseyTest {
     @Test
     public void testCustomExecutorsInstanceSync() throws ExecutionException, InterruptedException {
         ClientConfig jerseyConfig = new ClientConfig();
-        jerseyConfig.register
-                (new CustomExecutorProvider()).register(ThreadInterceptor.class);
+        jerseyConfig.register(new CustomExecutorProvider()).register(ThreadInterceptor.class);
         Client client = ClientBuilder.newClient(jerseyConfig);
         runCustomExecutorTestSync(client);
     }
@@ -383,11 +379,16 @@ public class BasicClientTest extends JerseyTest {
         return client.target("http://any.web:888");
     }
 
-    public static class CustomExecutorProvider implements RequestExecutorsProvider {
+    public static class CustomExecutorProvider implements RequestExecutorProvider {
 
         @Override
         public ExecutorService getRequestingExecutor() {
             return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("AsyncRequest").build());
+        }
+
+        @Override
+        public void releaseRequestingExecutor(ExecutorService executor) {
+            executor.shutdownNow();
         }
     }
 

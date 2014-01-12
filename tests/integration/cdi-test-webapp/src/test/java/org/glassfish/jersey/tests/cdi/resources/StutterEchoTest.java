@@ -41,14 +41,12 @@ package org.glassfish.jersey.tests.cdi.resources;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.ws.rs.client.WebTarget;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test for qualified injection.
@@ -68,7 +66,6 @@ public class StutterEchoTest extends CdiTest {
     };
 
     final String in, out;
-    final WebTarget stutterService;
 
     /**
      * Construct instance with the above test data injected.
@@ -79,12 +76,11 @@ public class StutterEchoTest extends CdiTest {
     public StutterEchoTest(String in, String out) {
         this.in = in;
         this.out = out;
-        this.stutterService = target().path("stutter").queryParam("s", in);
     }
 
     @Test
     public void testGet() {
-        String s = stutterService.request().get(String.class);
+        String s = target().path("stutter").queryParam("s", in).request().get(String.class);
         assertThat(s, equalTo(out));
     }
 }

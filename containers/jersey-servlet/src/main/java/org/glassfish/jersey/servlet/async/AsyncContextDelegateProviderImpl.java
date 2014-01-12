@@ -86,7 +86,7 @@ public class AsyncContextDelegateProviderImpl implements AsyncContextDelegatePro
         public void suspend() throws IllegalStateException {
             final AsyncContext asyncContext = request.startAsync(request, response);
 
-            // Tell underlying asycContext to never time out.
+            // Tell underlying asyncContext to never time out.
             asyncContext.setTimeout(NEVER_TIMEOUT_VALUE);
 
             asyncContextRef.set(asyncContext);

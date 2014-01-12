@@ -24,12 +24,6 @@ public class Main {
         // in $package package
         final ResourceConfig rc = new ResourceConfig().packages("$package");
 
-        // uncomment the following line if you want to enable
-        // support for JSON on the service (you also have to uncomment
-        // dependency on jersey-media-json module in pom.xml)
-        // --
-        // rc.addBinder(org.glassfish.jersey.media.json.JsonJaxbBinder);
-
         // create and start a new instance of grizzly http server
         // exposing the Jersey application at BASE_URI
         return GrizzlyHttpServerFactory.createHttpServer(URI.create(BASE_URI), rc);

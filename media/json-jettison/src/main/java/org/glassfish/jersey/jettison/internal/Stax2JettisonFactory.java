@@ -83,7 +83,14 @@ public class Stax2JettisonFactory {
                 } else {
                     jmConfig = new Configuration(config.getXml2JsonNs());
                 }
-                return new MappedXMLStreamWriter(new MappedNamespaceConvention(jmConfig), writer);
+
+                final MappedXMLStreamWriter result = new MappedXMLStreamWriter(new MappedNamespaceConvention(jmConfig), writer);
+
+                for (String array : config.getArrayElements()) {
+                    result.serializeAsArray(array);
+                }
+
+                return result;
             default:
                 return null;
         }

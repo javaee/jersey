@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.validation.internal;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
+import java.security.AccessController;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -92,8 +93,8 @@ class ValidateOnExecutionHandler {
 
     /**
      * Determine whether the given {@link Method getter} on the given {@link Class clazz} should be validated during the
-     * resource class validation. See {@code #validationMethod} to understand the difference between this and {@code
-     * #validationMethod}.
+     * resource class validation. See {@code #validateMethod} to understand the difference between this and {@code
+     * #validateMethod}.
      *
      * @param clazz class on which the getter will be invoked.
      * @param method method to be examined.
@@ -101,16 +102,16 @@ class ValidateOnExecutionHandler {
      */
     boolean validateGetter(final Class<?> clazz, final Method method) {
         if (!validateGetterCache.containsKey(method)) {
-            processMethod(clazz, method, method);
+            processMethod(clazz, method, method, true);
         }
         return validateGetterCache.get(method);
     }
 
     /**
-     * Determine whether the given {@link Method method} to-be-executed on the given {@link Class clazz} should be validated.
-     * The difference between this and {@code #validateGetter} method is that this method returns {@code true} if the {@code
-     * method} is getter and validating getter method is not explicitly disabled by {@link ValidateOnExecution} annotation in
-     * the class hierarchy.
+     * Determine whether the given resource {@link Method method} to-be-executed on the given {@link Class clazz} should be
+     * validated. The difference between this and {@code #validateGetter} method is that this method returns {@code true} if the
+     * {@code method} is getter and validating getter method is not explicitly disabled by {@link ValidateOnExecution} annotation
+     * in the class hierarchy.
      *
      * @param clazz class on which the method will be invoked.
      * @param method method to be examined.
@@ -119,7 +120,7 @@ class ValidateOnExecutionHandler {
      */
     boolean validateMethod(final Class<?> clazz, final Method method, final Method validationMethod) {
         if (!validateMethodCache.containsKey(validationMethod)) {
-            processMethod(clazz, method, validationMethod);
+            processMethod(clazz, method, validationMethod, false);
         }
         return validateMethodCache.get(validationMethod);
     }
@@ -131,8 +132,10 @@ class ValidateOnExecutionHandler {
      * @param clazz class on which the method will be invoked.
      * @param method method to be examined.
      * @param validationMethod method used for cache.
+     * @param forceValidation forces validation of a getter if no {@link ValidateOnExecution} annotation is present.
      */
-    private void processMethod(final Class<?> clazz, final Method method, final Method validationMethod) {
+    private void processMethod(final Class<?> clazz, final Method method, final Method validationMethod,
+                               final boolean forceValidation) {
         final Deque<Class<?>> hierarchy = getValidationClassHierarchy(clazz);
         Boolean validateMethod = processAnnotation(method, hierarchy, checkOverrides);
 
@@ -147,10 +150,10 @@ class ValidateOnExecutionHandler {
                     .getDefaultValidatedExecutableTypes();
             validateMethod = validateMethod(method, false, defaultValidatedExecutableTypes);
 
-            validateGetterCache.putIfAbsent(validationMethod, validateMethod);
+            validateGetterCache.putIfAbsent(validationMethod, validateMethod || forceValidation);
 
-            // When validateMethod is called and no ValidateOnExecution annotation is present we want to validate getters by
-            // default (see SPEC).
+            // When validateMethod is called and no ValidateOnExecution annotation is present we want to validate getter resource
+            // methods by default (see SPEC).
             validateMethodCache.putIfAbsent(validationMethod, ReflectionHelper.isGetter(validationMethod) || validateMethod);
         }
     }
@@ -168,7 +171,8 @@ class ValidateOnExecutionHandler {
         // Overridden methods.
         while(!hierarchy.isEmpty()) {
             final Class<?> overriddenClass = hierarchy.removeFirst();
-            final Method overriddenMethod = ReflectionHelper.findMethodOnClass(overriddenClass, method);
+            final Method overriddenMethod =
+                    AccessController.doPrivileged(ReflectionHelper.findMethodOnClassPA(overriddenClass, method));
 
             if (overriddenMethod != null) {
                 // Method.

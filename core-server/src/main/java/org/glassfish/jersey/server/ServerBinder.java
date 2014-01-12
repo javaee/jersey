@@ -39,7 +39,11 @@
  */
 package org.glassfish.jersey.server;
 
+import java.util.Map;
+
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
@@ -57,12 +61,9 @@ import org.glassfish.jersey.internal.JaxrsProviders;
 import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.HttpHeadersInjectee;
 import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.inject.RequestInjectee;
 import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
-import org.glassfish.jersey.internal.inject.UriInfoInjectee;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
@@ -76,6 +77,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
+import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
 import org.glassfish.jersey.server.internal.process.RespondingContext;
 import org.glassfish.jersey.server.internal.routing.RouterBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
@@ -88,8 +90,11 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * Server injection binder.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class ServerBinder extends AbstractBinder {
+class ServerBinder extends AbstractBinder {
+
+    private final Map<String, Object> applicationProperties;
 
     private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
         @Inject
@@ -104,6 +109,15 @@ public class ServerBinder extends AbstractBinder {
         }
     }
 
+    /**
+     * Create new {@code ServerBinder} instance.
+     *
+     * @param applicationProperties map of application-specific properties.
+     */
+    public ServerBinder(final Map<String, Object> applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
+
     @Override
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
@@ -112,7 +126,7 @@ public class ServerBinder extends AbstractBinder {
                 new ContextInjectionResolver.Binder(),
                 new ParameterInjectionBinder(),
                 new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(),
+                new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.SERVER),
                 new MessageBodyFactory.Binder(),
                 new ExceptionMapperFactory.Binder(),
                 new ContextResolverFactory.Binder(),
@@ -122,11 +136,12 @@ public class ServerBinder extends AbstractBinder {
                 new ResourceModelBinder(),
                 new RuntimeExecutorsBinder(),
                 new RouterBinder(),
-                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class),
+                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
                 new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class),
-                new MappableExceptionWrapperInterceptor.Binder());
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
+                new MappableExceptionWrapperInterceptor.Binder(),
+                new MonitoringContainerListener.Binder());
 
         // Request/Response injection interfaces
         bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
@@ -149,11 +164,63 @@ public class ServerBinder extends AbstractBinder {
 
         bindAsContract(ReferencesInitializer.class);
 
-        // JAX-RS proxiable request scoped injections
-        bind(UriInfoInjectee.class).to(UriInfoInjectee.class).to(UriInfo.class).proxy(true).in(RequestScoped.class);
-        bind(HttpHeadersInjectee.class).to(HttpHeadersInjectee.class).to(HttpHeaders.class).proxy(true).in(RequestScoped.class);
-        bind(RequestInjectee.class).to(RequestInjectee.class).to(Request.class).proxy(true).in(RequestScoped.class);
-        bind(SecurityContextInjectee.class).to(SecurityContextInjectee.class).to(SecurityContext.class).proxy(true).in(RequestScoped.class);
+        bindFactory(UriInfoReferencingFactory.class).to(UriInfo.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(ReferencingFactory.<UriInfo>referenceFactory()).to(new TypeLiteral<Ref<UriInfo>>() {
+        }).in(RequestScoped.class);
 
+        bindFactory(ResourceInfoReferencingFactory.class).to(ResourceInfo.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(ReferencingFactory.<ResourceInfo>referenceFactory()).to(new TypeLiteral<Ref<ResourceInfo>>() {
+        }).in(RequestScoped.class);
+
+        bindFactory(HttpHeadersReferencingFactory.class).to(HttpHeaders.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).to(new TypeLiteral<Ref<HttpHeaders>>() {
+        }).in(RequestScoped.class);
+
+        bindFactory(RequestReferencingFactory.class).to(Request.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+        bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
+        }).in(RequestScoped.class);
+
+        // SecurityContext must be injected using the Injectee. The reason is that
+        // SecurityContext can be changed by filters but it looks like the proxy internally caches
+        // the first SecurityContext value injected in the RequestScope. This is
+        bindAsContract(SecurityContextInjectee.class).to(SecurityContext.class)
+                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
+
+    }
+
+    @SuppressWarnings("JavaDoc")
+    private static class UriInfoReferencingFactory extends ReferencingFactory<UriInfo> {
+        @Inject
+        public UriInfoReferencingFactory(Provider<Ref<UriInfo>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    @SuppressWarnings("JavaDoc")
+    private static class ResourceInfoReferencingFactory extends ReferencingFactory<ResourceInfo> {
+        @Inject
+        public ResourceInfoReferencingFactory(Provider<Ref<ResourceInfo>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    @SuppressWarnings("JavaDoc")
+    private static class HttpHeadersReferencingFactory extends ReferencingFactory<HttpHeaders> {
+        @Inject
+        public HttpHeadersReferencingFactory(Provider<Ref<HttpHeaders>> referenceFactory) {
+            super(referenceFactory);
+        }
+    }
+
+    @SuppressWarnings("JavaDoc")
+    private static class RequestReferencingFactory extends ReferencingFactory<Request> {
+        @Inject
+        public RequestReferencingFactory(Provider<Ref<Request>> referenceFactory) {
+            super(referenceFactory);
+        }
     }
 }

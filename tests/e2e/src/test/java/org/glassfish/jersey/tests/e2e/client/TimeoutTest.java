@@ -71,7 +71,7 @@ public class TimeoutTest extends JerseyTest {
         @Path("timeout")
         public String getTimeout() {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -85,8 +85,8 @@ public class TimeoutTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig clientConfig) {
-        clientConfig.property(ClientProperties.READ_TIMEOUT, 1000);
+    protected void configureClient(ClientConfig config) {
+        config.property(ClientProperties.READ_TIMEOUT, 2000);
     }
 
     @Test

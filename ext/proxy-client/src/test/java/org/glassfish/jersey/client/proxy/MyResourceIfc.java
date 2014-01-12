@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,9 +40,13 @@
 package org.glassfish.jersey.client.proxy;
 
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.MatrixParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -70,6 +74,41 @@ public interface MyResourceIfc {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     String getByName(@QueryParam("name") String name);
+
+    @Path("query-list")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameList(@QueryParam("name-list") List<String> name);
+
+    @Path("query-set")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameSet(@QueryParam("name-list") Set<String> name);
+
+    @Path("query-sortedset")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameSortedSet(@QueryParam("name-list") SortedSet<String> name);
+
+    @Path("header-list")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameHeaderList(@HeaderParam("header-name-list") List<String> name);
+
+    @Path("matrix-list")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameMatrixList(@MatrixParam("matrix-name-list") List<String> name);
+
+    @Path("matrix-set")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameMatrixSet(@MatrixParam("matrix-name-set") Set<String> name);
+
+    @Path("matrix-sortedset")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameMatrixSortedSet(@MatrixParam("matrix-name-sorted") SortedSet<String> name);
 
     @Path("subresource")
     MySubResourceIfc getSubResource();

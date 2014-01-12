@@ -39,12 +39,15 @@
  */
 package org.glassfish.jersey.jettison;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
- * An immutable configuration of JSON notation and options. {@code JsonConfiguration}
+ * An immutable configuration of JSON notation and options. {@code JettisonConfig}
  * instance can be used for configuring the JSON notation on {@link JettisonJaxbContext}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -73,6 +76,7 @@ public class JettisonConfig {
 
     private final Notation notation;
     private final Map<String, String> jsonXml2JsonNs;
+    private final List<String> serializeAsArray;
 
     /**
      * Builder class for constructing {@link JettisonConfig} options
@@ -81,6 +85,7 @@ public class JettisonConfig {
 
         private final Notation notation;
         protected Map<String, String> jsonXml2JsonNs = new HashMap<String, String>(0);
+        protected List<String> serializeAsArray = new LinkedList<String>();
 
         private Builder(Notation notation) {
             this.notation = notation;
@@ -97,6 +102,7 @@ public class JettisonConfig {
 
         private void copyAttributes(JettisonConfig jc) {
             jsonXml2JsonNs.putAll(jc.getXml2JsonNs());
+            serializeAsArray.addAll(jc.getArrayElements());
         }
     }
 
@@ -128,11 +134,47 @@ public class JettisonConfig {
             this.jsonXml2JsonNs = jsonXml2JsonNs;
             return this;
         }
+
+        /**
+         * Add element names to be treated as arrays.
+         * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
+         * notation only.
+         * <p>
+         * Property value is a list of element names that should be treated
+         * as arrays even if only a single item is present.
+         * <p>
+         * The default value is an empty list.
+         *
+         * @param element names to be serialized as arrays.
+         * @return updated builder instance.
+         */
+        public MappedJettisonBuilder serializeAsArray(final String... arrays) {
+            return serializeAsArray(Arrays.asList(arrays));
+        }
+
+        /**
+         * Add element names to be treated as arrays.
+         * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
+         * notation only.
+         * <p>
+         * Property value is a list of element names that should be treated
+         * as arrays even if only a single item is present.
+         * <p>
+         * The default value is an empty list.
+         *
+         * @param list of element names to be serialized as arrays.
+         * @return updated builder instance.
+         */
+        public MappedJettisonBuilder serializeAsArray(final List<String> arrays) {
+            this.serializeAsArray.addAll(arrays);
+            return this;
+        }
     }
 
     private JettisonConfig(Builder b) {
         notation = b.notation;
         jsonXml2JsonNs = b.jsonXml2JsonNs;
+        serializeAsArray = b.serializeAsArray;
     }
 
     /**
@@ -141,11 +183,11 @@ public class JettisonConfig {
      *
      * @param c original instance of {@link JettisonConfig}, can't be null
      * @return copy of provided {@link JettisonConfig} with humanReadableFormatting set to formatted.
-     * @throws IllegalArgumentException when provided JsonConfiguration is null.
+     * @throws IllegalArgumentException when provided {@code JettisonConfig} is null.
      */
     public static JettisonConfig createJSONConfiguration(JettisonConfig c) throws IllegalArgumentException {
         if (c == null) {
-            throw new IllegalArgumentException("JSONConfiguration can't be null");
+            throw new IllegalArgumentException("JettisonConfig can't be null");
         }
 
         Builder b = copyBuilder(c);
@@ -154,17 +196,17 @@ public class JettisonConfig {
     }
 
     /**
-     * The default JsonConfiguration uses {@link JettisonConfig.Notation#MAPPED_JETTISON}
+     * The default {@code JettisonConfig} uses {@link JettisonConfig.Notation#MAPPED_JETTISON}
      * notation with root unwrapping option set to true.
      */
     public static final JettisonConfig DEFAULT = mappedJettison().build();
 
     /**
      * A static method for obtaining a builder of {@link JettisonConfig} instance, which will use {@link JettisonConfig.Notation#MAPPED_JETTISON} JSON notation.
-     * After getting the builder, you can set configuration options on it and finally get an immutable  JsonConfiguration
+     * After getting the builder, you can set configuration options on it and finally get an immutable {@code JettisonConfig}
      * instance using the {@link JettisonConfig.Builder#build() } method.
      *
-     * @return a builder for JsonConfiguration instance
+     * @return a builder for {@code JettisonConfig} instance
      */
     public static MappedJettisonBuilder mappedJettison() {
         return new MappedJettisonBuilder(Notation.MAPPED_JETTISON);
@@ -172,10 +214,10 @@ public class JettisonConfig {
 
     /**
      * A static method for obtaining a builder of {@link JettisonConfig} instance, which will use {@link JettisonConfig.Notation#BADGERFISH} JSON notation.
-     * After getting the builder, you can set configuration options on it and finally get an immutable  JsonConfiguration
+     * After getting the builder, you can set configuration options on it and finally get an immutable {@code JettisonConfig}
      * instance using the {@link JettisonConfig.Builder#build() } method.
      *
-     * @return a builder for JsonConfiguration instance
+     * @return a builder for {@code JettisonConfig} instance
      */
     public static Builder badgerFish() {
         return new Builder(Notation.BADGERFISH);
@@ -216,6 +258,18 @@ public class JettisonConfig {
      */
     public Map<String, String> getXml2JsonNs() {
         return (jsonXml2JsonNs != null) ? Collections.unmodifiableMap(jsonXml2JsonNs) : null;
+    }
+
+    /**
+     * Returns a list of elements to be treated as arrays. I.e. these elements will be serialized
+     * as arrays even if only a single element is included.
+     * This property is valid for the {@link JettisonConfig.Notation#MAPPED_JETTISON}
+     * notation only.
+     * @return a list of elements representing arrays.
+     * @see JettisonConfig.MappedJettisonBuilder#serializeAsArray(java.util.List)
+     */
+    public List<String> getArrayElements() {
+        return Collections.unmodifiableList(serializeAsArray);
     }
 
     @Override

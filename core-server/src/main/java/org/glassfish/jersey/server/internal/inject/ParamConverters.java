@@ -44,6 +44,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.security.AccessController;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -79,14 +80,14 @@ class ParamConverters {
                 return _fromString(value);
             } catch (InvocationTargetException ex) {
                 // if the value is an empty string, return null
-                if (value.length() == 0) {
+                if (value.isEmpty()) {
                     return null;
                 }
-                Throwable target = ex.getTargetException();
-                if (target instanceof WebApplicationException) {
-                    throw (WebApplicationException) target;
+                Throwable cause = ex.getCause();
+                if (cause instanceof WebApplicationException) {
+                    throw (WebApplicationException) cause;
                 } else {
-                    throw new ExtractorException(target);
+                    throw new ExtractorException(cause);
                 }
             } catch (Exception ex) {
                 throw new ProcessingException(ex);
@@ -95,12 +96,12 @@ class ParamConverters {
 
         protected abstract T _fromString(String value) throws Exception;
 
+        @Override
         public String toString(T value) throws IllegalArgumentException {
             return value.toString();
         }
 
     }
-
 
     /**
      * Provider of {@link ParamConverter param converter} that produce the target Java type instance
@@ -111,7 +112,8 @@ class ParamConverters {
 
         @Override
         public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
-            final Constructor constructor = ReflectionHelper.getStringConstructor(rawType);
+
+            final Constructor constructor = AccessController.doPrivileged(ReflectionHelper.getStringConstructorPA(rawType));
 
             return (constructor == null) ? null : new AbstractStringReader<T>() {
 
@@ -133,7 +135,8 @@ class ParamConverters {
 
         @Override
         public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
-            final Method valueOf = ReflectionHelper.getValueOfStringMethod(rawType);
+
+            final Method valueOf = AccessController.doPrivileged(ReflectionHelper.getValueOfStringMethodPA(rawType));
 
             return (valueOf == null) ? null : new AbstractStringReader<T>() {
 
@@ -154,7 +157,8 @@ class ParamConverters {
 
         @Override
         public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
-            final Method fromStringMethod = ReflectionHelper.getFromStringStringMethod(rawType);
+
+            final Method fromStringMethod = AccessController.doPrivileged(ReflectionHelper.getFromStringStringMethodPA(rawType));
 
             return (fromStringMethod == null) ? null : new AbstractStringReader<T>() {
 
@@ -223,12 +227,14 @@ class ParamConverters {
          */
         public AggregatedProvider(@Context ServiceLocator locator) {
             providers = new ParamConverterProvider[]{
+                    // ordering is important (e.g. Date provider must be executed before String Constructor
+                    // as Date has a deprecated String constructor
+                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class),
+                    locator.createAndInitialize(DateProvider.class),
                     locator.createAndInitialize(TypeFromStringEnum.class),
                     locator.createAndInitialize(TypeValueOf.class),
                     locator.createAndInitialize(TypeFromString.class),
-                    locator.createAndInitialize(StringConstructor.class),
-                    locator.createAndInitialize(DateProvider.class),
-                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class)
+                    locator.createAndInitialize(StringConstructor.class)
             };
         }
 

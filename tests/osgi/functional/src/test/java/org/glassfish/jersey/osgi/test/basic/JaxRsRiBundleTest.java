@@ -49,15 +49,14 @@ import javax.ws.rs.core.UriBuilder;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.osgi.test.util.Helper;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.TestProperties;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.Configuration;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
@@ -66,16 +65,14 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class JaxRsRiBundleTest {
-
-    private static final int port = Helper.getEnvVariable(TestProperties.CONTAINER_PORT, 8080);
 
     private static final String CONTEXT = "/jersey";
 
     private static final URI baseUri = UriBuilder.
             fromUri("http://localhost").
-            port(port).
+            port(Helper.getPort()).
             path(CONTEXT).build();
 
     @Configuration
@@ -106,7 +103,7 @@ public class JaxRsRiBundleTest {
         System.out.println("RESULT = " + response);
         assertEquals("OK", response);
 
-        server.stop();
+        server.shutdownNow();
     }
 
 }
