@@ -1,0 +1,123 @@
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <title></title>
+    <!-- get bootstrap css from CDN -->
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet"
+          media="screen">
+
+</head>
+<body style="padding-top: 80px;">
+<!-- get jquery from CDN -->
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<!-- get bootstrap.js from CDN -->
+<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".sparkline").hide();
+        $("#sContainer").hide().fadeIn(1000);
+        $(".btn").click(function (event) {
+            $(".sparkline").hide(250);
+            $(".sparkline").attr("src",
+                    "http://localhost:9998/sparklines/"
+                            + $('input:radio[name=sparklineType]:checked').val()
+                            + "?d=" + $("#sParams").val());
+            $(".sparkline").show(250);
+            event.preventDefault();
+        });
+    });
+</script>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="http://jersey.java.net">
+                <img src="http://jersey.java.net/images/jersey_logo.png" style="width:22px; margin-right:10px;"
+                     title="Jersey Website"/>
+            </a>
+
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    <li><a href="http://jersey.java.net/documentation/latest/index.html">Jersey Doc</a></li>
+                    <li><a href="http://jersey.java.net/apidocs/latest/jersey/index.html">Jersey API</a></li>
+                    <li><a href="http://jersey.java.net/download.html">Download Jersey!</a></li>
+                </ul>
+            </div>
+            <!--/.nav-collapse -->
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <h1>Jersey Sparklines Example</h1>
+
+    <form id="form" class="well" action="#">
+        <label for="sParams">Sparkline values: </label>
+        <input type="text"
+               name="d"
+               id="sParams"
+               class="span3"
+               value="88,84,82,92,82,86,66,82,44,64,66,88,96,80,24,26,14,0,0,26,8,6,6,24,52,66,36,6,10,14,30"
+        />
+        <span class="help-inline">Comma separated list of numbers...</span><br/><br/>
+        <label>Sparkline type: </label>
+        <input type="radio" name="sparklineType" value="discrete" checked="checked" class="radio">discrete</input><br/>
+        <input type="radio" name="sparklineType" value="smooth" class="radio">smooth</input>
+        <br/><br/>
+        <button type="submit" class="btn">Create sparkline</button>
+
+    </form>
+    <div id="sContainer" class="well">
+        <span id="sLabel">Your&nbsp;sparkline: </span>
+        <img class="sparkline" src="" alt="Your sparkline"/>
+    </div>
+</div>
+</body>
+</html>
