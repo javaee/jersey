@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<html>
+<head>
+    <title>DTMF Tone Generator Example</title>
+</head>
+<body>
+<h1>DTMF Tone Generator Example</h1>
+
+<p>Dual Tone Multi Frequency signals are common way how to transfer simple data over analogue voice line. The detailed
+    description can be found in the Wikipedia article
+    <a href="http://en.wikipedia.org/wiki/Dual-tone_multi-frequency_signaling">here</a>.
+</p>
+
+<h2>Contents</h2>
+
+<p>The example consists of one web resource:
+</p>
+<dl>
+    <dt><code>org.glassfish.jersey.examples.tonegen.WavResource</code></dt>
+    <dd>
+        This Java class returns the wave audio containing the sequence of DTMF tones generated
+        based on a given set of query parameters.
+    </dd>
+</dl>
+<p>
+    The example parses query parameters, generates sinus waves and composes them to create a valid DTMF tone sequence.
+</p>
+
+<p>
+    The mapping of the URI path space is presented in the following table:
+</p>
+<table border="1">
+    <tr>
+        <th>
+            <p>URI path</p>
+        </th>
+        <th>
+            <p>Resource class</p>
+        </th>
+        <th>
+            <p>HTTP methods</p>
+        </th>
+        <th>
+            <p>Description</p>
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <p>wav</p>
+        </td>
+        <td>
+            <p>WavResource</p>
+        </td>
+        <td>
+            <p>GET</p>
+        </td>
+        <td>
+            <p>Create a wav audio containing the DTMF tones.</p>
+        </td>
+    </tr>
+</table>
+<p><br/><br/>
+</p>
+
+<p>The following query parameters can be
+    declared:</p>
+<table border="1">
+    <tr>
+        <th>
+            <p>Query parameter</p>
+        </th>
+        <th>
+            <p>Default Value</p>
+        </th>
+        <th>
+            <p>Description</p>
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <p>toneSequence</p>
+        </td>
+        <td>
+            <p>1234567890#*</p>
+        </td>
+        <td>
+            <p>A String containing valid DTMF characters (0-9, # and *).</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>toneDuration</p>
+        </td>
+        <td>
+            <p>300</p>
+        </td>
+        <td>
+            <p>Duration of one generated tone in milliseconds.</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p>silenceDuration</p>
+        </td>
+        <td>
+            <p>100</p>
+        </td>
+        <td>
+            <p>Duration of the silence between two generated tones.</p>
+        </td>
+    </tr>
+</table>
+<p><br/><br/>
+</p>
+
+<h2>Running the Example</h2>
+
+<p>Run the example as follows:</p>
+
+<p>run
+</p>
+<blockquote><code>mvn compile exec:java</code></blockquote>
+<p>From a web browser, visit:</p>
+<blockquote>
+    <code>
+        <a href="http://localhost:9998/tonegen">http://localhost:9998/tonegen</a>
+    </code>
+</blockquote>
+Tweak the parameters and click <i>Play</i> to hear the result
+or compose your own URI based on the description above and have the wav audio returned from the resource.
+</body>
+</html>

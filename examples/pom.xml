@@ -111,6 +111,7 @@
         <module>sse-item-store-webapp</module>
         <module>sse-twitter-aggregator</module>
         <module>system-properties-example</module>
+        <module>tone-generator</module>
         <module>webapp-example-parent</module>
         <module>xml-moxy</module>
     </modules>
