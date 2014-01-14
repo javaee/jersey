@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,19 +55,25 @@ import javax.ws.rs.ext.MessageBodyWriter;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @see MessageBodyWriter
  */
-public class ChunkedResponseWriter implements MessageBodyWriter<ChunkedOutput<?>> {
+public final class ChunkedResponseWriter implements MessageBodyWriter<ChunkedOutput<?>> {
+
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
         return ChunkedOutput.class.isAssignableFrom(type);
     }
 
     @Override
-    public long getSize(ChunkedOutput<?> chunkedOutput, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public long getSize(final ChunkedOutput<?> chunkedOutput, final Class<?> type, final Type genericType,
+                        final Annotation[] annotations, final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(ChunkedOutput<?> chunkedOutput, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
+    public void writeTo(final ChunkedOutput<?> chunkedOutput, final Class<?> type, final Type genericType,
+                        final Annotation[] annotations, final MediaType mediaType,
+                        final MultivaluedMap<String, Object> httpHeaders, final OutputStream entityStream)
+            throws IOException, WebApplicationException {
         // do nothing.
     }
 }

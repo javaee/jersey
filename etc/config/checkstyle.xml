@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -196,7 +196,6 @@
         <!-- Checks for common coding problems               -->
         <!-- See http://checkstyle.sf.net/config_coding.html -->
         <!-- module name="AvoidInlineConditionals"/-->
-        <module name="DoubleCheckedLocking"/>
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
         <module name="HiddenField">
@@ -205,12 +204,9 @@
         </module>
         <module name="IllegalInstantiation"/>
         <module name="InnerAssignment"/>
-        <!--
-            Unable to use MagicNumber until maven plugin supports Checkstyle 5.3
-            or, at least, until Checkstyle 5.3 is available in a maven repository
         <module name="MagicNumber">
             <property name="ignoreHashCodeMethod" value="true"/>
-        </module-->
+        </module>
         <module name="MissingSwitchDefault"/>
         <module name="RedundantThrows">
             <property name="allowUnchecked" value="true"/>
