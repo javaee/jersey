@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -115,7 +115,11 @@ public interface RequestEvent {
         RESOURCE_METHOD_START,
 
         /**
-         * Resource method execution has finished. The response is not available yet.
+         * Resource method execution has finished. In the case of synchronous processing
+         * the response is not available yet. In the case of asynchronous processing the situation depends on the
+         * method design and it in some cases on race conditions. In asynchronous cases this event can be
+         * triggered even after the response is completely processed. Exactly defined, this event
+         * is triggered when the thread executing the resource method returns from the resource method.
          */
         RESOURCE_METHOD_FINISHED,
 

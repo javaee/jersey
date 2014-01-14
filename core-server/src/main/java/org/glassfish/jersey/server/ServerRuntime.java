@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -231,48 +231,44 @@ class ServerRuntime {
         initRequestEventListeners(request);
 
         TracingUtils.initTracingSupport(tracingConfig, tracingThreshold, request);
-        try {
-            request.checkState();
-            requestScope.runInScope(new Runnable() {
-                @Override
-                public void run() {
-                    TracingUtils.logStart(request);
+        request.checkState();
+        requestScope.runInScope(new Runnable() {
+            @Override
+            public void run() {
+                TracingUtils.logStart(request);
 
-                    final Responder responder = new Responder(request, ServerRuntime.this);
-                    final AsyncResponderHolder asyncResponderHolder = new AsyncResponderHolder(
-                            responder, requestScope.referenceCurrent());
+                final Responder responder = new Responder(request, ServerRuntime.this);
+                final AsyncResponderHolder asyncResponderHolder = new AsyncResponderHolder(
+                        responder, requestScope.referenceCurrent());
 
-                    try {
-                        final Ref<Endpoint> endpointRef = Refs.emptyRef();
-                        // set base URI into response builder thread-local variable
-                        // for later absolutization of relative location URIs
-                        OutboundJaxrsResponse.Builder.setBaseUri(request.getBaseUri());
-                        final ContainerRequest data = Stages.process(request, requestProcessingRoot, endpointRef);
+                try {
+                    final Ref<Endpoint> endpointRef = Refs.emptyRef();
+                    // set base URI into response builder thread-local variable
+                    // for later absolutization of relative location URIs
+                    OutboundJaxrsResponse.Builder.setBaseUri(request.getBaseUri());
+                    final ContainerRequest data = Stages.process(request, requestProcessingRoot, endpointRef);
 
-                        final Endpoint endpoint = endpointRef.get();
-                        if (endpoint == null) {
-                            // not found
-                            throw new NotFoundException();
-                        }
-
-                        asyncContextFactoryProvider.get().set(asyncResponderHolder);
-                        final ContainerResponse response = endpoint.apply(data);
-
-                        if (!asyncResponderHolder.isAsync()) {
-                            responder.process(response);
-                        }
-                    } catch (Throwable throwable) {
-                        responder.process(throwable);
-                    } finally {
-                        asyncResponderHolder.release();
-                        // clear base URI from the thread
-                        OutboundJaxrsResponse.Builder.clearBaseUri();
+                    final Endpoint endpoint = endpointRef.get();
+                    if (endpoint == null) {
+                        // not found
+                        throw new NotFoundException();
                     }
+
+                    asyncContextFactoryProvider.get().set(asyncResponderHolder);
+                    final ContainerResponse response = endpoint.apply(data);
+
+                    if (!asyncResponderHolder.isAsync()) {
+                        responder.process(response);
+                    }
+                } catch (Throwable throwable) {
+                    responder.process(throwable);
+                } finally {
+                    asyncResponderHolder.release();
+                    // clear base URI from the thread
+                    OutboundJaxrsResponse.Builder.clearBaseUri();
                 }
-            });
-        } finally {
-            request.triggerEvent(RequestEvent.Type.FINISHED);
-        }
+            }
+        });
     }
 
     private void initRequestEventListeners(ContainerRequest request) {
@@ -672,6 +668,8 @@ class ServerRuntime {
 
             } catch (Throwable throwable) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.RELEASING_REQUEST_PROCESSING_RESOURCES_FAILED(), throwable);
+            } finally {
+                request.triggerEvent(RequestEvent.Type.FINISHED);
             }
         }
     }
