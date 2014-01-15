@@ -144,6 +144,11 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.hk2.external</groupId>
+            <artifactId>asm-all-repackaged</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <scope>provided</scope>
@@ -263,6 +268,7 @@
                             com.sun.research.ws.wadl.*;version=${project.version}
                         </Export-Package>
                         <Import-Package>
+                            !org.objectweb.asm.*,
                             javax.servlet.annotation.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
                             javax.servlet.descriptor.*;resolution:=optional;version="${range;[==,+);${servlet3.version}}",
                             javax.servlet.*;version="[2.4,4.0)",
@@ -276,6 +282,23 @@
                     </instructions>
                     <unpackBundle>true</unpackBundle>
                     <excludeDependencies>*;scope=compile</excludeDependencies>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <configuration>
+                    <artifactSet>
+                        <includes>
+                            <include>org.glassfish.hk2.external:asm-all-repackaged:*</include>
+                        </includes>
+                    </artifactSet>
+                    <relocations>
+                        <relocation>
+                            <pattern>org.objectweb.asm</pattern>
+                            <shadedPattern>${jersey.shade.package.prefix}.objectweb.asm</shadedPattern>
+                        </relocation>
+                    </relocations>
                 </configuration>
             </plugin>
             <!-- producing zipped archives -->
