@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,8 @@ package org.glassfish.jersey.client;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
@@ -508,6 +510,18 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                 // the failure was caused by connection problems or by other circumstances
                 connectionFailed = true;
                 throw ce;
+            } catch (SocketTimeoutException e) {
+                // if MessageBodyWorkers.writeTo() fails because of non-routable target, SocketTimeOutException is thrown.
+                // In that case, exception is rethrown and the connectionFailed flag is set to prevent the attempt to commit.
+                // Calling commitStream() would lead to another wait time and the final timeout time would be twice as long
+                // as described in JERSEY-1984. Depending on a system and configuration, NoRouteToHostException may be thrown
+                // instead of SocketTimeoutException (see bellow).
+                connectionFailed = true;
+                throw e;
+            } catch (NoRouteToHostException e) {
+                // to cover all the cases, also NoRouteToHostException is to be handled similarly.
+                connectionFailed = true;
+                throw e;
             }
         } finally {
             // in case we've seen the ConnectException, we won't try to close/commit stream as this would produce just
