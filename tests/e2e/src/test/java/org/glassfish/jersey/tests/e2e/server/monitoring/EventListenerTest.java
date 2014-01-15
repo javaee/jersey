@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,16 +43,20 @@ package org.glassfish.jersey.tests.e2e.server.monitoring;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -60,6 +64,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import org.glassfish.jersey.server.ManagedAsync;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
@@ -68,6 +73,7 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -98,7 +104,8 @@ public class EventListenerTest extends JerseyTest {
         private ApplicationEvent appEventInitStart;
         private ApplicationEvent appEventInitFinished;
         private RequestEvent newRequestEvent;
-        private int resourceMethodEventCount = 0;
+        private volatile int resourceMethodEventCount = 0;
+        private volatile CountDownLatch finishedCalled = new CountDownLatch(1);
 
         @Override
         public void onEvent(ApplicationEvent event) {
@@ -126,7 +133,7 @@ public class EventListenerTest extends JerseyTest {
     public static class ReqEventListener implements RequestEventListener {
         private final AppEventListener appEventListener;
 
-        private final MultivaluedMap<String, String> eventData = new MultivaluedHashMap<String, String>();
+        public final MultivaluedMap<String, String> eventData = new MultivaluedHashMap<String, String>();
 
         public ReqEventListener(AppEventListener appEventListener) {
             this.appEventListener = appEventListener;
@@ -178,6 +185,8 @@ public class EventListenerTest extends JerseyTest {
                     }
                     break;
                 case FINISHED:
+                    Assert.assertNotNull(event.getContainerResponse());
+                    this.appEventListener.finishedCalled.countDown();
                     break;
             }
         }
@@ -235,6 +244,23 @@ public class EventListenerTest extends JerseyTest {
         @Path("locator")
         public SubResource locator() {
             return new SubResource();
+        }
+
+        @GET
+        @Path("async")
+        @ManagedAsync
+        public void getAsync(@Suspended AsyncResponse asyncResponse) {
+            asyncResponse.resume(Response.ok("async").build());
+        }
+
+        /**
+         * This works in the async way but it is served by only one thread.
+         * @param asyncResponse
+         */
+        @GET
+        @Path("asyncOneThread")
+        public void getAsyncOneThread(@Suspended AsyncResponse asyncResponse) {
+            asyncResponse.resume(Response.ok("async").build());
         }
     }
 
@@ -364,5 +390,40 @@ public class EventListenerTest extends JerseyTest {
         assertEquals("[" + i++ + "]", response.getHeaderString("R.EXCEPTION_MAPPER_FOUND.order"));
         assertEquals("[" + i++ + "]", response.getHeaderString("R.RESP_FILTERS_START.order"));
         assertEquals("[" + i + "]", response.getHeaderString("R.RESP_FILTERS_FINISHED.order"));
+    }
+
+    @Test
+    public void testAsyncProcessing() throws InterruptedException {
+        final Response response = target().path("resource/async").request().get();
+        assertEquals(200, response.getStatus());
+        assertEquals("async", response.readEntity(String.class));
+
+        int i = 1;
+        System.out.println(response.getHeaders());
+        assertEquals("[" + i++ + "]", response.getHeaderString("R.REQ_FILTERS_START.order"));
+        assertEquals("[" + i++ + "]", response.getHeaderString("R.REQ_FILTERS_FINISHED.order"));
+        assertEquals("[" + i++ + "]", response.getHeaderString("R.RESOURCE_METHOD_START.order"));
+        assertEquals("[" + i++ + "]", response.getHeaderString("R.RESP_FILTERS_START.order"));
+        assertEquals("[" + i + "]", response.getHeaderString("R.RESP_FILTERS_FINISHED.order"));
+        final boolean success = applicationEventListener.finishedCalled.await(3, TimeUnit.SECONDS);
+        Assert.assertTrue(success);
+    }
+
+    @Test
+    public void testAsyncProcessingWithOneThread() throws InterruptedException {
+        final Response response = target().path("resource/asyncOneThread").request().get();
+        assertEquals(200, response.getStatus());
+        assertEquals("async", response.readEntity(String.class));
+
+        int i = 1;
+        System.out.println(response.getHeaders());
+        assertEquals("[" + i++ + "]", response.getHeaderString("R.REQ_FILTERS_START.order"));
+        assertEquals("[" + i++ + "]", response.getHeaderString("R.REQ_FILTERS_FINISHED.order"));
+        assertEquals("[" + i++ + "]", response.getHeaderString("R.RESOURCE_METHOD_START.order"));
+        assertEquals("[" + i++ + "]", response.getHeaderString("R.RESP_FILTERS_START.order"));
+        assertEquals("[" + i + "]", response.getHeaderString("R.RESP_FILTERS_FINISHED.order"));
+
+        final boolean success = applicationEventListener.finishedCalled.await(3, TimeUnit.SECONDS);
+        Assert.assertTrue(success);
     }
 }
