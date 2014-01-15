@@ -813,7 +813,8 @@ Client client = ClientBuilder.newBuilder().sslContext(sslContext).build();</prog
                     In version prior to Jersey 2.5 the support was
                     provided by <literal>org.glassfish.jersey.client.filter.HttpBasicAuthFilter</literal>
                     and <literal>org.glassfish.jersey.client.filter.HttpDigestAuthFilter</literal>. Since Jersey
-                    2.5 these filters are deprecated and both authentication methods are provided by single &lit.jaxrs.core.Feature;
+                    2.5 these filters are deprecated (and removed in 2.6) and both authentication methods
+                    are provided by single &lit.jaxrs.core.Feature;
                     &jersey.client.HttpAuthenticationFeature;.
                 </para>
             </important>

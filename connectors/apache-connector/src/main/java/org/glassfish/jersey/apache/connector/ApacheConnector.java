@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -90,7 +90,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.client.params.HttpClientParamConfig;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.Registry;
@@ -118,7 +117,6 @@ import org.apache.http.impl.conn.ManagedHttpClientConnectionFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.io.ChunkedOutputStream;
 import org.apache.http.io.SessionOutputBuffer;
-import org.apache.http.params.HttpParams;
 import org.apache.http.util.TextUtils;
 import org.apache.http.util.VersionInfo;
 
@@ -131,12 +129,12 @@ import com.google.common.util.concurrent.MoreExecutors;
  * The following properties are only supported at construction of this class:
  * <ul>
  * <li>{@link ApacheClientProperties#CONNECTION_MANAGER}</li>
- * <li>{@link ApacheClientProperties#REQUEST_CONFIG} (or {@link ApacheClientProperties#HTTP_PARAMS})</li>
+ * <li>{@link ApacheClientProperties#REQUEST_CONFIG}</li>
  * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
  * <li>{@link ApacheClientProperties#DISABLE_COOKIES}</li>
- * <li>{@link ClientProperties#PROXY_URI} (or {@link ApacheClientProperties#PROXY_URI})</li>
- * <li>{@link ClientProperties#PROXY_USERNAME} (or {@link ApacheClientProperties#PROXY_USERNAME})</li>
- * <li>{@link ClientProperties#PROXY_PASSWORD} (or {@link ApacheClientProperties#PROXY_PASSWORD})</li>
+ * <li>{@link ClientProperties#PROXY_URI}</li>
+ * <li>{@link ClientProperties#PROXY_USERNAME}</li>
+ * <li>{@link ClientProperties#PROXY_PASSWORD}</li>
  * <li>{@link ClientProperties#REQUEST_ENTITY_PROCESSING} - default value is {@link RequestEntityProcessing#CHUNKED}</li>
  * <li>{@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>
  * <li>{@link ApacheClientProperties#SSL_CONFIG}</li>
@@ -206,7 +204,6 @@ public class ApacheConnector implements Connector {
      * @param config client configuration.
      */
     ApacheConnector(Configuration config) {
-        Object httpParams = null;
         Object reqConfig = null;
 
         if (config != null) {
@@ -225,21 +222,7 @@ public class ApacheConnector implements Connector {
             }
 
             reqConfig = config.getProperties().get(ApacheClientProperties.REQUEST_CONFIG);
-            if (reqConfig == null) {
-                httpParams = config.getProperties().get(ApacheClientProperties.HTTP_PARAMS);
-                if (httpParams != null) {
-                    if (!(httpParams instanceof HttpParams)) {
-                        LOGGER.log(
-                                Level.WARNING,
-                                LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
-                                        ApacheClientProperties.HTTP_PARAMS,
-                                        httpParams.getClass().getName(),
-                                        HttpParams.class.getName())
-                        );
-                        httpParams = null;
-                    }
-                }
-            } else {
+            if (reqConfig != null) {
                 if (!(reqConfig instanceof RequestConfig)) {
                     LOGGER.log(
                             Level.WARNING,
@@ -274,26 +257,16 @@ public class ApacheConnector implements Connector {
                 clientBuilder.setDefaultCredentialsProvider((CredentialsProvider) credentialsProvider);
             }
 
-
             Object proxyUri;
             proxyUri = config.getProperty(ClientProperties.PROXY_URI);
-            if (proxyUri == null) {
-                proxyUri = config.getProperty(ApacheClientProperties.PROXY_URI);
-            }
             if (proxyUri != null) {
                 final URI u = getProxyUri(proxyUri);
                 final HttpHost proxy = new HttpHost(u.getHost(), u.getPort(), u.getScheme());
                 String userName;
                 userName = PropertiesHelper.getValue(config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
-                if (userName == null) {
-                    userName = PropertiesHelper.getValue(config.getProperties(), ApacheClientProperties.PROXY_USERNAME, String.class);
-                }
                 if (userName != null) {
                     String password;
                     password = PropertiesHelper.getValue(config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
-                    if (password == null) {
-                        password = PropertiesHelper.getValue(config.getProperties(), ApacheClientProperties.PROXY_PASSWORD, String.class);
-                    }
 
                     if (password != null) {
                         CredentialsProvider credsProvider = new BasicCredentialsProvider();
@@ -314,8 +287,9 @@ public class ApacheConnector implements Connector {
             this.preemptiveBasicAuth = false;
         }
 
-        if (httpParams != null) {
-            RequestConfig.Builder reqConfigBuilder = RequestConfig.copy(HttpClientParamConfig.getRequestConfig((HttpParams) httpParams));
+
+        if (reqConfig != null) {
+            RequestConfig.Builder reqConfigBuilder = RequestConfig.copy((RequestConfig) reqConfig);
             if (connectTimeout > 0) {
                 reqConfigBuilder.setConnectTimeout(connectTimeout);
             }
@@ -327,27 +301,14 @@ public class ApacheConnector implements Connector {
             }
             requestConfig = reqConfigBuilder.build();
         } else {
-            if (reqConfig != null) {
-                RequestConfig.Builder reqConfigBuilder = RequestConfig.copy((RequestConfig) reqConfig);
-                if (connectTimeout > 0) {
-                    reqConfigBuilder.setConnectTimeout(connectTimeout);
-                }
-                if (socketTimeout > 0) {
-                    reqConfigBuilder.setSocketTimeout(socketTimeout);
-                }
-                if (ignoreCookies) {
-                    reqConfigBuilder.setCookieSpec(CookieSpecs.IGNORE_COOKIES);
-                }
-                requestConfig = reqConfigBuilder.build();
-            } else {
-                requestConfigBuilder.setConnectTimeout(connectTimeout);
-                requestConfigBuilder.setSocketTimeout(socketTimeout);
-                if (ignoreCookies) {
-                    requestConfigBuilder.setCookieSpec(CookieSpecs.IGNORE_COOKIES);
-                }
-                requestConfig = requestConfigBuilder.build();
+            requestConfigBuilder.setConnectTimeout(connectTimeout);
+            requestConfigBuilder.setSocketTimeout(socketTimeout);
+            if (ignoreCookies) {
+                requestConfigBuilder.setCookieSpec(CookieSpecs.IGNORE_COOKIES);
             }
+            requestConfig = requestConfigBuilder.build();
         }
+
         if (requestConfig.getCookieSpec() == null || !requestConfig.getCookieSpec().equals(CookieSpecs.IGNORE_COOKIES)) {
             this.cookieStore = new BasicCookieStore();
             clientBuilder.setDefaultCookieStore(cookieStore);
@@ -481,7 +442,7 @@ public class ApacheConnector implements Connector {
         } else if (proxy instanceof String) {
             return URI.create((String) proxy);
         } else {
-            throw new ProcessingException(LocalizationMessages.WRONG_PROXY_URI_TYPE(ApacheClientProperties.PROXY_URI));
+            throw new ProcessingException(LocalizationMessages.WRONG_PROXY_URI_TYPE(ClientProperties.PROXY_URI));
         }
     }
 

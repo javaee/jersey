@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,11 +78,11 @@ public class ExceptionViewProcessorTest extends JerseyTest {
         return new ResourceConfig(ExplicitTemplate.class)
                 .register(MvcFeature.class)
                 .register(TestViewProcessor.class)
-                .register(WebAppResolvingClassExceptionMapper.class);
+                .register(WebAppExceptionMapper.class);
     }
 
     @Provider
-    public static class WebAppResolvingClassExceptionMapper implements ExceptionMapper<WebApplicationException> {
+    public static class WebAppExceptionMapper implements ExceptionMapper<WebApplicationException> {
 
         public Response toResponse(WebApplicationException exception) {
             // Absolute.
@@ -95,7 +95,9 @@ public class ExceptionViewProcessorTest extends JerseyTest {
 
             // Relative.
             if (exception.getResponse().getStatus() == 406) {
-                return Response.status(406).entity(new Viewable("406", "406", WebAppResolvingClassExceptionMapper.class)).build();
+                return Response.status(406).entity(
+                        new Viewable("/org/glassfish/jersey/tests/e2e/server/mvc/ExceptionViewProcessorTest/WebAppExceptionMapper/406",
+                                "406")).build();
             }
 
             return exception.getResponse();
@@ -134,7 +136,7 @@ public class ExceptionViewProcessorTest extends JerseyTest {
 
         Properties p = new Properties();
         p.load(cr.readEntity(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExceptionViewProcessorTest/WebAppResolvingClassExceptionMapper/406.testp",
+        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExceptionViewProcessorTest/WebAppExceptionMapper/406.testp",
                 p.getProperty("path"));
         assertEquals("406", p.getProperty("model"));
     }

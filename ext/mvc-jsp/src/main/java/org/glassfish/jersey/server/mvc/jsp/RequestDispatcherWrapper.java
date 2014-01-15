@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.glassfish.jersey.server.mvc.Viewable;
+import org.glassfish.jersey.server.mvc.spi.ResolvedViewable;
 
 /**
  * {@link RequestDispatcher Request dispatcher wrapper} for setting attributes (e.g. {@code it}).
@@ -68,7 +68,7 @@ final class RequestDispatcherWrapper implements RequestDispatcher {
 
     private final String basePath;
 
-    private final Viewable viewable;
+    private final ResolvedViewable viewable;
 
     /**
      * Creates new {@code RequestDispatcherWrapper} responsible for setting request attributes and forwarding the processing to
@@ -79,7 +79,7 @@ final class RequestDispatcherWrapper implements RequestDispatcher {
      * @param viewable viewable to obtain model and resolving class from.
      */
     public RequestDispatcherWrapper(
-            final RequestDispatcher dispatcher, final String basePath, final Viewable viewable) {
+            final RequestDispatcher dispatcher, final String basePath, final ResolvedViewable viewable) {
         this.dispatcher = dispatcher;
         this.basePath = basePath;
         this.viewable = viewable;

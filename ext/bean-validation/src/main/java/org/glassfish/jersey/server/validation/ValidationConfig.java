@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -91,54 +91,6 @@ public final class ValidationConfig {
      */
     public ParameterNameProvider getParameterNameProvider() {
         return parameterNameProvider;
-    }
-
-    /**
-     * Defines the message interpolator.
-     * If {@code null} is passed, the default message interpolator is used.
-     *
-     * @param messageInterpolator message interpolator implementation.
-     * @deprecated use {@link #messageInterpolator(javax.validation.MessageInterpolator)} instead.
-     */
-    @Deprecated
-    public void setMessageInterpolator(final MessageInterpolator messageInterpolator) {
-        this.messageInterpolator = messageInterpolator;
-    }
-
-    /**
-     * Defines the traversable resolver.
-     * If {@code null} is passed, the default traversable resolver is used.
-     *
-     * @param traversableResolver traversable resolver implementation.
-     * @deprecated use {@link #traversableResolver(javax.validation.TraversableResolver)} instead.
-     */
-    @Deprecated
-    public void setTraversableResolver(final TraversableResolver traversableResolver) {
-        this.traversableResolver = traversableResolver;
-    }
-
-    /**
-     * Defines the constraint validator factory.
-     * If {@code null} is passed, the default constraint validator factory is used.
-     *
-     * @param constraintValidatorFactory constraint factory implementation.
-     * @deprecated use {@link #constraintValidatorFactory(javax.validation.ConstraintValidatorFactory)} instead.
-     */
-    @Deprecated
-    public void setConstraintValidatorFactory(final ConstraintValidatorFactory constraintValidatorFactory) {
-        this.constraintValidatorFactory = constraintValidatorFactory;
-    }
-
-    /**
-     * Defines the parameter name provider.
-     * If {@code null} is passed, the default parameter name provider is used.
-     *
-     * @param parameterNameProvider parameter name provider implementation.
-     * @deprecated use {@link #parameterNameProvider(javax.validation.ParameterNameProvider)} instead.
-     */
-    @Deprecated
-    public void setParameterNameProvider(final ParameterNameProvider parameterNameProvider) {
-        this.parameterNameProvider = parameterNameProvider;
     }
 
     /**

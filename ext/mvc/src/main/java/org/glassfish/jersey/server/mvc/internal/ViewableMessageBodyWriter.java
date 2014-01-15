@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.NotFoundException;
@@ -98,6 +99,9 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
     @Context
     private javax.inject.Provider<ResourceInfo> resourceInfoProvider;
 
+    private static final Logger LOGGER = Logger.getLogger(ViewableMessageBodyWriter.class.getName());
+
+
     @Override
     public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
                                final MediaType mediaType) {
@@ -118,14 +122,12 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
                         final MediaType mediaType,
                         final MultivaluedMap<String, Object> httpHeaders,
                         final OutputStream entityStream) throws IOException, WebApplicationException {
-        final Template template = TemplateHelper.getTemplateAnnotation(annotations);
 
         try {
-            final ResolvedViewable resolvedViewable = resolve(viewable, template);
+            final ResolvedViewable resolvedViewable = resolve(viewable);
             if (resolvedViewable == null) {
-                throw new WebApplicationException(
-                        new ProcessingException(LocalizationMessages.TEMPLATE_NAME_COULD_NOT_BE_RESOLVED(viewable.getTemplateName())),
-                        Response.Status.NOT_FOUND);
+                final String message = LocalizationMessages.TEMPLATE_NAME_COULD_NOT_BE_RESOLVED(viewable.getTemplateName());
+                throw new WebApplicationException(new ProcessingException(message), Response.Status.NOT_FOUND);
             }
 
             httpHeaders.putSingle(HttpHeaders.CONTENT_TYPE, resolvedViewable.getMediaType());
@@ -140,10 +142,9 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
      * {@link org.glassfish.jersey.server.mvc.spi.ViewableContext}.
      *
      * @param viewable viewable to be resolved.
-     * @param template resource method/class annotation.
      * @return resolved viewable or {@code null}, if the viewable cannot be resolved.
      */
-    private ResolvedViewable resolve(final Viewable viewable, final Template template) {
+    private ResolvedViewable resolve(final Viewable viewable) {
         if (viewable instanceof ResolvedViewable) {
             return (ResolvedViewable) viewable;
         } else {
@@ -153,23 +154,23 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
             final List<MediaType> producibleMediaTypes = TemplateHelper
                     .getProducibleMediaTypes(requestProvider.get(), extendedUriInfoProvider.get(), null);
 
+            final Class<?> resourceClass = resourceInfoProvider.get().getResourceClass();
             if (viewable instanceof ImplicitViewable) {
                 // Template Names.
                 final ImplicitViewable implicitViewable = (ImplicitViewable) viewable;
 
                 for (final String templateName : implicitViewable.getTemplateNames()) {
-                    final Viewable simpleViewable = new Viewable(templateName, viewable.getModel(), viewable.getResolvingClass());
+                    final Viewable simpleViewable = new Viewable(templateName, viewable.getModel());
 
                     final ResolvedViewable resolvedViewable = resolve(simpleViewable, producibleMediaTypes,
-                            simpleViewable.getResolvingClass(), viewableContext, templateProcessors);
+                            implicitViewable.getResolvingClass(), viewableContext, templateProcessors);
 
                     if (resolvedViewable != null) {
                         return resolvedViewable;
                     }
                 }
             } else {
-                return resolve(viewable, producibleMediaTypes, getResolvingClass(viewable, template, resourceInfoProvider.get()),
-                        viewableContext, templateProcessors);
+                return resolve(viewable, producibleMediaTypes, resourceClass, viewableContext, templateProcessors);
             }
 
             return null;
@@ -229,32 +230,5 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
             return customProviders.iterator().next();
         }
         return Providers.getProviders(serviceLocator, ViewableContext.class).iterator().next();
-    }
-
-    /**
-     * Get resolving class for given viewable. Priority of obtaining is as follows:
-     * <ul>
-     *     <li>{@link org.glassfish.jersey.server.mvc.Viewable#getResolvingClass()}</li>
-     *     <li>{@link org.glassfish.jersey.server.mvc.Template#resolvingClass()}</li>
-     *     <li>{@link javax.ws.rs.container.ResourceInfo#getResourceClass()}</li>
-     * </ul>
-     *
-     * @param viewable viewable.
-     * @param template appropriate {@link org.glassfish.jersey.server.mvc.Template} annotation.
-     * @param resourceInfo resource info.
-     * @return {@code non-null} resolving class.
-     */
-    private Class<?> getResolvingClass(final Viewable viewable, final Template template, final ResourceInfo resourceInfo) {
-        Class<?> resolvingClass;
-
-        if (viewable.getResolvingClass() != null) {
-            resolvingClass = viewable.getResolvingClass();
-        } else if (template != null && !Object.class.equals(template.resolvingClass())) {
-            resolvingClass = template.resolvingClass();
-        } else {
-            resolvingClass = resourceInfo.getResourceClass();
-        }
-
-        return resolvingClass;
     }
 }

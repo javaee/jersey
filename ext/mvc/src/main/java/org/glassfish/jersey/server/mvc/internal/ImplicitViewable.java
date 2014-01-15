@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,6 +56,8 @@ final class ImplicitViewable extends Viewable {
 
     private final List<String> templateNames;
 
+    private final Class<?> resolvingClass;
+
     /**
      * Create a {@code ImplicitViewable}.
      *
@@ -67,9 +69,10 @@ final class ImplicitViewable extends Viewable {
      */
     ImplicitViewable(final List<String> templateNames, final Object model, final Class<?> resolvingClass)
             throws IllegalArgumentException {
-        super("", model, resolvingClass);
+        super("", model);
 
         this.templateNames = templateNames;
+        this.resolvingClass = resolvingClass;
     }
 
     /**
@@ -79,5 +82,14 @@ final class ImplicitViewable extends Viewable {
      */
     public List<String> getTemplateNames() {
         return templateNames;
+    }
+
+    /**
+     * Get the resolving class.
+     *
+     * @return Resolving class.
+     */
+    public Class<?> getResolvingClass() {
+        return resolvingClass;
     }
 }

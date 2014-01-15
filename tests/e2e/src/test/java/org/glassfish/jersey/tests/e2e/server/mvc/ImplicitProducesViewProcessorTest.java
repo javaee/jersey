@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,14 +78,14 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
                 ImplicitWithGetTemplate.class,
                 ImplicitWithSubResourceGetTemplate.class)
                 .register(MvcFeature.class)
-                .register(TestViewProcessor.class);
+                .register(TestViewProcessor.class).property("jersey.config.server.tracing", "ALL");
     }
-    
+
     @Path("/implicit")
     @Template
     @Produces("text/plain;qs=5")
     public static class ImplicitTemplate {
-        
+
         public String toString() {
             return "ImplicitTemplate";
         }
@@ -183,7 +183,7 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
     @Template
     @Produces("text/plain;qs=5")
     public static class ImplicitWithSubResourceGetTemplate {
-        
+
         @GET
         @Path("sub")
         @Produces("application/foo")

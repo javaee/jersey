@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -115,68 +115,6 @@ public final class ApacheClientProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String CONNECTION_MANAGER = "jersey.config.apache.client.connectionManager";
-
-    /**
-     * Http parameters which will be used to create {@link org.apache.http.client.HttpClient}.
-     * <p/>
-     * The value MUST be an instance of {@link org.apache.http.params.HttpParams}.
-     * <p/>
-     * If the property is absent default http parameters will be used.
-     * <p/>
-     * The name of the configuration property is <tt>{@value}</tt>.
-     *
-     * @deprecated Use {@link org.glassfish.jersey.apache.connector.ApacheClientProperties#REQUEST_CONFIG} instead.
-     * Will be removed in one of the next releases.
-     */
-    @Deprecated
-    public static final String HTTP_PARAMS = "jersey.config.apache.client.httpParams";
-
-    /**
-     * A value of a URI to configure the proxy host and proxy port to proxy
-     * HTTP requests and responses. If the port component of the URI is absent
-     * then a default port of {@code 8080} will be selected.
-     * <p/>
-     * The value MUST be an instance of {@link String} or {@link java.net.URI}.
-     * <p/>
-     * If the property absent then no proxy will be utilized.
-     * <p/>
-     * The name of the configuration property is <tt>{@value}</tt>.
-     *
-     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_URI} instead.
-     * Will be removed in one of the next releases.
-     */
-    @Deprecated
-    public static final String PROXY_URI = "jersey.config.apache.client.proxyUri";
-
-    /**
-     * User name which will be used for proxy authentication.
-     * <p/>
-     * The value MUST be an instance of {@link String}.
-     * <p/>
-     * If the property absent then no proxy authentication will be utilized.
-     * <p/>
-     * The name of the configuration property is <tt>{@value}</tt>.
-     *
-     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_USERNAME} instead.
-     * Will be removed in one of the next releases.
-     */
-    @Deprecated
-    public static final String PROXY_USERNAME = "jersey.config.apache.client.proxyUsername";
-
-    /**
-     * Password which will be used for proxy authentication.
-     * <p/>
-     * The value MUST be an instance of {@link String}.
-     * <p/>
-     * If the property absent then no proxy authentication will be utilized.
-     * <p/>
-     * The name of the configuration property is <tt>{@value}</tt>.
-     *
-     * @deprecated Use {@link org.glassfish.jersey.client.ClientProperties#PROXY_PASSWORD} instead.
-     * Will be removed in one of the next releases.
-     */
-    @Deprecated
-    public static final String PROXY_PASSWORD = "jersey.config.apache.client.proxyPassword";
 
     /**
      * Request configuration for the {@link org.apache.http.client.HttpClient}.

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,8 +55,6 @@ import java.lang.annotation.Target;
  * <p/>
  * In case a resource method is annotated with {@link Template} annotation then the return value of the method is the model.
  * Otherwise the processing of such a method is the same as if the  return type of the method was {@link Viewable} class.
- * If a method is annotated with {@link Template} and also returning a {@link Viewable} instance then the values
- * (<tt>resolvingClass</tt>) from the {@link Viewable viewable} take precedence over those defined by the annotation.
  * Producible {@link javax.ws.rs.core.MediaType media types} are determined from the method's {@link javax.ws.rs.Produces}
  * annotation.
  * <p/>
@@ -75,15 +73,4 @@ public @interface Template {
      * if the name begins with a '/', otherwise the template name is declared as a relative template name.
      */
     String name() default "";
-
-    /**
-     * The class to be used to resolve the template name if the template name is not absolute.
-     * If the value is {@code Object.class} then the resolving class will be obtained from the last matched resource.
-     * <p/>
-     * Defaults to {@link Object}.
-     *
-     * @deprecated This attribute is obsolete and will be removed in the future releases. There is no replacement.
-     */
-    @Deprecated
-    Class<?> resolvingClass() default Object.class;
 }

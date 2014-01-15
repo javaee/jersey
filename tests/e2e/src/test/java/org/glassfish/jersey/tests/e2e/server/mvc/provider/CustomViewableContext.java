@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,7 @@ public class CustomViewableContext implements ViewableContext {
 
     @Override
     public ResolvedViewable resolveViewable(final Viewable viewable, final MediaType mediaType,
-                                            final Class<?> resolvingClass, final TemplateProcessor templateProcessor) {
+                                            final Class<?> resourceClass, final TemplateProcessor templateProcessor) {
         final String path = TemplateHelper.getTemplateName(viewable);
         final Object templateReference = templateProcessor.resolve("/CustomViewableContext/" + path,
                 MediaType.TEXT_PLAIN_TYPE);

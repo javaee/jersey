@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,6 +66,9 @@ public final class ResolvedViewable<T> extends Viewable {
 
     private final MediaType mediaType;
 
+    private final Class<?> resolvingClass;
+
+
     /**
      * Create a resolved viewable.
      *
@@ -75,7 +78,7 @@ public final class ResolvedViewable<T> extends Viewable {
      * @param mediaType media type the {@code templateReference} should be transformed into.
      */
     public ResolvedViewable(TemplateProcessor<T> viewProcessor, T templateReference, Viewable viewable, MediaType mediaType) {
-        this(viewProcessor, templateReference, viewable, viewable.getResolvingClass(), mediaType);
+        this(viewProcessor, templateReference, viewable, null, mediaType);
     }
 
     /**
@@ -89,18 +92,20 @@ public final class ResolvedViewable<T> extends Viewable {
      */
     public ResolvedViewable(TemplateProcessor<T> viewProcessor, T templateReference, Viewable viewable,
                             Class<?> resolvingClass, MediaType mediaType) {
-        super(viewable.getTemplateName(), viewable.getModel(), resolvingClass);
+        super(viewable.getTemplateName(), viewable.getModel());
 
         this.viewProcessor = viewProcessor;
         this.templateReference = templateReference;
         this.mediaType = mediaType;
+        this.resolvingClass = resolvingClass;
     }
 
     /**
      * Write the resolved viewable.
      * <p/>
-     * This method defers to {@link TemplateProcessor#writeTo(Object, org.glassfish.jersey.server.mvc.Viewable,
-     * javax.ws.rs.core.MediaType, java.io.OutputStream)} to write the viewable utilizing the template reference.
+     * This method defers to
+     * {@link TemplateProcessor#writeTo(Object, org.glassfish.jersey.server.mvc.Viewable, javax.ws.rs.core.MediaType, java.io.OutputStream)}
+     * to write the viewable utilizing the template reference.
      *
      * @param out the output stream that the view processor writes to.
      * @throws java.io.IOException if there was an error processing the template.
@@ -116,5 +121,15 @@ public final class ResolvedViewable<T> extends Viewable {
      */
     public MediaType getMediaType() {
         return mediaType;
+    }
+
+
+    /**
+     * Get resolving class.
+     *
+     * @return Resolving class.
+     */
+    public Class<?> getResolvingClass() {
+        return resolvingClass;
     }
 }

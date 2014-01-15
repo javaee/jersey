@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -73,7 +73,8 @@ public class ExplicitTemplateTest extends JerseyTest {
                 .register(TestViewProcessor.class);
     }
 
-    public static class CustomResolvingClass {}
+    public static class CustomResolvingClass {
+    }
 
     @Path("/")
     public static class ExplicitTemplate {
@@ -96,28 +97,6 @@ public class ExplicitTemplateTest extends JerseyTest {
         @Template(name = "/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/ExplicitTemplate/absolute")
         public String methodAbsolutePath() {
             return "methodAbsolutePath";
-        }
-
-        @GET
-        @Path("methodResolvingClass")
-        @Template(resolvingClass = CustomResolvingClass.class)
-        public String methodResolvingClass() {
-            return "methodResolvingClass";
-        }
-
-        @GET
-        @Path("methodRelativePathResolvingClass")
-        @Template(name = "relative", resolvingClass = CustomResolvingClass.class)
-        public String methodRelativePathResolvingClass() {
-            return "methodRelativePathResolvingClass";
-        }
-
-        @GET
-        @Path("methodAbsolutePathResolvingClass")
-        @Template(name = "/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/ExplicitTemplate/absolute",
-                resolvingClass = CustomResolvingClass.class)
-        public String methodAbsolutePathResolvingClass() {
-            return "methodAbsolutePathResolvingClass";
         }
 
         @Path("subResource")
@@ -173,23 +152,5 @@ public class ExplicitTemplateTest extends JerseyTest {
         assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/ExplicitTemplate/absolute.testp",
                 props.getProperty("path"));
         assertEquals("methodAbsolutePath", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodResolvingClass").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/CustomResolvingClass/index.testp",
-                props.getProperty("path"));
-        assertEquals("methodResolvingClass", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodRelativePathResolvingClass").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/CustomResolvingClass/relative.testp",
-                props.getProperty("path"));
-        assertEquals("methodRelativePathResolvingClass", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodAbsolutePathResolvingClass").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/ExplicitTemplate/absolute.testp",
-                props.getProperty("path"));
-        assertEquals("methodAbsolutePathResolvingClass", props.getProperty("model"));
     }
 }

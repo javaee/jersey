@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -124,10 +124,10 @@ public class ExplicitProduceTemplateTest extends JerseyTest {
 
     @Test
     public void testProducesWildcard() throws Exception {
-        for (final String path : new String[] {"explicit-no-produces", "explicit-wildcard-produces", "explicit-two-get-produces"}) {
+        for (final String path : new String[]{"explicit-no-produces", "explicit-wildcard-produces", "explicit-two-get-produces"}) {
             final WebTarget target = target(path);
 
-            for (final String mediaType : new String[] {"application/def", "text/plain"}) {
+            for (final String mediaType : new String[]{"application/def", "text/plain"}) {
                 final Properties p = new Properties();
                 p.load(target.request(mediaType).get(InputStream.class));
 
@@ -173,23 +173,5 @@ public class ExplicitProduceTemplateTest extends JerseyTest {
         assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/ExplicitTemplate/absolute.abc",
                 props.getProperty("path"));
         assertEquals("methodAbsolutePath", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodResolvingClass").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/CustomResolvingClass/index.abc",
-                props.getProperty("path"));
-        assertEquals("methodResolvingClass", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodRelativePathResolvingClass").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/CustomResolvingClass/relative.abc",
-                props.getProperty("path"));
-        assertEquals("methodRelativePathResolvingClass", props.getProperty("model"));
-
-        props = new Properties();
-        props.load(target.path("methodAbsolutePathResolvingClass").request().get(InputStream.class));
-        assertEquals("/org/glassfish/jersey/tests/e2e/server/mvc/ExplicitTemplateTest/ExplicitTemplate/absolute.abc",
-                props.getProperty("path"));
-        assertEquals("methodAbsolutePathResolvingClass", props.getProperty("model"));
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,12 +52,12 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
  * The following connector configuration properties are supported:
  * <ul>
  * <li>{@link ApacheClientProperties#CONNECTION_MANAGER}</li>
- * <li>{@link ApacheClientProperties#REQUEST_CONFIG} (or {@link ApacheClientProperties#HTTP_PARAMS})</li>
+ * <li>{@link ApacheClientProperties#REQUEST_CONFIG}</li>
  * <li>{@link ApacheClientProperties#CREDENTIALS_PROVIDER}</li>
  * <li>{@link ApacheClientProperties#DISABLE_COOKIES}</li>
- * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_URI} (or {@link ApacheClientProperties#PROXY_URI})</li>
- * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_USERNAME} (or {@link ApacheClientProperties#PROXY_USERNAME})</li>
- * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_PASSWORD} (or {@link ApacheClientProperties#PROXY_PASSWORD})</li>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_URI}</li>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_USERNAME}</li>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_PASSWORD}</li>
  * <li>{@link org.glassfish.jersey.client.ClientProperties#REQUEST_ENTITY_PROCESSING}
  * - default value is {@link org.glassfish.jersey.client.RequestEntityProcessing#CHUNKED}</li>
  * <li>{@link ApacheClientProperties#PREEMPTIVE_BASIC_AUTHENTICATION}</li>

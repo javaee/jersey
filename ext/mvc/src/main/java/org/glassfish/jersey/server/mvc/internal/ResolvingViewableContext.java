@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,22 +74,20 @@ class ResolvingViewableContext implements ViewableContext {
      *
      * @param viewable viewable to be resolved.
      * @param mediaType media type of te output.
-     * @param resolvingClass resolving class.
+     * @param resourceClass resolving class.
      * @param templateProcessor template processor to be used.
      * @return resolved viewable or {@code null} if the viewable cannot be resolved.
      */
     public ResolvedViewable resolveViewable(final Viewable viewable, final MediaType mediaType,
-                                            final Class<?> resolvingClass, final TemplateProcessor templateProcessor) {
+                                            final Class<?> resourceClass, final TemplateProcessor templateProcessor) {
         if (viewable.isTemplateNameAbsolute()) {
-            return resolveAbsoluteViewable(viewable, mediaType, templateProcessor);
-        } else if (viewable.getResolvingClass() != null) {
-            return resolveRelativeViewable(viewable, viewable.getResolvingClass(), mediaType, templateProcessor);
+            return resolveAbsoluteViewable(viewable, resourceClass, mediaType, templateProcessor);
         } else {
-            if (resolvingClass == null) {
+            if (resourceClass == null) {
                 throw new ViewableContextException(LocalizationMessages.TEMPLATE_RESOLVING_CLASS_CANNOT_BE_NULL());
             }
 
-            return resolveRelativeViewable(viewable, resolvingClass, mediaType, templateProcessor);
+            return resolveRelativeViewable(viewable, resourceClass, mediaType, templateProcessor);
         }
     }
 
@@ -99,16 +97,18 @@ class ResolvingViewableContext implements ViewableContext {
      *
      * @param viewable viewable to be resolved.
      * @param mediaType media type of te output.
+     * @param resourceClass resource class.
      * @param templateProcessor template processor to be used.
      * @return resolved viewable or {@code null} if the viewable cannot be resolved.
      */
     @SuppressWarnings("unchecked")
-    private ResolvedViewable resolveAbsoluteViewable(final Viewable viewable, final MediaType mediaType,
+    private ResolvedViewable resolveAbsoluteViewable(final Viewable viewable, Class<?> resourceClass,
+                                                     final MediaType mediaType,
                                                      final TemplateProcessor templateProcessor) {
         final Object resolvedTemplateObject = templateProcessor.resolve(viewable.getTemplateName(), mediaType);
 
         if (resolvedTemplateObject != null) {
-            return new ResolvedViewable(templateProcessor, resolvedTemplateObject, viewable, mediaType);
+            return new ResolvedViewable(templateProcessor, resolvedTemplateObject, viewable, resourceClass, mediaType);
         }
 
         return null;

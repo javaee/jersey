@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,24 +65,21 @@ public interface ViewableContext {
 
     /**
      * Resolve given {@link org.glassfish.jersey.server.mvc.Viewable viewable} using {@link javax.ws.rs.core.MediaType mediaType},
-     * {@code resolvingClass} and {@link TemplateProcessor templateProcessor}.
+     * {@code resourceClass} and {@link TemplateProcessor templateProcessor}.
      * <p/>
-     * If the template name of the viewable is not absolute then the given {@code resolvingClass} may be utilized to resolve
+     * If the template name of the viewable is not absolute then the given {@code resourceClass} may be utilized to resolve
      * the relative template name into an absolute template name.
      * <br/>
-     * {@code resolvingClass} contains one of these values (ordered by priority):
      * <ul>
-     *     <li>{@link org.glassfish.jersey.server.mvc.Viewable#getResolvingClass()}</li>
-     *     <li>{@link org.glassfish.jersey.server.mvc.Template#resolvingClass()}</li>
-     *     <li>{@link javax.ws.rs.container.ResourceInfo#getResourceClass()}</li>
+     * {@code resourceClass} contains class of the matched resource.
      * </ul>
      *
      * @param viewable viewable to be resolved.
      * @param mediaType media type the viewable may be transformed into.
-     * @param resolvingClass actual resolving class.
+     * @param resourceClass resource class.
      * @param templateProcessor template processor to be used.
      * @return resolved viewable or {@code null} if the viewable cannot be resolved.
      */
-    public ResolvedViewable resolveViewable(final Viewable viewable, final MediaType mediaType, final Class<?> resolvingClass,
+    public ResolvedViewable resolveViewable(final Viewable viewable, final MediaType mediaType, final Class<?> resourceClass,
                                             final TemplateProcessor templateProcessor);
 }

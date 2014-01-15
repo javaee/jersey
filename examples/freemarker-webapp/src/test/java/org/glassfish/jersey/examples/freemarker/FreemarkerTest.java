@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,7 @@ import java.net.URI;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.server.mvc.freemarker.FreemarkerProperties;
+import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
@@ -61,7 +61,7 @@ public class FreemarkerTest extends JerseyTest {
         enable(TestProperties.LOG_TRAFFIC);
         enable(TestProperties.DUMP_ENTITY);
 
-        return new MyApplication().property(FreemarkerProperties.TEMPLATES_BASE_PATH, "freemarker");
+        return new MyApplication().property(FreemarkerMvcFeature.TEMPLATES_BASE_PATH, "freemarker");
     }
 
     @Override

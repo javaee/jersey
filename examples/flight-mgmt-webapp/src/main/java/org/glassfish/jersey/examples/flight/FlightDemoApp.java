@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,6 @@ import org.glassfish.jersey.server.filter.HttpMethodOverrideFilter;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.server.mvc.beanvalidation.MvcBeanValidationFeature;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
-import org.glassfish.jersey.server.mvc.freemarker.FreemarkerProperties;
 
 /**
  * Flight management demo JAX-RS application.
@@ -98,7 +97,7 @@ public class FlightDemoApp extends ResourceConfig {
 
         // Enable MVC FreeMarker templating engine
         register(FreemarkerMvcFeature.class);
-        property(FreemarkerProperties.TEMPLATES_BASE_PATH, "freemarker");
+        property(FreemarkerMvcFeature.TEMPLATES_BASE_PATH, "freemarker");
         register(MvcBeanValidationFeature.class);
 
         // Enable SSE support

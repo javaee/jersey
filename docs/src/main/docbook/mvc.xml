@@ -428,10 +428,10 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
             are listed directly in the module <literal>*Feature</literal> class.
 
             <example xml:id="mvc.ex.rc.properties">
-                <title>Setting <literal>MvcProperties.TEMPLATE_BASE_PATH</literal> value in &lit.jersey.server.ResourceConfig;</title>
+                <title>Setting <literal>MvcFeature.TEMPLATE_BASE_PATH</literal> value in &lit.jersey.server.ResourceConfig;</title>
 
                 <programlisting language="java">new ResourceConfig()
-    .property(MvcProperties.TEMPLATE_BASE_PATH, "templates")
+    .property(MvcFeature.TEMPLATE_BASE_PATH, "templates")
     .register(MvcFeature.class)
     // Further configuration of ResourceConfig.
     .register( ... );</programlisting>

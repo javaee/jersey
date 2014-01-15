@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,8 +46,6 @@ import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Produces;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Configuration;
@@ -106,7 +104,6 @@ class TemplateModelProcessor implements ModelProcessor {
     private class TemplateInflectorImpl implements TemplateInflector, Inflector<ContainerRequestContext, Response> {
 
         private final String templateName;
-        private final Class<?> resolvingClass;
 
         private final Class<?> resourceClass;
         private final Object resourceInstance;
@@ -117,16 +114,14 @@ class TemplateModelProcessor implements ModelProcessor {
          * Create enhancing template {@link Inflector inflector} method.
          *
          * @param templateName template name for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}.
-         * @param resolvingClass resolving class of for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}
          * @param resourceClass model class for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}.
          * Should not be {@code null}.
          * @param resourceInstance model for the produced {@link org.glassfish.jersey.server.mvc.Viewable viewable}. May be
          * {@code null}.
          */
-        private TemplateInflectorImpl(final String templateName, final Class<?> resolvingClass, final Class<?> resourceClass,
+        private TemplateInflectorImpl(final String templateName, final Class<?> resourceClass,
                                       final Object resourceInstance) {
             this.templateName = templateName;
-            this.resolvingClass = resolvingClass;
 
             this.resourceClass = resourceClass;
             this.resourceInstance = resourceInstance;
@@ -143,10 +138,7 @@ class TemplateModelProcessor implements ModelProcessor {
                 validator.validateResourceAndInputParams(model, null, null);
             }
 
-            final Class<?> resolvingClass = Object.class.equals(this.resolvingClass) || this.resolvingClass == null
-                    ? resourceClass : this.resolvingClass;
-
-            return Response.ok().entity(new ImplicitViewable(templateNames, model, resolvingClass)).build();
+            return Response.ok().entity(new ImplicitViewable(templateNames, model, resourceClass)).build();
         }
 
         @Override
@@ -383,7 +375,7 @@ class TemplateModelProcessor implements ModelProcessor {
                     .createQualitySourceMediaTypes(annotatedResourceClass.getAnnotation(Produces.class));
             final List<MediaType> consumes = MediaTypes.createFrom(annotatedResourceClass.getAnnotation(Consumes.class));
 
-            final TemplateInflectorImpl inflector = new TemplateInflectorImpl(template.name(), template.resolvingClass(),
+            final TemplateInflectorImpl inflector = new TemplateInflectorImpl(template.name(),
                     resourceClass, resourceInstance);
 
             newMethods.add(new ModelProcessorUtil.Method(HttpMethod.GET, consumes, produces, inflector));

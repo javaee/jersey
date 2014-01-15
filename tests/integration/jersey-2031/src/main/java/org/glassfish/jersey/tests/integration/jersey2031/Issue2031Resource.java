@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,7 @@ public class Issue2031Resource {
     private final static String absolutePath;
 
     static {
-        absolutePath = "/" + ResolvingClass.class.getName().replaceAll("\\.", "/").replace('$', '/') + "/index.jsp";
+        absolutePath = "/" + Issue2031Resource.class.getName().replaceAll("\\.", "/").replace('$', '/') + "/index.jsp";
         model = new Model();
     }
 
@@ -67,20 +67,20 @@ public class Issue2031Resource {
     @Path("viewable-relative")
     @Produces("text/html")
     public Viewable viewableRelative() {
-        return new Viewable("index", model, ResolvingClass.class);
+        return new Viewable("index", model);
     }
 
     @GET
     @Path("viewable-absolute")
     @Produces("text/html")
     public Viewable viewableAbsolute() {
-        return new Viewable(absolutePath, model, ResolvingClass.class);
+        return new Viewable(absolutePath, model);
     }
 
     @GET
     @Path("template-relative")
     @Produces("text/html")
-    @Template(name = "index", resolvingClass = ResolvingClass.class)
+    @Template(name = "index")
     public Model templateRelative() {
         return model;
     }
@@ -89,14 +89,10 @@ public class Issue2031Resource {
     @Path("template-absolute")
     @Produces("text/html")
     @Template(
-            name = "/org/glassfish/jersey/tests/integration/jersey2031/Issue2031Resource/ResolvingClass/index.jsp",
-            resolvingClass = ResolvingClass.class
-    )
+            name = "/org/glassfish/jersey/tests/integration/jersey2031/Issue2031Resource/index.jsp")
     public Model templateAbsolute() {
         return model;
     }
-
-    public static class ResolvingClass {}
 
     public static class Model {
 

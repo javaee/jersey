@@ -52,6 +52,114 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+
+    <section xml:id="mig-2.6">
+        <title>Migrating from Jersey 2.5.1 to 2.6</title>
+
+        <section xml:id="mig-2.6-removed-deprecated">
+            <title>Removed deprecated APIs</title>
+            <para>Following, already deprecated, APIs were removed:</para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.client.filter.HttpBasicAuthFilter</literal>
+                            and <literal>org.glassfish.jersey.client.filter.HttpDigestAuthFilter</literal>
+                            (use &jersey.client.HttpAuthenticationFeature; instead)
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties.HTTP_PARAMS</literal>
+                            (use <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties#REQUEST_CONFIG</literal> instead),
+                            <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties.PROXY_URI</literal>,
+                            <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties.PROXY_USERNAME</literal>,
+                            <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties.PROXY_PASSWORD</literal>
+                            (use corresponding &jersey.client.ClientProperties; instead.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.server.validation.ValidationConfig.setMessageInterpolator</literal>
+                            <literal>org.glassfish.jersey.server.validation.ValidationConfig.setTraversableResolver</literal>
+                            <literal>org.glassfish.jersey.server.validation.ValidationConfig.setConstraintValidatorFactory</literal>
+                            <literal>org.glassfish.jersey.server.validation.ValidationConfig.setParameterNameProvider</literal>
+                            (use corresponding methods of the same class without <literal>"set"</literal> prefix in the method names).
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.server.mvc.MvcProperties</literal>
+                            (use properties of <literal>org.glassfish.jersey.server.mvc.MvcFeature</literal> instead).
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            MVC does not allow to specify the resolving class. Resolving class is used to create a path of the
+                            template. Changes are:
+                        </para>
+                        <para>
+                            Annotation attribute <literal>Class&lt;?&gt; org.glassfish.jersey.server.mvc.Template.resolvingClass()</literal>
+                            (the attribute was obsolete and therefore removed. Resolving class now always the resource
+                            class in which the MVC resource method is defined).
+                        </para>
+                        <para>
+                            <literal>resolvingClass</literal> was removed from &jersey.server.mvc.Viewable;. The constructor
+                            no longer accepts this argument and there is no getter for this field.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.server.mvc.freemarker.FreemarkerProperties</literal> (use
+                            &jersey.server.mvc.FreemarkerMvcFeature; instead)
+                        </para>
+                    </listitem>
+
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.server.mvc.jsp.JspProperties</literal>
+                            (use &jersey.server.mvc.JspMvcFeature; instead)
+                        </para>
+                    </listitem>
+
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.server.model.RuntimeResource.getFirstParentResource()</literal>
+                            (use &jersey.server.Resource.getParent; instead).
+                        </para>
+                    </listitem>
+
+                </itemizedlist>
+            </para>
+        </section>
+        <para>
+            <itemizedlist>
+                <listitem><para>
+                    WADL is by default displayed in the simplified form. It does not contain supporting resources
+                    like OPTIONS methods or <literal>/application.wadl</literal> itself. In order to get the
+                    full WADL use query param <literal>detail=true</literal>. For example make a GET request
+                    to <literal>http://localhost:8080/application.wadl?detail=true</literal>.
+                </para></listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
+
+    <section xml:id="mig-2.5.1">
+        <title>Migrating from Jersey 2.5 to 2.5.1</title>
+
+        <para>
+            <itemizedlist>
+                <listitem><para>
+                    WADL is by default displayed in the simplified form. It does not contain supporting resources
+                    like OPTIONS methods or <literal>/application.wadl</literal> itself. In order to get the
+                    full WADL use query param <literal>detail=true</literal>. For example make a GET request
+                    to <literal>http://localhost:8080/application.wadl?detail=true</literal>.
+                </para></listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
     <section xml:id="mig-2.5">
         <title>Migrating from Jersey 2.4.1 to 2.5</title>
 
@@ -63,24 +171,24 @@
                         <emphasis>Client chunked encoding configuration behaviour has changed:</emphasis>
                     </para>
                         <para>
-                        Jersey client uses chunked encoding (streaming) for serialization of the entity as a default option.
-                        Before Jersey 2.5 release entity buffering has been used by default. The size of the chunk can still
-                        be controlled by &jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE; property, this property
-                        however no longer enforces the use of chunked encoding. To control request entity buffering and
-                        chunked transfer coding selection, please utilize use the new
-                        &jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING; property. The behaviour of the property
-                        is however not unified across the available &jersey.client.Connector; implementations and depends
-                        on the connector implementation configured for the &jaxrs.client.Client; instance.
-                        Default connector produced by &jersey.client.HttpUrlConnectorProvider; still uses
-                        buffering as default options due to bugs in <literal>HttpURLConnection</literal>. On the other hand,
-                        Jetty HTTP Client based connectors produced by &jersey.jetty.JettyConnectorProvider; do not support
-                        chunked encoding at all.
-                    </para><para>
-                        Please note that this is not a newly introduced limitation - it's merely
-                        an official acknowledgement of the fact that different connectors have different capabilities and
-                        limitations - something that has always been part of the individual connector implementations, it
-                        just was not publicly acknowledged.
-                    </para></listitem>
+                            Jersey client uses chunked encoding (streaming) for serialization of the entity as a default option.
+                            Before Jersey 2.5 release entity buffering has been used by default. The size of the chunk can still
+                            be controlled by &jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE; property, this property
+                            however no longer enforces the use of chunked encoding. To control request entity buffering and
+                            chunked transfer coding selection, please utilize use the new
+                            &jersey.client.ClientProperties.REQUEST_ENTITY_PROCESSING; property. The behaviour of the property
+                            is however not unified across the available &jersey.client.Connector; implementations and depends
+                            on the connector implementation configured for the &jaxrs.client.Client; instance.
+                            Default connector produced by &jersey.client.HttpUrlConnectorProvider; still uses
+                            buffering as default options due to bugs in <literal>HttpURLConnection</literal>. On the other hand,
+                            Jetty HTTP Client based connectors produced by &jersey.jetty.JettyConnectorProvider; do not support
+                            chunked encoding at all.
+                        </para><para>
+                            Please note that this is not a newly introduced limitation - it's merely
+                            an official acknowledgement of the fact that different connectors have different capabilities and
+                            limitations - something that has always been part of the individual connector implementations, it
+                            just was not publicly acknowledged.
+                        </para></listitem>
                     <listitem><para>
                         New &jersey.client.ConnectorProvider; SPI has been introduced to decouple &jersey.client.Connector;
                         instantiation from &jaxrs.client.Client; instance boot-strapping. As such, the

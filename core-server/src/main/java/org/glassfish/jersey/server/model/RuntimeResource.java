@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -294,27 +294,6 @@ public class RuntimeResource implements ResourceModelComponent {
                 return (child == null) ? null : child.getParent();
             }
         });
-    }
-
-    /**
-     * Return parent {@link Resource resource} of the {@code resource} which is grouped in this runtime resource.
-     * If a {@code resource} is present in {@link #getResources()} more than one time the parent of this first resource
-     * will be returned.
-     *
-     * @param resource Resource whose parent should be returned.
-     * @return Parent resource or null if the resource has no parent.
-     * @throws IllegalArgumentException when resource is not in this RuntimeResource.
-     * @deprecated Please use {@link Resource#getParent()} directly instead.
-     */
-    @Deprecated
-    public Resource getFirstParentResource(Resource resource) {
-        for (Resource res : resources) {
-            if (res == resource) {
-                return res.getParent();
-            }
-        }
-
-        throw new IllegalArgumentException("RuntimeResource does not contain the resource.");
     }
 
     /**

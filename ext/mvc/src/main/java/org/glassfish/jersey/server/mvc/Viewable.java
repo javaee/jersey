@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,22 +50,12 @@ import org.glassfish.jersey.server.mvc.internal.LocalizationMessages;
  * <p/>
  * The template name may be declared as absolute template name if the name
  * begins with a '/', otherwise the template name is declared as a relative
- * template name.
+ * template name. If the template name is relative then the class of the
+ * last matching resource is utilized to create an absolute path by default. However,
+ * the responsibility of resolving the absolute template name is up to
+ * {@link org.glassfish.jersey.server.mvc.spi.ViewableContext} which can override the
+ * default resolving behaviour.
  * <p/>
- * A relative template name requires resolving to an absolute template name
- * when the viewable type is processed.
- * <br/>
- * If a resolving class is present then that class may be used to resolve the
- * relative template name.
- * <br/>
- * If a resolving class is not present and resolving class is not defined by the {@link Template} annotation
- * then the class of the last matching resource should be utilized as the resolving class.
- * <br/>
- * If there are no matching resources then an {@link org.glassfish.jersey.server.mvc.spi.ViewableContextException error}
- * will result.
- * <p/>
- * {@link org.glassfish.jersey.server.mvc.spi.ViewableContext} is responsible for
- * resolving absolute template name from relative template name.
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -80,8 +70,6 @@ public class Viewable {
 
     private final Object model;
 
-    private final Class<?> resolvingClass;
-
     /**
      * Construct a new viewable type with a template name.
      * <p/>
@@ -91,7 +79,7 @@ public class Viewable {
      * @throws IllegalArgumentException if the template name is {@code null}.
      */
     public Viewable(String templateName) throws IllegalArgumentException {
-        this(templateName, null, null);
+        this(templateName, null);
     }
 
     /**
@@ -102,29 +90,12 @@ public class Viewable {
      * @throws IllegalArgumentException if the template name is {@code null}.
      */
     public Viewable(String templateName, Object model) throws IllegalArgumentException {
-        this(templateName, model, null);
-    }
-
-    /**
-     * Construct a new viewable type with a template name, a model
-     * and a resolving class.
-     *
-     * @param templateName the template name, shall not be {@code null}.
-     * @param model the model, may be {@code null}.
-     * @param resolvingClass the class to use to resolve the template name if the template is not absolute,
-     * if {@code null} then the resolving class will be obtained from the last matching resource.
-     * @throws IllegalArgumentException if the template name is {@code null}.
-     * @deprecated The resolvingClass is obsolete and will be removed in the future releases. There is no replacement.
-     */
-    @Deprecated
-    public Viewable(String templateName, Object model, Class<?> resolvingClass) throws IllegalArgumentException {
         if (templateName == null) {
             throw new IllegalArgumentException(LocalizationMessages.TEMPLATE_NAME_MUST_NOT_BE_NULL());
         }
 
         this.templateName = templateName;
         this.model = model;
-        this.resolvingClass = resolvingClass;
     }
 
     /**
@@ -145,14 +116,6 @@ public class Viewable {
         return model;
     }
 
-    /**
-     * Get the resolving class.
-     *
-     * @return the resolving class.
-     */
-    public Class<?> getResolvingClass() {
-        return resolvingClass;
-    }
 
     /**
      * Determines whether the template name is represented by an absolute path.
