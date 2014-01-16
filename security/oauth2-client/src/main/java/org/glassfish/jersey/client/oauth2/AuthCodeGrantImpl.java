@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -335,7 +335,6 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
                 .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 
         if (response.getStatus() != 200) {
-            System.out.println(response.readEntity(String.class));
             throw new ProcessingException(LocalizationMessages.ERROR_FLOW_REQUEST_ACCESS_TOKEN(response.getStatus()));
         }
         this.tokenResult = response.readEntity(TokenResult.class);
@@ -355,7 +354,6 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
                 .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
 
         if (response.getStatus() != 200) {
-            System.out.println(response.readEntity(String.class));
             throw new ProcessingException(LocalizationMessages.ERROR_FLOW_REQUEST_REFRESH_TOKEN(response.getStatus()));
         }
 

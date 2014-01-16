@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -96,9 +96,7 @@ final class OAuth1ClientFeature implements Feature {
     }
 
     @Override
-    public boolean configure(FeatureContext context) {
-        System.out.println(config);
-
+    public boolean configure(final FeatureContext context) {
         context.register(OAuth1SignatureFeature.class);
         context.register(OAuth1ClientFilter.class);
 
