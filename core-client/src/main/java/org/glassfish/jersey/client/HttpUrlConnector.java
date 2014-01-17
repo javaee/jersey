@@ -46,6 +46,8 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -281,7 +283,13 @@ class HttpUrlConnector implements Connector {
                 status, request);
         responseContext.headers(Maps.<String, List<String>>filterKeys(uc.getHeaderFields(), Predicates.notNull()));
         responseContext.setEntityStream(getInputStream(uc));
-
+        try {
+            // the final URL after following redirections
+            URI finalURL = uc.getURL().toURI();
+            responseContext.setUri(finalURL);
+        } catch (URISyntaxException e) {
+            throw new ProcessingException(e);
+        }
         return responseContext;
     }
 
