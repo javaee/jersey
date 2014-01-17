@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,18 +54,11 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.client.WebTarget;
+import net.java.html.BrwsrCtx;
 
-import org.apidesign.html.json.spi.ContextBuilder;
-import org.apidesign.html.json.spi.ContextProvider;
-import org.apidesign.html.json.spi.JSONCall;
-import org.apidesign.html.json.spi.Transfer;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.util.lookup.ServiceProviders;
 
-import net.java.html.json.Context;
 import net.java.html.json.Model;
 import net.java.html.json.Models;
 import net.java.html.json.Property;
@@ -108,19 +101,12 @@ import net.java.html.json.Property;
  */
 @ServiceProviders({
         @ServiceProvider(service = MessageBodyWriter.class),
-        @ServiceProvider(service = MessageBodyReader.class),
-        @ServiceProvider(service = ContextProvider.class)
+        @ServiceProvider(service = MessageBodyReader.class)
 })
 public final class HtmlJsonProvider
-        implements MessageBodyWriter, MessageBodyReader<Object>, ContextProvider, Transfer {
+implements MessageBodyWriter, MessageBodyReader<Object> {
 
     private static final Logger LOG = Logger.getLogger(HtmlJsonProvider.class.getName());
-    private static final Context CONTEXT;
-
-    static {
-        HtmlJsonProvider w = new HtmlJsonProvider();
-        CONTEXT = ContextBuilder.create().withTransfer(w).build();
-    }
 
     @Override
     public boolean isWriteable(Class type, Type type1, Annotation[] antns, MediaType mt) {
@@ -151,41 +137,7 @@ public final class HtmlJsonProvider
                            Type type1, Annotation[] antns, MediaType mt,
                            MultivaluedMap<String, String> mm,
                            InputStream in) throws IOException, WebApplicationException {
-        return Models.parse(CONTEXT, type, in);
-    }
-
-    @Override
-    public Context findContext(Class<?> requestor) {
-        return CONTEXT;
-    }
-
-    @Override
-    public void extract(Object jsonObject, String[] props, Object[] values) {
-        if (jsonObject instanceof JSONObject) {
-            JSONObject obj = (JSONObject) jsonObject;
-            for (int i = 0; i < props.length; i++) {
-                try {
-                    values[i] = obj.has(props[i]) ? obj.get(props[i]) : null;
-                } catch (JSONException ex) {
-                    LOG.log(Level.SEVERE, "Can't read " + props[i] + " from " + jsonObject, ex);
-                }
-            }
-        }
-    }
-
-    @Override
-    public Object toJSON(InputStream is) throws IOException {
-        try {
-            InputStreamReader r = new InputStreamReader(is, "UTF-8");
-            JSONTokener t = new JSONTokener(r);
-            return new JSONObject(t);
-        } catch (JSONException ex) {
-            throw new IOException(ex);
-        }
-    }
-
-    @Override
-    public void loadJSON(JSONCall call) {
-        throw new UnsupportedOperationException();
+        BrwsrCtx def = BrwsrCtx.findDefault(HtmlJsonProvider.class);
+        return Models.parse(def, type, in);
     }
 }

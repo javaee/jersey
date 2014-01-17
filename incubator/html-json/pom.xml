@@ -75,24 +75,20 @@
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apidesign.html</groupId>
+            <groupId>org.netbeans.html</groupId>
             <artifactId>net.java.html.json</artifactId>
-            <version>0.3.1</version>
+            <version>0.7</version>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-util-lookup</artifactId>
             <version>RELEASE73</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20090211</version>
         </dependency>
 
         <dependency>
@@ -123,6 +119,12 @@
             <version>${project.version}</version>
             <type>pom</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.html</groupId>
+            <artifactId>ko-ws-tyrus</artifactId>
+            <version>0.7</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 </project>

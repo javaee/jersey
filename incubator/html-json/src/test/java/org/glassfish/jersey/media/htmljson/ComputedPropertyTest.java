@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -83,7 +83,7 @@ public class ComputedPropertyTest extends AbstractTypeTester {
     @Test public void askForFullName() {
         WebTarget target = target("empty/fullName");
         
-        Person p = new Person(net.java.html.json.Context.EMPTY);
+        Person p = new Person();
         p.setFirstName("Jaroslav");
         p.setLastName("Tulach");
         
