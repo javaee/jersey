@@ -100,6 +100,6 @@
     <properties>
         <skipTests>true</skipTests>
         <testContainerFactory>org.glassfish.jersey.test.external.ExternalTestContainerFactory</testContainerFactory>
-        <testContainerPort>8080</testContainerPort>
+        <testContainerPort>9998</testContainerPort>
     </properties>
 </project>

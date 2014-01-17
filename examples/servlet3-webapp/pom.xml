@@ -101,7 +101,7 @@
                     </webApp>
                     <connectors>
                         <connector implementation="org.eclipse.jetty.server.nio.SelectChannelConnector">
-                            <port>${jersey.config.test.container.port}</port>
+                            <port>9998</port>
                             <maxIdleTime>60000</maxIdleTime>
                         </connector>
                     </connectors>
