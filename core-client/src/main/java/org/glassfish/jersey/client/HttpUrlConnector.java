@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,8 +49,10 @@ import java.net.ProtocolException;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,10 +83,39 @@ import com.google.common.util.concurrent.MoreExecutors;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class HttpUrlConnector implements Connector {
+
+    private static Logger LOG = Logger.getLogger(HttpUrlConnector.class.getName());
+    private static final String ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY = "sun.net.http.allowRestrictedHeaders";
+    // The list of restricted headers is extracted from sun.net.www.protocol.http.HttpURLConnection
+    private static final String[] restrictedHeaders = {
+            "Access-Control-Request-Headers",
+            "Access-Control-Request-Method",
+            "Connection", /* close is allowed */
+            "Content-Length",
+            "Content-Transfer-Encoding",
+            "Host",
+            "Keep-Alive",
+            "Origin",
+            "Trailer",
+            "Transfer-Encoding",
+            "Upgrade",
+            "Via"
+    };
+
+    private static final Set<String> restrictedHeaderSet = new HashSet<String>(restrictedHeaders.length);
+
+    static {
+        for (String headerName : restrictedHeaders) {
+            restrictedHeaderSet.add(headerName.toLowerCase());
+        }
+    }
+
     private final HttpUrlConnectorProvider.ConnectionFactory connectionFactory;
     private final int chunkSize;
     private final boolean fixLengthStreaming;
     private final boolean setMethodWorkaround;
+    private final boolean isRestrictedHeaderPropertySet;
+
 
     /**
      * Create new {@code HttpUrlConnector} instance.
@@ -105,6 +136,18 @@ class HttpUrlConnector implements Connector {
         this.chunkSize = chunkSize;
         this.fixLengthStreaming = fixLengthStreaming;
         this.setMethodWorkaround = setMethodWorkaround;
+
+        // check if sun.net.http.allowRestrictedHeaders system property has been set and log the result
+        // the property is being cached in the HttpURLConnection, so this is only informative - there might
+        // already be some connection(s), that existed before the property was set/changed.
+        isRestrictedHeaderPropertySet = Boolean.valueOf(AccessController.doPrivileged(
+                PropertiesHelper.getSystemProperty(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY, "false")
+        )).booleanValue();
+
+        LOG.config(isRestrictedHeaderPropertySet ?
+                LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_TRUE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY) :
+                LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_FALSE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY)
+        );
     }
 
     private static InputStream getInputStream(final HttpURLConnection uc) throws IOException {
@@ -286,10 +329,15 @@ class HttpUrlConnector implements Connector {
     }
 
     private void setOutboundHeaders(MultivaluedMap<String, String> headers, HttpURLConnection uc) {
+        boolean restrictedSent = false;
         for (Map.Entry<String, List<String>> header : headers.entrySet()) {
+            String headerName = header.getKey();
+            String headerValue;
+
             List<String> headerValues = header.getValue();
             if (headerValues.size() == 1) {
-                uc.setRequestProperty(header.getKey(), headerValues.get(0));
+                headerValue = headerValues.get(0);
+                uc.setRequestProperty(headerName, headerValue);
             } else {
                 StringBuilder b = new StringBuilder();
                 boolean add = false;
@@ -300,9 +348,24 @@ class HttpUrlConnector implements Connector {
                     add = true;
                     b.append(value);
                 }
-                uc.setRequestProperty(header.getKey(), b.toString());
+                headerValue = b.toString();
+                uc.setRequestProperty(headerName, headerValue);
+            }
+            // if (at least one) restricted header was added and the allowRestrictedHeaders
+            if (!isRestrictedHeaderPropertySet && !restrictedSent) {
+                if (isHeaderRestricted(headerName, headerValue)) {
+                    restrictedSent = true;
+                }
             }
         }
+        if (restrictedSent) {
+            LOG.warning(LocalizationMessages.RESTRICTED_HEADER_POSSIBLY_IGNORED(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY));
+        }
+    }
+
+    private boolean isHeaderRestricted(String name, String value) {
+        name = name.toLowerCase();
+        return name.startsWith("sec-") || restrictedHeaderSet.contains(name) && !(name.equals("connection") && value.equalsIgnoreCase("close"));
     }
 
     /**
