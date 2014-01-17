@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,10 +58,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.Statuses;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -73,7 +76,7 @@ import com.google.common.collect.Sets;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ClientResponse extends InboundMessageContext implements ClientResponseContext {
+public class ClientResponse extends InboundMessageContext implements ClientResponseContext, ServiceLocatorSupplier {
     private Response.StatusType status;
     private final ClientRequest requestContext;
 
@@ -395,4 +398,8 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
         return (T) readEntity(entityType.getRawType(), entityType.getType(), annotations, requestContext.getPropertiesDelegate());
     }
 
+    @Override
+    public ServiceLocator getServiceLocator() {
+        return getRequestContext().getServiceLocator();
+    }
 }

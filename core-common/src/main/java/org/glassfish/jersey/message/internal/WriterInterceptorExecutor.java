@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,10 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.collect.Lists;
 
@@ -70,7 +73,8 @@ import com.google.common.collect.Lists;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor> implements WriterInterceptorContext {
+public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>
+        implements WriterInterceptorContext, ServiceLocatorSupplier {
 
     private OutputStream outputStream;
     private final MultivaluedMap<String, Object> headers;
@@ -78,6 +82,9 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
 
     private final Iterator<WriterInterceptor> iterator;
     private int processedCount;
+
+    private final ServiceLocator serviceLocator;
+
 
     /**
      * Constructs a new executor to write given type to provided {@link InputStream entityStream}.
@@ -96,9 +103,9 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
      * @param propertiesDelegate request-scoped properties delegate.
      * @param entityStream {@link java.io.InputStream} from which an entity will be read. The stream is not
      *            closed after reading the entity.
-     * @param workers {@link MessageBodyWorkers Message body workers}.
+     * @param workers {@link org.glassfish.jersey.message.MessageBodyWorkers Message body workers}.
      * @param writerInterceptors Writer interceptor that are to be used to intercept the writing of an entity. The interceptors
-     *                           will be executed in the same order as given in this parameter.
+     * @param serviceLocator Service locator.
      */
     public WriterInterceptorExecutor(Object entity, Class<?> rawType,
                                      Type type,
@@ -108,12 +115,14 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
                                      PropertiesDelegate propertiesDelegate,
                                      OutputStream entityStream,
                                      MessageBodyWorkers workers,
-                                     Iterable<WriterInterceptor> writerInterceptors) {
+                                     Iterable<WriterInterceptor> writerInterceptors,
+                                     ServiceLocator serviceLocator) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
         this.headers = headers;
         this.outputStream = entityStream;
+        this.serviceLocator = serviceLocator;
 
         final List<WriterInterceptor> effectiveInterceptors = Lists.newArrayList(writerInterceptors);
         effectiveInterceptors.add(new TerminalWriterInterceptor(workers));
@@ -186,6 +195,11 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
      */
     int getProcessedCount() {
         return processedCount;
+    }
+
+    @Override
+    public ServiceLocator getServiceLocator() {
+        return serviceLocator;
     }
 
     /**
