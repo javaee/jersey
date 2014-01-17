@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -82,16 +82,13 @@ public class HttpUrlConnectorTest {
     // there is about 30 ms overhead on my laptop, 500 ms should be safe
     private final int TimeoutBASE = 500;
 
+    // additional testcase for JERSEY-1984 to ensure, that the error occurs only when sending an entity
     @Test
-    @Ignore
-    // Does not seem to work on all operating systems - sometimes NoRouteToHostException is thrown
-    // rather than the expected SocketTimeoutException
     public void testConnectionTimeoutNoEntity() {
         _testInvocationTimeout(createNonRoutableTarget().request().buildGet());
     }
 
     // reproducer for JERSEY-1984
-    @Ignore
     @Test
     public void testConnectionTimeoutWithEntity() {
         _testInvocationTimeout(createNonRoutableTarget().request().buildPost(Entity.text("does not matter")));
