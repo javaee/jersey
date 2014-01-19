@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -477,8 +477,8 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
                     <title>Hooking up Jersey as a Servlet Filter</title>
                     <programlisting language="xml" linenumbering="numbered">&lt;web-app&gt;
     &lt;filter&gt;
-        &lt;filter-name&gt;MyApplication&lt;/servlet-name&gt;
-        &lt;filter-class&gt;org.glassfish.jersey.servlet.ServletContainer&lt;/servlet-class&gt;
+        &lt;filter-name&gt;MyApplication&lt;/filter-name&gt;
+        &lt;filter-class&gt;org.glassfish.jersey.servlet.ServletContainer&lt;/filter-class&gt;
         &lt;init-param&gt;
             ...
         &lt;/init-param&gt;
