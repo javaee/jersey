@@ -173,7 +173,7 @@ public class InboundMessageContext {
      *                     as required by JAX-RS specification on the server side.
      */
     public InboundMessageContext(boolean translateNce) {
-        this.headers = HeadersFactory.createInbound();
+        this.headers = HeaderUtils.createInbound();
         this.entityContent = new EntityContent();
         this.translateNce = translateNce;
     }
@@ -188,7 +188,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext header(String name, Object value) {
-        getHeaders().add(name, HeadersFactory.asString(value, RuntimeDelegate.getInstance()));
+        getHeaders().add(name, HeaderUtils.asString(value, RuntimeDelegate.getInstance()));
         return this;
     }
 
@@ -200,7 +200,7 @@ public class InboundMessageContext {
      * @return updated context.
      */
     public InboundMessageContext headers(String name, Object... values) {
-        this.getHeaders().addAll(name, HeadersFactory.asStringList(Arrays.asList(values), RuntimeDelegate.getInstance()));
+        this.getHeaders().addAll(name, HeaderUtils.asStringList(Arrays.asList(values), RuntimeDelegate.getInstance()));
         return this;
     }
 
@@ -258,7 +258,7 @@ public class InboundMessageContext {
 
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
         for (Object element : values) {
-            linkedList.add(HeadersFactory.asString(element, rd));
+            linkedList.add(HeaderUtils.asString(element, rd));
         }
 
         return linkedList;
@@ -325,7 +325,7 @@ public class InboundMessageContext {
         }
 
         try {
-            return converter.apply(HeadersFactory.asString(value, null));
+            return converter.apply(HeaderUtils.asString(value, null));
         } catch (ProcessingException ex) {
             throw exception(name, value, ex);
         }

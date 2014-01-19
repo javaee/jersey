@@ -629,6 +629,18 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
             <literal>org.glassfish.jersey.connectors:jersey-grizzly-connector</literal>)
             or &jersey.jetty.JettyConnectorProvider; (add a maven dependency to
             <literal>org.glassfish.jersey.connectors:jersey-jetty-connector</literal>) alternatively.
+            <warning xml:id="connectors.warning" xreflabel="Header modification issue">
+                <para>
+                    Be aware of using other than default &lit.jersey.client.Connector; implementation.
+                    There is an issue handling HTTP headers in
+                    &lit.jaxrs.WriterInterceptor; or &lit.jaxrs.ext.MessageBodyWriter;.
+                    If you need to change header fields do not use nor
+                    &lit.jersey.apache.ApacheConnectorProvider; nor &lit.jersey.grizzly.GrizzlyConnectorProvider;
+                    neither &lit.jersey.jetty.JettyConnectorProvider;.
+                    The issue for example applies to Jersey <xref linkend="multipart" endterm="multipart.short"/>
+                    feature that also modifies HTTP headers.
+                </para>
+            </warning>
         </para>
         <para>
             As indicated earlier, &jersey.client.Connector; and &jersey.client.ConnectorProvider; contracts are Jersey-specific

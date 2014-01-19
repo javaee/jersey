@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,7 +65,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.HeadersFactory;
+import org.glassfish.jersey.message.internal.HeaderUtils;
 
 /**
  * Used by tests to create mock JerseyContainerRequestContext instances.
@@ -184,7 +184,7 @@ public class RequestContextBuilder {
     }
 
     public RequestContextBuilder type(MediaType contentType) {
-        result.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, HeadersFactory.asString(contentType, rd));
+        result.getHeaders().putSingle(HttpHeaders.CONTENT_TYPE, HeaderUtils.asString(contentType, rd));
         return this;
     }
 
@@ -208,7 +208,7 @@ public class RequestContextBuilder {
             result.getHeaders().remove(name);
             return;
         }
-        result.header(name, HeadersFactory.asString(value, rd));
+        result.header(name, HeaderUtils.asString(value, rd));
     }
 
     private void putHeaders(String name, Object... values) {
@@ -216,7 +216,7 @@ public class RequestContextBuilder {
             result.getHeaders().remove(name);
             return;
         }
-        result.getHeaders().addAll(name, HeadersFactory.asStringList(Arrays.asList(values), rd));
+        result.getHeaders().addAll(name, HeaderUtils.asStringList(Arrays.asList(values), rd));
     }
 
     private void putHeaders(String name, String... values) {

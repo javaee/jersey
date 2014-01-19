@@ -58,7 +58,7 @@ import javax.ws.rs.core.Variant;
 import javax.annotation.Nullable;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.message.internal.HeadersFactory;
+import org.glassfish.jersey.message.internal.HeaderUtils;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -296,7 +296,7 @@ public class ResponseTest {
             pass = false;
         }
 
-        MultivaluedMap<String, String> mvp = HeadersFactory.asStringHeaders(
+        MultivaluedMap<String, String> mvp = HeaderUtils.asStringHeaders(
                 resp.getMetadata());
 
 

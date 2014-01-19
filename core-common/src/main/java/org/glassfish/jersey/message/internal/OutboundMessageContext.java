@@ -121,7 +121,7 @@ public class OutboundMessageContext {
      * Create new outbound message context.
      */
     public OutboundMessageContext() {
-        this.headers = HeadersFactory.createOutbound();
+        this.headers = HeaderUtils.createOutbound();
         this.committingOutputStream = new CommittingOutputStream();
         this.entityStream = committingOutputStream;
     }
@@ -133,7 +133,7 @@ public class OutboundMessageContext {
      * @param original the original outbound message context.
      */
     public OutboundMessageContext(OutboundMessageContext original) {
-        this.headers = HeadersFactory.createOutbound();
+        this.headers = HeaderUtils.createOutbound();
         this.headers.putAll(original.headers);
         this.committingOutputStream = new CommittingOutputStream();
         this.entityStream = committingOutputStream;
@@ -162,7 +162,7 @@ public class OutboundMessageContext {
      * @return multi-valued map of outbound message header names to their string-converted values.
      */
     public MultivaluedMap<String, String> getStringHeaders() {
-        return HeadersFactory.asStringHeaders(headers);
+        return HeaderUtils.asStringHeaders(headers);
     }
 
     /**
@@ -182,7 +182,7 @@ public class OutboundMessageContext {
      *         character.
      */
     public String getHeaderString(String name) {
-        return HeadersFactory.asHeaderString(headers.get(name), RuntimeDelegate.getInstance());
+        return HeaderUtils.asHeaderString(headers.get(name), RuntimeDelegate.getInstance());
     }
 
     /**
@@ -217,7 +217,7 @@ public class OutboundMessageContext {
             return valueType.cast(value);
         } else {
             try {
-                return converter.apply(HeadersFactory.asString(value, null));
+                return converter.apply(HeaderUtils.asString(value, null));
             } catch (ProcessingException ex) {
                 throw exception(name, value, ex);
             }
@@ -311,7 +311,7 @@ public class OutboundMessageContext {
             } else {
                 conversionApplied = true;
                 try {
-                    result.addAll(HttpHeaderReader.readAcceptMediaType(HeadersFactory.asString(value, rd)));
+                    result.addAll(HttpHeaderReader.readAcceptMediaType(HeaderUtils.asString(value, rd)));
                 } catch (java.text.ParseException e) {
                     throw exception(HttpHeaders.ACCEPT, value, e);
                 }
@@ -353,7 +353,7 @@ public class OutboundMessageContext {
             } else {
                 conversionApplied = true;
                 try {
-                    result.addAll(Lists.transform(HttpHeaderReader.readAcceptLanguage(HeadersFactory.asString(value, rd)),
+                    result.addAll(Lists.transform(HttpHeaderReader.readAcceptLanguage(HeaderUtils.asString(value, rd)),
                             new Function<AcceptableLanguageTag, Locale>() {
 
                                 @Override
@@ -392,7 +392,7 @@ public class OutboundMessageContext {
         }
 
         Map<String, Cookie> result = new HashMap<String, Cookie>();
-        for (String cookie : HeadersFactory.asStringList(cookies, RuntimeDelegate.getInstance())) {
+        for (String cookie : HeaderUtils.asStringList(cookies, RuntimeDelegate.getInstance())) {
             if (cookie != null) {
                 result.putAll(HttpHeaderReader.readCookies(cookie));
             }
@@ -449,7 +449,7 @@ public class OutboundMessageContext {
         }
 
         Map<String, NewCookie> result = new HashMap<String, NewCookie>();
-        for (String cookie : HeadersFactory.asStringList(cookies, RuntimeDelegate.getInstance())) {
+        for (String cookie : HeaderUtils.asStringList(cookies, RuntimeDelegate.getInstance())) {
             if (cookie != null) {
                 NewCookie newCookie = HttpHeaderReader.readNewCookie(cookie);
                 result.put(newCookie.getName(), newCookie);
@@ -533,7 +533,7 @@ public class OutboundMessageContext {
             } else {
                 conversionApplied = true;
                 try {
-                    result.add(Link.valueOf(HeadersFactory.asString(value, rd)));
+                    result.add(Link.valueOf(HeaderUtils.asString(value, rd)));
                 } catch (IllegalArgumentException e) {
                     throw exception(HttpHeaders.LINK, value, e);
                 }

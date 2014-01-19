@@ -40,28 +40,38 @@
 package org.glassfish.jersey.message.internal;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.RuntimeDelegate;
 import javax.ws.rs.ext.RuntimeDelegate.HeaderDelegate;
 
+import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Maps;
+import jersey.repackaged.com.google.common.collect.ImmutableMap;
 
 /**
  * Utility class supporting the processing of message headers.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public final class HeadersFactory {
+public final class HeaderUtils {
+
+    private final static Logger LOGGER = Logger.getLogger(HeaderUtils.class.getName());
 
     /**
      * Create an empty inbound message headers container. Created container is mutable.
@@ -152,7 +162,7 @@ public final class HeadersFactory {
         return Lists.transform(headerValues, new Function<Object, String>() {
             @Override
             public String apply(Object input) {
-                return (input == null) ? "[null]" : HeadersFactory.asString(input, delegate);
+                return (input == null) ? "[null]" : HeaderUtils.asString(input, delegate);
             }
 
         });
@@ -175,11 +185,33 @@ public final class HeadersFactory {
                 Maps.transformValues(headers, new Function<List<Object>, List<String>>() {
                     @Override
                     public List<String> apply(List<Object> input) {
-                        return HeadersFactory.asStringList(input, rd);
+                        return HeaderUtils.asStringList(input, rd);
                     }
                 })
         ) {
         };
+    }
+
+    /**
+     * Transforms multi value map of headers to single {@code String} value map.
+     *
+     * Returned map is immutable. Map values are formatted using method {@link #asHeaderString}.
+     *
+     * @param headers headers to be formatted
+     * @return immutable single {@code String} value map or
+     *      {@code null} if {@code headers} input parameter is {@code null}.
+     */
+    public static Map<String, String> asStringHeadersSingleValue(final MultivaluedMap<String, Object> headers) {
+        if (headers == null) {
+            return null;
+        }
+
+        final RuntimeDelegate rd = RuntimeDelegate.getInstance();
+        ImmutableMap.Builder<String, String> immutableMapBuilder = new ImmutableMap.Builder<String, String>();
+        for (Map.Entry<? extends String, ? extends List<Object>> entry : headers.entrySet()) {
+            immutableMapBuilder.put(entry.getKey(), asHeaderString(entry.getValue(), rd));
+        }
+        return immutableMapBuilder.build();
     }
 
     /**
@@ -216,8 +248,46 @@ public final class HeadersFactory {
     }
 
     /**
+     * Compares two snapshots of headers from jersey {@code ClientRequest} and logs {@code WARNING} in case of difference.
+     *
+     * Current container implementations does not support header modification in {@link javax.ws.rs.ext.WriterInterceptor}
+     * and {@link javax.ws.rs.ext.MessageBodyWriter}. The method checks there are some newly added headers
+     * (probably by WI or MBW) and logs {@code WARNING} message about it.
+     *
+     * @param headersSnapshot first immutable snapshot of headers
+     * @param currentHeaders  current instance of headers tobe compared to
+     * @param connectorName   name of connector the method is invoked from, used just in logged message
+     * @see <a href="https://java.net/jira/browse/JERSEY-2341">JERSEY-2341</a>
+     */
+    public static void checkHeaderChanges(final Map<String, String> headersSnapshot,
+                                          final MultivaluedMap<String, Object> currentHeaders,
+                                          final String connectorName) {
+        if (HeaderUtils.LOGGER.isLoggable(Level.WARNING)) {
+            final RuntimeDelegate rd = RuntimeDelegate.getInstance();
+            Set<String> changedHeaderNames = new HashSet<String>();
+            for (Map.Entry<? extends String, ? extends List<Object>> entry : currentHeaders.entrySet()) {
+                if (!headersSnapshot.containsKey(entry.getKey())) {
+                    changedHeaderNames.add(entry.getKey());
+                } else {
+                    String prevValue = headersSnapshot.get(entry.getKey());
+                    String newValue = asHeaderString(currentHeaders.get(entry.getKey()), rd);
+                    if (!prevValue.equals(newValue)) {
+                        changedHeaderNames.add(entry.getKey());
+                    }
+                }
+            }
+            if (!changedHeaderNames.isEmpty()) {
+                if (HeaderUtils.LOGGER.isLoggable(Level.WARNING)) {
+                    HeaderUtils.LOGGER.warning(LocalizationMessages.SOME_HEADERS_NOT_SENT(connectorName,
+                            changedHeaderNames.toString()));
+                }
+            }
+        }
+    }
+
+    /**
      * Preventing instantiation.
      */
-    private HeadersFactory() {
+    private HeaderUtils() {
     }
 }

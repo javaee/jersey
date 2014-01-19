@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,7 @@ import javax.ws.rs.ext.Providers;
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.media.multipart.internal.LocalizationMessages;
 import org.glassfish.jersey.message.MessageBodyWorkers;
-import org.glassfish.jersey.message.internal.HeadersFactory;
+import org.glassfish.jersey.message.internal.HeaderUtils;
 import org.glassfish.jersey.message.internal.ParameterizedHeader;
 
 /**
@@ -68,7 +68,7 @@ public class BodyPart {
 
     private Object entity;
 
-    private MultivaluedMap<String, String> headers = HeadersFactory.createInbound();
+    private MultivaluedMap<String, String> headers = HeaderUtils.createInbound();
 
     /**
      * Media type of this body part.

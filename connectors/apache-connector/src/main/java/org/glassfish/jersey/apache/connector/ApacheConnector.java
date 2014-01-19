@@ -73,6 +73,7 @@ import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.message.internal.HeaderUtils;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.ReaderWriter;
 import org.glassfish.jersey.message.internal.Statuses;
@@ -182,7 +183,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  * @see ApacheClientProperties#CONNECTION_MANAGER
  */
 @SuppressWarnings("deprecation")
-public class ApacheConnector implements Connector {
+class ApacheConnector implements Connector {
 
     private final static Logger LOGGER = Logger.getLogger(ApacheConnector.class.getName());
 
@@ -450,8 +451,7 @@ public class ApacheConnector implements Connector {
     @Override
     public ClientResponse apply(final ClientRequest clientRequest) throws ProcessingException {
         final HttpUriRequest request = getUriHttpRequest(clientRequest);
-
-        writeOutBoundHeaders(clientRequest.getHeaders(), request);
+        final Map<String, String> clientHeadersSnapshot = writeOutBoundHeaders(clientRequest.getHeaders(), request);
 
         try {
             final CloseableHttpResponse response;
@@ -461,10 +461,10 @@ public class ApacheConnector implements Connector {
                 final BasicScheme basicScheme = new BasicScheme();
                 authCache.put(getHost(request), basicScheme);
                 context.setAuthCache(authCache);
-                response = client.execute(getHost(request), request, context);
-            } else {
-                response = client.execute(getHost(request), request, context);
             }
+            response = client.execute(getHost(request), request, context);
+            HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, clientRequest.getHeaders(),
+                    this.getClass().getName());
 
             final Response.StatusType status = response.getStatusLine().getReasonPhrase() == null ?
                     Statuses.from(response.getStatusLine().getStatusCode()) :
@@ -605,22 +605,13 @@ public class ApacheConnector implements Connector {
         }
     }
 
-    private void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final HttpUriRequest request) {
-        for (final Map.Entry<String, List<Object>> e : headers.entrySet()) {
-            final List<Object> vs = e.getValue();
-            if (vs.size() == 1) {
-                request.addHeader(e.getKey(), vs.get(0).toString());
-            } else {
-                final StringBuilder b = new StringBuilder();
-                for (final Object v : e.getValue()) {
-                    if (b.length() > 0) {
-                        b.append(',');
-                    }
-                    b.append(v);
-                }
-                request.addHeader(e.getKey(), b.toString());
-            }
+    private static Map<String, String> writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final HttpUriRequest request) {
+        Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
+
+        for (Map.Entry<String, String> e : stringHeaders.entrySet()) {
+            request.addHeader(e.getKey(), e.getValue());
         }
+        return stringHeaders;
     }
 
     private static final class HttpClientResponseInputStream extends FilterInputStream {

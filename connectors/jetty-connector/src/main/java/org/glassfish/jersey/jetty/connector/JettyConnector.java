@@ -72,6 +72,7 @@ import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
+import org.glassfish.jersey.message.internal.HeaderUtils;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 
@@ -146,7 +147,7 @@ import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
  * @author Arul Dhesiaseelan (aruld at acm.org)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JettyConnector implements Connector {
+class JettyConnector implements Connector {
 
     private static final Logger LOGGER = Logger.getLogger(JettyConnector.class.getName());
 
@@ -247,6 +248,7 @@ public class JettyConnector implements Connector {
     @Override
     public ClientResponse apply(final ClientRequest jerseyRequest) throws ProcessingException {
         final Request jettyRequest = translateRequest(jerseyRequest);
+        final Map<String, String> clientHeadersSnapshot = writeOutBoundHeaders(jerseyRequest.getHeaders(), jettyRequest);
         final ContentProvider entity = getBytesProvider(jerseyRequest);
         if (entity != null) {
             jettyRequest.content(entity);
@@ -254,6 +256,9 @@ public class JettyConnector implements Connector {
 
         try {
             final ContentResponse jettyResponse = jettyRequest.send();
+            HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
+                    JettyConnector.this.getClass().getName());
+
             final javax.ws.rs.core.Response.StatusType status = jettyResponse.getReason() == null ?
                     Statuses.from(jettyResponse.getStatus()) :
                     Statuses.from(jettyResponse.getStatus(), jettyResponse.getReason());
@@ -314,26 +319,16 @@ public class JettyConnector implements Connector {
         if (readTimeout != null && readTimeout instanceof Integer && (Integer) readTimeout > 0) {
             request.timeout((Integer) readTimeout, TimeUnit.MILLISECONDS);
         }
-        writeOutBoundHeaders(clientRequest.getHeaders(), request);
         return request;
     }
 
-    private static void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final Request request) {
-        for (final Map.Entry<String, List<Object>> e : headers.entrySet()) {
-            final List<Object> vs = e.getValue();
-            if (vs.size() == 1) {
-                request.getHeaders().add(e.getKey(), vs.get(0).toString());
-            } else {
-                final StringBuilder b = new StringBuilder();
-                for (final Object v : e.getValue()) {
-                    if (b.length() > 0) {
-                        b.append(',');
-                    }
-                    b.append(v);
-                }
-                request.getHeaders().add(e.getKey(), b.toString());
-            }
+    private static Map<String, String> writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final Request request) {
+        Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
+
+        for (Map.Entry<String, String> e : stringHeaders.entrySet()) {
+            request.getHeaders().add(e.getKey(), e.getValue());
         }
+        return stringHeaders;
     }
 
     private ContentProvider getBytesProvider(final ClientRequest clientRequest) {
@@ -385,6 +380,7 @@ public class JettyConnector implements Connector {
     @Override
     public Future<?> apply(final ClientRequest jerseyRequest, final AsyncConnectorCallback callback) {
         final Request jettyRequest = translateRequest(jerseyRequest);
+        final Map<String, String> clientHeadersSnapshot = writeOutBoundHeaders(jerseyRequest.getHeaders(), jettyRequest);
         final ContentProvider entity = getStreamProvider(jerseyRequest);
         if (entity != null) {
             jettyRequest.content(entity);
@@ -412,6 +408,9 @@ public class JettyConnector implements Connector {
 
                         @Override
                         public void onHeaders(final Response jettyResponse) {
+                            HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
+                                    JettyConnector.this.getClass().getName());
+
                             if (responseFuture.isDone())
                                 if (!callbackInvoked.compareAndSet(false, true)) {
                                     return;

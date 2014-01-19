@@ -50,6 +50,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
@@ -67,6 +68,7 @@ import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
+import org.glassfish.jersey.message.internal.HeaderUtils;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 
 import com.ning.http.client.AsyncHandler;
@@ -88,6 +90,9 @@ import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class GrizzlyConnector implements Connector {
+
+    private final static Logger LOGGER = Logger.getLogger(GrizzlyConnector.class.getName());
+
     private final AsyncHttpClient grizzlyClient;
 
     /**
@@ -139,6 +144,7 @@ class GrizzlyConnector implements Connector {
     @Override
     public ClientResponse apply(final ClientRequest request) {
         final Request connectorRequest = translate(request);
+        final Map<String, String> clientHeadersSnapshot = writeOutBoundHeaders(request.getHeaders(), connectorRequest);
 
         final SettableFuture<ClientResponse> responseFuture = SettableFuture.create();
         final ByteBufferInputStream entityStream = new ByteBufferInputStream();
@@ -159,6 +165,9 @@ class GrizzlyConnector implements Connector {
                     if (!futureSet.compareAndSet(false, true)) {
                         return STATE.ABORT;
                     }
+
+                    HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, request.getHeaders(),
+                            GrizzlyConnector.this.getClass().getName());
 
                     responseFuture.set(translate(request, this.status, headers, entityStream));
                     return STATE.CONTINUE;
@@ -201,6 +210,7 @@ class GrizzlyConnector implements Connector {
     @Override
     public Future<?> apply(final ClientRequest request, final AsyncConnectorCallback callback) {
         final Request connectorRequest = translate(request);
+        final Map<String, String> clientHeadersSnapshot = writeOutBoundHeaders(request.getHeaders(), connectorRequest);
         final ByteBufferInputStream entityStream = new ByteBufferInputStream();
         final AtomicBoolean callbackInvoked = new AtomicBoolean(false);
 
@@ -220,6 +230,9 @@ class GrizzlyConnector implements Connector {
                     if (!callbackInvoked.compareAndSet(false, true)) {
                         return STATE.ABORT;
                     }
+
+                    HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, request.getHeaders(),
+                            GrizzlyConnector.this.getClass().getName());
 
                     callback.response(translate(request, this.status, headers, entityStream));
                     return STATE.CONTINUE;
@@ -318,11 +331,7 @@ class GrizzlyConnector implements Connector {
                 builder.setBody(getEntityWriter(requestContext));
             }
         }
-
-        com.ning.http.client.Request result = builder.build();
-        writeOutBoundHeaders(requestContext.getHeaders(), result);
-
-        return result;
+        return builder.build();
     }
 
     @SuppressWarnings("MagicNumber")
@@ -343,23 +352,14 @@ class GrizzlyConnector implements Connector {
         return baos.toByteArray();
     }
 
-    private static void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers,
-                                             final com.ning.http.client.Request request) {
-        for (Map.Entry<String, List<Object>> e : headers.entrySet()) {
-            List<Object> vs = e.getValue();
-            if (vs.size() == 1) {
-                request.getHeaders().add(e.getKey(), vs.get(0).toString());
-            } else {
-                StringBuilder b = new StringBuilder();
-                for (Object v : e.getValue()) {
-                    if (b.length() > 0) {
-                        b.append(',');
-                    }
-                    b.append(v);
-                }
-                request.getHeaders().add(e.getKey(), b.toString());
-            }
+    private static Map<String, String> writeOutBoundHeaders(final MultivaluedMap<String, Object> headers,
+                                                            final com.ning.http.client.Request request) {
+        Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
+
+        for (Map.Entry<String, String> e : stringHeaders.entrySet()) {
+            request.getHeaders().add(e.getKey(), e.getValue());
         }
+        return stringHeaders;
     }
 
     private com.ning.http.client.Request.EntityWriter getEntityWriter(final ClientRequest requestContext) {

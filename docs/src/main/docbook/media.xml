@@ -1417,6 +1417,7 @@ final ResourceConfig config = new ResourceConfig()
 
     <section xml:id="multipart">
         <title>Multipart</title>
+        <titleabbrev id="multipart.short">Multipart</titleabbrev>
 
         <section>
             <title>Overview</title>
@@ -1624,6 +1625,13 @@ final Response response = target.request()
     .post(Entity.entity(multipart, multipart.getMediaType()));</programlisting>
                 </example>
             </para>
+            <warning>
+                <para>
+                    Do not use &lit.jersey.apache.ApacheConnectorProvider; nor &lit.jersey.grizzly.GrizzlyConnectorProvider;
+                    neither &lit.jersey.jetty.JettyConnectorProvider; connector implementations with Jersey Multipart
+                    features. See <xref linkend="connectors.warning"/> warning for more details.
+                </para>
+            </warning>
         </section>
 
         <section>

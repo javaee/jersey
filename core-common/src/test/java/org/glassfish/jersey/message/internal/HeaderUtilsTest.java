@@ -61,20 +61,20 @@ import static org.junit.Assert.fail;
 import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
- * {@link HeadersFactory} unit tests.
+ * {@link HeaderUtils} unit tests.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class HeadersFactoryTest {
+public class HeaderUtilsTest {
 
-    public HeadersFactoryTest() {
+    public HeaderUtilsTest() {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
     }
 
 
     @Test
     public void testCreateInbound() throws Exception {
-        final MultivaluedMap<String, String> inbound = HeadersFactory.createInbound();
+        final MultivaluedMap<String, String> inbound = HeaderUtils.createInbound();
         assertNotNull(inbound);
 
         // Test mutability.
@@ -84,10 +84,10 @@ public class HeadersFactoryTest {
 
     @Test
     public void testEmpty() throws Exception {
-        final MultivaluedMap<String, String> emptyStrings = HeadersFactory.empty();
+        final MultivaluedMap<String, String> emptyStrings = HeaderUtils.empty();
         assertNotNull(emptyStrings);
 
-        final MultivaluedMap<String, Object> emptyObjects = HeadersFactory.empty();
+        final MultivaluedMap<String, Object> emptyObjects = HeaderUtils.empty();
         assertNotNull(emptyObjects);
 
         // Test immutability.
@@ -107,7 +107,7 @@ public class HeadersFactoryTest {
 
     @Test
     public void testCreateOutbound() throws Exception {
-        final MultivaluedMap<String, Object> outbound = HeadersFactory.createOutbound();
+        final MultivaluedMap<String, Object> outbound = HeaderUtils.createOutbound();
         assertNotNull(outbound);
 
         // Test mutability.
@@ -121,26 +121,26 @@ public class HeadersFactoryTest {
 
     @Test
     public void testAsString() throws Exception {
-        assertNull(HeadersFactory.asString(null, null));
+        assertNull(HeaderUtils.asString(null, null));
 
         final String value = "value";
-        assertSame(value, HeadersFactory.asString(value, null));
+        assertSame(value, HeaderUtils.asString(value, null));
 
 
         final URI uri = new URI("test");
-        assertEquals(uri.toASCIIString(), HeadersFactory.asString(uri, null));
+        assertEquals(uri.toASCIIString(), HeaderUtils.asString(uri, null));
     }
 
     @Test
     public void testAsStringList() throws Exception {
-        assertNotNull(HeadersFactory.asStringList(null, null));
-        assertTrue(HeadersFactory.asStringList(null, null).isEmpty());
+        assertNotNull(HeaderUtils.asStringList(null, null));
+        assertTrue(HeaderUtils.asStringList(null, null).isEmpty());
 
         final URI uri = new URI("test");
         final ArrayList<Object> values = Lists.<Object>newArrayList("value", null, uri);
 
         // test string values
-        final List<String> stringList = HeadersFactory.asStringList(values, null);
+        final List<String> stringList = HeaderUtils.asStringList(values, null);
         assertEquals(Lists.newArrayList("value", "[null]", uri.toASCIIString()),
                 stringList);
 
@@ -156,9 +156,9 @@ public class HeadersFactoryTest {
 
     @Test
     public void testAsStringHeaders() throws Exception {
-        assertNull(HeadersFactory.asStringHeaders(null));
+        assertNull(HeaderUtils.asStringHeaders(null));
 
-        final AbstractMultivaluedMap<String,Object> headers = HeadersFactory.createOutbound();
+        final AbstractMultivaluedMap<String,Object> headers = HeaderUtils.createOutbound();
 
         headers.putSingle("k1", "value");
         headers.add("k1", "value2");
@@ -168,7 +168,7 @@ public class HeadersFactoryTest {
 
         headers.putSingle("k3", "value3");
 
-        final MultivaluedMap<String, String> stringHeaders = HeadersFactory.asStringHeaders(headers);
+        final MultivaluedMap<String, String> stringHeaders = HeaderUtils.asStringHeaders(headers);
 
         // test string values
         assertEquals(Lists.newArrayList("value", "value2"),
@@ -192,13 +192,13 @@ public class HeadersFactoryTest {
 
     @Test
     public void testAsHeaderString() throws Exception {
-        assertNull(HeadersFactory.asHeaderString(null, null));
+        assertNull(HeaderUtils.asHeaderString(null, null));
 
         final URI uri = new URI("test");
         final ArrayList<Object> values = Lists.<Object>newArrayList("value", null, uri);
 
         // test string values
-        final String result = HeadersFactory.asHeaderString(values, null);
+        final String result = HeaderUtils.asHeaderString(values, null);
         assertEquals("value,[null]," + uri.toASCIIString(), result);
     }
 }
