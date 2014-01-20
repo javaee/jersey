@@ -60,7 +60,18 @@
 
     <modules>
         <module>gae-integration</module>
-        <module>html-json</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>jdk7-or-higher</id>
+            <activation>
+                <jdk>(1.6,)</jdk>
+            </activation>
+            <modules>
+                <module>html-json</module>
+            </modules>
+        </profile>
+    </profiles>
 
 </project>
