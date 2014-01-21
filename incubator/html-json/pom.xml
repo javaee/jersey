@@ -77,7 +77,7 @@
         <dependency>
             <groupId>org.netbeans.html</groupId>
             <artifactId>net.java.html.json</artifactId>
-            <version>0.7</version>
+            <version>0.7.1</version>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
@@ -123,7 +123,7 @@
         <dependency>
             <groupId>org.netbeans.html</groupId>
             <artifactId>ko-ws-tyrus</artifactId>
-            <version>0.7</version>
+            <version>0.7.1</version>
             <scope>runtime</scope>
         </dependency>
     </dependencies>
