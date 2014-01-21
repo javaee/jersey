@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -297,6 +297,8 @@
 <!ENTITY jersey.client.ContentEncoder "<link xlink:href='&jersey.javadoc.path;/spi/ContentEncoder.html'>ContentEncoder</link>">
 <!ENTITY jersey.client.CsrfProtectionFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/CsrfProtectionFilter.html'>CsrfProtectionFilter</link>">
 <!ENTITY jersey.client.EncodingFeature "<link xlink:href='&jersey.javadoc.path;/client/filter/EncodingFeature.html'>EncodingFeature</link>">
+<!ENTITY jersey.client.ServiceLocatorClientProvider "<link xlink:href='&jersey.javadoc.path;/client/ServiceLocatorClientProvider.html'>ServiceLocatorClientProvider</link>">
+
 <!ENTITY jersey.sse.EventOutput "<link xlink:href='&jersey.javadoc.path;/media/sse/EventOutput.html'>EventOutput</link>">
 <!ENTITY jersey.sse.EventInput "<link xlink:href='&jersey.javadoc.path;/media/sse/EventInput.html'>EventInput</link>">
 <!ENTITY jersey.sse.EventInputReader "<link xlink:href='&jersey.javadoc.path;/media/sse/EventInputReader.html'>EventInputReader</link>">
@@ -319,6 +321,8 @@
 <!ENTITY jersey.common.SslConfigurator "<link xlink:href='&jersey.javadoc.path;/SslConfigurator.html'>SslConfigurator</link>">
 <!ENTITY jersey.common.spi.RequestExecutorProvider "<link xlink:href='&jersey.javadoc.path;/spi/RequestExecutorProvider.html'>RequestExecutorProvider</link>">
 <!ENTITY jersey.common.uri.UriTemplate "<link xlink:href='&jersey.javadoc.path;/uri/UriTemplate.html'>UriTemplate</link>">
+<!ENTITY jersey.common.ServiceLocatorProvider "<link xlink:href='&jersey.javadoc.path;/ServiceLocatorProvider.html'>ServiceLocatorProvider</link>">
+
 
 
 <!ENTITY jersey.ext.ValidationFeature "<link xlink:href='&jersey.javadoc.path;/server/validation/ValidationFeature.html'>ValidationFeature</link>">
@@ -666,6 +670,7 @@
 <!ENTITY lit.jersey.client.HttpUrlConnectorProvider "<literal>HttpUrlConnectorProvider</literal>">
 <!ENTITY lit.jersey.client.HttpAuthenticationFeature "<literal>HttpAuthenticationFeature</literal>">
 <!ENTITY lit.jersey.client.EncodingFeature "<literal>EncodingFeature</literal>">
+<!ENTITY lit.jersey.client.ServiceLocatorClientProvider "<literal>ServiceLocatorClientProvider</literal>">
 
 <!ENTITY lit.jersey.message.MessageProperties "<literal>MessageProperties</literal>">
 <!ENTITY lit.jersey.message.MessageBodyWorkers "<literal>MessageBodyWorkers</literal>">
@@ -677,6 +682,8 @@
 <!ENTITY lit.jersey.common.CommonProperties "<literal>CommonProperties</literal>">
 <!ENTITY lit.jersey.common.SslConfigurator "<literal>SslConfigurator</literal>">
 <!ENTITY lit.jersey.common.spi.RequestExecutorProvider "<literal>RequestExecutorProvider</literal>">
+<!ENTITY lit.jersey.common.ServiceLocatorProvider "<literal>ServiceLocatorProvider</literal>">
+
 
 <!ENTITY lit.jersey.ext.ValidationConfig "<literal>ValidationConfig</literal>">
 <!ENTITY lit.jersey.ext.ValidationError "<literal>ValidationError</literal>">

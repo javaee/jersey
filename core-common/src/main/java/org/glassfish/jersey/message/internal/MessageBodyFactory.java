@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -184,6 +184,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             };
 
+    private final ServiceLocator serviceLocator;
+
     private final Boolean legacyProviderOrdering;
 
     private final List<MbrModel> readers;
@@ -289,6 +291,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
      */
     @Inject
     public MessageBodyFactory(ServiceLocator locator, @Optional Configuration configuration) {
+        this.serviceLocator = locator;
         this.legacyProviderOrdering = configuration != null
                 && PropertiesHelper.isProperty(configuration.getProperty(MessageProperties.LEGACY_WORKERS_ORDERING));
 
@@ -737,7 +740,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
-        MessageBodyReader <T> selected = null;
+        MessageBodyReader<T> selected = null;
         final Iterator<MbrModel> iterator = readers.iterator();
         while (iterator.hasNext()) {
             final MbrModel model = iterator.next();
@@ -885,7 +888,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
-        MessageBodyWriter <T> selected = null;
+        MessageBodyWriter<T> selected = null;
         final Iterator<MessageBodyWriter> iterator = writers.iterator();
         while (iterator.hasNext()) {
             final MessageBodyWriter p = iterator.next();
@@ -1102,7 +1105,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                            Iterable<ReaderInterceptor> readerInterceptors,
                            boolean translateNce) throws WebApplicationException, IOException {
         ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
-                httpHeaders, propertiesDelegate, entityStream, this, readerInterceptors, translateNce);
+                httpHeaders, propertiesDelegate, entityStream, this, readerInterceptors, translateNce, serviceLocator);
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         final long timestamp = tracingLogger.timestamp(MsgTraceEvent.RI_SUMMARY);
         try {
@@ -1132,7 +1135,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                 Iterable<WriterInterceptor> writerInterceptors)
             throws IOException, WebApplicationException {
         WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
-                httpHeaders, propertiesDelegate, entityStream, this, writerInterceptors);
+                httpHeaders, propertiesDelegate, entityStream, this, writerInterceptors, serviceLocator);
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         final long timestamp = tracingLogger.timestamp(MsgTraceEvent.WI_SUMMARY);
         try {

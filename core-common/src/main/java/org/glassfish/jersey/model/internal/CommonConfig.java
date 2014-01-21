@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -649,6 +649,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     private void configureFeatures(final ServiceLocator locator,
                                    final Set<FeatureRegistration> processed,
                                    final List<FeatureRegistration> unprocessed) {
+
+        FeatureContextWrapper featureContextWrapper = null;
         for (FeatureRegistration registration : unprocessed) {
             if (processed.contains(registration)) {
                 LOGGER.config(LocalizationMessages.FEATURE_HAS_ALREADY_BEEN_PROCESSED(registration.getFeatureClass()));
@@ -671,7 +673,11 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                 continue;
             }
 
-            boolean success = feature.configure(this);
+            if (featureContextWrapper == null) {
+                // init lazily
+                featureContextWrapper = new FeatureContextWrapper(this, locator);
+            }
+            boolean success = feature.configure(featureContextWrapper);
 
             if (success) {
                 processed.add(registration);

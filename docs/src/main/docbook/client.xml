@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -706,6 +706,50 @@ System.out.println("Now the connection is closed.");</programlisting>
             (by <literal>response.readEntity(InputStream.class)</literal>), the connection stays open until
             you finish reading from the &lit.jdk6.InputStream;. In that case, the InputStream
             or the Response should be closed manually at the end of reading from InputStream.
+        </para>
+    </section>
+
+    <section>
+        <title>Injections into client providers</title>
+
+        <para>
+            In some cases you might need to inject some custom types into your client provider instance. JAX-RS
+            types do not need to be injected as they are passed as arguments into API methods.
+            Injections into client providers (filters, interceptor) are possible as long as the provider is
+            registered as a class. If the provider is registered as an instance then runtime will not inject
+            the provider. The reason is that this provider instance might be registered into multiple client
+            configurations. For example one instance of &jaxrs.client.ClientRequestFilter; can be registered
+            to two &jaxrs.client.Client;s.
+        </para>
+        <para>
+            To solve injection of a custom type into a client provider instance
+            use &jersey.client.ServiceLocatorClientProvider; to
+            extract &hk2.ServiceLocator; which can return the required injection. The following example shows how to utilize
+            &lit.jersey.client.ServiceLocatorClientProvider;:
+        </para>
+        <example>
+            <title>ServiceLocatorClientProvider example</title>
+            <programlisting language="java" linenumbering="numbered">public static class MyRequestFilter implements ClientRequestFilter {
+    // this injection does not work as filter is registered as an instance:
+    // @Inject
+    // private MyInjectedService service;
+
+    @Override
+    public void filter(ClientRequestContext requestContext) throws IOException {
+        // use ServiceLocatorClientProvider to extract HK2 ServiceLocator from request
+        final ServiceLocator locator = ServiceLocatorClientProvider.getServiceLocator(requestContext);
+
+        // and ask for MyInjectedService:
+        final MyInjectedService service = locator.getService(MyInjectedService.class);
+
+        final String name = service.getName();
+        ...
+    }
+}</programlisting>
+        </example>
+        <para>
+            For more information see javadoc of &jersey.client.ServiceLocatorClientProvider;
+            (and javadoc of &jersey.common.ServiceLocatorProvider; which supports common JAX-RS components).
         </para>
     </section>
 

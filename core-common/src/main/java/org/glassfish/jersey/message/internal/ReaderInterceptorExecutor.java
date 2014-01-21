@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,10 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.collect.Lists;
 
@@ -73,7 +76,7 @@ import com.google.common.collect.Lists;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderInterceptor>
-        implements ReaderInterceptorContext {
+        implements ReaderInterceptorContext, ServiceLocatorSupplier {
 
     private InputStream inputStream;
     private final MultivaluedMap<String, String> headers;
@@ -82,6 +85,8 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
     private int processedCount;
     private final MessageBodyWorkers workers;
     private final boolean translateNce;
+
+    private final ServiceLocator serviceLocator;
 
     /**
      * Constructs a new executor to read given type from provided {@link InputStream entityStream}.
@@ -96,24 +101,25 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
      * @param headers            mutable message headers.
      * @param propertiesDelegate request-scoped properties delegate.
      * @param inputStream        entity input stream.
-     * @param workers            {@link MessageBodyWorkers Message body workers}.
+     * @param workers            {@link org.glassfish.jersey.message.MessageBodyWorkers Message body workers}.
      * @param readerInterceptors Reader interceptor that are to be used to intercept the reading of an entity.
      *                           The interceptors will be executed in the same order as given in this parameter.
-     * @param translateNce       if {@code true}, the {@link NoContentException} thrown by a selected message body
-     *                           reader will be translated into a {@link BadRequestException} as required by
-     *                           JAX-RS specification on the server side.
+     * @param translateNce       if {@code true}, the {@link javax.ws.rs.core.NoContentException} thrown by a selected message body
+     *                           reader will be translated into a {@link javax.ws.rs.BadRequestException} as required by
+     * @param serviceLocator Service locator.
      */
     public ReaderInterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
                                      MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate,
                                      InputStream inputStream, MessageBodyWorkers workers,
                                      Iterable<ReaderInterceptor> readerInterceptors,
-                                     boolean translateNce) {
+                                     boolean translateNce, ServiceLocator serviceLocator) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
         this.inputStream = inputStream;
         this.workers = workers;
         this.translateNce = translateNce;
+        this.serviceLocator = serviceLocator;
 
         final List<ReaderInterceptor> effectiveInterceptors = Lists.newArrayList(readerInterceptors);
         effectiveInterceptors.add(new TerminalReaderInterceptor());
@@ -142,6 +148,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
             traceAfter(interceptor, MsgTraceEvent.RI_AFTER);
         }
     }
+
     @Override
     public InputStream getInputStream() {
         return this.inputStream;
@@ -165,6 +172,11 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
      */
     int getProcessedCount() {
         return processedCount;
+    }
+
+    @Override
+    public ServiceLocator getServiceLocator() {
+        return serviceLocator;
     }
 
     /**

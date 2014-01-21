@@ -67,9 +67,12 @@ import javax.ws.rs.ext.WriterInterceptor;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
+import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import com.google.common.base.Preconditions;
 
@@ -78,7 +81,7 @@ import com.google.common.base.Preconditions;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ClientRequest extends OutboundMessageContext implements ClientRequestContext {
+public class ClientRequest extends OutboundMessageContext implements ClientRequestContext, ServiceLocatorSupplier {
     // Request-scoped configuration instance
     private final ClientConfig clientConfig;
     // Request-scoped properties delegate
@@ -598,5 +601,10 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
      */
     void setReaderInterceptors(Iterable<ReaderInterceptor> readerInterceptors) {
         this.readerInterceptors = readerInterceptors;
+    }
+
+    @Override
+    public ServiceLocator getServiceLocator() {
+        return getClientRuntime().getServiceLocator();
     }
 }
