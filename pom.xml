@@ -597,6 +597,26 @@
                         <message>JERSEY-${project.version}</message>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>2.2</version>
+                    <executions>
+                        <execution>
+                            <id>shade-archive</id>
+                            <goals>
+                                <goal>shade</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <shadeTestJar>false</shadeTestJar>
+                        <minimizeJar>true</minimizeJar>
+                        <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+                        <!-- Do not create reduced pom - jaxrs-ri cannot be built when set to true -->
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -999,6 +1019,21 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>org.glassfish.hk2.external</groupId>
+                <artifactId>asm-all-repackaged</artifactId>
+                <version>${hk2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.hk2.external</groupId>
+                <artifactId>aopalliance-repackaged</artifactId>
+                <version>${hk2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>${javassist.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.glassfish.grizzly</groupId>
@@ -1295,6 +1330,7 @@
         </findbugs.glassfish.logging.validLoggerPrefixes>
         <java.version>1.6</java.version>
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
+        <jersey.shade.package.prefix>org.glassfish.jersey.shaded</jersey.shade.package.prefix>
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -1316,9 +1352,10 @@
         <grizzly.client.version>1.6</grizzly.client.version>
         <grizzly2.version>2.3.8</grizzly2.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <hk2.version>2.2.0-b21</hk2.version>
+        <hk2.version>2.2.0</hk2.version>
         <jackson.version>1.9.13</jackson.version>
         <jackson2.version>2.2.3</jackson2.version>
+        <javassist.version>3.18.1-GA</javassist.version>
         <javax.annotation.version>1.2</javax.annotation.version>
         <javax.annotation.bundle.version>1.2</javax.annotation.bundle.version>
         <javax.el.version>2.2.4</javax.el.version>
