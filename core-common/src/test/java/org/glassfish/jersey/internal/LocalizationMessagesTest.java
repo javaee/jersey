@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,63 +39,19 @@
  */
 package org.glassfish.jersey.internal;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.Variant;
-import javax.ws.rs.ext.RuntimeDelegate;
-
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.message.internal.MessagingBinders;
 
 import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * Test runtime delegate.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * Tests {@link org.glassfish.jersey.internal.LocalizationMessages}.
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class TestRuntimeDelegate extends AbstractRuntimeDelegate {
+public class LocalizationMessagesTest {
 
-    public TestRuntimeDelegate() {
-        super(Injections.createLocator(new MessagingBinders.HeaderDelegateProviders()));
-    }
-
-    @Override
-    public <T> T createEndpoint(Application application, Class<T> endpointType) throws IllegalArgumentException, UnsupportedOperationException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void testMediaType() {
-        MediaType m = new MediaType("text", "plain");
-        Assert.assertNotNull(m);
-    }
-
-    public void testUriBuilder() {
-        UriBuilder ub = RuntimeDelegate.getInstance().createUriBuilder();
-        Assert.assertNotNull(ub);
-    }
-
-    public void testResponseBuilder() {
-        Response.ResponseBuilder rb = RuntimeDelegate.getInstance().createResponseBuilder();
-        Assert.assertNotNull(rb);
-    }
-
-    public void testVariantListBuilder() {
-        Variant.VariantListBuilder vlb = RuntimeDelegate.getInstance().createVariantListBuilder();
-        Assert.assertNotNull(vlb);
-    }
-
-    public void testLinkBuilder() {
-        final Link.Builder linkBuilder = RuntimeDelegate.getInstance().createLinkBuilder();
-        Assert.assertNotNull(linkBuilder);
-    }
-
-    public void testWebApplicationException() {
-        WebApplicationException wae = new WebApplicationException();
-        Assert.assertNotNull(wae);
+    @Test
+    public void test() {
+        Assert.assertTrue(LocalizationMessages.COMPONENT_CONTRACTS_EMPTY_OR_NULL("TYPE")
+                .contains("Attempt to register component of type TYPE"));
     }
 }

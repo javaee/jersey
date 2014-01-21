@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,9 +45,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
- * TODO: javadoc.
+ * Tests {@link PathTemplate}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
@@ -55,12 +56,12 @@ public class PathPatternTest {
 
     @Test
     public void testTerminalPathPatterMatching() {
-        final String[] rootPaths = new String[] {
+        final String[] rootPaths = new String[]{
                 "/a/b/c",
                 "/a/b/c/"
         };
 
-        final String[] subPaths = new String[] {
+        final String[] subPaths = new String[]{
                 "d/e",
                 "d/e/",
                 "/d/e",
@@ -70,7 +71,7 @@ public class PathPatternTest {
         final String path1 = "/a/b/c";
         final String path2 = "/a/b/c/";
 
-        final PathPattern[] patterns = new PathPattern[] {
+        final PathPattern[] patterns = new PathPattern[]{
                 new PathPattern("a"),
                 new PathPattern("b"),
                 new PathPattern("c"),
@@ -97,5 +98,31 @@ public class PathPatternTest {
         }
 
         assertEquals("/", rhp);
+    }
+
+    @Test
+    public void testSimplePattern() throws Exception {
+        PathPattern pattern = new PathPattern("/test");
+        assertNull(pattern.match("doesn't match"));
+        assertNotNull(pattern.match("/test/me"));
+    }
+
+    @Test
+    public void testSimplePatternWithRightHandSide() throws Exception {
+
+        PathPattern pattern = new PathPattern(new PathTemplate("/test/{template: abc.*}"));
+        assertNull("Why matched?", pattern.match("/test/me"));
+        assertNotNull("Why not matched?", pattern.match("/test/abc-should_work"));
+    }
+
+    @Test
+    public void testSetsAndGetsUriTemplate() throws Exception {
+        PathTemplate tmpl = new PathTemplate("/test");
+        PathPattern pattern = new PathPattern(tmpl);
+        assertEquals(
+                "We just injected the value, why it is different?",
+                tmpl,
+                pattern.getTemplate()
+        );
     }
 }

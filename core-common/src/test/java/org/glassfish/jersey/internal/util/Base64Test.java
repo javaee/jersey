@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,12 @@
  */
 package org.glassfish.jersey.internal.util;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  *
@@ -48,20 +52,20 @@ import static org.junit.Assert.assertEquals;
  */
 public class Base64Test {
 
-    private static String[] decoded = new String[] {
-        "any carnal pleasure.",
-        "any carnal pleasure",
-        "any carnal pleasur",
-        "any carnal pleasu",
-        "any carnal pleas"
+    private static String[] decoded = new String[]{
+            "any carnal pleasure.",
+            "any carnal pleasure",
+            "any carnal pleasur",
+            "any carnal pleasu",
+            "any carnal pleas"
     };
 
-    private static String[] encoded = new String[] {
-        "YW55IGNhcm5hbCBwbGVhc3VyZS4=",
-        "YW55IGNhcm5hbCBwbGVhc3VyZQ==",
-        "YW55IGNhcm5hbCBwbGVhc3Vy",
-        "YW55IGNhcm5hbCBwbGVhc3U=",
-        "YW55IGNhcm5hbCBwbGVhcw=="
+    private static String[] encoded = new String[]{
+            "YW55IGNhcm5hbCBwbGVhc3VyZS4=",
+            "YW55IGNhcm5hbCBwbGVhc3VyZQ==",
+            "YW55IGNhcm5hbCBwbGVhc3Vy",
+            "YW55IGNhcm5hbCBwbGVhc3U=",
+            "YW55IGNhcm5hbCBwbGVhcw=="
     };
 
     @Test
@@ -78,4 +82,71 @@ public class Base64Test {
         }
     }
 
+    @Test
+    public void testRoundtripLengthMod3Equals0() {
+        byte[] data = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+        byte[] result = Base64.decode(Base64.encode(data));
+        assertTrue("failed to roundtrip value to base64", Arrays.equals(data, result));
+    }
+
+    @Test
+    public void testRoundtripLengthMod3Equals1() {
+        byte[] data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        byte[] result = Base64.decode(Base64.encode(data));
+        assertTrue("failed to roundtrip value to base64", Arrays.equals(data, result));
+    }
+
+    @Test
+    public void testRoundtripLengthMod3Equals2() {
+        byte[] data = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        byte[] result = Base64.decode(Base64.encode(data));
+        assertTrue("failed to roundtrip value to base64", Arrays.equals(data, result));
+    }
+
+    @Test
+    public void testRoundtripOneByteGreaterThan127() {
+        byte[] data = {(byte) 128};
+        try {
+            byte[] result = Base64.decode(Base64.encode(data));
+            fail();
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    @Test
+    public void testRoundtripAssortedValues() {
+        byte[] data = {0, 1, 63, 64, 65, (byte) 127, (byte) 128, (byte) 1299, (byte) 254, (byte) 255};
+        try {
+            byte[] result = Base64.decode(Base64.encode(data));
+            fail();
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    @Test
+    public void testEncodeByteArray() {
+        String expectedResult = "//79/Pv6+fj39vX08/Lx8O/u7ezr6uno5+bl5OPi4eDf3t3c29rZ2NfW1dTT0tHQz87NzMvKycjHxsXEw8LBwL++vby7urm4t7a1tLOysbCvrq2sq6qpqKempaSjoqGgn56dnJuamZiXlpWUk5KRkI+OjYyLiomIh4aFhIOCgYB/fn18e3p5eHd2dXRzcnFwb25tbGtqaWhnZmVkY2JhYF9eXVxbWllYV1ZVVFNSUVBPTk1MS0pJSEdGRURDQkFAPz49PDs6OTg3NjU0MzIxMC8uLSwrKikoJyYlJCMiISAfHh0cGxoZGBcWFRQTEhEQDw4NDAsKCQgHBgUEAwIBAA==";
+        byte[] data = new byte[256];
+        for (int i = 0; i < 256; ++i) {
+            data[i] = (byte) (255 - i);
+        }
+        try {
+            String result = new String(Base64.encode(data));
+            fail();
+        } catch (Exception e) {
+            // ok
+        }
+    }
+
+    @Test
+    public void testDecodeString2() {
+        String data = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==";
+        byte[] result = Base64.decode(data.getBytes());
+        assertEquals("incorrect length", result.length, 256);
+        for (int i = 0; i < 256; ++i) {
+            assertEquals("incorrect value", result[i], (byte) i);
+        }
+    }
 }

@@ -1,31 +1,5 @@
 TODO - FIRST:
-contribs/jersey-multipart/src/test/java/com/sun/jersey/multipart/impl/MultipartMixedWithApacheClientTest.java
 
-contribs/jersey-oauth/oauth-tests/src/test/java/com/sun/jersey/oauth/tests/OsgiIntegrationTest.java
-
-glassfish/tests/jaxb22test/src/test/java/com/sun/jersey/glassfish/tests/jaxb22test/Jaxb22Test.java
-
-jersey-bundle/src-test/java/com/sun/jersey/impl/MessageRBTest.java
-
-jersey-client/src/test/java/com/sun/jersey/api/client/filter/HTTPDigestAuthFilterTest.java
-jersey-client/src/test/java/com/sun/jersey/api/client/WebResourcePropertiesTest.java
-jersey-client/src/test/java/com/sun/jersey/impl/client/CopyOnWriteHashMapTest.java
-jersey-client/src/test/java/com/sun/jersey/impl/client/filter/FilterTest.java
-jersey-client/src/test/java/com/sun/jersey/impl/client/inject/IoCComponentProcessorTest.java
-jersey-client/src/test/java/com/sun/jersey/impl/client/RuntimeDelegateTest.java
-
-jersey-core/src/test/java/com/sun/jersey/core/spi/factory/ResponseImplTest.java
-jersey-core/src/test/java/com/sun/jersey/core/util/AbstractKeyComparatorHashMapTest.java
-jersey-core/src/test/java/com/sun/jersey/core/util/Base64Test.java
-jersey-core/src/test/java/com/sun/jersey/core/util/KeyComparatorHashMapTest.java
-jersey-core/src/test/java/com/sun/jersey/core/util/KeyComparatorLinkedHashMapTest.java
-
-jersey-server/src/test/java/com/sun/jersey/server/impl/application/WebApplicationContextTest.java
-jersey-server/src/test/java/com/sun/jersey/server/impl/application/WebApplicationImplTest.java
-jersey-server/src/test/java/com/sun/jersey/server/impl/BuildIdTest.java
-jersey-server/src/test/java/com/sun/jersey/server/impl/modelapi/annotation/IntrospectionModellerTest.java
-jersey-server/src/test/java/com/sun/jersey/server/impl/uri/PathPatternTest.java
-jersey-server/src/test/java/com/sun/jersey/server/impl/uri/PathTemplateTest.java
 jersey-server/src/test/java/com/sun/jersey/server/impl/uri/rules/BaseRuleTest.java
 jersey-server/src/test/java/com/sun/jersey/server/impl/uri/rules/RootResourceClassesRuleTest.java
 jersey-server/src/test/java/com/sun/jersey/server/impl/uri/UriHelperTest.java
@@ -366,6 +340,8 @@ tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/ResourcesCon
 tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/ResponseWriterMetadataTest.java
 
 TODO - LATER:
+
+contribs/jersey-oauth/oauth-tests/src/test/java/com/sun/jersey/oauth/tests/OsgiIntegrationTest.java
 
 contribs/bill-burke-book/ex03_1/src/test/java/com/restfully/shop/test/CustomerResourceTest.java
 contribs/bill-burke-book/ex04_1/src/test/java/com/restfully/shop/test/PatchTest.java
