@@ -79,7 +79,7 @@ public class ResourceMxBeanImpl implements ResourceMXBean {
         this.name = name;
         this.uriResource = uriResource;
         this.mBeanExposer = mBeanExposer;
-        this.resourcePropertyName = parentName + ",resource=" + name;
+        this.resourcePropertyName = parentName + ",resource=" + MBeanExposer.convertToObjectName(name, uriResource);
         mBeanExposer.registerMBean(this, resourcePropertyName);
         this.methodsExecutionStatisticsBean = new ExecutionStatisticsDynamicBean(
                 resourceStatistics.getResourceMethodExecutionStatistics(), mBeanExposer, resourcePropertyName,
