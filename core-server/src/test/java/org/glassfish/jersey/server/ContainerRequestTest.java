@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -222,5 +222,29 @@ public class ContainerRequestTest {
 
             assertEquals(URI.create(path).normalize().toString() + absoluteUri, request.getPath(true));
         }
+    }
+
+    private ContainerRequest getContainerRequestForPreconditionsTest() {
+        return new ContainerRequest(URI.create("http://example.org"),
+                    URI.create("http://example.org/app/respource"), "GET", SECURITY_CONTEXT, new MapPropertiesDelegate());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEvaluatePreconditionsDateNull() {
+        ContainerRequest r = getContainerRequestForPreconditionsTest();
+        r.evaluatePreconditions((Date) null);
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEvaluatePreconditionsEntityTagNull() {
+        ContainerRequest r = getContainerRequestForPreconditionsTest();
+        r.evaluatePreconditions((EntityTag) null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEvaluatePreconditionsBothNull() {
+        ContainerRequest r = getContainerRequestForPreconditionsTest();
+        r.evaluatePreconditions(null, null);
     }
 }

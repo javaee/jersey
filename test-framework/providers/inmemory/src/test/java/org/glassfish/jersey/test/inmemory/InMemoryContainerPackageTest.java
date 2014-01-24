@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,56 +37,78 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.inmemory.internal;
+package org.glassfish.jersey.test.inmemory;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * Package scanning test for {@link org.glassfish.jersey.test.inmemory.InMemoryConnector}.
+ *
+ * @author Paul Sandoz
  */
-public class FollowRedirectsTest extends JerseyTest {
-    @Path("/followTest")
-    public static class RedirectResource {
-        @GET
-        public String get() {
-            return "GET";
-        }
+public class InMemoryContainerPackageTest extends JerseyTest {
 
-        @GET
-        @Path("redirect")
-        public Response redirect() {
-            return Response.status(302).location(UriBuilder.fromResource(RedirectResource.class).build()).build();
-        }
+    /**
+     * Creates new instance.
+     */
+    public InMemoryContainerPackageTest() {
+        super(new InMemoryTestContainerFactory());
     }
 
     @Override
-    protected Application configure() {
-        return new ResourceConfig(RedirectResource.class);
+    protected ResourceConfig configure() {
+        ResourceConfig rc = new ResourceConfig();
+        rc.packages(this.getClass().getPackage().getName());
+        return rc;
+    }
+
+    /**
+     * Test resource class.
+     */
+    @Path("packagetest")
+    public static class TestResource {
+
+        /**
+         * Test resource method.
+         *
+         * @return Test simple string response.
+         */
+        @GET
+        public String getSomething() {
+            return "get";
+        }
+
+        /**
+         * Test (sub)resource method.
+         *
+         * @return Simple string test response.
+         */
+        @GET
+        @Path("sub")
+        public String getSubResource() {
+            return "sub";
+        }
     }
 
     @Test
-    public void testDoFollow() {
-        Response r = target("followTest/redirect").request().get();
-        assertEquals(200, r.getStatus());
-        assertEquals("GET", r.readEntity(String.class));
+    public void testInMemoryConnectorGet() {
+        final Response response = target("packagetest").request().get();
+
+        assertTrue(response.getStatus() == 200);
     }
 
     @Test
-    public void testDontFollow() {
-        WebTarget t = target("followTest/redirect");
-        t.property(ClientProperties.FOLLOW_REDIRECTS, false);
-        assertEquals(302, t.request().get().getStatus());
+    public void testGetSub() {
+        final String response = target("packagetest").path("sub").request().get(String.class);
+        assertEquals("sub", response);
     }
 }

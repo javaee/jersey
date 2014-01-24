@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -446,4 +446,21 @@ public class UriTemplateTest {
 
         assertEquals(uri, t.createURI(variableMap));
     }
+
+    @Test
+    public void testNormalizesURIs() throws Exception {
+        this.validateNormalize("/some-path", "/some-path");
+        this.validateNormalize("http://example.com/some/../path", "http://example.com/path");
+        // note, that following behaviour differs from Jersey-1.x UriHelper.normalize(), the '..' segment is simply left out in
+        // this case, where older UriHelper.normalize() would return the path including the '..' segment. It is also mentioned
+        // in the UriTemplate.normalize() javadoc.
+        this.validateNormalize("http://example.com/../path", "http://example.com/path");
+        this.validateNormalize("http://example.com//path", "http://example.com//path");
+    }
+
+    private void validateNormalize(String path, String expected) throws Exception {
+        URI result = UriTemplate.normalize(path);
+        assertEquals(expected, result.toString());
+    }
+
 }
