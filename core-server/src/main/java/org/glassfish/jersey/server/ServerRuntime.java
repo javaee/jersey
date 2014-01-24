@@ -103,14 +103,15 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
+
+import org.glassfish.hk2.api.ServiceLocator;
+
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
-import com.google.common.base.Preconditions;
+import jersey.repackaged.com.google.common.base.Preconditions;
 
 /**
  * Server-side request processing runtime.

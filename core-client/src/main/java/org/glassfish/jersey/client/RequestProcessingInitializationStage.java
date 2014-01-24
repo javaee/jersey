@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,8 +54,8 @@ import org.glassfish.jersey.model.internal.RankedComparator;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.base.Function;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Function that can be put to an acceptor chain to properly initialize

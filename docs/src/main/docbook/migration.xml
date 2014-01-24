@@ -56,6 +56,20 @@
     <section xml:id="mig-2.6">
         <title>Migrating from Jersey 2.5.1 to 2.6</title>
 
+        <section xml:id="mig-2.6-repackaged">
+            <title>Guava and ASM have been embedded</title>
+            <para>
+                Jersey no longer depend directly on Guava and ASM artifacts which means that users are free to use their own
+                versions of mentioned libraries.
+            </para>
+            <para>
+                New bundle has been created for Guava (<literal>bundles/repackaged/jersey-guava</literal>), with Maven coordinates:
+                <literal>org.glassfish.jersey.bundles.repackaged:jersey-guava</literal>
+            </para>
+            <para>
+                (Repackaged) ASM is now part of Jersey Server. Jersey currently uses ASM 5 for package-scanning capabilities.
+            </para>
+        </section>
         <section xml:id="mig-2.6-removed-deprecated">
             <title>Removed deprecated APIs</title>
             <para>Following, already deprecated, APIs were removed:</para>

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,15 +37,16 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.Set;
 
-import javax.inject.Singleton;
-
 import javax.ws.rs.RuntimeType;
+
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -58,8 +59,8 @@ import org.glassfish.hk2.utilities.AliasDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
 import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.base.Predicate;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Class used for registration of the custom providers into HK2 service locator.
@@ -88,7 +89,7 @@ public class ProviderBinder {
      * @param locator HK2 service locator the binder will use to bind the
      *                providers into.
      */
-    public ProviderBinder(ServiceLocator locator) {
+    public ProviderBinder(final ServiceLocator locator) {
         this.locator = locator;
     }
 
@@ -98,9 +99,9 @@ public class ProviderBinder {
      *
      * @param instances custom provider instances.
      */
-    public void bindInstances(Iterable<Object> instances) {
+    public void bindInstances(final Iterable<Object> instances) {
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        for (Object instance : instances) {
+        for (final Object instance : instances) {
             bindInstance(instance, dc);
         }
         dc.commit();
@@ -113,10 +114,10 @@ public class ProviderBinder {
      *
      * @param classes custom provider classes.
      */
-    public void bindClasses(Class<?>... classes) {
+    public void bindClasses(final Class<?>... classes) {
         if (classes != null && classes.length > 0) {
             final DynamicConfiguration dc = Injections.getConfiguration(locator);
-            for (Class<?> clazz : classes) {
+            for (final Class<?> clazz : classes) {
                 bindClass(clazz, locator, dc, false);
             }
             dc.commit();
@@ -129,7 +130,7 @@ public class ProviderBinder {
      *
      * @param classes custom provider classes.
      */
-    public void bindClasses(Iterable<Class<?>> classes) {
+    public void bindClasses(final Iterable<Class<?>> classes) {
         bindClasses(classes, false);
     }
 
@@ -147,13 +148,13 @@ public class ProviderBinder {
      * @param bindResources if {@code true}, the provider classes will also be bound as
      *                      resources.
      */
-    public void bindClasses(Iterable<Class<?>> classes, boolean bindResources) {
+    public void bindClasses(final Iterable<Class<?>> classes, final boolean bindResources) {
         if (classes == null || !classes.iterator().hasNext()) {
             return;
         }
 
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        for (Class<?> clazz : classes) {
+        for (final Class<?> clazz : classes) {
             bindClass(clazz, locator, dc, bindResources);
         }
         dc.commit();
@@ -169,7 +170,7 @@ public class ProviderBinder {
     public static void bindProvider(
             final Class<?> providerClass, final ContractProvider model, final DynamicConfiguration dc) {
 
-        for (Class contract : model.getContracts()) {
+        for (final Class contract : model.getContracts()) {
             final ScopedBindingBuilder bindingBuilder = Injections.newBinder(providerClass)
                     .in(model.getScope())
                     .qualifiedBy(new CustomAnnotationImpl());
@@ -200,7 +201,7 @@ public class ProviderBinder {
     public static void bindProvider(
             final Object providerInstance, final ContractProvider model, final DynamicConfiguration dc) {
 
-        for (Class contract : model.getContracts()) {
+        for (final Class contract : model.getContracts()) {
             final ScopedBindingBuilder bindingBuilder = Injections.
                     newBinder(providerInstance).
                     qualifiedBy(new CustomAnnotationImpl());
@@ -259,9 +260,9 @@ public class ProviderBinder {
                                      final RuntimeType constrainedTo,
                                      final Set<Class<?>> registeredClasses,
                                      final DynamicConfiguration dynamicConfiguration) {
-        Predicate<ContractProvider> filter = new Predicate<ContractProvider>() {
+        final Predicate<ContractProvider> filter = new Predicate<ContractProvider>() {
             @Override
-            public boolean apply(ContractProvider input) {
+            public boolean apply(final ContractProvider input) {
                 return ComponentBag.EXCLUDE_EMPTY.apply(input) && ComponentBag.EXCLUDE_META_PROVIDERS.apply(input);
             }
         };
@@ -271,7 +272,7 @@ public class ProviderBinder {
         if (constrainedTo != null) {
             classes = Sets.filter(classes, new Predicate<Class<?>>() {
                 @Override
-                public boolean apply(Class<?> componentClass) {
+                public boolean apply(final Class<?> componentClass) {
                     return Providers.checkProviderRuntime(
                             componentClass,
                             componentBag.getModel(componentClass),
@@ -281,7 +282,7 @@ public class ProviderBinder {
                 }
             });
         }
-        for (Class<?> providerClass : classes) {
+        for (final Class<?> providerClass : classes) {
             final ContractProvider model = componentBag.getModel(providerClass);
             ProviderBinder.bindProvider(providerClass, model, dynamicConfiguration);
         }
@@ -291,7 +292,7 @@ public class ProviderBinder {
         if (constrainedTo != null) {
             instances = Sets.filter(instances, new Predicate<Object>() {
                 @Override
-                public boolean apply(Object component) {
+                public boolean apply(final Object component) {
                     final Class<?> componentClass = component.getClass();
                     return Providers.checkProviderRuntime(
                             componentClass,
@@ -302,28 +303,28 @@ public class ProviderBinder {
                 }
             });
         }
-        for (Object provider : instances) {
+        for (final Object provider : instances) {
             final ContractProvider model = componentBag.getModel(provider.getClass());
             ProviderBinder.bindProvider(provider, model, dynamicConfiguration);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void bindInstance(T instance, DynamicConfiguration dc) {
-        for (Class contract : Providers.getProviderContracts(instance.getClass())) {
+    private <T> void bindInstance(final T instance, final DynamicConfiguration dc) {
+        for (final Class contract : Providers.getProviderContracts(instance.getClass())) {
             Injections.addBinding(Injections.newBinder(instance).to(contract).qualifiedBy(new CustomAnnotationImpl()), dc);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void bindClass(Class<T> clazz, ServiceLocator locator, DynamicConfiguration dc, boolean isResource) {
-        Class<? extends Annotation> scope = getProviderScope(clazz);
+    private <T> void bindClass(final Class<T> clazz, final ServiceLocator locator, final DynamicConfiguration dc, final boolean isResource) {
+        final Class<? extends Annotation> scope = getProviderScope(clazz);
 
         if (isResource) {
             final ActiveDescriptor<?> descriptor = dc.bind(BuilderHelper.activeLink(clazz).to(clazz).in(scope).build());
 
-            for (Class contract : Providers.getProviderContracts(clazz)) {
-                AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
+            for (final Class contract : Providers.getProviderContracts(clazz)) {
+                final AliasDescriptor aliasDescriptor = new AliasDescriptor(locator, descriptor, contract.getName(), null);
                 aliasDescriptor.setScope(scope.getName());
                 aliasDescriptor.addQualifierAnnotation(new CustomAnnotationImpl());
 
@@ -332,14 +333,14 @@ public class ProviderBinder {
         } else {
             final ScopedBindingBuilder<T> bindingBuilder =
                     Injections.newBinder(clazz).in(scope).qualifiedBy(new CustomAnnotationImpl());
-            for (Class contract : Providers.getProviderContracts(clazz)) {
+            for (final Class contract : Providers.getProviderContracts(clazz)) {
                 bindingBuilder.to(contract);
             }
             Injections.addBinding(bindingBuilder, dc);
         }
     }
 
-    private Class<? extends Annotation> getProviderScope(Class<?> clazz) {
+    private Class<? extends Annotation> getProviderScope(final Class<?> clazz) {
         Class<? extends Annotation> hk2Scope = Singleton.class;
         if (clazz.isAnnotationPresent(PerLookup.class)) {
             hk2Scope = PerLookup.class;

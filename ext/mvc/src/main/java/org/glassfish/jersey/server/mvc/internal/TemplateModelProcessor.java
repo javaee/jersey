@@ -73,7 +73,7 @@ import org.glassfish.jersey.server.model.internal.ModelProcessorUtil;
 import org.glassfish.jersey.server.mvc.Template;
 import org.glassfish.jersey.server.mvc.Viewable;
 
-import com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * {@link ModelProcessor Model processor} enhancing (sub-)resources with {@value HttpMethod#GET} methods responsible of producing

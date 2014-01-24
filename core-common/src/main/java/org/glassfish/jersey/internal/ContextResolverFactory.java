@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal;
 
 import java.lang.reflect.Type;
@@ -64,8 +65,6 @@ import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
-import com.google.common.collect.Maps;
-
 /**
  * A factory implementation for managing {@link ContextResolver} instances.
  *
@@ -86,9 +85,10 @@ public class ContextResolverFactory implements ContextResolvers {
         }
     }
 
-    //
-    private final Map<Type, Map<MediaType, ContextResolver>> resolver = Maps.newHashMapWithExpectedSize(3);
-    private final Map<Type, ConcurrentHashMap<MediaType, ContextResolver>> cache = Maps.newHashMapWithExpectedSize(3);
+    private final Map<Type, Map<MediaType, ContextResolver>> resolver =
+            new HashMap<Type, Map<MediaType, ContextResolver>>(3);
+    private final Map<Type, ConcurrentHashMap<MediaType, ContextResolver>> cache =
+            new HashMap<Type, ConcurrentHashMap<MediaType, ContextResolver>>(3);
 
     /**
      * Create new context resolver factory backed by the supplied {@link ServiceLocator HK2 service locator}.
@@ -96,22 +96,22 @@ public class ContextResolverFactory implements ContextResolvers {
      * @param locator HK2 service locator.
      */
     @Inject
-    public ContextResolverFactory(ServiceLocator locator) {
-        Map<Type, Map<MediaType, List<ContextResolver>>> rs =
+    public ContextResolverFactory(final ServiceLocator locator) {
+        final Map<Type, Map<MediaType, List<ContextResolver>>> rs =
                 new HashMap<Type, Map<MediaType, List<ContextResolver>>>();
 
-        Iterable<ContextResolver> providers = Providers.getAllProviders(locator, ContextResolver.class);
-        for (ContextResolver provider : providers) {
-            List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
+        final Iterable<ContextResolver> providers = Providers.getAllProviders(locator, ContextResolver.class);
+        for (final ContextResolver provider : providers) {
+            final List<MediaType> ms = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
 
-            Type type = getParameterizedType(provider.getClass());
+            final Type type = getParameterizedType(provider.getClass());
 
             Map<MediaType, List<ContextResolver>> mr = rs.get(type);
             if (mr == null) {
                 mr = new HashMap<MediaType, List<ContextResolver>>();
                 rs.put(type, mr);
             }
-            for (MediaType m : ms) {
+            for (final MediaType m : ms) {
                 List<ContextResolver> crl = mr.get(m);
                 if (crl == null) {
                     crl = new ArrayList<ContextResolver>();
@@ -124,24 +124,24 @@ public class ContextResolverFactory implements ContextResolvers {
         // Reduce set of two or more context resolvers for same type and
         // media type
 
-        for (Map.Entry<Type, Map<MediaType, List<ContextResolver>>> e : rs.entrySet()) {
-            Map<MediaType, ContextResolver> mr = new KeyComparatorHashMap<MediaType, ContextResolver>(
+        for (final Map.Entry<Type, Map<MediaType, List<ContextResolver>>> e : rs.entrySet()) {
+            final Map<MediaType, ContextResolver> mr = new KeyComparatorHashMap<MediaType, ContextResolver>(
                     4, MessageBodyFactory.MEDIA_TYPE_COMPARATOR);
             resolver.put(e.getKey(), mr);
 
             cache.put(e.getKey(), new ConcurrentHashMap<MediaType, ContextResolver>(4));
 
-            for (Map.Entry<MediaType, List<ContextResolver>> f : e.getValue().entrySet()) {
+            for (final Map.Entry<MediaType, List<ContextResolver>> f : e.getValue().entrySet()) {
                 mr.put(f.getKey(), reduce(f.getValue()));
             }
         }
     }
 
-    private Type getParameterizedType(Class<?> c) {
-        DeclaringClassInterfacePair p = ReflectionHelper.getClass(
+    private Type getParameterizedType(final Class<?> c) {
+        final DeclaringClassInterfacePair p = ReflectionHelper.getClass(
                 c, ContextResolver.class);
 
-        Type[] as = ReflectionHelper.getParameterizedTypeArguments(p);
+        final Type[] as = ReflectionHelper.getParameterizedTypeArguments(p);
 
         return (as != null) ? as[0] : Object.class;
     }
@@ -152,7 +152,7 @@ public class ContextResolverFactory implements ContextResolvers {
     private static final class NullContextResolverAdapter implements ContextResolver {
 
         @Override
-        public Object getContext(Class type) {
+        public Object getContext(final Class type) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
     }
@@ -161,19 +161,18 @@ public class ContextResolverFactory implements ContextResolvers {
 
         private final ContextResolver[] cra;
 
-        ContextResolverAdapter(ContextResolver... cra) {
+        ContextResolverAdapter(final ContextResolver... cra) {
             this(removeNull(cra));
         }
 
-        ContextResolverAdapter(List<ContextResolver> crl) {
+        ContextResolverAdapter(final List<ContextResolver> crl) {
             this.cra = crl.toArray(new ContextResolver[crl.size()]);
         }
 
         @Override
-        public Object getContext(Class objectType) {
-            for (ContextResolver cr : cra) {
-                @SuppressWarnings("unchecked")
-                Object c = cr.getContext(objectType);
+        public Object getContext(final Class objectType) {
+            for (final ContextResolver cr : cra) {
+                @SuppressWarnings("unchecked") final Object c = cr.getContext(objectType);
                 if (c != null) {
                     return c;
                 }
@@ -192,9 +191,9 @@ public class ContextResolverFactory implements ContextResolvers {
             }
         }
 
-        private static List<ContextResolver> removeNull(ContextResolver... cra) {
-            List<ContextResolver> crl = new ArrayList<ContextResolver>(cra.length);
-            for (ContextResolver cr : cra) {
+        private static List<ContextResolver> removeNull(final ContextResolver... cra) {
+            final List<ContextResolver> crl = new ArrayList<ContextResolver>(cra.length);
+            for (final ContextResolver cr : cra) {
                 if (cr != null) {
                     crl.add(cr);
                 }
@@ -203,7 +202,7 @@ public class ContextResolverFactory implements ContextResolvers {
         }
     }
 
-    private ContextResolver reduce(List<ContextResolver> r) {
+    private ContextResolver reduce(final List<ContextResolver> r) {
         if (r.size() == 1) {
             return r.iterator().next();
         } else {
@@ -213,7 +212,7 @@ public class ContextResolverFactory implements ContextResolvers {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> ContextResolver<T> resolve(Type t, MediaType m) {
+    public <T> ContextResolver<T> resolve(final Type t, MediaType m) {
         final ConcurrentHashMap<MediaType, ContextResolver> crMapCache = cache.get(t);
         if (crMapCache == null) {
             return null;
@@ -247,7 +246,7 @@ public class ContextResolverFactory implements ContextResolvers {
                 cr = new ContextResolverAdapter(type, subTypeWildCard, wildCard).reduce();
             }
 
-            ContextResolver<T> _cr = crMapCache.putIfAbsent(m, cr);
+            final ContextResolver<T> _cr = crMapCache.putIfAbsent(m, cr);
             // If there is already a value in the cache use that
             // instance, and discard the new and redundant instance, to
             // ensure the same instance is always returned.

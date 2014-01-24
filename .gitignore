@@ -1,26 +1,29 @@
 # maven noise
 target/
 
+# gradle noise
+.gradle
+
 # osx noise
 .DS_Store
 profile
 
-#IntelliJ Idea noise
+# IntelliJ Idea noise
 .idea
 *.iws
 *.ipr
 *.iml
 *.releaseBackup
 
-#NB noise
+# NB noise
 nbactions.xml
 nb-configuration.xml
 
-#eclipse noise
+# Eclipse noise
 .settings
 .settings/*
 .project
 .classpath
 
-#Maven plugins noise
+# Maven plugins noise
 dependency-reduced-pom.xml

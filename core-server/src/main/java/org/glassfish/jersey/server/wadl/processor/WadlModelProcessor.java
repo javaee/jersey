@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -72,9 +72,9 @@ import org.glassfish.jersey.server.wadl.WadlApplicationContext;
 import org.glassfish.jersey.server.wadl.internal.WadlResource;
 import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 
-import com.google.common.collect.Lists;
-
 import com.sun.research.ws.wadl.Application;
+
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * WADL {@link ModelProcessor model processor} which enhance resource model by WADL related resources (like "/application.wadl").

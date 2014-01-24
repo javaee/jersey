@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,10 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
 
-import com.google.common.base.Function;
 import org.glassfish.hk2.api.Factory;
+
+import jersey.repackaged.com.google.common.base.Function;
 
 /**
  * Helper function converting a HK2 {@link Factory service factory} into the
@@ -53,7 +55,7 @@ import org.glassfish.hk2.api.Factory;
 public final class FactoryToService<T> implements Function<Factory<T>, T> {
 
     @Override
-    public T apply(Factory<T> input) {
+    public T apply(final Factory<T> input) {
         return (input != null) ? input.provide() : null;
     }
 }

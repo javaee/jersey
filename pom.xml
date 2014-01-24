@@ -617,6 +617,24 @@
                         <createDependencyReducedPom>false</createDependencyReducedPom>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.fortasoft</groupId>
+                    <artifactId>gradle-maven-plugin</artifactId>
+                    <version>1.0.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.wvengen</groupId>
+                    <artifactId>proguard-maven-plugin</artifactId>
+                    <version>2.0.6</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>net.sf.proguard</groupId>
+                            <artifactId>proguard-base</artifactId>
+                            <version>4.11</version>
+                            <scope>runtime</scope>
+                        </dependency>
+                    </dependencies>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -1330,7 +1348,7 @@
         </findbugs.glassfish.logging.validLoggerPrefixes>
         <java.version>1.6</java.version>
         <javadoc.stylesheet>etc/config/javadoc-stylesheet.css</javadoc.stylesheet>
-        <jersey.shade.package.prefix>org.glassfish.jersey.shaded</jersey.shade.package.prefix>
+        <jersey.repackaged.prefix>jersey.repackaged</jersey.repackaged.prefix>
         <netbeans.hint.license>gf-cddl-gpl</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>

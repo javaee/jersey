@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,14 +50,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.server.mvc.Template;
 
-import com.google.common.base.Objects;
+import jersey.repackaged.com.google.common.base.Objects;
 
 @Template
 @Produces("text/html;qs=5")
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Item {
-    
+
     private String title;
     private String author;
 
@@ -88,7 +88,6 @@ public class Item {
         return Objects.toStringHelper(Item.class).
                 add("title", title).
                 add("author", author).
-                omitNullValues().
                 toString();
     }
 }

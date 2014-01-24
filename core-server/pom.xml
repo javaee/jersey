@@ -120,7 +120,7 @@
                     <relocations>
                         <relocation>
                             <pattern>org.objectweb.asm</pattern>
-                            <shadedPattern>${jersey.shade.package.prefix}.objectweb.asm</shadedPattern>
+                            <shadedPattern>${jersey.repackaged.prefix}.objectweb.asm</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
@@ -144,17 +144,6 @@
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>

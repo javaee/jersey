@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,6 @@ package org.glassfish.jersey.server.wadl.processor;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Priority;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Configuration;
@@ -51,6 +50,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import javax.annotation.Priority;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.process.Inflector;
@@ -60,7 +60,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelProcessorUtil;
 
-import com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * {@link ModelProcessor Model processor} enhancing {@link ResourceModel resource model} and {@link Resource sub resources}

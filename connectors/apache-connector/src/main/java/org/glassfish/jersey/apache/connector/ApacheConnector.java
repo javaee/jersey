@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.apache.connector;
 
 import java.io.BufferedInputStream;
@@ -120,7 +121,7 @@ import org.apache.http.io.SessionOutputBuffer;
 import org.apache.http.util.TextUtils;
 import org.apache.http.util.VersionInfo;
 
-import com.google.common.util.concurrent.MoreExecutors;
+import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * A {@link Connector} that utilizes the Apache HTTP Client to send and receive
@@ -207,7 +208,7 @@ public class ApacheConnector implements Connector {
         Object reqConfig = null;
 
         if (config != null) {
-            Object connectionManager = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
+            final Object connectionManager = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
 
             if (connectionManager != null) {
                 if (!(connectionManager instanceof HttpClientConnectionManager)) {
@@ -242,7 +243,7 @@ public class ApacheConnector implements Connector {
         clientBuilder.setConnectionManager(getConnectionManager(config, sslContext));
         clientBuilder.setSslcontext(sslContext);
 
-        RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
+        final RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 
         int connectTimeout = 0;
         int socketTimeout = 0;
@@ -252,7 +253,7 @@ public class ApacheConnector implements Connector {
             socketTimeout = PropertiesHelper.getValue(config.getProperties(), ClientProperties.READ_TIMEOUT, 0);
             ignoreCookies = PropertiesHelper.isProperty(config.getProperties(), ApacheClientProperties.DISABLE_COOKIES);
 
-            Object credentialsProvider = config.getProperty(ApacheClientProperties.CREDENTIALS_PROVIDER);
+            final Object credentialsProvider = config.getProperty(ApacheClientProperties.CREDENTIALS_PROVIDER);
             if (credentialsProvider != null && (credentialsProvider instanceof CredentialsProvider)) {
                 clientBuilder.setDefaultCredentialsProvider((CredentialsProvider) credentialsProvider);
             }
@@ -269,7 +270,7 @@ public class ApacheConnector implements Connector {
                     password = PropertiesHelper.getValue(config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
 
                     if (password != null) {
-                        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                        final CredentialsProvider credsProvider = new BasicCredentialsProvider();
                         credsProvider.setCredentials(
                                 new AuthScope(u.getHost(), u.getPort()),
                                 new UsernamePasswordCredentials(userName, password)
@@ -280,7 +281,7 @@ public class ApacheConnector implements Connector {
                 clientBuilder.setProxy(proxy);
             }
 
-            Boolean preemptiveBasicAuthProperty = (Boolean) config.getProperties()
+            final Boolean preemptiveBasicAuthProperty = (Boolean) config.getProperties()
                     .get(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
             this.preemptiveBasicAuth = (preemptiveBasicAuthProperty != null) ? preemptiveBasicAuthProperty : false;
         } else {
@@ -356,9 +357,9 @@ public class ApacheConnector implements Connector {
 
     private HttpClientConnectionManager createConnectionManager(
             final Configuration config,
-            SSLContext sslContext,
+            final SSLContext sslContext,
             X509HostnameVerifier hostnameVerifier,
-            boolean useSystemProperties) {
+            final boolean useSystemProperties) {
 
         final String[] supportedProtocols = useSystemProperties ? split(
                 System.getProperty("https.protocols")) : null;
@@ -369,7 +370,7 @@ public class ApacheConnector implements Connector {
             hostnameVerifier = SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
         }
 
-        LayeredConnectionSocketFactory sslSocketFactory;
+        final LayeredConnectionSocketFactory sslSocketFactory;
         if (sslContext != null) {
             sslSocketFactory = new SSLConnectionSocketFactory(
                     sslContext, supportedProtocols, supportedCipherSuites, hostnameVerifier);
@@ -456,8 +457,8 @@ public class ApacheConnector implements Connector {
             final CloseableHttpResponse response;
             final HttpClientContext context = HttpClientContext.create();
             if (preemptiveBasicAuth) {
-                AuthCache authCache = new BasicAuthCache();
-                BasicScheme basicScheme = new BasicScheme();
+                final AuthCache authCache = new BasicAuthCache();
+                final BasicScheme basicScheme = new BasicScheme();
                 authCache.put(getHost(request), basicScheme);
                 context.setAuthCache(authCache);
                 response = client.execute(getHost(request), request, context);
@@ -472,7 +473,7 @@ public class ApacheConnector implements Connector {
             final ClientResponse responseContext = new ClientResponse(status, clientRequest);
 
             final Header[] respHeaders = response.getAllHeaders();
-            for (Header header : respHeaders) {
+            for (final Header header : respHeaders) {
                 final String headerName = header.getName();
                 final MultivaluedMap<String, String> headers = responseContext.getHeaders();
                 List<String> list = headers.get(headerName);
@@ -485,12 +486,12 @@ public class ApacheConnector implements Connector {
 
             try {
                 responseContext.setEntityStream(new HttpClientResponseInputStream(response));
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 LOGGER.log(Level.SEVERE, null, e);
             }
 
             return responseContext;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new ProcessingException(e);
         }
     }
@@ -502,9 +503,9 @@ public class ApacheConnector implements Connector {
             public void run() {
                 try {
                     callback.response(apply(request));
-                } catch (ProcessingException ex) {
+                } catch (final ProcessingException ex) {
                     callback.failure(ex);
-                } catch (Throwable t) {
+                } catch (final Throwable t) {
                     callback.failure(t);
                 }
             }
@@ -520,7 +521,7 @@ public class ApacheConnector implements Connector {
     public void close() {
         try {
             client.close();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new ProcessingException(LocalizationMessages.FAILED_TO_STOP_CLIENT(), e);
         }
     }
@@ -554,7 +555,7 @@ public class ApacheConnector implements Connector {
             return null;
         }
 
-        AbstractHttpEntity httpEntity = new AbstractHttpEntity() {
+        final AbstractHttpEntity httpEntity = new AbstractHttpEntity() {
             @Override
             public boolean isRepeatable() {
                 return false;
@@ -568,7 +569,7 @@ public class ApacheConnector implements Connector {
             @Override
             public InputStream getContent() throws IOException, IllegalStateException {
                 if (bufferingEnabled) {
-                    ByteArrayOutputStream buffer = new ByteArrayOutputStream(512);
+                    final ByteArrayOutputStream buffer = new ByteArrayOutputStream(512);
                     writeTo(buffer);
                     return new ByteArrayInputStream(buffer.toByteArray());
                 } else {
@@ -580,7 +581,7 @@ public class ApacheConnector implements Connector {
             public void writeTo(final OutputStream outputStream) throws IOException {
                 clientRequest.setStreamProvider(new OutboundMessageContext.StreamProvider() {
                     @Override
-                    public OutputStream getOutputStream(int contentLength) throws IOException {
+                    public OutputStream getOutputStream(final int contentLength) throws IOException {
                         return outputStream;
                     }
                 });
@@ -596,7 +597,7 @@ public class ApacheConnector implements Connector {
         if (bufferingEnabled) {
             try {
                 return new BufferedHttpEntity(httpEntity);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new ProcessingException(LocalizationMessages.ERROR_BUFFERING_ENTITY(), e);
             }
         } else {
@@ -605,13 +606,13 @@ public class ApacheConnector implements Connector {
     }
 
     private void writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final HttpUriRequest request) {
-        for (Map.Entry<String, List<Object>> e : headers.entrySet()) {
-            List<Object> vs = e.getValue();
+        for (final Map.Entry<String, List<Object>> e : headers.entrySet()) {
+            final List<Object> vs = e.getValue();
             if (vs.size() == 1) {
                 request.addHeader(e.getKey(), vs.get(0).toString());
             } else {
-                StringBuilder b = new StringBuilder();
-                for (Object v : e.getValue()) {
+                final StringBuilder b = new StringBuilder();
+                for (final Object v : e.getValue()) {
                     if (b.length() > 0) {
                         b.append(',');
                     }

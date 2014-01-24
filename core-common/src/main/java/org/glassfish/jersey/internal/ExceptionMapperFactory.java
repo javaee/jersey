@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal;
 
 import java.lang.reflect.ParameterizedType;
@@ -45,6 +46,7 @@ import java.lang.reflect.TypeVariable;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,8 +64,6 @@ import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-
-import com.google.common.collect.Maps;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -93,7 +93,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         ExceptionMapper mapper;
         Class<? extends Throwable> exceptionType;
 
-        public ExceptionMapperType(ExceptionMapper mapper, Class<? extends Throwable> exceptionType) {
+        public ExceptionMapperType(final ExceptionMapper mapper, final Class<? extends Throwable> exceptionType) {
             this.mapper = mapper;
             this.exceptionType = exceptionType;
         }
@@ -103,23 +103,23 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends Throwable> ExceptionMapper<T> findMapping(T exceptionInstance) {
+    public <T extends Throwable> ExceptionMapper<T> findMapping(final T exceptionInstance) {
         return find((Class<T>)exceptionInstance.getClass(), exceptionInstance);
     }
 
     @Override
-    public <T extends Throwable> ExceptionMapper<T> find(Class<T> type) {
+    public <T extends Throwable> ExceptionMapper<T> find(final Class<T> type) {
         return find(type, null);
     }
 
 
     @SuppressWarnings("unchecked")
-    private <T extends Throwable> ExceptionMapper<T> find(Class<T> type, T exceptionInstance) {
+    private <T extends Throwable> ExceptionMapper<T> find(final Class<T> type, final T exceptionInstance) {
 
-        Map<Integer, ExceptionMapper<T>> orderedMappers = Maps.newTreeMap();
+        final Map<Integer, ExceptionMapper<T>> orderedMappers = new TreeMap<Integer, ExceptionMapper<T>>();
 
-        for (ExceptionMapperType mapperType : exceptionMapperTypes) {
-            int d = distance(type, mapperType.exceptionType);
+        for (final ExceptionMapperType mapperType : exceptionMapperTypes) {
+            final int d = distance(type, mapperType.exceptionType);
             if (d >= 0) {
                 orderedMappers.put(d, mapperType.mapper);
             }
@@ -130,7 +130,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         }
 
         if (exceptionInstance != null) {
-            for (ExceptionMapper<T> mapper : orderedMappers.values()) {
+            for (final ExceptionMapper<T> mapper : orderedMappers.values()) {
                 if (mapper instanceof ExtendedExceptionMapper) {
                     final boolean mappable = ((ExtendedExceptionMapper<T>) mapper).isMappable(exceptionInstance);
                     if (mappable) {
@@ -155,16 +155,16 @@ public class ExceptionMapperFactory implements ExceptionMappers {
      * @param locator HK2 service locator.
      */
     @Inject
-    public ExceptionMapperFactory(ServiceLocator locator) {
-        for (ExceptionMapper<?> mapper : Providers.getAllProviders(locator, ExceptionMapper.class)) {
-            Class<? extends Throwable> c = getExceptionType(mapper.getClass());
+    public ExceptionMapperFactory(final ServiceLocator locator) {
+        for (final ExceptionMapper<?> mapper : Providers.getAllProviders(locator, ExceptionMapper.class)) {
+            final Class<? extends Throwable> c = getExceptionType(mapper.getClass());
             if (c != null) {
                 exceptionMapperTypes.add(new ExceptionMapperType(mapper, c));
             }
         }
     }
 
-    private int distance(Class<?> c, Class<?> emtc) {
+    private int distance(Class<?> c, final Class<?> emtc) {
         int distance = 0;
         if (!emtc.isAssignableFrom(c)) {
             return -1;
@@ -179,8 +179,8 @@ public class ExceptionMapperFactory implements ExceptionMappers {
     }
 
     @SuppressWarnings("unchecked")
-    private Class<? extends Throwable> getExceptionType(Class<? extends ExceptionMapper> c) {
-        Class<?> t = getType(c);
+    private Class<? extends Throwable> getExceptionType(final Class<? extends ExceptionMapper> c) {
+        final Class<?> t = getType(c);
         if (Throwable.class.isAssignableFrom(t)) {
             return (Class<? extends Throwable>) t;
         }
@@ -202,7 +202,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         Class clazzHolder = clazz;
 
         while (clazzHolder != Object.class) {
-            Class type = getTypeFromInterface(clazzHolder, clazz);
+            final Class type = getTypeFromInterface(clazzHolder, clazz);
             if (type != null) {
                 return type;
             }
@@ -224,7 +224,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
         for (final Type type : types) {
             if (type instanceof ParameterizedType) {
-                ParameterizedType pt = (ParameterizedType) type;
+                final ParameterizedType pt = (ParameterizedType) type;
                 if (pt.getRawType() == ExceptionMapper.class
                         || pt.getRawType() == ExtendedExceptionMapper.class) {
                     return getResolvedType(pt.getActualTypeArguments()[0], original, clazz);
@@ -241,18 +241,18 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         return null;
     }
 
-    private Class getResolvedType(Type t, Class c, Class dc) {
+    private Class getResolvedType(final Type t, final Class c, final Class dc) {
         if (t instanceof Class) {
             return (Class) t;
         } else if (t instanceof TypeVariable) {
-            ClassTypePair ct = ReflectionHelper.resolveTypeVariable(c, dc, (TypeVariable) t);
+            final ClassTypePair ct = ReflectionHelper.resolveTypeVariable(c, dc, (TypeVariable) t);
             if (ct != null) {
                 return ct.rawClass();
             } else {
                 return null;
             }
         } else if (t instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) t;
+            final ParameterizedType pt = (ParameterizedType) t;
             return (Class) pt.getRawType();
         } else {
             return null;

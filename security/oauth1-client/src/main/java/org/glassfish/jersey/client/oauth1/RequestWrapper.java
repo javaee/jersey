@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.oauth1.signature.OAuth1Request;
 
-import com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Implements the OAuth signature library Request interface, wrapping a Jersey

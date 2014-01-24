@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ import javax.ws.rs.core.Variant;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 
-import com.google.common.base.Objects;
+import jersey.repackaged.com.google.common.base.Objects;
 
 /**
  * An outbound JAX-RS response message.

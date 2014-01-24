@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,13 @@ import java.util.Collections;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.server.model.Parameter.Source;
+import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
+
 import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.Injectee;
@@ -56,12 +63,6 @@ import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.InjecteeImpl;
 import org.glassfish.hk2.utilities.cache.Cache;
 import org.glassfish.hk2.utilities.cache.Computable;
-import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.model.Parameter.Source;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
 /**
  * Value factory provider that delegates the injection target lookup to

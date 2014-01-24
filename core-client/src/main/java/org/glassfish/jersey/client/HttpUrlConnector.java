@@ -73,9 +73,9 @@ import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 
-import com.google.common.base.Predicates;
-import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.MoreExecutors;
+import jersey.repackaged.com.google.common.base.Predicates;
+import jersey.repackaged.com.google.common.collect.Maps;
+import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Default client transport connector using {@link HttpURLConnection}.

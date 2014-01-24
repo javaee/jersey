@@ -149,8 +149,9 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <groupId>org.glassfish.jersey.bundles.repackaged</groupId>
+            <artifactId>jersey-guava</artifactId>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -296,7 +297,7 @@
                     <relocations>
                         <relocation>
                             <pattern>org.objectweb.asm</pattern>
-                            <shadedPattern>${jersey.shade.package.prefix}.objectweb.asm</shadedPattern>
+                            <shadedPattern>${jersey.repackaged.prefix}.org.objectweb.asm</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>

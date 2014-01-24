@@ -62,7 +62,7 @@ import org.glassfish.jersey.process.internal.Stages;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.util.concurrent.SettableFuture;
+import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Client-side request processing runtime.

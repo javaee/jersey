@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 
 import org.glassfish.jersey.message.internal.ReaderWriter;
 
-import com.google.common.collect.Maps;
+import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Class that provides methods to build {@link OAuth2CodeGrantFlow} pre-configured for usage

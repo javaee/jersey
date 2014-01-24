@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ package org.glassfish.jersey.message.filtering;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import jersey.repackaged.com.google.common.collect.Sets;
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessorContext;
@@ -53,8 +54,6 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import com.google.common.collect.Sets;
 
 /**
  * {@link org.glassfish.jersey.message.filtering.SecurityEntityProcessor} unit tests.

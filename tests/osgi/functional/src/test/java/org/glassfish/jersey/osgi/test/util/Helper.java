@@ -155,9 +155,6 @@ public class Helper {
                 // javax.annotation has to go first!
                 mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
 
-                // Google Guava
-                mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
-
                 junitBundles(),
 
                 // HK2
@@ -178,6 +175,9 @@ public class Helper {
 
                 // javax.validation
                 mavenBundle().groupId("javax.validation").artifactId("validation-api").versionAsInProject(),
+
+                // Guava
+                mavenBundle().groupId("org.glassfish.jersey.bundles.repackaged").artifactId("jersey-guava").versionAsInProject(),
 
                 // Jersey Grizzly
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-grizzly2-http")

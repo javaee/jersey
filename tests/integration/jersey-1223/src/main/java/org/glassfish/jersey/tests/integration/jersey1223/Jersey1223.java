@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,14 +40,13 @@
 
 package org.glassfish.jersey.tests.integration.jersey1223;
 
+import java.util.Collections;
 import java.util.Set;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
-
-import com.google.common.collect.Sets;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -67,6 +66,6 @@ public class Jersey1223 extends Application {
 
     @Override
     public Set<Class<?>> getClasses() {
-        return Sets.<Class<?>>newHashSet(ContentTypeResource.class);
+        return Collections.<Class<?>>singleton(ContentTypeResource.class);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,11 +40,10 @@
 
 package org.glassfish.jersey.examples.entityfiltering.domain;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Entity-store utility class. Class creates a sample instance of each entity.
@@ -54,9 +53,9 @@ import com.google.common.collect.Maps;
 @SuppressWarnings({"JavaDoc", "UnusedDeclaration"})
 public final class EntityStore {
 
-    private static final Map<Long, Project> projects = Maps.newLinkedHashMap();
-    private static final Map<Long, User> users = Maps.newLinkedHashMap();
-    private static final Map<Long, Task> tasks = Maps.newLinkedHashMap();
+    private static final Map<Long, Project> projects = new LinkedHashMap<Long, Project>();
+    private static final Map<Long, User> users = new LinkedHashMap<Long, User>();
+    private static final Map<Long, Task> tasks = new LinkedHashMap<Long, Task>();
 
     static {
         // Projects.
@@ -111,8 +110,8 @@ public final class EntityStore {
                                         final List<Task> tasks) {
         final Project project = new Project(projects.size() + 1l, name, description);
 
-        project.setTasks(tasks == null ? Lists.<Task>newArrayList() : tasks);
-        project.setUsers(users == null ? Lists.<User>newArrayList() : users);
+        project.setTasks(tasks == null ? new ArrayList<Task>() : tasks);
+        project.setUsers(users == null ? new ArrayList<User>() : users);
         projects.put(project.getId(), project);
 
         return project;
@@ -125,8 +124,8 @@ public final class EntityStore {
     public static User createUser(final String name, final String email, final List<Project> projects, final List<Task> tasks) {
         final User user = new User(users.size() + 1l, name, email);
 
-        user.setProjects(projects == null ? Lists.<Project>newArrayList() : projects);
-        user.setTasks(tasks == null ? Lists.<Task>newArrayList() : tasks);
+        user.setProjects(projects == null ? new ArrayList<Project>() : projects);
+        user.setTasks(tasks == null ? new ArrayList<Task>() : tasks);
         users.put(user.getId(), user);
 
         return user;
@@ -159,14 +158,14 @@ public final class EntityStore {
     }
 
     public static List<Project> getProjects() {
-        return Lists.newArrayList(projects.values());
+        return new ArrayList<Project>(projects.values());
     }
 
     public static List<User> getUsers() {
-        return Lists.newArrayList(users.values());
+        return new ArrayList<User>(users.values());
     }
 
     public static List<Task> getTasks() {
-        return Lists.newArrayList(tasks.values());
+        return new ArrayList<Task>(tasks.values());
     }
 }

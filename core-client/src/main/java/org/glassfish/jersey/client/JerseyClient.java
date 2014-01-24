@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,8 +56,8 @@ import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
 import org.glassfish.jersey.internal.util.collection.Values;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static jersey.repackaged.com.google.common.base.Preconditions.checkNotNull;
+import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
 
 /**
  * Jersey implementation of {@link javax.ws.rs.client.Client JAX-RS JerseyClient}

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,7 @@ import javax.inject.Singleton;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)

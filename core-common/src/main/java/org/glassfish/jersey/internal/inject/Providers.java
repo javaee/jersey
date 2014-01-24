@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
@@ -70,11 +71,10 @@ import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.base.Function;
+import jersey.repackaged.com.google.common.collect.Collections2;
+import jersey.repackaged.com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Utility class providing a set of utility methods for easier and more type-safe
@@ -93,7 +93,7 @@ public final class Providers {
             getJaxRsProviderInterfaces();
 
     private static Map<Class<?>, ProviderRuntime> getJaxRsProviderInterfaces() {
-        Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
+        final Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
 
         interfaces.put(javax.ws.rs.ext.ContextResolver.class, ProviderRuntime.BOTH);
         interfaces.put(javax.ws.rs.ext.ExceptionMapper.class, ProviderRuntime.BOTH);
@@ -120,7 +120,7 @@ public final class Providers {
             getExternalProviderInterfaces();
 
     private static Map<Class<?>, ProviderRuntime> getExternalProviderInterfaces() {
-        Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
+        final Map<Class<?>, ProviderRuntime> interfaces = new HashMap<Class<?>, ProviderRuntime>();
 
         // JAX-RS
         interfaces.putAll(JAX_RS_PROVIDER_INTERFACE_WHITELIST);
@@ -138,7 +138,7 @@ public final class Providers {
 
         private final RuntimeType runtime;
 
-        private ProviderRuntime(RuntimeType runtime) {
+        private ProviderRuntime(final RuntimeType runtime) {
             this.runtime = runtime;
         }
 
@@ -166,7 +166,7 @@ public final class Providers {
             }
 
             @Override
-            public void dispose(T instance) {
+            public void dispose(final T instance) {
                 //not used
             }
         };
@@ -181,7 +181,7 @@ public final class Providers {
      * @param contract service provider contract.
      * @return set of all available default service provider instances for the contract.
      */
-    public static <T> Set<T> getProviders(ServiceLocator locator, Class<T> contract) {
+    public static <T> Set<T> getProviders(final ServiceLocator locator, final Class<T> contract) {
         final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract);
         return getClasses(hk2Providers);
     }
@@ -195,7 +195,7 @@ public final class Providers {
      * @param contract service provider contract.
      * @return set of all available service provider instances for the contract.
      */
-    public static <T> Set<T> getCustomProviders(ServiceLocator locator, Class<T> contract) {
+    public static <T> Set<T> getCustomProviders(final ServiceLocator locator, final Class<T> contract) {
         final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
         return getClasses(hk2Providers);
     }
@@ -209,7 +209,7 @@ public final class Providers {
      * @param contract service provider contract.
      * @return iterable of all available service provider instances for the contract. Return value is never null.
      */
-    public static <T> Iterable<T> getAllProviders(ServiceLocator locator, Class<T> contract) {
+    public static <T> Iterable<T> getAllProviders(final ServiceLocator locator, final Class<T> contract) {
         return getAllProviders(locator, contract, (Comparator<T>) null);
     }
 
@@ -222,14 +222,15 @@ public final class Providers {
      * @param contract service provider contract.
      * @return iterable of all available ranked service providers for the contract. Return value is never null.
      */
-    public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(ServiceLocator locator, Class<T> contract) {
-        List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
+    public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(final ServiceLocator locator, final Class<T> contract) {
+        final List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
         providers.addAll(getAllServiceHandles(locator, contract));
 
-        LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>> providerMap = Maps.newLinkedHashMap();
+        final LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>> providerMap =
+                new LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>>();
 
-        for (ServiceHandle<T> provider : providers) {
-            ActiveDescriptor<T> key = provider.getActiveDescriptor();
+        for (final ServiceHandle<T> provider : providers) {
+            final ActiveDescriptor<T> key = provider.getActiveDescriptor();
             if (!providerMap.containsKey(key)) {
                 providerMap.put(key, new RankedProvider<T>(provider.getService(), key.getRanking()));
             }
@@ -307,15 +308,15 @@ public final class Providers {
         return sortRankedProviders(comparator, getAllRankedProviders(locator, contract));
     }
 
-    private static <T> List<ServiceHandle<T>> getAllServiceHandles(ServiceLocator locator, Class<T> contract,
-                                                                   Annotation... qualifiers) {
+    private static <T> List<ServiceHandle<T>> getAllServiceHandles(final ServiceLocator locator, final Class<T> contract,
+                                                                   final Annotation... qualifiers) {
 
-        List<ServiceHandle<T>> allServiceHandles = qualifiers == null ?
+        final List<ServiceHandle<T>> allServiceHandles = qualifiers == null ?
                 locator.getAllServiceHandles(contract) :
                 locator.getAllServiceHandles(contract, qualifiers);
 
-        ArrayList<ServiceHandle<T>> serviceHandles = new ArrayList<ServiceHandle<T>>();
-        for (ServiceHandle handle : allServiceHandles) {
+        final ArrayList<ServiceHandle<T>> serviceHandles = new ArrayList<ServiceHandle<T>>();
+        for (final ServiceHandle handle : allServiceHandles) {
             //noinspection unchecked
             serviceHandles.add((ServiceHandle<T>) handle);
         }
@@ -333,14 +334,15 @@ public final class Providers {
      * @return set of all available service provider instances for the contract ordered using the given
      * {@link Comparator comparator}.
      */
-    public static <T> Iterable<T> getAllProviders(ServiceLocator locator, Class<T> contract, Comparator<T> comparator) {
-        List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
+    public static <T> Iterable<T> getAllProviders(final ServiceLocator locator, final Class<T> contract, final Comparator<T> comparator) {
+        final List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
         providers.addAll(getAllServiceHandles(locator, contract));
 
-        LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap = Maps.newLinkedHashMap();
+        final LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap =
+                new LinkedHashMap<ActiveDescriptor, ServiceHandle<T>>();
 
-        for (ServiceHandle<T> provider : providers) {
-            ActiveDescriptor key = provider.getActiveDescriptor();
+        for (final ServiceHandle<T> provider : providers) {
+            final ActiveDescriptor key = provider.getActiveDescriptor();
             if (!providerMap.containsKey(key)) {
                 providerMap.put(key, provider);
             }
@@ -355,7 +357,7 @@ public final class Providers {
         return providerList;
     }
 
-    private static <T> Set<T> getClasses(Collection<ServiceHandle<T>> hk2Providers) {
+    private static <T> Set<T> getClasses(final Collection<ServiceHandle<T>> hk2Providers) {
         if (hk2Providers.isEmpty()) {
             return Sets.newLinkedHashSet();
         } else {
@@ -374,7 +376,7 @@ public final class Providers {
      *                   set.
      * @return set of all available service provider instances for the contract.
      */
-    public static <T> SortedSet<T> getProviders(ServiceLocator locator, Class<T> contract, final Comparator<T> comparator) {
+    public static <T> SortedSet<T> getProviders(final ServiceLocator locator, final Class<T> contract, final Comparator<T> comparator) {
         final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract);
         if (hk2Providers.isEmpty()) {
             return Sets.newTreeSet(comparator);
@@ -393,14 +395,14 @@ public final class Providers {
      * @param clazz class to extract the provider interfaces from.
      * @return set of provider contracts implemented by the given class.
      */
-    public static Set<Class<?>> getProviderContracts(Class<?> clazz) {
-        Set<Class<?>> contracts = Sets.newIdentityHashSet();
+    public static Set<Class<?>> getProviderContracts(final Class<?> clazz) {
+        final Set<Class<?>> contracts = Sets.newIdentityHashSet();
         computeProviderContracts(clazz, contracts);
         return contracts;
     }
 
-    private static void computeProviderContracts(Class<?> clazz, Set<Class<?>> contracts) {
-        for (Class<?> contract : getImplementedContracts(clazz)) {
+    private static void computeProviderContracts(final Class<?> clazz, final Set<Class<?>> contracts) {
+        for (final Class<?> contract : getImplementedContracts(clazz)) {
             if (isSupportedContract(contract)) {
                 contracts.add(contract);
             }
@@ -425,11 +427,11 @@ public final class Providers {
      * @param isResource        {@code true} if the component is also a resource class.
      * @return {@code true} if component is acceptable for use in the given runtime type, {@code false} otherwise.
      */
-    public static boolean checkProviderRuntime(Class<?> component,
-                                               ContractProvider model,
-                                               RuntimeType runtimeConstraint,
-                                               boolean scanned,
-                                               boolean isResource) {
+    public static boolean checkProviderRuntime(final Class<?> component,
+                                               final ContractProvider model,
+                                               final RuntimeType runtimeConstraint,
+                                               final boolean scanned,
+                                               final boolean isResource) {
         final Set<Class<?>> contracts = model.getContracts();
         final ConstrainedTo constrainedTo = component.getAnnotation(ConstrainedTo.class);
         final RuntimeType componentConstraint = constrainedTo == null ? null : constrainedTo.value();
@@ -446,7 +448,7 @@ public final class Providers {
              */
             boolean foundComponentCompatible = componentConstraint == null;
             boolean foundRuntimeCompatibleContract = isResource && runtimeConstraint == RuntimeType.SERVER;
-            for (Class<?> contract : contracts) {
+            for (final Class<?> contract : contracts) {
                 // if the contract is common/not constrained, default to provider constraint
                 final RuntimeType contractConstraint = getContractConstraint(contract, componentConstraint);
                 foundRuntimeCompatibleContract |= contractConstraint == null || contractConstraint == runtimeConstraint;
@@ -474,7 +476,7 @@ public final class Providers {
                 return false;
             }
 
-            boolean isProviderRuntimeCompatible;
+            final boolean isProviderRuntimeCompatible;
             // runtimeConstraint vs. providerConstraint
             isProviderRuntimeCompatible = componentConstraint == null || componentConstraint == runtimeConstraint;
             if (!isProviderRuntimeCompatible && !scanned) {
@@ -506,7 +508,7 @@ public final class Providers {
         }
     }
 
-    private static void logProviderSkipped(StringBuilder sb, Class<?> provider, boolean alsoResourceClass) {
+    private static void logProviderSkipped(final StringBuilder sb, final Class<?> provider, final boolean alsoResourceClass) {
         sb.append(alsoResourceClass ?
                 LocalizationMessages.ERROR_PROVIDER_AND_RESOURCE_CONSTRAINED_TO_IGNORED(provider.getName()) :
                 LocalizationMessages.ERROR_PROVIDER_CONSTRAINED_TO_IGNORED(provider.getName()))
@@ -519,11 +521,11 @@ public final class Providers {
      * @param type contract type.
      * @return {@code true} if given type is a Jersey-supported contract, {@code false} otherwise.
      */
-    public static boolean isSupportedContract(Class<?> type) {
+    public static boolean isSupportedContract(final Class<?> type) {
         return (EXTERNAL_PROVIDER_INTERFACE_WHITELIST.get(type) != null || type.isAnnotationPresent(Contract.class));
     }
 
-    private static RuntimeType getContractConstraint(Class<?> clazz, RuntimeType defaultConstraint) {
+    private static RuntimeType getContractConstraint(final Class<?> clazz, final RuntimeType defaultConstraint) {
         final ProviderRuntime jaxRsProvider = EXTERNAL_PROVIDER_INTERFACE_WHITELIST.get(clazz);
 
         RuntimeType result = null;
@@ -539,8 +541,8 @@ public final class Providers {
         return (result == null) ? defaultConstraint : result;
     }
 
-    private static Iterable<Class<?>> getImplementedContracts(Class<?> clazz) {
-        Collection<Class<?>> list = new LinkedList<Class<?>>();
+    private static Iterable<Class<?>> getImplementedContracts(final Class<?> clazz) {
+        final Collection<Class<?>> list = new LinkedList<Class<?>>();
 
         Collections.addAll(list, clazz.getInterfaces());
 
@@ -559,7 +561,7 @@ public final class Providers {
      * @param clazz class to test.
      * @return {@code true} if the class is provider, {@code false} otherwise.
      */
-    public static boolean isProvider(Class<?> clazz) {
+    public static boolean isProvider(final Class<?> clazz) {
         return findFirstProviderContract(clazz);
     }
 
@@ -569,8 +571,8 @@ public final class Providers {
      * @param clazz class to check.
      * @return {@code true} if the class is a JAX-RS provider, {@code false} otherwise.
      */
-    public static boolean isJaxRsProvider(Class<?> clazz) {
-        for (Class<?> providerType : JAX_RS_PROVIDER_INTERFACE_WHITELIST.keySet()) {
+    public static boolean isJaxRsProvider(final Class<?> clazz) {
+        for (final Class<?> providerType : JAX_RS_PROVIDER_INTERFACE_WHITELIST.keySet()) {
             if (providerType.isAssignableFrom(clazz)) {
                 return true;
             }
@@ -586,13 +588,13 @@ public final class Providers {
      * @throws java.lang.IllegalArgumentException in case any of the implementation classes does not
      *                                            implement the expected contract.
      */
-    public static void ensureContract(Class<?> contract, Class<?>... implementations) {
+    public static void ensureContract(final Class<?> contract, final Class<?>... implementations) {
         if (implementations == null || implementations.length <= 0) {
             return;
         }
 
-        StringBuilder invalidClassNames = new StringBuilder();
-        for (Class<?> impl : implementations) {
+        final StringBuilder invalidClassNames = new StringBuilder();
+        for (final Class<?> impl : implementations) {
             if (!contract.isAssignableFrom(impl)) {
                 if (invalidClassNames.length() > 0) {
                     invalidClassNames.append(", ");
@@ -616,15 +618,15 @@ public final class Providers {
      * @param providerInstances Iterable of provider instances to be injected.
      * @param serviceLocator    Service locator.
      */
-    public static <T> void injectProviders(Iterable<T> providerInstances, ServiceLocator serviceLocator) {
-        for (T providerInstance : providerInstances) {
+    public static <T> void injectProviders(final Iterable<T> providerInstances, final ServiceLocator serviceLocator) {
+        for (final T providerInstance : providerInstances) {
             serviceLocator.inject(providerInstance);
         }
 
     }
 
-    private static boolean findFirstProviderContract(Class<?> clazz) {
-        for (Class<?> contract : getImplementedContracts(clazz)) {
+    private static boolean findFirstProviderContract(final Class<?> clazz) {
+        for (final Class<?> contract : getImplementedContracts(clazz)) {
             if (isSupportedContract(contract)) {
                 return true;
             }

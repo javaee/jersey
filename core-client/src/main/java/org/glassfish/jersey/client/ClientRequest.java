@@ -74,7 +74,7 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.base.Preconditions;
+import jersey.repackaged.com.google.common.base.Preconditions;
 
 /**
  * Jersey client request context.

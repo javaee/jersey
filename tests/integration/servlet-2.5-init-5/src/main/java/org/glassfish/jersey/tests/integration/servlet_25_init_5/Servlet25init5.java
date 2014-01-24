@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,12 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_25_init_5;
 
-import com.google.common.collect.Sets;
-
-import javax.ws.rs.core.Application;
 import java.util.Set;
+
 import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)

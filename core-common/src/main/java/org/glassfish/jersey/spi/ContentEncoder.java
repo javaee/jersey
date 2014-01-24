@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import javax.annotation.Priority;
 
-import com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Standard contract for plugging in content encoding support. Provides a standard way of implementing encoding

@@ -94,9 +94,9 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.jvnet.hk2.annotations.Optional;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.primitives.Primitives;
+import jersey.repackaged.com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.primitives.Primitives;
 
 /**
  * A factory for managing {@link MessageBodyReader}, {@link MessageBodyWriter} instances.

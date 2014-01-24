@@ -45,8 +45,8 @@ import java.util.List;
 
 import org.glassfish.jersey.uri.PathPattern;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.base.Function;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Runtime resource is a group of {@link Resource resources} with the same {@link Resource#getPath() path}

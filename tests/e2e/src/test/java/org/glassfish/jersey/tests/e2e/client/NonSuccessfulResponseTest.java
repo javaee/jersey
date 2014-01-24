@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -77,7 +78,7 @@ public class NonSuccessfulResponseTest extends JerseyTest {
 	        }
 
 	        @POST
-	        @Path("/{status}")	        
+	        @Path("/{status}")
 	        public Response postXXX(@PathParam("status") int status, String post) {
 	            return Response.status(status).entity(post).build();
 	        }
@@ -93,7 +94,7 @@ public class NonSuccessfulResponseTest extends JerseyTest {
 	    public void testPost3XX() {
 	        generalTestPost(302);
 	    }
-	    
+
 	    @Test
 	    public void testGet4XX() {
 			generalTestGet(401);
@@ -103,7 +104,7 @@ public class NonSuccessfulResponseTest extends JerseyTest {
 	    public void testPost4XX() {
 	        generalTestPost(401);
 	    }
-	    
+
 	    @Test
 	    public void testGet5XX() {
 			generalTestGet(500);
@@ -112,23 +113,23 @@ public class NonSuccessfulResponseTest extends JerseyTest {
 	    @Test
 	    public void testPost5XX() {
 	        generalTestPost(500);
-	    }	    
-	    
+	    }
+
 	    private void generalTestGet(int status) {
 	    	WebTarget target = target("resource").path(Integer.toString(status));
 	    	SyncInvoker sync = target.request();
 	    	Response response = sync.get(Response.class);
 	    	Assert.assertEquals(status, response.getStatus());
 	    	Assert.assertEquals("get", response.readEntity(String.class));
-	    }    	
+	    }
 
 		private void generalTestPost(int status) {
-			Entity<String> entity = Entity.entity("entity", MediaType.WILDCARD_TYPE);	    	
+			Entity<String> entity = Entity.entity("entity", MediaType.WILDCARD_TYPE);
 	        WebTarget target = target("resource").path(Integer.toString(status));
 	        SyncInvoker sync = target.request();
 	        Response response = sync.post(entity, Response.class);
 	        Assert.assertEquals(status, response.getStatus());
 	        Assert.assertEquals("entity", response.readEntity(String.class));
-		}   
-	    
+		}
+
 }

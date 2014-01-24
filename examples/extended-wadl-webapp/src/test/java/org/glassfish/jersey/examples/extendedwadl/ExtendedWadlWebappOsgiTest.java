@@ -124,9 +124,6 @@ public class ExtendedWadlWebappOsgiTest {
                 // javax.annotation must go first!
                 mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
 
-                // Google Guava
-                mavenBundle().groupId("com.google.guava").artifactId("guava").versionAsInProject(),
-
                 junitBundles(),
 
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn"),
@@ -148,6 +145,8 @@ public class ExtendedWadlWebappOsgiTest {
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
+                // Guava
+                mavenBundle().groupId("org.glassfish.jersey.bundles.repackaged").artifactId("jersey-guava").versionAsInProject(),
 
                 // jettison
                 mavenBundle().groupId("org.codehaus.jettison").artifactId("jettison").versionAsInProject(),

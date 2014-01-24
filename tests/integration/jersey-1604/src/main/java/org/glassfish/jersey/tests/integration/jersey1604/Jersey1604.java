@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.tests.integration.jersey1604;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
 
 import javax.ws.rs.DELETE;
@@ -48,8 +48,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import com.google.common.collect.Sets;
 
 /**
  * Application class with test resource that sets {@code Connection} header to {@code close}.
@@ -61,9 +59,7 @@ public class Jersey1604 extends Application {
     @SuppressWarnings("unchecked")
     @Override
     public Set<Class<?>> getClasses() {
-        final HashSet<Class<?>> classes = Sets.newHashSet();
-        classes.add(TestResource.class);
-        return classes;
+        return Collections.<Class<?>>singleton(TestResource.class);
     }
 
     @Path("/")

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,8 +61,8 @@ import javax.inject.Provider;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.JSONP;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.collect.Maps;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * A {@link WriterInterceptor} implementation for JSONP format. This interceptor wraps a JSON stream obtained by a underlying

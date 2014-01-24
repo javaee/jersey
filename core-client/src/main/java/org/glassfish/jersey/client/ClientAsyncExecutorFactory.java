@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,7 +50,7 @@ import org.glassfish.jersey.spi.RequestExecutorProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * {@link org.glassfish.jersey.process.internal.RequestExecutorFactory Executors factory}
@@ -71,7 +71,7 @@ class ClientAsyncExecutorFactory extends RequestExecutorFactory {
      *                              {@link java.util.concurrent.Executors#newCachedThreadPool() cached thread pool}
      *                              is created in such case instead.
      */
-    public ClientAsyncExecutorFactory(ServiceLocator locator, int defaultThreadPoolSize) {
+    public ClientAsyncExecutorFactory(final ServiceLocator locator, final int defaultThreadPoolSize) {
         super(locator, defaultThreadPoolSize);
     }
 
@@ -103,7 +103,7 @@ class ClientAsyncExecutorFactory extends RequestExecutorFactory {
             }
 
             @Override
-            public void releaseRequestingExecutor(ExecutorService executor) {
+            public void releaseRequestingExecutor(final ExecutorService executor) {
                 executor.shutdownNow();
             }
         };

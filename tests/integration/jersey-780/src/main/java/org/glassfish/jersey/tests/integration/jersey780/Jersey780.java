@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,10 @@
  */
 package org.glassfish.jersey.tests.integration.jersey780;
 
-import com.google.common.collect.Sets;
+import java.util.Collections;
+import java.util.Set;
 
 import javax.ws.rs.core.Application;
-import java.util.Set;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -51,6 +51,6 @@ public class Jersey780 extends Application {
     @SuppressWarnings({"unchecked"})
     @Override
     public Set<Class<?>> getClasses() {
-        return Sets.<Class<?>>newHashSet(HelloWorldResource.class);
+        return Collections.<Class<?>>singleton(HelloWorldResource.class);
     }
 }

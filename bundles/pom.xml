@@ -58,6 +58,7 @@
     <description>Jersey bundles providers umbrella project module.</description>
 
     <modules>
+        <module>repackaged</module>
         <module>jaxrs-ri</module>
     </modules>
 

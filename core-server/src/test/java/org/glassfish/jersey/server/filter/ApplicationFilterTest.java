@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
@@ -67,7 +68,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Test for JAX-RS filters.
@@ -92,14 +93,14 @@ public class ApplicationFilterTest {
          * @param providers list of provider instances.
          * @param providerType registered provider contract type.
          */
-        public ProviderInstanceBindingBinder(Iterable<? extends T> providers, Class<T> providerType) {
+        public ProviderInstanceBindingBinder(final Iterable<? extends T> providers, final Class<T> providerType) {
             this.providers = providers;
             this.providerType = providerType;
         }
 
         @Override
         protected void configure() {
-            for (T provider : providers) {
+            for (final T provider : providers) {
                 bind(provider).to(providerType);
             }
         }
@@ -110,10 +111,10 @@ public class ApplicationFilterTest {
 
         final AtomicInteger called = new AtomicInteger(0);
 
-        List<ContainerRequestFilter> requestFilters = Lists.newArrayList();
+        final List<ContainerRequestFilter> requestFilters = Lists.newArrayList();
         requestFilters.add(new ContainerRequestFilter() {
             @Override
-            public void filter(ContainerRequestContext context) throws IOException {
+            public void filter(final ContainerRequestContext context) throws IOException {
                 called.incrementAndGet();
             }
         });
@@ -121,11 +122,11 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig()
                 .register(new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilters, ContainerRequestFilter.class));
 
-        Resource.Builder rb = Resource.builder("test");
+        final Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(ContainerRequestContext request) {
+            public Response apply(final ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -140,10 +141,10 @@ public class ApplicationFilterTest {
     public void testSingleResponseFilter() throws Exception {
         final AtomicInteger called = new AtomicInteger(0);
 
-        List<ContainerResponseFilter> responseFilterList = Lists.newArrayList();
+        final List<ContainerResponseFilter> responseFilterList = Lists.newArrayList();
         responseFilterList.add(new ContainerResponseFilter() {
             @Override
-            public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+            public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws IOException {
                 called.incrementAndGet();
             }
         });
@@ -151,11 +152,11 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig().register(
                 new ProviderInstanceBindingBinder<ContainerResponseFilter>(responseFilterList, ContainerResponseFilter.class));
 
-        Resource.Builder rb = Resource.builder("test");
+        final Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(ContainerRequestContext request) {
+            public Response apply(final ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -212,7 +213,7 @@ public class ApplicationFilterTest {
         public boolean called = false;
 
         @Override
-        public void filter(ContainerRequestContext context) throws IOException {
+        public void filter(final ContainerRequestContext context) throws IOException {
             verify();
             called = true;
         }
@@ -233,7 +234,7 @@ public class ApplicationFilterTest {
         private Filter10 filter10;
         private Filter100 filter100;
 
-        public void setFilters(Filter10 filter10, Filter100 filter100) {
+        public void setFilters(final Filter10 filter10, final Filter100 filter100) {
             this.filter10 = filter10;
             this.filter100 = filter100;
         }
@@ -251,7 +252,7 @@ public class ApplicationFilterTest {
         private Filter1 filter1;
         private Filter100 filter100;
 
-        public void setFilters(Filter1 filter1, Filter100 filter100) {
+        public void setFilters(final Filter1 filter1, final Filter100 filter100) {
             this.filter1 = filter1;
             this.filter100 = filter100;
         }
@@ -269,7 +270,7 @@ public class ApplicationFilterTest {
         private Filter1 filter1;
         private Filter10 filter10;
 
-        public void setFilters(Filter1 filter1, Filter10 filter10) {
+        public void setFilters(final Filter1 filter1, final Filter10 filter10) {
             this.filter1 = filter1;
             this.filter10 = filter10;
         }
@@ -292,7 +293,7 @@ public class ApplicationFilterTest {
         filter10.setFilters(filter1, filter100);
         filter100.setFilters(filter1, filter10);
 
-        List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
+        final List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
         requestFilterList.add(filter100);
         requestFilterList.add(filter1);
         requestFilterList.add(filter10);
@@ -300,11 +301,11 @@ public class ApplicationFilterTest {
         final ResourceConfig resourceConfig = new ResourceConfig().register(
                 new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
-        Resource.Builder rb = Resource.builder("test");
+        final Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(ContainerRequestContext request) {
+            public Response apply(final ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -316,7 +317,7 @@ public class ApplicationFilterTest {
 
     public class ExceptionFilter implements ContainerRequestFilter {
         @Override
-        public void filter(ContainerRequestContext context) throws IOException {
+        public void filter(final ContainerRequestContext context) throws IOException {
             throw new IOException("test");
         }
     }
@@ -324,17 +325,17 @@ public class ApplicationFilterTest {
     @Test
     public void testFilterExceptionHandling() throws Exception {
 
-        List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
+        final List<ContainerRequestFilter> requestFilterList = Lists.newArrayList();
         requestFilterList.add(new ExceptionFilter());
 
         final ResourceConfig resourceConfig = new ResourceConfig().register(
                 new ProviderInstanceBindingBinder<ContainerRequestFilter>(requestFilterList, ContainerRequestFilter.class));
 
-        Resource.Builder rb = Resource.builder("test");
+        final Resource.Builder rb = Resource.builder("test");
         rb.addMethod("GET").handledBy(new Inflector<ContainerRequestContext, Response>() {
 
             @Override
-            public Response apply(ContainerRequestContext request) {
+            public Response apply(final ContainerRequestContext request) {
                 return Response.ok().build();
             }
         });
@@ -343,7 +344,7 @@ public class ApplicationFilterTest {
         try {
             application.apply(RequestContextBuilder.from("/test", "GET").build()).get().getStatus();
             Assert.fail("should throw an exception");
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // ok
         }
     }

@@ -62,7 +62,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.collect.Lists;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Represents writer interceptor chain executor for both client and server side.

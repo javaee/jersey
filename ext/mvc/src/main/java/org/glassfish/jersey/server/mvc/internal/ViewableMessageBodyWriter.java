@@ -76,7 +76,7 @@ import org.glassfish.jersey.server.mvc.spi.ViewableContextException;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * {@link javax.ws.rs.ext.MessageBodyWriter Message body writer} for {@link org.glassfish.jersey.server.mvc.Viewable viewable}

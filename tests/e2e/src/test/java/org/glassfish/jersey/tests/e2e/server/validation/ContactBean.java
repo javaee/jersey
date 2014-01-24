@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,7 +48,7 @@ import javax.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
 
-import com.google.common.base.Objects;
+import jersey.repackaged.com.google.common.base.Objects;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -130,7 +130,6 @@ public class ContactBean implements Serializable {
                 add("email", email).
                 add("phone", phone).
                 add("name", name).
-                omitNullValues().
                 toString();
     }
 }

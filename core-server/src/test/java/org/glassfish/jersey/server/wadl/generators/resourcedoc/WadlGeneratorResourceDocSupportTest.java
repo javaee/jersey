@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,7 +46,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import javax.ws.rs.POST;
-import javax.ws.rs.core.UriInfo;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -67,9 +66,9 @@ import org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model.Re
 
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
 import com.sun.research.ws.wadl.Application;
+
+import jersey.repackaged.com.google.common.collect.Lists;
 
 public class WadlGeneratorResourceDocSupportTest {
     @Test

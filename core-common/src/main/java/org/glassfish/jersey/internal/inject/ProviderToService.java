@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,9 @@
  */
 package org.glassfish.jersey.internal.inject;
 
-import com.google.common.base.Function;
 import org.glassfish.hk2.api.ServiceHandle;
+
+import jersey.repackaged.com.google.common.base.Function;
 
 /**
  * Helper function converting a HK2 {@link ServiceHandle service provider} into the

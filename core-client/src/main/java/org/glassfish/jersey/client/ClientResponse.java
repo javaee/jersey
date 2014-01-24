@@ -66,10 +66,10 @@ import org.glassfish.jersey.message.internal.Statuses;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.base.Function;
+import jersey.repackaged.com.google.common.base.Objects;
+import jersey.repackaged.com.google.common.collect.Collections2;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Jersey client response context.

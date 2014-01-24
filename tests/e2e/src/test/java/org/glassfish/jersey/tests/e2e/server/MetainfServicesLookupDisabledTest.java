@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,12 @@
  */
 package org.glassfish.jersey.tests.e2e.server;
 
+import javax.ws.rs.core.Application;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.junit.Test;
 
-import javax.ws.rs.core.Application;
+import org.junit.Test;
 
 /**
  * Property {@link ServerProperties#METAINF_SERVICES_LOOKUP_DISABLE} IS set.
