@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,56 +37,52 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.inmemory.internal;
+package org.glassfish.jersey.jdkhttp;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * Jdk Http Container package scanning test.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class FollowRedirectsTest extends JerseyTest {
-    @Path("/followTest")
-    public static class RedirectResource {
+public class JdkHttpPackageTest extends AbstractJdkHttpServerTester {
+
+    @Path("/packageTest")
+    public static class TestResource {
         @GET
         public String get() {
-            return "GET";
+            return "test";
         }
 
         @GET
-        @Path("redirect")
-        public Response redirect() {
-            return Response.status(302).location(UriBuilder.fromResource(RedirectResource.class).build()).build();
+        @Path("sub")
+        public String getSub() {
+            return "test-sub";
         }
     }
 
-    @Override
-    protected Application configure() {
-        return new ResourceConfig(RedirectResource.class);
-    }
-
     @Test
-    public void testDoFollow() {
-        Response r = target("followTest/redirect").request().get();
-        assertEquals(200, r.getStatus());
-        assertEquals("GET", r.readEntity(String.class));
-    }
+    public void testJdkHttpPackage() {
+        final ResourceConfig rc = new ResourceConfig();
+        rc.packages(this.getClass().getPackage().getName());
 
-    @Test
-    public void testDontFollow() {
-        WebTarget t = target("followTest/redirect");
-        t.property(ClientProperties.FOLLOW_REDIRECTS, false);
-        assertEquals(302, t.request().get().getStatus());
+        startServer(rc);
+
+        WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
+
+        assertEquals("test", r.path("packageTest").request().get(String.class));
+        assertEquals("test-sub", r.path("packageTest/sub").request().get(String.class));
+        assertEquals(404, r.path("wrong").request().get(Response.class).getStatus());
+
     }
 }

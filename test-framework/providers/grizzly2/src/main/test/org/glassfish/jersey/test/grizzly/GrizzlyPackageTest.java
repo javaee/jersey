@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,56 +37,63 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.inmemory.internal;
+package org.glassfish.jersey.test.grizzly;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
+
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Paul Sandoz
  */
-public class FollowRedirectsTest extends JerseyTest {
-    @Path("/followTest")
-    public static class RedirectResource {
+public class GrizzlyPackageTest extends JerseyTest {
+    @Override
+    protected ResourceConfig configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+        ResourceConfig rc = new ResourceConfig();
+        rc.packages(this.getClass().getPackage().getName());
+        return rc;
+    }
+
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory() {
+        return new GrizzlyTestContainerFactory();
+    }
+
+    @Path("root")
+    public static class TestResource {
         @GET
         public String get() {
             return "GET";
         }
 
+        @Path("sub")
         @GET
-        @Path("redirect")
-        public Response redirect() {
-            return Response.status(302).location(UriBuilder.fromResource(RedirectResource.class).build()).build();
+        public String getSub() {
+            return "sub";
         }
     }
 
-    @Override
-    protected Application configure() {
-        return new ResourceConfig(RedirectResource.class);
+    @Test
+    public void testGet() {
+        String s = target().path("root").request().get(String.class);
+        assertEquals("GET", s);
     }
 
     @Test
-    public void testDoFollow() {
-        Response r = target("followTest/redirect").request().get();
-        assertEquals(200, r.getStatus());
-        assertEquals("GET", r.readEntity(String.class));
+    public void testSub() {
+        String s = target().path("root/sub").request().get(String.class);
+        assertEquals("sub", s);
     }
 
-    @Test
-    public void testDontFollow() {
-        WebTarget t = target("followTest/redirect");
-        t.property(ClientProperties.FOLLOW_REDIRECTS, false);
-        assertEquals(302, t.request().get().getStatus());
-    }
+
 }

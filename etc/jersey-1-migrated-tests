@@ -1,41 +1,5 @@
 TODO - FIRST:
 
-jersey-server/src/test/java/com/sun/jersey/server/impl/uri/rules/BaseRuleTest.java
-jersey-server/src/test/java/com/sun/jersey/server/impl/uri/rules/RootResourceClassesRuleTest.java
-jersey-server/src/test/java/com/sun/jersey/server/impl/uri/UriHelperTest.java
-jersey-server/src/test/java/com/sun/jersey/spi/container/ContainerRequestTest.java
-
-jersey-test-framework/jersey-test-framework-core/src/main/java/com/sun/jersey/test/framework/JerseyTest.java
-jersey-test-framework/jersey-test-framework-core/src/test/java/com/sun/jersey/test/framework/impl/ClientFactoryTest.java
-jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/BaseUriTest.java
-jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzly2/GrizzlyClassesTest.java
-jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzly2/testpackage/GrizzlyPackageTest.java
-jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb2/contextpath/GrizzlyWebContextPathTest.java
-jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb2/GrizzlyWebInjectionTest.java
-jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb2/GrizzlyWebServletAndFilterTest.java
-jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb2/GrizzlyWebTest.java
-jersey-test-framework/jersey-test-framework-grizzly/src/test/java/com/sun/jersey/test/framework/BaseUriTest.java
-jersey-test-framework/jersey-test-framework-grizzly/src/test/java/com/sun/jersey/test/framework/impl/container/grizzly/GrizzlyClassesTest.java
-jersey-test-framework/jersey-test-framework-grizzly/src/test/java/com/sun/jersey/test/framework/impl/container/grizzly/testpackage/GrizzlyPackageTest.java
-jersey-test-framework/jersey-test-framework-grizzly/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb/contextpath/GrizzlyWebContextPathTest.java
-jersey-test-framework/jersey-test-framework-grizzly/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb/GrizzlyWebInjectionTest.java
-jersey-test-framework/jersey-test-framework-grizzly/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb/GrizzlyWebServletAndFilterTest.java
-jersey-test-framework/jersey-test-framework-grizzly/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb/GrizzlyWebTest.java
-jersey-test-framework/jersey-test-framework-http/src/test/java/com/sun/jersey/test/framework/impl/container/http/HTTPClassesTest.java
-jersey-test-framework/jersey-test-framework-http/src/test/java/com/sun/jersey/test/framework/impl/container/http/testpackage/HTTPServerPackageTest.java
-jersey-test-framework/jersey-test-framework-inmemory/src/test/java/com/sun/jersey/test/framework/impl/container/inmemory/InMemoryClassesTest.java
-jersey-test-framework/jersey-test-framework-inmemory/src/test/java/com/sun/jersey/test/framework/impl/container/inmemory/testpackage/InMemoryPackageTest.java
-
-jersey-tests/src/test/java/com/sun/jersey/api/core/AbstractResourceConfigOrderTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/core/ClassNamesResourceConfigTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/core/DefaultResourceConfigTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/core/reflection/GenericMethodListTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/core/reflection/MethodListTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/model/AbstractResourceMethodTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/wadl/config/WadlGeneratorConfigTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/wadl/config/WadlGeneratorConfigurationLoaderTest.java
-jersey-tests/src/test/java/com/sun/jersey/api/wadl/config/WadlGeneratorLoaderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/application/WebApplicationTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/AllowHttpHeaderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/AsyncHttpMethodTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/client/ConfigurationTest.java
@@ -445,3 +409,16 @@ samples/jersey-server-linking-sample/src/test/java/com/sun/jersey/samples/linkin
 
 samples/simple-atom-server/src/test/java/com/sun/jersey/samples/atomserver/SimpleAtomServerTest.java
 
+TODO - SUGGEST TO SKIP THOSE TESTS:
+-- test framework/Grizzly2
+jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/BaseUriTest.java // tested multiple times everywhere, e.g. LocationHeaderTest, ResponseTest, etc.
+jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzly2/GrizzlyClassesTest.java // same as above
+jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb2/contextpath/GrizzlyWebContextPathTest.java
+jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb2/GrizzlyWebInjectionTest.java
+jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb2/GrizzlyWebServletAndFilterTest.java
+jersey-test-framework/jersey-test-framework-grizzly2/src/test/java/com/sun/jersey/test/framework/impl/container/grizzlyweb2/GrizzlyWebTest.java
+
+jersey-tests/src/test/java/com/sun/jersey/api/core/AbstractResourceConfigOrderTest.java
+jersey-tests/src/test/java/com/sun/jersey/api/core/ClassNamesResourceConfigTest.java
+jersey-tests/src/test/java/com/sun/jersey/api/core/DefaultResourceConfigTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/application/WebApplicationTest.java

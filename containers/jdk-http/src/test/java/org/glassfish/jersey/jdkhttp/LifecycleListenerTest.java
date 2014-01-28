@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,6 +68,12 @@ public class LifecycleListenerTest extends AbstractJdkHttpServerTester {
         public String get() {
             return "one";
         }
+
+        @GET
+        @Path("sub")
+        public String getSub() {
+            return "one-sub";
+        }
     }
 
     @Path("/two")
@@ -107,12 +113,14 @@ public class LifecycleListenerTest extends AbstractJdkHttpServerTester {
         WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
 
         assertEquals("one", r.path("one").request().get(String.class));
+        assertEquals("one-sub", r.path("one/sub").request().get(String.class));
         assertEquals(404, r.path("two").request().get(Response.class).getStatus());
 
         // add Two resource
         reloader.reload(new ResourceConfig(One.class, Two.class));
 
         assertEquals("one", r.path("one").request().get(String.class));
+        assertEquals("one-sub", r.path("one/sub").request().get(String.class));
         assertEquals("two", r.path("two").request().get(String.class));
     }
 
