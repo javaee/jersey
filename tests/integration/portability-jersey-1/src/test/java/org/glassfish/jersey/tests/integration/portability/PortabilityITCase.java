@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,26 +39,27 @@
  */
 package org.glassfish.jersey.tests.integration.portability;
 
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Response;
+import com.sun.jersey.api.client.ClientResponse;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
+import com.sun.jersey.test.framework.AppDescriptor;
+import com.sun.jersey.test.framework.JerseyTest;
+import com.sun.jersey.test.framework.WebAppDescriptor;
+import com.sun.jersey.test.framework.spi.container.TestContainerException;
+import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+import com.sun.jersey.test.framework.spi.container.external.ExternalTestContainerFactory;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class PortabilityITCase extends JerseyTest {
+
     @Override
-    protected Application configure() {
-        // dummy resource config
-        return new ResourceConfig();
+    protected AppDescriptor configure() {
+        return new WebAppDescriptor.Builder().build();
     }
 
     @Override
@@ -68,14 +69,46 @@ public class PortabilityITCase extends JerseyTest {
 
     @Test
     public void testHelloWorld() throws Exception {
-        String s = target("helloworld").request().get(String.class);
+        String s = resource().path("helloworld").get(String.class);;
         assertEquals("Hello World!", s);
     }
 
     @Test
     public void testJersey() {
-        Response r = target("jersey").request().get();
+        ClientResponse r = resource().path("jersey").get(ClientResponse.class);
         assertEquals(200, r.getStatus());
-        assertEquals("Using Jersey 1.x", r.readEntity(String.class));
+        assertEquals("Using Jersey 1.x", r.getEntity(String.class));
+    }
+
+    /**
+     * The whole project is setup for Jersey 2. Need to get the effective port number
+     * from Jersey 2 properties to make Hudson happy.
+     *
+     * @param defaultPort to use if no other configuration is available
+     * @return port number to use by the client
+     */
+    @Override
+    protected int getPort(int defaultPort) {
+
+        String port = System.getProperty("jersey.config.test.container.port");
+        if (null != port) {
+            try {
+                return Integer.parseInt(port);
+            } catch (NumberFormatException e) {
+                throw new TestContainerException("jersey.config.test.container.port with a " +
+                        "value of \"" + port +"\" is not a valid integer.", e);
+            }
+        }
+
+        port = System.getProperty("JERSEY_TEST_PORT");
+        if (null != port) {
+            try {
+                return Integer.parseInt(port);
+            } catch (NumberFormatException e) {
+                throw new TestContainerException("JERSEY_TEST_PORT with a " +
+                        "value of \"" + port +"\" is not a valid integer.", e);
+            }
+        }
+        return defaultPort;
     }
 }

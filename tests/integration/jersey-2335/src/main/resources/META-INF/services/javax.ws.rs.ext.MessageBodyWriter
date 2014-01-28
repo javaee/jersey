@@ -1,0 +1,2 @@
+org.glassfish.jersey.tests.integration.jersey2335.FieldInjectedProvider
+org.glassfish.jersey.tests.integration.jersey2335.ConstructorInjectedProvider

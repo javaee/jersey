@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -49,31 +49,22 @@
         <version>2.6-SNAPSHOT</version>
     </parent>
 
-    <artifactId>portability-jersey-2</artifactId>
+    <artifactId>jersey-2335</artifactId>
     <packaging>war</packaging>
-    <name>jersey-tests-integration-portability-jersey-2</name>
+    <name>jersey-tests-integration-jersey-2335</name>
 
-    <description>Servlet portability test - testing co-bundling with Jersey 2</description>
+    <description>Servlet integration test - JERSEY-2335 - Providers do not get injected properly</description>
 
     <dependencies>
-        <dependency>
-            <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-servlet-portability</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-external</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet-core</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-servlet</artifactId>
-            <version>${jersey1.version}</version>
-            <scope>provided</scope>
+            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+            <artifactId>jersey-test-framework-provider-external</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -86,17 +77,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                  <classpathDependencyExcludes> <!-- this is to ensure only one Jersey version is present in the classpath -->
-                    <classpathDependencyExclude>com.sun.jersey:jersey-core</classpathDependencyExclude>
-                    <classpathDependencyExclude>com.sun.jersey:jersey-server</classpathDependencyExclude>
-                    <classpathDependencyExclude>com.sun.jersey:jersey-servlet</classpathDependencyExclude>
-                  </classpathDependencyExcludes>
-                </configuration>
-             </plugin>
+            </plugin>
             <plugin>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>jetty-maven-plugin</artifactId>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

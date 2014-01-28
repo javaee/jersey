@@ -61,8 +61,15 @@
             <artifactId>jersey-servlet-portability</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-            <artifactId>jersey-test-framework-provider-external</artifactId>
+            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <artifactId>jersey-test-framework-external</artifactId>
+            <version>${jersey1.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <artifactId>jersey-test-framework-core</artifactId>
+            <version>${jersey1.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -86,6 +93,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                  <classpathDependencyExcludes> <!-- this is to ensure only one Jersey version is present in the classpath -->
+                    <classpathDependencyExclude>org.glassfish.jersey.core:jersey-common</classpathDependencyExclude>
+                    <classpathDependencyExclude>org.glassfish.jersey.core:jersey-server</classpathDependencyExclude>
+                    <classpathDependencyExclude>org.glassfish.jersey.core:jersey-client</classpathDependencyExclude>
+                  </classpathDependencyExcludes>
+                </configuration>
             </plugin>
             <plugin>
               <groupId>org.mortbay.jetty</groupId>
