@@ -182,12 +182,16 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
         return properties;
     }
 
+    @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return !isPrimitiveType(type) && super.isReadable(type, genericType, annotations, mediaType);
+        return !isPrimitiveType(type) && !Map.class.isAssignableFrom(type) && super.isReadable(type, genericType, annotations,
+                mediaType);
     }
 
+    @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        return !isPrimitiveType(type) && super.isWriteable(type, genericType, annotations, mediaType);
+        return !isPrimitiveType(type) && !Map.class.isAssignableFrom(type) && super.isWriteable(type, genericType, annotations,
+                mediaType);
     }
 
     private boolean isPrimitiveType(final Class<?> type) {

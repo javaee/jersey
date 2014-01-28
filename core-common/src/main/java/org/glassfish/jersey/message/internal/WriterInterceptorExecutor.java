@@ -46,6 +46,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
@@ -75,6 +77,8 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>
         implements WriterInterceptorContext, ServiceLocatorSupplier {
+
+    private static final Logger LOGGER = Logger.getLogger(WriterInterceptorExecutor.class.getName());
 
     private OutputStream outputStream;
     private final MultivaluedMap<String, Object> headers;
@@ -238,6 +242,8 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
                         context.getAnnotations(), context.getMediaType(), WriterInterceptorExecutor.this);
 
                 if (writer == null) {
+                    LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYWRITER(
+                            context.getMediaType(), context.getType(), context.getGenericType()));
                     throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYWRITER(
                             context.getMediaType(), context.getType(), context.getGenericType()));
                 }
