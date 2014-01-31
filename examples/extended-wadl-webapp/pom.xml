@@ -220,7 +220,7 @@
                         <docletArtifact>
                             <groupId>xerces</groupId>
                             <artifactId>xercesImpl</artifactId>
-                            <version>2.6.1</version>
+                            <version>${xerces.version}</version>
                         </docletArtifact>
                     </docletArtifacts>
                     <!-- the following option is required as a work around for
