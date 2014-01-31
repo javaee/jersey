@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,29 +68,31 @@ import static org.junit.Assert.assertEquals;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class GenericTypeAndEntityTest extends AbstractTypeTester {
+
     @Provider
+    @SuppressWarnings("UnusedDeclaration")
     public static class ListIntegerWriter implements MessageBodyWriter<List<Integer>> {
         private final Type t;
 
         public ListIntegerWriter() {
-            List<Integer> l = new ArrayList<Integer>();
-            GenericEntity<List<Integer>> ge = new GenericEntity<List<Integer>>(l) {};
+            final List<Integer> l = new ArrayList<Integer>();
+            final GenericEntity<List<Integer>> ge = new GenericEntity<List<Integer>>(l) {};
             this.t = ge.getType();
         }
 
-        public boolean isWriteable(Class<?> c, Type t, Annotation[] as, MediaType mt) {
+        public boolean isWriteable(final Class<?> c, final Type t, final Annotation[] as, final MediaType mt) {
             return this.t.equals(t);
         }
 
-        public long getSize(List<Integer> l, Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+        public long getSize(final List<Integer> l, final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
             return -1;
         }
 
-        public void writeTo(List<Integer> l, Class<?> c, Type t, Annotation[] as,
-                            MediaType mt, MultivaluedMap<String, Object> hs,
-                            OutputStream out) throws IOException, WebApplicationException {
-            StringBuffer sb = new StringBuffer();
-            for (Integer i : l) {
+        public void writeTo(final List<Integer> l, final Class<?> c, final Type t, final Annotation[] as,
+                            final MediaType mt, final MultivaluedMap<String, Object> hs,
+                            final OutputStream out) throws IOException, WebApplicationException {
+            final StringBuilder sb = new StringBuilder();
+            for (final Integer i : l) {
                 if (sb.length() > 0) sb.append(", ");
                 sb.append(i);
             }
@@ -186,8 +188,8 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
         _genericTest(ListResourceWithMediaType.class);
     }
 
-    private void _genericTest(Class resourceClass) {
-        WebTarget target = target(resourceClass.getSimpleName());
+    private void _genericTest(final Class resourceClass) {
+        final WebTarget target = target(resourceClass.getSimpleName());
 
         _testPath(target, "type");
         _testPath(target, "genericEntity");
@@ -196,7 +198,7 @@ public class GenericTypeAndEntityTest extends AbstractTypeTester {
         _testPath(target, "wrongGenericEntity");
     }
 
-    private void _testPath(WebTarget target, String path) {
+    private void _testPath(final WebTarget target, final String path) {
         assertEquals("1, 2, 3, 4", target.path(path).request().get(String.class));
     }
 }

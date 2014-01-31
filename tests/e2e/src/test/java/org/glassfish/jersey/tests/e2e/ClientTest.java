@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -90,10 +91,13 @@ public class ClientTest extends JerseyTest {
 
         @POST
         @Path("content")
-        public String contentHeaders(@Context HttpHeaders headers, String entity) {
-            StringBuilder sb = new StringBuilder(entity).append('\n');
+        public String contentHeaders(@HeaderParam("custom-header") final String customHeader,
+                                     @Context final HttpHeaders headers, final String entity) {
+            final StringBuilder sb = new StringBuilder(entity).append('\n');
 
-            for (Map.Entry<String, List<String>> header : headers.getRequestHeaders().entrySet()) {
+            sb.append("custom-header:").append(customHeader).append('\n');
+
+            for (final Map.Entry<String, List<String>> header : headers.getRequestHeaders().entrySet()) {
                 sb.append(header.getKey()).append(':').append(header.getValue().toString()).append('\n');
             }
 
@@ -108,24 +112,24 @@ public class ClientTest extends JerseyTest {
 
     @Test
     public void testAccesingHelloworldResource() {
-        WebTarget resource = target().path("helloworld");
-        Response r = resource.request().get();
+        final WebTarget resource = target().path("helloworld");
+        final Response r = resource.request().get();
         assertEquals(200, r.getStatus());
 
-        String responseMessage = resource.request().get(String.class);
+        final String responseMessage = resource.request().get(String.class);
         assertEquals(HelloWorldResource.MESSAGE, responseMessage);
     }
 
     @Test
     public void testAccesingMissingResource() {
-        WebTarget missingResource = target().path("missing");
-        Response r = missingResource.request().get();
+        final WebTarget missingResource = target().path("missing");
+        final Response r = missingResource.request().get();
         assertEquals(404, r.getStatus());
 
 
         try {
             missingResource.request().get(String.class);
-        } catch (WebApplicationException ex) {
+        } catch (final WebApplicationException ex) {
             assertEquals(404, ex.getResponse().getStatus());
             return;
         }
@@ -141,7 +145,6 @@ public class ClientTest extends JerseyTest {
         Invocation.Builder ib;
         Invocation i;
         Response r;
-        String expected;
         String reqHeaders;
 
         ib = target.request("*/*");
@@ -150,10 +153,11 @@ public class ClientTest extends JerseyTest {
         i = ib.build("POST", Entity.entity("aaa", MediaType.WILDCARD_TYPE));
         r = i.invoke();
 
-        expected = "custom-header:[custom-value]";
         reqHeaders = r.readEntity(String.class).toLowerCase();
-        assertTrue(String.format("Request headers do not contain expected '%s' entry:\n%s", expected, reqHeaders),
-                reqHeaders.contains(expected));
+        for (final String expected : new String[] {"custom-header:[custom-value]", "custom-header:custom-value"}) {
+            assertTrue(String.format("Request headers do not contain expected '%s' entry:\n%s", expected, reqHeaders),
+                    reqHeaders.contains(expected));
+        }
         final String unexpected = "content-encoding";
         assertFalse(String.format("Request headers contains unexpected '%s' entry:\n%s", unexpected, reqHeaders),
                 reqHeaders.contains(unexpected));
@@ -163,7 +167,7 @@ public class ClientTest extends JerseyTest {
                 Entity.entity("aaa", Variant.mediaTypes(MediaType.WILDCARD_TYPE).encodings("deflate").build().get(0)));
         r = i.invoke();
 
-        expected = "content-encoding:[deflate]";
+        final String expected = "content-encoding:[deflate]";
         reqHeaders = r.readEntity(String.class).toLowerCase();
         assertTrue(String.format("Request headers do not contain expected '%s' entry:\n%s", expected, reqHeaders),
                 reqHeaders.contains(expected));

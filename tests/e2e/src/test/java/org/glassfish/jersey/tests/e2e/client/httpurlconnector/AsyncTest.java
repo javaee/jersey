@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,10 @@
  */
 package org.glassfish.jersey.tests.e2e.client.httpurlconnector;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -46,6 +50,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.AsyncInvoker;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
@@ -54,6 +60,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -61,8 +68,12 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Asynchronous connector test.
@@ -71,6 +82,7 @@ import static org.junit.Assert.assertThat;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class AsyncTest extends JerseyTest {
+
     private static final Logger LOGGER = Logger.getLogger(AsyncTest.class.getName());
     private static final String PATH = "async";
 
@@ -97,7 +109,7 @@ public class AsyncTest extends JerseyTest {
 
                 @Override
                 public void run() {
-                    String result = veryExpensiveOperation();
+                    final String result = veryExpensiveOperation();
                     asyncResponse.resume(result);
                 }
 
@@ -106,7 +118,7 @@ public class AsyncTest extends JerseyTest {
                     try {
                         Thread.sleep(OPERATION_DURATION);
                         return "DONE-" + id;
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
                         return "INTERRUPTED-" + id;
                     } finally {
@@ -128,7 +140,7 @@ public class AsyncTest extends JerseyTest {
             asyncResponse.setTimeoutHandler(new TimeoutHandler() {
 
                 @Override
-                public void handleTimeout(AsyncResponse asyncResponse) {
+                public void handleTimeout(final AsyncResponse asyncResponse) {
                     asyncResponse.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE)
                             .entity("Operation time out.").build());
                 }
@@ -139,7 +151,7 @@ public class AsyncTest extends JerseyTest {
 
                 @Override
                 public void run() {
-                    String result = veryExpensiveOperation();
+                    final String result = veryExpensiveOperation();
                     asyncResponse.resume(result);
                 }
 
@@ -149,7 +161,7 @@ public class AsyncTest extends JerseyTest {
                     try {
                         Thread.sleep(5 * OPERATION_DURATION);
                         return "DONE";
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
                         return "INTERRUPTED";
                     } finally {
@@ -163,12 +175,12 @@ public class AsyncTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(AsyncResource.class)
+        return new ResourceConfig(AsyncResource.class, ThreadPoolResource.class)
                 .register(new LoggingFilter(LOGGER, true));
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         config.register(new LoggingFilter(LOGGER, true));
         config.connectorProvider(new HttpUrlConnectorProvider());
     }
@@ -218,5 +230,61 @@ public class AsyncTest extends JerseyTest {
         // get() waits for the response
         assertEquals(503, response.getStatus());
         assertEquals("Operation time out.", response.readEntity(String.class));
+    }
+
+    @Path("/threadpool")
+    public static class ThreadPoolResource {
+
+        @GET
+        public String get() {
+            sleep();
+            return "GET";
+        }
+
+        private void sleep() {
+            try {
+                Thread.sleep(100);
+            } catch (final InterruptedException ex) {
+                // NOOP.
+            }
+        }
+    }
+
+    @Test
+    public void testClientThreadPool() throws Exception {
+        final AsyncInvoker invoker = ClientBuilder
+                .newClient(new ClientConfig().property(ClientProperties.ASYNC_THREADPOOL_SIZE, 9))
+                .target(getBaseUri())
+                .path("threadpool")
+                .request()
+                .async();
+
+        final CountDownLatch latch = new CountDownLatch(100);
+        final int threadCount = Thread.activeCount();
+
+        final List<Thread> threads = new ArrayList<Thread>(20);
+        for (int i = 0; i < 20; i++) {
+            threads.add(new Thread(new Runnable() {
+                @Override
+                public void run() throws RuntimeException {
+                    for (int i = 0; i < 5; i++) {
+                        try {
+                            assertThat(invoker.get().get().readEntity(String.class), equalTo("GET"));
+                            assertThat(Thread.activeCount() - threadCount - 20, lessThanOrEqualTo(10));
+                            latch.countDown();
+                        } catch (final InterruptedException e) {
+                            fail();
+                        } catch (final ExecutionException e) {
+                            fail();
+                        }
+                    }
+                }
+            }));
+        }
+        for (final Thread thread : threads) {
+            thread.start();
+        }
+
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
     }
 }

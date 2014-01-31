@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -99,7 +99,7 @@ public class JarFileScannerTest {
         }
 
         // Scan entries using Jersey scanner.
-        InputStream jaxRsApi = new FileInputStream(jaxRsApiPath);
+        final InputStream jaxRsApi = new FileInputStream(jaxRsApiPath);
 
         try {
             final JarFileScanner jarFileScanner = new JarFileScanner(jaxRsApi, "javax/ws/rs", true);
@@ -112,7 +112,7 @@ public class JarFileScannerTest {
                 // This test doesn't actually do anything with the input stream, but it is important that it
                 // open/close the stream to simulate actual usage.  The reported defect is only exposed if you
                 // call open/close in some fashion.
-                InputStream classStream = jarFileScanner.open();
+                final InputStream classStream = jarFileScanner.open();
 
                 try {
                     scannedEntryCount++;

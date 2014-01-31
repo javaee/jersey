@@ -47,3 +47,4 @@ truststore_server
 bootstrap
 build.readme
 /tests/e2e/entity/multipart-testcase.txt
+/test/resources/org/glassfish/jersey/server/config/jaxrs-components

@@ -1,23 +1,5 @@
 TODO - FIRST:
 
-jersey-tests/src/test/java/com/sun/jersey/impl/client/AllowHttpHeaderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/AsyncHttpMethodTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/ConfigurationTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/filter/ConnectionListenerTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/filter/HTTPDigestAuthFilterTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/GenericTypeAndEntityTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/HttpHeadersTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/HttpMethodWorkaroundTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/InjectableProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/ThreadpoolSizeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/client/UriBuildingTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/config/ClasspathResourceConfigTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/config/DefaultResourceConfigTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/config/JarZipSchemeScannerTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/config/PackageResourceConfigTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/config/ServiceFinderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/CachedEntityFilterTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/EntityWriterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/FormFilterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredAnnotatedResourceFiltersTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredAnnotatedWithSplitResourceFiltersTest.java
@@ -408,6 +390,11 @@ samples/atompub-contacts/atompub-contacts-server/src/test/java/com/sun/jersey/sa
 samples/jersey-server-linking-sample/src/test/java/com/sun/jersey/samples/linking/LinkWebAppTest.java
 
 samples/simple-atom-server/src/test/java/com/sun/jersey/samples/atomserver/SimpleAtomServerTest.java
+
+TODO - FEATURE NOT SUPPORTED, TESTS SHOULD BE DROPPED
+
+# Client - ContainerListener, OnStartConnectionListener
+jersey-tests/src/test/java/com/sun/jersey/impl/client/filter/ConnectionListenerTest.java
 
 TODO - SUGGEST TO SKIP THOSE TESTS:
 -- test framework/Grizzly2

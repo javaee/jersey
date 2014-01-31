@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -112,8 +112,8 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Path("InputStreamResource")
     public static class InputStreamResource {
         @POST
-        public InputStream post(InputStream in) throws IOException {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
+        public InputStream post(final InputStream in) throws IOException {
+            final ByteArrayOutputStream out = new ByteArrayOutputStream();
             int read;
             final byte[] data = new byte[2048];
             while ((read = in.read(data)) != -1)
@@ -125,7 +125,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testInputStream() {
-        ByteArrayInputStream in = new ByteArrayInputStream("CONTENT".getBytes());
+        final ByteArrayInputStream in = new ByteArrayInputStream("CONTENT".getBytes());
         _test(in, InputStreamResource.class);
     }
 
@@ -175,10 +175,10 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJaxbBeanRepresentationError() {
-        WebTarget target = target("JaxbBeanResource");
+        final WebTarget target = target("JaxbBeanResource");
 
-        String xml = "<root>foo</root>";
-        Response cr = target.request().post(Entity.entity(xml, "application/xml"));
+        final String xml = "<root>foo</root>";
+        final Response cr = target.request().post(Entity.entity(xml, "application/xml"));
         assertEquals(400, cr.getStatus());
     }
 
@@ -219,17 +219,17 @@ public class EntityTypesTest extends AbstractTypeTester {
         _testListOrArray(true, MediaType.APPLICATION_XML_TYPE);
     }
 
-    public void _testListOrArray(boolean isList, MediaType mt) {
-        Object in = isList ? getJAXBElementList() : getJAXBElementArray();
-        GenericType gt = isList ? new GenericType<List<JAXBElement<String>>>() {
+    public void _testListOrArray(final boolean isList, final MediaType mt) {
+        final Object in = isList ? getJAXBElementList() : getJAXBElementArray();
+        final GenericType gt = isList ? new GenericType<List<JAXBElement<String>>>() {
         } : new GenericType<JAXBElement<String>[]>() {
         };
 
-        WebTarget target = target(isList ? "JAXBElementListResource" : "JAXBElementArrayResource");
-        Object out = target.request(mt).post(Entity.entity(new GenericEntity(in, gt.getType()), mt), gt);
+        final WebTarget target = target(isList ? "JAXBElementListResource" : "JAXBElementArrayResource");
+        final Object out = target.request(mt).post(Entity.entity(new GenericEntity(in, gt.getType()), mt), gt);
 
-        List<JAXBElement<String>> inList = isList ? ((List<JAXBElement<String>>) in) : Arrays.asList((JAXBElement<String>[]) in);
-        List<JAXBElement<String>> outList = isList ? ((List<JAXBElement<String>>) out) : Arrays.asList((JAXBElement<String>[]) out);
+        final List<JAXBElement<String>> inList = isList ? ((List<JAXBElement<String>>) in) : Arrays.asList((JAXBElement<String>[]) in);
+        final List<JAXBElement<String>> outList = isList ? ((List<JAXBElement<String>>) out) : Arrays.asList((JAXBElement<String>[]) out);
         assertEquals("Lengths differ", inList.size(), outList.size());
         for (int i = 0; i < inList.size(); i++) {
             assertEquals("Names of elements at index " + i + " differ", inList.get(i).getName(), outList.get(i).getName());
@@ -278,10 +278,10 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanRepresentationError() {
-        WebTarget target = target("JAXBElementBeanResource");
+        final WebTarget target = target("JAXBElementBeanResource");
 
-        String xml = "<root><value>foo";
-        Response cr = target.request().post(Entity.entity(xml, "application/xml"));
+        final String xml = "<root><value>foo";
+        final Response cr = target.request().post(Entity.entity(xml, "application/xml"));
         assertEquals(400, cr.getStatus());
     }
 
@@ -312,7 +312,7 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/xml")
     public static class JAXBTypeResource {
         @POST
-        public JaxbBean post(JaxbBeanType t) {
+        public JaxbBean post(final JaxbBeanType t) {
             return new JaxbBean(t.value);
         }
     }
@@ -323,16 +323,16 @@ public class EntityTypesTest extends AbstractTypeTester {
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         super.configureClient(config);
         config.register(new JettisonFeature());
     }
 
     @Test
     public void testJAXBTypeRepresentation() {
-        WebTarget target = target("JAXBTypeResource");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBeanType out = target.request().post(Entity.entity(in, "application/xml"), JaxbBeanType.class);
+        final WebTarget target = target("JAXBTypeResource");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBeanType out = target.request().post(Entity.entity(in, "application/xml"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
     }
 
@@ -344,9 +344,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBTypeRepresentationMediaType() {
-        WebTarget target = target("JAXBTypeResourceMediaType");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBeanType out = target.request().post(Entity.entity(in, "application/foo+xml"), JaxbBeanType.class);
+        final WebTarget target = target("JAXBTypeResourceMediaType");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBeanType out = target.request().post(Entity.entity(in, "application/foo+xml"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
     }
 
@@ -356,18 +356,18 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/xml")
     public static class JAXBObjectResource {
         @POST
-        public Object post(Object o) {
+        public Object post(final Object o) {
             return o;
         }
     }
 
     @Provider
     public static class JAXBObjectResolver implements ContextResolver<JAXBContext> {
-        public JAXBContext getContext(Class<?> c) {
+        public JAXBContext getContext(final Class<?> c) {
             if (Object.class == c) {
                 try {
                     return JAXBContext.newInstance(JaxbBean.class);
-                } catch (JAXBException ex) {
+                } catch (final JAXBException ex) {
                 }
             }
             return null;
@@ -376,9 +376,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBObjectRepresentation() {
-        WebTarget target = target("JAXBObjectResource");
-        Object in = new JaxbBean("CONTENT");
-        JaxbBean out = target.request().post(Entity.entity(in, "application/xml"), JaxbBean.class);
+        final WebTarget target = target("JAXBObjectResource");
+        final Object in = new JaxbBean("CONTENT");
+        final JaxbBean out = target.request().post(Entity.entity(in, "application/xml"), JaxbBean.class);
         assertEquals(in, out);
     }
 
@@ -390,19 +390,19 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBObjectRepresentationMediaType() {
-        WebTarget target = target("JAXBObjectResourceMediaType");
-        Object in = new JaxbBean("CONTENT");
-        JaxbBean out = target.request().post(Entity.entity(in, "application/foo+xml"), JaxbBean.class);
+        final WebTarget target = target("JAXBObjectResourceMediaType");
+        final Object in = new JaxbBean("CONTENT");
+        final JaxbBean out = target.request().post(Entity.entity(in, "application/foo+xml"), JaxbBean.class);
         assertEquals(in, out);
     }
 
 
     @Test
     public void testJAXBObjectRepresentationError() {
-        WebTarget target = target("JAXBObjectResource");
+        final WebTarget target = target("JAXBObjectResource");
 
-        String xml = "<root>foo</root>";
-        Response cr = target.request().post(Entity.entity(xml, "application/xml"));
+        final String xml = "<root>foo</root>";
+        final Response cr = target.request().post(Entity.entity(xml, "application/xml"));
         assertEquals(400, cr.getStatus());
     }
 
@@ -412,8 +412,8 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testFileRepresentation() throws IOException {
-        FileProvider fp = new FileProvider();
-        File in = fp.readFrom(File.class, File.class, null, null, null,
+        final FileProvider fp = new FileProvider();
+        final File in = fp.readFrom(File.class, File.class, null, null, null,
                 new ByteArrayInputStream("CONTENT".getBytes()));
 
         _test(in, FileResource.class);
@@ -427,18 +427,18 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testFormRepresentation() {
-        Form fp = new Form();
+        final Form fp = new Form();
         fp.param("Email", "johndoe@gmail.com");
         fp.param("Passwd", "north 23AZ");
         fp.param("service", "cl");
         fp.param("source", "Gulp-CalGul-1.05");
 
-        WebTarget target = target("FormResource");
-        Form response = target.request().post(Entity.entity(fp, MediaType.APPLICATION_FORM_URLENCODED_TYPE), Form.class);
+        final WebTarget target = target("FormResource");
+        final Form response = target.request().post(Entity.entity(fp, MediaType.APPLICATION_FORM_URLENCODED_TYPE), Form.class);
 
         assertEquals(fp.asMap().size(), response.asMap().size());
-        for (Map.Entry<String, List<String>> entry : fp.asMap().entrySet()) {
-            List<String> s = response.asMap().get(entry.getKey());
+        for (final Map.Entry<String, List<String>> entry : fp.asMap().entrySet()) {
+            final List<String> s = response.asMap().get(entry.getKey());
             assertEquals(entry.getValue().size(), s.size());
             for (Iterator<String> it1 = entry.getValue().listIterator(), it2 = s.listIterator(); it1.hasNext(); ) {
                 assertEquals(it1.next(), it2.next());
@@ -455,7 +455,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJSONObjectRepresentation() throws Exception {
-        JSONObject object = new JSONObject();
+        final JSONObject object = new JSONObject();
         object.put("userid", 1234).
                 put("username", "1234").
                 put("email", "a@b").
@@ -472,7 +472,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJSONObjectRepresentationGeneralMediaTyp() throws Exception {
-        JSONObject object = new JSONObject();
+        final JSONObject object = new JSONObject();
         object.put("userid", 1234).
                 put("username", "1234").
                 put("email", "a@b").
@@ -489,7 +489,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJSONArrayRepresentation() throws Exception {
-        JSONArray array = new JSONArray();
+        final JSONArray array = new JSONArray();
         array.put("One").put("Two").put("Three").put(1).put(2.0);
 
         _test(array, JSONOArrayResource.class, MediaType.APPLICATION_JSON_TYPE);
@@ -503,7 +503,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJSONArrayRepresentationGeneralMediaType() throws Exception {
-        JSONArray array = new JSONArray();
+        final JSONArray array = new JSONArray();
         array.put("One").put("Two").put("Three").put(1).put(2.0);
 
         _test(array, JSONOArrayResourceGeneralMediaType.class, MediaType.valueOf("application/xxx+json"));
@@ -552,7 +552,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testStreamSourceRepresentation() throws Exception {
-        StreamSource ss = new StreamSource(
+        final StreamSource ss = new StreamSource(
                 new ByteArrayInputStream(XML_DOCUMENT.getBytes()));
         _test(ss, StreamSourceResource.class);
     }
@@ -563,7 +563,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testSAXSourceRepresentation() throws Exception {
-        StreamSource ss = new StreamSource(
+        final StreamSource ss = new StreamSource(
                 new ByteArrayInputStream(XML_DOCUMENT.getBytes()));
         _test(ss, SAXSourceResource.class);
     }
@@ -574,9 +574,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testDOMSourceRepresentation() throws Exception {
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        Document d = dbf.newDocumentBuilder().parse(new InputSource(new StringReader(XML_DOCUMENT)));
-        DOMSource ds = new DOMSource(d);
+        final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        final Document d = dbf.newDocumentBuilder().parse(new InputSource(new StringReader(XML_DOCUMENT)));
+        final DOMSource ds = new DOMSource(d);
         _test(ds, DOMSourceResource.class);
     }
 
@@ -586,8 +586,8 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testDocumentRepresentation() throws Exception {
-        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-        Document d = dbf.newDocumentBuilder().parse(new InputSource(new StringReader(XML_DOCUMENT)));
+        final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        final Document d = dbf.newDocumentBuilder().parse(new InputSource(new StringReader(XML_DOCUMENT)));
         _test(d, DocumentResource.class);
     }
 
@@ -596,14 +596,14 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/x-www-form-urlencoded")
     public static class FormMultivaluedMapResource {
         @POST
-        public MultivaluedMap<String, String> post(MultivaluedMap<String, String> t) {
+        public MultivaluedMap<String, String> post(final MultivaluedMap<String, String> t) {
             return t;
         }
     }
 
     @Test
     public void testFormMultivaluedMapRepresentation() {
-        MultivaluedMap<String, String> fp = new MultivaluedStringMap();
+        final MultivaluedMap<String, String> fp = new MultivaluedStringMap();
         fp.add("Email", "johndoe@gmail.com");
         fp.add("Passwd", "north 23AZ");
         fp.add("service", "cl");
@@ -611,8 +611,8 @@ public class EntityTypesTest extends AbstractTypeTester {
         fp.add("source", "foo.java");
         fp.add("source", "bar.java");
 
-        WebTarget target = target("FormMultivaluedMapResource");
-        MultivaluedMap _fp = target.request().post(Entity.entity(fp, "application/x-www-form-urlencoded"), MultivaluedMap.class);
+        final WebTarget target = target("FormMultivaluedMapResource");
+        final MultivaluedMap _fp = target.request().post(Entity.entity(fp, "application/x-www-form-urlencoded"), MultivaluedMap.class);
         assertEquals(fp, _fp);
     }
 
@@ -621,8 +621,8 @@ public class EntityTypesTest extends AbstractTypeTester {
         @GET
         public StreamingOutput get() {
             return new StreamingOutput() {
-                public void write(OutputStream entity) throws IOException {
-                    entity.write(new String("CONTENT").getBytes());
+                public void write(final OutputStream entity) throws IOException {
+                    entity.write("CONTENT".getBytes());
                 }
             };
         }
@@ -630,7 +630,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testStreamingOutputRepresentation() throws Exception {
-        WebTarget target = target("StreamingOutputResource");
+        final WebTarget target = target("StreamingOutputResource");
         assertEquals("CONTENT", target.request().get(String.class));
     }
 
@@ -642,15 +642,15 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanJSONRepresentation() {
-        WebTarget target = target("JAXBElementBeanJSONResource");
+        final WebTarget target = target("JAXBElementBeanJSONResource");
 
-        Response rib = target.request().post(
+        final Response rib = target.request().post(
                 Entity.entity(new JAXBElement<String>(new QName("test"), String.class, "CONTENT"), "application/json"));
 
         // TODO: the following would not be needed if i knew how to workaround JAXBElement<String>.class literal
 
-        byte[] inBytes = requestEntity;
-        byte[] outBytes = getEntityAsByteArray(rib);
+        final byte[] inBytes = requestEntity;
+        final byte[] outBytes = getEntityAsByteArray(rib);
 
         assertEquals(new String(outBytes), inBytes.length, outBytes.length);
         for (int i = 0; i < inBytes.length; i++) {
@@ -668,9 +668,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJaxbBeanRepresentationJSON() {
-        WebTarget target = target("JaxbBeanResourceJSON");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBean out = target.request().post(Entity.entity(in, "application/json"), JaxbBean.class);
+        final WebTarget target = target("JaxbBeanResourceJSON");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBean out = target.request().post(Entity.entity(in, "application/json"), JaxbBean.class);
         assertEquals(in.value, out.value);
     }
 
@@ -682,9 +682,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJaxbBeanRepresentationJSONMediaType() {
-        WebTarget target = target("JaxbBeanResourceJSONMediaType");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBean out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBean.class);
+        final WebTarget target = target("JaxbBeanResourceJSONMediaType");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBean out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBean.class);
         assertEquals(in.value, out.value);
     }
 
@@ -696,9 +696,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanRepresentationJSON() {
-        WebTarget target = target("JAXBElementBeanResourceJSON");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBean out = target.request().post(Entity.entity(in, "application/json"), JaxbBean.class);
+        final WebTarget target = target("JAXBElementBeanResourceJSON");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBean out = target.request().post(Entity.entity(in, "application/json"), JaxbBean.class);
         assertEquals(in.value, out.value);
     }
 
@@ -710,9 +710,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBElementBeanRepresentationJSONMediaType() {
-        WebTarget target = target("JAXBElementBeanResourceJSONMediaType");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBean out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBean.class);
+        final WebTarget target = target("JAXBElementBeanResourceJSONMediaType");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBean out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBean.class);
         assertEquals(in.value, out.value);
     }
 
@@ -721,16 +721,16 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/json")
     public static class JAXBTypeResourceJSON {
         @POST
-        public JaxbBean post(JaxbBeanType t) {
+        public JaxbBean post(final JaxbBeanType t) {
             return new JaxbBean(t.value);
         }
     }
 
     @Test
     public void testJAXBTypeRepresentationJSON() {
-        WebTarget target = target("JAXBTypeResourceJSON");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBeanType out = target.request().post(Entity.entity(in, "application/json"), JaxbBeanType.class);
+        final WebTarget target = target("JAXBTypeResourceJSON");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBeanType out = target.request().post(Entity.entity(in, "application/json"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
     }
 
@@ -739,16 +739,16 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/foo+json")
     public static class JAXBTypeResourceJSONMediaType {
         @POST
-        public JaxbBean post(JaxbBeanType t) {
+        public JaxbBean post(final JaxbBeanType t) {
             return new JaxbBean(t.value);
         }
     }
 
     @Test
     public void testJAXBTypeRepresentationJSONMediaType() {
-        WebTarget target = target("JAXBTypeResourceJSONMediaType");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBeanType out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBeanType.class);
+        final WebTarget target = target("JAXBTypeResourceJSONMediaType");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBeanType out = target.request().post(Entity.entity(in, "application/foo+json"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
     }
 
@@ -762,9 +762,9 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Ignore("TODO: unignore once fi support implemented (JERSEY-1190)")
     // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJaxbBeanRepresentationFastInfoset() {
-        WebTarget target = target("JaxbBeanResourceFastInfoset");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBean out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBean.class);
+        final WebTarget target = target("JaxbBeanResourceFastInfoset");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBean out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBean.class);
         assertEquals(in.value, out.value);
     }
 
@@ -778,9 +778,9 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Ignore("TODO: unignore once fi support implemented (JERSEY-1190)")
     // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBElementBeanRepresentationFastInfoset() {
-        WebTarget target = target("JAXBElementBeanResourceFastInfoset");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBean out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBean.class);
+        final WebTarget target = target("JAXBElementBeanResourceFastInfoset");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBean out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBean.class);
         assertEquals(in.value, out.value);
     }
 
@@ -789,7 +789,7 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/fastinfoset")
     public static class JAXBTypeResourceFastInfoset {
         @POST
-        public JaxbBean post(JaxbBeanType t) {
+        public JaxbBean post(final JaxbBeanType t) {
             return new JaxbBean(t.value);
         }
     }
@@ -798,9 +798,9 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Ignore("TODO: unignore once fi support implemented (JERSEY-1190)")
     // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBTypeRepresentationFastInfoset() {
-        WebTarget target = target("JAXBTypeResourceFastInfoset");
-        JaxbBean in = new JaxbBean("CONTENT");
-        JaxbBeanType out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBeanType.class);
+        final WebTarget target = target("JAXBTypeResourceFastInfoset");
+        final JaxbBean in = new JaxbBean("CONTENT");
+        final JaxbBeanType out = target.request().post(Entity.entity(in, "application/fastinfoset"), JaxbBeanType.class);
         assertEquals(in.value, out.value);
     }
 
@@ -810,37 +810,37 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/xml")
     public static class JAXBListResource {
         @POST
-        public List<JaxbBean> post(List<JaxbBean> l) {
+        public List<JaxbBean> post(final List<JaxbBean> l) {
             return l;
         }
 
         @POST
         @Path("set")
-        public Set<JaxbBean> postSet(Set<JaxbBean> l) {
+        public Set<JaxbBean> postSet(final Set<JaxbBean> l) {
             return l;
         }
 
         @POST
         @Path("queue")
-        public Queue<JaxbBean> postQueue(Queue<JaxbBean> l) {
+        public Queue<JaxbBean> postQueue(final Queue<JaxbBean> l) {
             return l;
         }
 
         @POST
         @Path("stack")
-        public Stack<JaxbBean> postStack(Stack<JaxbBean> l) {
+        public Stack<JaxbBean> postStack(final Stack<JaxbBean> l) {
             return l;
         }
 
         @POST
         @Path("custom")
-        public MyArrayList<JaxbBean> postCustom(MyArrayList<JaxbBean> l) {
+        public MyArrayList<JaxbBean> postCustom(final MyArrayList<JaxbBean> l) {
             return l;
         }
 
         @GET
         public Collection<JaxbBean> get() {
-            ArrayList<JaxbBean> l = new ArrayList<JaxbBean>();
+            final ArrayList<JaxbBean> l = new ArrayList<JaxbBean>();
             l.add(new JaxbBean("one"));
             l.add(new JaxbBean("two"));
             l.add(new JaxbBean("three"));
@@ -849,9 +849,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
         @POST
         @Path("type")
-        public List<JaxbBean> postType(Collection<JaxbBeanType> l) {
-            List<JaxbBean> beans = new ArrayList<JaxbBean>();
-            for (JaxbBeanType t : l)
+        public List<JaxbBean> postType(final Collection<JaxbBeanType> l) {
+            final List<JaxbBean> beans = new ArrayList<JaxbBean>();
+            for (final JaxbBeanType t : l)
                 beans.add(new JaxbBean(t.value));
             return beans;
         }
@@ -862,13 +862,13 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Consumes("application/xml")
     public static class JAXBArrayResource {
         @POST
-        public JaxbBean[] post(JaxbBean[] l) {
+        public JaxbBean[] post(final JaxbBean[] l) {
             return l;
         }
 
         @GET
         public JaxbBean[] get() {
-            ArrayList<JaxbBean> l = new ArrayList<JaxbBean>();
+            final ArrayList<JaxbBean> l = new ArrayList<JaxbBean>();
             l.add(new JaxbBean("one"));
             l.add(new JaxbBean("two"));
             l.add(new JaxbBean("three"));
@@ -877,9 +877,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
         @POST
         @Path("type")
-        public JaxbBean[] postType(JaxbBeanType[] l) {
-            List<JaxbBean> beans = new ArrayList<JaxbBean>();
-            for (JaxbBeanType t : l)
+        public JaxbBean[] postType(final JaxbBeanType[] l) {
+            final List<JaxbBean> beans = new ArrayList<JaxbBean>();
+            for (final JaxbBeanType t : l)
                 beans.add(new JaxbBean(t.value));
             return beans.toArray(new JaxbBean[beans.size()]);
         }
@@ -887,9 +887,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBArrayRepresentation() {
-        WebTarget target = target("JAXBArrayResource");
+        final WebTarget target = target("JAXBArrayResource");
 
-        JaxbBean[] a = target.request().get(JaxbBean[].class);
+        final JaxbBean[] a = target.request().get(JaxbBean[].class);
         JaxbBean[] b = target.request().post(Entity.entity(a, "application/xml"), JaxbBean[].class);
         assertEquals(a.length, b.length);
         for (int i = 0; i < a.length; i++)
@@ -910,7 +910,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBListRepresentationMediaType() {
-        WebTarget target = target("JAXBListResourceMediaType");
+        final WebTarget target = target("JAXBListResourceMediaType");
 
 
         Collection<JaxbBean> a = target.request().get(
@@ -929,36 +929,37 @@ public class EntityTypesTest extends AbstractTypeTester {
         });
         assertEquals(a, b);
 
-        a = new LinkedList(a);
-        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue) a) {
+        a = new LinkedList<JaxbBean>(a);
+        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue<JaxbBean>) a) {
         }, "application/foo+xml"), new GenericType<Queue<JaxbBean>>() {
         });
         assertEquals(a, b);
 
-        a = new HashSet(a);
-        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set) a) {
+        a = new HashSet<JaxbBean>(a);
+        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set<JaxbBean>) a) {
         }, "application/foo+xml"), new GenericType<Set<JaxbBean>>() {
         });
-        Comparator<JaxbBean> c = new Comparator<JaxbBean>() {
+        final Comparator<JaxbBean> c = new Comparator<JaxbBean>() {
             @Override
-            public int compare(JaxbBean t, JaxbBean t1) {
+            public int compare(final JaxbBean t, final JaxbBean t1) {
                 return t.value.compareTo(t1.value);
             }
         };
-        TreeSet t1 = new TreeSet(c), t2 = new TreeSet(c);
+        final TreeSet<JaxbBean> t1 = new TreeSet<JaxbBean>(c);
+        final TreeSet<JaxbBean> t2 = new TreeSet<JaxbBean>(c);
         t1.addAll(a);
         t2.addAll(b);
         assertEquals(t1, t2);
 
-        Stack s = new Stack();
+        final Stack<JaxbBean> s = new Stack<JaxbBean>();
         s.addAll(a);
         b = target.path("stack").request().post(Entity.entity(new GenericEntity<Stack<JaxbBean>>(s) {
         }, "application/foo+xml"), new GenericType<Stack<JaxbBean>>() {
         });
         assertEquals(s, b);
 
-        a = new MyArrayList(a);
-        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList) a) {
+        a = new MyArrayList<JaxbBean>(a);
+        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {
         }, "application/foo+xml"), new GenericType<MyArrayList<JaxbBean>>() {
         });
         assertEquals(a, b);
@@ -967,10 +968,10 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBListRepresentationError() {
-        WebTarget target = target("JAXBListResource");
+        final WebTarget target = target("JAXBListResource");
 
-        String xml = "<root><value>foo";
-        Response cr = target.request().post(Entity.entity(xml, "application/xml"));
+        final String xml = "<root><value>foo";
+        final Response cr = target.request().post(Entity.entity(xml, "application/xml"));
         assertEquals(400, cr.getStatus());
     }
 
@@ -988,7 +989,7 @@ public class EntityTypesTest extends AbstractTypeTester {
     @Ignore("TODO: unignore once fi support implemented (JERSEY-1190)")
     // TODO: unignore once fi support implemented (JERSEY-1190)
     public void testJAXBListRepresentationFastInfoset() {
-        WebTarget target = target("JAXBListResourceFastInfoset");
+        final WebTarget target = target("JAXBListResourceFastInfoset");
 
         Collection<JaxbBean> a = target.request().get(new GenericType<Collection<JaxbBean>>() {
         });
@@ -1005,36 +1006,37 @@ public class EntityTypesTest extends AbstractTypeTester {
         });
         assertEquals(a, b);
 
-        a = new LinkedList(a);
-        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue) a) {
+        a = new LinkedList<JaxbBean>(a);
+        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue<JaxbBean>) a) {
         }, "application/fastinfoset"), new GenericType<Queue<JaxbBean>>() {
         });
         assertEquals(a, b);
 
-        a = new HashSet(a);
-        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set) a) {
+        a = new HashSet<JaxbBean>(a);
+        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set<JaxbBean>) a) {
         }, "application/fastinfoset"), new GenericType<Set<JaxbBean>>() {
         });
-        Comparator<JaxbBean> c = new Comparator<JaxbBean>() {
+        final Comparator<JaxbBean> c = new Comparator<JaxbBean>() {
             @Override
-            public int compare(JaxbBean t, JaxbBean t1) {
+            public int compare(final JaxbBean t, final JaxbBean t1) {
                 return t.value.compareTo(t1.value);
             }
         };
-        TreeSet t1 = new TreeSet(c), t2 = new TreeSet(c);
+        final TreeSet<JaxbBean> t1 = new TreeSet<JaxbBean>(c);
+        final TreeSet<JaxbBean> t2 = new TreeSet<JaxbBean>(c);
         t1.addAll(a);
         t2.addAll(b);
         assertEquals(t1, t2);
 
-        Stack s = new Stack();
+        final Stack<JaxbBean> s = new Stack<JaxbBean>();
         s.addAll(a);
         b = target.path("stack").request().post(Entity.entity(new GenericEntity<Stack<JaxbBean>>(s) {
         }, "application/fastinfoset"), new GenericType<Stack<JaxbBean>>() {
         });
         assertEquals(s, b);
 
-        a = new MyArrayList(a);
-        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList) a) {
+        a = new MyArrayList<JaxbBean>(a);
+        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {
         }, "application/fastinfoset"), new GenericType<MyArrayList<JaxbBean>>() {
         });
         assertEquals(a, b);
@@ -1049,7 +1051,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBListRepresentationJSON() throws Exception {
-        WebTarget target = target("JAXBListResourceJSON");
+        final WebTarget target = target("JAXBListResourceJSON");
 
         Collection<JaxbBean> a = target.request().get(
                 new GenericType<Collection<JaxbBean>>() {
@@ -1065,36 +1067,37 @@ public class EntityTypesTest extends AbstractTypeTester {
         });
         assertEquals(a, b);
 
-        a = new LinkedList(a);
-        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue) a) {
+        a = new LinkedList<JaxbBean>(a);
+        b = target.path("queue").request().post(Entity.entity(new GenericEntity<Queue<JaxbBean>>((Queue<JaxbBean>) a) {
         }, "application/json"), new GenericType<Queue<JaxbBean>>() {
         });
         assertEquals(a, b);
 
-        a = new HashSet(a);
-        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set) a) {
+        a = new HashSet<JaxbBean>(a);
+        b = target.path("set").request().post(Entity.entity(new GenericEntity<Set<JaxbBean>>((Set<JaxbBean>) a) {
         }, "application/json"), new GenericType<Set<JaxbBean>>() {
         });
-        Comparator<JaxbBean> c = new Comparator<JaxbBean>() {
+        final Comparator<JaxbBean> c = new Comparator<JaxbBean>() {
             @Override
-            public int compare(JaxbBean t, JaxbBean t1) {
+            public int compare(final JaxbBean t, final JaxbBean t1) {
                 return t.value.compareTo(t1.value);
             }
         };
-        TreeSet t1 = new TreeSet(c), t2 = new TreeSet(c);
+        final TreeSet<JaxbBean> t1 = new TreeSet<JaxbBean>(c);
+        final TreeSet<JaxbBean> t2 = new TreeSet<JaxbBean>(c);
         t1.addAll(a);
         t2.addAll(b);
         assertEquals(t1, t2);
 
-        Stack s = new Stack();
+        final Stack<JaxbBean> s = new Stack<JaxbBean>();
         s.addAll(a);
         b = target.path("stack").request().post(Entity.entity(new GenericEntity<Stack<JaxbBean>>(s) {
         }, "application/json"), new GenericType<Stack<JaxbBean>>() {
         });
         assertEquals(s, b);
 
-        a = new MyArrayList(a);
-        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList) a) {
+        a = new MyArrayList<JaxbBean>(a);
+        b = target.path("custom").request().post(Entity.entity(new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {
         }, "application/json"), new GenericType<MyArrayList<JaxbBean>>() {
         });
         assertEquals(a, b);
@@ -1119,9 +1122,9 @@ public class EntityTypesTest extends AbstractTypeTester {
 
     @Test
     public void testJAXBListRepresentationJSONMediaType() throws Exception {
-        WebTarget target = target("JAXBListResourceJSONMediaType");
+        final WebTarget target = target("JAXBListResourceJSONMediaType");
 
-        Collection<JaxbBean> a = target.request().get(
+        final Collection<JaxbBean> a = target.request().get(
                 new GenericType<Collection<JaxbBean>>() {
                 });
         Collection<JaxbBean> b = target.request().post(Entity.entity(new GenericEntity<Collection<JaxbBean>>(a) {
