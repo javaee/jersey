@@ -65,6 +65,8 @@ public class ItemsModel {
         items.add(new ItemModel("Item 0"));
         items.add(new ItemModel("Item 1"));
         items.add(new ItemModel("Item 2"));
+        items.add(new ItemModel("Item 3"));
+        items.add(new ItemModel("Item 4"));
     }
 
     public boolean hasNext(String currentId) {
