@@ -39,7 +39,19 @@
  */
 package org.glassfish.jersey.media.multipart.internal;
 
-import com.google.common.collect.Sets;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
@@ -48,21 +60,10 @@ import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
 import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.test.TestProperties;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -102,7 +103,9 @@ public class MultiPartHeaderModificationTest extends MultiPartJerseyTest {
 
     @Override
     protected Set<Class<?>> getResourceClasses() {
-        return Sets.<Class<?>>newHashSet(MultiPartResource.class);
+        final HashSet<Class<?>> classes = new HashSet<Class<?>>();
+        classes.add(MultiPartResource.class);
+        return classes;
     }
 
     @Override
