@@ -52,7 +52,7 @@
       <h2>Contents</h2>
       <p>The example consists of one resource class and one representation class along with a couple of model classes:</p>
       <dl>
-          <dt><code>com.sun.jersey.samples.linking.resources.ItemResource</code></dt>
+          <dt><code>org.glassfish.jersey.examples.linking.resources.ItemResource</code></dt>
           <dd>A resource class that produces a XML response to an HTTP GET.</dd>
           <dt><code>com.sun.jersey.samples.linking.representation.ItemRepresentation</code></dt>
           <dd>A JAXB representation class used to produce XML. This class also contains @Link and @Ref annotations to produce hyperlinks in the
@@ -74,10 +74,14 @@
 
       <h2>Running the Example</h2>
 
-      <p>Run the example using embedded GlassFish as follows:</p>
+      <h2>Running the Example</h2>
+         <p>Run the example as follows:</p>
+        <blockquote><pre>
+mvn clean compile exec:java</pre></blockquote>
+        <p>This deploys the example using
+            <a href="http://grizzly.java.net/">Grizzly</a>
+        </p>
 
-      <p> run
-      <blockquote><code>mvn clean package embedded-glassfish:run</code></blockquote>
       <p>From a web browser, visit:</p>
       <blockquote><code><a href="http://localhost:8080/items/0">http://localhost:8080/items/0</a><br/><a href="http://localhost:8080/items/1">http://localhost:8080/items/1</a><br/><a href="http://localhost:8080/items/2">http://localhost:8080/items/2</a><br/></code>
       </blockquote>
