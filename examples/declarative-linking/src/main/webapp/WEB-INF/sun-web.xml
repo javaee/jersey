@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2011 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,31 +40,14 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.glassfish.jersey</groupId>
-        <artifactId>project</artifactId>
-        <version>2.6-SNAPSHOT</version>
-    </parent>
-
-    <groupId>org.glassfish.jersey.media</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-media</name>
-
-    <description>
-        Contains entity media type provider modules.
-    </description>
-
-    <modules>
-        <module>json-jackson</module>
-        <module>json-jettison</module>
-        <module>json-processing</module>
-        <module>moxy</module>
-        <module>multipart</module>
-        <module>sse</module>
-        <module>linking</module>
-    </modules>
-</project>
+<!DOCTYPE sun-web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Application Server 9.0 Servlet 2.5//EN" "http://www.sun.com/software/appserver/dtds/sun-web-app_2_5-0.dtd">
+<sun-web-app error-url="">
+  <context-root>/items</context-root>
+  <class-loader delegate="false"/>
+  <jsp-config>
+    <property name="keepgenerated" value="true">
+      <description>Keep a copy of the generated servlet class' java code.</description>
+    </property>
+  </jsp-config>
+</sun-web-app>

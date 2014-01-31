@@ -58,7 +58,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class MethodList implements Iterable<AnnotatedMethod> {
+public final class MethodList implements Iterable<AnnotatedMethod> {
 
     private AnnotatedMethod[] methods;
 
