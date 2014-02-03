@@ -1214,6 +1214,13 @@
                 <scope>test</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>org.apache.felix.framework.security</artifactId>
+                <version>2.2.0</version>
+                <scope>test</scope>
+            </dependency>
+
 
             <!-- HV OSGi dependencies. -->
             <dependency>
@@ -1273,6 +1280,13 @@
             <dependency>
                 <groupId>org.ops4j.pax.exam</groupId>
                 <artifactId>pax-exam-container-forked</artifactId>
+                <version>${pax.exam.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.ops4j.pax.exam</groupId>
+                <artifactId>pax-exam-container-native</artifactId>
                 <version>${pax.exam.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -1401,7 +1415,7 @@
         <moxy.version>2.5.0</moxy.version>
         <mustache.version>0.8.12</mustache.version>
         <osgi.version>4.2.0</osgi.version>
-        <pax.exam.version>3.2.0</pax.exam.version>
+        <pax.exam.version>3.3.0</pax.exam.version>
         <pax.web.version>0.7.4</pax.web.version><!-- TODO: UPGRADE! -->
         <paxexam.mvn.plugin.version>1.2.4</paxexam.mvn.plugin.version>
         <servlet2.version>2.4</servlet2.version>

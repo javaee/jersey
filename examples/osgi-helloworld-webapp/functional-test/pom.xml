@@ -71,6 +71,7 @@
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.examples.osgi-helloworld-webapp</groupId>
             <artifactId>alternate-version-bundle</artifactId>
@@ -86,7 +87,7 @@
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>
@@ -160,7 +161,25 @@
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
             <scope>test</scope>
-        </dependency>
+         </dependency>
+         <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework.security</artifactId>
+            <scope>test</scope>
+         </dependency>
+         <!-- uncomment the following dependency to get ability
+              to run felix console in the test -->
+         <!--dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.shell.remote</artifactId>
+            <version>1.1.2</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>org.osgi.core</artifactId>
+                </exclusion>
+            </exclusions>
+         </dependency-->
     </dependencies>
 
     <build>
@@ -206,6 +225,12 @@
                 <configuration>
                     <forkMode>always</forkMode>
                     <enableAssertions>false</enableAssertions>
+                    <argLine>-Dfelix.policy=${project.build.directory}/test-classes/felix.policy -Druntime.policy=${project.build.directory}/test-classes/runtime.policy</argLine>
+                    <!--argLine>-Djavax.security.manager -Druntime.policy=${project.build.directory}/test-classes/runtime.policy -Djavax.security.policy=${project.build.directory}/test-classes/surefire.policy</argLine-->
+                    <classpathDependencyExcludes>
+                        <classpathDepenencyExclude>org.apache.felix:org.osgi.core</classpathDepenencyExclude>
+                        <classpathDepenencyExclude>org.osgi:org.osgi.core</classpathDepenencyExclude>
+                    </classpathDependencyExcludes>
                 </configuration>
                 <executions>
                     <execution>

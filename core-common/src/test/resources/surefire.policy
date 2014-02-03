@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,18 +43,18 @@ grant codebase "file:${java.home}/-" {
 };
 
 // we do not care about our dependencies
-grant codebase "file:${local.repo}/-" {
+grant codebase "file:${settings.localRepository}/-" {
   permission java.security.AllPermission;
 };
 
 // this is to be able to set runtime delegate instance in jax-rs from the tests
 // and to run multi-threaded tests
-grant codebase "file:${build.dir}/test-classes/-" {
+grant codebase "file:${project.build.directory}/test-classes/-" {
   permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
   permission java.lang.RuntimePermission "modifyThread";
 };
 
-grant codebase "file:${build.dir}/classes/-" {
+grant codebase "file:${project.build.directory}/classes/-" {
   permission java.lang.RuntimePermission "accessDeclaredMembers";
   permission java.lang.RuntimePermission "getClassLoader";
   permission java.util.PropertyPermission "*", "read";

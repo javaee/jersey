@@ -57,6 +57,13 @@
     <description>Jersey core server implementation</description>
 
     <build>
+        <testResources>
+          <testResource>
+            <directory>${basedir}/src/test/resources</directory>
+            <filtering>true</filtering>
+          </testResource>
+        </testResources>
+
         <plugins>
             <plugin>
                 <groupId>com.sun.istack</groupId>
@@ -125,7 +132,16 @@
                     </relocations>
                 </configuration>
             </plugin>
-        </plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                    <argLine>-Djava.security.manager -Djava.security.policy=${project.build.directory}/test-classes/server.policy</argLine>
+                </configuration>
+            </plugin>
+         </plugins>
     </build>
 
     <dependencies>
