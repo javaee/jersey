@@ -65,8 +65,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-linking</artifactId>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-declarative-linking</artifactId>
             <version>2.6-SNAPSHOT</version>
         </dependency>
 

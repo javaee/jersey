@@ -38,44 +38,81 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
-
-import java.io.IOException;
-import java.net.URI;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
-
 /**
- * Hello world!
- */ 
-public class App {
+ * Utility class for working with class fields
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ */
+class FieldDescriptor {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
+    protected Field field;
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+    FieldDescriptor(Field f) {
+        this.field = f;
     }
+
+    public Object getFieldValue(Object instance) {
+        setAccessibleField(field);
+        Object value = null;
+        try {
+            value = field.get(instance);
+        } catch (IllegalArgumentException ex) {
+            Logger.getLogger(FieldDescriptor.class.getName()).log(Level.FINE, null, ex);
+        } catch (IllegalAccessException ex) {
+            Logger.getLogger(FieldDescriptor.class.getName()).log(Level.FINE, null, ex);
+        }
+        return value;
+    }
+
+    public String getFieldName() {
+        return field.getName();
+    }
+
+    protected static void setAccessibleField(final Field f) {
+        if (Modifier.isPublic(f.getModifiers()))
+            return;
+
+        AccessController.doPrivileged(new PrivilegedAction<Object>() {
+            public Object run() {
+                if (!f.isAccessible()) {
+                    f.setAccessible(true);
+                }
+                return f;
+            }
+        });
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final FieldDescriptor other = (FieldDescriptor) obj;
+        if (this.field != other.field && (this.field == null || !this.field.equals(other.field))) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 83 * hash + (this.field != null ? this.field.hashCode() : 0);
+        return hash;
+    }
+
+
 }

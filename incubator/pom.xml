@@ -60,6 +60,7 @@
 
     <modules>
         <module>gae-integration</module>
+	<module>declarative-linking</module>
     </modules>
 
     <profiles>

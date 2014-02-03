@@ -38,44 +38,46 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.glassfish.jersey.Beta;
 
 /**
- * Hello world!
- */ 
-public class App {
+ * Specifies the binding between a URI template parameter and a bean property.
+ * @see Link#bindings()
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ */
+@Target({})
+@Retention(RetentionPolicy.RUNTIME)
+@Beta
+public @interface Binding {
+    /**
+     * Specifies the name of the URI template parameter.
+     */
+    String name();
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
-
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
+    /**
+     * Specifies the value of a URI template parameter. The value is an EL
+     * expression using immediate evaluation syntax. E.g.:
+     * <pre>${instance.widgetId}</pre>
+     * In the above example the value is taken from the <code>widgetId</code>
+     * property of the implicit <code>instance</code> bean.
+     * <p>Three implicit beans are supported:</p>
+     * <dl>
+     * <dt><code>instance</code></dt><dd>The object whose class contains the
+     * {@link Link} annotation.</dd>
+     * <dt><code>entity</code></dt><dd>The entity returned by the resource 
+     * class method. This is either the resource method return value
+     * or the entity property for a resource method that returns Response.</dd>
+     * <dt><code>resource</code></dt><dd>The resource class instance that
+     * returned the object that contains the {@link Link} annotation.</dd>
+     * </dd>
+     * </dl>
+     */
+    String value();
 }

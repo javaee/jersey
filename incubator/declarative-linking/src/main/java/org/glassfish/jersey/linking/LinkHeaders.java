@@ -38,44 +38,29 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.glassfish.jersey.Beta;
 
 /**
- * Hello world!
- */ 
-public class App {
+ * Used to request the addition of a set of Link headers in the returned HTTP headers.
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Beta
+public @interface LinkHeaders {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
+    /**
+     * Container for a set of {@link LinkHeader} annotations
+     * @return
+     */
+    LinkHeader[] value() default {};
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
 }

@@ -38,83 +38,45 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking.representation;
+package org.glassfish.jersey.examples.linking;
 
+import java.util.List;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
 import org.glassfish.jersey.samples.linking.resources.ItemResource;
-import org.glassfish.jersey.linking.Binding;
-import org.glassfish.jersey.linking.LinkHeader;
-import org.glassfish.jersey.linking.LinkHeaders;
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLink.Style;
-import java.net.URI;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.jersey.test.TestProperties;
+import org.junit.Assert; 
+import org.junit.Test;
 
 /**
- * JAXB representation of an item
- * @author mh124079
+ *
+ * @author Naresh (Srinivas.Bhimisetty@Sun.Com)
  */
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name="item")
-@LinkHeaders({
-    @LinkHeader(
-        value=@InjectLink(
-            resource=ItemResource.class,
-            style = Style.ABSOLUTE,
-            condition="${resource.next}",
-            bindings=@Binding(name="id", value="${resource.nextId}")
-        ),
-        rel="next"
-    ),
-    @LinkHeader(
-        value=@InjectLink(
-            resource=ItemResource.class,
-            style = Style.ABSOLUTE,
-            condition="${resource.prev}",
-            bindings=@Binding(name="id", value="${resource.prevId}")
-        ),
-        rel="prev"
-    )
-})
-public class ItemRepresentation {
+public class LinkWebAppTest extends JerseyTest {
 
-    @XmlElement
-    private String name;
+    @Override
+    protected ResourceConfig configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+        ResourceConfig rc = new ResourceConfig(ItemResource.class);
+        rc.register(DeclarativeLinkingFeature.class);
+        return rc;
+    }     
+    
 
-    @InjectLink(
-        resource=ItemResource.class,
-        style = Style.ABSOLUTE,
-        bindings=@Binding(name="id", value="${resource.id}")
-    )
-    @XmlElement
-    URI self;
-
-    @InjectLink(
-        resource=ItemResource.class,
-        style = Style.ABSOLUTE,
-        condition="${resource.next}",
-        bindings=@Binding(name="id", value="${resource.nextId}")
-    )
-    @XmlElement
-    URI next;
-
-    @InjectLink(
-        resource=ItemResource.class,
-        style = Style.ABSOLUTE,
-        condition="${resource.prev}",
-        bindings=@Binding(name="id", value="${resource.prevId}")
-    )
-    @XmlElement
-    URI prev;
-
-    public ItemRepresentation() {
-        this.name = "";
+    /**
+     * Test that the expected response is sent back.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testHelloWorld() throws Exception {
+        WebTarget webResource = target();
+//        webResource.addFilter(new LoggingFilter());
+        Response response = webResource.path("1").request().get(Response.class);
+        List<Object> linkHeaders = response.getHeaders().get("Link");
+        Assert.assertEquals(2, linkHeaders.size());
     }
-
-    public ItemRepresentation(String name) {
-        this.name = name;
-    }
-
 }

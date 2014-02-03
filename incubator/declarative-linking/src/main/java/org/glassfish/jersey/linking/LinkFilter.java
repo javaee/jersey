@@ -38,43 +38,52 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.ext.Provider;
 
 /**
- * Hello world!
- */ 
-public class App {
+ * Filter that processes {@link Link} annotated fields in returned response
+ * entities.
+ * <p/>
+ * When an application is deployed as a Servlet or Filter this filter can be
+ * registered using the following initialization parameters:
+ * <blockquote><pre>
+ *     &lt;init-param&gt
+ *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
+ *         &lt;param-value&gt;com.sun.jersey.server.linking.LinkFilter&lt;/param-value&gt;
+ *     &lt;/init-param&gt;
+ * </pre></blockquote>
+ * <p/>
+ *
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ * @see LinkHeader
+ */
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
+@Provider
+class LinkFilter implements ContainerResponseFilter {
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
+    @Context
+    private UriInfo uriInfo;
 
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
+    public void filter(ContainerRequestContext request, ContainerResponseContext response) {
+        final Object entity = response.getEntity();
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
+            Class<?> entityClass = entity.getClass();
+            LinkProcessor lhp = new LinkProcessor(entityClass);
+            lhp.processLinkHeaders(entity, uriInfo, response.getHeaders());
+            RefProcessor lp = new RefProcessor(entityClass);
+            lp.processLinks(entity, uriInfo);
         }
 
     }

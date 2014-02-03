@@ -38,83 +38,51 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking.representation;
+package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.LinkHeader;
-import org.glassfish.jersey.linking.LinkHeaders;
-import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLink.Style;
-import java.net.URI;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * JAXB representation of an item
- * @author mh124079
+ * Utility class for working with {@link LinkHeader} annotations
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name="item")
-@LinkHeaders({
-    @LinkHeader(
-        value=@InjectLink(
-            resource=ItemResource.class,
-            style = Style.ABSOLUTE,
-            condition="${resource.next}",
-            bindings=@Binding(name="id", value="${resource.nextId}")
-        ),
-        rel="next"
-    ),
-    @LinkHeader(
-        value=@InjectLink(
-            resource=ItemResource.class,
-            style = Style.ABSOLUTE,
-            condition="${resource.prev}",
-            bindings=@Binding(name="id", value="${resource.prevId}")
-        ),
-        rel="prev"
-    )
-})
-public class ItemRepresentation {
+class LinkDescriptor implements RefDescriptor {
 
-    @XmlElement
-    private String name;
+    private LinkHeader linkHeader;
+    private Map<String, String> bindings;
 
-    @InjectLink(
-        resource=ItemResource.class,
-        style = Style.ABSOLUTE,
-        bindings=@Binding(name="id", value="${resource.id}")
-    )
-    @XmlElement
-    URI self;
-
-    @InjectLink(
-        resource=ItemResource.class,
-        style = Style.ABSOLUTE,
-        condition="${resource.next}",
-        bindings=@Binding(name="id", value="${resource.nextId}")
-    )
-    @XmlElement
-    URI next;
-
-    @InjectLink(
-        resource=ItemResource.class,
-        style = Style.ABSOLUTE,
-        condition="${resource.prev}",
-        bindings=@Binding(name="id", value="${resource.prevId}")
-    )
-    @XmlElement
-    URI prev;
-
-    public ItemRepresentation() {
-        this.name = "";
+    LinkDescriptor(LinkHeader linkHeader) {
+        this.linkHeader = linkHeader;
+        bindings = new HashMap<String, String>();
+        for (Binding binding: linkHeader.value().bindings()) {
+            bindings.put(binding.name(), binding.value());
+        }
     }
 
-    public ItemRepresentation(String name) {
-        this.name = name;
+    public LinkHeader getLinkHeader() {
+        return linkHeader;
+    }
+
+    public String getLinkTemplate() {
+        return RefFieldDescriptor.getLinkTemplate(linkHeader.value());
+    }
+
+    public Style getLinkStyle() {
+        return linkHeader.value().style();
+    }
+
+    public String getBinding(String name) {
+        return bindings.get(name);
+    }
+
+    public String getCondition() {
+        return linkHeader.value().condition();
     }
 
 }

@@ -65,6 +65,5 @@
         <module>moxy</module>
         <module>multipart</module>
         <module>sse</module>
-        <module>linking</module>
     </modules>
 </project>

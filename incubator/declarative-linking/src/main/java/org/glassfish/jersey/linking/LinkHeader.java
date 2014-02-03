@@ -38,44 +38,82 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.glassfish.jersey.Beta;
 
 /**
- * Hello world!
- */ 
-public class App {
+ * Used to request the addition of a Ref header in the returned HTTP headers.
+ * One of {@link #value()} of {@link #resource()} must be specified.
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Beta
+public @interface LinkHeader {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
+    /**
+     * Specifies the link value of the Ref header
+     */
+    InjectLink value();
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
+    /**
+     * Specifies the relationship.
+     */
+    String rel() default "";
 
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
+    /**
+     * Specifies the reverse relationship.
+     */
+    String rev() default "";
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    /**
+     * Specifies the media type.
+     */
+    String type() default "";
 
+    /**
+     * Specifies the title.
+     */
+    String title() default "";
+
+    /**
+     * Specifies the anchor
+     */
+    String anchor() default "";
+
+    /**
+     * Specifies the media
+     */
+    String media() default "";
+
+    /**
+     * Specifies the lang of the referenced resource
+     */
+    String hreflang() default "";
+
+    /**
+     * Specifies extension parameters as name-value pairs.
+     */
+    Extension[] extensions() default {};
+
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface Extension {
+        /**
+         * Specifies the name of the extension parameter
+         */
+        String name();
+
+        /**
+         * Specifies the value of the extension parameter
+         */
+        String value();
     }
 }

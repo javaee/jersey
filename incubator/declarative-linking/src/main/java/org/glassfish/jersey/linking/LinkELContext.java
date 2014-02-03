@@ -38,44 +38,72 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import javax.el.BeanELResolver;
+import javax.el.CompositeELResolver;
+import javax.el.ELContext;
+import javax.el.ELResolver;
+import javax.el.FunctionMapper;
+import javax.el.VariableMapper;
 
 /**
- * Hello world!
- */ 
-public class App {
+ * An ELContext that encapsulates the response information for use by the
+ * expression evaluator.
+ *
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ */
+class LinkELContext extends ELContext {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
+    private Object entity;
+    private Object resource;
+    private Object instance;
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+    /**
+     * Convenience constructor for the common case where a context where
+     * the entity and instance are the same. Equivalent to
+     * <code>LinkELContext(entity, resource, entity)</code>
+     *
+     * @param entity
+     * @param resource
+     */
+    public LinkELContext(Object entity, Object resource) {
+        this.entity = entity;
+        this.resource = resource;
+        this.instance = entity;
     }
+
+    /**
+     * Construct a new context
+     * @param entity the entity returned from the resource method
+     * @param resource the resource class instance that returned the entity
+     * @param instance the instance that contains the entity, e.g. the value of
+     * a field within an entity class.
+     */
+    public LinkELContext(Object entity, Object resource, Object instance) {
+        this.entity = entity;
+        this.resource = resource;
+        this.instance = instance;
+    }
+
+    @Override
+    public ELResolver getELResolver() {
+        CompositeELResolver resolver = new CompositeELResolver();
+        resolver.add(new ResponseContextResolver(entity, resource, instance));
+        resolver.add(new BeanELResolver(true));
+        return resolver;
+    }
+
+    @Override
+    public FunctionMapper getFunctionMapper() {
+        return null;
+    }
+
+    @Override
+    public VariableMapper getVariableMapper() {
+        return null;
+    }
+
 }

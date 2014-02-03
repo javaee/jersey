@@ -38,44 +38,40 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import org.glassfish.jersey.linking.InjectLink;
 
 /**
- * Hello world!
- */ 
-public class App {
+ * Utility for working with @Ref annotations
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ */
+interface RefDescriptor {
+    /**
+     * Get the style
+     * @return the style
+     */
+    InjectLink.Style getLinkStyle();
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
+    /**
+     * Get the link template, either directly from the value() or from the
+     * @Path of the class referenced in resource()
+     * @return the link template
+     */
+    String getLinkTemplate();
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
+    /**
+     * Get the binding as an EL expression for a particular URI template parameter
+     * @param name
+     * @return the EL binding
+     */
+    String getBinding(String name);
 
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
+    /**
+     * Get the condition.
+     * @return the condition
+     */
+    String getCondition();
 }

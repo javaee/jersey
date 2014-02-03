@@ -38,44 +38,37 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
+import org.glassfish.jersey.Beta;
 
 /**
- * Hello world!
- */ 
-public class App {
+ * A feature to enable the declarative linking functionality
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ */
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
+@Beta
+public class DeclarativeLinkingFeature
+    implements Feature
+{
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+    @Override
+    public boolean configure(FeatureContext context) {
+        
+        Configuration config = context.getConfiguration();
+        
+        if (!config.isRegistered(LinkFilter.class))
+        {
+            context.register(LinkFilter.class);
+            return true;
         }
-
+        
+        return false;
     }
+    
 }

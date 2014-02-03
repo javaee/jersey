@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
+<!ENTITY % ents SYSTEM "jersey.ent" >
+%ents;
+]>
+<chapter id="linking">
+    <title>Declarative Hyperlinking</title>
+    <para><ulink url="http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven">RESTful
+            APIs must be hypertext-driven</ulink>. JAX-RS currently offers &jaxrs.core.UriBuilder; to simplify URI
+        creation but Jersey adds an additional annotation-based alternative that is described
+        here. <b>This API is in development and experimental so it is subject to change at any time.</b></para>
+        
+    <section>
+        <title>Dependency</title>
+
+        <para>
+            To use Declarative Linking you need to add &lit.jersey-media-linking; module to your
+            &lit.pom.xml; file:
+
+            <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+&lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+&lt;artifactId&gt;jersey-declarative-linking&lt;/artifactId&gt;
+&lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+            If you're not using Maven make sure to have all needed dependencies (see &jersey-declarative-linking;) on
+            the classpath.
+        </para>
+    </section>
+        
+        
+    <section>
+        <title>Links in Representations</title>
+        <para>Links are added to representations using the <literal>@InjectLink</literal> annotation on
+            entity class fields. The Jersey runtime is responsible for injecting the appropriate URI
+            into the field prior to serialization by a message body writer. E.g. consider the
+            following resource and entity classes:</para>
+        <programlisting language="java">@Path("widgets")
+public class WidgetsResource {
+  @GET
+  public Widgets get() {
+    return new Widgets();
+  }
+}
+        
+public class Widgets {
+  @InjectLink(resource=WidgetsResource.class)
+  URI u;
+}</programlisting>
+        <para>After a call to <literal>WidgetsResource#get</literal>, the Jersey runtime will inject
+            the value "/context/widgets"<footnote>
+                <para>Where <literal>/context</literal> is the application deployment
+                    context.</para>
+            </footnote> into the returned <literal>Widgets</literal> instance. If an absolute URI is
+            desired instead of an absolute path then the annotation can be changed to
+                <literal>@InjectLink(resource=WidgetsResource.class, style=ABSOLUTE)</literal>.</para>
+        <para>The above usage works nicely when there's already a URI template on a class that you
+            want to reuse. If there's no such template available then you can use a literal value
+            instead of a reference. E.g. the following is equivalent to the earlier example:
+                <literal>@InjectLink(value="widgets", style=ABSOLUTE)</literal>.</para>
+    </section>
+    <section>
+        <title>Binding Template Parameters</title>
+        <para>Referenced or literal templates may contain parameters. Two forms of parameters are
+            supported:</para>
+        <itemizedlist>
+            <listitem>
+                <para>URI template parameters, e.g. <literal>widgets/{id}</literal> where
+                        <literal>{id}</literal> represents a variable part of the URI.</para>
+            </listitem>
+            <listitem>
+                <para>EL expressions, e.g. <literal>widgets/${instance.id}</literal> where
+                        <literal>${instance.id}</literal> is an EL expression.</para>
+            </listitem>
+        </itemizedlist>
+        <para>Parameter values can be extracted from three implicit beans:</para>
+        <variablelist>
+            <varlistentry>
+                <term>
+                    <literal>instance</literal>
+                </term>
+                <listitem>
+                    <para>Represents the instance of the class that contains the annotated
+                        field.</para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <literal>entity</literal>
+                </term>
+                <listitem>
+                    <para>Represents the entity class instance returned by the resource
+                        method.</para>
+                </listitem>
+            </varlistentry>
+            <varlistentry>
+                <term>
+                    <literal>resource</literal>
+                </term>
+                <listitem>
+                    <para>Represents the resource class instance that returned the entity.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+
+        <para>By default URI template parameter values are extracted from the implicit
+                <literal>instance</literal> bean, i.e. the following two annotations are
+            equivalent:</para>
+        <programlisting language="java">@InjectLink("widgets/{id}")
+@InjectLink("widgets/${instance.id}")</programlisting>
+        <para>The source for URI template parameter values can be changed using the
+                <literal>@Binding</literal> annotation, E.g. the following two annotations are
+            equivalent:</para>
+        <programlisting language="java">@InjectLink(value="widgets/{id}", bindings={
+  @Binding(name="id" value="${resource.id}"}
+)
+@InjectLink("widgets/${resource.id}")</programlisting>
+
+    </section>
+
+    <section>
+        <title>Conditional Link Injection</title>
+        <para>Link value injection can be made conditional by use of the
+                <literal>condition</literal> property. The value of this property is a boolean EL
+            expression and a link will only be injected if the condition expression evaluates to
+            true. E.g.:</para>
+        <programlisting language="java">@InjectLink(value="widgets/${instance.id}/offers",
+  condition="${instance.offers}")
+URI offers;</programlisting>
+        <para>In the above, a URI will only be injected into the <literal>offers</literal> field if
+            the <literal>offers</literal> property of the instance is <literal>true</literal>.
+        </para>
+    </section>
+
+
+    <section>
+        <title>Link Headers</title>
+        <para><ulink url="http://tools.ietf.org/html/rfc5988#section-5">HTTP Link
+                headers</ulink> can also be added to responses using annotations. Instead of
+            annotating the fields of an entity class with <literal>@InjectLink</literal>, you instead
+            annotate the entity class itself with <literal>@LinkHeader</literal>. E.g.:</para>
+        <programlisting language="java">@LinkHeader(
+  value=@InjectLink("widgets/${resource.nextId}"),
+  rel="next"
+)</programlisting>
+        <para>The above would insert a HTTP Link header into any response whose entity was thus
+            annotated. The <literal>@LinkHeader</literal> annotation contains properties that map to the
+            parameters of the HTTP Link header. The above specifies the link relation as
+                <literal>next</literal>. All properties of the <literal>@InjectLink</literal> annotation
+            may be used as described above. </para>
+        <para>Multiple link headers can be added by use of the <literal>@LinkHeaders</literal> annotation
+            which can contain multiple <literal>@LinkHeader</literal> annotations.</para>
+    </section>
+    
+    
+    <section>
+        <title>Configure and register</title>
+
+        <para>
+            In order to add the Declarative Linking feature register &jersey.ext.LinkingFeature;
+
+            <example>
+                <title>Creating JAX-RS application with Declarative Linking feature enabled.</title>
+
+                <programlisting language="java">// Create JAX-RS application.
+final Application application = new ResourceConfig()
+.packages("org.glassfish.jersey.examples.linking")
+.register(LinkingFeature.class);</programlisting>
+            </example>
+        </para>
+    </section>
+
+
+
+
+</chapter>

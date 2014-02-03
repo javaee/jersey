@@ -38,44 +38,36 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.linking;
 
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
-
+import org.glassfish.jersey.internal.l10n.LocalizableMessage;
+import org.glassfish.jersey.internal.l10n.LocalizableMessageFactory;
+import org.glassfish.jersey.internal.l10n.Localizable;
+import org.glassfish.jersey.internal.l10n.Localizer;
+ 
 /**
- * Hello world!
- */ 
-public class App {
+ * Message for declarative linking
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
+ */
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
-
-    public static void main(String[] args) {
-        try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+class LinkMessages {
+ 
+    private final static LocalizableMessageFactory messageFactory = new LocalizableMessageFactory("org.glassfish.jersey.media.linking.internal");
+    private final static Localizer localizer = new Localizer();
+    
+    public static Localizable localizableWARNING_LINKFILTER_PROCESSING(Object arg0) {
+        return messageFactory.getMessage("warning.linkfilter.processing", arg0);
     }
+
+    /**
+     * LinkFilter cannot process class {0}, exception occurred during processing. Class will be ignored in the LinkFilter.
+     * 
+     */
+    public static String WARNING_LINKFILTER_PROCESSING(Object arg0) {
+        return localizer.localize(localizableWARNING_LINKFILTER_PROCESSING(arg0));
+    }
+    
+    
 }
