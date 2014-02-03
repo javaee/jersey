@@ -55,6 +55,7 @@ import org.junit.Test;
 /**
  *
  * @author Naresh (Srinivas.Bhimisetty@Sun.Com)
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class LinkWebAppTest extends JerseyTest {
 

@@ -53,7 +53,9 @@ import javax.ws.rs.core.MediaType;
 /**
  * Resource that provides access to one item from a set of items managed
  * by ItemsModel
- * @author mh124079
+ *
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 @Path("{id}")
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})

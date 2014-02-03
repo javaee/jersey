@@ -41,8 +41,8 @@
 package org.glassfish.jersey.samples.linking.model;
 
 /**
- *
- * @author mh124079
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class ItemModel {
     String name;

@@ -46,7 +46,9 @@ import java.util.List;
 /**
  * Models a three entry list of items and provides a simple means of navigating
  * the list.
- * @author mh124079
+ *
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class ItemsModel {
 

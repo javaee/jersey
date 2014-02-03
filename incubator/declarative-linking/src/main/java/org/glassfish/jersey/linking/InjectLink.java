@@ -237,8 +237,8 @@ public @interface InjectLink {
             for (InjectLink.Extension ext : link.extensions()) {
                 builder = builder.param(ext.name(), ext.value());
             }
-            return builder.build();
-
+            Link built = builder.build();
+            return built;
         }
     }
 

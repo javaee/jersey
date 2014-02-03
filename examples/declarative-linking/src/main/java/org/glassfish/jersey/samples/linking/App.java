@@ -54,7 +54,10 @@ import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
 import org.glassfish.jersey.samples.linking.resources.ItemResource;
 
 /**
- * Hello world!
+ * Show link injection in action
+ * 
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */ 
 public class App {
 

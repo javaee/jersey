@@ -57,7 +57,9 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 /**
  * JAXB representation of an item
  *
- * @author mh124079
+ *
+ * @author Mark Hadley
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = "item")
