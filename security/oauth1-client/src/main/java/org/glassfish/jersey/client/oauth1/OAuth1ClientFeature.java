@@ -42,13 +42,9 @@ package org.glassfish.jersey.client.oauth1;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import javax.inject.Inject;
-
 import org.glassfish.jersey.oauth1.signature.OAuth1Parameters;
 import org.glassfish.jersey.oauth1.signature.OAuth1Secrets;
 import org.glassfish.jersey.oauth1.signature.OAuth1SignatureFeature;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * OAuth1 client filter feature registers the support for performing authenticated requests to the
@@ -80,9 +76,6 @@ final class OAuth1ClientFeature implements Feature {
 
     private final OAuth1Parameters parameters;
     private final OAuth1Secrets secrets;
-
-    @Inject
-    private ServiceLocator config;
 
     /**
      * Create a new feature.
