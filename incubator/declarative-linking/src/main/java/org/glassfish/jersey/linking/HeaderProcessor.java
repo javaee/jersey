@@ -40,80 +40,66 @@
 
 package org.glassfish.jersey.linking;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.glassfish.jersey.Beta;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
+
 
 /**
- * Used to request the addition of a Ref header in the returned HTTP headers.
- * One of {@link #value()} of {@link #resource()} must be specified.
+ * Processes @Link and @LinkHeaders annotations on entity classes and
+ * adds appropriate HTTP Link headers.
  * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Beta
-public @interface LinkHeader {
+class HeaderProcessor<T> {
 
-    /**
-     * Specifies the link value of the Ref header
-     */
-    InjectLink value();
+    private EntityDescriptor instanceDescriptor;
 
-    /**
-     * Specifies the relationship.
-     */
-    String rel() default "";
-
-    /**
-     * Specifies the reverse relationship.
-     */
-    String rev() default "";
-
-    /**
-     * Specifies the media type.
-     */
-    String type() default "";
-
-    /**
-     * Specifies the title.
-     */
-    String title() default "";
-
-    /**
-     * Specifies the anchor
-     */
-    String anchor() default "";
-
-    /**
-     * Specifies the media
-     */
-    String media() default "";
-
-    /**
-     * Specifies the lang of the referenced resource
-     */
-    String hreflang() default "";
-
-    /**
-     * Specifies extension parameters as name-value pairs.
-     */
-    Extension[] extensions() default {};
-
-    @Target(ElementType.TYPE)
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Extension {
-        /**
-         * Specifies the name of the extension parameter
-         */
-        String name();
-
-        /**
-         * Specifies the value of the extension parameter
-         */
-        String value();
+    public HeaderProcessor(Class<T> c) {
+        instanceDescriptor = EntityDescriptor.getInstance(c);
     }
+
+    /**
+     * Process any {@link InjectLink} annotations on the supplied entity.
+     * @param entity the entity object returned by the resource method
+     * @param uriInfo the uriInfo for the request
+     * @param headers the map into which the headers will be added
+     */
+    public void processLinkHeaders(T entity, UriInfo uriInfo, MultivaluedMap<String, Object> headers) {
+        List<String> headerValues = getLinkHeaderValues(entity, uriInfo);
+        for (String headerValue: headerValues) {
+            headers.add("Link", headerValue);
+        }
+    }
+
+    List<String> getLinkHeaderValues(Object entity, UriInfo uriInfo) {
+        final List<Object> matchedResources = uriInfo.getMatchedResources();
+
+        if (!matchedResources.isEmpty()) {
+            final Object resource = matchedResources.get(0);
+            final List<String> headerValues = new ArrayList<String>();
+
+            for (LinkHeaderDescriptor desc: instanceDescriptor.getLinkHeaders()) {
+                if (ELLinkBuilder.evaluateCondition(desc.getCondition(), entity, resource, entity)) {
+                    String headerValue = getLinkHeaderValue(desc, entity, resource, uriInfo);
+                    headerValues.add(headerValue);
+                }
+            }
+            return headerValues;
+        }
+
+        return Collections.emptyList(); 
+    }
+
+    static String getLinkHeaderValue(LinkHeaderDescriptor desc, Object entity, Object resource, UriInfo uriInfo) {
+        URI uri = ELLinkBuilder.buildURI(desc, entity, resource, entity, uriInfo);
+        InjectLink link = desc.getLinkHeader();
+        return InjectLink.Util.buildLinkFromUri(uri, link).toString(); 
+    }
+
 }

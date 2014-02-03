@@ -40,38 +40,28 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.InjectLink;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.glassfish.jersey.Beta;
 
 /**
- * Utility for working with @Ref annotations
+ * Used to request the addition of a set of links, can be used for both
+ * link headers on a Class or injection into a List<Link> or Link[] property.
  * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-interface RefDescriptor {
-    /**
-     * Get the style
-     * @return the style
-     */
-    InjectLink.Style getLinkStyle();
+@Target({ElementType.TYPE, ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+@Beta
+public @interface InjectLinks {
 
     /**
-     * Get the link template, either directly from the value() or from the
-     * @Path of the class referenced in resource()
-     * @return the link template
+     * Container for a set of {@link LinkHeader} annotations
+     * @return
      */
-    String getLinkTemplate();
+    InjectLink[] value() default {};
 
-    /**
-     * Get the binding as an EL expression for a particular URI template parameter
-     * @param name
-     * @return the EL binding
-     */
-    String getBinding(String name);
-
-    /**
-     * Get the condition.
-     * @return the condition
-     */
-    String getCondition();
 }

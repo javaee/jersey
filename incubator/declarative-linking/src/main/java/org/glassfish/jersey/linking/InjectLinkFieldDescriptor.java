@@ -40,8 +40,6 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.Binding;
-import org.glassfish.jersey.linking.InjectLink;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.HashMap;
@@ -50,6 +48,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Link;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
   
 import org.glassfish.jersey.server.model.MethodList;
@@ -60,13 +59,13 @@ import org.glassfish.jersey.server.model.MethodList;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-class RefFieldDescriptor extends FieldDescriptor implements RefDescriptor {
+class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDescriptor {
 
     private InjectLink link;
     private Class<?> type;
     private Map<String, String> bindings;
 
-    public RefFieldDescriptor(Field f, InjectLink l, Class<?> t) {
+    public InjectLinkFieldDescriptor(Field f, InjectLink l, Class<?> t) {
         super(f);
         link = l;
         type = t;
@@ -76,14 +75,37 @@ class RefFieldDescriptor extends FieldDescriptor implements RefDescriptor {
         }
     }
     
-    public void setPropertyValue(Object instance, URI value) {
+    public void setPropertyValue(Object instance, URI uri) {
         setAccessibleField(field);
         try {
-            field.set(instance, type.equals(URI.class) ? value : value.toString());
+            
+            Object value = null;
+            if (URI.class.equals(type)) {
+                value = uri;
+            }
+            else if (Link.class.isAssignableFrom(type)) {
+
+                // Make a link with the correct bindings
+                //
+                
+                value = getLink(uri);
+            }
+            else if (String.class.equals(type)) {
+                value = uri.toString();
+            }
+            else  {
+                throw new IllegalArgumentException("Field type "  + type + " not one of supported String,URI and Link");
+            }
+            
+            field.set(instance, value);
+            
+            
+            
+            
         } catch (IllegalArgumentException ex) {
-            Logger.getLogger(RefFieldDescriptor.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(InjectLinkFieldDescriptor.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            Logger.getLogger(RefFieldDescriptor.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(InjectLinkFieldDescriptor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -126,7 +148,11 @@ class RefFieldDescriptor extends FieldDescriptor implements RefDescriptor {
         }
         return template;
     }
-
+    
+    public Link getLink(URI uri) {
+        return InjectLink.Util.buildLinkFromUri(uri, link);
+    }
+    
     public String getBinding(String name) {
         return bindings.get(name);
     }

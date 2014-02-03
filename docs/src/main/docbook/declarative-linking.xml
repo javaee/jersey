@@ -176,22 +176,29 @@ URI offers;</programlisting>
 
 
     <section>
+        <title>List of Link Injection</title>
+        <para>You can inject multiple links into an array of a List collection type. E.g.:</para>
+        <programlisting language="java">@InjectLinks({@InjectLink(resource=WidgetsResource.class, rel = "self")})
+List&lt;Link&gt; links</programlisting>  
+    </section>
+
+    <section>
         <title>Link Headers</title>
         <para><ulink url="http://tools.ietf.org/html/rfc5988#section-5">HTTP Link
                 headers</ulink> can also be added to responses using annotations. Instead of
             annotating the fields of an entity class with <literal>@InjectLink</literal>, you instead
-            annotate the entity class itself with <literal>@LinkHeader</literal>. E.g.:</para>
-        <programlisting language="java">@LinkHeader(
+            annotate the entity class itself with <literal>@InjectLinks</literal>. E.g.:</para>
+        <programlisting language="java">@InjectLinks(
   value=@InjectLink("widgets/${resource.nextId}"),
   rel="next"
 )</programlisting>
         <para>The above would insert a HTTP Link header into any response whose entity was thus
-            annotated. The <literal>@LinkHeader</literal> annotation contains properties that map to the
+            annotated. The <literal>@InjectLink</literal> annotation contains properties that map to the
             parameters of the HTTP Link header. The above specifies the link relation as
                 <literal>next</literal>. All properties of the <literal>@InjectLink</literal> annotation
             may be used as described above. </para>
-        <para>Multiple link headers can be added by use of the <literal>@LinkHeaders</literal> annotation
-            which can contain multiple <literal>@LinkHeader</literal> annotations.</para>
+        <para>Multiple link headers can be added by use of the <literal>@InjectLinks</literal> annotation
+            which can contain multiple <literal>@InjectLink</literal> annotations.</para>
     </section>
     
     
@@ -207,7 +214,7 @@ URI offers;</programlisting>
                 <programlisting language="java">// Create JAX-RS application.
 final Application application = new ResourceConfig()
 .packages("org.glassfish.jersey.examples.linking")
-.register(LinkingFeature.class);</programlisting>
+.register(DeclarativeLinkingFeature.class);</programlisting>
             </example>
         </para>
     </section>

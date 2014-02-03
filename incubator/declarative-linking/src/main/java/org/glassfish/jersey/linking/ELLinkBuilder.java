@@ -41,7 +41,7 @@
 package org.glassfish.jersey.linking;
 
 import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.RefDescriptor;
+import org.glassfish.jersey.linking.InjectLinkDescriptor;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -74,7 +74,7 @@ class ELLinkBuilder {
         return result.equals("true");
     }
 
-    public static URI buildURI(RefDescriptor link, Object entity, Object resource, Object instance,
+    public static URI buildURI(InjectLinkDescriptor link, Object entity, Object resource, Object instance,
             UriInfo uriInfo) {
         String template = link.getLinkTemplate();
 
@@ -110,7 +110,7 @@ class ELLinkBuilder {
         return ub;
     }
 
-    private static Map<String, Object> getParameterValues(List<String> parameterNames, RefDescriptor linkField, LinkELContext context) {
+    private static Map<String, Object> getParameterValues(List<String> parameterNames, InjectLinkDescriptor linkField, LinkELContext context) {
         Map<String, Object> values = new HashMap<String, Object>();
         for (String name: parameterNames) {
             String elExpression = getEL(name, linkField);
@@ -122,7 +122,7 @@ class ELLinkBuilder {
         return values;
     }
 
-    private static String getEL(String name, RefDescriptor linkField) {
+    private static String getEL(String name, InjectLinkDescriptor linkField) {
         String binding = linkField.getBinding(name);
         if (binding != null)
             return binding;

@@ -40,51 +40,38 @@
 
 package org.glassfish.jersey.linking;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
-
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.ext.Provider;
+import org.glassfish.jersey.linking.InjectLink;
 
 /**
- * Filter that processes {@link Link} annotated fields in returned response
- * entities.
- * <p/>
- * When an application is deployed as a Servlet or Filter this filter can be
- * registered using the following initialization parameters:
- * <blockquote><pre>
- *     &lt;init-param&gt
- *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *         &lt;param-value&gt;com.sun.jersey.server.linking.LinkFilter&lt;/param-value&gt;
- *     &lt;/init-param&gt;
- * </pre></blockquote>
- * <p/>
- *
+ * Utility for working with @Ref annotations
  * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
- * @see LinkHeader
  */
+interface InjectLinkDescriptor {
+    /**
+     * Get the style
+     * @return the style
+     */
+    InjectLink.Style getLinkStyle();
 
-@Provider
-class LinkFilter implements ContainerResponseFilter {
+    /**
+     * Get the link template, either directly from the value() or from the
+     * @Path of the class referenced in resource()
+     * @return the link template
+     */
+    String getLinkTemplate();
 
-    @Context
-    private UriInfo uriInfo;
+    /**
+     * Get the binding as an EL expression for a particular URI template parameter
+     * @param name
+     * @return the EL binding
+     */
+    String getBinding(String name);
 
-    public void filter(ContainerRequestContext request, ContainerResponseContext response) {
-        final Object entity = response.getEntity();
-
-        if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
-            Class<?> entityClass = entity.getClass();
-            HeaderProcessor lhp = new HeaderProcessor(entityClass);
-            lhp.processLinkHeaders(entity, uriInfo, response.getHeaders());
-            FieldProcessor lp = new FieldProcessor(entityClass);
-            lp.processLinks(entity, uriInfo);
-        }
-
-    }
+    /**
+     * Get the condition.
+     * @return the condition
+     */
+    String getCondition();
 }

@@ -40,27 +40,47 @@
 
 package org.glassfish.jersey.linking;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.glassfish.jersey.Beta;
+import org.glassfish.jersey.linking.InjectLink.Style;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Used to request the addition of a set of Link headers in the returned HTTP headers.
+ * Utility class for working with {@link LinkHeader} annotations
  * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Beta
-public @interface LinkHeaders {
+class LinkHeaderDescriptor implements InjectLinkDescriptor {
 
-    /**
-     * Container for a set of {@link LinkHeader} annotations
-     * @return
-     */
-    LinkHeader[] value() default {};
+    private InjectLink linkHeader;
+    private Map<String, String> bindings;
+    
+    LinkHeaderDescriptor(InjectLink linkHeader) {
+        this.linkHeader = linkHeader;
+        bindings = new HashMap<String, String>();
+        for (Binding binding: linkHeader.bindings()) {
+            bindings.put(binding.name(), binding.value());
+        }
+    }
+
+    public InjectLink getLinkHeader() {
+        return linkHeader;
+    }
+
+    public String getLinkTemplate() {
+        return InjectLinkFieldDescriptor.getLinkTemplate(linkHeader);
+    }
+
+    public Style getLinkStyle() {
+        return linkHeader.style();
+    }
+
+    public String getBinding(String name) {
+        return bindings.get(name);
+    }
+
+    public String getCondition() {
+        return linkHeader.condition();
+    }
 
 }

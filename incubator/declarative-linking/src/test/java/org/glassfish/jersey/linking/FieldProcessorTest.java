@@ -41,7 +41,7 @@
 package org.glassfish.jersey.linking;
 
 import org.glassfish.jersey.linking.FieldDescriptor;
-import org.glassfish.jersey.linking.RefProcessor;
+import org.glassfish.jersey.linking.FieldProcessor;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLink;
 
@@ -65,7 +65,7 @@ import org.junit.Test;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-public class RefProcessorTest {
+public class FieldProcessorTest {
     
     UriInfo mockUriInfo = new UriInfo() {
 
@@ -166,7 +166,7 @@ public class RefProcessorTest {
     @Test
     public void testProcessLinks() {
         System.out.println("Links");
-        RefProcessor<TestClassD> instance = new RefProcessor(TestClassD.class);
+        FieldProcessor<TestClassD> instance = new FieldProcessor(TestClassD.class);
         TestClassD testClass = new TestClassD();
         instance.processLinks(testClass, mockUriInfo);
         assertEquals(TEMPLATE_A, testClass.res1);
@@ -193,7 +193,7 @@ public class RefProcessorTest {
     @Test
     public void testProcessLinksWithFields() {
         System.out.println("Links from field values");
-        RefProcessor<TestClassE> instance = new RefProcessor(TestClassE.class);
+        FieldProcessor<TestClassE> instance = new FieldProcessor(TestClassE.class);
         TestClassE testClass = new TestClassE("10");
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("widgets/10", testClass.link);
@@ -219,7 +219,7 @@ public class RefProcessorTest {
     @Test
     public void testNesting() {
         System.out.println("Nesting");
-        RefProcessor<TestClassF> instance = new RefProcessor(TestClassF.class);
+        FieldProcessor<TestClassF> instance = new FieldProcessor(TestClassF.class);
         TestClassE nested = new TestClassE("10");
         TestClassF testClass = new TestClassF("20", nested);
         instance.processLinks(testClass, mockUriInfo);
@@ -230,7 +230,7 @@ public class RefProcessorTest {
     @Test
     public void testArray() {
         System.out.println("Array");
-        RefProcessor<TestClassE[]> instance = new RefProcessor(TestClassE[].class);
+        FieldProcessor<TestClassE[]> instance = new FieldProcessor(TestClassE[].class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
         TestClassE array[] = {item1, item2};
@@ -242,7 +242,7 @@ public class RefProcessorTest {
     @Test
     public void testCollection() {
         System.out.println("Collection");
-        RefProcessor<List> instance = new RefProcessor(List.class);
+        FieldProcessor<List> instance = new FieldProcessor(List.class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
         List<TestClassE> list = Arrays.asList(item1, item2);
@@ -278,7 +278,7 @@ public class RefProcessorTest {
     @Test
     public void testLinkStyles() {
         System.out.println("Link styles");
-        RefProcessor<TestClassG> instance = new RefProcessor(TestClassG.class);
+        FieldProcessor<TestClassG> instance = new FieldProcessor(TestClassG.class);
         TestClassG testClass = new TestClassG("10");
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("widgets/10", testClass.relativePath);
@@ -299,7 +299,7 @@ public class RefProcessorTest {
     @Test
     public void testComputedProperty() {
         System.out.println("Computed property");
-        RefProcessor<TestClassH> instance = new RefProcessor(TestClassH.class);
+        FieldProcessor<TestClassH> instance = new FieldProcessor(TestClassH.class);
         TestClassH testClass = new TestClassH();
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("/application/resources/widgets/10", testClass.link);
@@ -317,7 +317,7 @@ public class RefProcessorTest {
     @Test
     public void testEL() {
         System.out.println("EL link");
-        RefProcessor<TestClassI> instance = new RefProcessor(TestClassI.class);
+        FieldProcessor<TestClassI> instance = new FieldProcessor(TestClassI.class);
         TestClassI testClass = new TestClassI();
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("/application/resources/widgets/10", testClass.link);
@@ -335,7 +335,7 @@ public class RefProcessorTest {
     @Test
     public void testMixed() {
         System.out.println("Mixed EL and template vars link");
-        RefProcessor<TestClassJ> instance = new RefProcessor(TestClassJ.class);
+        FieldProcessor<TestClassJ> instance = new FieldProcessor(TestClassJ.class);
         TestClassJ testClass = new TestClassJ();
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("/application/resources/widgets/10/widget/10", testClass.link);
@@ -361,7 +361,7 @@ public class RefProcessorTest {
     @Test
     public void testELScopes() {
         System.out.println("EL scopes");
-        RefProcessor<OuterBean> instance = new RefProcessor(OuterBean.class);
+        FieldProcessor<OuterBean> instance = new FieldProcessor(OuterBean.class);
         OuterBean testClass = new OuterBean();
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("/application/resources/inner", testClass.inner.innerUri);
@@ -380,12 +380,82 @@ public class RefProcessorTest {
     @Test
     public void testELBinding() {
         System.out.println("EL binding");
-        RefProcessor<BoundLinkBean> instance = new RefProcessor(BoundLinkBean.class);
+        FieldProcessor<BoundLinkBean> instance = new FieldProcessor(BoundLinkBean.class);
         BoundLinkBean testClass = new BoundLinkBean();
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("/application/resources/name", testClass.uri);
     }
 
+     public static class BoundLinkOnLinkBean {
+        @InjectLink(value="{id}",
+                bindings={@Binding(name="id", value="${instance.name}")},
+                rel="self")
+        public Link link;
+
+        public String getName() {
+            return "name";
+        }
+    }
+
+    @Test
+    public void testELBindingOnLink() {
+        System.out.println("EL binding");
+        FieldProcessor<BoundLinkOnLinkBean> instance = new FieldProcessor(BoundLinkOnLinkBean.class);
+        BoundLinkOnLinkBean testClass = new BoundLinkOnLinkBean();
+        instance.processLinks(testClass, mockUriInfo);
+        assertEquals("/application/resources/name", testClass.link.getUri().toString());
+        assertEquals("self", testClass.link.getRel());
+    }
+
+    
+     public static class BoundLinkOnLinksBean {
+        @InjectLinks({
+        @InjectLink(value="{id}",
+                bindings={@Binding(name="id", value="${instance.name}")},
+                rel="self"),
+        @InjectLink(value="{id}",
+                bindings={@Binding(name="id", value="${instance.name}")},
+                rel="other"),
+        
+        }) 
+        public List<Link> links;
+        
+        @InjectLinks({
+        @InjectLink(value="{id}",
+                bindings={@Binding(name="id", value="${instance.name}")},
+                rel="self"),
+        @InjectLink(value="{id}",
+                bindings={@Binding(name="id", value="${instance.name}")},
+                rel="other"),
+        
+        }) 
+        public Link[] linksArray;
+        
+        
+
+        public String getName() {
+            return "name";
+        }
+    }
+
+    @Test
+    public void testELBindingOnLinks() {
+        System.out.println("EL binding");
+        FieldProcessor<BoundLinkOnLinksBean> instance = new FieldProcessor(BoundLinkOnLinksBean.class);
+        BoundLinkOnLinksBean testClass = new BoundLinkOnLinksBean();
+        instance.processLinks(testClass, mockUriInfo);
+        assertEquals("/application/resources/name", testClass.links.get(0).getUri().toString());
+        assertEquals("self", testClass.links.get(0).getRel());
+        assertEquals("other", testClass.links.get(1).getRel());
+
+        assertEquals("/application/resources/name", testClass.linksArray[0].getUri().toString());
+        assertEquals("self", testClass.linksArray[0].getRel());
+        assertEquals("other", testClass.linksArray[1].getRel());
+    
+    }
+    
+    
+    
     public static class ConditionalLinkBean {
         @InjectLink(value="{id}", condition="${entity.uri1Enabled}")
         public String uri1;
@@ -409,7 +479,7 @@ public class RefProcessorTest {
     @Test
     public void testCondition() {
         System.out.println("Condition");
-        RefProcessor<ConditionalLinkBean> instance = new RefProcessor(ConditionalLinkBean.class);
+        FieldProcessor<ConditionalLinkBean> instance = new FieldProcessor(ConditionalLinkBean.class);
         ConditionalLinkBean testClass = new ConditionalLinkBean();
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("/application/resources/name", testClass.uri1);
@@ -433,7 +503,7 @@ public class RefProcessorTest {
     @Test
     public void testSubresource() {
         System.out.println("Subresource");
-        RefProcessor<SubResourceBean> instance = new RefProcessor(SubResourceBean.class);
+        FieldProcessor<SubResourceBean> instance = new FieldProcessor(SubResourceBean.class);
         SubResourceBean testClass = new SubResourceBean();
         instance.processLinks(testClass, mockUriInfo);
         assertEquals("/application/resources/a/b", testClass.uri);
@@ -470,13 +540,13 @@ public class RefProcessorTest {
         Logger.getLogger(FieldDescriptor.class.getName()).setFilter(lf);
         assertTrue(lf.getCount() == 0);
 
-        RefProcessor<TestClassK> instanceK = new RefProcessor(TestClassK.class);
+        FieldProcessor<TestClassK> instanceK = new FieldProcessor(TestClassK.class);
         TestClassK testClassK = new TestClassK();
         instanceK.processLinks(testClassK, mockUriInfo);
 
         assertTrue(lf.getCount() == 0);
 
-        RefProcessor<TestClassL> instanceL = new RefProcessor(TestClassL.class);
+        FieldProcessor<TestClassL> instanceL = new FieldProcessor(TestClassL.class);
         TestClassL testClassL = new TestClassL();
         instanceL.processLinks(testClassL, mockUriInfo);
 

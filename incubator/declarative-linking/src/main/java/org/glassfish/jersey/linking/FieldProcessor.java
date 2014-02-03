@@ -41,11 +41,14 @@
 package org.glassfish.jersey.linking;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import javax.ws.rs.core.Link;
 
 import javax.ws.rs.core.UriInfo;
 
@@ -58,12 +61,12 @@ import org.glassfish.jersey.linking.LinkMessages;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-class RefProcessor<T> {
+class FieldProcessor<T> {
 
     private EntityDescriptor instanceDescriptor;
-    private static final Logger log = Logger.getLogger(RefProcessor.class.getName());
+    private static final Logger log = Logger.getLogger(FieldProcessor.class.getName());
 
-    public RefProcessor(Class<T> c) {
+    public FieldProcessor(Class<T> c) {
         instanceDescriptor = EntityDescriptor.getInstance(c);
     }
 
@@ -100,13 +103,35 @@ class RefProcessor<T> {
         }
 
         // Process any @Link annotated fields in entity
-        for (RefFieldDescriptor linkField : instanceDescriptor.getLinkFields()) {
-            if (ELLinkBuilder.evaluateCondition(linkField.getCondition(), entity, resource, instance)) {
-                URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo);
-                linkField.setPropertyValue(instance, uri);
+        for (FieldDescriptor field : instanceDescriptor.getLinkFields()) {
+            
+            // TODO replace with properly poly-morphic code
+            if (field instanceof InjectLinkFieldDescriptor)
+            {
+                InjectLinkFieldDescriptor linkField = (InjectLinkFieldDescriptor) field;
+                if (ELLinkBuilder.evaluateCondition(linkField.getCondition(), entity, resource, instance)) {
+                    URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo);
+                    linkField.setPropertyValue(instance, uri);
+                }
+            } else if (field instanceof InjectLinksFieldDescriptor) {
+                
+                InjectLinksFieldDescriptor linksField = (InjectLinksFieldDescriptor) field;
+                List<Link> list = new ArrayList<Link>();
+                for (InjectLinkFieldDescriptor linkField : linksField.getLinksToInject())
+                {
+                    if (ELLinkBuilder.evaluateCondition(linkField.getCondition(), entity, resource, instance)) {
+                       URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo);
+                       Link link = linkField.getLink(uri);
+                       list.add(link);
+                    }   
+                }
+                
+                linksField.setPropertyValue(instance, list);
             }
         }
 
+        
+        
         // If entity is an array or collection then process members
         Class<?> instanceClass = instance.getClass();
         if (instanceClass.isArray() && Object[].class.isAssignableFrom(instanceClass)) {
@@ -130,7 +155,7 @@ class RefProcessor<T> {
 
     private void processMember(Object entity, Object resource, Object member, Set<Object> processed, UriInfo uriInfo) {
         if (member != null) {
-            RefProcessor proc = new RefProcessor(member.getClass());
+            FieldProcessor proc = new FieldProcessor(member.getClass());
             proc.processLinks(entity, resource, member, processed, uriInfo);
         }
     }

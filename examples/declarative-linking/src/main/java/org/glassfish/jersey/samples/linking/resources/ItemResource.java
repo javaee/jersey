@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType;
  * @author mh124079
  */
 @Path("{id}")
-@Produces(MediaType.APPLICATION_XML)
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 public class ItemResource {
 
     private ItemsModel itemsModel;

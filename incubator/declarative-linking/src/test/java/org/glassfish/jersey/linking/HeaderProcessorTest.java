@@ -40,7 +40,7 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.LinkHeader.Extension;
+import org.glassfish.jersey.linking.InjectLink.Extension;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -58,7 +58,7 @@ import org.junit.Test;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-public class LinkProcessorTest  {
+public class HeaderProcessorTest  {
 
     UriInfo mockUriInfo = new UriInfo() {
 
@@ -143,17 +143,17 @@ public class LinkProcessorTest  {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
 
-        };
+        };  
 
-    
-    @LinkHeader(@InjectLink(value="A"))
+     
+    @InjectLink(value="A")
     public static class EntityA {
     }
 
     @Test
     public void testLiteral() {
         System.out.println("Literal");
-        LinkProcessor<EntityA> instance = new LinkProcessor(EntityA.class);
+        HeaderProcessor<EntityA> instance = new HeaderProcessor(EntityA.class);
         EntityA testClass = new EntityA();
         List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
         assertEquals(1, headerValues.size());
@@ -161,7 +161,7 @@ public class LinkProcessorTest  {
         assertEquals("</application/resources/A>", headerValue);
     }
 
-    @LinkHeader(@InjectLink(value="${entity.id}"))
+    @InjectLink(value="${entity.id}")
     public static class EntityB {
         public String getId() {
             return "B";
@@ -171,7 +171,7 @@ public class LinkProcessorTest  {
     @Test
     public void testEL() {
         System.out.println("EL");
-        LinkProcessor<EntityB> instance = new LinkProcessor(EntityB.class);
+        HeaderProcessor<EntityB> instance = new HeaderProcessor(EntityB.class);
         EntityB testClass = new EntityB();
         List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
         assertEquals(1, headerValues.size());
@@ -179,7 +179,7 @@ public class LinkProcessorTest  {
         assertEquals("</application/resources/B>", headerValue);
     }
 
-    @LinkHeader(@InjectLink(value="{id}"))
+    @InjectLink(value="{id}")
     public static class EntityC {
         public String getId() {
             return "C";
@@ -189,7 +189,7 @@ public class LinkProcessorTest  {
     @Test
     public void testTemplateLiteral() {
         System.out.println("Template Literal");
-        LinkProcessor<EntityC> instance = new LinkProcessor(EntityC.class);
+        HeaderProcessor<EntityC> instance = new HeaderProcessor(EntityC.class);
         EntityC testClass = new EntityC();
         List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
         assertEquals(1, headerValues.size());
@@ -197,9 +197,9 @@ public class LinkProcessorTest  {
         assertEquals("</application/resources/C>", headerValue);
     }
 
-    @LinkHeaders({
-        @LinkHeader(@InjectLink(value="A")),
-        @LinkHeader(@InjectLink(value="B"))
+    @InjectLinks({
+        @InjectLink(value="A"),
+        @InjectLink(value="B")
     })
     public static class EntityD {
     }
@@ -207,7 +207,7 @@ public class LinkProcessorTest  {
     @Test
     public void testMultiple() {
         System.out.println("Multiple Literal");
-        LinkProcessor<EntityD> instance = new LinkProcessor(EntityD.class);
+        HeaderProcessor<EntityD> instance = new HeaderProcessor(EntityD.class);
         EntityD testClass = new EntityD();
         List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
         assertEquals(2, headerValues.size());
@@ -219,8 +219,7 @@ public class LinkProcessorTest  {
         assertEquals("</application/resources/B>", headerValue);
     }
 
-    @LinkHeader(
-        value=@InjectLink(value="E"),
+    @InjectLink(value="E",
         rel="relE",
         rev="revE",
         type="type/e",
@@ -239,7 +238,7 @@ public class LinkProcessorTest  {
     @Test
     public void testParameters() {
         System.out.println("Parameters");
-        LinkProcessor<EntityE> instance = new LinkProcessor(EntityE.class);
+        HeaderProcessor<EntityE> instance = new HeaderProcessor(EntityE.class);
         EntityE testClass = new EntityE();
         List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
         assertEquals(1, headerValues.size());
@@ -256,9 +255,9 @@ public class LinkProcessorTest  {
         assertTrue(headerValue.contains("; e2=\"v2\""));
     }
 
-    @LinkHeaders({
-        @LinkHeader(@InjectLink(value="${entity.id1}", condition="${entity.id1Enabled}")),
-        @LinkHeader(@InjectLink(value="${entity.id2}", condition="${entity.id2Enabled}"))
+    @InjectLinks({
+        @InjectLink(value="${entity.id1}", condition="${entity.id1Enabled}"),
+        @InjectLink(value="${entity.id2}", condition="${entity.id2Enabled}")
     })
     public static class EntityF {
         public boolean isId1Enabled() {
@@ -278,7 +277,7 @@ public class LinkProcessorTest  {
     @Test
     public void testConditional() {
         System.out.println("EL");
-        LinkProcessor<EntityF> instance = new LinkProcessor(EntityF.class);
+        HeaderProcessor<EntityF> instance = new HeaderProcessor(EntityF.class);
         EntityF testClass = new EntityF();
         List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
         assertEquals(1, headerValues.size());
