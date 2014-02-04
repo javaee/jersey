@@ -68,8 +68,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
+import static javax.ws.rs.client.Entity.text;
 
-import javax.annotation.Nullable;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -87,8 +87,6 @@ import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Collections2;
 import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import static javax.ws.rs.client.Entity.text;
 
 /**
  * Tests sync and async client invocations.
@@ -172,7 +170,7 @@ public class BasicClientTest extends JerseyTest {
                 Arrays.asList("a", "b", "c").toString(),
                 Collections2.transform(f3.get(), new Function<JaxbString, String>() {
                     @Override
-                    public String apply(@Nullable JaxbString input) {
+                    public String apply(JaxbString input) {
                         return input.value;
                     }
                 }).toString());
@@ -203,7 +201,7 @@ public class BasicClientTest extends JerseyTest {
             protected String process(List<JaxbString> result) {
                 return Collections2.transform(result, new Function<JaxbString, String>() {
                     @Override
-                    public String apply(@Nullable JaxbString input) {
+                    public String apply(JaxbString input) {
                         return input.value;
                     }
                 }).toString();
@@ -283,7 +281,7 @@ public class BasicClientTest extends JerseyTest {
             protected String process(List<JaxbString> result) {
                 return Collections2.transform(result, new Function<JaxbString, String>() {
                     @Override
-                    public String apply(@Nullable JaxbString input) {
+                    public String apply(JaxbString input) {
                         return input.value;
                     }
                 }).toString();
@@ -318,7 +316,7 @@ public class BasicClientTest extends JerseyTest {
                 Arrays.asList("a", "b", "c").toString(),
                 Collections2.transform(r3, new Function<JaxbString, String>() {
                     @Override
-                    public String apply(@Nullable JaxbString input) {
+                    public String apply(JaxbString input) {
                         return input.value;
                     }
                 }).toString());

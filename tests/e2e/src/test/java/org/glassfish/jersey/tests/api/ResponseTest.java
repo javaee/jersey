@@ -55,8 +55,6 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
-import javax.annotation.Nullable;
-
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.HeaderUtils;
 
@@ -392,8 +390,7 @@ public class ResponseTest {
         return sb.toString();
     }
 
-    private String verifyResponse(Response resp, String content, int status,
-                                  @Nullable HashMap<String, String> expected_map) {
+    private String verifyResponse(Response resp, String content, int status, HashMap<String, String> expected_map) {
         boolean pass = true;
         StringBuilder sb = new StringBuilder();
 
