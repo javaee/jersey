@@ -96,7 +96,12 @@ public class NewCookieProvider implements HeaderDelegateProvider<NewCookie> {
         if (cookie.isHttpOnly()) {
             b.append(";HttpOnly");
         }
-        return b.toString();
+        if (cookie.getExpiry() != null) {
+          b.append(";Expires=");
+          b.append(HttpDateFormat.getPreferedDateFormat().format(cookie.getExpiry()));
+        }
+
+      return b.toString();
     }
 
     @Override
