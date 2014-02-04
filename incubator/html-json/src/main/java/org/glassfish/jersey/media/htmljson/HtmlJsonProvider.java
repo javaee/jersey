@@ -104,7 +104,7 @@ import net.java.html.json.Property;
         @ServiceProvider(service = MessageBodyReader.class)
 })
 public final class HtmlJsonProvider
-implements MessageBodyWriter, MessageBodyReader<Object> {
+implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
 
     private static final Logger LOG = Logger.getLogger(HtmlJsonProvider.class.getName());
 
