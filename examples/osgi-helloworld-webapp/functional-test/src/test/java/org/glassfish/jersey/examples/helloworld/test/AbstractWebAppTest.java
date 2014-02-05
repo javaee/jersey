@@ -37,17 +37,21 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.helloworld.test;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URI;
 import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -64,13 +68,20 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.condpermadmin.ConditionalPermissionAdmin;
+import org.osgi.service.condpermadmin.ConditionalPermissionInfo;
+import org.osgi.service.condpermadmin.ConditionalPermissionUpdate;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
@@ -84,65 +95,76 @@ public abstract class AbstractWebAppTest {
 
     @Inject
     BundleContext bundleContext;
-
     /**
      * maximum waiting time for runtime initialization and Jersey deployment
      */
     public static final long MAX_WAITING_SECONDS = 10L;
-
     /**
-     * Latch for blocking the testing thread until the runtime is ready and Jersey deployed
+     * Latch for blocking the testing thread until the runtime is ready and
+     * Jersey deployed
      */
     final CountDownLatch countDownLatch = new CountDownLatch(1);
-
     private static final int port = getProperty("jersey.config.test.container.port", 8080);
+    private static final String runtimePolicy = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("runtime.policy"));
+    private static final String felixPolicy = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("felix.policy"));
     private static final String CONTEXT = "/helloworld";
     private static final URI baseUri = UriBuilder.fromUri("http://localhost").port(port).path(CONTEXT).build();
-    private static final String BundleLocationProperty = "jersey.bundle.location";
-
     private static final Logger LOGGER = Logger.getLogger(AbstractWebAppTest.class.getName());
 
     /**
-     * Allow subclasses to define additional OSGi configuration - called after genericOsgiOptions() and jettyOptions()
+     * Allow subclasses to define additional OSGi configuration - called after
+     * genericOsgiOptions() and jettyOptions()
      *
      * @return list of pax exam Options
      */
     public abstract List<Option> osgiRuntimeOptions();
 
     /**
-     * Generic OSGi options - defines which dependencies (bundles) should be loaded into runtime
+     * Generic OSGi options - defines which dependencies (bundles) should be
+     * loaded into runtime
      *
      * @return
      */
     public List<Option> genericOsgiOptions() {
+
+        // uncomment for debugging using felix console (lookup gogo string in the commnented lines bellow)
+        String gogoVersion = "0.8.0";
+
         @SuppressWarnings("RedundantStringToString")
-
-        final String bundleLocation = mavenBundle().
-                groupId("org.glassfish.jersey.examples.osgi-helloworld-webapp").
-                artifactId("war-bundle").
-                type("war").versionAsInProject().getURL().toString();
-
         List<Option> options = Arrays.asList(options(
                 // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
+                //                vmOption("-Djava.security.debug=scl"),
 
+                // uncomment for verbose class loading info
+                //                vmOption("-verbose:class"),
+
+                //                bootDelegationPackage("org.glassfish.jersey.client.*"),
+
+                systemProperty("java.security.manager").value(""),
+                systemProperty("felix.policy").value(felixPolicy),
+                systemProperty("java.security.policy").value(runtimePolicy),
+                systemProperty(org.osgi.framework.Constants.FRAMEWORK_SECURITY).value(org.osgi.framework.Constants.FRAMEWORK_SECURITY_OSGI),
                 systemProperty("org.osgi.service.http.port").value(String.valueOf(port)),
                 systemProperty("org.osgi.framework.system.packages.extra").value("javax.annotation"),
                 systemProperty("jersey.config.test.container.port").value(String.valueOf(port)),
-                systemProperty(BundleLocationProperty).value(bundleLocation),
+                //                systemProperty(BundleLocationProperty).value(bundleLocation),
 
                 // do not remove the following line
-                // systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
-
+                systemProperty("org.ops4j.pax.logging.DefaultServiceLog.level").value("FINEST"),
+                // uncomment the following 4 lines should you need to debug from th felix console
+//                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.runtime").version(gogoVersion),
+//                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.shell").version(gogoVersion),
+//                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.command").version(gogoVersion),
+//                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.shell.remote").versionAsInProject(),
+                mavenBundle("org.apache.felix", "org.apache.felix.framework.security").versionAsInProject(),
                 // uncomment for logging (do not remove the following two lines)
-                // mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
-                // mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
+                //                 mavenBundle("org.ops4j.pax.logging", "pax-logging-api", "1.4"),
+                //                 mavenBundle("org.ops4j.pax.logging", "pax-logging-service", "1.4"),
 
                 // javax.annotation must go first!
                 mavenBundle().groupId("javax.annotation").artifactId("javax.annotation-api").versionAsInProject(),
-
                 // pax exam dependencies
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn"),
-
                 junitBundles(), // adds junit classes to the OSGi context
 
                 // HK2
@@ -154,41 +176,35 @@ public abstract class AbstractWebAppTest {
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("aopalliance-repackaged").versionAsInProject(),
                 mavenBundle().groupId("org.javassist").artifactId("javassist").versionAsInProject(),
-
                 // JAX-RS API
                 mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
-
                 // validation - required by jersey-container-servlet-core
                 mavenBundle().groupId("javax.validation").artifactId("validation-api").versionAsInProject(),
-
                 // Jersey bundles
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-common").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-server").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.core").artifactId("jersey-client").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.jersey.containers").artifactId("jersey-container-servlet-core")
-                        .versionAsInProject(),
+                .versionAsInProject(),
                 // Guava
                 mavenBundle().groupId("org.glassfish.jersey.bundles.repackaged").artifactId("jersey-guava").versionAsInProject(),
-
                 // Those two bundles have different (unique) maven coordinates, but represent the same OSGi bundle in two
                 // different versions.
                 // (see the maven bundle plugin configuration in each of the two pom.xml files
                 // Both bundles are explicitly loaded here to ensure, that both co-exist within the OSGi runtime;
                 mavenBundle().groupId("org.glassfish.jersey.examples.osgi-helloworld-webapp")
-                        .artifactId("additional-bundle")
-                        .versionAsInProject(),
-
+                             .artifactId("additional-bundle").versionAsInProject(),
                 // The alternate-version-bundle contains the same resource in the same package
                 // (org.glassfish.jersey.examples.osgi.helloworld.additional.resource.AdditionalResource),
                 // mapped to the same URI (/additional), but returning a different string as a response.
                 // ---> if the test passes, it ensures, that Jersey sees/uses the correct version of the bundle
                 mavenBundle().groupId("org.glassfish.jersey.examples.osgi-helloworld-webapp")
-                        .artifactId("alternate-version-bundle")
-                        .versionAsInProject()
-
-                // Debug
+                             .artifactId("alternate-version-bundle").versionAsInProject(),
+                mavenBundle().groupId("org.glassfish.jersey.examples.osgi-helloworld-webapp")
+                             .artifactId("war-bundle").type("war").versionAsInProject()
+                // uncomment for debugging
                 // vmOption( "-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005" )
-        ));
+                ));
 
         final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
         if (localRepository != null) {
@@ -205,9 +221,42 @@ public abstract class AbstractWebAppTest {
                 mavenBundle().groupId("org.ops4j.pax.web").artifactId("pax-web-extender-war").versionAsInProject()));
     }
 
+    private void updatePermissionsFromFile() throws IOException {
+
+        final ServiceReference cpaRef = bundleContext.getServiceReference(ConditionalPermissionAdmin.class.getName());
+        final ConditionalPermissionAdmin conditionalPermissionAdmin = (ConditionalPermissionAdmin) bundleContext.getService(cpaRef);
+        final ConditionalPermissionUpdate permissionUpdate = conditionalPermissionAdmin.newConditionalPermissionUpdate();
+        final List conditionalPermissionInfos = permissionUpdate.getConditionalPermissionInfos();
+
+        try {
+
+            final BufferedReader reader = new BufferedReader(new FileReader(felixPolicy));
+            String line;
+            final Set<String> cpiNames = new HashSet<String>();
+
+            while ((line = reader.readLine()) != null) {
+                if (!line.startsWith("//")) {
+                    final ConditionalPermissionInfo cpi = conditionalPermissionAdmin.newConditionalPermissionInfo(line);
+                    final String cpiName = cpi.getName();
+                    if (cpiNames.contains(cpiName)) {
+                        throw new RuntimeException("Redundant policy name!");
+                    }
+                    cpiNames.add(cpiName);
+                    conditionalPermissionInfos.add(cpi);
+                }
+            }
+            reader.close();
+            permissionUpdate.commit();
+
+        } finally {
+            bundleContext.ungetService(cpaRef);
+        }
+    }
+
     /**
-     * After the war bundle is loaded and initialized, it sends custom OSGi event "jersey/test/DEPLOYED";
-     * This class handles the event (releases the waiting lock)
+     * After the war bundle is loaded and initialized, it sends custom OSGi
+     * event "jersey/test/DEPLOYED"; This class handles the event (releases the
+     * waiting lock)
      */
     @SuppressWarnings("UnusedDeclaration")
     public class WebEventHandler implements EventHandler {
@@ -220,7 +269,6 @@ public abstract class AbstractWebAppTest {
         public WebEventHandler(String handlerName) {
             this.handlerName = handlerName;
         }
-
         private final String handlerName;
 
         protected String getHandlerName() {
@@ -248,51 +296,40 @@ public abstract class AbstractWebAppTest {
     /**
      * Registers the event handler for custom jersey/test/DEPLOYED event
      */
-    public void defaultMandatoryBeforeMethod() {
-        bundleContext.registerService(EventHandler.class.getName(), new WebEventHandler("Deploy Handler"), getHandlerServiceProperties("jersey/test/DEPLOYED"));
+    public void defaultMandatoryBeforeMethod() throws Exception {
+        bundleContext.registerService(EventHandler.class.getName(),
+                new WebEventHandler("Deploy Handler"), getHandlerServiceProperties("jersey/test/DEPLOYED"));
+
+        assertNotNull(System.getSecurityManager());
+
+        updatePermissionsFromFile();
     }
 
     /**
-     * The test method itself - installs the war-bundle and sends two testing requests
+     * The test method itself - installs the war-bundle and sends two testing
+     * requests
      *
      * @throws Exception
      */
     public void defaultWebAppTestMethod() throws Exception {
-        // Start the war-bundle
-        final Bundle warBundle = bundleContext.installBundle(
-                AccessController.doPrivileged(PropertiesHelper.getSystemProperty(BundleLocationProperty))
-        );
+
+        LOGGER.info(bundleList());
+
+        // restart war bundle...
+        final Bundle warBundle = lookupWarBundle();
+        warBundle.stop();
         warBundle.start();
 
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("-- Bundle list -- \n");
-        for (Bundle b : bundleContext.getBundles()) {
-            sb.append(String.format("%1$5s", "[" + b.getBundleId() + "]")).append(" ")
-                    .append(String.format("%1$-70s", b.getSymbolicName())).append(" | ")
-                    .append(String.format("%1$-20s", b.getVersion())).append(" |");
-            try {
-                b.start();
-                sb.append(" STARTED  | ");
-            } catch (BundleException e) {
-                sb.append(" *FAILED* | ").append(e.getMessage());
-            }
-            sb.append(b.getLocation()).append("\n");
-        }
-        sb.append("-- \n\n");
-        LOGGER.info(sb.toString());
-
         // and wait until it's ready
-        LOGGER.fine("Waiting for jersey/test/DEPLOYED event with timeout " + MAX_WAITING_SECONDS + " seconds...");
         LOGGER.fine("Waiting for jersey/test/DEPLOYED event with timeout " + MAX_WAITING_SECONDS + " seconds...");
         if (!countDownLatch.await(MAX_WAITING_SECONDS, TimeUnit.SECONDS)) {
             throw new TimeoutException("The event jersey/test/DEPLOYED did not arrive in "
                     + MAX_WAITING_SECONDS
                     + " seconds. Waiting timed out.");
         }
+        final Client c = ClientBuilder.newClient();
 
         // server should be listening now and everything should be initialized
-        final Client c = ClientBuilder.newClient();
         final WebTarget target = c.target(baseUri);
 
         // send request and check response - helloworld resource
@@ -302,6 +339,7 @@ public abstract class AbstractWebAppTest {
 
         // send request and check response - another resource
         final String anotherResult = target.path("/webresources/another").request().build("GET").invoke().readEntity(String.class);
+
         LOGGER.info("ANOTHER RESULT = " + anotherResult);
         assertEquals("Another", anotherResult);
 
@@ -311,6 +349,15 @@ public abstract class AbstractWebAppTest {
 
         LOGGER.info("ADDITIONAL RESULT = " + additionalResult);
         assertEquals("Additional Bundle!", additionalResult);
+    }
+
+    private Bundle lookupWarBundle() {
+        for (Bundle b : bundleContext.getBundles()) {
+            if (b.getSymbolicName().contains("war-bundle")) {
+                return b;
+            }
+        }
+        return null;
     }
 
     private static int getProperty(final String varName, int defaultValue) {
@@ -333,5 +380,32 @@ public abstract class AbstractWebAppTest {
         Dictionary result = new Hashtable();
         result.put(EventConstants.EVENT_TOPIC, topics);
         return result;
+    }
+
+    private String bundleList() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("-- Bundle list -- \n");
+        for (Bundle b : bundleContext.getBundles()) {
+            sb.append(String.format("%1$5s", "[" + b.getBundleId() + "]")).append(" ")
+                    .append(String.format("%1$-70s", b.getSymbolicName())).append(" | ")
+                    .append(String.format("%1$-20s", b.getVersion())).append(" |");
+            sb.append(stateString(b)).append(" |");
+            sb.append(b.getLocation()).append("\n");
+        }
+        sb.append("-- \n\n");
+        return sb.toString();
+    }
+
+    private String stateString(Bundle b) {
+        switch (b.getState()) {
+            case Bundle.ACTIVE:
+                return "ACTIVE";
+            case Bundle.INSTALLED:
+                return "INSTALLED";
+            case Bundle.RESOLVED:
+                return "RESOLVED";
+            default:
+                return "???";
+        }
     }
 }

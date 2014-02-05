@@ -63,6 +63,14 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+
+        <testResources>
+          <testResource>
+            <directory>${basedir}/src/test/resources</directory>
+            <filtering>true</filtering>
+          </testResource>
+        </testResources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -129,7 +137,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Dlocal.repo=${settings.localRepository} -Dbuild.dir=${project.build.directory} -Djava.security.manager -Djava.security.policy=${project.build.directory}/test-classes/surefire.policy</argLine>
+                    <argLine>-Djava.security.manager -Djava.security.policy=${project.build.directory}/test-classes/surefire.policy</argLine>
                 </configuration>
             </plugin>
         </plugins>
