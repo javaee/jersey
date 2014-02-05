@@ -40,16 +40,21 @@
 package org.glassfish.jersey.test;
 
 import java.net.URI;
+import java.security.AccessController;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
 import org.junit.Test;
 
 import static junit.framework.Assert.assertEquals;
@@ -129,7 +134,11 @@ public class JerseyTestTest {
     @Test
     public void testThatDefaultContainerPortIsUsed() {
         MyJerseyTest myJerseyTest = new MyJerseyTest();
-        assertEquals(TestProperties.DEFAULT_CONTAINER_PORT, myJerseyTest.getPort());
+
+        String portValue = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(TestProperties.CONTAINER_PORT,
+                String.valueOf(TestProperties.DEFAULT_CONTAINER_PORT)));
+
+        assertEquals(Integer.valueOf(portValue).intValue(), myJerseyTest.getPort());
     }
 
 }
