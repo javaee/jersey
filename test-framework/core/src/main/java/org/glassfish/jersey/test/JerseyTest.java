@@ -574,7 +574,7 @@ public abstract class JerseyTest {
      * @return The HTTP port of the URI
      */
     protected final int getPort() {
-        final String value = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(TestProperties.CONTAINER_PORT));
+        final String value = getProperty(TestProperties.CONTAINER_PORT);
         if (value != null) {
 
             try {
