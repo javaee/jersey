@@ -148,8 +148,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
          * @return new resource method invoker instance.
          */
         public ResourceMethodInvoker build(
-                ResourceMethod method,
-                ProcessingProviders processingProviders
+                final ResourceMethod method,
+                final ProcessingProviders processingProviders
         ) {
             return new ResourceMethodInvoker(
                     routingContextProvider,
@@ -165,15 +165,15 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     }
 
     private ResourceMethodInvoker(
-            Provider<RoutingContext> routingContextProvider,
-            Provider<AsyncContext> asyncContextProvider,
-            Provider<RespondingContext> respondingContextProvider,
-            ResourceMethodDispatcher.Provider dispatcherProvider,
-            ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
+            final Provider<RoutingContext> routingContextProvider,
+            final Provider<AsyncContext> asyncContextProvider,
+            final Provider<RespondingContext> respondingContextProvider,
+            final ResourceMethodDispatcher.Provider dispatcherProvider,
+            final ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             final ResourceMethod method,
-            ProcessingProviders processingProviders,
+            final ProcessingProviders processingProviders,
             ServiceLocator locator,
-            Configuration globalConfig) {
+            final Configuration globalConfig) {
 
         this.routingContextProvider = routingContextProvider;
         this.asyncContextProvider = asyncContextProvider;
@@ -267,22 +267,23 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         this.responseFilters.addAll(_responseFilters);
     }
 
-    private <T> void addNameBoundProviders(Collection<RankedProvider<T>> targetCollection, final NameBound nameBound,
+    private <T> void addNameBoundProviders(final Collection<RankedProvider<T>> targetCollection,
+                                           final NameBound nameBound,
                                            final MultivaluedMap<Class<? extends Annotation>,
-                                                   RankedProvider<T>> nameBoundProviders, final MultivaluedMap<RankedProvider<T>,
-            Class<? extends Annotation>> nameBoundProvidersInverse) {
-        MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> foundBindingsMap
+                                           RankedProvider<T>> nameBoundProviders,
+                                           final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> nameBoundProvidersInverse) {
+        final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> foundBindingsMap
                 = new MultivaluedHashMap<RankedProvider<T>, Class<? extends Annotation>>();
-        for (Class<? extends Annotation> nameBinding : nameBound.getNameBindings()) {
-            Iterable<RankedProvider<T>> providers = nameBoundProviders.get(nameBinding);
+        for (final Class<? extends Annotation> nameBinding : nameBound.getNameBindings()) {
+            final Iterable<RankedProvider<T>> providers = nameBoundProviders.get(nameBinding);
             if (providers != null) {
-                for (RankedProvider<T> provider : providers) {
+                for (final RankedProvider<T> provider : providers) {
                     foundBindingsMap.add(provider, nameBinding);
                 }
             }
         }
 
-        for (Map.Entry<RankedProvider<T>, List<Class<? extends Annotation>>> entry : foundBindingsMap.entrySet()) {
+        for (final Map.Entry<RankedProvider<T>, List<Class<? extends Annotation>>> entry : foundBindingsMap.entrySet()) {
             final RankedProvider<T> provider = entry.getKey();
             final List<Class<? extends Annotation>> foundBindings = entry.getValue();
             final List<Class<? extends Annotation>> providerBindings = nameBoundProvidersInverse.get(provider);
@@ -353,12 +354,12 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     private static final Cache<Method, Annotation[]> methodAnnotationCache = new Cache<Method, Annotation[]>(new Computable<Method, Annotation[]>() {
 
         @Override
-        public Annotation[] compute(Method m) {
+        public Annotation[] compute(final Method m) {
             return m.getDeclaredAnnotations();
         }
     });
 
-    private Response invoke(ContainerRequest requestContext, Object resource) {
+    private Response invoke(final ContainerRequest requestContext, final Object resource) {
 
         Response jaxrsResponse;
         requestContext.triggerEvent(RequestEvent.Type.RESOURCE_METHOD_START);
@@ -366,8 +367,11 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         respondingContextProvider.get().push(new Function<ContainerResponse, ContainerResponse>() {
             @Override
             public ContainerResponse apply(final ContainerResponse response) {
-                if (response == null) {
-                    return null;
+                // Need to check whether the response is null or mapped from exception. In these cases we don't want to modify
+                // response with resource method metadata.
+                if (response == null
+                        || response.isMappedFromException()) {
+                    return response;
                 }
 
                 final Invocable invocable = method.getInvocable();
@@ -377,14 +381,14 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     if (entityAnn.length == 0) {
                         response.setEntityAnnotations(methodAnn);
                     } else {
-                        Annotation[] mergedAnn = Arrays.copyOf(methodAnn, methodAnn.length + entityAnn.length);
+                        final Annotation[] mergedAnn = Arrays.copyOf(methodAnn, methodAnn.length + entityAnn.length);
                         System.arraycopy(entityAnn, 0, mergedAnn, methodAnn.length, entityAnn.length);
                         response.setEntityAnnotations(mergedAnn);
                     }
                 }
 
                 if (response.hasEntity() && !(response.getEntityType() instanceof ParameterizedType)) {
-                    Type invocableType = invocable.getResponseType();
+                    final Type invocableType = invocable.getResponseType();
                     if (invocableType != null &&
                             Void.TYPE != invocableType &&
                             Void.class != invocableType &&
@@ -393,8 +397,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                         response.setEntityType(invocableType);
                     }
                 }
-                return response;
 
+                return response;
             }
         });
 

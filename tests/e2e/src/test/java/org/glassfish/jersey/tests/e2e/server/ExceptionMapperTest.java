@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -113,8 +113,11 @@ public class ExceptionMapperTest extends JerseyTest {
                 ProviderNotFoundExceptionMapper.class,
                 // JERSEY-1887
                 Jersey1887Resource.class,
-                Jersey1887ExceptionMapperImpl.class
-                //
+                Jersey1887ExceptionMapperImpl.class,
+                // JERSEY-2382
+                Jersey2382Resource.class,
+                Jersey2382ExceptionMapper.class,
+                Jersey2382Provider.class
         );
     }
 
@@ -597,5 +600,73 @@ public class ExceptionMapperTest extends JerseyTest {
 
         assertThat(response.getStatus(), equalTo(200));
         assertThat(response.readEntity(String.class), equalTo("found"));
+    }
+
+    public static class Jersey2382Exception extends RuntimeException {
+    }
+
+    public static class Jersey2382Entity {
+    }
+
+    @Provider
+    public static class Jersey2382Provider implements MessageBodyWriter<Jersey2382Entity> {
+
+        @Override
+        public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                                   final MediaType mediaType) {
+            return true;
+        }
+
+        @Override
+        public long getSize(final Jersey2382Entity jersey2382Entity, final Class<?> type, final Type genericType,
+                            final Annotation[] annotations, final MediaType mediaType) {
+            return -1;
+        }
+
+        @Override
+        public void writeTo(final Jersey2382Entity jersey2382Entity,
+                            final Class<?> type,
+                            final Type genericType,
+                            final Annotation[] annotations,
+                            final MediaType mediaType,
+                            final MultivaluedMap<String, Object> httpHeaders,
+                            final OutputStream entityStream) throws IOException, WebApplicationException {
+            if (Jersey2382Entity.class != type) {
+                entityStream.write("wrong-type".getBytes());
+            } else if (Jersey2382Entity.class != genericType) {
+                entityStream.write("wrong-generic-type".getBytes());
+            } else {
+                entityStream.write("ok".getBytes());
+            }
+        }
+    }
+
+    @Provider
+    public static class Jersey2382ExceptionMapper implements ExceptionMapper<Jersey2382Exception> {
+
+        @Override
+        public Response toResponse(final Jersey2382Exception exception) {
+            return Response.ok(new Jersey2382Entity()).build();
+        }
+    }
+
+    @Path("jersey2382")
+    public static class Jersey2382Resource {
+
+        @GET
+        public List<List<Integer>> get() {
+            throw new Jersey2382Exception();
+        }
+    }
+
+    /**
+     * Test that we're able to use correct exception mapper even when the mapper hierarchy has complex inheritance.
+     */
+    @Test
+    public void testJersey2382() throws Exception {
+        final Response response = target().path("jersey2382").request().get();
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("ok"));
     }
 }
