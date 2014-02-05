@@ -157,8 +157,7 @@ public class Widgets {
   @Binding(name="id" value="${resource.id}"}
 )
 @InjectLink(value="widgets/{value}", bindings={
-  @Binding(value="${resource.id}"}
-)
+  @Binding("${resource.id}")})
 @InjectLink("widgets/${resource.id}")</programlisting>
 
     </section>
