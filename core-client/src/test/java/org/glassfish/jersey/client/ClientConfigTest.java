@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,8 +51,6 @@ import javax.ws.rs.ext.Provider;
 import javax.net.ssl.SSLContext;
 
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
-import org.glassfish.jersey.model.internal.CommonConfig;
-import org.glassfish.jersey.model.internal.ComponentBag;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -159,16 +157,13 @@ public class ClientConfigTest {
         ClientConfig config = jerseyClient.getConfiguration();
         final ClientRuntime runtime = config.getRuntime();
 
-        final CommonConfig commonConfig = (CommonConfig) runtime.getConfig();
+        final ClientConfig runtimeConfig = runtime.getConfig();
 
-        assertEquals(1, commonConfig.getClasses().size());
-        assertEquals(1, commonConfig.getInstances().size());
+        assertEquals(1, runtimeConfig.getClasses().size());
+        assertEquals(1, runtimeConfig.getInstances().size());
 
-        assertEquals(1, commonConfig.getComponentBag().getClasses(ComponentBag.EXCLUDE_META_PROVIDERS).size());
-        assertTrue(commonConfig.getComponentBag().getInstances(ComponentBag.EXCLUDE_META_PROVIDERS).isEmpty());
-
-        assertTrue(commonConfig.isRegistered(MyProvider.class));
-        assertTrue(commonConfig.isEnabled(feature));
+        assertTrue(runtimeConfig.isRegistered(MyProvider.class));
+        assertTrue(runtimeConfig.isEnabled(feature));
 
     }
 
