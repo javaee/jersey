@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.client;
 
 import java.util.Arrays;
@@ -49,7 +48,6 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
@@ -74,7 +72,7 @@ class ClientRuntime {
     private final Stage<ClientResponse> responseProcessingRoot;
 
     private final Connector connector;
-    private final ExtendedConfig config;
+    private final ClientConfig config;
 
     private final RequestScope requestScope;
     private final ClientAsyncExecutorFactory asyncExecutorsFactory;
@@ -88,7 +86,7 @@ class ClientRuntime {
      * @param connector client transport connector.
      * @param locator   HK2 service locator.
      */
-    public ClientRuntime(final ExtendedConfig config, final Connector connector, final ServiceLocator locator) {
+    public ClientRuntime(final ClientConfig config, final Connector connector, final ServiceLocator locator) {
         final Stage.Builder<ClientRequest> requestingChainBuilder = Stages
                 .chain(locator.createAndInitialize(RequestProcessingInitializationStage.class));
         final ChainableStage<ClientRequest> requestFilteringStage = ClientFilteringStages.createRequestFilteringStage(locator);
@@ -251,7 +249,7 @@ class ClientRuntime {
      *
      * @return runtime configuration.
      */
-    public ExtendedConfig getConfig() {
+    public ClientConfig getConfig() {
         return config;
     }
 
