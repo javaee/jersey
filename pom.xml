@@ -1226,6 +1226,16 @@
                 <scope>test</scope>
             </dependency>
 
+            <dependency>
+                <groupId>org.glassfish.main.ejb</groupId>
+                <artifactId>ejb-container</artifactId>
+                <version>${gf.impl.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.main.common</groupId>
+                <artifactId>container-common</artifactId>
+                <version>${gf.impl.version}</version>
+            </dependency>
 
             <!-- HV OSGi dependencies. -->
             <dependency>
@@ -1382,6 +1392,7 @@
         <cdi.api.version>1.1</cdi.api.version>
         <checkstyle.mvn.plugin.version>2.11</checkstyle.mvn.plugin.version>
         <ejb.version>3.2</ejb.version>
+        <gf.impl.version>4.0</gf.impl.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
         <findbugs.glassfish.version>1.3</findbugs.glassfish.version>
         <findbugs.version>2.5.2</findbugs.version>

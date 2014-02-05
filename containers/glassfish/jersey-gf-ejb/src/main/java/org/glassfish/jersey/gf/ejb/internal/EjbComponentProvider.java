@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,16 +39,27 @@
  */
 package org.glassfish.jersey.gf.ejb.internal;
 
+import com.sun.ejb.containers.BaseContainer;
+import com.sun.ejb.containers.EjbContainerUtil;
+import com.sun.ejb.containers.EjbContainerUtilImpl;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,6 +72,9 @@ import javax.inject.Singleton;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.glassfish.ejb.deployment.descriptor.EjbBundleDescriptorImpl;
+import org.glassfish.ejb.deployment.descriptor.EjbDescriptor;
+
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.model.Invocable;
@@ -71,6 +85,9 @@ import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
+
+import org.glassfish.internal.data.ApplicationInfo;
+import org.glassfish.internal.data.ModuleInfo;
 
 /**
  * EJB component provider.
@@ -86,6 +103,8 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             EjbComponentProvider.class.getName());
 
     private InitialContext initialContext;
+    private final List<String> libNames = new CopyOnWriteArrayList<String>();
+
     private boolean ejbInterceptorRegistered = false;
 
     /**
@@ -95,12 +114,13 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
         final InitialContext ctx;
         final Class<T> clazz;
+        final EjbComponentProvider ejbProvider;
 
         @SuppressWarnings("unchecked")
         @Override
         public T provide() {
             try {
-                return (T) lookup(ctx, clazz, clazz.getSimpleName());
+                return (T) lookup(ctx, clazz, clazz.getSimpleName(), ejbProvider);
             } catch (NamingException ex) {
                 Logger.getLogger(ApplicationHandler.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
@@ -112,9 +132,10 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
             // do nothing
         }
 
-        public EjbFactory(Class<T> rawType, InitialContext ctx) {
+        public EjbFactory(Class<T> rawType, InitialContext ctx, EjbComponentProvider ejbProvider) {
             this.clazz = rawType;
             this.ctx = ctx;
+            this.ejbProvider = ejbProvider;
         }
     }
 
@@ -140,8 +161,44 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
     private void registerEjbInterceptor() {
         try {
+            final Object interceptor = new EjbComponentInterceptor(locator);
             initialContext = getInitialContext();
-            Object interceptorBinder = initialContext.lookup("java:org.glassfish.ejb.container.interceptor_binding_spi");
+            final EjbContainerUtil ejbUtil = EjbContainerUtilImpl.getInstance();
+            final ApplicationInfo appInfo = ejbUtil.getDeployment().get((String)initialContext.lookup("java:app/AppName"));
+            final List<String> tempLibNames = new LinkedList<String>();
+            for (ModuleInfo moduleInfo : appInfo.getModuleInfos()) {
+                final String jarName = moduleInfo.getName();
+                if (jarName.endsWith(".jar")) {
+                    final String moduleName = jarName.substring(0, jarName.length() - 4);
+                    tempLibNames.add(moduleName);
+                    final Object bundleDescriptor = moduleInfo.getMetaData(EjbBundleDescriptorImpl.class.getName());
+                    if (bundleDescriptor instanceof EjbBundleDescriptorImpl) {
+                        final Collection<EjbDescriptor> ejbs = ((EjbBundleDescriptorImpl)bundleDescriptor).getEjbs();
+
+                        for (final EjbDescriptor ejb : ejbs) {
+                            final BaseContainer ejbContainer = EjbContainerUtilImpl.getInstance().getContainer(ejb.getUniqueId());
+                            try {
+                                AccessController.doPrivileged(new PrivilegedExceptionAction() {
+                                    @Override
+                                    public Object run() throws Exception {
+                                        final Method registerInterceptorMethod =
+                                                BaseContainer.class.getDeclaredMethod("registerSystemInterceptor", java.lang.Object.class);
+                                        registerInterceptorMethod.setAccessible(true);
+
+                                        registerInterceptorMethod.invoke(ejbContainer, interceptor);
+                                        return null;
+                                    }
+                                });
+                            } catch (PrivilegedActionException pae) {
+                                final Throwable cause = pae.getCause();
+                                LOGGER.log(Level.WARNING, cause.getMessage(), cause);
+                            }
+                        }
+                    }
+                }
+            }
+            libNames.addAll(tempLibNames);
+            final Object interceptorBinder = initialContext.lookup("java:org.glassfish.ejb.container.interceptor_binding_spi");
             // Some implementations of InitialContext return null instead of
             // throwing NamingException if there is no Object associated with
             // the name
@@ -149,30 +206,25 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
                 throw new IllegalStateException(LocalizationMessages.EJB_INTERCEPTOR_BIND_API_NOT_AVAILABLE());
             }
 
-            Method interceptorBinderMethod = interceptorBinder.getClass().
-                    getMethod("registerInterceptor", java.lang.Object.class);
-
             try {
+                AccessController.doPrivileged(new PrivilegedExceptionAction() {
+                    @Override
+                    public Object run() throws Exception {
+                        Method interceptorBinderMethod = interceptorBinder.getClass().
+                                getMethod("registerInterceptor", java.lang.Object.class);
 
-                // create an interceptor instance via reflection
-                final Class<?> interceptorClass =
-                        Class.forName(EjbComponentProvider.class.getPackage().getName() + ".EjbComponentInterceptor");
-                final Object interceptor = interceptorClass.getConstructor(ServiceLocator.class).newInstance(locator);
-
-                interceptorBinderMethod.invoke(interceptorBinder, interceptor);
-
-                this.ejbInterceptorRegistered = true;
-                LOGGER.log(Level.INFO, LocalizationMessages.EJB_INTERCEPTOR_BOUND());
-            } catch (Exception ex) {
-                throw new IllegalStateException(LocalizationMessages.EJB_INTERCEPTOR_CONFIG_ERROR(), ex);
+                        interceptorBinderMethod.invoke(interceptorBinder, interceptor);
+                        EjbComponentProvider.this.ejbInterceptorRegistered = true;
+                        LOGGER.log(Level.CONFIG, LocalizationMessages.EJB_INTERCEPTOR_BOUND());
+                        return null;
+                    }
+                });
+            } catch (PrivilegedActionException pae) {
+                throw new IllegalStateException(LocalizationMessages.EJB_INTERCEPTOR_CONFIG_ERROR(), pae.getCause());
             }
 
         } catch (NamingException ex) {
             throw new IllegalStateException(LocalizationMessages.EJB_INTERCEPTOR_BIND_API_NOT_AVAILABLE(), ex);
-        } catch (NoSuchMethodException ex) {
-            throw new IllegalStateException(LocalizationMessages.EJB_INTERCEPTOR_BIND_API_NON_CONFORMANT(), ex);
-        } catch (SecurityException ex) {
-            throw new IllegalStateException(LocalizationMessages.EJB_INTERCEPTOR_CONFIG_SECURITY_ERROR(), ex);
         } catch (LinkageError ex) {
             throw new IllegalStateException(LocalizationMessages.EJB_INTERCEPTOR_CONFIG_LINKAGE_ERROR(), ex);
         }
@@ -201,7 +253,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
 
         DynamicConfiguration dc = Injections.getConfiguration(locator);
 
-        final ServiceBindingBuilder bindingBuilder = Injections.newFactoryBinder(new EjbFactory(component, initialContext));
+        final ServiceBindingBuilder bindingBuilder = Injections.newFactoryBinder(new EjbFactory(component, initialContext, this));
 
         bindingBuilder.to(component);
         for (Class contract : providerContracts) {
@@ -303,23 +355,57 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
         }
     }
 
-    private static Object lookup(InitialContext ic, Class<?> c, String name) throws NamingException {
+    private static Object lookup(InitialContext ic, Class<?> c, String name, EjbComponentProvider provider) throws NamingException {
         try {
-            return lookupSimpleForm(ic, name);
+            return lookupSimpleForm(ic, name, provider);
         } catch (NamingException ex) {
             LOGGER.log(Level.WARNING, LocalizationMessages.EJB_CLASS_SIMPLE_LOOKUP_FAILED(c.getName()), ex);
 
-            return lookupFullyQualifiedForm(ic, c, name);
+            return lookupFullyQualifiedForm(ic, c, name, provider);
         }
     }
 
-    private static Object lookupSimpleForm(InitialContext ic, String name) throws NamingException {
-        String jndiName = "java:module/" + name;
-        return ic.lookup(jndiName);
+    private static Object lookupSimpleForm(InitialContext ic, String name, EjbComponentProvider provider) throws NamingException {
+        if (provider.libNames.isEmpty()) {
+            String jndiName = "java:module/" + name;
+            return ic.lookup(jndiName);
+        } else {
+            NamingException ne = null;
+            for (String moduleName : provider.libNames) {
+                String jndiName = "java:app/" + moduleName + "/" + name;
+                Object result;
+                try {
+                    result = ic.lookup(jndiName);
+                    if (result != null) {
+                        return result;
+                    }
+                 } catch (NamingException e) {
+                     ne = e;
+                 }
+            }
+            throw (ne != null) ? ne : new NamingException();
+        }
     }
 
-    private static Object lookupFullyQualifiedForm(InitialContext ic, Class<?> c, String name) throws NamingException {
-        String jndiName = "java:module/" + name + "!" + c.getName();
-        return ic.lookup(jndiName);
+    private static Object lookupFullyQualifiedForm(InitialContext ic, Class<?> c, String name, EjbComponentProvider provider) throws NamingException {
+        if (provider.libNames.isEmpty()) {
+            String jndiName = "java:module/" + name + "!" + c.getName();
+            return ic.lookup(jndiName);
+        } else {
+            NamingException ne = null;
+            for (String moduleName : provider.libNames) {
+                String jndiName = "java:app/" + moduleName + "/" + name + "!" + c.getName();
+                Object result;
+                try {
+                    result = ic.lookup(jndiName);
+                    if (result != null) {
+                        return result;
+                    }
+                 } catch (NamingException e) {
+                     ne = e;
+                 }
+            }
+            throw (ne != null) ? ne : new NamingException();
+        }
     }
 }
