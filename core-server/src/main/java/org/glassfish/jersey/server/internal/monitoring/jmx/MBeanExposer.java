@@ -102,6 +102,27 @@ public class MBeanExposer extends AbstractContainerLifecycleListener implements 
     }
 
     /**
+     * Convert the resource name to a valid {@link javax.management.ObjectName object name}.
+     * @param name Resource name.
+     * @param isUri {@code true} if the resource name is an URI.
+     *
+     * @return Converted valid object name.
+     */
+    static String convertToObjectName(String name, boolean isUri) {
+        if (!isUri) {
+            return name;
+        }
+
+        String str = name.replace("\\", "\\\\");
+        str = str.replace("?", "\\?");
+        str = str.replace("*", "\\*");
+        StringBuilder sb = new StringBuilder();
+        sb.append("\"").append(str).append("\"");
+
+        return sb.toString();
+    }
+
+    /**
      * Register the MBean with the given postfix name.
      *
      * @param mbean MBean to be registered.

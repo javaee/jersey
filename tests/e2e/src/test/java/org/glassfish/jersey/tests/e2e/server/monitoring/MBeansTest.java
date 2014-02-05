@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,7 +53,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
 import org.glassfish.jersey.server.ResourceConfig;
@@ -68,6 +71,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
@@ -105,6 +109,31 @@ public class MBeansTest extends JerseyTest {
         public String testGet() {
             return "get";
         }
+
+        @GET
+        @Path("test/{test: \\d+}")
+        public String testGetPathPattern1() {
+            return "testGetPathPattern1";
+        }
+
+        @GET
+        @Path("test2/{test: hell?o}")
+        public String testGetPathPattern2() {
+            return "testGetPathPattern2";
+        }
+
+        @GET
+        @Path("test3/{test: abc.* (a)(b)[a,c]?$[1-4]kkx|Y}")
+        public String testGetPathPattern3() {
+            return "testGetPathPattern2";
+        }
+
+        @GET
+        @Path("test4/{test: [a,b]:r}")
+        public String testGetPathPattern4() {
+            return "testGetPathPattern2";
+        }
+
 
         @POST
         public String testPost() {
@@ -176,7 +205,6 @@ public class MBeansTest extends JerseyTest {
     @Test
     public void test() throws Exception {
         final String path = "resource";
-
         assertEquals(200, target().path(path).request().get().getStatus());
         assertEquals(200, target().path(path).request().post(Entity.entity("post",
                 MediaType.TEXT_PLAIN_TYPE)).getStatus());
@@ -206,20 +234,37 @@ public class MBeansTest extends JerseyTest {
         final ObjectName name = new ObjectName("org.glassfish.jersey:type=myApplication,subType=Global,global=Configuration");
         final String str = (String) mBeanServer.getAttribute(name, "ApplicationName");
         Assert.assertEquals("myApplication", str);
+
+        checkResourceMBean("/resource");
+        checkResourceMBean("/resource/sub");
+        checkResourceMBean("/resource/locator");
+        checkResourceMBean("/resource/exception");
+        checkResourceMBean("/resource/test/{test: \\\\d+}");
+        checkResourceMBean("/resource/test2/{test: hell\\?o}");
+        checkResourceMBean("/resource/test3/{test: abc.\\* (a)(b)[a,c]\\?$[1-4]kkx|Y}");
+        checkResourceMBean("/resource/test4/{test: [a,b]:r}");
     }
 
+    private void checkResourceMBean(String name) throws MalformedObjectNameException {
+        final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        final ObjectName objectName = new ObjectName("org.glassfish.jersey:type=myApplication,subType=Uris,resource=\"" + name + "\"");
+        ObjectInstance mbean = null;
+        try {
+            mbean = mBeanServer.getObjectInstance(objectName);
+        } catch (InstanceNotFoundException e) {
+            Assert.fail("Resource MBean name '" + name + "' not found.");
+        }
+        assertNotNull(mbean);
+    }
 
     // this test runs the jersey environments, exposes mbeans and makes requests to
     // the deployed application. The test will never finished. This should be uncommented
     // only for development testing of mbeans in jconsole.
     // Steps: uncomment the test; run it; run jconsole and attach to the process of the tests
-
 //    @Test
 //    public void testNeverFinishesAndMustBeCommented() throws Exception {
 //        while (true) {
 //            test();
 //        }
 //    }
-
-
 }
