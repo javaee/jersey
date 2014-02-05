@@ -57,9 +57,10 @@ import org.glassfish.jersey.Beta;
 @Beta
 public @interface Binding {
     /**
-     * Specifies the name of the URI template parameter.
+     * Specifies the name of the URI template parameter, defaults to 
+     * "value" for convenience.
      */
-    String name();
+    String name() default "value";
 
     /**
      * Specifies the value of a URI template parameter. The value is an EL

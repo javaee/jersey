@@ -151,10 +151,13 @@ public class Widgets {
         <programlisting language="java">@InjectLink("widgets/{id}")
 @InjectLink("widgets/${instance.id}")</programlisting>
         <para>The source for URI template parameter values can be changed using the
-                <literal>@Binding</literal> annotation, E.g. the following two annotations are
+                <literal>@Binding</literal> annotation, E.g. the following three annotations are
             equivalent:</para>
         <programlisting language="java">@InjectLink(value="widgets/{id}", bindings={
   @Binding(name="id" value="${resource.id}"}
+)
+@InjectLink(value="widgets/{value}", bindings={
+  @Binding(value="${resource.id}"}
 )
 @InjectLink("widgets/${resource.id}")</programlisting>
 
