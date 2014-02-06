@@ -77,10 +77,11 @@ import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.Statuses;
 
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpProxy;
+import org.eclipse.jetty.client.ProxyConfiguration;
 import org.eclipse.jetty.client.api.AuthenticationStore;
 import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.ProxyConfiguration;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.api.Result;
@@ -196,8 +197,8 @@ class JettyConnector implements Connector {
             final Object proxyUri = config.getProperties().get(ClientProperties.PROXY_URI);
             if (proxyUri != null) {
                 final URI u = getProxyUri(proxyUri);
-                final ProxyConfiguration proxyConfig = new ProxyConfiguration(u.getHost(), u.getPort());
-                client.setProxyConfiguration(proxyConfig);
+                final ProxyConfiguration proxyConfig = client.getProxyConfiguration();
+                proxyConfig.getProxies().add(new HttpProxy(u.getHost(), u.getPort()));
             }
 
             if (disableCookies) {
@@ -239,7 +240,7 @@ class JettyConnector implements Connector {
      * Get the {@link CookieStore}.
      *
      * @return the {@link CookieStore} instance or null when
-     *         JettyClientProperties.DISABLE_COOKIES set to true.
+     * JettyClientProperties.DISABLE_COOKIES set to true.
      */
     public CookieStore getCookieStore() {
         return cookieStore;
@@ -295,12 +296,7 @@ class JettyConnector implements Connector {
             super(getInputStream(jettyResponse));
         }
 
-        @Override
-        public void close() throws IOException {
-            super.close();
-        }
-
-        private static InputStream getInputStream(final ContentResponse response) throws IOException {
+        private static InputStream getInputStream(final ContentResponse response) {
             return new ByteArrayInputStream(response.getContent());
         }
     }
@@ -404,52 +400,52 @@ class JettyConnector implements Connector {
             });
             final AtomicReference<ClientResponse> jerseyResponse = new AtomicReference<ClientResponse>();
             final ByteBufferInputStream entityStream = new ByteBufferInputStream();
-            jettyRequest.send(new Response.Listener.Empty() {
+            jettyRequest.send(new Response.Listener.Adapter() {
 
-                        @Override
-                        public void onHeaders(final Response jettyResponse) {
-                            HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
-                                    JettyConnector.this.getClass().getName());
+                @Override
+                public void onHeaders(final Response jettyResponse) {
+                    HeaderUtils.checkHeaderChanges(clientHeadersSnapshot, jerseyRequest.getHeaders(),
+                            JettyConnector.this.getClass().getName());
 
-                            if (responseFuture.isDone())
-                                if (!callbackInvoked.compareAndSet(false, true)) {
-                                    return;
-                                }
-                            final ClientResponse response = translateResponse(jerseyRequest, jettyResponse, entityStream);
-                            jerseyResponse.set(response);
-                            callback.response(response);
+                    if (responseFuture.isDone())
+                        if (!callbackInvoked.compareAndSet(false, true)) {
+                            return;
                         }
+                    final ClientResponse response = translateResponse(jerseyRequest, jettyResponse, entityStream);
+                    jerseyResponse.set(response);
+                    callback.response(response);
+                }
 
-                        @Override
-                        public void onContent(final Response jettyResponse, final ByteBuffer content) {
-                            try {
-                                entityStream.put(content);
-                            } catch (final InterruptedException ex) {
-                                final ProcessingException pe = new ProcessingException(ex);
-                                entityStream.closeQueue(pe);
-                                // try to complete the future with an exception
-                                responseFuture.setException(pe);
-                                Thread.currentThread().interrupt();
-                            }
-                        }
+                @Override
+                public void onContent(final Response jettyResponse, final ByteBuffer content) {
+                    try {
+                        entityStream.put(content);
+                    } catch (final InterruptedException ex) {
+                        final ProcessingException pe = new ProcessingException(ex);
+                        entityStream.closeQueue(pe);
+                        // try to complete the future with an exception
+                        responseFuture.setException(pe);
+                        Thread.currentThread().interrupt();
+                    }
+                }
 
-                        @Override
-                        public void onComplete(final Result result) {
-                            entityStream.closeQueue();
-                            // try to complete the future with the response only once truly done
-                            responseFuture.set(jerseyResponse.get());
-                        }
+                @Override
+                public void onComplete(final Result result) {
+                    entityStream.closeQueue();
+                    // try to complete the future with the response only once truly done
+                    responseFuture.set(jerseyResponse.get());
+                }
 
-                        @Override
-                        public void onFailure(final Response response, final Throwable t) {
-                            entityStream.closeQueue(t);
-                            // try to complete the future with an exception
-                            responseFuture.setException(t);
-                            if (callbackInvoked.compareAndSet(false, true)) {
-                                callback.failure(t);
-                            }
-                        }
-                    });
+                @Override
+                public void onFailure(final Response response, final Throwable t) {
+                    entityStream.closeQueue(t);
+                    // try to complete the future with an exception
+                    responseFuture.setException(t);
+                    if (callbackInvoked.compareAndSet(false, true)) {
+                        callback.failure(t);
+                    }
+                }
+            });
             return responseFuture;
         } catch (final Throwable t) {
             failure = t;
@@ -462,8 +458,8 @@ class JettyConnector implements Connector {
     }
 
     private static ClientResponse translateResponse(final ClientRequest jerseyRequest,
-                                             final org.eclipse.jetty.client.api.Response jettyResponse,
-                                             final NonBlockingInputStream entityStream) {
+                                                    final org.eclipse.jetty.client.api.Response jettyResponse,
+                                                    final NonBlockingInputStream entityStream) {
         final ClientResponse jerseyResponse = new ClientResponse(Statuses.from(jettyResponse.getStatus()), jerseyRequest);
         processResponseHeaders(jettyResponse.getHeaders(), jerseyResponse);
         jerseyResponse.setEntityStream(entityStream);
