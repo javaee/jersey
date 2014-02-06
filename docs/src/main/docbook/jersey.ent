@@ -404,6 +404,8 @@
 <!ENTITY jersey.message.filtering.SecurityAnnotations "<link xlink:href='&jersey.javadoc.path;/message/filtering/SecurityAnnotations.html'>SecurityAnnotations</link>">
 <!ENTITY jersey.message.filtering.SecurityEntityFilteringFeature "<link xlink:href='&jersey.javadoc.path;/message/filtering/SecurityEntityFilteringFeature.html'>SecurityEntityFilteringFeature</link>">
 
+<!ENTITY jersey.linking.DeclarativeLinkingFeature "<link xlink:href='&jersey.javadoc.path;/linking/DeclarativeLinkingFeature.html'>DeclarativeLinkingFeature</link>">
+
 <!ENTITY jersey.server.mvc.MvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/MvcFeature.html'>MvcFeature</link>">
 <!ENTITY jersey.server.mvc.FreemarkerMvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/freemarker/FreemarkerMvcFeature.html'>FreemarkerMvcFeature</link>">
 <!ENTITY jersey.server.mvc.JspMvcFeature "<link xlink:href='&jersey.javadoc.path;/server/mvc/jsp/JspMvcFeature.html'>JspMvcFeature</link>">
@@ -464,6 +466,7 @@
 
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
+<!ENTITY jersey-declarative-linking "<link xlink:href='&jersey.site.path;/jersey-declarative-linking/dependencies.html'>jersey-declarative-linking</link>" >
 <!ENTITY jersey-entity-filtering "<link xlink:href='&jersey.site.path;/jersey-entity-filtering/dependencies.html'>jersey-entity-filtering</link>" >
 <!ENTITY jersey-media-json-processing "<link xlink:href='&jersey.site.path;/jersey-media-json-processing/dependencies.html'>jersey-media-json-processing</link>" >
 <!ENTITY jersey-media-json-jettison "<link xlink:href='&jersey.site.path;/jersey-media-json-jettison/dependencies.html'>jersey-media-json-jettison</link>" >
@@ -693,6 +696,8 @@
 <!ENTITY lit.jersey.ext.ValidationConfig "<literal>ValidationConfig</literal>">
 <!ENTITY lit.jersey.ext.ValidationError "<literal>ValidationError</literal>">
 
+<!ENTITY lit.jersey.linking.DeclarativeLinkingFeature "<literal>DeclarativeLinkingFeature</literal>">
+
 <!ENTITY lit.jersey.media.MoxyJsonConfig "<literal>MoxyJsonConfig</literal>" >
 <!ENTITY lit.jersey.media.MoxyJsonFeature "<literal>MoxyJsonFeature</literal>" >
 <!ENTITY lit.jersey.media.JsonProcessingFeature "<literal>JsonProcessingFeature</literal>" >
@@ -823,6 +828,7 @@
 
 <!-- Jersey Module Literals -->
 <!ENTITY lit.jersey-bean-validation "<literal>jersey-bean-validation</literal>" >
+<!ENTITY lit.jersey-declarative-linking "<literal>jersey-jersey.ent</literal>" >
 <!ENTITY lit.jersey-media-json-processing "<literal>jersey-media-json-processing</literal>" >
 <!ENTITY lit.jersey-media-json-jettison "<literal>jersey-media-json-jettison</literal>" >
 <!ENTITY lit.jersey-media-json-jackson "<literal>jersey-media-json-jackson</literal>" >

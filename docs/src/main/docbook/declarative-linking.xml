@@ -40,188 +40,229 @@
     holder.
 
 -->
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-                 "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"[
-<!ENTITY % ents SYSTEM "jersey.ent" >
-%ents;
-]>
-<chapter id="linking">
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd
+                             http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
+         xml:id="declarative-linking">
+
     <title>Declarative Hyperlinking</title>
-    <para><ulink url="http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven">RESTful
-            APIs must be hypertext-driven</ulink>. JAX-RS currently offers &jaxrs.core.UriBuilder; to simplify URI
-        creation but Jersey adds an additional annotation-based alternative that is described
-        here. <b>This API is in development and experimental so it is subject to change at any time.</b></para>
-        
+
+    <para>
+        <link xlink:href="http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven">RESTful APIs must be
+            hypertext-driven</link>. JAX-RS currently offers &jaxrs.core.UriBuilder; to simplify URI
+        creation but Jersey adds an additional annotation-based alternative that is described here.
+    </para>
+    <important>
+        <para>
+            This API is currently under development and experimental so it is subject to change at any time.
+        </para>
+    </important>
+
     <section>
         <title>Dependency</title>
 
         <para>
-            To use Declarative Linking you need to add &lit.jersey-media-linking; module to your
-            &lit.pom.xml; file:
+            To use Declarative Linking you need to add &lit.jersey-declarative-linking; module to your &lit.pom.xml; file:
 
             <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
-&lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
-&lt;artifactId&gt;jersey-declarative-linking&lt;/artifactId&gt;
-&lt;version&gt;&version;&lt;/version&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-declarative-linking&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
             If you're not using Maven make sure to have all needed dependencies (see &jersey-declarative-linking;) on
             the classpath.
         </para>
     </section>
-        
-        
+
+
     <section>
         <title>Links in Representations</title>
-        <para>Links are added to representations using the <literal>@InjectLink</literal> annotation on
+
+        <para>
+            Links are added to representations using the <literal>@InjectLink</literal> annotation on
             entity class fields. The Jersey runtime is responsible for injecting the appropriate URI
             into the field prior to serialization by a message body writer. E.g. consider the
-            following resource and entity classes:</para>
+            following resource and entity classes:
+        </para>
+
         <programlisting language="java">@Path("widgets")
 public class WidgetsResource {
-  @GET
-  public Widgets get() {
-    return new Widgets();
-  }
+    @GET
+    public Widgets get() {
+        return new Widgets();
+    }
 }
-        
+
 public class Widgets {
-  @InjectLink(resource=WidgetsResource.class)
-  URI u;
+    @InjectLink(resource=WidgetsResource.class)
+    URI u;
 }</programlisting>
-        <para>After a call to <literal>WidgetsResource#get</literal>, the Jersey runtime will inject
-            the value "/context/widgets"<footnote>
-                <para>Where <literal>/context</literal> is the application deployment
-                    context.</para>
-            </footnote> into the returned <literal>Widgets</literal> instance. If an absolute URI is
+
+        <para>
+            After a call to<literal>WidgetsResource#get</literal>, the Jersey runtime will inject the value
+            <literal>"/context/widgets"</literal>
+            <footnote>
+                <para>
+                    Where <literal>/context</literal> is the application deployment context.
+                </para>
+            </footnote>
+            into the returned <literal>Widgets</literal> instance. If an absolute URI is
             desired instead of an absolute path then the annotation can be changed to
-                <literal>@InjectLink(resource=WidgetsResource.class, style=ABSOLUTE)</literal>.</para>
-        <para>The above usage works nicely when there's already a URI template on a class that you
+            <literal>@InjectLink(resource=WidgetsResource.class, style=ABSOLUTE)</literal>.
+        </para>
+        <para>
+            The above usage works nicely when there's already a URI template on a class that you
             want to reuse. If there's no such template available then you can use a literal value
             instead of a reference. E.g. the following is equivalent to the earlier example:
-                <literal>@InjectLink(value="widgets", style=ABSOLUTE)</literal>.</para>
+            <literal>@InjectLink(value="widgets", style=ABSOLUTE)</literal>.
+        </para>
     </section>
+
     <section>
         <title>Binding Template Parameters</title>
-        <para>Referenced or literal templates may contain parameters. Two forms of parameters are
-            supported:</para>
-        <itemizedlist>
-            <listitem>
-                <para>URI template parameters, e.g. <literal>widgets/{id}</literal> where
-                        <literal>{id}</literal> represents a variable part of the URI.</para>
-            </listitem>
-            <listitem>
-                <para>EL expressions, e.g. <literal>widgets/${instance.id}</literal> where
-                        <literal>${instance.id}</literal> is an EL expression.</para>
-            </listitem>
-        </itemizedlist>
-        <para>Parameter values can be extracted from three implicit beans:</para>
-        <variablelist>
-            <varlistentry>
-                <term>
-                    <literal>instance</literal>
-                </term>
-                <listitem>
-                    <para>Represents the instance of the class that contains the annotated
-                        field.</para>
-                </listitem>
-            </varlistentry>
-            <varlistentry>
-                <term>
-                    <literal>entity</literal>
-                </term>
-                <listitem>
-                    <para>Represents the entity class instance returned by the resource
-                        method.</para>
-                </listitem>
-            </varlistentry>
-            <varlistentry>
-                <term>
-                    <literal>resource</literal>
-                </term>
-                <listitem>
-                    <para>Represents the resource class instance that returned the entity.</para>
-                </listitem>
-            </varlistentry>
-        </variablelist>
 
-        <para>By default URI template parameter values are extracted from the implicit
-                <literal>instance</literal> bean, i.e. the following two annotations are
-            equivalent:</para>
-        <programlisting language="java">@InjectLink("widgets/{id}")
+        <para>
+            Referenced or literal templates may contain parameters. Two forms of parameters are
+            supported:
+            <itemizedlist>
+                <listitem><para>
+                    URI template parameters, e.g. <literal>widgets/{id}</literal> where <literal>{id}</literal> represents
+                    a variable part of the URI.
+                </para></listitem>
+                <listitem><para>
+                    EL expressions, e.g. <literal>widgets/${instance.id}</literal> where <literal>${instance.id}</literal>
+                    is an EL expression.
+                </para></listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            Parameter values can be extracted from three implicit beans:
+            <variablelist>
+                <varlistentry>
+                    <term>
+                        <literal>instance</literal>
+                    </term>
+                    <listitem>
+                        <para>Represents the instance of the class that contains the annotated field.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>
+                        <literal>entity</literal>
+                    </term>
+                    <listitem>
+                        <para>Represents the entity class instance returned by the resource method.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>
+                        <literal>resource</literal>
+                    </term>
+                    <listitem>
+                        <para>Represents the resource class instance that returned the entity.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </para>
+
+        <para>
+            By default URI template parameter values are extracted from the implicit <literal>instance</literal> bean,
+            i.e. the following two annotations are equivalent:
+
+            <programlisting language="java">@InjectLink("widgets/{id}")
+
 @InjectLink("widgets/${instance.id}")</programlisting>
-        <para>The source for URI template parameter values can be changed using the
-                <literal>@Binding</literal> annotation, E.g. the following three annotations are
-            equivalent:</para>
-        <programlisting language="java">@InjectLink(value="widgets/{id}", bindings={
-  @Binding(name="id" value="${resource.id}"}
+        </para>
+
+        <para>
+            The source for URI template parameter values can be changed using the <literal>@Binding</literal>
+            annotation, E.g. the following three annotations are equivalent:
+            <programlisting language="java">@InjectLink(value="widgets/{id}", bindings={
+    @Binding(name="id" value="${resource.id}"}
 )
+
 @InjectLink(value="widgets/{value}", bindings={
-  @Binding("${resource.id}")})
+    @Binding("${resource.id}")})
 @InjectLink("widgets/${resource.id}")</programlisting>
+        </para>
 
     </section>
 
     <section>
         <title>Conditional Link Injection</title>
-        <para>Link value injection can be made conditional by use of the
-                <literal>condition</literal> property. The value of this property is a boolean EL
-            expression and a link will only be injected if the condition expression evaluates to
-            true. E.g.:</para>
-        <programlisting language="java">@InjectLink(value="widgets/${instance.id}/offers",
-  condition="${instance.offers}")
+        <para>
+            Link value injection can be made conditional by use of the <literal>condition</literal> property.
+            The value of this property is a boolean EL expression and a link will only be injected if the condition
+            expression evaluates to true. E.g.:
+
+            <programlisting language="java">@InjectLink(value="widgets/${instance.id}/offers",
+    condition="${instance.offers}")
 URI offers;</programlisting>
-        <para>In the above, a URI will only be injected into the <literal>offers</literal> field if
-            the <literal>offers</literal> property of the instance is <literal>true</literal>.
+        </para>
+
+        <para>
+            In the above, a URI will only be injected into the <literal>offers</literal> field if the
+            <literal>offers</literal> property of the instance is <literal>true</literal>.
         </para>
     </section>
 
-
     <section>
         <title>List of Link Injection</title>
-        <para>You can inject multiple links into an array of a List collection type. E.g.:</para>
-        <programlisting language="java">@InjectLinks({@InjectLink(resource=WidgetsResource.class, rel = "self")})
-List&lt;Link&gt; links</programlisting>  
+        <para>
+            You can inject multiple links into an array of a List collection type. E.g.:
+            <programlisting language="java">@InjectLinks({@InjectLink(resource=WidgetsResource.class, rel = "self")})
+List&lt;Link&gt; links</programlisting>
+        </para>
     </section>
 
     <section>
         <title>Link Headers</title>
-        <para><ulink url="http://tools.ietf.org/html/rfc5988#section-5">HTTP Link
-                headers</ulink> can also be added to responses using annotations. Instead of
-            annotating the fields of an entity class with <literal>@InjectLink</literal>, you instead
-            annotate the entity class itself with <literal>@InjectLinks</literal>. E.g.:</para>
-        <programlisting language="java">@InjectLinks(
-  value=@InjectLink("widgets/${resource.nextId}"),
-  rel="next"
+        <para>
+            <link xlink:href="http://tools.ietf.org/html/rfc5988#section-5">HTTP Link headers</link> can also be added
+            to responses using annotations. Instead of annotating the fields of an entity class with
+            <literal>@InjectLink</literal>, you instead annotate the entity class itself with
+            <literal>@InjectLinks</literal>. E.g.:
+            <programlisting language="java">@InjectLinks(
+    value=@InjectLink("widgets/${resource.nextId}"),
+    rel="next"
 )</programlisting>
-        <para>The above would insert a HTTP Link header into any response whose entity was thus
-            annotated. The <literal>@InjectLink</literal> annotation contains properties that map to the
-            parameters of the HTTP Link header. The above specifies the link relation as
-                <literal>next</literal>. All properties of the <literal>@InjectLink</literal> annotation
-            may be used as described above. </para>
-        <para>Multiple link headers can be added by use of the <literal>@InjectLinks</literal> annotation
-            which can contain multiple <literal>@InjectLink</literal> annotations.</para>
+        </para>
+
+        <para>
+            The above would insert a HTTP Link header into any response whose entity was thus annotated.
+            The <literal>@InjectLink</literal> annotation contains properties that map to the parameters
+            of the HTTP Link header. The above specifies the link relation as <literal>next</literal>.
+            All properties of the <literal>@InjectLink</literal> annotation may be used as described above.
+        </para>
+
+        <para>
+            Multiple link headers can be added by use of the <literal>@InjectLinks</literal> annotation
+            which can contain multiple <literal>@InjectLink</literal> annotations.
+        </para>
     </section>
-    
-    
+
     <section>
         <title>Configure and register</title>
 
         <para>
-            In order to add the Declarative Linking feature register &jersey.ext.LinkingFeature;
+            In order to add the Declarative Linking feature register &jersey.linking.DeclarativeLinkingFeature;
 
             <example>
                 <title>Creating JAX-RS application with Declarative Linking feature enabled.</title>
 
                 <programlisting language="java">// Create JAX-RS application.
 final Application application = new ResourceConfig()
-.packages("org.glassfish.jersey.examples.linking")
-.register(DeclarativeLinkingFeature.class);</programlisting>
+        .packages("org.glassfish.jersey.examples.linking")
+        .register(DeclarativeLinkingFeature.class);</programlisting>
             </example>
         </para>
     </section>
-
-
-
-
 </chapter>
