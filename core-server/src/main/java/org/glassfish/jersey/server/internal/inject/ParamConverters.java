@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -229,12 +229,12 @@ class ParamConverters {
             providers = new ParamConverterProvider[]{
                     // ordering is important (e.g. Date provider must be executed before String Constructor
                     // as Date has a deprecated String constructor
-                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class),
                     locator.createAndInitialize(DateProvider.class),
                     locator.createAndInitialize(TypeFromStringEnum.class),
                     locator.createAndInitialize(TypeValueOf.class),
                     locator.createAndInitialize(TypeFromString.class),
-                    locator.createAndInitialize(StringConstructor.class)
+                    locator.createAndInitialize(StringConstructor.class),
+                    locator.createAndInitialize(JaxbStringReaderProvider.RootElementProvider.class)
             };
         }
 
