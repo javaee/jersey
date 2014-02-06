@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ package org.glassfish.jersey.tests.integration.servlet_25_mvc_3;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -60,6 +61,8 @@ public abstract class TestSupport extends JerseyTest {
 
     @Override
     protected Application configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
         return new MyApplication();
     }
 
@@ -68,14 +71,14 @@ public abstract class TestSupport extends JerseyTest {
         return new ExternalTestContainerFactory();
     }
 
-    protected void assertHtmlResponse(String response) {
+    protected void assertHtmlResponse(final String response) {
         assertNotNull("No text returned!", response);
 
         assertResponseContains(response, "<html>");
         assertResponseContains(response, "</html>");
     }
 
-    protected void assertResponseContains(String response, String text) {
+    protected void assertResponseContains(final String response, final String text) {
         assertTrue("Response should contain " + text + " but was: " + response, response.contains(text));
     }
 }

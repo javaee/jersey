@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,11 +41,13 @@
 package org.glassfish.jersey.tests.integration.servlet_25_mvc_3;
 
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.tests.integration.servlet_25_mvc_3.resource.Book;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 public class ItemITCase extends TestSupport {
@@ -57,10 +59,37 @@ public class ItemITCase extends TestSupport {
     }
 
     @Test
+    public void testResourceAsHtmlUtf8() throws Exception {
+        final Response response = item1resource().path("utf").request().get();
+        final String html = response.readEntity(String.class);
+
+        assertItemHtmlResponse(html);
+        assertResponseContains(html, "Ha\u0161ek");
+    }
+
+    @Test
+    public void testResourceAsHtmlIso88592() throws Exception {
+        final Response response = item1resource().path("iso").request().get();
+        response.bufferEntity();
+
+        final String htmlUtf8 = response.readEntity(String.class);
+
+        assertItemHtmlResponse(htmlUtf8);
+        assertFalse("Response shouldn't contain Ha\u0161ek but was: " + htmlUtf8, htmlUtf8.contains("Ha\u0161ek"));
+
+        final byte[] bytes = response.readEntity(byte[].class);
+        final String htmlIso = new String(bytes, "ISO-8859-2");
+
+        assertItemHtmlResponse(htmlIso);
+        assertFalse("Response shouldn't contain Ha\u0161ek but was: " + htmlIso, htmlIso.contains("Ha\u0161ek"));
+        assertResponseContains(htmlIso, new String("Ha\u0161ek".getBytes(), "ISO-8859-2"));
+    }
+
+    @Test
     public void testResourceAsXml() throws Exception {
         final String text = item1resource().request("application/xml").get(String.class);
         System.out.println("Item XML is: " + text);
-        
+
         final Book response = item1resource().request("application/xml").get(Book.class);
         assertNotNull("Should have returned an item!", response);
         assertEquals("item title", "Svejk", response.getTitle());
@@ -77,7 +106,7 @@ public class ItemITCase extends TestSupport {
         assertItemHtmlResponse(response);
     }
 
-    protected void assertItemHtmlResponse(String response) {
+    protected void assertItemHtmlResponse(final String response) {
         assertHtmlResponse(response);
         assertResponseContains(response, "<title>Book</title>");
         assertResponseContains(response, "<h1>Svejk</h1>");
@@ -86,6 +115,4 @@ public class ItemITCase extends TestSupport {
     protected WebTarget item1resource() {
         return target().path("/items/1");
     }
-
-
 }

@@ -41,6 +41,7 @@
 package org.glassfish.jersey.tests.integration.servlet_25_mvc_3.resource;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -49,6 +50,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.server.mvc.Template;
+import org.glassfish.jersey.server.mvc.Viewable;
 
 import jersey.repackaged.com.google.common.base.Objects;
 
@@ -81,6 +83,18 @@ public class Item {
     @Produces({MediaType.APPLICATION_XML, MediaType.TEXT_XML, MediaType.APPLICATION_JSON})
     public Item getXml() {
         return this;
+    }
+
+    @GET
+    @Path("utf")
+    public Viewable getItemUtf8() {
+        return new Viewable("index.utf8.jsp", this);
+    }
+
+    @GET
+    @Path("iso")
+    public Viewable getItemIso88592() {
+        return new Viewable("index.iso88592.jsp", this);
     }
 
     @Override
