@@ -124,6 +124,7 @@ This line fits the page width.
     <xi:include href="filters.xml" />
     <xi:include href="async.xml" />
     <xi:include href="uris-and-links.xml" />
+    <xi:include href="declarative-linking.xml" />    
     <xi:include href="resource-builder.xml" />
     <xi:include href="sse.xml" />
     <xi:include href="security.xml" />

@@ -66,6 +66,7 @@
         <module>cdi-webapp</module>
         <module>clipboard</module>
         <module>clipboard-programmatic</module>
+        <module>declarative-linking</module>
         <module>entity-filtering</module>
         <module>entity-filtering-security</module>
         <module>extended-wadl-webapp</module>
