@@ -41,39 +41,28 @@
 --%>
 <%@page contentType="text/html"%>
 <%@page pageEncoding="UTF-8"%>
-
+<%--
+The taglib directive below imports the JSTL library. If you uncomment it,
+you must also add the JSTL library to the project. The Add Library... action
+on Libraries node in Projects view can be used to add the JSTL 1.1 library.
+--%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@taglib prefix="rbt" uri="urn:org:glassfish:jersey:servlet:mvc" %>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-   "http://www.w3.org/TR/html4/loose.dtd">
+"http://www.w3.org/TR/html4/loose.dtd">
 
 <html>
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <style type="text/css" media="screen">
-          @import url( <c:url value="/css/style.css"/> );
-        </style>
-        <title>REST Bookstore Sample</title>
+        <title>Book</title>
     </head>
     <body>
 
-    <h1>${it.name}</h1>
+        <h1>${it.title}</h1>
 
-    <h2>Item List</h2>
+        Book from ${it.author}
 
-    <ul>
-        <c:forEach var="i" items="${it.items}">
-            <li><a href="items/${i.key}/">${i.value.title}</a>
-        </c:forEach>
-    </ul>
+        <rbt:include page="footer.jsp"/>
 
-    <h2>Others</h2>
-    <p>
-      <a href="count">count inventory</a>
-    <p>
-      <a href="time">get the system time</a>
-    <p>
-      <a href="jsp/help.jsp">regular resources</a>
-    </p>
     </body>
 </html>
