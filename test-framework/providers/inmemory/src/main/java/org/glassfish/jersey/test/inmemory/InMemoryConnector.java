@@ -323,22 +323,28 @@ class InMemoryConnector implements Connector {
 
     @SuppressWarnings("MagicNumber")
     private ClientResponse tryFollowRedirects(boolean followRedirects, ClientResponse response, ClientRequest request) {
-        final int statusCode = response.getStatus();
-        if (!followRedirects || statusCode < 302 || statusCode > 307) {
+        if (!followRedirects) {
             return response;
         }
 
-        switch (statusCode) {
-            case 303:
-                request.setMethod("GET");
-                // intentionally no break
-            case 302:
-            case 307:
-                request.setUri(response.getLocation());
-
-                return apply(request);
-            default:
-                return response;
+        while (true) {
+            boolean useGetMethod = false;
+            switch (response.getStatus()) {
+                case 303:
+                    useGetMethod = true;
+                    // intentionally no break
+                case 302:
+                case 307:
+                    request = new ClientRequest(request);
+                    request.setUri(response.getLocation());
+                    if (useGetMethod) {
+                        request.setMethod("GET");
+                    }
+                    response = apply(request);
+                    break;
+                default:
+                    return response;
+            }
         }
     }
 

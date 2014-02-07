@@ -50,7 +50,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
@@ -90,8 +89,6 @@ import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class GrizzlyConnector implements Connector {
-
-    private final static Logger LOGGER = Logger.getLogger(GrizzlyConnector.class.getName());
 
     private final AsyncHttpClient grizzlyClient;
 
@@ -303,7 +300,6 @@ class GrizzlyConnector implements Connector {
 
         for (Map.Entry<String, List<String>> entry : headers.getHeaders().entrySet()) {
             for (String value : entry.getValue()) {
-                // TODO value.toString?
                 responseContext.getHeaders().add(entry.getKey(), value);
             }
         }
