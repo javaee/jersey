@@ -50,7 +50,7 @@
         <version>2.6-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jersey-examples-declarative-linking</artifactId>
+    <artifactId>declarative-linking</artifactId>
 
     <packaging>jar</packaging>
     <name>jersey-examples-declarative-linking</name>
@@ -74,7 +74,7 @@
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>org.eclipse.persistence.moxy</artifactId>
