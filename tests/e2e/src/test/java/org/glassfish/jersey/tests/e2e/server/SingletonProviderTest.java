@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -69,8 +69,8 @@ import org.glassfish.jersey.spi.ContextResolvers;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Class testing that providers are managed correctly in the singleton scope.
@@ -88,10 +88,10 @@ public class SingletonProviderTest extends JerseyTest {
     public void filterTest() {
         String str;
         str = target().path("resource/filter").request().get().readEntity(String.class);
-        Assert.assertEquals("filter:1", str);
+        assertEquals("filter:1", str);
 
         str = target().path("resource/filter").request().get().readEntity(String.class);
-        Assert.assertEquals("filter:2", str);
+        assertEquals("filter:2", str);
     }
 
 
@@ -99,9 +99,9 @@ public class SingletonProviderTest extends JerseyTest {
     public void exceptionMapperTest() {
         String str;
         str = target().path("resource/exception").request().get().readEntity(String.class);
-        Assert.assertEquals("mapper:1", str);
+        assertEquals("mapper:1", str);
         str = target().path("resource/exception").request().get().readEntity(String.class);
-        Assert.assertEquals("mapper:2", str);
+        assertEquals("mapper:2", str);
 
     }
 
@@ -109,33 +109,33 @@ public class SingletonProviderTest extends JerseyTest {
     public void messageBodyWriterTest() {
         String str1;
         str1 = target().path("resource/messagebody").request("text/test").get().readEntity(String.class);
-        Assert.assertTrue(str1.endsWith(":1"));
+        assertTrue(str1.endsWith(":1"));
         String str2;
         str2 = target().path("resource/messagebody").request("text/test").get().readEntity(String.class);
-        Assert.assertTrue(str2.endsWith(":2"));
+        assertTrue(str2.endsWith(":2"));
 
-        Assert.assertEquals(str1.substring(0, str1.length() - 2), str2.substring(0, str2.length() - 2));
+        assertEquals(str1.substring(0, str1.length() - 2), str2.substring(0, str2.length() - 2));
     }
 
     @Test
     public void messageBodyReaderTest() {
         String str1 = target().path("resource/messagebodyreader").request("text/plain")
                 .put(Entity.entity("from-client", "text/test")).readEntity(String.class);
-        Assert.assertTrue(str1.endsWith(":1"));
+        assertTrue(str1.endsWith(":1"));
         String str2 = target().path("resource/messagebodyreader").request("text/plain").put(Entity.entity("from-client",
                 "text/test")).readEntity(String.class);
-        Assert.assertTrue(str2.endsWith(":2"));
+        assertTrue(str2.endsWith(":2"));
 
-        Assert.assertEquals(str1.substring(0, str1.length() - 2), str2.substring(0, str2.length() - 2));
+        assertEquals(str1.substring(0, str1.length() - 2), str2.substring(0, str2.length() - 2));
     }
 
     @Test
     public void contextResolverTest() {
         String str1 = target().path("resource/context").request("text/plain").get().readEntity(String.class);
-        Assert.assertEquals("context:1", str1);
+        assertEquals("context:1", str1);
 
         String str2 = target().path("resource/context").request("text/plain").get().readEntity(String.class);
-        Assert.assertEquals("context:2", str2);
+        assertEquals("context:2", str2);
     }
 
     @Path("resource")

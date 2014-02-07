@@ -44,13 +44,16 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author pavel.bucek@oracle.com
  */
-public class WebTargetPropertiesTest extends TestCase {
+public class WebTargetPropertiesTest {
 
+    @Test
     public void testPropagation() {
         Client c = ClientBuilder.newBuilder().newClient();
 

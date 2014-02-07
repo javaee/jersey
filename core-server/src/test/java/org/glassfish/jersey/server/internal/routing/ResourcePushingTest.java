@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.List;
@@ -59,8 +58,9 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.RuntimeResource;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
  * Test getting matched resources from {@link ExtendedUriInfo}.
@@ -82,10 +82,10 @@ public class ResourcePushingTest {
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public String get() {
-            Assert.assertEquals("root", extendedUriInfo.getMatchedModelResource().getPath());
-            Assert.assertEquals(MediaType.TEXT_PLAIN_TYPE, extendedUriInfo.getMatchedResourceMethod().getProducedTypes().get(0));
-            Assert.assertEquals("/root", extendedUriInfo.getMatchedRuntimeResources().get(0).getRegex());
-            Assert.assertEquals(1, extendedUriInfo.getMatchedRuntimeResources().size());
+            assertEquals("root", extendedUriInfo.getMatchedModelResource().getPath());
+            assertEquals(MediaType.TEXT_PLAIN_TYPE, extendedUriInfo.getMatchedResourceMethod().getProducedTypes().get(0));
+            assertEquals("/root", extendedUriInfo.getMatchedRuntimeResources().get(0).getRegex());
+            assertEquals(1, extendedUriInfo.getMatchedRuntimeResources().size());
 
             return "root";
         }
@@ -94,13 +94,13 @@ public class ResourcePushingTest {
         @GET
         public String child() {
             final Resource resource = extendedUriInfo.getMatchedModelResource();
-            Assert.assertEquals("child", resource.getPath());
+            assertEquals("child", resource.getPath());
             final List<RuntimeResource> runtimeResources = extendedUriInfo.getMatchedRuntimeResources();
-            Assert.assertEquals("root", resource.getParent().getPath());
-            Assert.assertEquals(2, runtimeResources.size());
-            Assert.assertEquals("/child;/root", convertToString(runtimeResources));
-            Assert.assertEquals("/child", runtimeResources.get(0).getRegex());
-            Assert.assertEquals("/root", runtimeResources.get(1).getRegex());
+            assertEquals("root", resource.getParent().getPath());
+            assertEquals(2, runtimeResources.size());
+            assertEquals("/child;/root", convertToString(runtimeResources));
+            assertEquals("/child", runtimeResources.get(0).getRegex());
+            assertEquals("/root", runtimeResources.get(1).getRegex());
             return "child";
         }
     }
@@ -110,7 +110,7 @@ public class ResourcePushingTest {
         ApplicationHandler applicationHandler = getApplication();
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root",
                 "GET").build()).get();
-        Assert.assertEquals("root", response.getEntity());
+        assertEquals("root", response.getEntity());
     }
 
     @Test
@@ -118,7 +118,7 @@ public class ResourcePushingTest {
         ApplicationHandler applicationHandler = getApplication();
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root/child",
                 "GET").build()).get();
-        Assert.assertEquals("child", response.getEntity());
+        assertEquals("child", response.getEntity());
     }
 
     @Path("locator-test")
@@ -141,7 +141,7 @@ public class ResourcePushingTest {
 
         @GET
         public String get() {
-            Assert.assertFalse(extendedUriInfo.getMatchedModelResource().getPath() != null);
+            assertFalse(extendedUriInfo.getMatchedModelResource().getPath() != null);
             final List<RuntimeResource> matchedRuntimeResources = extendedUriInfo.getMatchedRuntimeResources();
             return convertToString(matchedRuntimeResources);
         }
@@ -150,17 +150,17 @@ public class ResourcePushingTest {
         @Path("subget")
         public String subGet() {
             final List<RuntimeResource> matchedRuntimeResources = extendedUriInfo.getMatchedRuntimeResources();
-            Assert.assertEquals("/subget", matchedRuntimeResources.get(0).getRegex());
-            Assert.assertEquals("subget", extendedUriInfo.getMatchedModelResource().getPath());
+            assertEquals("/subget", matchedRuntimeResources.get(0).getRegex());
+            assertEquals("subget", extendedUriInfo.getMatchedModelResource().getPath());
             return convertToString(matchedRuntimeResources);
         }
 
         @Path("sub")
         public Class<SubResourceLocator> getRecursive() {
             final List<RuntimeResource> matchedRuntimeResources = extendedUriInfo.getMatchedRuntimeResources();
-            Assert.assertEquals("/sub", matchedRuntimeResources.get(0).getRegex());
-            Assert.assertNull(extendedUriInfo.getMatchedModelResource());
-            Assert.assertNull(extendedUriInfo.getMatchedResourceMethod());
+            assertEquals("/sub", matchedRuntimeResources.get(0).getRegex());
+            assertNull(extendedUriInfo.getMatchedModelResource());
+            assertNull(extendedUriInfo.getMatchedResourceMethod());
             return SubResourceLocator.class;
         }
     }
@@ -188,9 +188,9 @@ public class ResourcePushingTest {
         ApplicationHandler applicationHandler = getApplication();
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from(requestUri,
                 "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String resources = (String) response.getEntity();
-        Assert.assertEquals(expectedResourceList, resources);
+        assertEquals(expectedResourceList, resources);
     }
 
     @Test

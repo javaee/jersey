@@ -60,10 +60,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
-
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
@@ -120,7 +117,7 @@ public class XmlJaxBElementProviderTest extends JerseyTest {
         assertEquals(200, res.getStatus());
         final GenericType<JAXBElement<String>> genericType = new GenericType<JAXBElement<String>>() {};
         final JAXBElement<String> stringJAXBElement = res.readEntity(genericType);
-        Assert.assertEquals("value", stringJAXBElement.getValue());
+        assertEquals("value", stringJAXBElement.getValue());
     }
 
     @Test

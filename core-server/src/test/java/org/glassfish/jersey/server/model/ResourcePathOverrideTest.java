@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import javax.ws.rs.GET;
@@ -54,8 +53,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
-import junit.framework.Assert;
 
 /**
  * Test of resource path overriding via programmatic API.
@@ -111,7 +108,7 @@ public class ResourcePathOverrideTest {
 
         request = RequestContextBuilder.from("/hello2/world", "GET").build();
         final ContainerResponse response = app.apply(request).get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         assertEquals("Hello World!", response.getEntity());
     }
 }

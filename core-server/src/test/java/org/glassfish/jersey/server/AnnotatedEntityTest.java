@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server;
 
 import java.lang.annotation.Retention;
@@ -54,8 +53,9 @@ import javax.ws.rs.core.HttpHeaders;
 import org.glassfish.jersey.server.model.ModelValidationException;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Tests entity parameter annotated with non injection annotations.
@@ -75,8 +75,8 @@ public class AnnotatedEntityTest {
 
         ContainerResponse res = app.apply(RequestContextBuilder.from("/resource/pathParam?query=queryParam",
                 "POST").entity("entity").build()).get();
-        Assert.assertEquals(200, res.getStatus());
-        Assert.assertEquals("entity", res.getEntity());
+        assertEquals(200, res.getStatus());
+        assertEquals("entity", res.getEntity());
     }
 
     @Test
@@ -85,8 +85,8 @@ public class AnnotatedEntityTest {
 
         ContainerResponse res = app.apply(RequestContextBuilder.from("/resource/pathParam/allAnnotated?query=queryParam",
                 "POST").entity("entity").build()).get();
-        Assert.assertEquals(200, res.getStatus());
-        Assert.assertEquals("entity", res.getEntity());
+        assertEquals(200, res.getStatus());
+        assertEquals("entity", res.getEntity());
     }
 
     @Test
@@ -95,19 +95,19 @@ public class AnnotatedEntityTest {
 
         ContainerResponse res = app.apply(RequestContextBuilder.from("/resource/pathParam/context?query=queryParam",
                 "POST").entity("entity").build()).get();
-        Assert.assertEquals(200, res.getStatus());
-        Assert.assertEquals("entity", res.getEntity());
+        assertEquals(200, res.getStatus());
+        assertEquals("entity", res.getEntity());
     }
 
     @Test
     public void testAmbiguousEntityParameter() throws ExecutionException, InterruptedException {
         try {
             ApplicationHandler app = createApplication(WrongResource.class);
-            Assert.fail("Model validation should fail.");
+            fail("Model validation should fail.");
         } catch (ModelValidationException ex) {
             // ok - should be thrown
         } catch (Exception e) {
-            Assert.fail("ModelValidationException should be thrown.");
+            fail("ModelValidationException should be thrown.");
         }
     }
 
@@ -128,9 +128,9 @@ public class AnnotatedEntityTest {
         }
 
         private void testParameters(String pathParam, String entity, String queryParam) {
-            Assert.assertEquals("pathParam", pathParam);
-            Assert.assertEquals("queryParam", queryParam);
-            Assert.assertEquals("entity", entity);
+            assertEquals("pathParam", pathParam);
+            assertEquals("queryParam", queryParam);
+            assertEquals("entity", entity);
         }
 
         @POST
@@ -147,7 +147,7 @@ public class AnnotatedEntityTest {
         public String postContextAnnotation(@PathParam("path") String pathParam, @Context HttpHeaders headers,
                                             @TestAnnotation String entity, @QueryParam("query") String queryParam) {
             testParameters(pathParam, entity, queryParam);
-            Assert.assertNotNull(headers);
+            assertNotNull(headers);
             return entity;
         }
     }
@@ -159,7 +159,7 @@ public class AnnotatedEntityTest {
                                           String ambiguousParameter,
                                           @QueryParam("query") String queryParam) {
 
-            Assert.fail("Should not be called (ambiguous entity parameter).");
+            fail("Should not be called (ambiguous entity parameter).");
             return null;
         }
 

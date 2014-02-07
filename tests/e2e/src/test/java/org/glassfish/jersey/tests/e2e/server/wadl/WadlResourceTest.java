@@ -113,13 +113,10 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.sun.research.ws.wadl.Resources;
-
-import junit.framework.Assert;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
 
 /**
  * @author mh124079
@@ -135,7 +132,7 @@ public class WadlResourceTest {
     private static Document extractWadlAsDocument(Response response) throws ParserConfigurationException, SAXException,
             IOException {
 //        final Response response = webTarget.request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         File tmpFile = response.readEntity(File.class);
         DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
         bf.setNamespaceAware(true);
@@ -175,14 +172,14 @@ public class WadlResourceTest {
         public void testPathTemplateInSubResourceMethod() throws ParserConfigurationException, SAXException, IOException,
                 XPathExpressionException {
             final Response response = target("root/foo").request(MediaTypes.WADL).options();
-            Assert.assertEquals(200, response.getStatus());
+            assertEquals(200, response.getStatus());
         }
 
         @Test
         public void testPathTemplateInSubResourceMethod2() throws ParserConfigurationException, SAXException, IOException,
                 XPathExpressionException {
             final Response response = target("root").request(MediaTypes.WADL).options();
-            Assert.assertEquals(200, response.getStatus());
+            assertEquals(200, response.getStatus());
         }
     }
 
@@ -392,7 +389,7 @@ public class WadlResourceTest {
             // test WidgetsResource
             Response response = target("/widgets").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
                     .request(MediaTypes.WADL).options();
-            Assert.assertEquals(200, response.getStatus());
+            assertEquals(200, response.getStatus());
 //            System.out.println(response.readEntity(String.class));
             File tmpFile = response.readEntity(File.class);
             DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
@@ -444,7 +441,7 @@ public class WadlResourceTest {
 
             response = target("/foo").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
                     .request(MediaTypes.WADL).options();
-            Assert.assertEquals(200, response.getStatus());
+            assertEquals(200, response.getStatus());
             tmpFile = response.readEntity(File.class);
             b = bf.newDocumentBuilder();
             d = b.parse(tmpFile);
@@ -1334,11 +1331,11 @@ public class WadlResourceTest {
             xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
             String result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='GET']/@id", d, XPathConstants.STRING);
-            Assert.assertEquals("getA", result);
+            assertEquals("getA", result);
 
 
             result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='POST']/@id", d, XPathConstants.STRING);
-            Assert.assertEquals("postB", result);
+            assertEquals("postB", result);
         }
 
         @Test
@@ -1353,10 +1350,10 @@ public class WadlResourceTest {
             xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
 
             String result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='GET']/@id", d, XPathConstants.STRING);
-            Assert.assertEquals("getTemplateA", result);
+            assertEquals("getTemplateA", result);
 
             result = (String) xp.evaluate("//wadl:resource/wadl:method[@name='POST']/@id", d, XPathConstants.STRING);
-            Assert.assertEquals("postTemplateB", result);
+            assertEquals("postTemplateB", result);
         }
     }
 

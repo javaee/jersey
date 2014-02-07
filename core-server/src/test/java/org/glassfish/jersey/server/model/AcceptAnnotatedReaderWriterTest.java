@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,8 +68,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
-import junit.framework.Assert;
 
 /**
  *
@@ -275,25 +273,25 @@ public class AcceptAnnotatedReaderWriterTest {
 
         @POST
         public StringWrapperBar postFoo2Bar(StringWrapperFoo foo) {
-            Assert.assertEquals("application/foo", httpHeaders.getMediaType().toString());
+            assertEquals("application/foo", httpHeaders.getMediaType().toString());
             return new StringWrapperBar(foo.s);
         }
 
         @POST
         public StringWrapperBar postBar2Bar(StringWrapperBar bar) {
-            Assert.assertEquals("application/bar", httpHeaders.getMediaType().toString());
+            assertEquals("application/bar", httpHeaders.getMediaType().toString());
             return new StringWrapperBar(bar.s);
         }
 
         @POST
         public StringWrapperFoo postBar2Foo(StringWrapperBar bar) {
-            Assert.assertEquals("application/bar", httpHeaders.getMediaType().toString());
+            assertEquals("application/bar", httpHeaders.getMediaType().toString());
             return new StringWrapperFoo(bar.s);
         }
 
         @POST
         public StringWrapperFoo postFoo2Foo(StringWrapperFoo foo) {
-            Assert.assertEquals("application/foo", httpHeaders.getMediaType().toString());
+            assertEquals("application/foo", httpHeaders.getMediaType().toString());
             return new StringWrapperFoo(foo.s);
         }
     }

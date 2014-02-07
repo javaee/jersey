@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,10 +58,9 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import junit.framework.Assert;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -71,7 +70,7 @@ public class ContainerResponseFilterOrderingTest {
     public void testResponseFilter() throws ExecutionException, InterruptedException {
         ApplicationHandler handler = new ApplicationHandler(new ResourceConfig(Resource.class, ResponseFilter1.class, ResponseFilter2.class, ResponseFilter3.class));
         ContainerResponse res = handler.apply(RequestContextBuilder.from("", "/resource/", "GET").build()).get();
-        Assert.assertEquals(200, res.getStatus());
+        assertEquals(200, res.getStatus());
     }
 
     @Provider

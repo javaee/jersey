@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.io.IOException;
@@ -68,8 +67,7 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test {@link NameBinding name binding} annotations on the {@link Application} class.
@@ -202,9 +200,9 @@ public class AppNameBindingTest2 extends JerseyTest {
     public void testBind() {
         final Response response = target().path("resource/bind").request(MediaType.TEXT_PLAIN_TYPE).post(
                 Entity.entity(Integer.valueOf(0), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final Integer integer = response.readEntity(Integer.class);
-        Assert.assertEquals(111, integer.intValue());
+        assertEquals(111, integer.intValue());
     }
 
 
@@ -212,9 +210,9 @@ public class AppNameBindingTest2 extends JerseyTest {
     public void testNoBind() {
         final Response response = target().path("resource/nobind").request(MediaType.TEXT_PLAIN_TYPE).post(
                 Entity.entity(Integer.valueOf(0), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final Integer integer = response.readEntity(Integer.class);
-        Assert.assertEquals(111, integer.intValue());
+        assertEquals(111, integer.intValue());
     }
 
 }

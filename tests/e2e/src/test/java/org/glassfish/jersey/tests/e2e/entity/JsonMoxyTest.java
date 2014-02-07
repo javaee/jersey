@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,8 +75,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -171,7 +170,8 @@ public class JsonMoxyTest extends AbstractTypeTester {
     public void testJAXBElementBeanJSONRepresentation() {
         final WebTarget target = target("JAXBElementBeanJSONResource");
 
-        final GenericType<JAXBElement<String>> genericType = new GenericType<JAXBElement<String>>() {};
+        final GenericType<JAXBElement<String>> genericType = new GenericType<JAXBElement<String>>() {
+        };
         final GenericEntity<JAXBElement<String>> jaxbElementGenericEntity = new GenericEntity<JAXBElement<String>>(new
                 JAXBElement<String>(new QName("test"), String.class, "CONTENT"), genericType.getType());
 
@@ -434,8 +434,10 @@ public class JsonMoxyTest extends AbstractTypeTester {
 
         a = new MyArrayList<JaxbBean>(a);
         b = target.path("custom").request().post(Entity.entity(
-                new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {}, "application/json"),
-                new GenericType<MyArrayList<JaxbBean>>() {});
+                new GenericEntity<MyArrayList<JaxbBean>>((MyArrayList<JaxbBean>) a) {
+                }, "application/json"),
+                new GenericType<MyArrayList<JaxbBean>>() {
+                });
         assertEquals(a, b);
     }
 

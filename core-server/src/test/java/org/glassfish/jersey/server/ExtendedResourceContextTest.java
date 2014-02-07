@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server;
 
 import java.util.List;
@@ -53,8 +52,8 @@ import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.ResourceTestUtils;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Test (@link ExtendedResourceContext extended resource context}.
@@ -69,7 +68,7 @@ public class ExtendedResourceContextTest {
                 return resource;
             }
         }
-        Assert.fail("Resource with path '" + path + "' is not in the list of resources " + resources + "!");
+        fail("Resource with path '" + path + "' is not in the list of resources " + resources + "!");
         return null;
     }
 
@@ -105,7 +104,7 @@ public class ExtendedResourceContextTest {
             ResourceTestUtils.containsMethod(q, "GET");
 
 
-            Assert.assertEquals(3, resources.size());
+            assertEquals(3, resources.size());
 
             return "ok";
         }
@@ -140,7 +139,7 @@ public class ExtendedResourceContextTest {
         ApplicationHandler applicationHandler = new ApplicationHandler(new ResourceConfig(ResourceA.class, ResourceASecond.class,
                 ResourceB.class));
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/a/model", "GET").build()).get();
-        Assert.assertEquals("ok", response.getEntity());
+        assertEquals("ok", response.getEntity());
 
     }
 

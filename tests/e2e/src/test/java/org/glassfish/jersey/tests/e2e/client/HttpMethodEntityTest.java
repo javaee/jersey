@@ -59,9 +59,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-
-import junit.framework.Assert;
+import static org.junit.Assert.fail;
 
 /**
  * Tests HTTP methods and entity presence.
@@ -123,12 +123,12 @@ public class HttpMethodEntityTest extends JerseyTest {
         try {
             final Future<Response> future = target().path("resource").request().async().method(method, entity);
             if (shouldFail) {
-                Assert.fail("The method should fail.");
+                fail("The method should fail.");
             }
-            Assert.assertEquals(200, future.get().getStatus());
+            assertEquals(200, future.get().getStatus());
         } catch (Exception e) {
             if (!shouldFail) {
-                Assert.fail("The method " + method + " with entity=" + (entity != null) + " should not fail.");
+                fail("The method " + method + " with entity=" + (entity != null) + " should not fail.");
             }
         }
     }
@@ -136,13 +136,13 @@ public class HttpMethodEntityTest extends JerseyTest {
     public void _testSync(String method, Entity entity, boolean shouldFail) {
         try {
             final Response response = target().path("resource").request().method(method, entity);
-            Assert.assertEquals(200, response.getStatus());
+            assertEquals(200, response.getStatus());
             if (shouldFail) {
-                Assert.fail("The method should fail.");
+                fail("The method should fail.");
             }
         } catch (Exception e) {
             if (!shouldFail) {
-                Assert.fail("The method " + method + " with entityPresent=" + (entity != null) + " should not fail.");
+                fail("The method " + method + " with entityPresent=" + (entity != null) + " should not fail.");
             }
         }
     }

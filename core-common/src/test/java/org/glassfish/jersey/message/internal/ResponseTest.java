@@ -45,13 +45,15 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.Response.StatusType;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 /**
  *
  * @author Paul.Sandoz
  */
-public class ResponseTest extends TestCase {
+public class ResponseTest {
 
     public void testDeclaredStatusCodes() {
         for (Status s : Status.values()) {

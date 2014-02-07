@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,13 +65,12 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests aborting the request on the client side.
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
-
  */
 public class AbortResponseClientTest extends JerseyTest {
 
@@ -107,11 +106,11 @@ public class AbortResponseClientTest extends JerseyTest {
             public void filter(ClientRequestContext requestContext,
                                ClientResponseContext responseContext) throws IOException {
                 Map<String, NewCookie> map = responseContext.getCookies();
-                Assert.assertEquals("cookie1", map.get("cookie1").getValue());
-                Assert.assertEquals("cookie2", map.get("cookie2").getValue());
+                assertEquals("cookie1", map.get("cookie1").getValue());
+                assertEquals("cookie2", map.get("cookie2").getValue());
                 final MultivaluedMap<String, String> headers = responseContext.getHeaders();
-                Assert.assertEquals("head1", headers.get("head1").get(0));
-                Assert.assertEquals(date.getTime(), responseContext.getDate().getTime());
+                assertEquals("head1", headers.get("head1").get(0));
+                assertEquals(date.getTime(), responseContext.getDate().getTime());
             }
         };
 
@@ -120,19 +119,19 @@ public class AbortResponseClientTest extends JerseyTest {
         Invocation i = target.request().buildGet();
         Response r = i.invoke();
 
-        Assert.assertEquals("head1", r.getHeaderString("head1"));
-        Assert.assertEquals("cookie1", r.getCookies().get("cookie1").getValue());
-        Assert.assertEquals("cookie2", r.getCookies().get("cookie2").getValue());
-        Assert.assertEquals(date.getTime(), r.getDate().getTime());
-        Assert.assertEquals("123465", r.getEntityTag().getValue());
-        Assert.assertEquals("language", r.getLanguage().toString());
-        Assert.assertEquals(date.getTime(), r.getLastModified().getTime());
+        assertEquals("head1", r.getHeaderString("head1"));
+        assertEquals("cookie1", r.getCookies().get("cookie1").getValue());
+        assertEquals("cookie2", r.getCookies().get("cookie2").getValue());
+        assertEquals(date.getTime(), r.getDate().getTime());
+        assertEquals("123465", r.getEntityTag().getValue());
+        assertEquals("language", r.getLanguage().toString());
+        assertEquals(date.getTime(), r.getLastModified().getTime());
 //        Assert.assertEquals("uri", r.getLink("link")); TODO: not supported yet
-        Assert.assertEquals("www.oracle.com", r.getLocation().toString());
-        Assert.assertEquals(MediaType.TEXT_HTML_TYPE, r.getMediaType());
-        Assert.assertEquals(99, r.getLength());
+        assertEquals("www.oracle.com", r.getLocation().toString());
+        assertEquals(MediaType.TEXT_HTML_TYPE, r.getMediaType());
+        assertEquals(99, r.getLength());
 
-        Assert.assertEquals(200, r.getStatus());
+        assertEquals(200, r.getStatus());
     }
 
     private Date getDate() {

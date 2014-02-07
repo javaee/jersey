@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,8 +60,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 /**
  * Tests primitive types as entity.
@@ -78,23 +78,23 @@ public class PrimitiveTypesTest extends JerseyTest {
     public void testInteger() {
         WebTarget web = target().path("test");
         Response response = web.path("Integer").request().post(Entity.entity(new Integer(5), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new Integer(6), response.readEntity(Integer.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new Integer(6), response.readEntity(Integer.class));
     }
 
     @Test
     public void testPrimitiveInt() {
         WebTarget web = target().path("test");
         Response response = web.path("int").request().post(Entity.entity(5, MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new Integer(6), response.readEntity(Integer.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new Integer(6), response.readEntity(Integer.class));
     }
 
     @Test
     public void testPrimitiveIntNull() {
         WebTarget web = target().path("test");
         Response response = web.path("int").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(400, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 
 
@@ -102,23 +102,23 @@ public class PrimitiveTypesTest extends JerseyTest {
     public void testLong() {
         WebTarget web = target().path("test");
         Response response = web.path("Long").request().post(Entity.entity(new Long(5), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new Long(6), response.readEntity(Long.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new Long(6), response.readEntity(Long.class));
     }
 
     @Test
     public void testPrimitiveLong() {
         WebTarget web = target().path("test");
         Response response = web.path("long").request().post(Entity.entity(5l, MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(6l, (long) response.readEntity(long.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(6l, (long) response.readEntity(long.class));
     }
 
     @Test
     public void testPrimitiveLongNull() {
         WebTarget web = target().path("test");
         Response response = web.path("long").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(400, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 
 
@@ -126,131 +126,131 @@ public class PrimitiveTypesTest extends JerseyTest {
     public void testShort() {
         WebTarget web = target().path("test");
         Response response = web.path("Short").request().post(Entity.entity(new Short((short) 5), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new Short((short) 6), response.readEntity(Short.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new Short((short) 6), response.readEntity(Short.class));
     }
 
     @Test
     public void testPrimitiveShort() {
         WebTarget web = target().path("test");
         Response response = web.path("short").request().post(Entity.entity((short) 5, MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals((short) 6, (short) response.readEntity(short.class));
+        assertEquals(200, response.getStatus());
+        assertEquals((short) 6, (short) response.readEntity(short.class));
     }
 
     @Test
     public void testPrimitiveShortNull() {
         WebTarget web = target().path("test");
         Response response = web.path("short").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(400, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 
     @Test
     public void testByte() {
         WebTarget web = target().path("test");
         Response response = web.path("Byte").request().post(Entity.entity(new Byte((byte) 5), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new Byte((byte) 6), response.readEntity(Byte.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new Byte((byte) 6), response.readEntity(Byte.class));
     }
 
     @Test
     public void testPrimitiveByte() {
         WebTarget web = target().path("test");
         Response response = web.path("byte").request().post(Entity.entity((byte) 5, MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals((byte) 6, (byte) response.readEntity(byte.class));
+        assertEquals(200, response.getStatus());
+        assertEquals((byte) 6, (byte) response.readEntity(byte.class));
     }
 
     @Test
     public void testPrimitiveByteNull() {
         WebTarget web = target().path("test");
         Response response = web.path("byte").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(400, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 
     @Test
     public void testFloat() {
         WebTarget web = target().path("test");
         Response response = web.path("Float").request().post(Entity.entity(new Float(5), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new Float(6), response.readEntity(Float.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new Float(6), response.readEntity(Float.class));
     }
 
     @Test
     public void testPrimitiveFloat() {
         WebTarget web = target().path("test");
         Response response = web.path("float").request().post(Entity.entity(5f, MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(6f, response.readEntity(float.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(6f, response.readEntity(float.class), 0.0f);
     }
 
     @Test
     public void testPrimitiveFloatNull() {
         WebTarget web = target().path("test");
         Response response = web.path("float").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(400, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 
     @Test
     public void testDouble() {
         WebTarget web = target().path("test");
         Response response = web.path("Double").request().post(Entity.entity(new Double(5), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new Double(6), response.readEntity(Double.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new Double(6), response.readEntity(Double.class));
     }
 
     @Test
     public void testPrimitiveDouble() {
         WebTarget web = target().path("test");
         Response response = web.path("double").request().post(Entity.entity(5d, MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(6d, response.readEntity(double.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(6d, response.readEntity(double.class), 0.0d);
     }
 
     @Test
     public void testPrimitiveDoubleNull() {
         WebTarget web = target().path("test");
         Response response = web.path("double").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(400, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 
     @Test
     public void testCharacter() {
         WebTarget web = target().path("test");
         Response response = web.path("Character").request().post(Entity.entity(new Character('a'), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new Character('b'), response.readEntity(Character.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new Character('b'), response.readEntity(Character.class));
     }
 
     @Test
     public void testPrimitiveCharacter() {
         WebTarget web = target().path("test");
         Response response = web.path("char").request().post(Entity.entity('a', MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals('b', (char) response.readEntity(char.class));
+        assertEquals(200, response.getStatus());
+        assertEquals('b', (char) response.readEntity(char.class));
     }
 
     @Test
     public void testPrimitiveCharacterNull() {
         WebTarget web = target().path("test");
         Response response = web.path("char").request().post(Entity.entity("", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(400, response.getStatus());
+        assertEquals(400, response.getStatus());
     }
 
     @Test
     public void testString() {
         WebTarget web = target().path("test");
         Response response = web.path("String").request().post(Entity.entity("String", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("StringPOST", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("StringPOST", response.readEntity(String.class));
     }
 
     @Test
     public void testBoolean() {
         WebTarget web = target().path("test");
         Response response = web.path("Boolean").request().post(Entity.entity(Boolean.TRUE, MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(Boolean.FALSE, response.readEntity(Boolean.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(Boolean.FALSE, response.readEntity(Boolean.class));
     }
 
 
@@ -258,24 +258,24 @@ public class PrimitiveTypesTest extends JerseyTest {
     public void testPrimitiveBoolean() {
         WebTarget web = target().path("test");
         Response response = web.path("boolean").request().post(Entity.entity(true, MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertFalse(response.readEntity(boolean.class));
+        assertEquals(200, response.getStatus());
+        assertFalse(response.readEntity(boolean.class));
     }
 
     @Test
     public void testBigDecimal() {
         WebTarget web = target().path("test");
         Response response = web.path("bigDecimal").request().post(Entity.entity(new BigDecimal("15"), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new BigDecimal("16"), response.readEntity(BigDecimal.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new BigDecimal("16"), response.readEntity(BigDecimal.class));
     }
 
     @Test
     public void testBigInteger() {
         WebTarget web = target().path("test");
         Response response = web.path("bigInteger").request().post(Entity.entity(new BigInteger("15"), MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(new BigInteger("16"), response.readEntity(BigInteger.class));
+        assertEquals(200, response.getStatus());
+        assertEquals(new BigInteger("16"), response.readEntity(BigInteger.class));
     }
 
     @Test
@@ -283,8 +283,8 @@ public class PrimitiveTypesTest extends JerseyTest {
         WebTarget web = target().path("test");
         Response response = web.path("atomicInteger").request().post(Entity.entity(new AtomicInteger(15),
                 MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(16, response.readEntity(AtomicInteger.class).get());
+        assertEquals(200, response.getStatus());
+        assertEquals(16, response.readEntity(AtomicInteger.class).get());
     }
 
     @Test
@@ -292,8 +292,8 @@ public class PrimitiveTypesTest extends JerseyTest {
         WebTarget web = target().path("test");
         Response response = web.path("atomicLong").request().post(Entity.entity(new AtomicLong(15),
                 MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(16, response.readEntity(AtomicLong.class).get());
+        assertEquals(200, response.getStatus());
+        assertEquals(16, response.readEntity(AtomicLong.class).get());
     }
 
 

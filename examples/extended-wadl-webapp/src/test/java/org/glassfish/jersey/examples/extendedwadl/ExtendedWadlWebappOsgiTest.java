@@ -83,6 +83,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.w3c.dom.Document;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
@@ -93,10 +94,7 @@ import static org.ops4j.pax.exam.CoreOptions.systemPackage;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
-import static junit.framework.Assert.assertEquals;
-
 /**
- *
  * @author Naresh
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -185,7 +183,7 @@ public class ExtendedWadlWebappOsgiTest {
                                 .set("Export-Package", MyApplication.class.getPackage().getName() + "," + SampleWadlGeneratorConfig.class.getPackage().getName())
                                 .set("DynamicImport-Package", "*")
                                 .set("Bundle-SymbolicName", "webapp").build())
-            )
+        )
         );
         final String localRepository = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("localRepository"));
         if (localRepository != null) {
@@ -206,6 +204,7 @@ public class ExtendedWadlWebappOsgiTest {
     /**
      * Test checks that the WADL generated using the WadlGenerator api doesn't
      * contain the expected text.
+     *
      * @throws java.lang.Exception
      */
     @Test

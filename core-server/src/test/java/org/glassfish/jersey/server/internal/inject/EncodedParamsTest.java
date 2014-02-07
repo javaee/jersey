@@ -61,8 +61,6 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import junit.framework.Assert;
-
 /**
  *
  * @author Paul Sandoz
@@ -118,7 +116,7 @@ public class EncodedParamsTest extends AbstractTest {
         form.param("f", ":f");
         RequestContextBuilder requestBuilder = RequestContextBuilder.from("/%20u;m=%20m?q=%20q",
                 "POST").type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).entity(form);
-        Assert.assertEquals("content", apply(requestBuilder.build()).getEntity());
+        assertEquals("content", apply(requestBuilder.build()).getEntity());
     }
 
     @Test
@@ -129,7 +127,7 @@ public class EncodedParamsTest extends AbstractTest {
         form.param("f2", ":f2");
         RequestContextBuilder requestBuilder = RequestContextBuilder.from("/%20u/combined;m=%20m?q=%20q",
                 "POST").type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).entity(form);
-        Assert.assertEquals("content", apply(requestBuilder.build()).getEntity());
+        assertEquals("content", apply(requestBuilder.build()).getEntity());
     }
 
     @Encoded

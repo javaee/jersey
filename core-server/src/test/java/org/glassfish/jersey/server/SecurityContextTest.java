@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,11 +51,10 @@ import javax.ws.rs.core.SecurityContext;
 
 import javax.annotation.Priority;
 
-import org.junit.Assert;
 import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test class for testing security context in the Filter and resource.
@@ -74,8 +73,8 @@ public class SecurityContextTest {
         @Override
         public void filter(ContainerRequestContext rc) throws IOException {
             // test injections
-            Assert.assertNotNull(rc.getSecurityContext());
-            Assert.assertTrue(rc.getSecurityContext().getUserPrincipal() == null);
+            assertNotNull(rc.getSecurityContext());
+            assertTrue(rc.getSecurityContext().getUserPrincipal() == null);
 
             String header = rc.getHeaders().getFirst(SKIP_FILTER);
             if ("true".equals(header)) {
@@ -273,7 +272,7 @@ public class SecurityContextTest {
                 application.apply(RequestContextBuilder.from("/test", "GET").header(SKIP_FILTER, "true").build()).get();
         assertEquals(200, response.getStatus());
         Object entity = response.getEntity();
-        Assert.assertTrue(!PRINCIPAL_NAME.equals(entity));
+        assertTrue(!PRINCIPAL_NAME.equals(entity));
     }
 
     /**

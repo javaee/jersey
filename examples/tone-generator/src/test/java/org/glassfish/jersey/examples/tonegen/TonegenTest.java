@@ -39,14 +39,14 @@
  */
 package org.glassfish.jersey.examples.tonegen;
 
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+
 import org.junit.Test;
-
-import javax.ws.rs.core.Response;
-
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test the tonegen example application.
@@ -63,7 +63,7 @@ public class TonegenTest extends JerseyTest {
     }
 
     /**
-     * Test, that the resource response is a wav audio
+     * Test, that the resource response is a wav audio.
      */
     @Test
     public void testWavResource() {

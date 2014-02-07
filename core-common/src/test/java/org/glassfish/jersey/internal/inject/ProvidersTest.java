@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.internal.inject;
 
 import java.io.IOException;
@@ -53,8 +52,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import org.glassfish.jersey.spi.Contract;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests {@link Providers}.
@@ -65,10 +63,10 @@ import junit.framework.Assert;
 public class ProvidersTest {
     @Test
     public void testIsProviderInterface() {
-        Assert.assertEquals(true, Providers.isProvider(Provider.class));
-        Assert.assertEquals(false, Providers.isProvider(NotProvider.class));
-        Assert.assertEquals(true, Providers.isProvider(JaxRsProvider.class));
-        Assert.assertEquals(true, Providers.isProvider(ClassBasedProvider.class));
+        assertEquals(true, Providers.isProvider(Provider.class));
+        assertEquals(false, Providers.isProvider(NotProvider.class));
+        assertEquals(true, Providers.isProvider(JaxRsProvider.class));
+        assertEquals(true, Providers.isProvider(ClassBasedProvider.class));
     }
 
     public static interface NonContractInterface {

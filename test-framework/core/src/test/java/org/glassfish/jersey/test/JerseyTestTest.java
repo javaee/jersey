@@ -56,8 +56,7 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,8 +64,7 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests {@link ParamConverter param converters} as e2e test.
@@ -89,7 +88,7 @@ public class ParamConverterTest extends JerseyTest {
                 "headerParam").cookie("cookie", "cookieParam").post(Entity.entity(form,
                 MediaType.APPLICATION_FORM_URLENCODED_TYPE));
         final String str = response.readEntity(String.class);
-        Assert.assertEquals("*pathParam*_*matrixParam*_*queryParam*_*headerParam*_*cookieParam*_*formParam*", str);
+        assertEquals("*pathParam*_*matrixParam*_*queryParam*_*headerParam*_*cookieParam*_*formParam*", str);
 
     }
 
@@ -103,7 +102,7 @@ public class ParamConverterTest extends JerseyTest {
                 "headerParam").cookie("cookie", "cookieParam").post(Entity.entity(form,
                 MediaType.APPLICATION_FORM_URLENCODED_TYPE));
         final String str = response.readEntity(String.class);
-        Assert.assertEquals("-pathParam-_-matrixParam-_-queryParam-_-headerParam-_-cookieParam-_-formParam-", str);
+        assertEquals("-pathParam-_-matrixParam-_-queryParam-_-headerParam-_-cookieParam-_-formParam-", str);
 
     }
 
@@ -112,7 +111,7 @@ public class ParamConverterTest extends JerseyTest {
     // TODO: JERSEY-1385: after clarifying with spec the ResponseBuilder paramconversion should be finished (or removed)
     public void testStringParamInResponse() {
         final Response response = target().path("resource/response").request().get();
-        Assert.assertEquals("-:res-head:-", response.getHeaderString("response-header"));
+        assertEquals("-:res-head:-", response.getHeaderString("response-header"));
 
     }
 

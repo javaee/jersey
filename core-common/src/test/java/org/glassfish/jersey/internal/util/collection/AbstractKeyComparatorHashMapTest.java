@@ -40,13 +40,15 @@
 
 package org.glassfish.jersey.internal.util.collection;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
  *
  * @author Paul Sandoz
  */
-public abstract class AbstractKeyComparatorHashMapTest extends TestCase {
+public abstract class AbstractKeyComparatorHashMapTest {
 
     protected void _test(KeyComparatorHashMap<String, String> k) {
         assertNull(k.get(null));

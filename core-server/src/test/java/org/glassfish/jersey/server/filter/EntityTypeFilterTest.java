@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
@@ -59,8 +58,8 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 
 /**
@@ -74,7 +73,7 @@ public class EntityTypeFilterTest {
         ApplicationHandler handler = new ApplicationHandler(new ResourceConfig(Resource.class, ResponseFilter.class));
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource/getentitytype",
                 "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
     }
 
 
@@ -84,9 +83,9 @@ public class EntityTypeFilterTest {
         @Override
         public void filter(ContainerRequestContext requestContext,
                            ContainerResponseContext responseContext) throws IOException {
-            Assert.assertNull(responseContext.getEntityType());
-            Assert.assertNull(responseContext.getEntityClass());
-            Assert.assertNull(responseContext.getEntity());
+            assertNull(responseContext.getEntityType());
+            assertNull(responseContext.getEntityClass());
+            assertNull(responseContext.getEntity());
         }
     }
 

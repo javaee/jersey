@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,12 +55,10 @@ import javax.ws.rs.ext.RuntimeDelegate;
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import junit.framework.Assert;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNull;
 
 /**
  * {@link org.glassfish.jersey.message.internal.InboundMessageContext} test.
@@ -208,10 +206,10 @@ public class InboundMessageContextTest {
         InboundMessageContext r = new InboundMessageContext();
         r.header(HttpHeaders.ALLOW, "a,B,CcC,dDd");
         final Set<String> allowedMethods = r.getAllowedMethods();
-        Assert.assertEquals(4, allowedMethods.size());
-        Assert.assertTrue(allowedMethods.contains("A"));
-        Assert.assertTrue(allowedMethods.contains("B"));
-        Assert.assertTrue(allowedMethods.contains("CCC"));
-        Assert.assertTrue(allowedMethods.contains("DDD"));
+        assertEquals(4, allowedMethods.size());
+        assertTrue(allowedMethods.contains("A"));
+        assertTrue(allowedMethods.contains("B"));
+        assertTrue(allowedMethods.contains("CCC"));
+        assertTrue(allowedMethods.contains("DDD"));
     }
 }

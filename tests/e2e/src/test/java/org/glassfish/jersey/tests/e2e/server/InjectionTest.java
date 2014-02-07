@@ -62,9 +62,8 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Ignore;
 import org.junit.Test;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Injection E2E tests.
@@ -91,10 +90,10 @@ public class InjectionTest extends JerseyTest {
         @GET
         @Path("async")
         public void asyncGet(@Context final UriInfo uriInfo,
-                              @Context final Request request,
-                              @Context final HttpHeaders headers,
-                              @Context final SecurityContext securityContext,
-                              @Suspended final AsyncResponse response) {
+                             @Context final Request request,
+                             @Context final HttpHeaders headers,
+                             @Context final SecurityContext securityContext,
+                             @Suspended final AsyncResponse response) {
 
             // now suspend and resume later on with
             Executors.newSingleThreadExecutor().submit(new Runnable() {
@@ -123,8 +122,8 @@ public class InjectionTest extends JerseyTest {
      * JERSEY-1711 reproducer.
      *
      * The test is ignored as it currently fails on the following:
-     *   - HttpURLConnection throws a java.net.ProtocolException when trying to send request data with HTTP DELETE
-     *   - Grizzly container ignores any DELETE request data and does not pass them to Jersey
+     * - HttpURLConnection throws a java.net.ProtocolException when trying to send request data with HTTP DELETE
+     * - Grizzly container ignores any DELETE request data and does not pass them to Jersey
      *
      * We would need to by-pass these issues in underlying layer to un-ignore the test.
      */

@@ -38,17 +38,17 @@
  * holder.
  */
 
+import java.util.logging.Logger;
+
+import javax.ws.rs.core.Response;
+
 import org.glassfish.jersey.examples.sparklines.SparklinesResource;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+
 import org.junit.Test;
-
-import javax.ws.rs.core.Response;
-
-import java.util.logging.Logger;
-
-import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test the sparklines example application.

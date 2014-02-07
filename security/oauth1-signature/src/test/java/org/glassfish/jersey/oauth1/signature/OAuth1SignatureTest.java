@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.oauth1.signature;
 
 import java.net.URL;
@@ -49,14 +48,13 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.junit.Test;
-
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
  * @author Martin Matula
  */
-public class OAuth1SignatureTest extends TestCase {
+public class OAuth1SignatureTest {
 
     @Test
     public void testNormalizeParameters() {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,18 +57,16 @@ import javax.xml.xpath.XPathFactory;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.util.SaxHelper;
+import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.internal.util.SimpleNamespaceResolver;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import org.w3c.dom.Document;
 import static org.junit.Assert.assertEquals;
-
-import junit.framework.Assert;
 
 /**
  * Tests for {@code MultipartResource} class.
@@ -98,7 +96,7 @@ public class MultiPartWebAppTest extends JerseyTest {
         final WebTarget target = target().path("application.wadl");
 
         final Response response = target.request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final File tmpFile = response.readEntity(File.class);
 
         final DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();

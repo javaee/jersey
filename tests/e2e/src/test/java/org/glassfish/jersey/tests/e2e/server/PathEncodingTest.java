@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,13 +52,12 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Testing encoding of {@Path path annotations}.
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
-
  */
 public class PathEncodingTest extends JerseyTest {
     @Override
@@ -68,62 +67,62 @@ public class PathEncodingTest extends JerseyTest {
 
     @Test
     public void test1() {
-        Assert.assertEquals("ok", target().path("test").path("[]").request().get(String.class));
+        assertEquals("ok", target().path("test").path("[]").request().get(String.class));
     }
 
     @Test
     public void test2() {
-        Assert.assertEquals("ok", target().path("test").path("%5b%5d").request().get(String.class));
+        assertEquals("ok", target().path("test").path("%5b%5d").request().get(String.class));
     }
 
     @Test
     public void test3() {
-        Assert.assertEquals("ok", target().path("test").path("%5b%5D").request().get(String.class));
+        assertEquals("ok", target().path("test").path("%5b%5D").request().get(String.class));
     }
 
     @Test
     public void testComplex1() {
-        Assert.assertEquals("a-ok", target().path("test").path("test/a/[]").request().get(String.class));
+        assertEquals("a-ok", target().path("test").path("test/a/[]").request().get(String.class));
     }
 
     @Test
     public void testComplex2() {
-        Assert.assertEquals("a-ok", target().path("test").path("test/a/%5b%5D").request().get(String.class));
+        assertEquals("a-ok", target().path("test").path("test/a/%5b%5D").request().get(String.class));
     }
 
     @Test
     public void testComplex3() {
         final Response res = target().path("test").path("test/a/path/%5b%5d").request().get();
-        Assert.assertEquals(200, res.getStatus());
-        Assert.assertEquals("a-ok", res.readEntity(String.class));
+        assertEquals(200, res.getStatus());
+        assertEquals("a-ok", res.readEntity(String.class));
     }
 
     @Test
     public void testNotFound() {
         final Response res = target().path("test").path("test/a/path/%5ab").request().get();
-        Assert.assertEquals(404, res.getStatus());
+        assertEquals(404, res.getStatus());
     }
 
     @Test
     public void testComplex4() {
-        Assert.assertEquals("a-ok", target().path("test").path("test/a/path/[]").request().get(String.class));
+        assertEquals("a-ok", target().path("test").path("test/a/path/[]").request().get(String.class));
     }
 
     @Test
     public void testSlash() {
-        Assert.assertEquals("ok", target().path("test/slash/").request().get(String.class));
+        assertEquals("ok", target().path("test/slash/").request().get(String.class));
     }
 
     @Test
     public void testWithoutSlash() {
-        Assert.assertEquals("ok", target().path("test/slash").request().get(String.class));
+        assertEquals("ok", target().path("test/slash").request().get(String.class));
     }
 
     @Test
     public void testAsteriskInPath() {
         Response response = target().path("*").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("ok", response.readEntity(String.class));
+        assertEquals(200, response.getStatus());
+        assertEquals("ok", response.readEntity(String.class));
     }
 
     @Path("*")

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import java.util.concurrent.ExecutionException;
@@ -57,8 +56,8 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Test sub resource locators returning {@link Resource programmatic resources}.
@@ -255,8 +254,8 @@ public class SubResourceProgrammaticTest {
     private void _test(ApplicationHandler handler, String requestUri, String expected)
             throws InterruptedException, ExecutionException {
         final ContainerResponse response = handler.apply(RequestContextBuilder.from(requestUri, "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(expected, response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals(expected, response.getEntity());
     }
 
 
@@ -266,8 +265,8 @@ public class SubResourceProgrammaticTest {
         _test(handler, "/wrong", "ok");
         try {
             final ContainerResponse response = handler.apply(RequestContextBuilder.from("/wrong/locator", "GET").build()).get();
-            Assert.assertEquals(500, response.getStatus());
-            Assert.fail("Should throw exception caused by validation errors of Sub Resource.");
+            assertEquals(500, response.getStatus());
+            fail("Should throw exception caused by validation errors of Sub Resource.");
         } catch (Throwable e) {
             // ok - Should throw exception caused by validation errors of Sub Resource.
         }

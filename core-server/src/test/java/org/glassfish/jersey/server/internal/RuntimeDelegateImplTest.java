@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,8 +44,7 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.junit.Test;
 import static org.junit.Assert.assertSame;
-
-import junit.framework.Assert;
+import static org.junit.Assert.fail;
 
 /**
  * Unit test that checks that the right RuntimeDelegateImpl is loaded by JAX-RS.
@@ -59,11 +58,11 @@ public class RuntimeDelegateImplTest {
         RuntimeDelegate delegate = RuntimeDelegate.getInstance();
         try {
             delegate.createEndpoint((Application) null, com.sun.net.httpserver.HttpHandler.class);
-            Assert.fail("IllegalArgumentException should be thrown");
+            fail("IllegalArgumentException should be thrown");
         } catch (IllegalArgumentException iae) {
             // ok - should be thrown
         } catch (Exception e) {
-            Assert.fail("IllegalArgumentException should be thrown");
+            fail("IllegalArgumentException should be thrown");
         }
     }
 

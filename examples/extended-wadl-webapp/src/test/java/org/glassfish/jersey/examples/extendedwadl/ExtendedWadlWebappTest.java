@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.extendedwadl;
 
 import java.io.ByteArrayInputStream;
@@ -68,13 +67,11 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import org.w3c.dom.Document;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import static junit.framework.Assert.assertEquals;
-
 /**
- *
  * @author Naresh
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
@@ -104,6 +101,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     /**
      * Test checks that the WADL generated using the WadlGenerator api doesn't
      * contain the expected text.
+     *
      * @throws java.lang.Exception
      */
     @Test

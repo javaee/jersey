@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server;
 
 import javax.ws.rs.GET;
@@ -61,8 +60,7 @@ import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Class testing Resources managed as singletons.
@@ -116,63 +114,63 @@ public class SingletonResourceTest extends JerseyTest {
     public void singletonResourceTest() {
         String str;
         str = target().path("singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("res:1", str);
+        assertEquals("res:1", str);
 
         str = target().path("singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("res:2", str);
+        assertEquals("res:2", str);
 
         str = target().path("singleton/sub").request().get().readEntity(String.class);
-        Assert.assertEquals("sub:1", str);
+        assertEquals("sub:1", str);
 
         str = target().path("singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("res:3", str);
+        assertEquals("res:3", str);
 
         str = target().path("singleton/sub").request().get().readEntity(String.class);
-        Assert.assertEquals("sub:2", str);
+        assertEquals("sub:2", str);
 
 
         str = target().path("singleton/sub-not-singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("not-singleton:1", str);
+        assertEquals("not-singleton:1", str);
 
         str = target().path("singleton/sub-not-singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("not-singleton:1", str);
+        assertEquals("not-singleton:1", str);
 
         str = target().path("singleton/instance").request().get().readEntity(String.class);
-        Assert.assertEquals("sub:1", str);
+        assertEquals("sub:1", str);
 
         str = target().path("singleton/instance").request().get().readEntity(String.class);
-        Assert.assertEquals("sub:1", str);
+        assertEquals("sub:1", str);
 
         str = target().path("singleton/sub").request().get().readEntity(String.class);
-        Assert.assertEquals("sub:3", str);
+        assertEquals("sub:3", str);
 
 
         // one instance
         str = target().path("programmatic").path("instance").request().get().readEntity(String.class);
-        Assert.assertEquals("prg-instance:1", str);
+        assertEquals("prg-instance:1", str);
 
         str = target().path("programmatic").path("instance").request().get().readEntity(String.class);
-        Assert.assertEquals("prg-instance:2", str);
+        assertEquals("prg-instance:2", str);
 
         // singleton
         str = target().path("programmatic").path("singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("prg-singleton:1", str);
+        assertEquals("prg-singleton:1", str);
 
         str = target().path("programmatic").path("singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("prg-singleton:2", str);
+        assertEquals("prg-singleton:2", str);
 
 
         // request to the SubResourceSingleton (same class as sub resource on path "singleton/sub")
         str = target().path("programmatic").path("reused-singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("reused-singleton:4", str);
+        assertEquals("reused-singleton:4", str);
 
 
         // not singleton
         str = target().path("programmatic").path("not-singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("prg-not-singleton:1", str);
+        assertEquals("prg-not-singleton:1", str);
 
         str = target().path("programmatic").path("not-singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("prg-not-singleton:1", str);
+        assertEquals("prg-not-singleton:1", str);
     }
 
     @Test
@@ -180,10 +178,10 @@ public class SingletonResourceTest extends JerseyTest {
         // Singleton annotation is not inherited
         String str;
         str = target().path("inherit").request().get().readEntity(String.class);
-        Assert.assertEquals("inherit:1", str);
+        assertEquals("inherit:1", str);
 
         str = target().path("inherit").request().get().readEntity(String.class);
-        Assert.assertEquals("inherit:1", str);
+        assertEquals("inherit:1", str);
     }
 
     @Test
@@ -191,10 +189,10 @@ public class SingletonResourceTest extends JerseyTest {
         // Singleton annotation is not inherited
         String str;
         str = target().path("interface").request().get().readEntity(String.class);
-        Assert.assertEquals("interface:1", str);
+        assertEquals("interface:1", str);
 
         str = target().path("interface").request().get().readEntity(String.class);
-        Assert.assertEquals("interface:1", str);
+        assertEquals("interface:1", str);
 
     }
 
@@ -204,19 +202,19 @@ public class SingletonResourceTest extends JerseyTest {
     @Test
     public void testResourceInRequestScope() {
         String str = target().path("testScope/request").request().get().readEntity(String.class);
-        Assert.assertEquals("same-instances", str);
+        assertEquals("same-instances", str);
     }
 
     @Test
     public void testResourceInPerLookupScope() {
         String str = target().path("testScope/perlookup").request().get().readEntity(String.class);
-        Assert.assertEquals("different-instances", str);
+        assertEquals("different-instances", str);
     }
 
     @Test
     public void testResourceInSingletonScope() {
         String str = target().path("testScope/singleton").request().get().readEntity(String.class);
-        Assert.assertEquals("same-instances", str);
+        assertEquals("same-instances", str);
     }
 
     @Path("test-requestScope")

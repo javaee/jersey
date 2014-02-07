@@ -69,9 +69,9 @@ import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import jersey.repackaged.com.google.common.collect.Lists;
-import junit.framework.Assert;
 
 /**
  * Test model processor.
@@ -257,130 +257,130 @@ public class ModelProcessorTest extends JerseyTest {
     @Test
     public void testResourceAGet() {
         Response response = target("/a").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("a-get", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("a-get", entity);
     }
 
     @Test
     public void testResourceAPost() {
         Response response = target("/a").request().post(Entity.entity("post", MediaType.TEXT_PLAIN_TYPE));
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("a-post", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("a-post", entity);
     }
 
     @Test
     public void testResourceAOptions() {
         Response response = target("/a").request(MediaType.TEXT_PLAIN_TYPE).options();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("a", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("a", entity);
     }
 
     @Test
     public void testResourceAChildGet() {
         Response response = target("/a/child").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("a-child-get", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("a-child-get", entity);
     }
 
     @Test
     public void testResourceALocatorGet() {
         Response response = target("/a/locator").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("sub-get", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("sub-get", entity);
     }
 
 
     @Test
     public void testResourceALocatorOptions() {
         Response response = target("/a/locator").request().options();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("", entity);
     }
 
 
     @Test
     public void testResourceBGet() {
         Response response = target("/b").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("b-get", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("b-get", entity);
     }
 
     @Test
     public void testResourceBOptions() {
         Response response = target("/b").request().options();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("b-options", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("b-options", entity);
     }
 
     @Test
     public void testResourceBLocatorGet() {
         Response response = target("/b/locator").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("sub-get", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("sub-get", entity);
     }
 
 
     @Test
     public void testResourceBLocatorOptions() {
         Response response = target("/b/locator").request().options();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("", entity);
     }
 
     @Test
     public void testResourceAMyResource() {
         Response response = target("/a/my-resource").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("my-resource:a,GET=getFromA|POST=postFromA|", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("my-resource:a,GET=getFromA|POST=postFromA|", entity);
     }
 
     @Test
     public void testResourceALocatorMyResource() {
         Response response = target("/a/locator/my-resource").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("my-resource:<no-path>GET=getFromSubResource|", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("my-resource:<no-path>GET=getFromSubResource|", entity);
     }
 
     @Test
     public void testResourceBMyResource() {
         Response response = target("/b/my-resource").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("my-resource:b,GET=getFromB|OPTIONS=optionsFromB|", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("my-resource:b,GET=getFromB|OPTIONS=optionsFromB|", entity);
     }
 
     @Test
     public void testInfo() {
         Response response = target("/model").request().get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("a|b|model|", entity);
+        assertEquals(200, response.getStatus());
+        assertEquals("a|b|model|", entity);
     }
 
 

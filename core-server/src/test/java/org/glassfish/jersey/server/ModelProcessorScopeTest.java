@@ -58,8 +58,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test scope of resources enhanced by model processors.
@@ -200,11 +199,11 @@ public class ModelProcessorScopeTest {
             InterruptedException, ExecutionException {
         ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from(requestUri,
                 "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(prefix + ":0", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals(prefix + ":0", response.getEntity());
         response = applicationHandler.apply(RequestContextBuilder.from(requestUri,
                 "GET").build()).get();
-        Assert.assertEquals(prefix + ":" + expectedSecondHit, response.getEntity());
+        assertEquals(prefix + ":" + expectedSecondHit, response.getEntity());
     }
 
     @Test

@@ -72,9 +72,10 @@ import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import jersey.repackaged.com.google.common.collect.Sets;
-import junit.framework.Assert;
 
 /**
  * Tests whether providers are correctly validated in the server runtime (for example if provider constrained to
@@ -92,9 +93,9 @@ public class ConstrainedToServerTest {
         resourceConfig.registerInstances(new MyServerWrongFilter2(), new MyServerFilter2());
         ApplicationHandler handler = new ApplicationHandler(resourceConfig);
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
-        Assert.assertEquals("called", response.getHeaderString("MyServerFilter"));
-        Assert.assertEquals("called", response.getHeaderString("MyServerFilter2"));
-        Assert.assertEquals("called", response.getHeaderString("MyServerFilterWithoutConstraint"));
+        assertEquals("called", response.getHeaderString("MyServerFilter"));
+        assertEquals("called", response.getHeaderString("MyServerFilter2"));
+        assertEquals("called", response.getHeaderString("MyServerFilterWithoutConstraint"));
     }
 
     @Test
@@ -102,7 +103,7 @@ public class ConstrainedToServerTest {
         final ResourceConfig resourceConfig = new ResourceConfig(MyClientUnConstrainedFilter.class, Resource.class);
         ApplicationHandler handler = new ApplicationHandler(resourceConfig);
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
@@ -111,7 +112,7 @@ public class ConstrainedToServerTest {
         ApplicationHandler handler = new ApplicationHandler(resourceConfig);
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource-and-provider",
                 "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
@@ -120,8 +121,8 @@ public class ConstrainedToServerTest {
         ApplicationHandler handler = new ApplicationHandler(resourceConfig);
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource-and-provider-server",
                 "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("called", response.getHeaderString("ResourceAndProviderConstrainedToServer"));
+        assertEquals(200, response.getStatus());
+        assertEquals("called", response.getHeaderString("ResourceAndProviderConstrainedToServer"));
     }
 
     @Test
@@ -129,8 +130,8 @@ public class ConstrainedToServerTest {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, MyServerAndClientFilter.class);
         ApplicationHandler handler = new ApplicationHandler(resourceConfig);
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("called", response.getHeaderString("MyServerAndClientFilter"));
+        assertEquals(200, response.getStatus());
+        assertEquals("called", response.getHeaderString("MyServerAndClientFilter"));
     }
 
     @Test
@@ -138,7 +139,7 @@ public class ConstrainedToServerTest {
         final ResourceConfig resourceConfig = new ResourceConfig(Resource.class, MyServerAndClientContrainedToClientFilter.class);
         ApplicationHandler handler = new ApplicationHandler(resourceConfig);
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
     }
 
     @Test
@@ -155,7 +156,7 @@ public class ConstrainedToServerTest {
         };
         ApplicationHandler handler = new ApplicationHandler(app);
         final ContainerResponse response = handler.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
+        assertEquals(200, response.getStatus());
     }
 
     @ConstrainedTo(RuntimeType.SERVER)
@@ -189,7 +190,7 @@ public class ConstrainedToServerTest {
 
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            Assert.fail("This filter should never be called.");
+            fail("This filter should never be called.");
         }
     }
 
@@ -211,7 +212,7 @@ public class ConstrainedToServerTest {
             MessageBodyWriter<String> {
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            Assert.fail("This MyServerAndClientContrainedToClientFilter filter should never be called.");
+            fail("This MyServerAndClientContrainedToClientFilter filter should never be called.");
         }
 
         @Override
@@ -240,7 +241,7 @@ public class ConstrainedToServerTest {
 
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            Assert.fail("This filter should never be called.");
+            fail("This filter should never be called.");
         }
     }
 
@@ -249,7 +250,7 @@ public class ConstrainedToServerTest {
 
         @Override
         public void filter(ClientRequestContext requestContext) throws IOException {
-            Assert.fail("This filter should never be called.");
+            fail("This filter should never be called.");
         }
     }
 
@@ -258,7 +259,7 @@ public class ConstrainedToServerTest {
 
         @Override
         public void filter(ClientRequestContext requestContext) throws IOException {
-            Assert.fail("This filter should never be called.");
+            fail("This filter should never be called.");
         }
     }
 
@@ -282,7 +283,7 @@ public class ConstrainedToServerTest {
 
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-            Assert.fail("This filter method should never be called.");
+            fail("This filter method should never be called.");
         }
     }
 

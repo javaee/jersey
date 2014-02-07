@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model.internal;
 
 import java.util.concurrent.ExecutionException;
@@ -53,8 +52,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.uri.PathPattern;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
@@ -66,8 +64,8 @@ public class ChildResourceTest {
     public void testRootResource() throws ExecutionException, InterruptedException {
         ApplicationHandler applicationHandler = createApplication();
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root", "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("root-get", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("root-get", response.getEntity());
     }
 
     @Test
@@ -75,8 +73,8 @@ public class ChildResourceTest {
         ApplicationHandler applicationHandler = createApplication();
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root/child",
                 "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("sub-get", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("sub-get", response.getEntity());
     }
 
     @Test
@@ -84,8 +82,8 @@ public class ChildResourceTest {
         ApplicationHandler applicationHandler = createApplication();
         final ContainerResponse response = applicationHandler.apply(RequestContextBuilder.from("/root/another-child",
                 "GET").build()).get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("another-child-get", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("another-child-get", response.getEntity());
     }
 
     private ApplicationHandler createApplication() {

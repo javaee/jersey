@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.concurrent.ExecutionException;
@@ -50,8 +49,7 @@ import javax.ws.rs.PathParam;
 import org.glassfish.jersey.server.ContainerResponse;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
@@ -65,7 +63,7 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(FooResource.class);
 
         ContainerResponse response = getResponseContext("/foo/bar/test");
-        Assert.assertEquals("test", response.getEntity());
+        assertEquals("test", response.getEntity());
     }
 
     @Test
@@ -73,7 +71,7 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(FooResource.class);
 
         ContainerResponse response = getResponseContext("/foo");
-        Assert.assertEquals("default-id", response.getEntity());
+        assertEquals("default-id", response.getEntity());
     }
 
     @Test
@@ -81,7 +79,7 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(Resource.class);
 
         ContainerResponse response = getResponseContext("/foo");
-        Assert.assertEquals("default-id", response.getEntity());
+        assertEquals("default-id", response.getEntity());
     }
 
 
@@ -90,7 +88,7 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(Resource.class);
 
         ContainerResponse response = getResponseContext("/foo/bar/aaa");
-        Assert.assertEquals("aaa", response.getEntity());
+        assertEquals("aaa", response.getEntity());
     }
 
     @Test
@@ -98,7 +96,7 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(Resource.class);
 
         ContainerResponse response = getResponseContext("/foo/bar");
-        Assert.assertEquals(404, response.getStatus());
+        assertEquals(404, response.getStatus());
     }
 
     @Test
@@ -106,8 +104,8 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(FooResource.class);
 
         ContainerResponse response = getResponseContext("/foo/baz/sub");
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("default-id", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("default-id", response.getEntity());
     }
 
 
@@ -116,8 +114,8 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(FooResource.class);
 
         ContainerResponse response = getResponseContext("/foo/baz/iddd");
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("iddd", response.getEntity());
+        assertEquals(200, response.getStatus());
+        assertEquals("iddd", response.getEntity());
     }
 
 
@@ -126,7 +124,7 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(AnotherResource.class);
 
         ContainerResponse response = getResponseContext("/foo/test/bar/barrr");
-        Assert.assertEquals("test:barrr", response.getEntity());
+        assertEquals("test:barrr", response.getEntity());
     }
 
 
@@ -135,7 +133,7 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(AnotherResource.class);
 
         ContainerResponse response = getResponseContext("/foo");
-        Assert.assertEquals("default-id:default-bar", response.getEntity());
+        assertEquals("default-id:default-bar", response.getEntity());
     }
 
 
@@ -144,7 +142,7 @@ public class PathParamDefaultValueTest extends AbstractTest {
         initiateWebApplication(AnotherResource.class);
 
         ContainerResponse response = getResponseContext("/foo/test");
-        Assert.assertEquals("test:default-bar", response.getEntity());
+        assertEquals("test:default-bar", response.getEntity());
     }
 
     @Path("foo")

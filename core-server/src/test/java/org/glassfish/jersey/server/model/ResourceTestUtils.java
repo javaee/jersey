@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,12 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import java.util.List;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Utils for {@link Resource resource} testing.
@@ -53,11 +53,11 @@ import junit.framework.Assert;
 public class ResourceTestUtils {
 
     public static void containsExactMethods(Resource resource, boolean shouldContainLocator, String... httpMethods) {
-        Assert.assertEquals(shouldContainLocator, resource.getResourceLocator() != null);
+        assertEquals(shouldContainLocator, resource.getResourceLocator() != null);
         for (String httpMethod : httpMethods) {
             containsMethod(resource, httpMethod);
         }
-        Assert.assertEquals(httpMethods.length, resource.getResourceMethods().size());
+        assertEquals(httpMethods.length, resource.getResourceMethods().size());
     }
 
     public static void containsMethod(Resource resource, String httpMethod) {
@@ -66,7 +66,7 @@ public class ResourceTestUtils {
                 return;
             }
         }
-        Assert.fail("Resource " + resource + " does not contain resource method " + httpMethod + "!");
+        fail("Resource " + resource + " does not contain resource method " + httpMethod + "!");
     }
 
     public static Resource getResource(List<Resource> resources, String path) {
@@ -75,7 +75,7 @@ public class ResourceTestUtils {
                 return resource;
             }
         }
-        Assert.fail("Resource with path '" + path + "' is not in the list of resources " + resources + "!");
+        fail("Resource with path '" + path + "' is not in the list of resources " + resources + "!");
         return null;
     }
 
@@ -86,16 +86,16 @@ public class ResourceTestUtils {
                 return resource;
             }
         }
-        Assert.fail("RuntimeResource with regex '" + regex + "' is not in the list of runtime resources " + resources + "!");
+        fail("RuntimeResource with regex '" + regex + "' is not in the list of runtime resources " + resources + "!");
         return null;
     }
 
     public static void containsExactMethods(RuntimeResource resource, boolean shouldContainLocator, String... httpMethods) {
-        Assert.assertEquals(shouldContainLocator, resource.getResourceLocators().size() == 1);
+        assertEquals(shouldContainLocator, resource.getResourceLocators().size() == 1);
         for (String httpMethod : httpMethods) {
             containsMethod(resource, httpMethod);
         }
-        Assert.assertEquals(httpMethods.length, resource.getResourceMethods().size());
+        assertEquals(httpMethods.length, resource.getResourceMethods().size());
     }
 
     public static void containsMethod(RuntimeResource resource, String httpMethod) {
@@ -104,7 +104,7 @@ public class ResourceTestUtils {
                 return;
             }
         }
-        Assert.fail("RuntimeResource " + resource + " does not contain resource method " + httpMethod + "!");
+        fail("RuntimeResource " + resource + " does not contain resource method " + httpMethod + "!");
     }
 
 

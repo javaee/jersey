@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.inject;
 
 import java.util.concurrent.ExecutionException;
@@ -49,8 +48,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Tests injections into constructor parameters.
@@ -95,18 +94,18 @@ public class ConstructorParameterInjectionTest extends AbstractTest {
 
         @GET
         public String get() {
-            Assert.assertEquals("p", pathParam);
-            Assert.assertEquals(5, queryParam);
-            Assert.assertEquals("m", matrixParam);
+            assertEquals("p", pathParam);
+            assertEquals(5, queryParam);
+            assertEquals("m", matrixParam);
             return "content";
         }
 
         @GET
         @Path("nullMatrix")
         public String getWithoutMatrixParam() {
-            Assert.assertEquals("p", pathParam);
-            Assert.assertEquals(5, queryParam);
-            Assert.assertNull(matrixParam);
+            assertEquals("p", pathParam);
+            assertEquals(5, queryParam);
+            assertNull(matrixParam);
             return "content";
         }
     }
@@ -124,9 +123,9 @@ public class ConstructorParameterInjectionTest extends AbstractTest {
 
         @GET
         public String get() {
-            Assert.assertEquals("p", pathParam);
-            Assert.assertEquals(5, queryParam);
-            Assert.assertEquals("m", matrixParam);
+            assertEquals("p", pathParam);
+            assertEquals(5, queryParam);
+            assertEquals("m", matrixParam);
             return "content";
         }
     }

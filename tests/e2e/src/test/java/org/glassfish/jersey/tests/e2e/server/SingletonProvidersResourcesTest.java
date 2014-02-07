@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,8 +59,9 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.hk2.api.PerLookup;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test resources which also acts as providers.
@@ -85,28 +86,28 @@ public class SingletonProvidersResourcesTest extends JerseyTest {
     @Test
     public void testResourceAsFilter() {
         String str = target().path("singleton").request().header("singleton", "singleton").get(String.class);
-        Assert.assertTrue(str, str.startsWith("true/"));
+        assertTrue(str, str.startsWith("true/"));
         String str2 = target().path("singleton").request().header("singleton", "singleton").get(String.class);
-        Assert.assertTrue(str2, str2.startsWith("true/"));
-        Assert.assertEquals(str, str2);
+        assertTrue(str2, str2.startsWith("true/"));
+        assertEquals(str, str2);
     }
 
     @Test
     public void testResourceAsFilterAnnotatedPerLookup() {
         String str = target().path("perlookup").request().header("not-singleton", "not-singleton").get(String.class);
-        Assert.assertTrue(str.startsWith("false/"));
+        assertTrue(str.startsWith("false/"));
         String str2 = target().path("perlookup").request().header("not-singleton", "not-singleton").get(String.class);
-        Assert.assertTrue(str2.startsWith("false/"));
-        Assert.assertNotSame(str, str2);
+        assertTrue(str2.startsWith("false/"));
+        assertNotSame(str, str2);
     }
 
     @Test
     public void testResourceProgrammatic() {
         String str = target().path("programmatic").request().header("programmatic", "programmatic").get(String.class);
-        Assert.assertTrue(str.startsWith("false/"));
+        assertTrue(str.startsWith("false/"));
         String str2 = target().path("programmatic").request().header("programmatic", "programmatic").get(String.class);
-        Assert.assertTrue(str2.startsWith("false/"));
-        Assert.assertNotSame(str, str2);
+        assertTrue(str2.startsWith("false/"));
+        assertNotSame(str, str2);
     }
 
     // this should be singleton, it means the same instance for the usage as a filter and as an resource

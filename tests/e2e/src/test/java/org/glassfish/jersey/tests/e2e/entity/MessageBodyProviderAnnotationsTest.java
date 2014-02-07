@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.entity;
 
 import java.io.IOException;
@@ -67,14 +66,12 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests annotations passed to message body provider.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class MessageBodyProviderAnnotationsTest extends JerseyTest {
 
@@ -86,13 +83,13 @@ public class MessageBodyProviderAnnotationsTest extends JerseyTest {
     @Test
     public void testWriter() {
         String get = target().path("test").request("test/text").get(String.class);
-        Assert.assertEquals("get-ok", get);
+        assertEquals("get-ok", get);
     }
 
     @Test
     public void testReader() {
         String get = target().path("test").request("text/plain").post(Entity.entity("test", "test/text"), String.class);
-        Assert.assertEquals("ok", get);
+        assertEquals("ok", get);
     }
 
 
