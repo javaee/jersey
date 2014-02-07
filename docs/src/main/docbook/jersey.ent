@@ -856,3 +856,18 @@
 
 <!-- Various literals -->
 <!ENTITY lit.pom.xml "<literal>pom.xml</literal>">
+
+<!-- Http header names literals -->
+<!ENTITY lit.http.header.AccessControlRequestHeaders "<literal>Access-Control-Request-Headers</literal>">
+<!ENTITY lit.http.header.AccessControlRequestMethod "<literal>Access-Control-Request-Method</literal>">
+<!ENTITY lit.http.header.Connection "<literal>Connection</literal>">
+<!ENTITY lit.http.header.ContentLength "<literal>Content-Length</literal>">
+<!ENTITY lit.http.header.ContentTransferEncoding "<literal>Content-Transfer-Encoding</literal>-">
+<!ENTITY lit.http.header.Host "<literal>Host</literal>">
+<!ENTITY lit.http.header.Keep-Alive "<literal>Keep-Alive</literal>">
+<!ENTITY lit.http.header.Origin "<literal>Origin</literal>">
+<!ENTITY lit.http.header.Trailer "<literal>Trailer</literal>">
+<!ENTITY lit.http.header.Transfer-Encoding "<literal>Transfer-Encoding</literal>">
+<!ENTITY lit.http.header.Upgrade "<literal>Upgrade</literal>">
+<!ENTITY lit.http.header.Via "<literal>Via</literal>">
+<!ENTITY lit.http.header.Sec-prefix "<literal>Sec-</literal>">

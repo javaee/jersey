@@ -640,6 +640,58 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
                     The issue for example applies to Jersey <xref linkend="multipart" endterm="multipart.short"/>
                     feature that also modifies HTTP headers.
                 </para>
+                <para>
+                    On the other hand, in the default transport connector, there are some restrictions on the headers, that
+                    can be sent in the default configuration.
+                    <literal>HttpUrlConnectorProvider</literal> uses &lit.jdk6.HttpUrlConnection; as an underlying connection
+                    implementation. This JDK class by default restricts the use of following headers:
+                    <itemizedlist>
+                        <listitem>&lit.http.header.AccessControlRequestHeaders;</listitem>
+                        <listitem>&lit.http.header.AccessControlRequestMethod;</listitem>
+                        <listitem>&lit.http.header.Connection; (with one exception - &lit.http.header.Connection; header with
+                            value <literal>Closed</literal> is allowed by default)</listitem>
+                        <listitem>&lit.http.header.ContentLength;</listitem>
+                        <listitem>&lit.http.header.ContentTransferEncoding;</listitem>
+                        <listitem>&lit.http.header.Host;</listitem>
+                        <listitem>&lit.http.header.Keep-Alive;</listitem>
+                        <listitem>&lit.http.header.Origin;</listitem>
+                        <listitem>&lit.http.header.Trailer;</listitem>
+                        <listitem>&lit.http.header.Transfer-Encoding;</listitem>
+                        <listitem>&lit.http.header.Upgrade;</listitem>
+                        <listitem>&lit.http.header.Via;</listitem>
+                        <listitem>all the headers starting with &lit.http.header.Sec-prefix;</listitem>
+                    </itemizedlist>
+                    The underlying connection can be configured to permit all headers to be sent,
+                    however this behaviour can be changed only by setting the system property
+                    <literal>sun.net.http.allowRestrictedHeaders</literal>.
+                    <example>
+                        <title>Sending restricted headers with <literal>HttpUrlConnector</literal></title>
+                        <programlisting language="java" linenumbering="numbered">
+                            Client client = ClientBuilder.newClient();
+                            System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+
+                            Response response = client.target(yourUri).path(yourPath).request().
+                            header("Origin", "http://example.com").
+                            header("Access-Control-Request-Method", "POST").
+                            get();
+                        </programlisting>
+                    </example>
+                </para>
+                <para>
+                    Note, that internally the &lit.jdk6.HttpUrlConnection; instances are pooled, so (un)setting the
+                    property after already creating a target typically does not have any effect.
+                    The property influences all the connections <emphasis>created</emphasis> after the property has been
+                    (un)set, but there is no guarantee, that your request will use a connection
+                    created after the property change.
+                </para>
+                <para>
+                    In a simple environment, setting the property before creating the first target is sufficient, but in complex
+                    environments (such as application servers), where some poolable connections might exist before your
+                    application even bootstraps, this approach is not 100% reliable and we recommend using a different client
+                    transport connector, such as Apache Connector.
+                    These limitations have to be considered especially when invoking <emphasis>CORS</emphasis> (Cross Origin
+                    Resource Sharing) requests.
+                </para>
             </warning>
         </para>
         <para>
