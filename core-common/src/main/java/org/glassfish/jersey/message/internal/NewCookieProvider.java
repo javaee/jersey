@@ -58,16 +58,16 @@ import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentEx
 public class NewCookieProvider implements HeaderDelegateProvider<NewCookie> {
 
     @Override
-    public boolean supports(Class<?> type) {
+    public boolean supports(final Class<?> type) {
         return type == NewCookie.class;
     }
 
     @Override
-    public String toString(NewCookie cookie) {
+    public String toString(final NewCookie cookie) {
 
         throwIllegalArgumentExceptionIfNull(cookie, LocalizationMessages.NEW_COOKIE_IS_NULL());
 
-        StringBuilder b = new StringBuilder();
+        final StringBuilder b = new StringBuilder();
 
         b.append(cookie.getName()).append('=');
         StringBuilderUtils.appendQuotedIfWhitespace(b, cookie.getValue());
@@ -97,15 +97,15 @@ public class NewCookieProvider implements HeaderDelegateProvider<NewCookie> {
             b.append(";HttpOnly");
         }
         if (cookie.getExpiry() != null) {
-          b.append(";Expires=");
-          b.append(HttpDateFormat.getPreferedDateFormat().format(cookie.getExpiry()));
+            b.append(";Expires=");
+            b.append(HttpDateFormat.getPreferredDateFormat().format(cookie.getExpiry()));
         }
 
-      return b.toString();
+        return b.toString();
     }
 
     @Override
-    public NewCookie fromString(String header) {
+    public NewCookie fromString(final String header) {
         throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.NEW_COOKIE_IS_NULL());
         return HttpHeaderReader.readNewCookie(header);
     }
