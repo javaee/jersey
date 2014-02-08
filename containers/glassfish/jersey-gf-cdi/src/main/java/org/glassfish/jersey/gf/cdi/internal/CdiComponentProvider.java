@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,6 +52,10 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.annotation.ManagedBean;
 import javax.annotation.Priority;
@@ -73,21 +76,23 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
-
 import javax.inject.Inject;
 import javax.inject.Qualifier;
 import javax.inject.Singleton;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
-
 import javax.naming.InitialContext;
-
+import javax.naming.NamingException;
 import javax.transaction.Transactional;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.ext.ExceptionMapper;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.spi.ComponentProvider;
+import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
 import org.glassfish.hk2.api.ClassAnalyzer;
 import org.glassfish.hk2.api.DynamicConfiguration;
@@ -97,14 +102,6 @@ import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
 import org.glassfish.hk2.utilities.cache.Cache;
 import org.glassfish.hk2.utilities.cache.Computable;
-
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.model.Parameter;
-import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.spi.ComponentProvider;
-import org.glassfish.jersey.server.spi.internal.ValueFactoryProvider;
 
 /**
  * Jersey CDI integration implementation.
@@ -180,10 +177,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         /**
          * Create new factory instance for given type and bean manager.
          *
-         * @param rawType type of the components to provide.
-         * @param locator actual HK2 service locator instance
+         * @param rawType     type of the components to provide.
+         * @param locator     actual HK2 service locator instance
          * @param beanManager current bean manager to get references from.
-         * @param cdiManaged set to true if the component should be managed by CDI
+         * @param cdiManaged  set to true if the component should be managed by CDI
          */
         CdiFactory(final Class<T> rawType, final ServiceLocator locator, final BeanManager beanManager, boolean cdiManaged) {
             this.clazz = rawType;
@@ -291,7 +288,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
          * to a CDI bean constructor parameter, or the value could not be found, the method will return null.
          *
          * @param injectionPoint actual injection point.
-         * @param beanManager current application bean manager.
+         * @param beanManager    current application bean manager.
          * @return String value for given injection point.
          */
         @javax.enterprise.inject.Produces
@@ -409,7 +406,8 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @Transactional
     public static final class WebApplicationExceptionPreservingInterceptor {
 
-        @Inject BeanManager beanManager;
+        @Inject
+        BeanManager beanManager;
 
         @AroundInvoke
         public Object intercept(InvocationContext ic) throws Exception {
@@ -442,12 +440,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             }
         }
 
-       if (isJaxRsComponentType(componentClass)) {
-           event.setInjectionTarget(new InjectionTarget() {
+        if (isJaxRsComponentType(componentClass)) {
+            event.setInjectionTarget(new InjectionTarget() {
 
                 @Override
                 public void inject(Object t, CreationalContext cc) {
-                   it.inject(t, cc);
+                    it.inject(t, cc);
                     if (locator != null) {
                         locator.inject(t, CDI_CLASS_ANALYZER);
                     }
@@ -494,23 +492,33 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
      * @param clazz type to be introspected.
      * @return true if the type represents a JAX-RS component type.
      */
-    /* package */static boolean isJaxRsComponentType(Class<?> clazz) {
+    /* package */
+    static boolean isJaxRsComponentType(Class<?> clazz) {
         return Application.class.isAssignableFrom(clazz) ||
                 Providers.isJaxRsProvider(clazz) ||
-                  Resource.from(clazz) != null;
+                Resource.from(clazz) != null;
     }
 
     private static BeanManager beanManagerFromJndi() {
-    	try {
-        	return (BeanManager)new InitialContext().lookup("java:comp/BeanManager");
+        InitialContext initialContext = null;
+        try {
+            initialContext = new InitialContext();
+            return (BeanManager) initialContext.lookup("java:comp/BeanManager");
         } catch (Exception ex) {
-        	try {
-        		return CDI.current().getBeanManager();
-        	}
-        	catch (Exception e) {
-            	LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());      
-            	return null;
-        	}
+            try {
+                return CDI.current().getBeanManager();
+            } catch (Exception e) {
+                LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());
+                return null;
+            }
+        } finally {
+            if (initialContext != null) {
+                try {
+                    initialContext.close();
+                } catch (NamingException ignored) {
+                    // no-op
+                }
+            }
         }
     }
 
@@ -521,11 +529,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         final int skippedElements = methodsToSkip.size() + fieldsToSkip.size();
 
-        final ClassAnalyzer customizedClassAnalyzer =
-                skippedElements > 0 ? new InjecteeSkippingAnalyzer(
-                                                defaultClassAnalyzer,
-                                                methodsToSkip,
-                                                fieldsToSkip) : defaultClassAnalyzer;
+        final ClassAnalyzer customizedClassAnalyzer = skippedElements > 0
+                ? new InjecteeSkippingAnalyzer(defaultClassAnalyzer, methodsToSkip, fieldsToSkip)
+                : defaultClassAnalyzer;
 
         DynamicConfiguration dc = Injections.getConfiguration(locator);
 

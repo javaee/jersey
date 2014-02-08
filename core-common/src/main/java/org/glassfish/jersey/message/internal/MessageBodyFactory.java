@@ -196,20 +196,22 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private final Map<MediaType, List<MessageBodyWriter>> writersCache =
             new KeyComparatorHashMap<MediaType, List<MessageBodyWriter>>(MEDIA_TYPE_COMPARATOR);
 
-    private final Map<Class<?>, List<MessageBodyReader>> mbrTypeLookupCache =
-            DataStructures.createConcurrentMap(32, 0.75f, DataStructures.DEFAULT_CONCURENCY_LEVEL);
-    private final Map<Class<?>, List<MessageBodyWriter>> mbwTypeLookupCache =
-            DataStructures.createConcurrentMap(32, 0.75f, DataStructures.DEFAULT_CONCURENCY_LEVEL);
+    private static final int LOOKUP_CACHE_INITIAL_CAPACITY = 32;
+    private static final float LOOKUP_CACHE_LOAD_FACTOR = 0.75f;
+    private final Map<Class<?>, List<MessageBodyReader>> mbrTypeLookupCache = DataStructures.createConcurrentMap(
+            LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
+    private final Map<Class<?>, List<MessageBodyWriter>> mbwTypeLookupCache = DataStructures.createConcurrentMap(
+            LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
 
-    private final Map<Class<?>, List<MediaType>> typeToMediaTypeReadersCache =
-            DataStructures.createConcurrentMap(32, 0.75f, DataStructures.DEFAULT_CONCURENCY_LEVEL);
-    private final Map<Class<?>, List<MediaType>> typeToMediaTypeWritersCache =
-            DataStructures.createConcurrentMap(32, 0.75f, DataStructures.DEFAULT_CONCURENCY_LEVEL);
+    private final Map<Class<?>, List<MediaType>> typeToMediaTypeReadersCache = DataStructures.createConcurrentMap(
+            LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
+    private final Map<Class<?>, List<MediaType>> typeToMediaTypeWritersCache = DataStructures.createConcurrentMap(
+            LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
 
-    private final Map<ModelLookupKey, List<MbrModel>> mbrLookupCache =
-            DataStructures.createConcurrentMap(32, 0.75f, DataStructures.DEFAULT_CONCURENCY_LEVEL);
-    private final Map<ModelLookupKey, List<MbwModel>> mbwLookupCache =
-            DataStructures.createConcurrentMap(32, 0.75f, DataStructures.DEFAULT_CONCURENCY_LEVEL);
+    private final Map<ModelLookupKey, List<MbrModel>> mbrLookupCache = DataStructures.createConcurrentMap(
+            LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
+    private final Map<ModelLookupKey, List<MbwModel>> mbwLookupCache = DataStructures.createConcurrentMap(
+            LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
 
     private static class WorkerModel<T> {
 
@@ -703,10 +705,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 if (mediaType == null) {
                     return true;
                 }
-
-                if (MediaTypes.typeEqual(mediaType, mt) ||
-                        MediaTypes.typeEqual(MediaTypes.getTypeWildCart(mediaType), mt) ||
-                        MediaTypes.typeEqual(MediaTypes.GENERAL_MEDIA_TYPE, mt)) {
+                if (mediaType.isCompatible(mt)) {
                     return true;
                 }
             }
@@ -722,7 +721,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                            List<MbrModel> models,
                                                            PropertiesDelegate propertiesDelegate) {
 
-        List<MbrModel> readers = mbrLookupCache.get(new ModelLookupKey(c, mediaType));
+        // Ensure a parameter-less lookup type to prevent excessive memory consumption
+        // reported in JERSEY-2297
+        final MediaType lookupType = mediaType == null || mediaType.getParameters().isEmpty() ?
+                mediaType :
+                new MediaType(mediaType.getType(), mediaType.getSubtype());
+
+        final ModelLookupKey lookupKey = new ModelLookupKey(c, lookupType);
+        List<MbrModel> readers = mbrLookupCache.get(lookupKey);
         if (readers == null) {
             readers = new ArrayList<MbrModel>();
 
@@ -732,7 +738,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             }
             Collections.sort(readers, new WorkerComparator<MessageBodyReader>(c, mediaType));
-            mbrLookupCache.put(new ModelLookupKey(c, mediaType), readers);
+            mbrLookupCache.put(lookupKey, readers);
         }
 
         if (readers.isEmpty()) {
@@ -834,8 +840,14 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                                                            MediaType mediaType,
                                                            List<MbwModel> models,
                                                            PropertiesDelegate propertiesDelegate) {
+        // Ensure  a parameter-less lookup type to prevent excessive memory consumption
+        // reported in JERSEY-2297
+        final MediaType lookupType = mediaType == null || mediaType.getParameters().isEmpty() ?
+                mediaType :
+                new MediaType(mediaType.getType(), mediaType.getSubtype());
 
-        List<MbwModel> writers = mbwLookupCache.get(new ModelLookupKey(c, mediaType));
+        final ModelLookupKey lookupKey = new ModelLookupKey(c, lookupType);
+        List<MbwModel> writers = mbwLookupCache.get(lookupKey);
         if (writers == null) {
 
             writers = new ArrayList<MbwModel>();
@@ -846,7 +858,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             }
             Collections.sort(writers, new WorkerComparator<MessageBodyWriter>(c, mediaType));
-            mbwLookupCache.put(new ModelLookupKey(c, mediaType), writers);
+            mbwLookupCache.put(lookupKey, writers);
         }
 
         if (writers.isEmpty()) {
