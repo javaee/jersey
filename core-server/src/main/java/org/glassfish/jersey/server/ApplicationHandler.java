@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server;
 
 import java.io.OutputStream;
@@ -142,9 +141,9 @@ import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
  * </p>
  * <p>
  * {@code ApplicationHandler} provides two implementations of {@link javax.ws.rs.core.Configuration config} that can be injected
- * into the application classes. The first is {@link ResourceConfig resource config} which implements {@code Configuration} itself
- * and is configured by the user. The resource config is not modified by this application handler so the future reloads of the
- * application is not disrupted by providers found on a classpath. This config can
+ * into the application classes. The first is {@link ResourceConfig resource config} which implements {@code Configuration}
+ * itself and is configured by the user. The resource config is not modified by this application handler so the future reloads of
+ * the application is not disrupted by providers found on a classpath. This config can
  * be injected only as {@code ResourceConfig} or {@code Application}. The second one can be injected into the
  * {@code Configuration} parameters / fields and contains info about all the properties / provider classes / provider instances
  * from the resource config and also about all the providers found during processing classes registered under
@@ -270,23 +269,41 @@ public final class ApplicationHandler {
      *                    will be used to configure the new Jersey application handler.
      */
     public ApplicationHandler(final Application application) {
-        this(application, null);
+        this(application, null, null);
     }
 
     /**
      * Create a new Jersey server-side application handler configured by an instance
      * of a {@link ResourceConfig} and a custom {@link Binder}.
      *
-     * @param application an instance of a JAX-RS {@code Application} (sub-)class that
-     *                    will be used to configure the new Jersey application handler.
-     * @param customBinder additional custom bindings used during {@link ServiceLocator} creation
+     * @param application  an instance of a JAX-RS {@code Application} (sub-)class that
+     *                     will be used to configure the new Jersey application handler.
+     * @param customBinder additional custom bindings used during {@link ServiceLocator} creation.
      */
     public ApplicationHandler(final Application application, final Binder customBinder) {
+        this(application, customBinder, null);
+    }
+
+    /**
+     * Create a new Jersey server-side application handler configured by an instance
+     * of a {@link ResourceConfig}, custom {@link Binder} and a parent {@link org.glassfish.hk2.api.ServiceLocator}.
+     *
+     * @param application  an instance of a JAX-RS {@code Application} (sub-)class that
+     *                     will be used to configure the new Jersey application handler.
+     * @param customBinder additional custom bindings used during {@link ServiceLocator} creation.
+     * @param parent       parent {@link ServiceLocator} instance.
+     */
+    public ApplicationHandler(final Application application, final Binder customBinder, final ServiceLocator parent) {
         if (customBinder == null) {
-            this.locator = Injections.createLocator(new ServerBinder(application.getProperties()), new ApplicationBinder());
+            this.locator = Injections.createLocator(
+                    parent,
+                    new ServerBinder(application.getProperties()),
+                    new ApplicationBinder());
         } else {
-            this.locator = Injections.createLocator(new ServerBinder(application.getProperties()), new ApplicationBinder(),
-                                                    customBinder);
+            this.locator = Injections.createLocator(parent,
+                    new ServerBinder(application.getProperties()),
+                    new ApplicationBinder(),
+                    customBinder);
         }
         locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
