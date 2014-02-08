@@ -79,6 +79,7 @@
         <module>helloworld-pure-jax-rs</module>
         <module>helloworld-webapp</module>
         <module>helloworld-spring-webapp</module>
+        <module>helloworld-spring-annotations</module>
         <module>http-trace</module>
         <module>https-clientserver-grizzly</module>
         <module>https-server-glassfish</module>

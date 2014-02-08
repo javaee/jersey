@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -74,6 +74,7 @@ public class SpringComponentProvider implements ComponentProvider {
     private static final Logger LOGGER = Logger.getLogger(SpringComponentProvider.class.getName());
     private static final String DEFAULT_CONTEXT_CONFIG_LOCATION = "applicationContext.xml";
     private static final String PARAM_CONTEXT_CONFIG_LOCATION = "contextConfigLocation";
+    private static final String PARAM_SPRING_CONTEXT = "contextConfig";
 
     private volatile ServiceLocator locator;
     private volatile ApplicationContext ctx;
@@ -93,12 +94,7 @@ public class SpringComponentProvider implements ComponentProvider {
             ctx = WebApplicationContextUtils.getWebApplicationContext(sc);
         } else {
             // non-servlet container
-            ApplicationHandler applicationHandler = locator.getService(ApplicationHandler.class);
-            String contextConfigLocation = (String)applicationHandler.getConfiguration().getProperty(PARAM_CONTEXT_CONFIG_LOCATION);
-            if(contextConfigLocation == null) {
-                contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
-            }
-            ctx = new ClassPathXmlApplicationContext(contextConfigLocation, "jersey-spring-applicationContext.xml");
+            ctx = createSpringContext();
         }
         if(ctx == null) {
             LOGGER.severe(LocalizationMessages.CTX_LOOKUP_FAILED());
@@ -148,6 +144,23 @@ public class SpringComponentProvider implements ComponentProvider {
 
     @Override
     public void done() {
+    }
+
+    private ApplicationContext createSpringContext() {
+        ApplicationHandler applicationHandler = locator.getService(ApplicationHandler.class);
+        ApplicationContext springContext = (ApplicationContext) applicationHandler.getConfiguration().getProperty(PARAM_SPRING_CONTEXT);
+        if (springContext == null) {
+            String contextConfigLocation = (String) applicationHandler.getConfiguration().getProperty(PARAM_CONTEXT_CONFIG_LOCATION);
+            springContext = createXmlSpringConfiguration(contextConfigLocation);
+        }
+        return springContext;
+    }
+
+    private ApplicationContext createXmlSpringConfiguration(String contextConfigLocation) {
+        if (contextConfigLocation == null) {
+            contextConfigLocation = DEFAULT_CONTEXT_CONFIG_LOCATION;
+        }
+        return ctx = new ClassPathXmlApplicationContext(contextConfigLocation, "jersey-spring-applicationContext.xml");
     }
 
 
