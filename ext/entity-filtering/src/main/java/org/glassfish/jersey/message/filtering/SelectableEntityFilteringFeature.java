@@ -38,46 +38,37 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.entityfiltering.selectable;
+package org.glassfish.jersey.message.filtering;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-
-import org.glassfish.grizzly.http.server.HttpServer;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Feature;
+import javax.ws.rs.core.FeatureContext;
 
 /**
- * Java application class starting Grizzly2 server with Entity Data Filtering with security annotations.
- *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * {@link Feature} used to add support for custom query parameter filtering for
+ * Entity Data Filtering feature. </p> Note: This feature also registers the
+ * {@link EntityFilteringFeature}.
+ * 
+ * @author Andy Pemberton (pembertona at oracle.com)
+ * @see org.glassfish.jersey.message.filtering.EntityFilteringFeature
  */
-public final class App {
+public final class SelectableEntityFilteringFeature implements Feature {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/");
+	@Override
+	public boolean configure(final FeatureContext context) {
+		final Configuration config = context.getConfiguration();
 
-    public static void main(String[] args) {
-        try {
-            System.out.println("Jersey Entity Data Filtering Example.");
+		if (!config.isRegistered(SelectableEntityProcessor.class)) {
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, new SelectableEntityFilteringApplication());
+			// register EntityFilteringFeature
+			context.register(EntityFilteringFeature.class);
+			// Entity Processors.
+			context.register(SelectableEntityProcessor.class);
+			// Scope Resolver.
+			context.register(SelectableScopeResolver.class);
 
-            System.out.println("Application started.\nTry out one of these URIs:");
-            for (final String path : new String[]{"people/1234", "people/1234?select=familyName,givenName",
-            		"people/1234?select=region,addresses.region",
-                    "people/1234?select=familyName,givenName,addresses.phoneNumber.number"}) {
-                System.out.println(BASE_URI + path);
-            }
-            System.out.println("Hit enter to stop it...");
-
-            System.in.read();
-
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName())
-                    .log(Level.SEVERE, "I/O error occurred during reading from an system input stream.", ex);
-        }
-    }
+			return true;
+		}
+		return true;
+	}
 }
