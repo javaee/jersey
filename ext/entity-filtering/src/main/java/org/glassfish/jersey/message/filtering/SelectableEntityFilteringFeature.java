@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.message.filtering;
 
 import javax.ws.rs.core.Configuration;
@@ -54,6 +53,8 @@ import javax.ws.rs.core.FeatureContext;
  */
 public final class SelectableEntityFilteringFeature implements Feature {
 
+	public static final String QUERY_PARAM_NAME = "jersey.config.entityFiltering.selectable.query";
+
 	@Override
 	public boolean configure(final FeatureContext context) {
 		final Configuration config = context.getConfiguration();
@@ -61,7 +62,9 @@ public final class SelectableEntityFilteringFeature implements Feature {
 		if (!config.isRegistered(SelectableEntityProcessor.class)) {
 
 			// register EntityFilteringFeature
-			context.register(EntityFilteringFeature.class);
+			if (!config.isRegistered(EntityFilteringFeature.class)) {
+				context.register(EntityFilteringFeature.class);
+			}
 			// Entity Processors.
 			context.register(SelectableEntityProcessor.class);
 			// Scope Resolver.

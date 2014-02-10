@@ -62,6 +62,8 @@ public class SelectableEntityFilteringApplication extends ResourceConfig {
 
 		// Configure MOXy Json provider.
 		register(new MoxyJsonConfig().setFormattedOutput(true).resolver());
+		
+		property(SelectableEntityFilteringFeature.QUERY_PARAM_NAME, "select");
 
 	}
 }

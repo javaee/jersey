@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.examples.entityfiltering.selectable.resource;
 
 import java.util.ArrayList;
