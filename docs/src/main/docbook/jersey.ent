@@ -403,6 +403,7 @@
 <!ENTITY jersey.message.filtering.ScopeResolver "<link xlink:href='&jersey.javadoc.path;/message/filtering/spi/ScopeResolver.html'>ScopeResolver</link>">
 <!ENTITY jersey.message.filtering.SecurityAnnotations "<link xlink:href='&jersey.javadoc.path;/message/filtering/SecurityAnnotations.html'>SecurityAnnotations</link>">
 <!ENTITY jersey.message.filtering.SecurityEntityFilteringFeature "<link xlink:href='&jersey.javadoc.path;/message/filtering/SecurityEntityFilteringFeature.html'>SecurityEntityFilteringFeature</link>">
+<!ENTITY jersey.message.filtering.SelectableEntityFilteringFeature "<link xlink:href='&jersey.javadoc.path;/message/filtering/SelectableEntityFilteringFeature.html'>SelectableEntityFilteringFeature</link>">
 
 <!ENTITY jersey.linking.DeclarativeLinkingFeature "<link xlink:href='&jersey.javadoc.path;/linking/DeclarativeLinkingFeature.html'>DeclarativeLinkingFeature</link>">
 

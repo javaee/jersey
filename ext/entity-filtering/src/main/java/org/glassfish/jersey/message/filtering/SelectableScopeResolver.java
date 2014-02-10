@@ -59,31 +59,31 @@ import jersey.repackaged.com.google.common.collect.Sets;
 @Singleton
 public class SelectableScopeResolver implements ScopeResolver {
 
-	/**
-	 * Prefix for all selectable scopes
-	 */
+    /**
+     * Prefix for all selectable scopes
+     */
     public static String PREFIX = SelectableScopeResolver.class.getName() + "_";
-    
+
     /**
      * Scope used for selecting all fields, i.e.: when no filter is applied
      */
     public static String DEFAULT_SCOPE = PREFIX + "*";
-    
+
     /**
      * Query parameter name for selectable feature, set to default value
      */
     private static String SELECTABLE_PARAM_NAME = "select";
-    
+
     @Context
     private Configuration configuration;
-    
+
     @Context
     private UriInfo uriInfo;
-    
+
     @PostConstruct
     private void init(){
-    	String paramName = (String) configuration.getProperty(SelectableEntityFilteringFeature.QUERY_PARAM_NAME);
-    	SELECTABLE_PARAM_NAME = paramName != null ? paramName : SELECTABLE_PARAM_NAME;
+        final String paramName = (String) configuration.getProperty(SelectableEntityFilteringFeature.QUERY_PARAM_NAME);
+        SELECTABLE_PARAM_NAME = paramName != null ? paramName : SELECTABLE_PARAM_NAME;
     }
 
     @Override
@@ -107,12 +107,12 @@ public class SelectableScopeResolver implements ScopeResolver {
         // add specific scope in case of specific request
         final String[] fields = Tokenizer.tokenize(fieldName, ",");
         for (final String field : fields) {
-        	final String[] subfields = Tokenizer.tokenize(field, ".");
-        	// in case of nested path, add first level as stand-alone to ensure subgraph is added
-    		scopes.add(SelectableScopeResolver.PREFIX + subfields[0]);
-        	if(subfields.length > 1){
-        		scopes.add(SelectableScopeResolver.PREFIX + field);
-        	}
+            final String[] subfields = Tokenizer.tokenize(field, ".");
+            // in case of nested path, add first level as stand-alone to ensure subgraph is added
+            scopes.add(SelectableScopeResolver.PREFIX + subfields[0]);
+            if(subfields.length > 1){
+                scopes.add(SelectableScopeResolver.PREFIX + field);
+            }
         }
 
         return scopes;

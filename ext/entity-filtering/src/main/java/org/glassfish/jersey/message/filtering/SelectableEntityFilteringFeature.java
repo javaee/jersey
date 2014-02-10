@@ -53,25 +53,25 @@ import javax.ws.rs.core.FeatureContext;
  */
 public final class SelectableEntityFilteringFeature implements Feature {
 
-	public static final String QUERY_PARAM_NAME = "jersey.config.entityFiltering.selectable.query";
+    public static final String QUERY_PARAM_NAME = "jersey.config.entityFiltering.selectable.query";
 
-	@Override
-	public boolean configure(final FeatureContext context) {
-		final Configuration config = context.getConfiguration();
+    @Override
+    public boolean configure(final FeatureContext context) {
+        final Configuration config = context.getConfiguration();
 
-		if (!config.isRegistered(SelectableEntityProcessor.class)) {
+        if (!config.isRegistered(SelectableEntityProcessor.class)) {
 
-			// register EntityFilteringFeature
-			if (!config.isRegistered(EntityFilteringFeature.class)) {
-				context.register(EntityFilteringFeature.class);
-			}
-			// Entity Processors.
-			context.register(SelectableEntityProcessor.class);
-			// Scope Resolver.
-			context.register(SelectableScopeResolver.class);
+            // register EntityFilteringFeature
+            if (!config.isRegistered(EntityFilteringFeature.class)) {
+                context.register(EntityFilteringFeature.class);
+            }
+            // Entity Processors.
+            context.register(SelectableEntityProcessor.class);
+            // Scope Resolver.
+            context.register(SelectableScopeResolver.class);
 
-			return true;
-		}
-		return true;
-	}
+            return true;
+        }
+        return true;
+    }
 }

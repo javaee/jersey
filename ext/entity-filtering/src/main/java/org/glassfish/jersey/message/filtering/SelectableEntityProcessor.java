@@ -55,15 +55,15 @@ import jersey.repackaged.com.google.common.collect.Sets;
 @Priority(Integer.MAX_VALUE - 5000)
 public class SelectableEntityProcessor extends AbstractEntityProcessor {
 
-	protected Result process(final String fieldName, final Class<?> fieldClass, final Annotation[] fieldAnnotations,
-			final Annotation[] annotations, final EntityGraph graph) {
+    protected Result process(final String fieldName, final Class<?> fieldClass, final Annotation[] fieldAnnotations,
+                             final Annotation[] annotations, final EntityGraph graph) {
 
         if (fieldName != null) {
-        	final Set<String> scopes = Sets.newHashSet();
+            final Set<String> scopes = Sets.newHashSet();
 
             // add default selectable scope in case of none requested
             scopes.add(SelectableScopeResolver.DEFAULT_SCOPE);
-            
+
             // add specific scope in case of specific request
             scopes.add(SelectableScopeResolver.PREFIX + fieldName);
 
