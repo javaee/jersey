@@ -68,6 +68,7 @@
         <module>clipboard-programmatic</module>
         <module>declarative-linking</module>
         <module>entity-filtering</module>
+        <module>entity-filtering-selectable</module>
         <module>entity-filtering-security</module>
         <module>extended-wadl-webapp</module>
         <module>exception-mapping</module>

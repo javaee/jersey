@@ -79,6 +79,9 @@
             <listitem>
                 <para><xref linkend="ef.security.annotations"/></para>
             </listitem>
+            <listitem>
+                <para><xref linkend="ef.selectable.annotations"/></para>
+            </listitem>
         </itemizedlist>
 
         as well as some more complex ones.
@@ -116,7 +119,7 @@
             </note>
         </para>
         <para>
-            The entity-filtering extension module provides two &lit.jaxrs.core.Feature;s which you can register into server/client
+            The entity-filtering extension module provides three &lit.jaxrs.core.Feature;s which you can register into server/client
             runtime in prior to use Entity Filtering in an application:
 
             <itemizedlist>
@@ -131,6 +134,10 @@
                     <para>&jersey.message.filtering.SecurityEntityFilteringFeature;</para>
                     <para>Filtering based on security (<literal>javax.annotation.security</literal>) and entity-filtering
                         annotations.</para>
+                </listitem>
+                <listitem>
+                    <para>&jersey.message.filtering.SelectableEntityFilteringFeature;</para>
+                    <para>Filtering based on dynamic and configurable query parameters</para>
                 </listitem>
             </itemizedlist>
 
@@ -184,6 +191,18 @@
     .property(EntityFilteringFeature.ENTITY_FILTERING_SCOPE, new Annotation[] {SecurityAnnotations.rolesAllowed("manager")})
     // Register the SecurityEntityFilteringFeature.
     .register(SecurityEntityFilteringFeature.class)
+    // Further configuration of ResourceConfig.
+    .register( ... );</programlisting>
+            </example>
+            
+            <example xml:id="ef.example.server.security.registration">
+                <title>Registering and configuring entity-filtering feature with security annotations on server.</title>
+
+                <programlisting language="java" linenumbering="numbered">new ResourceConfig()
+    // Set query parameter name for dynamic filtering
+    .property(SelectableEntityFilteringFeature.QUERY_PARAM_NAME, "select"})
+    // Register the SelectableEntityFilteringFeature.
+    .register(SelectableEntityFilteringFeature.class)
     // Further configuration of ResourceConfig.
     .register( ... );</programlisting>
             </example>
@@ -709,6 +728,42 @@ public class ClientsResource {
                 </para>
             </note>
         </para>
+    </section>
+    
+    <section xml:id="ef.selectable.annotations">
+        <para>
+            Filtering the content sent to the client (or server) dynamically based on query parameters is another commonly
+            required use case. By registering &jersey.message.filtering.SelectableEntityFilteringFeature; you can
+            leverage the Jersey Entity Filtering facility in connection with query parameters exactly the same way as you would with custom
+            entity-filtering annotations described in previous chapters. 
+        </para>
+        
+        <para>
+        	<example>
+                    <title>Sever - Query Parameter driven entity-filtering</title>
+
+                    <programlisting language="java" linenumbering="numbered">@XmlRootElement
+public class Address {
+
+    private String streetAddress;
+
+    private String region;
+
+    private PhoneNumber phoneNumber;
+}</programlisting>
+                </example>
+        </para>
+        <para>Query parameters are supported in comma delimited "dot notation" style similar to BeanInfo objects and Spring path expressions. As an example, the following URL: 
+        http://jersey.example.com/addresses/51234?select=region,streetAddress may render only the address's region and street address properties as in the following example:  
+        </para>
+        
+        <example>
+        <programlisting language="xml" linenumbering="numbered">{
+	   "region" : "CA",
+	   "streetAddress" : "1234 Fake St."
+	}</programlisting>
+	</example>
+
     </section>
 
     <section xml:id="ef.custom.annotations">

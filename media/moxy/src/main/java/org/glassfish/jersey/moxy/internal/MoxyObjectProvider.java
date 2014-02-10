@@ -102,28 +102,30 @@ final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persis
             final Subgraph subgraph = graph.addSubgraph(entry.getKey());
             final ObjectGraph entityGraph = entry.getValue();
 
-            final Set<String> fields = entityGraph.getFields();
+            final Set<String> fields = entityGraph.getFields(entry.getKey());
             if (!fields.isEmpty()) {
                 subgraph.addAttributeNodes(fields.toArray(new String[fields.size()]));
             }
 
-            final Map<String, ObjectGraph> subgraphs = entityGraph.getSubgraphs();
+            final Map<String, ObjectGraph> subgraphs = entityGraph.getSubgraphs(entry.getKey());
             if (!subgraphs.isEmpty()) {
                 final Class<?> subEntityClass = entityGraph.getEntityClass();
 
                 processed.add(getProcessedSubgraph(entityClass, entry.getKey(), subEntityClass));
-                createSubgraphs(subgraph, subEntityClass, subgraphs, processed);
+                createSubgraphs(entry.getKey(), subgraph, subEntityClass, subgraphs, processed);
             }
         }
     }
 
-    private void createSubgraphs(final Subgraph graph, final Class<?> entityClass,
+    private void createSubgraphs(final String parent, final Subgraph graph, final Class<?> entityClass,
                                  final Map<String, ObjectGraph> entitySubgraphs, final Set<String> processed) {
         for (final Map.Entry<String, ObjectGraph> entry : entitySubgraphs.entrySet()) {
             final Subgraph subgraph = graph.addSubgraph(entry.getKey());
             final ObjectGraph entityGraph = entry.getValue();
+            
+            String path = parent + "." + entry.getKey();
 
-            final Set<String> fields = entityGraph.getFields();
+            final Set<String> fields = entityGraph.getFields(path);
             if (!fields.isEmpty()) {
                 subgraph.addAttributeNodes(fields.toArray(new String[fields.size()]));
             }
@@ -134,7 +136,7 @@ final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persis
 
             if (!subgraphs.isEmpty() && !processed.contains(processedSubgraph)) {
                 processed.add(processedSubgraph);
-                createSubgraphs(subgraph, subEntityClass, subgraphs, processed);
+                createSubgraphs(path, subgraph, subEntityClass, subgraphs, processed);
             }
         }
     }
