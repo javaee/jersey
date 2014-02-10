@@ -59,34 +59,34 @@ import org.glassfish.jersey.examples.entityfiltering.selectable.domain.PhoneNumb
 @Produces("application/json")
 public class PersonResource {
 
-	@GET
-	@Path("{id}")
-	public Person getPerson() {
-		Person person = new Person();
-		person.setGivenName("Andrew");
-		person.setFamilyName("Dowd");
-		person.setHonorificPrefix("Mr.");
-		person.setRegion("1st Level Region");
-		person.setAddresses(new ArrayList<Address>());
-		person.getAddresses().add(new Address());
-		person.getAddresses().get(0).setRegion("2nd Level Region");
-		person.getAddresses().get(0).setStreetAddress("1234 fake st.");
-		person.getAddresses().get(0).setPhoneNumber(new PhoneNumber());
-		person.getAddresses().get(0).getPhoneNumber().setNumber("867-5309");
-		person.getAddresses().get(0).getPhoneNumber().setAreaCode("540");
+    @GET
+    @Path("{id}")
+    public Person getPerson() {
+        Person person = new Person();
+        person.setGivenName("Andrew");
+        person.setFamilyName("Dowd");
+        person.setHonorificPrefix("Mr.");
+        person.setRegion("1st Level Region");
+        person.setAddresses(new ArrayList<Address>());
+        person.getAddresses().add(new Address());
+        person.getAddresses().get(0).setRegion("2nd Level Region");
+        person.getAddresses().get(0).setStreetAddress("1234 fake st.");
+        person.getAddresses().get(0).setPhoneNumber(new PhoneNumber());
+        person.getAddresses().get(0).getPhoneNumber().setNumber("867-5309");
+        person.getAddresses().get(0).getPhoneNumber().setAreaCode("540");
 
-		person.setPhoneNumbers(new HashMap<String, PhoneNumber>());
-		PhoneNumber number = new PhoneNumber();
-		number.setAreaCode("804");
-		number.setNumber("867-5309");
-		person.getPhoneNumbers().put("HOME", number);
+        person.setPhoneNumbers(new HashMap<String, PhoneNumber>());
+        PhoneNumber number = new PhoneNumber();
+        number.setAreaCode("804");
+        number.setNumber("867-5309");
+        person.getPhoneNumbers().put("HOME", number);
 
-		return person;
-	}
+        return person;
+    }
 
-	@GET
-	@Path("{id}/addresses")
-	public Address getAddress() {
-		return this.getPerson().getAddresses().get(0);
-	}
+    @GET
+    @Path("{id}/addresses")
+    public Address getAddress() {
+        return this.getPerson().getAddresses().get(0);
+    }
 }

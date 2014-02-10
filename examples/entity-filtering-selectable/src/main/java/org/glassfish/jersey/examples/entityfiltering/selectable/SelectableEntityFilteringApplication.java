@@ -47,23 +47,23 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * Entity Data Filtering application using request parameters.
- * 
+ *
  * @author Andy Pemberton (pembertona at gmail.com)
  */
 @ApplicationPath("/")
 public class SelectableEntityFilteringApplication extends ResourceConfig {
 
-	public SelectableEntityFilteringApplication() {
-		// Register all resources present under the package.
-		packages("org.glassfish.jersey.examples.entityfiltering.selectable");
+    public SelectableEntityFilteringApplication() {
+        // Register all resources present under the package.
+        packages("org.glassfish.jersey.examples.entityfiltering.selectable");
 
-		// Register entity-filtering selectable feature.
-		register(SelectableEntityFilteringFeature.class);
+        // Register entity-filtering selectable feature.
+        register(SelectableEntityFilteringFeature.class);
 
-		// Configure MOXy Json provider.
-		register(new MoxyJsonConfig().setFormattedOutput(true).resolver());
-		
-		property(SelectableEntityFilteringFeature.QUERY_PARAM_NAME, "select");
+        // Configure MOXy Json provider.
+        register(new MoxyJsonConfig().setFormattedOutput(true).resolver());
+        
+        property(SelectableEntityFilteringFeature.QUERY_PARAM_NAME, "select");
 
-	}
+    }
 }

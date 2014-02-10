@@ -40,10 +40,6 @@
 
 package org.glassfish.jersey.examples.entityfiltering.selectable;
 
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.examples.entityfiltering.selectable.domain.Person;
@@ -52,6 +48,10 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 /**
  * {@link PersonResource} unit tests.
  * 
@@ -59,97 +59,97 @@ import org.junit.Test;
  */
 public class PersonResourceTest extends JerseyTest {
 
-	@Override
-	protected Application configure() {
-		enable(TestProperties.LOG_TRAFFIC);
-		enable(TestProperties.DUMP_ENTITY);
+    @Override
+    protected Application configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+        enable(TestProperties.DUMP_ENTITY);
 
-		return new SelectableEntityFilteringApplication();
-	}
+        return new SelectableEntityFilteringApplication();
+    }
 
-	@Test
-	public void testNoFilter() throws Exception {
-		final Person entity = target("people").path("1234").request()
-				.get(Person.class);
+    @Test
+    public void testNoFilter() throws Exception {
+        final Person entity = target("people").path("1234").request()
+                .get(Person.class);
 
-		// Not null values.
-		assertThat(entity.getFamilyName(), notNullValue());
-		assertThat(entity.getGivenName(), notNullValue());
-		assertThat(entity.getAddresses(), notNullValue());
-		assertThat(entity.getPhoneNumbers(), notNullValue());
+        // Not null values.
+        assertThat(entity.getFamilyName(), notNullValue());
+        assertThat(entity.getGivenName(), notNullValue());
+        assertThat(entity.getAddresses(), notNullValue());
+        assertThat(entity.getPhoneNumbers(), notNullValue());
 
-	}
+    }
 
-	/**
-	 * Test first level filters
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void testFilters() throws Exception {
-		final Person entity = target("people").path("1234")
-				.queryParam("select", "familyName,givenName").request()
-				.get(Person.class);
+    /**
+     * Test first level filters
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testFilters() throws Exception {
+        final Person entity = target("people").path("1234")
+                .queryParam("select", "familyName,givenName").request()
+                .get(Person.class);
 
-		// Not null values.
-		assertThat(entity.getFamilyName(), notNullValue());
-		assertThat(entity.getGivenName(), notNullValue());
+        // Not null values.
+        assertThat(entity.getFamilyName(), notNullValue());
+        assertThat(entity.getGivenName(), notNullValue());
 
-		// Null values.
-		assertThat(entity.getAddresses(), nullValue());
-		assertThat(entity.getPhoneNumbers(), nullValue());
-		assertThat(entity.getRegion(), nullValue());
-	}
+        // Null values.
+        assertThat(entity.getAddresses(), nullValue());
+        assertThat(entity.getPhoneNumbers(), nullValue());
+        assertThat(entity.getRegion(), nullValue());
+    }
 
-	/**
-	 * Test 2nd and 3rd level filters
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void testSubFilters() throws Exception {
-		final Person entity = target("people")
-				.path("1234")
-				.queryParam("select",
-						"familyName,givenName,addresses.streetAddress,addresses.phoneNumber.areaCode")
-				.request().get(Person.class);
+    /**
+     * Test 2nd and 3rd level filters
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testSubFilters() throws Exception {
+        final Person entity = target("people")
+                .path("1234")
+                .queryParam("select",
+                        "familyName,givenName,addresses.streetAddress,addresses.phoneNumber.areaCode")
+                .request().get(Person.class);
 
-		// Not null values.
-		assertThat(entity.getFamilyName(), notNullValue());
-		assertThat(entity.getGivenName(), notNullValue());
-		assertThat(entity.getAddresses().get(0).getStreetAddress(),
-				notNullValue());
-		assertThat(entity.getAddresses().get(0).getPhoneNumber().getAreaCode(),
-				notNullValue());
+        // Not null values.
+        assertThat(entity.getFamilyName(), notNullValue());
+        assertThat(entity.getGivenName(), notNullValue());
+        assertThat(entity.getAddresses().get(0).getStreetAddress(),
+                notNullValue());
+        assertThat(entity.getAddresses().get(0).getPhoneNumber().getAreaCode(),
+                notNullValue());
 
-		// Null values.
-		assertThat(entity.getRegion(), nullValue());
-		assertThat(entity.getAddresses().get(0).getPhoneNumber().getNumber(),
-				nullValue());
-	}
+        // Null values.
+        assertThat(entity.getRegion(), nullValue());
+        assertThat(entity.getAddresses().get(0).getPhoneNumber().getNumber(),
+                nullValue());
+    }
 
-	/**
-	 * Test that 1st and 2nd level filters with the same name act as expected
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void testFiltersSameName() throws Exception {
-		final Person firstLevel = target("people").path("1234")
-				.queryParam("select", "familyName,region").request()
-				.get(Person.class);
-		final Person secondLevel = target("people").path("1234")
-				.queryParam("select", "familyName,addresses.region").request()
-				.get(Person.class);
+    /**
+     * Test that 1st and 2nd level filters with the same name act as expected
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testFiltersSameName() throws Exception {
+        final Person firstLevel = target("people").path("1234")
+                .queryParam("select", "familyName,region").request()
+                .get(Person.class);
+        final Person secondLevel = target("people").path("1234")
+                .queryParam("select", "familyName,addresses.region").request()
+                .get(Person.class);
 
-		// Not null values.
-		assertThat(firstLevel.getRegion(), notNullValue());
-		assertThat(secondLevel.getAddresses().get(0).getRegion(),
-				notNullValue());
+        // Not null values.
+        assertThat(firstLevel.getRegion(), notNullValue());
+        assertThat(secondLevel.getAddresses().get(0).getRegion(),
+                notNullValue());
 
-		// Null values.
-		assertThat(firstLevel.getAddresses(), nullValue()); //confirms 2nd level region on addresses is null
-		assertThat(secondLevel.getRegion(), nullValue());
-	}
+        // Null values.
+        assertThat(firstLevel.getAddresses(), nullValue()); //confirms 2nd level region on addresses is null
+        assertThat(secondLevel.getRegion(), nullValue());
+    }
 
 }

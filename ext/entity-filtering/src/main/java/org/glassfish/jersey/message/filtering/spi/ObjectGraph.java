@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,7 +76,7 @@ public interface ObjectGraph {
      * Get fields with the given parent path. The parent path, which may exist in the requested filtering scopes, is
      * used for context to match against the field at the subgraph level.
      * 
-     * @param name of parent field.
+     * @param parent name of parent field.
      * @return non-filterable fields.
      */
     public Set<String> getFields(String parent);
@@ -95,7 +95,7 @@ public interface ObjectGraph {
      * Get subgraphs with the given parent path. The parent path, which may exist in the requested filtering scopes, is
      * used for context to match against the subgraph level.
      *
-     * @param name of parent field.
+     * @param parent name of parent field.
      * @return further-filterable map of fields.
      * 
      */

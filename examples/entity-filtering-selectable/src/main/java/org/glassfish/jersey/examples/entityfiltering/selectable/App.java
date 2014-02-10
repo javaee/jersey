@@ -45,9 +45,8 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
 /**
  * Java application class starting Grizzly2 server with Entity Data Filtering with query parameters.
@@ -56,7 +55,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
  */
 public final class App {
 
-	private static final URI BASE_URI = URI.create("http://localhost:8080/");
+    private static final URI BASE_URI = URI.create("http://localhost:8080/");
 
     public static void main(String[] args) {
         try {
@@ -66,7 +65,7 @@ public final class App {
 
             System.out.println("Application started.\nTry out one of these URIs:");
             for (final String path : new String[]{"people/1234", "people/1234?select=familyName,givenName",
-            		"people/1234?select=region,addresses.region",
+                    "people/1234?select=region,addresses.region",
                     "people/1234?select=familyName,givenName,addresses.phoneNumber.number"}) {
                 System.out.println(BASE_URI + path);
             }

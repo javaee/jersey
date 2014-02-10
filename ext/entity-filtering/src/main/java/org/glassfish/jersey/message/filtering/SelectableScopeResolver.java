@@ -45,15 +45,16 @@ import java.util.List;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Singleton;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
-import jersey.repackaged.com.google.common.collect.Sets;
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.util.Tokenizer;
 import org.glassfish.jersey.message.filtering.spi.ScopeResolver;
+
+import jersey.repackaged.com.google.common.collect.Sets;
 
 @Singleton
 public class SelectableScopeResolver implements ScopeResolver {
@@ -86,28 +87,27 @@ public class SelectableScopeResolver implements ScopeResolver {
     }
 
     @Override
-    public Set<String> resolve(Annotation[] annotations) {
-        Set<String> scopes = new HashSet<String>();
+    public Set<String> resolve(final Annotation[] annotations) {
+        final Set<String> scopes = new HashSet<String>();
 
-        List<String> fields = uriInfo.getQueryParameters().get(SELECTABLE_PARAM_NAME);
+        final List<String> fields = uriInfo.getQueryParameters().get(SELECTABLE_PARAM_NAME);
         if (fields != null && !fields.isEmpty()) {
-            for (String field : fields) {
+            for (final String field : fields) {
                 scopes.addAll(getScopesForField(field));
             }
-        }
-        else {
+        } else {
             scopes.add(DEFAULT_SCOPE);
         }
         return scopes;
     }
 
-    private Set<String> getScopesForField(String fieldName) {
-        Set<String> scopes = Sets.newHashSet();
+    private Set<String> getScopesForField(final String fieldName) {
+        final Set<String> scopes = Sets.newHashSet();
 
         // add specific scope in case of specific request
-        String[] fields = Tokenizer.tokenize(fieldName, ",");
-        for (String field : fields) {
-        	String[] subfields = Tokenizer.tokenize(field, ".");
+        final String[] fields = Tokenizer.tokenize(fieldName, ",");
+        for (final String field : fields) {
+        	final String[] subfields = Tokenizer.tokenize(field, ".");
         	// in case of nested path, add first level as stand-alone to ensure subgraph is added
     		scopes.add(SelectableScopeResolver.PREFIX + subfields[0]);
         	if(subfields.length > 1){

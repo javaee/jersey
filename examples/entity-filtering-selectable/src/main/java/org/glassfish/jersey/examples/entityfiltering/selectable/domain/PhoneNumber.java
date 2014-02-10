@@ -44,24 +44,24 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class PhoneNumber {
 
-	private String areaCode;
+    private String areaCode;
 
-	private String number;
+    private String number;
 
-	public String getNumber() {
-		return number;
-	}
+    public String getNumber() {
+        return number;
+    }
 
-	public void setNumber(String number) {
-		this.number = number;
-	}
+    public void setNumber(String number) {
+        this.number = number;
+    }
 
-	public String getAreaCode() {
-		return areaCode;
-	}
+    public String getAreaCode() {
+        return areaCode;
+    }
 
-	public void setAreaCode(String areaCode) {
-		this.areaCode = areaCode;
-	}
+    public void setAreaCode(String areaCode) {
+        this.areaCode = areaCode;
+    }
 
 }

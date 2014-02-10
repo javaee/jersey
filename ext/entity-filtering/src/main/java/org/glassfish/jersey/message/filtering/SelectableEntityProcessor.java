@@ -45,21 +45,21 @@ import java.util.Set;
 import javax.annotation.Priority;
 import javax.inject.Singleton;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-
 import org.glassfish.jersey.message.filtering.spi.AbstractEntityProcessor;
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
 import org.glassfish.jersey.message.filtering.spi.EntityProcessor;
+
+import jersey.repackaged.com.google.common.collect.Sets;
 
 @Singleton
 @Priority(Integer.MAX_VALUE - 5000)
 public class SelectableEntityProcessor extends AbstractEntityProcessor {
 
-	protected Result process(String fieldName, Class<?> fieldClass, Annotation[] fieldAnnotations,
-            Annotation[] annotations, EntityGraph graph) {
+	protected Result process(final String fieldName, final Class<?> fieldClass, final Annotation[] fieldAnnotations,
+			final Annotation[] annotations, final EntityGraph graph) {
 
         if (fieldName != null) {
-            Set<String> scopes = Sets.newHashSet();
+        	final Set<String> scopes = Sets.newHashSet();
 
             // add default selectable scope in case of none requested
             scopes.add(SelectableScopeResolver.DEFAULT_SCOPE);

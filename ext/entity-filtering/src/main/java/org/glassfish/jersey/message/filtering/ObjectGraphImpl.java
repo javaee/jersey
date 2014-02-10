@@ -47,13 +47,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
-
 import org.glassfish.jersey.message.filtering.spi.EntityGraph;
 import org.glassfish.jersey.message.filtering.spi.ObjectGraph;
 import org.glassfish.jersey.message.filtering.spi.ScopeProvider;
+
+import jersey.repackaged.com.google.common.base.Function;
+import jersey.repackaged.com.google.common.collect.Maps;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Default implementation of {@link ObjectGraph}.
@@ -88,7 +88,7 @@ final class ObjectGraphImpl implements ObjectGraph {
     }
     
 	@Override
-	public Set<String> getFields(String parent) {
+	public Set<String> getFields(final String parent) {
 		Set<String> childFilteringscopes = getFilteringScopes(parent);
 		if (fields == null) {
             fields = graph.getFields(Sets.union(childFilteringscopes, Collections.singleton(ScopeProvider.DEFAULT_SCOPE)));
@@ -102,7 +102,7 @@ final class ObjectGraphImpl implements ObjectGraph {
     }
 	
 	@Override
-    public Map<String, ObjectGraph> getSubgraphs(String parent) {
+    public Map<String, ObjectGraph> getSubgraphs(final String parent) {
 		Set<String> childFilteringscopes = getFilteringScopes(parent);
 		
         if (subgraphs == null) {
@@ -120,14 +120,14 @@ final class ObjectGraphImpl implements ObjectGraph {
         return subgraphs;
     }
 	
-	private Set<String> getFilteringScopes(String parent){
+	private Set<String> getFilteringScopes(final String parent){
 		Set<String> childFilteringscopes = new HashSet<String>();
 		if (filteringScopes.contains(SelectableScopeResolver.DEFAULT_SCOPE) || parent == null) {
 			childFilteringscopes = filteringScopes;
 		} else {
-			for(String filteringScope : filteringScopes) {
-				Pattern p = Pattern.compile(SelectableScopeResolver.PREFIX + parent + "\\.(\\w+)(\\.\\w+)*$");
-				Matcher m = p.matcher(filteringScope);
+			for(final String filteringScope : filteringScopes) {
+				final Pattern p = Pattern.compile(SelectableScopeResolver.PREFIX + parent + "\\.(\\w+)(\\.\\w+)*$");
+				final Matcher m = p.matcher(filteringScope);
 				if(m.matches()) {
 					childFilteringscopes.add(SelectableScopeResolver.PREFIX + m.group(1));
 				} else {
