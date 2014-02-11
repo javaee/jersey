@@ -44,6 +44,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -170,7 +171,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
 
         @Override
-        public void dispose(T instance) {
+        public void dispose(final T instance) {
             referenceProvider.preDestroy(instance);
         }
 
@@ -182,17 +183,17 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
          * @param beanManager current bean manager to get references from.
          * @param cdiManaged  set to true if the component should be managed by CDI
          */
-        CdiFactory(final Class<T> rawType, final ServiceLocator locator, final BeanManager beanManager, boolean cdiManaged) {
+        CdiFactory(final Class<T> rawType, final ServiceLocator locator, final BeanManager beanManager, final boolean cdiManaged) {
             this.clazz = rawType;
             this.qualifiers = getQualifiers(clazz.getAnnotations());
             this.beanManager = beanManager;
             this.locator = locator;
             this.referenceProvider = cdiManaged ? new InstanceManager<T>() {
                 @Override
-                public T getInstance(Class<T> clazz) {
+                public T getInstance(final Class<T> clazz) {
 
                     final Set<Bean<?>> beans = beanManager.getBeans(clazz, qualifiers);
-                    for (Bean b : beans) {
+                    for (final Bean b : beans) {
                         final Object instance = beanManager.getReference(b, clazz, beanManager.createCreationalContext(b));
                         return (T) instance;
                     }
@@ -200,7 +201,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 }
 
                 @Override
-                public void preDestroy(T instance) {
+                public void preDestroy(final T instance) {
                     // do nothing
                 }
 
@@ -212,7 +213,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 final CreationalContext creationalContext = beanManager.createCreationalContext(null);
 
                 @Override
-                public T getInstance(Class<T> clazz) {
+                public T getInstance(final Class<T> clazz) {
                     final T instance = injectionTarget.produce(creationalContext);
                     injectionTarget.inject(instance, creationalContext);
                     if (locator != null) {
@@ -224,7 +225,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 }
 
                 @Override
-                public void preDestroy(T instance) {
+                public void preDestroy(final T instance) {
                     injectionTarget.preDestroy(instance);
                 }
             };
@@ -266,12 +267,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
                 if (annotated instanceof AnnotatedParameter) {
 
-                    AnnotatedParameter annotatedParameter = (AnnotatedParameter) annotated;
+                    final AnnotatedParameter annotatedParameter = (AnnotatedParameter) annotated;
                     final AnnotatedCallable callable = annotatedParameter.getDeclaringCallable();
 
                     if (callable instanceof AnnotatedConstructor) {
 
-                        AnnotatedConstructor ac = (AnnotatedConstructor) callable;
+                        final AnnotatedConstructor ac = (AnnotatedConstructor) callable;
                         final int position = annotatedParameter.getPosition();
                         final List<Parameter> parameters = Parameter.create(clazz, clazz, ac.getJavaMember(), false);
 
@@ -292,17 +293,17 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
          * @return String value for given injection point.
          */
         @javax.enterprise.inject.Produces
-        public String getParameterValue(InjectionPoint injectionPoint, BeanManager beanManager) {
+        public String getParameterValue(final InjectionPoint injectionPoint, final BeanManager beanManager) {
 
             final Parameter parameter = parameterCache.compute(injectionPoint);
 
             if (parameter != null) {
 
-                ServiceLocator locator = beanManager.getExtension(CdiComponentProvider.class).locator;
+                final ServiceLocator locator = beanManager.getExtension(CdiComponentProvider.class).locator;
 
                 final Set<ValueFactoryProvider> providers = Providers.getProviders(locator, ValueFactoryProvider.class);
 
-                for (ValueFactoryProvider vfp : providers) {
+                for (final ValueFactoryProvider vfp : providers) {
                     final Factory<?> valueFactory = vfp.getValueFactory(parameter);
                     if (valueFactory != null) {
                         return (String) valueFactory.provide();
@@ -333,13 +334,13 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             return false;
         }
 
-        DynamicConfiguration dc = Injections.getConfiguration(locator);
+        final DynamicConfiguration dc = Injections.getConfiguration(locator);
 
         final ServiceBindingBuilder bindingBuilder =
                 Injections.newFactoryBinder(new CdiFactory(clazz, locator, beanManager, isCdiManaged));
 
         bindingBuilder.to(clazz);
-        for (Class contract : providerContracts) {
+        for (final Class contract : providerContracts) {
             bindingBuilder.to(contract);
         }
 
@@ -366,14 +367,14 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         dc.commit();
     }
 
-    private boolean isCdiComponent(Class<?> component) {
+    private boolean isCdiComponent(final Class<?> component) {
         final Annotation[] qualifiers = getQualifiers(component.getAnnotations());
         return !beanManager.getBeans(component, qualifiers).isEmpty();
     }
 
-    private static Annotation[] getQualifiers(Annotation[] annotations) {
-        List<Annotation> result = new ArrayList<Annotation>(annotations.length);
-        for (Annotation a : annotations) {
+    private static Annotation[] getQualifiers(final Annotation[] annotations) {
+        final List<Annotation> result = new ArrayList<Annotation>(annotations.length);
+        for (final Annotation a : annotations) {
             if (a.annotationType().isAnnotationPresent(Qualifier.class)) {
                 result.add(a);
             }
@@ -381,18 +382,18 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         return result.toArray(new Annotation[result.size()]);
     }
 
-    private boolean isManagedBean(Class<?> component) {
+    private boolean isManagedBean(final Class<?> component) {
         return component.isAnnotationPresent(ManagedBean.class);
     }
 
     @SuppressWarnings("unused")
-    private void afterTypeDiscovery(@Observes AfterTypeDiscovery afterTypeDiscovery) {
+    private void afterTypeDiscovery(@Observes final AfterTypeDiscovery afterTypeDiscovery) {
         final List<Class<?>> interceptors = afterTypeDiscovery.getInterceptors();
         interceptors.add(WebApplicationExceptionPreservingInterceptor.class);
     }
 
     @SuppressWarnings("unused")
-    private void beforeBeanDiscovery(@Observes BeforeBeanDiscovery beforeBeanDiscovery, BeanManager beanManager) {
+    private void beforeBeanDiscovery(@Observes final BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(JaxRsParamProducer.class));
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(WebApplicationExceptionPreservingInterceptor.class));
     }
@@ -410,10 +411,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         BeanManager beanManager;
 
         @AroundInvoke
-        public Object intercept(InvocationContext ic) throws Exception {
+        public Object intercept(final InvocationContext ic) throws Exception {
             try {
                 return ic.proceed();
-            } catch (WebApplicationException wae) {
+            } catch (final WebApplicationException wae) {
                 final CdiComponentProvider extension = beanManager.getExtension(CdiComponentProvider.class);
                 final ContainerRequest jerseyRequest = extension.locator.getService(ContainerRequest.class);
                 if (jerseyRequest != null) {
@@ -425,13 +426,13 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     @SuppressWarnings("unused")
-    private void processInjectionTarget(@Observes ProcessInjectionTarget event) {
+    private void processInjectionTarget(@Observes final ProcessInjectionTarget event) {
         final InjectionTarget it = event.getInjectionTarget();
         final Class<?> componentClass = event.getAnnotatedType().getJavaClass();
 
         final Set<InjectionPoint> injectionPoints = it.getInjectionPoints();
 
-        for (InjectionPoint injectionPoint : injectionPoints) {
+        for (final InjectionPoint injectionPoint : injectionPoints) {
             final Member member = injectionPoint.getMember();
             if (member instanceof Field) {
                 addInjecteeToSkip(componentClass, fieldsToSkip, (Field) member);
@@ -440,39 +441,22 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             }
         }
 
-        if (isJaxRsComponentType(componentClass)) {
-            event.setInjectionTarget(new InjectionTarget() {
-
-                @Override
-                public void inject(Object t, CreationalContext cc) {
-                    it.inject(t, cc);
-                    if (locator != null) {
-                        locator.inject(t, CDI_CLASS_ANALYZER);
-                    }
-                }
-
-                @Override
-                public void postConstruct(Object t) {
-                    it.postConstruct(t);
-                }
-
-                @Override
-                public void preDestroy(Object t) {
-                    it.preDestroy(t);
-                }
-
-                @Override
-                public Object produce(CreationalContext cc) {
-                    return it.produce(cc);
-                }
-
-                @Override
-                public void dispose(Object t) {
-                    it.dispose(t);
-                }
+        if (isJerseyOrDependencyType(componentClass)) {
+            event.setInjectionTarget(new CdiInjectionTarget(it) {
 
                 @Override
                 public Set getInjectionPoints() {
+                    // Tell CDI to ignore Jersey (or it's dependencies) classes when injecting.
+                    // CDI will not treat these classes as CDI beans (as they are not).
+                    return Collections.emptySet();
+                }
+            });
+        } else if (isJaxRsComponentType(componentClass)) {
+            event.setInjectionTarget(new CdiInjectionTarget(it) {
+
+                @Override
+                public Set getInjectionPoints() {
+                    // Inject CDI beans into JAX-RS resources/providers/application.
                     return it.getInjectionPoints();
                 }
             });
@@ -493,10 +477,22 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
      * @return true if the type represents a JAX-RS component type.
      */
     /* package */
-    static boolean isJaxRsComponentType(Class<?> clazz) {
+    static boolean isJaxRsComponentType(final Class<?> clazz) {
         return Application.class.isAssignableFrom(clazz) ||
                 Providers.isJaxRsProvider(clazz) ||
                 Resource.from(clazz) != null;
+    }
+
+    private static boolean isJerseyOrDependencyType(final Class<?> clazz) {
+        final String pckg = clazz.getPackage().getName();
+
+        // Ignore Jersey Examples from this check.
+        return pckg.contains("org.glassfish.hk2")
+                || pckg.contains("jersey.repackaged")
+                || pckg.contains("org.jvnet.hk2")
+                || (pckg.startsWith("org.glassfish.jersey")
+                    && !pckg.startsWith("org.glassfish.jersey.examples")
+                    && !pckg.startsWith("org.glassfish.jersey.tests"));
     }
 
     private static BeanManager beanManagerFromJndi() {
@@ -504,10 +500,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         try {
             initialContext = new InitialContext();
             return (BeanManager) initialContext.lookup("java:comp/BeanManager");
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             try {
                 return CDI.current().getBeanManager();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 LOGGER.config(LocalizationMessages.CDI_BEAN_MANAGER_JNDI_LOOKUP_FAILED());
                 return null;
             }
@@ -515,7 +511,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             if (initialContext != null) {
                 try {
                     initialContext.close();
-                } catch (NamingException ignored) {
+                } catch (final NamingException ignored) {
                     // no-op
                 }
             }
@@ -533,7 +529,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 ? new InjecteeSkippingAnalyzer(defaultClassAnalyzer, methodsToSkip, fieldsToSkip)
                 : defaultClassAnalyzer;
 
-        DynamicConfiguration dc = Injections.getConfiguration(locator);
+        final DynamicConfiguration dc = Injections.getConfiguration(locator);
 
         final ScopedBindingBuilder bindingBuilder =
                 Injections.newBinder(customizedClassAnalyzer);
@@ -545,5 +541,45 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         Injections.addBinding(bindingBuilder, dc);
 
         dc.commit();
+    }
+
+    private abstract class CdiInjectionTarget implements InjectionTarget {
+
+        private final InjectionTarget delegate;
+
+        protected CdiInjectionTarget(final InjectionTarget delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void inject(final Object t, final CreationalContext cc) {
+            delegate.inject(t, cc);
+            if (locator != null) {
+                locator.inject(t, CDI_CLASS_ANALYZER);
+            }
+        }
+
+        @Override
+        public void postConstruct(final Object t) {
+            delegate.postConstruct(t);
+        }
+
+        @Override
+        public void preDestroy(final Object t) {
+            delegate.preDestroy(t);
+        }
+
+        @Override
+        public Object produce(final CreationalContext cc) {
+            return delegate.produce(cc);
+        }
+
+        @Override
+        public void dispose(final Object t) {
+            delegate.dispose(t);
+        }
+
+        @Override
+        public abstract Set getInjectionPoints();
     }
 }
