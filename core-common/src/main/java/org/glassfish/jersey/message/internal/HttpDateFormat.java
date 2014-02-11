@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -79,13 +79,13 @@ public class HttpDateFormat {
     };
 
     private static List<SimpleDateFormat> createDateFormats() {
-        SimpleDateFormat[] formats = new SimpleDateFormat[]{
+        final SimpleDateFormat[] formats = new SimpleDateFormat[]{
             new SimpleDateFormat(RFC1123_DATE_FORMAT_PATTERN, Locale.US),
             new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN, Locale.US),
             new SimpleDateFormat(ANSI_C_ASCTIME_DATE_FORMAT_PATTERN, Locale.US)
         };
 
-        TimeZone tz = TimeZone.getTimeZone("GMT");
+        final TimeZone tz = TimeZone.getTimeZone("GMT");
         formats[0].setTimeZone(tz);
         formats[1].setTimeZone(tz);
         formats[2].setTimeZone(tz);
@@ -95,7 +95,7 @@ public class HttpDateFormat {
 
     /**
      * Return an unmodifiable list of HTTP specified date formats to use for
-     * parsing or formating {@link Date}.
+     * parsing or formatting {@link Date}.
      * <p>
      * The list of date formats are scoped to the current thread and may be
      * used without requiring to synchronize access to the instances when
@@ -114,9 +114,24 @@ public class HttpDateFormat {
      * used without requiring to synchronize access to the instance when
      * parsing or formatting.
      *
+     * @deprecated typo in the method name. Use {@link #getPreferredDateFormat()} instead.
      * @return the preferred of data format.
      */
+    @Deprecated
     public static SimpleDateFormat getPreferedDateFormat() {
+        return getPreferredDateFormat();
+    }
+
+    /**
+     * Get the preferred HTTP specified date format (RFC 1123).
+     * <p>
+     * The date format is scoped to the current thread and may be
+     * used without requiring to synchronize access to the instance when
+     * parsing or formatting.
+     *
+     * @return the preferred of data format.
+     */
+    public static SimpleDateFormat getPreferredDateFormat() {
         return dateFormats.get().get(0);
     }
 
@@ -128,12 +143,12 @@ public class HttpDateFormat {
      * @return the date
      * @throws java.text.ParseException
      */
-    public static Date readDate(String date) throws ParseException {
+    public static Date readDate(final String date) throws ParseException {
         ParseException pe = null;
-        for (SimpleDateFormat f : HttpDateFormat.getDateFormats()) {
+        for (final SimpleDateFormat f : HttpDateFormat.getDateFormats()) {
             try {
                 return f.parse(date);
-            } catch (ParseException e) {
+            } catch (final ParseException e) {
                 pe = (pe == null) ? e : pe;
             }
         }

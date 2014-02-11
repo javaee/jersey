@@ -75,21 +75,21 @@ class ParamConverters {
     private static abstract class AbstractStringReader<T> implements ParamConverter<T> {
 
         @Override
-        public T fromString(String value) {
+        public T fromString(final String value) {
             try {
                 return _fromString(value);
-            } catch (InvocationTargetException ex) {
+            } catch (final InvocationTargetException ex) {
                 // if the value is an empty string, return null
                 if (value.isEmpty()) {
                     return null;
                 }
-                Throwable cause = ex.getCause();
+                final Throwable cause = ex.getCause();
                 if (cause instanceof WebApplicationException) {
                     throw (WebApplicationException) cause;
                 } else {
                     throw new ExtractorException(cause);
                 }
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 throw new ProcessingException(ex);
             }
         }
@@ -97,7 +97,7 @@ class ParamConverters {
         protected abstract T _fromString(String value) throws Exception;
 
         @Override
-        public String toString(T value) throws IllegalArgumentException {
+        public String toString(final T value) throws IllegalArgumentException {
             return value.toString();
         }
 
@@ -111,14 +111,14 @@ class ParamConverters {
     public static class StringConstructor implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
 
             final Constructor constructor = AccessController.doPrivileged(ReflectionHelper.getStringConstructorPA(rawType));
 
             return (constructor == null) ? null : new AbstractStringReader<T>() {
 
                 @Override
-                protected T _fromString(String value) throws Exception {
+                protected T _fromString(final String value) throws Exception {
                     return rawType.cast(constructor.newInstance(value));
                 }
             };
@@ -134,14 +134,14 @@ class ParamConverters {
     public static class TypeValueOf implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
 
             final Method valueOf = AccessController.doPrivileged(ReflectionHelper.getValueOfStringMethodPA(rawType));
 
             return (valueOf == null) ? null : new AbstractStringReader<T>() {
 
                 @Override
-                public T _fromString(String value) throws Exception {
+                public T _fromString(final String value) throws Exception {
                     return rawType.cast(valueOf.invoke(null, value));
                 }
             };
@@ -156,14 +156,14 @@ class ParamConverters {
     public static class TypeFromString implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
 
             final Method fromStringMethod = AccessController.doPrivileged(ReflectionHelper.getFromStringStringMethodPA(rawType));
 
             return (fromStringMethod == null) ? null : new AbstractStringReader<T>() {
 
                 @Override
-                public T _fromString(String value) throws Exception {
+                public T _fromString(final String value) throws Exception {
                     return rawType.cast(fromStringMethod.invoke(null, value));
                 }
             };
@@ -178,7 +178,7 @@ class ParamConverters {
     public static class TypeFromStringEnum extends TypeFromString {
 
         @Override
-        public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
             return (!Enum.class.isAssignableFrom(rawType)) ? null : super.getConverter(rawType, genericType, annotations);
         }
     }
@@ -192,20 +192,20 @@ class ParamConverters {
     public static class DateProvider implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(final Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
             return (rawType != Date.class) ? null : new ParamConverter<T>() {
 
                 @Override
-                public T fromString(String value) {
+                public T fromString(final String value) {
                     try {
                         return rawType.cast(HttpDateFormat.readDate(value));
-                    } catch (ParseException ex) {
+                    } catch (final ParseException ex) {
                         throw new ExtractorException(ex);
                     }
                 }
 
                 @Override
-                public String toString(T value) throws IllegalArgumentException {
+                public String toString(final T value) throws IllegalArgumentException {
                     return value.toString();
                 }
             };
@@ -225,7 +225,7 @@ class ParamConverters {
          *
          * @param locator HK2 service locator.
          */
-        public AggregatedProvider(@Context ServiceLocator locator) {
+        public AggregatedProvider(@Context final ServiceLocator locator) {
             providers = new ParamConverterProvider[]{
                     // ordering is important (e.g. Date provider must be executed before String Constructor
                     // as Date has a deprecated String constructor
@@ -239,8 +239,8 @@ class ParamConverters {
         }
 
         @Override
-        public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
-            for (ParamConverterProvider p : providers) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+            for (final ParamConverterProvider p : providers) {
                 // This iteration trough providers is important. It can't be replaced by just registering all the internal
                 // providers of this class. Using iteration trough array the correct ordering of providers is ensured (see
                 // javadoc of PathParam, HeaderParam, ... - there is defined a fixed order of constructing objects form Strings).

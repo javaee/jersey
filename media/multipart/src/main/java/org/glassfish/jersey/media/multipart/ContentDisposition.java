@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,9 +64,8 @@ public class ContentDisposition {
     private Date readDate;
     private long size;
 
-    protected ContentDisposition(String type, String fileName,
-            Date creationDate, Date modificationDate, Date readDate,
-            long size) {
+    protected ContentDisposition(final String type, final String fileName, final Date creationDate,
+                                 final Date modificationDate, final Date readDate, final long size) {
         this.type = type;
         this.fileName = fileName;
         this.creationDate = creationDate;
@@ -76,20 +75,20 @@ public class ContentDisposition {
         this.parameters = Collections.emptyMap();
     }
 
-    public ContentDisposition(String header) throws ParseException {
+    public ContentDisposition(final String header) throws ParseException {
         this(header, false);
     }
 
-    public ContentDisposition(String header, boolean fileNameFix) throws ParseException {
+    public ContentDisposition(final String header, final boolean fileNameFix) throws ParseException {
         this(HttpHeaderReader.newInstance(header), fileNameFix);
     }
 
-    public ContentDisposition(HttpHeaderReader reader, boolean fileNameFix) throws ParseException {
+    public ContentDisposition(final HttpHeaderReader reader, final boolean fileNameFix) throws ParseException {
         reader.hasNext();
 
         type = reader.nextToken();
 
-        Map<String, String> paramsOrNull = reader.hasNext() ?
+        final Map<String, String> paramsOrNull = reader.hasNext() ?
                 HttpHeaderReader.readParameters(reader, fileNameFix) :
                 null;
 
@@ -174,7 +173,7 @@ public class ContentDisposition {
     }
 
     protected StringBuilder toStringBuffer() {
-        StringBuilder sb = new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
 
         sb.append(type);
         addStringParameter(sb, "filename", fileName);
@@ -186,19 +185,19 @@ public class ContentDisposition {
         return sb;
     }
 
-    protected void addStringParameter(StringBuilder sb, String name, String p) {
+    protected void addStringParameter(final StringBuilder sb, final String name, final String p) {
         if (p != null) {
             sb.append("; ").append(name).append("=\"").append(p).append("\"");
         }
     }
 
-    protected void addDateParameter(StringBuilder sb, String name, Date p) {
+    protected void addDateParameter(final StringBuilder sb, final String name, final Date p) {
         if (p != null) {
-            sb.append("; ").append(name).append("=\"").append(HttpDateFormat.getPreferedDateFormat().format(p)).append("\"");
+            sb.append("; ").append(name).append("=\"").append(HttpDateFormat.getPreferredDateFormat().format(p)).append("\"");
         }
     }
 
-    protected void addLongParameter(StringBuilder sb, String name, Long p) {
+    protected void addLongParameter(final StringBuilder sb, final String name, final Long p) {
         if (p != -1) {
             sb.append("; ").append(name).append('=').append(Long.toString(p));
         }
@@ -216,22 +215,22 @@ public class ContentDisposition {
         size = createLong("size");
     }
 
-    private Date createDate(String name) throws ParseException {
-        String value = parameters.get(name);
+    private Date createDate(final String name) throws ParseException {
+        final String value = parameters.get(name);
         if (value == null) {
             return null;
         }
-        return HttpDateFormat.getPreferedDateFormat().parse(value);
+        return HttpDateFormat.getPreferredDateFormat().parse(value);
     }
 
-    private long createLong(String name) throws ParseException {
-        String value = parameters.get(name);
+    private long createLong(final String name) throws ParseException {
+        final String value = parameters.get(name);
         if (value == null) {
             return -1;
         }
         try {
             return Long.valueOf(value);
-        } catch (NumberFormatException e) {
+        } catch (final NumberFormatException e) {
             throw new ParseException("Error parsing size parameter of value, " + value, 0);
         }
     }
@@ -242,7 +241,7 @@ public class ContentDisposition {
      * @param type the disposition typr.
      * @return the content disposition builder.
      */
-    public static ContentDispositionBuilder type(String type) {
+    public static ContentDispositionBuilder type(final String type) {
         return new ContentDispositionBuilder(type);
     }
 
@@ -261,7 +260,7 @@ public class ContentDisposition {
         protected Date readDate;
         protected long size = -1;
 
-        ContentDispositionBuilder(String type) {
+        ContentDispositionBuilder(final String type) {
             this.type = type;
         }
 
@@ -273,7 +272,7 @@ public class ContentDisposition {
          * @return this builder.
          */
         @SuppressWarnings("unchecked")
-        public T fileName(String fileName) {
+        public T fileName(final String fileName) {
             this.fileName = fileName;
             return (T) this;
         }
@@ -286,7 +285,7 @@ public class ContentDisposition {
          * @return this builder.
          */
         @SuppressWarnings("unchecked")
-        public T creationDate(Date creationDate) {
+        public T creationDate(final Date creationDate) {
             this.creationDate = creationDate;
             return (T) this;
         }
@@ -299,7 +298,7 @@ public class ContentDisposition {
          * @return this builder.
          */
         @SuppressWarnings("unchecked")
-        public T modificationDate(Date modificationDate) {
+        public T modificationDate(final Date modificationDate) {
             this.modificationDate = modificationDate;
             return (T) this;
         }
@@ -312,7 +311,7 @@ public class ContentDisposition {
          * @return this builder.
          */
         @SuppressWarnings("unchecked")
-        public T readDate(Date readDate) {
+        public T readDate(final Date readDate) {
             this.readDate = readDate;
             return (T) this;
         }
@@ -324,7 +323,7 @@ public class ContentDisposition {
          * @return this builder.
          */
         @SuppressWarnings("unchecked")
-        public T size(long size) {
+        public T size(final long size) {
             this.size = size;
             return (T) this;
         }
@@ -336,7 +335,7 @@ public class ContentDisposition {
          */
         @SuppressWarnings("unchecked")
         public V build() {
-            ContentDisposition cd = new ContentDisposition(type, fileName, creationDate, modificationDate, readDate, size);
+            final ContentDisposition cd = new ContentDisposition(type, fileName, creationDate, modificationDate, readDate, size);
             return (V) cd;
         }
     }

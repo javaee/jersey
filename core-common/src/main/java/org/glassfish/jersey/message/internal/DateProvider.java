@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,24 +59,24 @@ import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentEx
 public class DateProvider implements HeaderDelegateProvider<Date> {
 
     @Override
-    public boolean supports(Class<?> type) {
+    public boolean supports(final Class<?> type) {
         return Date.class.isAssignableFrom(type);
     }
 
     @Override
-    public String toString(Date header) {
+    public String toString(final Date header) {
         throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.DATE_IS_NULL());
-        return HttpDateFormat.getPreferedDateFormat().format(header);
+        return HttpDateFormat.getPreferredDateFormat().format(header);
     }
 
     @Override
-    public Date fromString(String header) {
+    public Date fromString(final String header) {
 
         throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.DATE_IS_NULL());
 
         try {
             return HttpHeaderReader.readDate(header);
-        } catch (ParseException ex) {
+        } catch (final ParseException ex) {
             throw new IllegalArgumentException(
                     "Error parsing date '" + header + "'", ex);
         }
