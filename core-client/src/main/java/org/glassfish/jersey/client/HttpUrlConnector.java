@@ -46,6 +46,8 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
@@ -84,7 +86,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  */
 class HttpUrlConnector implements Connector {
 
-    private static Logger LOG = Logger.getLogger(HttpUrlConnector.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(HttpUrlConnector.class.getName());
     private static final String ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY = "sun.net.http.allowRestrictedHeaders";
     // The list of restricted headers is extracted from sun.net.www.protocol.http.HttpURLConnection
     private static final String[] restrictedHeaders = {
@@ -142,9 +144,9 @@ class HttpUrlConnector implements Connector {
         // already be some connection(s), that existed before the property was set/changed.
         isRestrictedHeaderPropertySet = Boolean.valueOf(AccessController.doPrivileged(
                 PropertiesHelper.getSystemProperty(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY, "false")
-        )).booleanValue();
+        ));
 
-        LOG.config(isRestrictedHeaderPropertySet ?
+        LOGGER.config(isRestrictedHeaderPropertySet ?
                 LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_TRUE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY) :
                 LocalizationMessages.RESTRICTED_HEADER_PROPERTY_SETTING_FALSE(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY)
         );
@@ -318,11 +320,17 @@ class HttpUrlConnector implements Connector {
 
         final int code = uc.getResponseCode();
         final String reasonPhrase = uc.getResponseMessage();
-        final Response.StatusType status = reasonPhrase == null ?
-                Statuses.from(code) : Statuses.from(code, reasonPhrase);
-        ClientResponse responseContext = new ClientResponse(
-                status, request);
-        responseContext.headers(Maps.<String, List<String>>filterKeys(uc.getHeaderFields(), Predicates.notNull()));
+        final Response.StatusType status =
+                reasonPhrase == null ? Statuses.from(code) : Statuses.from(code, reasonPhrase);
+        final URI resolvedRequestUri;
+        try {
+            resolvedRequestUri = uc.getURL().toURI();
+        } catch (URISyntaxException e) {
+            throw new ProcessingException(e);
+        }
+
+        ClientResponse responseContext = new ClientResponse(status, request, resolvedRequestUri);
+        responseContext.headers(Maps.filterKeys(uc.getHeaderFields(), Predicates.notNull()));
         responseContext.setEntityStream(getInputStream(uc));
 
         return responseContext;
@@ -359,20 +367,21 @@ class HttpUrlConnector implements Connector {
             }
         }
         if (restrictedSent) {
-            LOG.warning(LocalizationMessages.RESTRICTED_HEADER_POSSIBLY_IGNORED(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY));
+            LOGGER.warning(LocalizationMessages.RESTRICTED_HEADER_POSSIBLY_IGNORED(ALLOW_RESTRICTED_HEADERS_SYSTEM_PROPERTY));
         }
     }
 
     private boolean isHeaderRestricted(String name, String value) {
         name = name.toLowerCase();
-        return name.startsWith("sec-") || restrictedHeaderSet.contains(name) && !(name.equals("connection") && value.equalsIgnoreCase("close"));
+        return name.startsWith("sec-") ||
+                restrictedHeaderSet.contains(name) && !("connection".equalsIgnoreCase(name) && "close".equalsIgnoreCase(value));
     }
 
     /**
      * Workaround for a bug in {@code HttpURLConnection.setRequestMethod(String)}
      * The implementation of Sun/Oracle is throwing a {@code ProtocolException}
-     * when the method is other than the HTTP/1.1 default methods. So to use {@code PROPFIND}
-     * and others, we must apply this workaround.
+     * when the method is not in the list of the HTTP/1.1 default methods.
+     * This means that to use e.g. {@code PROPFIND} and others, we must apply this workaround.
      *
      * See issue http://java.net/jira/browse/JERSEY-639
      */

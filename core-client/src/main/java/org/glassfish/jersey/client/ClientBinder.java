@@ -77,8 +77,6 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 class ClientBinder extends AbstractBinder {
 
-    private final RuntimeType runtimeType;
-
     private final Map<String, Object> applicationProperties;
 
 
@@ -109,9 +107,8 @@ class ClientBinder extends AbstractBinder {
     }
 
 
-    ClientBinder(Map<String, Object> applicationProperties, RuntimeType runtimeType) {
+    ClientBinder(Map<String, Object> applicationProperties) {
         this.applicationProperties = applicationProperties;
-        this.runtimeType = runtimeType;
     }
 
     @Override
@@ -120,12 +117,12 @@ class ClientBinder extends AbstractBinder {
                 new JerseyErrorService.Binder(),
                 new ContextInjectionResolver.Binder(),
                 new JerseyClassAnalyzer.Binder(),
-                new MessagingBinders.MessageBodyProviders(applicationProperties, runtimeType),
+                new MessagingBinders.MessageBodyProviders(applicationProperties, RuntimeType.CLIENT),
                 new MessagingBinders.HeaderDelegateProviders(),
                 new MessageBodyFactory.Binder(),
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, runtimeType));
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, RuntimeType.CLIENT));
 
         bindFactory(ReferencingFactory.<ClientConfig>referenceFactory()).to(new TypeLiteral<Ref<ClientConfig>>() {
         }).in(RequestScoped.class);
@@ -139,7 +136,7 @@ class ClientBinder extends AbstractBinder {
 
         bindFactory(PropertiesDelegateFactory.class, Singleton.class).to(PropertiesDelegate.class).in(RequestScoped.class);
 
-        // ChunkedInput support
+        // ChunkedInput entity support
         bind(ChunkedInputReader.class).to(MessageBodyReader.class).in(Singleton.class);
     }
 }

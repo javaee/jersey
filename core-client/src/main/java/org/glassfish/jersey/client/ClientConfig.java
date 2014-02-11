@@ -379,8 +379,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             final State runtimeCfgState = this.copy();
             runtimeCfgState.markAsShared();
 
-            final ServiceLocator locator = Injections.createLocator(
-                    new ClientBinder(runtimeCfgState.getProperties(), RuntimeType.CLIENT));
+            final ServiceLocator locator = Injections.createLocator(new ClientBinder(runtimeCfgState.getProperties()));
             locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
             // AutoDiscoverable.

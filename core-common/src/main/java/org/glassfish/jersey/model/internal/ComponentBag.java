@@ -99,7 +99,7 @@ public class ComponentBag {
         @Override
         public boolean apply(ContractProvider model) {
             final Set<Class<?>> contracts = model.getContracts();
-            if (contracts.size() == 0) {
+            if (contracts.isEmpty()) {
                 return true;
             }
 

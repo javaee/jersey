@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.apache.connector;
 
 import java.io.BufferedInputStream;
@@ -471,6 +470,10 @@ class ApacheConnector implements Connector {
                     Statuses.from(response.getStatusLine().getStatusCode(), response.getStatusLine().getReasonPhrase());
 
             final ClientResponse responseContext = new ClientResponse(status, clientRequest);
+            final List<URI> redirectLocations = context.getRedirectLocations();
+            if (redirectLocations != null && !redirectLocations.isEmpty()) {
+                responseContext.setResolvedRequestUri(redirectLocations.get(redirectLocations.size()-1));
+            }
 
             final Header[] respHeaders = response.getAllHeaders();
             for (final Header header : respHeaders) {
@@ -531,8 +534,8 @@ class ApacheConnector implements Connector {
     }
 
     private HttpUriRequest getUriHttpRequest(final ClientRequest clientRequest) {
-        final Boolean redirectsEnabled = clientRequest.resolveProperty(ClientProperties.FOLLOW_REDIRECTS,
-                requestConfig.isRedirectsEnabled());
+        final Boolean redirectsEnabled =
+                clientRequest.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, requestConfig.isRedirectsEnabled());
         final RequestConfig config = RequestConfig.copy(requestConfig).setRedirectsEnabled(redirectsEnabled).build();
 
         final Boolean bufferingEnabled = clientRequest.resolveProperty(ClientProperties.REQUEST_ENTITY_PROCESSING,
