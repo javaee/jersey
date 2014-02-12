@@ -43,6 +43,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,8 +63,11 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.annotation.ManagedBean;
 import javax.annotation.Priority;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Default;
+import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.AfterTypeDiscovery;
 import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedCallable;
@@ -77,6 +82,7 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
 import javax.inject.Singleton;
@@ -429,10 +435,11 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private void processInjectionTarget(@Observes final ProcessInjectionTarget event) {
         final InjectionTarget it = event.getInjectionTarget();
         final Class<?> componentClass = event.getAnnotatedType().getJavaClass();
+        typesSeenBeforeValidation.add(event.getAnnotatedType().getBaseType());
 
-        final Set<InjectionPoint> injectionPoints = it.getInjectionPoints();
+        final Set<InjectionPoint> filteredInjectionPoints = filterHk2InjectionPointsOut(it.getInjectionPoints());
 
-        for (final InjectionPoint injectionPoint : injectionPoints) {
+        for (final InjectionPoint injectionPoint : filteredInjectionPoints) {
             final Member member = injectionPoint.getMember();
             if (member instanceof Field) {
                 addInjecteeToSkip(componentClass, fieldsToSkip, (Field) member);
@@ -457,10 +464,76 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 @Override
                 public Set getInjectionPoints() {
                     // Inject CDI beans into JAX-RS resources/providers/application.
-                    return it.getInjectionPoints();
+                    return filteredInjectionPoints;
                 }
             });
         }
+    }
+
+    // TODO: refactor the following method
+    private Set<InjectionPoint> filterHk2InjectionPointsOut(final Set<InjectionPoint> originalInjectionPoints) {
+        final Set<InjectionPoint> filteredInjectionPoints = new HashSet<InjectionPoint>();
+        for (InjectionPoint ip : originalInjectionPoints) {
+            final Type injectedType = ip.getType();
+            if (injectedType instanceof Class<?>) {
+                if (!isJerseyOrDependencyType((Class<?>)injectedType)) {
+                    filteredInjectionPoints.add(ip);
+                } else {
+                    //remember the type, we would need to mock it's CDI binding at runtime
+                    hk2ProvidedTypes.add(injectedType);
+                }
+            } else {
+                if (isInjectionProvider(injectedType)) {
+                    if (!isProviderOfJerseyType((ParameterizedType)injectedType)) {
+                        filteredInjectionPoints.add(ip);
+                    } else {
+                        //remember the type, we would need to mock it's CDI binding at runtime
+                        hk2ProvidedTypes.add(((ParameterizedType)injectedType).getActualTypeArguments()[0]);
+                    }
+                } else {
+                    filteredInjectionPoints.add(ip);
+                }
+            }
+        }
+        return filteredInjectionPoints;
+    }
+
+    private Set<Type> hk2ProvidedTypes = Collections.synchronizedSet(new HashSet<Type>());
+    private Set<Type> potentionalHk2CustomBoundTypes = Collections.synchronizedSet(new HashSet<Type>());
+    private Set<Type> typesSeenBeforeValidation = Collections.synchronizedSet(new HashSet<Type>());
+
+    private boolean isInjectionProvider(final Type injectedType) {
+        return injectedType instanceof ParameterizedType
+                && ((ParameterizedType)injectedType).getRawType() == javax.inject.Provider.class;
+    }
+
+    private boolean isProviderOfJerseyType(final ParameterizedType provider) {
+        final Type firstArgumentType = provider.getActualTypeArguments()[0];
+        return firstArgumentType instanceof Class && isJerseyOrDependencyType((Class<?>)firstArgumentType);
+    }
+
+    /**
+     * Auxiliary annotation for mocked beans used to cover Jersey/HK2 injected injection points.
+     */
+    @SuppressWarnings("serial")
+    public static class CdiDefaultAnnotation extends AnnotationLiteral<Default> implements Default {
+    }
+
+    @SuppressWarnings({ "unused", "unchecked", "rawtypes" })
+    private void afterDiscoveryObserver(@Observes AfterBeanDiscovery abd) {
+        potentionalHk2CustomBoundTypes.removeAll(typesSeenBeforeValidation);
+        for (Type t : potentionalHk2CustomBoundTypes) {
+            if (!isJavaEEType(t)) { // need to avoid built-in beans conflict
+                hk2ProvidedTypes.add(t);
+            }
+        }
+        for (final Type t: hk2ProvidedTypes) {
+            abd.addBean(new Hk2Bean(t));
+        }
+    }
+
+    private boolean isJavaEEType(Type t) {
+        return (t instanceof Class) && ((Class<?>)t).getPackage().getName().startsWith("javax");
     }
 
     private <T> void addInjecteeToSkip(final Class<?> componentClass, final Map<Class<?>, Set<T>> toSkip, final T member) {
@@ -483,16 +556,22 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 Resource.from(clazz) != null;
     }
 
-    private static boolean isJerseyOrDependencyType(final Class<?> clazz) {
+    private boolean isJerseyOrDependencyType(final Class<?> clazz) {
         final String pckg = clazz.getPackage().getName();
 
-        // Ignore Jersey Examples from this check.
-        return pckg.contains("org.glassfish.hk2")
-                || pckg.contains("jersey.repackaged")
-                || pckg.contains("org.jvnet.hk2")
-                || (pckg.startsWith("org.glassfish.jersey")
-                    && !pckg.startsWith("org.glassfish.jersey.examples")
-                    && !pckg.startsWith("org.glassfish.jersey.tests"));
+        final boolean result = pckg.contains("org.glassfish.hk2")
+                                || pckg.contains("jersey.repackaged")
+                                || pckg.contains("org.jvnet.hk2")
+                                || (pckg.startsWith("org.glassfish.jersey")
+                                    && !pckg.startsWith("org.glassfish.jersey.examples")
+                                    && !pckg.startsWith("org.glassfish.jersey.tests"));
+
+        // TODO: refactor this, it needs to get out of this checking method
+        if (!result) {
+            potentionalHk2CustomBoundTypes.add(clazz);
+        }
+
+        return result;
     }
 
     private static BeanManager beanManagerFromJndi() {
@@ -581,5 +660,68 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         @Override
         public abstract Set getInjectionPoints();
+    }
+
+    private class Hk2Bean implements Bean {
+
+        private final Type t;
+
+        public Hk2Bean(Type t) {
+            this.t = t;
+        }
+
+        @Override
+        public Class getBeanClass() {
+            return (Class)t;
+        }
+
+        @Override
+        public Set getInjectionPoints() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public boolean isNullable() {
+            return true;
+        }
+
+        @Override
+        public Object create(CreationalContext creationalContext) {
+            return CdiComponentProvider.this.locator.getService(t);
+        }
+
+        @Override
+        public void destroy(Object instance, CreationalContext creationalContext) {
+        }
+
+        @Override
+        public Set getTypes() {
+            return Collections.singleton(t);
+        }
+
+        @Override
+        public Set getQualifiers() {
+            return Collections.singleton(new CdiDefaultAnnotation());
+        }
+
+        @Override
+        public Class getScope() {
+            return Dependent.class;
+        }
+
+        @Override
+        public String getName() {
+            return t.toString();
+        }
+
+        @Override
+        public Set getStereotypes() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public boolean isAlternative() {
+            return false;
+        }
     }
 }
