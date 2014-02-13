@@ -61,7 +61,7 @@
     <packaging>war</packaging>
     <name>jersey-examples-helloworld-spring-webapp</name>
 
-    <description>Spring 3 Integration Jersey Example</description>
+    <description>Spring 4 Integration Jersey Example</description>
 
     <dependencies>
         <dependency>
@@ -72,7 +72,7 @@
         <dependency>
           <groupId>org.springframework</groupId>
           <artifactId>spring-web</artifactId>
-          <version>${spring3.version}</version>
+          <version>${spring4.version}</version>
           <scope>compile</scope>
         </dependency>
 
@@ -90,7 +90,7 @@
 
         <dependency>
           <groupId>org.glassfish.jersey.ext</groupId>
-          <artifactId>jersey-spring3</artifactId>
+          <artifactId>jersey-spring4</artifactId>
           <version>${project.version}</version>
         </dependency>
 
