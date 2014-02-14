@@ -304,6 +304,7 @@
             </plugin>
             <!-- producing zipped archives -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
@@ -335,6 +336,63 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>licensee.src.bundle</id>
+            <activation>
+                <property>
+                    <name>license.url</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>wagon-maven-plugin</artifactId>
+                        <version>1.0-beta-4</version>
+                        <inherited>false</inherited>
+                        <executions>
+                            <execution>
+                                <id>get-license</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>download-single</goal>
+                                </goals>
+                                <configuration>
+                                    <url>${license.url}</url>
+                                    <fromFile>TLDA_SCSL_Licensees_License_Notice.txt</fromFile>
+                                    <toDir>${project.build.directory}/license</toDir>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <inherited>false</inherited>
+                        <executions>
+                            <execution>
+                                <id>make-licensee-source-archive</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <finalName>jaxrs-ri-${project.version}-src-licensee</finalName>
+                                    <attach>false</attach>
+                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <descriptors>
+                                        <descriptor>${project.basedir}/src/main/assembly/assembly-src-licensee.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <properties>
         <generated.src.dir>${basedir}/target/unpacked-src/main/java</generated.src.dir>
