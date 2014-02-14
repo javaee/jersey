@@ -63,6 +63,7 @@
         <module>e2e</module>
         <module>integration</module>
         <module>osgi</module>
+        <module>performance</module>
     </modules>
 
     <dependencyManagement>
@@ -76,6 +77,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
 
     <build>
         <plugins>
