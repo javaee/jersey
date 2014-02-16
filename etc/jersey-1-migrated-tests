@@ -1,12 +1,5 @@
 TODO - FIRST:
 
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/FormFilterTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredAnnotatedResourceFiltersTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredAnnotatedWithSplitResourceFiltersTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LayeredResourceFilterFactoriesTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/LoggingFilterTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/ResourceFilterFactoriesTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/filter/UriModificationFilterTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/CanonicalizationFeatureTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/EscapedURITest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/GZIPContentEncodingTest.java
