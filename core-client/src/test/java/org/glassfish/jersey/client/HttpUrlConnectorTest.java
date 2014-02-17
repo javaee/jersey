@@ -68,6 +68,7 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -86,8 +87,10 @@ public class HttpUrlConnectorTest {
 
     /**
      * Reproducer for JERSEY-1984.
+     * TODO: fix and re-enable the test, it could give java.net.NoRouteToHostException in certain environments instead of timeout exception
      */
     @Test
+    @Ignore
     public void testConnectionTimeoutWithEntity() {
         _testInvocationTimeout(createNonRoutableTarget().request().buildPost(Entity.text("does not matter")));
     }
