@@ -760,6 +760,11 @@
                             <systemPropertyVariables>
                                 <javax.xml.bind.JAXBContext>org.eclipse.persistence.jaxb.JAXBContextFactory</javax.xml.bind.JAXBContext>
                             </systemPropertyVariables>
+                            <excludes>
+                                <exclude>**/ReflectionHelperTest.java</exclude><!-- security is off for moxy, skip -->
+                                <exclude>**/e2e/server/monitoring/*.java</exclude><!-- contains jdk7 only tests -->
+                                <exclude>**/e2e/server/wadl/*.java</exclude>
+                            </excludes>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -1385,6 +1390,7 @@
         <release.tests.args>-Dmaven.test.skip=false</release.tests.args>
         <skip.tests>false</skip.tests>
         <xdk.absolute.path />
+        <surefire.security.argline></surefire.security.argline>
 
         <!-- Dependency versions -->
         <jersey.version>${project.version}</jersey.version>

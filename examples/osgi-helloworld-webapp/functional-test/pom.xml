@@ -225,7 +225,7 @@
                 <configuration>
                     <forkMode>always</forkMode>
                     <enableAssertions>false</enableAssertions>
-                    <argLine>-Dfelix.policy=${project.build.directory}/test-classes/felix.policy -Druntime.policy=${project.build.directory}/test-classes/runtime.policy</argLine>
+                    <argLine>${surefire.security.argline}</argLine>
                     <!--argLine>-Djavax.security.manager -Druntime.policy=${project.build.directory}/test-classes/runtime.policy -Djavax.security.policy=${project.build.directory}/test-classes/surefire.policy</argLine-->
                     <classpathDependencyExcludes>
                         <classpathDepenencyExclude>org.apache.felix:org.osgi.core</classpathDepenencyExclude>
@@ -262,5 +262,9 @@
             </build>
         </profile>
     </profiles>
+
+    <properties>
+        <surefire.security.argline>-Dfelix.policy=${project.build.directory}/test-classes/felix.policy -Druntime.policy=${project.build.directory}/test-classes/runtime.policy</surefire.security.argline>
+    </properties>
 
 </project>
