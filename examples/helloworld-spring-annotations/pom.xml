@@ -50,11 +50,7 @@ holder.
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>helloworld-spring-annotations</artifactId>
-    <description>Spring 3 Integration Jersey Example</description>
-
-    <properties>
-        <spring4.version>4.0.0.RELEASE</spring4.version>
-    </properties>
+    <description>Spring 4 Integration Jersey Example</description>
 
     <dependencies>
         <dependency>
@@ -63,14 +59,14 @@ holder.
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
-            <artifactId>jersey-spring3</artifactId>
+            <artifactId>jersey-spring4</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-            <version>${spring3.version}</version>
+            <version>${spring4.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
