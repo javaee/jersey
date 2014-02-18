@@ -523,7 +523,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private void afterDiscoveryObserver(@Observes AfterBeanDiscovery abd) {
         potentionalHk2CustomBoundTypes.removeAll(typesSeenBeforeValidation);
         for (Type t : potentionalHk2CustomBoundTypes) {
-            if (!isJavaEEType(t)) { // need to avoid built-in beans conflict
+            if (!isJavaxEType(t)) { // need to avoid built-in beans conflict
                 hk2ProvidedTypes.add(t);
             }
         }
@@ -532,8 +532,14 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
     }
 
-    private boolean isJavaEEType(Type t) {
-        return (t instanceof Class) && ((Class<?>)t).getPackage().getName().startsWith("javax");
+    private boolean isJavaxEType(Type t) {
+        if (!(t instanceof Class)) {
+            return false;
+        }
+
+        final String pkgName = ((Class<?>)t).getPackage().getName();
+
+        return pkgName.startsWith("java.") || pkgName.startsWith("javax.");
     }
 
     private <T> void addInjecteeToSkip(final Class<?> componentClass, final Map<Class<?>, Set<T>> toSkip, final T member) {

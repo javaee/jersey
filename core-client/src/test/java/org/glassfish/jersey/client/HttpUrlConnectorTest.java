@@ -97,8 +97,10 @@ public class HttpUrlConnectorTest {
 
     /**
      * Additional test case for JERSEY-1984 to ensure, that the error occurs only when sending an entity.
+     * TODO: see above, rewrite server part, the "non-routable" target solution is fragile
      */
     @Test
+    @Ignore
     public void testConnectionTimeoutNoEntity() {
         _testInvocationTimeout(createNonRoutableTarget().request().buildGet());
     }
