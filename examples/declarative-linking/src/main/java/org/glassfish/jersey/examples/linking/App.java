@@ -38,60 +38,47 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking.model;
+package org.glassfish.jersey.examples.linking;
 
-import java.util.ArrayList;
-import java.util.List;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
+import org.glassfish.jersey.examples.linking.resources.ItemResource;
 
 /**
- * Models a three entry list of items and provides a simple means of navigating
- * the list.
+ * Show link injection in action
  *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-public class ItemsModel {
+public class App {
 
-    private List<ItemModel> items;
-    private static ItemsModel instance;
+    private static final URI BASE_URI = URI.create("http://localhost:8080/");
+    public static final String ROOT_PATH = "items/0";
 
-    public static synchronized ItemsModel getInstance() {
-        if (instance==null) {
-            instance = new ItemsModel();
+    public static void main(String[] args) {
+        try {
+            System.out.println("\"Declarative Linking\" Jersey Example App");
+
+            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
+            resourceConfig.register(DeclarativeLinkingFeature.class);
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
+
+            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+                    BASE_URI, ROOT_PATH));
+            System.in.read();
+            server.shutdownNow();
+        } catch (IOException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return instance;
-    }
 
-    private ItemsModel() {
-        items = new ArrayList<ItemModel>();
-        items.add(new ItemModel("Item 0"));
-        items.add(new ItemModel("Item 1"));
-        items.add(new ItemModel("Item 2"));
-        items.add(new ItemModel("Item 3"));
-        items.add(new ItemModel("Item 4"));
-    }
-
-    public boolean hasNext(String currentId) {
-        return getIndex(currentId) < items.size()-1;
-    }
-
-    public boolean hasPrev(String currentId) {
-        return getIndex(currentId) > 0;
-    }
-
-    public ItemModel getItem(String id) {
-        return items.get(getIndex(id));
-    }
-
-    public String getNextId(String id) {
-        return Integer.toString(getIndex(id)+1);
-    }
-
-    public String getPrevId(String id) {
-        return Integer.toString(getIndex(id)-1);
-    }
-    
-    private int getIndex(String id) {
-        return Integer.parseInt(id);
     }
 }

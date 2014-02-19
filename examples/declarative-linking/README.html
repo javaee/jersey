@@ -40,51 +40,60 @@
     holder.
 
 -->
-<html><head><title>Jersey Declarative Hyperlinking Example</title></head>
+<html>
+    <head>
+        <title>Jersey Declarative Hyperlinking Example</title>
+    </head>
 
+    <body>
+        <h1>Declarative Hyperlinking Example</h1>
 
-  <body>
-      <h1>Declarative Hyperlinking Example</h1>
+        <p>This example demonstrates how to use the declarative
+            hyperlink annotations.</p>
 
-      <p>This example demonstrates how to use the declarative
-      hyperlink annotations.</p>
+        <h2>Contents</h2>
+        <p>The example consists of one resource class and one representation class along with a couple of model classes:</p>
+        <dl>
+            <dt><code>org.glassfish.jersey.examples.linking.resources.ItemResource</code></dt>
+            <dd>A resource class that produces a XML response to an HTTP GET.</dd>
+            <dt><code>com.sun.jersey.samples.linking.representation.ItemRepresentation</code></dt>
+            <dd>A JAXB representation class used to produce XML. This class also contains @Link and @Ref annotations to produce hyperlinks in the
+                XML document.</dd>
+        </dl>
+        <p>The mapping of the URI path space is presented in the following table:</p>
+        <table border="1">
+            <tr>
+                <th>URI path</th>
+                <th>Resource class</th>
+                <th>HTTP methods</th>
+            </tr>
+            <tr>
+                <td>/items/{index}</td>
+                <td>ItemResource</td>
+                <td>GET</td>
+            </tr>
+        </table>
 
-      <h2>Contents</h2>
-      <p>The example consists of one resource class and one representation class along with a couple of model classes:</p>
-      <dl>
-          <dt><code>org.glassfish.jersey.examples.linking.resources.ItemResource</code></dt>
-          <dd>A resource class that produces a XML response to an HTTP GET.</dd>
-          <dt><code>com.sun.jersey.samples.linking.representation.ItemRepresentation</code></dt>
-          <dd>A JAXB representation class used to produce XML. This class also contains @Link and @Ref annotations to produce hyperlinks in the
-          XML document.</dd>
-      </dl>
-    <p>The mapping of the URI path space is presented in the following table:</p>
-	<table border="1">
-	<tr>
-	<th>URI path</th>
-	<th>Resource class</th>
-	<th>HTTP methods</th>
-	</tr>
-	<tr>
-	<td>/items/{index}</td>
-	<td>ItemResource</td>
-	<td>GET</td>
-	</tr>
-	</table>
+        <h2>Running the Example</h2>
 
-      <h2>Running the Example</h2>
-
-      <h2>Running the Example</h2>
-         <p>Run the example as follows:</p>
-        <blockquote><pre>
-mvn clean compile exec:java</pre></blockquote>
+        <p>Run the example as follows:</p>
+        <blockquote><code>
+        mvn clean compile exec:java</code></blockquote>
         <p>This deploys the example using
             <a href="http://grizzly.java.net/">Grizzly</a>
         </p>
 
-      <p>From a web browser, visit:</p>
-      <blockquote><code><a href="http://localhost:8080/items/0">http://localhost:8080/items/0</a><br/><a href="http://localhost:8080/items/1">http://localhost:8080/items/1</a><br/><a href="http://localhost:8080/items/2">http://localhost:8080/items/2</a><br/></code>
-      </blockquote>
-      <p>Notice how the first has a self link, a next link but no previous link, the second has all three and the third only has a self link and prev link.<p>
-      <p>Observe the HTTP headers included in the responses (e.g. via <code>curl -v</code>). Notice that there is a HTTP Link header for next and previous when appropriate.</p>
- </body></html>
+        <p>From a web browser, visit:</p>
+        <blockquote>
+            <code>
+                <a href="http://localhost:8080/items/0">http://localhost:8080/items/0</a><br/>
+                <a href="http://localhost:8080/items/1">http://localhost:8080/items/1</a><br/>
+                <a href="http://localhost:8080/items/2">http://localhost:8080/items/2</a><br/>
+                <a href="http://localhost:8080/items/3">http://localhost:8080/items/3</a><br/>
+                <a href="http://localhost:8080/items/4">http://localhost:8080/items/4</a><br/>
+            </code>
+        </blockquote>
+        <p>Notice how the first has a self link, a next link but no previous link, the second, third and fourth have all three and the last one only has a self link and prev link.<p>
+        <p>Observe the HTTP headers included in the responses (e.g. via <code>curl -v</code>). Notice that there is a HTTP Link header for next and previous when appropriate.</p>
+    </body>
+</html>

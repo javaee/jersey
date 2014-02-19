@@ -67,7 +67,6 @@
         <dependency>
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-declarative-linking</artifactId>
-            <version>2.7-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -78,11 +77,6 @@
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>org.eclipse.persistence.moxy</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-server</artifactId>
         </dependency>
 
         <dependency>
@@ -120,8 +114,4 @@
         </profile>
     </profiles>
 
-
-    <properties>
-        <netbeans.hint.deploy.server>gfv3</netbeans.hint.deploy.server>
-    </properties>
 </project>

@@ -59,8 +59,9 @@
     </description>
 
     <modules>
+        <module>declarative-linking</module>
         <module>gae-integration</module>
-	<module>declarative-linking</module>
+        <module>html-json</module>
     </modules>
 
     <profiles>

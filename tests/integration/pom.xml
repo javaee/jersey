@@ -57,6 +57,7 @@
     <modules>
         <module>cdi-ejb-test-webapp</module>
         <module>cdi-test-webapp</module>
+        <module>cdi-with-jersey-injection-webapp</module>
         <module>ejb-test-webapp</module>
         <module>ejb-jax-rs-ear1</module>
         <module>ejb-jax-rs-web1</module>
@@ -79,6 +80,7 @@
         <module>jersey-2176</module>
         <module>jersey-2184</module>
         <module>jersey-2322</module>
+        <module>jersey-2335</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
         <module>security-digest</module>

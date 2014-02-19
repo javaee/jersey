@@ -38,47 +38,73 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking;
+package org.glassfish.jersey.examples.linking.resources;
 
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import org.glassfish.jersey.examples.linking.model.ItemModel;
+import org.glassfish.jersey.examples.linking.model.ItemsModel;
+import org.glassfish.jersey.examples.linking.representation.ItemRepresentation;
+import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
- * Show link injection in action
- * 
+ * Resource that provides access to one item from a set of items managed
+ * by ItemsModel
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
- */ 
-public class App {
+ */
+@Path("items/{id}")
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+public class ItemResource {
 
-    private static final URI BASE_URI = URI.create("http://localhost:8080/base/");
-    public static final String ROOT_PATH = "0";
+    private ItemsModel itemsModel;
+    private ItemModel itemModel;
+    private String id;
 
-    public static void main(String[] args) {
+    public ItemResource(@PathParam("id") String id) {
+        this.id = id;
+        itemsModel = ItemsModel.getInstance();
         try {
-            System.out.println("\"Declarative Linking\" Jersey Example App");
-
-            final ResourceConfig resourceConfig = new ResourceConfig(ItemResource.class);
-            resourceConfig.register(DeclarativeLinkingFeature.class);
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
-
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
-            System.in.read();
-            server.shutdownNow();
-        } catch (IOException ex) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+            itemModel = itemsModel.getItem(id);
+        } catch (IndexOutOfBoundsException ex) {
+            throw new NotFoundException();
         }
+    }
 
+    @GET
+    public ItemRepresentation get() {
+        return new ItemRepresentation(itemModel.getName());
+    }
+
+    /**
+     * Determines whether there is a next item.
+     * @return
+     */
+    public boolean isNext() {
+        return itemsModel.hasNext(id);
+    }
+
+    /**
+     * Determines whether there is a previous item
+     * @return
+     */
+    public boolean isPrev() {
+        return itemsModel.hasPrev(id);
+    }
+
+    public String getNextId() {
+        return itemsModel.getNextId(id);
+    }
+
+    public String getPrevId() {
+        return itemsModel.getPrevId(id);
+    }
+
+    public String getId() {
+        return id;
     }
 }

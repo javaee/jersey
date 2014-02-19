@@ -41,19 +41,20 @@
 package org.glassfish.jersey.examples.linking;
 
 import java.util.List;
+
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.server.ResourceConfig;
 
+import org.glassfish.jersey.examples.linking.resources.ItemResource;
+import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.junit.Assert; 
+
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 /**
- *
  * @author Naresh (Srinivas.Bhimisetty@Sun.Com)
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
@@ -65,19 +66,16 @@ public class LinkWebAppTest extends JerseyTest {
         ResourceConfig rc = new ResourceConfig(ItemResource.class);
         rc.register(DeclarativeLinkingFeature.class);
         return rc;
-    }     
-    
+    }
 
     /**
      * Test that the expected response is sent back.
-     * @throws java.lang.Exception
      */
     @Test
-    public void testHelloWorld() throws Exception {
-        WebTarget webResource = target();
-//        webResource.addFilter(new LoggingFilter());
-        Response response = webResource.path("1").request().get(Response.class);
+    public void testLinks() throws Exception {
+        Response response = target().path("items/1").request().get(Response.class);
         List<Object> linkHeaders = response.getHeaders().get("Link");
-        Assert.assertEquals(2, linkHeaders.size());
+
+        assertEquals(2, linkHeaders.size());
     }
 }

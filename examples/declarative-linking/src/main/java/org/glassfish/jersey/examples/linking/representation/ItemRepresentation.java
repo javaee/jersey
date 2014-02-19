@@ -37,14 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.samples.linking.representation;
+package org.glassfish.jersey.examples.linking.representation;
 
-import org.glassfish.jersey.samples.linking.resources.ItemResource;
+import org.glassfish.jersey.examples.linking.resources.ItemResource;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLinks;
 import org.glassfish.jersey.linking.InjectLink;
 import org.glassfish.jersey.linking.InjectLink.Style;
-import java.net.URI;
+
 import java.util.List;
 import javax.ws.rs.core.Link;
 import javax.xml.bind.annotation.XmlAccessType;

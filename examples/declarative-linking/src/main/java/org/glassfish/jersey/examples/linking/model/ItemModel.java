@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking.model;
+package org.glassfish.jersey.examples.linking.model;
 
 /**
  * @author Mark Hadley

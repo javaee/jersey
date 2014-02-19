@@ -38,73 +38,60 @@
  * holder.
  */
 
-package org.glassfish.jersey.samples.linking.resources;
+package org.glassfish.jersey.examples.linking.model;
 
-import org.glassfish.jersey.samples.linking.model.ItemModel;
-import org.glassfish.jersey.samples.linking.model.ItemsModel;
-import org.glassfish.jersey.samples.linking.representation.ItemRepresentation;
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Resource that provides access to one item from a set of items managed
- * by ItemsModel
+ * Models a three entry list of items and provides a simple means of navigating
+ * the list.
  *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-@Path("{id}")
-@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-public class ItemResource {
+public class ItemsModel {
 
-    private ItemsModel itemsModel;
-    private ItemModel itemModel;
-    private String id;
+    private List<ItemModel> items;
+    private static ItemsModel instance;
 
-    public ItemResource(@PathParam("id") String id) {
-        this.id = id;
-        itemsModel = ItemsModel.getInstance();
-        try {
-            itemModel = itemsModel.getItem(id);
-        } catch (IndexOutOfBoundsException ex) {
-            throw new NotFoundException();
+    public static synchronized ItemsModel getInstance() {
+        if (instance==null) {
+            instance = new ItemsModel();
         }
+        return instance;
     }
 
-    @GET
-    public ItemRepresentation get() {
-        return new ItemRepresentation(itemModel.getName());
+    private ItemsModel() {
+        items = new ArrayList<ItemModel>();
+        items.add(new ItemModel("Item 0"));
+        items.add(new ItemModel("Item 1"));
+        items.add(new ItemModel("Item 2"));
+        items.add(new ItemModel("Item 3"));
+        items.add(new ItemModel("Item 4"));
     }
 
-    /**
-     * Determines whether there is a next item.
-     * @return
-     */
-    public boolean isNext() {
-        return itemsModel.hasNext(id);
+    public boolean hasNext(String currentId) {
+        return getIndex(currentId) < items.size()-1;
     }
 
-    /**
-     * Determines whether there is a previous item
-     * @return
-     */
-    public boolean isPrev() {
-        return itemsModel.hasPrev(id);
+    public boolean hasPrev(String currentId) {
+        return getIndex(currentId) > 0;
     }
 
-    public String getNextId() {
-        return itemsModel.getNextId(id);
+    public ItemModel getItem(String id) {
+        return items.get(getIndex(id));
     }
 
-    public String getPrevId() {
-        return itemsModel.getPrevId(id);
+    public String getNextId(String id) {
+        return Integer.toString(getIndex(id)+1);
     }
 
-    public String getId() {
-        return id;
+    public String getPrevId(String id) {
+        return Integer.toString(getIndex(id)-1);
+    }
+
+    private int getIndex(String id) {
+        return Integer.parseInt(id);
     }
 }
