@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,7 @@ package org.glassfish.jersey.tests.ejb.resources;
 
 /**
  * Part of the reproducer for GLASSFISH-16199. This EJB business interface
- * is being registered by an annotation on the EJB component class, {@link RawEcho}.
+ * is being registered by an annotation on the EJB component class, {@link RawEchoResource}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */

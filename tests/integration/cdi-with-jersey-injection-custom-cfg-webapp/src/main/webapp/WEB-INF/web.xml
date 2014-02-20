@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -40,26 +40,14 @@
     holder.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>org.glassfish.jersey.containers</groupId>
-        <artifactId>project</artifactId>
-        <version>2.7-SNAPSHOT</version>
-    </parent>
-
-    <groupId>org.glassfish.jersey.containers.glassfish</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-glassfish-support</name>
-
-    <description>Jersey GlassFish container providers umbrella project module</description>
-
-    <modules>
-        <module>jersey-gf-ejb</module>
-        <module>jersey-gf-cdi</module>
-        <module>jersey-gf-cdi-ban-custom-hk2-binding</module>
-    </modules>
-
-</project>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+      version="3.0">
+    <env-entry>
+        <env-entry-name>injectedResource</env-entry-name>
+        <env-entry-type>java.lang.Integer</env-entry-type>
+        <env-entry-value>10</env-entry-value>
+    </env-entry>
+</web-app>

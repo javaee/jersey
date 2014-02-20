@@ -39,49 +39,55 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.ws.rs.ApplicationPath;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.test.JerseyTest;
+import org.junit.Test;
+
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 
 /**
- * JAX-RS application to configure resources.
+ * Test for CDI web application resources.
+ * Run with:
+ * <pre>
+ * mvn clean package
+ * $AS_HOME/bin/asadmin deploy target/cdi-test-webapp
+ * mvn -DskipTests=false test</pre>
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
+public class EchoResourceTest extends JerseyTest {
 
-    public static class MyInjection {
-
-        private final String name;
-
-        public MyInjection(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
+    @Override
+    protected Application configure() {
+        return new MyApplication();
     }
 
-    public MyApplication() {
+    @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path("cdi-iface-with-non-jaxrs-impl-test-webapp").build();
+    }
 
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
+    @Test
+    public void testCdiInjection() throws Exception {
+        final Response response = target().path("echo").queryParam("s", "I").request().get();
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.readEntity(String.class), startsWith("CDI ECHOED"));
+    }
 
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
-
-        // Jersey monitoring
-        register(MonitoringFeature.class);
+    protected void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(EchoResourceTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

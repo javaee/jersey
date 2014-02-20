@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -49,49 +49,29 @@
         <version>2.7-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jersey-gf-cdi</artifactId>
+    <artifactId>jersey-gf-cdi-ban-custom-hk2-binding</artifactId>
     <packaging>jar</packaging>
-    <name>jersey-gf-cdi</name>
+    <name>jersey-gf-cdi-ban-custom-hk2-binding</name>
 
-    <description>Jersey CDI for GlassFish integration</description>
+    <description>Jersey CDI for GlassFish integration - this module disables custom HK2 binding</description>
 
     <dependencies>
-
         <dependency>
-            <groupId>org.jboss.weld</groupId>
-            <artifactId>weld-osgi-bundle</artifactId>
-            <version>${weld.version}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.annotation</groupId>
-                    <artifactId>jsr250-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>javax.transaction-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-server</artifactId>
+            <groupId>org.glassfish.jersey.containers.glassfish</groupId>
+            <artifactId>jersey-gf-cdi</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>com.sun.istack</groupId>
-                <artifactId>maven-istack-commons-plugin</artifactId>
-                <inherited>true</inherited>
-            </plugin>
-            <plugin>
+           <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <inherited>true</inherited>
@@ -102,8 +82,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <!--Import-Package>javax.interceptor;version="[1.0-4)",*</Import-Package-->
-                        <Export-Package>org.glassfish.jersey.gf.cdi.spi, org.glassfish.jersey.gf.cdi.internal</Export-Package>
+                        <Export-Package>org.glassfish.jersey.gf.cdi.hk2ban</Export-Package>
                         <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                         <_nodefaultversion>false</_nodefaultversion>
                     </instructions>
@@ -120,5 +99,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

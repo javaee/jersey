@@ -39,49 +39,84 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.spi.BeanManager;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
+import org.glassfish.jersey.spi.ExceptionMappers;
 
 /**
- * JAX-RS application to configure resources.
+ * CDI backed, request scoped, JAX-RS resource.
+ * It's fields are injected from both CDI and Jersey HK2.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
+@RequestScoped
+@Path("request-field-injected")
+public class RequestScopedFieldInjectedResource {
 
-    public static class MyInjection {
+    // built-in CDI bean
+    @Inject BeanManager beanManager;
 
-        private final String name;
+    // CDI injected
+    @Inject @RequestSpecific EchoService echoService;
 
-        public MyInjection(String name) {
-            this.name = name;
-        }
+    // Jersey injected
+    @Inject ContainerRequest request;
+    @Inject ExceptionMappers mappers;
+    @Inject Provider<MonitoringStatistics> stats;
 
-        public String getName() {
-            return name;
-        }
+    // Custom Jersey/HK2 injected
+    @Inject MyApplication.MyInjection customInjected;
+    // Custom Jersey/HK2 injected
+    @Inject CdiInjectedType hk2Injected;
+
+    @GET
+    public String echo(@QueryParam("s") String s) {
+        return echoService.echo(s);
     }
 
-    public MyApplication() {
+    @GET
+    @Path("path/{param}")
+    public String getPath() {
+        return request.getPath(true);
+    }
 
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
+    @GET
+    @Path("mappers")
+    public String getMappers() {
+        return mappers.toString();
+    }
 
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
+    @GET
+    @Path("requestCount")
+    public String getStatisticsProperty() {
+        return String.valueOf(stats.get().snapshot().getRequestStatistics().getTimeWindowStatistics().get(0l).getRequestCount());
+    }
 
-        // Jersey monitoring
-        register(MonitoringFeature.class);
+    @GET
+    @Path("custom")
+    public String getCustom() {
+        return customInjected.getName();
+    }
+
+    @GET
+    @Path("custom2")
+    public String getCustom2() {
+        return hk2Injected.getName();
+    }
+
+    @GET
+    @Path("bm")
+    public String getBm() {
+        return beanManager.toString();
     }
 }
