@@ -202,6 +202,16 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>xdk</id>
+            <properties>
+                <!-- do not use security manager for xdk -->
+                <surefire.security.argline></surefire.security.argline>
+            </properties>
+        </profile>
+    </profiles>
+
     <properties>
         <surefire.security.argline>-Djava.security.manager -Djava.security.policy=${project.build.directory}/test-classes/surefire.policy</surefire.security.argline>
     </properties>

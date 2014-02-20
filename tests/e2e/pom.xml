@@ -209,6 +209,15 @@
                 </plugins>
             </build>
         </profile>
+
+        <profile>
+            <id>xdk</id>
+            <properties>
+                <!-- do not use security manager for xdk -->
+                <surefire.security.argline></surefire.security.argline>
+            </properties>
+        </profile>
+
     </profiles>
 
 </project>

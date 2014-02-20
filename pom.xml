@@ -731,6 +731,11 @@
                             <classpathDependencyExcludes>
                                 <classpathDependencyExcludes>xerces:xercesImpl</classpathDependencyExcludes>
                             </classpathDependencyExcludes>
+                            <excludes>
+                                <exclude>**/ReflectionHelperTest.java</exclude><!-- security is off for moxy, skip -->
+                                <exclude>**/e2e/server/monitoring/*.java</exclude><!-- contains jdk7 only tests -->
+                                <exclude>**/EntityExpansionTest.java</exclude><!-- does not work with xdk SaxParser -->
+                            </excludes>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -763,7 +768,7 @@
                             <excludes>
                                 <exclude>**/ReflectionHelperTest.java</exclude><!-- security is off for moxy, skip -->
                                 <exclude>**/e2e/server/monitoring/*.java</exclude><!-- contains jdk7 only tests -->
-                                <exclude>**/e2e/server/wadl/*.java</exclude>
+                                <exclude>**/e2e/server/wadl/*.java</exclude><!-- works, but unstable with moxy -->
                             </excludes>
                         </configuration>
                     </plugin>
