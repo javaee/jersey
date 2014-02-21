@@ -46,10 +46,7 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Link;
-import javax.ws.rs.ext.Provider;
 
 /**
  * Filter that processes {@link Link} annotated fields in returned response
@@ -75,19 +72,6 @@ class RequestLinkFilter implements ContainerRequestFilter {
 
     @Context
     private UriInfo uriInfo;
-
-//    public void filter(ContainerRequestContext request) {
-//        final Object entity = response.getEntity();
-//
-//        if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
-//            Class<?> entityClass = entity.getClass();
-//            HeaderProcessor lhp = new HeaderProcessor(entityClass);
-//            lhp.processLinkHeaders(entity, uriInfo, response.getHeaders());
-//            FieldProcessor lp = new FieldProcessor(entityClass);
-//            lp.processLinks(entity, uriInfo);
-//        }
-//
-//    }
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {

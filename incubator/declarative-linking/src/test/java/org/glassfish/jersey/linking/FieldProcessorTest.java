@@ -40,10 +40,6 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.FieldDescriptor;
-import org.glassfish.jersey.linking.FieldProcessor;
-import org.glassfish.jersey.linking.Binding;
-import org.glassfish.jersey.linking.InjectLink;
 
 import java.net.URI;
 import java.util.Arrays;

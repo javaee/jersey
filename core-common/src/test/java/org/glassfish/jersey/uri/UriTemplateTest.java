@@ -60,6 +60,7 @@ import org.junit.Ignore;
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.uri.UriTemplateTest
  *
  * @author Paul.Sandoz at Sun.Com
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class UriTemplateTest {
 
@@ -583,7 +584,24 @@ public class UriTemplateTest {
         );
         
     }    
-    
+
+    @Test
+    public void testSettingTwoSeperatedMatrixParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{;matrix}/other{;other}");
+        
+        Map<String,String> values = new HashMap<String,String>();
+        values.put("matrix", "example");
+        values.put("other", "otherExample");
+        
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is not set",
+                "/test;matrix=example/other;other=otherExample",
+                uri
+        );
+        
+    }    
+
     
     @Test
     public void testNotSettingQueryParameter() throws Exception {

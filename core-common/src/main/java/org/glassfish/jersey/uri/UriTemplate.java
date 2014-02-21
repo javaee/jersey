@@ -41,7 +41,6 @@ package org.glassfish.jersey.uri;
 
 import java.net.URI;
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
@@ -61,6 +60,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  *
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class UriTemplate {
     private static String[] EMPTY_VALUES = new String[0];
@@ -132,6 +132,17 @@ public class UriTemplate {
             return o2.pattern.getRegex().compareTo(o1.pattern.getRegex());
         }
     };
+    
+    
+    /**
+     * A strategy interface for processing parameters, should be replaced with
+     * a JDK 8 one day in the future.
+     */
+    private interface NameStrategy
+    {
+        public String getValueFor(String tVariable, String matchedGroup);
+    }
+
     /**
      * The regular expression for matching URI templates and names.
      */
@@ -167,6 +178,12 @@ public class UriTemplate {
      * variables.
      */
     private final int numOfExplicitRegexes;
+
+    /**
+     * The number regular expression groups in this pattern
+     */
+    private final int numOfRegexGroups;
+    
     /**
      * The number of characters in the regular expression not resulting
      * from conversion of template variables.
@@ -181,7 +198,7 @@ public class UriTemplate {
         this.pattern = PatternWithGroups.EMPTY;
         this.endsWithSlash = false;
         this.templateVariables = Collections.emptyList();
-        this.numOfExplicitRegexes = this.numOfCharacters = 0;
+        this.numOfExplicitRegexes = this.numOfCharacters = this.numOfRegexGroups = 0;
     }
 
     /**
@@ -233,6 +250,8 @@ public class UriTemplate {
         this.pattern = initUriPattern(templateParser);
 
         this.numOfExplicitRegexes = templateParser.getNumberOfExplicitRegexes();
+        
+        this.numOfRegexGroups = templateParser.getNumberOfRegexGroups();
 
         this.numOfCharacters = templateParser.getNumberOfLiteralCharacters();
 
@@ -454,6 +473,16 @@ public class UriTemplate {
     }
 
     /**
+     * Get the number of regular expression groups
+     *
+     * @return the number of regular expressions groups
+     */
+    public final int getNumberOfRegexGroups() {
+        return numOfRegexGroups;
+    }
+    
+    
+    /**
      * Get the number of characters in the regular expression not resulting
      * from conversion of template variables.
      *
@@ -562,12 +591,6 @@ public class UriTemplate {
         return createURI(values, 0, values.length);
     }
     
-    
-    private interface NameStrategy
-    {
-        public String getValueFor(String tVariable, String matchedGroup);
-    }
-
     /**
      * Create a URI by substituting any template variables
      * for corresponding template values.

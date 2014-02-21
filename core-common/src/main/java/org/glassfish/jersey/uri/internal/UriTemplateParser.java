@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,6 +58,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * A URI template parser that parses JAX-RS specific URI templates.
  *
  * @author Paul Sandoz
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class UriTemplateParser {
     /* package */ static final int[] EMPTY_INT_ARRAY = new int[0];
@@ -89,6 +90,8 @@ public class UriTemplateParser {
     private final List<Integer> groupCounts = new ArrayList<Integer>();
     private final Map<String, Pattern> nameToPattern = new HashMap<String, Pattern>();
     private int numOfExplicitRegexes;
+    private int skipGroup;
+
     private int literalCharacters;
 
     /**
@@ -186,16 +189,10 @@ public class UriTemplateParser {
         }
 
         int[] indexes = new int[names.size()];
-//        indexes[0] = 1;
         for (int i = 0; i < indexes.length; i++) {
             indexes[i] = (i == 0 ? 0 : indexes[i - 1]) + groupCounts.get(i);
         }
         
-//        for (int i = 0; i < indexes.length; i++) {
-//            if (indexes[i] != i + 1) {
-//                return indexes;
-//            }
-//        }
         return indexes;
     }
 
@@ -208,6 +205,22 @@ public class UriTemplateParser {
         return numOfExplicitRegexes;
     }
 
+    /**
+     * Get the number of regular expression groups
+     *
+     * @return the number of regular expressions groups
+     */
+    public final int getNumberOfRegexGroups() {
+        if (groupCounts.isEmpty()) {
+            return 0;
+        }
+        else {
+            int groupIndex[] = getGroupIndexes();
+            return groupIndex[groupIndex.length-1] + skipGroup;
+        }
+    }
+    
+    
     /**
      * Get the number of literal characters.
      *
@@ -229,7 +242,6 @@ public class UriTemplateParser {
 
     private void parse(final CharacterIterator ci) {
         try {
-            int skipGroup = 0;
             while (ci.hasNext()) {
                 char c = ci.next();
                 if (c == '{') {

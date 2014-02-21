@@ -65,7 +65,8 @@ public class DeclarativeLinkingFeature
         if (!config.isRegistered(ResponseLinkFilter.class))
         {
             context.register(ResponseLinkFilter.class);
-            context.register(RequestLinkFilter.class);
+            // Todo map values back?
+//            context.register(RequestLinkFilter.class);
             return true;
         }
         

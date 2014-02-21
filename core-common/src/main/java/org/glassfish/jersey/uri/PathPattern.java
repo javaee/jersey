@@ -40,6 +40,7 @@
 package org.glassfish.jersey.uri;
 
 import java.util.Comparator;
+import java.util.regex.MatchResult;
 
 /**
  * A path pattern that is a regular expression generated from a URI path
@@ -149,7 +150,7 @@ public final class PathPattern extends PatternWithGroups {
      */
     public PathPattern(PathTemplate template) {
         super(postfixWithCapturingGroup(template.getPattern().getRegex()),
-                addIndexForRightHandPathCapturingGroup(template.getPattern().getGroupIndexes()));
+                addIndexForRightHandPathCapturingGroup(template.getNumberOfRegexGroups(), template.getPattern().getGroupIndexes()));
 
         this.template = template;
     }
@@ -172,7 +173,7 @@ public final class PathPattern extends PatternWithGroups {
      */
     public PathPattern(PathTemplate template, RightHandPath rhpp) {
         super(postfixWithCapturingGroup(template.getPattern().getRegex(), rhpp),
-                addIndexForRightHandPathCapturingGroup(template.getPattern().getGroupIndexes()));
+                addIndexForRightHandPathCapturingGroup(template.getNumberOfRegexGroups(), template.getPattern().getGroupIndexes()));
 
         this.template = template;
     }
@@ -193,15 +194,15 @@ public final class PathPattern extends PatternWithGroups {
         return regex + rhpp.getRegex();
     }
 
-    private static int[] addIndexForRightHandPathCapturingGroup(int[] indexes) {
+    private static int[] addIndexForRightHandPathCapturingGroup(int  numberOfGroups, int[] indexes) {
         if (indexes.length == 0) {
             return indexes;
         }
-
+        
         int[] cgIndexes = new int[indexes.length + 1];
         System.arraycopy(indexes, 0, cgIndexes, 0, indexes.length);
 
-        cgIndexes[indexes.length] = cgIndexes[indexes.length - 1] + 1;
+        cgIndexes[indexes.length] = numberOfGroups +1;
         return cgIndexes;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,6 +54,7 @@ import java.util.regex.PatternSyntaxException;
  * #renamed com.sun.jersey.api.uri.UriPattern
  *
  * @author Paul Sandoz
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class PatternWithGroups {
 
@@ -369,11 +370,6 @@ public class PatternWithGroups {
         // Assign the matched group values to group names
         groupValues.clear();
         
-        
-        for (int count = 0; count <= m.groupCount(); ++count)
-        {
-            System.out.println(count + " " + m.group(count));
-        }
         
         for (int i = 0; i < groupNames.size(); i++) {
             String name = groupNames.get(i);
