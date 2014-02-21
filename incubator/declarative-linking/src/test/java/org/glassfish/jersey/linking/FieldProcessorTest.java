@@ -55,6 +55,7 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.*;
 
 import static org.junit.Assert.*;
@@ -509,6 +510,63 @@ public class FieldProcessorTest {
         assertEquals("/application/resources/a/b", testClass.uri);
     }
 
+    
+    @Path("a")
+    public static class QueryResource {
+        
+        @Path("b")
+        @GET
+        public String getB(@QueryParam("query") String query, @QueryParam("query2") String query2) {
+            return "hello world";
+        }
+    }
+
+    public static class QueryResourceBean {
+
+        public String getQueryParam() {
+            return queryExample;
+        }
+        private String queryExample;
+
+        public QueryResourceBean(String queryExample, String queryExample2) {
+            this.queryExample = queryExample;
+            this.queryExample2 = queryExample2;
+        }
+
+        public String getQueryParam2() {
+            return queryExample2;
+        }
+        private String queryExample2;
+        
+        
+        @InjectLink(resource=QueryResource.class, method="getB",
+          bindings = {
+              @Binding(name="query", value = "${instance.queryParam}"),
+              @Binding(name="query2", value = "${instance.queryParam2}")
+          })
+        public String uri;
+    }
+    
+
+    @Test
+    public void testQueryResource() {
+        System.out.println("QueryResource");
+        FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
+        QueryResourceBean testClass = new QueryResourceBean("queryExample",null);
+        instance.processLinks(testClass, mockUriInfo);
+        assertEquals("/application/resources/a/b?query=queryExample", testClass.uri);
+    }
+    
+    @Test
+    public void testDoubleQueryResource() {
+        System.out.println("QueryResource");
+        FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
+        QueryResourceBean testClass = new QueryResourceBean("queryExample","queryExample2");
+        instance.processLinks(testClass, mockUriInfo);
+        assertEquals("/application/resources/a/b?query=queryExample&query2=queryExample2", testClass.uri);
+    }
+    
+    
     public static class TestClassK {
         public static final ZipEntry zipEntry = new ZipEntry("entry");
     }

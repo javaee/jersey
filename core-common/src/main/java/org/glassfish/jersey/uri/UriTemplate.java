@@ -41,6 +41,7 @@ package org.glassfish.jersey.uri;
 
 import java.net.URI;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
@@ -134,7 +135,8 @@ public class UriTemplate {
     /**
      * The regular expression for matching URI templates and names.
      */
-    private static final Pattern TEMPLATE_NAMES_PATTERN = Pattern.compile("\\{(\\w[-\\w\\.]*)\\}");
+    private static final Pattern TEMPLATE_NAMES_PATTERN = Pattern.compile("\\{([\\w\\?;][-\\w\\.,]*)\\}");
+    
     /**
      * The empty URI template that matches the null or empty URI path.
      */
@@ -529,28 +531,27 @@ public class UriTemplate {
      * @param values the map of template variables to template values.
      * @return the URI.
      */
-    public final String createURI(Map<String, String> values) {
-        StringBuilder b = new StringBuilder();
-        // Find all template variables
-        Matcher m = TEMPLATE_NAMES_PATTERN.matcher(normalizedTemplate);
-        int i = 0;
-        while (m.find()) {
-            b.append(normalizedTemplate, i, m.start());
-            String tValue = values.get(m.group(1));
-            if (tValue != null) {
-                b.append(tValue);
+    public final String createURI(final Map<String, String> values) {
+        NameStrategy ns = new NameStrategy()
+        {
+            public String getValueFor(String tVariable, String matchedGroup)
+            {
+                return values.get(tVariable);
+                
             }
-            i = m.end();
-        }
-        b.append(normalizedTemplate, i, normalizedTemplate.length());
-        return b.toString();
+                    
+        };        
+
+        final StringBuilder sb = new StringBuilder();        
+        applyTemplateStrategy(normalizedTemplate, sb, ns);
+        return sb.toString();        
     }
 
     /**
      * Create a URI by substituting any template variables
      * for corresponding template values.
      * <p>
-     * A URI template varibale without a value will be substituted by the
+     * A URI template variable without a value will be substituted by the
      * empty string.
      *
      * @param values the array of template values. The values will be
@@ -559,6 +560,12 @@ public class UriTemplate {
      */
     public final String createURI(String... values) {
         return createURI(values, 0, values.length);
+    }
+    
+    
+    private interface NameStrategy
+    {
+        public String getValueFor(String tVariable, String matchedGroup);
     }
 
     /**
@@ -574,38 +581,101 @@ public class UriTemplate {
      * @param length the length of the array
      * @return the URI.
      */
-    public final String createURI(String[] values, int offset, int length) {
-        Map<String, String> mapValues = new HashMap<String, String>();
-        StringBuilder b = new StringBuilder();
+    public final String createURI(final String[] values, final int offset, final int length) {
+        
+        NameStrategy ns = new NameStrategy()
+        {
+            int lengthPlusOffset = length +  offset;
+            int v = offset;
+            
+
+            Map<String, String> mapValues = new HashMap<String, String>();
+
+            
+            public String getValueFor(String tVariable, String matchedGroup)
+            {
+                // Check if a template variable has already occurred
+                // If so use the value to ensure that two or more declarations of
+                // a template variable have the same value
+                String tValue = mapValues.get(tVariable);
+                if (tValue == null) {
+                    if (v < lengthPlusOffset) {
+                        tValue = values[v++];
+                        if (tValue != null) {
+                            mapValues.put(tVariable, tValue);
+                        }
+                    }
+                }
+                
+                return tValue;
+                
+            }
+                    
+        };        
+
+        final StringBuilder sb = new StringBuilder();        
+        applyTemplateStrategy(normalizedTemplate, sb, ns);
+        return sb.toString();        
+    }
+
+    /**
+     * Build a URI based on the parameters provided by the strategy
+     * @param ns The naming strategy to use
+     * @return the URI
+     */
+    private static void applyTemplateStrategy(
+            String normalizedTemplate, 
+            StringBuilder b,
+            NameStrategy ns) {
         // Find all template variables
         Matcher m = TEMPLATE_NAMES_PATTERN.matcher(normalizedTemplate);
-        int v = offset;
-        length += offset;
+
+        
+        
         int i = 0;
         while (m.find()) {
             b.append(normalizedTemplate, i, m.start());
             String tVariable = m.group(1);
-            // Check if a template variable has already occurred
-            // If so use the value to ensure that two or more declarations of
-            // a template variable have the same value
-            String tValue = mapValues.get(tVariable);
-            if (tValue != null) {
-                b.append(tValue);
-            } else {
-                if (v < length) {
-                    tValue = values[v++];
-                    if (tValue != null) {
-                        mapValues.put(tVariable, tValue);
+            // TODO matrix
+            if (tVariable.startsWith("?") || tVariable.startsWith(";")) {
+            
+                char seperator = tVariable.startsWith("?") ? '&' : ';';
+                char prefix = tVariable.startsWith("?") ? '?' : ';';
+                
+                boolean found = false;
+                int index = b.length();
+                String variables[] = tVariable.substring(1).split(", ?");
+                for (String variable : variables) {
+                    String tValue = ns.getValueFor(variable, m.group());
+                    if (tValue!=null && tValue.length() > 0) {
+                        if (index != b.length()) {
+                            b.append(seperator);
+                        }
+                        
+                        b.append(variable);
+                        b.append('=');
                         b.append(tValue);
                     }
                 }
+                
+                if (index!= b.length()) {
+                    b.insert(index, prefix);
+                }
             }
+            else {
+                String tValue = ns.getValueFor(tVariable, m.group());
+
+                if (tValue!=null) {
+                    b.append(tValue);
+                }
+            }
+            
             i = m.end();
         }
         b.append(normalizedTemplate, i, normalizedTemplate.length());
-        return b.toString();
     }
 
+    
     @Override
     public final String toString() {
         return pattern.toString();
@@ -865,14 +935,14 @@ public class UriTemplate {
     }
 
     @SuppressWarnings("unchecked")
-    private static int createURIComponent(UriComponent.Type t,
+    private static int createURIComponent(final UriComponent.Type t,
                                           String template,
                                           final String[] values, final int offset,
                                           final boolean encode,
                                           final Map<String, ?> _mapValues,
                                           final StringBuilder b) {
 
-        Map<String, Object> mapValues = (Map<String, Object>) _mapValues;
+        final Map<String, Object> mapValues = (Map<String, Object>) _mapValues;
 
         if (template.indexOf('{') == -1) {
             b.append(template);
@@ -881,34 +951,37 @@ public class UriTemplate {
 
         // Find all template variables
         template = new UriTemplateParser(template).getNormalizedTemplate();
-        final Matcher m = TEMPLATE_NAMES_PATTERN.matcher(template);
-        int v = offset;
-        int i = 0;
-        while (m.find()) {
-            b.append(template, i, m.start());
-            final String tVariable = m.group(1);
-            // Check if a template variable has already occurred
-            // If so use the value to ensure that two or more declarations of
-            // a template variable have the same value
-            Object tValue = mapValues.get(tVariable);
-            if (tValue == null && v < values.length) {
-                tValue = values[v++];
-            }
-            if (tValue != null) {
-                mapValues.put(tVariable, tValue);
-                if (encode) {
-                    tValue = UriComponent.encode(tValue.toString(), t);
-                } else {
-                    tValue = UriComponent.contextualEncode(tValue.toString(), t);
+        
+        class CountingStrategy implements NameStrategy
+        {
+            int v = offset;
+
+            @Override
+            public String getValueFor(String tVariable, String matchedGroup) {
+
+                Object tValue = mapValues.get(tVariable);
+                if (tValue == null && v < values.length) {
+                    tValue = values[v++];
                 }
-                b.append(tValue);
-            } else {
-                throw templateVariableHasNoValue(tVariable);
+                if (tValue != null) {
+                    mapValues.put(tVariable, tValue);
+                    if (encode) {
+                        tValue = UriComponent.encode(tValue.toString(), t);
+                    } else {
+                        tValue = UriComponent.contextualEncode(tValue.toString(), t);
+                    }
+                } else {
+                    throw templateVariableHasNoValue(tVariable);
+                }
+
+                return tValue!=null ? tValue.toString() : null;
             }
-            i = m.end();
+            
         }
-        b.append(template, i, template.length());
-        return v;
+        CountingStrategy cs = new CountingStrategy();
+        applyTemplateStrategy(template, b, cs);
+
+        return cs.v;
     }
 
 
@@ -924,7 +997,7 @@ public class UriTemplate {
      * @throws IllegalArgumentException when {@code _mapValues} value is null.
      */
     @SuppressWarnings("unchecked")
-    public static String resolveTemplateValues(UriComponent.Type type,
+    public static String resolveTemplateValues(final UriComponent.Type type,
                                                String template,
                                                final boolean encode,
                                                final Map<String, ?> _mapValues) {
@@ -933,37 +1006,38 @@ public class UriTemplate {
             return template;
         }
 
-        Map<String, Object> mapValues = (Map<String, Object>) _mapValues;
+        final Map<String, Object> mapValues = (Map<String, Object>) _mapValues;
         StringBuilder sb = new StringBuilder();
 
         // Find all template variables
         template = new UriTemplateParser(template).getNormalizedTemplate();
-        final Matcher m = TEMPLATE_NAMES_PATTERN.matcher(template);
+        
+        NameStrategy ns = new NameStrategy()
+        {
+            @Override
+            public String getValueFor(String tVariable, String matchedGroup) {
 
-        int i = 0;
-        while (m.find()) {
-            sb.append(template, i, m.start());
-            final String tVariable = m.group(1);
-            Object tValue = mapValues.get(tVariable);
+                Object tValue = mapValues.get(tVariable);
 
-            if (tValue != null) {
-                if (encode) {
-                    tValue = UriComponent.encode(tValue.toString(), type);
+                if (tValue != null) {
+                    if (encode) {
+                        tValue = UriComponent.encode(tValue.toString(), type);
+                    } else {
+                        tValue = UriComponent.contextualEncode(tValue.toString(), type);
+                    }
+                    return tValue.toString();
                 } else {
-                    tValue = UriComponent.contextualEncode(tValue.toString(), type);
-                }
-                sb.append(tValue);
-            } else {
-                if (mapValues.containsKey(tVariable)) {
-                    throw new IllegalArgumentException("The value associated of the template value map for key + " + tVariable
-                            + " is null.");
-                }
+                    if (mapValues.containsKey(tVariable)) {
+                        throw new IllegalArgumentException("The value associated of the template value map for key + " + tVariable
+                                + " is null.");
+                    }
 
-                sb.append(m.group());
+                    return matchedGroup;
+                }
             }
-            i = m.end();
-        }
-        sb.append(template, i, template.length());
+        };
+        
+        applyTemplateStrategy(template, sb, ns);
         return sb.toString();
     }
 

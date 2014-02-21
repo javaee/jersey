@@ -257,7 +257,7 @@ public class PatternWithGroups {
 
         @Override
         public int groupCount() {
-            return groupIndexes.length - 1;
+            return groupIndexes.length;
         }
     }
 
@@ -319,7 +319,7 @@ public class PatternWithGroups {
 
         groupValues.clear();
         if (groupIndexes.length > 0) {
-            for (int i = 0; i < groupIndexes.length - 1; i++) {
+            for (int i = 0; i < groupIndexes.length; i++) {
                 groupValues.add(m.group(groupIndexes[i]));
             }
         } else {
@@ -368,6 +368,13 @@ public class PatternWithGroups {
 
         // Assign the matched group values to group names
         groupValues.clear();
+        
+        
+        for (int count = 0; count <= m.groupCount(); ++count)
+        {
+            System.out.println(count + " " + m.group(count));
+        }
+        
         for (int i = 0; i < groupNames.size(); i++) {
             String name = groupNames.get(i);
             String currentValue = m.group((groupIndexes.length > 0) ? groupIndexes[i] : i + 1);

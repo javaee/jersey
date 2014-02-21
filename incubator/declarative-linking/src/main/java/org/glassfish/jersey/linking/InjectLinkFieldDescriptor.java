@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.linking;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Link;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
   
@@ -139,6 +141,26 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
                     if (!(template.endsWith("/") || methodTemplate.startsWith("/")))
                         builder.append("/");
                     builder.append(methodTemplate);
+                    
+                    // append query parameters
+                    StringBuilder querySubString = new StringBuilder();
+                    for (Annotation paramAnns[] : method.getParameterAnnotations()){
+                        for (Annotation ann : paramAnns) {
+                            if (ann.annotationType() == QueryParam.class) {
+                                querySubString.append(((QueryParam)ann).value());
+                                querySubString.append(',');
+                            }
+                        }
+                    }
+                    
+                    if (querySubString.length() > 0)
+                    {
+                        builder.append("{?");
+                        builder.append(querySubString.subSequence(0, querySubString.length()-1));
+                        builder.append("}");
+                    }
+                    
+                    
                     template = builder.toString();
                     break;
                 }

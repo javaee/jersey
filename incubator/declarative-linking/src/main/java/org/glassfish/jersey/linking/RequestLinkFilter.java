@@ -40,10 +40,12 @@
 
 package org.glassfish.jersey.linking;
 
+import java.io.IOException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Link;
@@ -58,7 +60,7 @@ import javax.ws.rs.ext.Provider;
  * <blockquote><pre>
  *     &lt;init-param&gt
  *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *         &lt;param-value&gt;com.sun.jersey.server.linking.LinkFilter&lt;/param-value&gt;
+ *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
  *     &lt;/init-param&gt;
  * </pre></blockquote>
  * <p/>
@@ -69,22 +71,27 @@ import javax.ws.rs.ext.Provider;
  * @see LinkHeader
  */
 
-@Provider
-class LinkFilter implements ContainerResponseFilter {
+class RequestLinkFilter implements ContainerRequestFilter {
 
     @Context
     private UriInfo uriInfo;
 
-    public void filter(ContainerRequestContext request, ContainerResponseContext response) {
-        final Object entity = response.getEntity();
+//    public void filter(ContainerRequestContext request) {
+//        final Object entity = response.getEntity();
+//
+//        if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
+//            Class<?> entityClass = entity.getClass();
+//            HeaderProcessor lhp = new HeaderProcessor(entityClass);
+//            lhp.processLinkHeaders(entity, uriInfo, response.getHeaders());
+//            FieldProcessor lp = new FieldProcessor(entityClass);
+//            lp.processLinks(entity, uriInfo);
+//        }
+//
+//    }
 
-        if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
-            Class<?> entityClass = entity.getClass();
-            HeaderProcessor lhp = new HeaderProcessor(entityClass);
-            lhp.processLinkHeaders(entity, uriInfo, response.getHeaders());
-            FieldProcessor lp = new FieldProcessor(entityClass);
-            lp.processLinks(entity, uriInfo);
-        }
+    @Override
+    public void filter(ContainerRequestContext requestContext) throws IOException {
 
+        
     }
 }

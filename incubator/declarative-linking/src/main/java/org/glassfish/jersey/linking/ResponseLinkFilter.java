@@ -40,36 +40,50 @@
 
 package org.glassfish.jersey.linking;
 
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.FeatureContext;
-import org.glassfish.jersey.Beta;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
+
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.ext.Provider;
 
 /**
- * A feature to enable the declarative linking functionality
+ * Filter that processes {@link Link} annotated fields in returned response
+ * entities.
+ * <p/>
+ * When an application is deployed as a Servlet or Filter this filter can be
+ * registered using the following initialization parameters:
+ * <blockquote><pre>
+ *     &lt;init-param&gt
+ *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
+ *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
+ *     &lt;/init-param&gt;
+ * </pre></blockquote>
+ * <p/>
+ *
  * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
+ * @see LinkHeader
  */
 
-@Beta
-public class DeclarativeLinkingFeature
-    implements Feature
-{
+class ResponseLinkFilter implements ContainerResponseFilter {
 
-    @Override
-    public boolean configure(FeatureContext context) {
-        
-        Configuration config = context.getConfiguration();
-        
-        if (!config.isRegistered(ResponseLinkFilter.class))
-        {
-            context.register(ResponseLinkFilter.class);
-            context.register(RequestLinkFilter.class);
-            return true;
+    @Context
+    private UriInfo uriInfo;
+
+    public void filter(ContainerRequestContext request, ContainerResponseContext response) {
+        final Object entity = response.getEntity();
+
+        if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
+            Class<?> entityClass = entity.getClass();
+            HeaderProcessor lhp = new HeaderProcessor(entityClass);
+            lhp.processLinkHeaders(entity, uriInfo, response.getHeaders());
+            FieldProcessor lp = new FieldProcessor(entityClass);
+            lp.processLinks(entity, uriInfo);
         }
-        
-        return false;
+
     }
-    
 }

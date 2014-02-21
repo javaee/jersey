@@ -42,18 +42,10 @@ package org.glassfish.jersey.linking;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.Path;
 import javax.ws.rs.core.Link;
-import org.glassfish.jersey.server.model.AnnotatedMethod;
-  
-import org.glassfish.jersey.server.model.MethodList;
   
 /**
  * Utility class for working with {@link InjectLinks} annotated fields

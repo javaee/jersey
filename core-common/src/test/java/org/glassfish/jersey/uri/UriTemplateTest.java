@@ -54,6 +54,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.uri.UriTemplateTest
@@ -311,9 +312,9 @@ public class UriTemplateTest {
         assertEquals(uri.length(), mr.end());
         assertEquals(0, mr.start(0));
         assertEquals(uri.length(), mr.end(0));
-        for (int i = 1; i <= mr.groupCount(); i++) {
-            assertEquals(values[i - 1], mr.group(i));
-            assertEquals(values[i - 1], uri.substring(mr.start(i), mr.end(i)));
+        for (int i = 0; i < mr.groupCount(); i++) {
+            assertEquals(values[i], mr.group(i+1));
+            assertEquals(values[i], uri.substring(mr.start(i+1), mr.end(i+1)));
         }
     }
 
@@ -462,5 +463,156 @@ public class UriTemplateTest {
         URI result = UriTemplate.normalize(path);
         assertEquals(expected, result.toString());
     }
+
+    
+    
+    @Test
+    public void testSingleQueryParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{?query}");
+
+        Map<String,String> result = new HashMap<String,String>();
+        tmpl.match("/test?query=x", result);
+        
+        assertEquals(
+                "incorrect size for match string",
+                1,
+                result.size()
+        );
+        
+        assertEquals(
+                "query parameter is not matched",
+                "x",
+                result.get("query")
+        );
+    }
+
+
+    @Test
+    public void testDoubleQueryParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{?query,secondQuery}");
+
+        List<String> list = new ArrayList<String>();
+        tmpl.match("/test?query=x&secondQuery=y", list);
+        
+        Map<String,String> result = new HashMap<String,String>();
+        tmpl.match("/test?query=x&secondQuery=y", result);
+        
+        assertEquals(
+                "incorrect size for match string",
+                2,
+                result.size()
+        );
+        
+        assertEquals(
+                "query parameter is not matched",
+                "x",
+                result.get("query")
+        );
+        assertEquals(
+                "query parameter is not matched",
+                "y",
+                result.get("secondQuery")
+        );
+    }
+
+    
+    @Test
+    public void testSettingQueryParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{?query}");
+        
+        Map<String,String> values = new HashMap<String,String>();
+        values.put("query", "example");
+        
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is not set",
+                "/test?query=example",
+                uri
+        );
+        
+    }    
+
+    @Test
+    public void testSettingMatrixParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{;matrix}/other");
+        
+        Map<String,String> values = new HashMap<String,String>();
+        values.put("matrix", "example");
+        
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is not set",
+                "/test;matrix=example/other",
+                uri
+        );
+        
+    }    
+   
+    
+    
+    @Test
+    public void testSettingTwoQueryParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{?query,other}");
+        
+        Map<String,String> values = new HashMap<String,String>();
+        values.put("query", "example");
+        values.put("other", "otherExample");
+        
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is not set",
+                "/test?query=example&other=otherExample",
+                uri
+        );
+        
+    }    
+
+    @Test
+    public void testSettingTwoMatrixParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{;matrix,other}/other");
+        
+        Map<String,String> values = new HashMap<String,String>();
+        values.put("matrix", "example");
+        values.put("other", "otherExample");
+        
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is not set",
+                "/test;matrix=example;other=otherExample/other",
+                uri
+        );
+        
+    }    
+    
+    
+    @Test
+    public void testNotSettingQueryParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{?query}");
+        
+        Map<String,String> values = new HashMap<String,String>();
+        
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is set",
+                "/test",
+                uri
+        );
+        
+    }    
+
+    @Test
+    public void testNotSettingMatrixParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{;query}/other");
+        
+        Map<String,String> values = new HashMap<String,String>();
+        
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is set",
+                "/test/other",
+                uri
+        );
+        
+    }    
 
 }

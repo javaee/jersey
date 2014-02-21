@@ -40,8 +40,6 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLinkDescriptor;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
