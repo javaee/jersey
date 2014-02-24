@@ -52,9 +52,12 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.Priorities;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.oauth1.signature.OAuth1Parameters;
@@ -74,6 +77,7 @@ import org.glassfish.jersey.server.oauth1.internal.OAuthServerRequest;
  * @author Paul C. Bryan <pbryan@sun.com>
  * @author Martin Matula
  */
+@Priority(Priorities.AUTHENTICATION)
 class OAuth1ServerFilter implements ContainerRequestFilter {
 
     /** OAuth Server */
