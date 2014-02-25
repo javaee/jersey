@@ -41,19 +41,15 @@ package org.glassfish.jersey.client.authentication;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -61,11 +57,12 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
-import javax.xml.soap.SOAPException;
-import javax.xml.soap.SOAPMessage;
+import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
  * Implementation of Digest Http Authentication method (RFC 2617).
@@ -75,8 +72,6 @@ import org.glassfish.jersey.client.internal.LocalizationMessages;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 final class DigestAuthenticator {
-
-	private static final Logger logger = Logger.getLogger(DigestAuthenticator.class.getName());
 
 	private static final char[] HEX_ARRAY = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 	private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s*=\\s*(\"([^\"]+)\"|(\\w+))\\s*,?\\s*");
@@ -133,36 +128,6 @@ final class DigestAuthenticator {
 				request.getHeaders().add(HttpHeaders.AUTHORIZATION, createNextAuthToken(digestScheme, request, cred));
 				return true;
 			}
-		}
-		// das ist schon die SoapMessage:
-		if (request.hasEntity()) {
-			try {
-				OutputStream os = request.getEntityStream();
-				Object entity = request.getEntity();
-				if (entity instanceof SOAPMessage) {
-					logger.fine("SKAT entity is instanceof SOAPMessage");
-					SOAPMessage sm = (SOAPMessage) entity;
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					sm.writeTo(baos);
-					baos.close();
-					logger.fine("SKAT entity as String: " + baos.toString());
-				}
-				for (Class c : request.getConfiguration().getClasses()) {
-					logger.fine("SKAT configuration class: " + c.getCanonicalName());
-					if (MessageBodyWriter.class.isAssignableFrom(c)) {
-						logger.fine("SKAT configuration class: " + c.getCanonicalName() + " has MessageBodyWriter");
-						if (entity.getClass().isAssignableFrom(c)) {
-							logger.fine("SKAT hat message body writer und kann entity behandeln");
-						}
-					}
-				}
-				//for (Object instance : request.getConfiguration().getInstances()) {
-				//	logger.info("SKAT configuration instance: " + instance.getClass().getCanonicalName());
-				//}
-			} catch (SOAPException ex) {
-				Logger.getLogger(DigestAuthenticator.class.getName()).log(Level.SEVERE, null, ex);
-			}
-
 		}
 		return false;
 	}
@@ -309,21 +274,21 @@ final class DigestAuthenticator {
 
 		String ha2;
 		if (ds.getQop().equals(QOP.AUTHINT)) {
-			ByteArrayOutputStream entityBody = new ByteArrayOutputStream();
+			String entityBodyString = "";
 			if (requestContext.hasEntity()) {
-				OutputStream os = requestContext.getEntityStream();
-				Object entity = requestContext.getEntity();
-				if (entity instanceof SOAPMessage) {
-					SOAPMessage sm = (SOAPMessage) entity;
-					try {
-						sm.writeTo(entityBody);
-					} catch (SOAPException ex) {
-						throw new IOException("Cant read entity body");
-					}
-					entityBody.close();
+				final Type entityType = requestContext.getEntityType();
+				final Class entityClass = requestContext.getEntityClass();
+				ClientRequest cr = (ClientRequest) requestContext;
+				MessageBodyWorkers mbws = cr.getWorkers();
+				MessageBodyWriter mbw = mbws.getMessageBodyWriter(entityClass, entityType, null, MediaType.WILDCARD_TYPE);
+				if (mbw != null) {
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					mbw.writeTo(requestContext.getEntity(), entityClass, entityType, null, MediaType.WILDCARD_TYPE, null, baos);
+					baos.close();
+					entityBodyString = baos.toString();
 				}
 			}
-			ha2 = md5(requestContext.getMethod(), uri, md5(entityBody.toString()));
+			ha2 = md5(requestContext.getMethod(), uri, md5(entityBodyString));
 		} else { // QOP.UNSPECIFIED or QOP.AUTH
 			ha2 = md5(requestContext.getMethod(), uri);
 		}
