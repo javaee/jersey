@@ -286,6 +286,8 @@ final class DigestAuthenticator {
 					mbw.writeTo(requestContext.getEntity(), entityClass, entityType, null, MediaType.WILDCARD_TYPE, null, baos);
 					baos.close();
 					entityBodyString = baos.toString();
+				} else {
+					throw new IOException(LocalizationMessages.AUTHENTICATION_MESSAGEBODYWRITER_NOTAVAILABLE());
 				}
 			}
 			ha2 = md5(requestContext.getMethod(), uri, md5(entityBodyString));
