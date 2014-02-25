@@ -50,7 +50,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.ProcessingException;
@@ -276,11 +275,23 @@ final class DigestAuthenticator {
 		if (ds.getQop().equals(QOP.AUTHINT)) {
 			String entityBodyString = "";
 			if (requestContext.hasEntity()) {
+
 				final Type entityType = requestContext.getEntityType();
 				final Class entityClass = requestContext.getEntityClass();
+
 				ClientRequest cr = (ClientRequest) requestContext;
 				MessageBodyWorkers mbws = cr.getWorkers();
-				MessageBodyWriter mbw = mbws.getMessageBodyWriter(entityClass, entityType, null, MediaType.WILDCARD_TYPE);
+
+				MessageBodyWriter mbw = null;
+				for (MessageBodyWriter w : mbws.getMessageBodyWritersForType(entityClass)) {
+					if (w.isWriteable(entityClass, null,null, MediaType.WILDCARD_TYPE)) {
+						mbw = w;
+						break;
+					}
+				}
+				// this does not reliably work:
+				// mbw = mbws.getMessageBodyWriter(entityClass, entityType, null, MediaType.WILDCARD_TYPE);
+
 				if (mbw != null) {
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					mbw.writeTo(requestContext.getEntity(), entityClass, entityType, null, MediaType.WILDCARD_TYPE, null, baos);
@@ -405,6 +416,7 @@ final class DigestAuthenticator {
 		byte[] bytes = new byte[nbBytes];
 		randomGenerator.nextBytes(bytes);
 		return bytesToHex(bytes);
+
 	}
 
 	enum QOP {
