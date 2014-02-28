@@ -416,7 +416,7 @@ request count: 4, average request processing [ms]: 73</programlisting>
                             </listitem>
                         </varlistentry>
                         <varlistentry>
-                            <term>&lit.jersey.server.monitoring.ResponseStatistics;</term>
+                            <term>&jersey.server.monitoring.ResponseStatistics;</term>
                             <listitem>
                                 <para>response statistics (eg. response status codes and their count)</para>
                             </listitem>
@@ -581,7 +581,7 @@ request count: 4, average request processing [ms]: 73</programlisting>
                         map that contains exception mapper classes as keys and number of their execution as values.
                     </para></listitem>
                     <listitem><para>
-                        <literal>Global->Responses-?ResponseCodesToCountMap</literal>:
+                        <literal>Global->Responses->ResponseCodesToCountMap</literal>:
                         map that contains response codes as keys and their total occurrence in responses as values.
                     </para></listitem>
                     <listitem><para>
