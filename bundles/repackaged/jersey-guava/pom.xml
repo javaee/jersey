@@ -98,6 +98,7 @@
                             javax.annotation;resolution:=optional,
                             javax.inject;resolution:=optional,
                             sun.misc.*;resolution:=optional,
+                            javax.annotation.*;version="[1.2,2)",
                             *
                         </Import-Package>
                         <Export-Package>
