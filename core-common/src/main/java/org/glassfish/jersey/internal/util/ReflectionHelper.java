@@ -58,6 +58,7 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -74,7 +75,6 @@ import javax.ws.rs.core.GenericType;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.OsgiRegistry;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -308,6 +308,34 @@ public class ReflectionHelper {
             public Field[] run() {
                 return clazz.getDeclaredFields();
             }
+        };
+    }
+    
+    /**
+     * Get privileged action to obtain fields on given class, recursively through inheritance hierarchy.
+     * If run using security manager, the returned privileged action
+     * must be invoked within a doPrivileged block.
+     *
+     * @param clazz class for which to get fields.
+     * @return privileged action to obtain fields declared on the {@code clazz} class.
+     *
+     * @see AccessController#doPrivileged(java.security.PrivilegedAction)
+     */
+    public static PrivilegedAction<Field[]> getAllFieldsPA(final Class<?> clazz) {
+        return new PrivilegedAction<Field[]>() {
+            @Override
+            public Field[] run() {
+            	final List<Field> fields = new ArrayList<Field>();
+            	recurse(clazz, fields);
+                return fields.toArray(new Field[0]);
+            }
+            
+           private void recurse(final Class<?> clazz, final List<Field> fields) {
+        	   fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+        	   if(clazz.getSuperclass() != null) {
+        		   recurse(clazz.getSuperclass(), fields);
+        	   }
+           }
         };
     }
 
