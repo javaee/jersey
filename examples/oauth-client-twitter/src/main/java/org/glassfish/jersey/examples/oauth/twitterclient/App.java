@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,7 +68,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  */
 public class App {
     private static final BufferedReader IN = new BufferedReader(new InputStreamReader(System.in));
-    private static final String FRIENDS_TIMELINE_URI = "http://api.twitter.com/1.1/statuses/home_timeline.json";
+    private static final String FRIENDS_TIMELINE_URI = "https://api.twitter.com/1.1/statuses/home_timeline.json";
     private static final Properties PROPERTIES = new Properties();
     private static final String PROPERTIES_FILE_NAME = "twitterclient.properties";
     private static final String PROPERTY_CONSUMER_KEY = "consumerKey";
@@ -101,9 +101,9 @@ public class App {
             // let the user approve our app and get Access Token.
             final OAuth1AuthorizationFlow authFlow = OAuth1ClientSupport.builder(consumerCredentials)
                     .authorizationFlow(
-                            "http://api.twitter.com/oauth/request_token",
-                            "http://api.twitter.com/oauth/access_token",
-                            "http://api.twitter.com/oauth/authorize")
+                            "https://api.twitter.com/oauth/request_token",
+                            "https://api.twitter.com/oauth/access_token",
+                            "https://api.twitter.com/oauth/authorize")
                     .build();
             final String authorizationUri = authFlow.start();
 
