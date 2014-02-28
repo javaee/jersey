@@ -65,6 +65,7 @@
                 <configuration>
                     <minimizeJar>false</minimizeJar>
                     <createSourcesJar>true</createSourcesJar>
+                    <shadeSourcesContent>true</shadeSourcesContent>
                     <artifactSet>
                         <includes>
                             <include>com.google.guava:guava:*</include>
@@ -94,9 +95,15 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
+                            javax.annotation;resolution:=optional,
+                            javax.inject;resolution:=optional,
                             sun.misc.*;resolution:=optional,
                             *
                         </Import-Package>
+                        <Export-Package>
+                            !${jersey.repackaged.prefix}.com.google.common.base.internal,
+                            ${jersey.repackaged.prefix}.com.google.common.*
+                        </Export-Package>
                         <_include>src/main/resources/META-INF/MANIFEST.MF</_include>
                     </instructions>
                     <unpackBundle>true</unpackBundle>
