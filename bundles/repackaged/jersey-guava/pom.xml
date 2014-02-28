@@ -95,6 +95,7 @@
                     <instructions>
                         <Import-Package>
                             sun.misc.*;resolution:=optional,
+                            javax.annotation.*;version="[1.2,2)",
                             *
                         </Import-Package>
                         <_include>src/main/resources/META-INF/MANIFEST.MF</_include>
