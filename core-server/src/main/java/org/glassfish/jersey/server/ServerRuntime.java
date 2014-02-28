@@ -41,6 +41,7 @@ package org.glassfish.jersey.server;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,13 +71,13 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Closure;
 import org.glassfish.jersey.internal.util.Producer;
+import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.internal.util.collection.Value;
@@ -103,14 +104,12 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
 import org.glassfish.hk2.api.ServiceLocator;
 
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
-
 import jersey.repackaged.com.google.common.base.Preconditions;
 
 /**
@@ -547,6 +546,13 @@ class ServerRuntime {
             }
 
             final Object entity = response.getEntity();
+            Type type = response.getEntityType();
+            // check to see if the type of the actual entity in the response is different
+            // from the type of the ContainerResponse definition
+            if(entity != null && !entity.getClass().equals(response.getEntityClass())) {
+            	// it's different, let's get the ACTUAL type of the entity in the response
+            	type = ReflectionHelper.genericTypeFor(entity).getType();
+            }
             boolean skipFinally = false;
 
             final boolean isHead = request.getMethod().equals(HttpMethod.HEAD);
@@ -571,7 +577,7 @@ class ServerRuntime {
                     response.setEntityStream(request.getWorkers().writeTo(
                             entity,
                             entity.getClass(),
-                            response.getEntityType(),
+                            type,
                             response.getEntityAnnotations(),
                             response.getMediaType(),
                             response.getHeaders(),
