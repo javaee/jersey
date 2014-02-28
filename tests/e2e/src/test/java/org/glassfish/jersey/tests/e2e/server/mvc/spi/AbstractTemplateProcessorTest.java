@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
@@ -138,7 +139,8 @@ public class AbstractTemplateProcessorTest {
 
         @Override
         public void writeTo(final String templateReference, final Viewable viewable, final MediaType mediaType,
-                            final OutputStream out) throws IOException {
+                            final MultivaluedMap<String, Object> httpHeaders, final OutputStream out)
+                throws IOException {
             out.write(templateReference.getBytes());
         }
     }
@@ -223,6 +225,7 @@ public class AbstractTemplateProcessorTest {
 
         @Override
         public void writeTo(final String templateReference, final Viewable viewable, final MediaType mediaType,
+                            final MultivaluedMap<String, Object> httpHeaders,
                             final OutputStream out) throws IOException {
             out.write(templateReference.getBytes());
         }

@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.server.mvc.Viewable;
 
@@ -104,14 +105,15 @@ public final class ResolvedViewable<T> extends Viewable {
      * Write the resolved viewable.
      * <p/>
      * This method defers to
-     * {@link TemplateProcessor#writeTo(Object, org.glassfish.jersey.server.mvc.Viewable, javax.ws.rs.core.MediaType, java.io.OutputStream)}
+     * {@link TemplateProcessor#writeTo(Object, org.glassfish.jersey.server.mvc.Viewable, javax.ws.rs.core.MediaType,
+     * javax.ws.rs.core.MultivaluedMap, java.io.OutputStream)}
      * to write the viewable utilizing the template reference.
      *
      * @param out the output stream that the view processor writes to.
      * @throws java.io.IOException if there was an error processing the template.
      */
-    public void writeTo(OutputStream out) throws IOException {
-        viewProcessor.writeTo(templateReference, this, mediaType, out);
+    public void writeTo(OutputStream out, final MultivaluedMap<String, Object> httpHeaders) throws IOException {
+        viewProcessor.writeTo(templateReference, this, mediaType, httpHeaders, out);
     }
 
     /**

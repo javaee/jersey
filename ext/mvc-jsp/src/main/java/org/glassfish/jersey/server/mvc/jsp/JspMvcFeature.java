@@ -77,6 +77,7 @@ public final class JspMvcFeature implements Feature {
      */
     public static final String TEMPLATES_BASE_PATH = MvcFeature.TEMPLATE_BASE_PATH + SUFFIX;
 
+
     @Override
     public boolean configure(final FeatureContext context) {
         final Configuration config = context.getConfiguration();
