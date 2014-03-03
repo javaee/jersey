@@ -39,15 +39,16 @@
  */
 package org.glassfish.jersey.examples.hello.spring.annotations.annotations;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
  * Integration of jersey and spring.
@@ -57,7 +58,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Geoffroy Warin (http://geowarin.github.io)
  */
 @Singleton
-@Path("spring-hello")
+@Path("spring-resource")
 @Service
 public class SpringRequestResource {
 
@@ -66,9 +67,26 @@ public class SpringRequestResource {
     @Autowired
     private GreetingService greetingService;
 
+    @Autowired
+    private List<GoodbyeService> goodbyeServices;
+
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String getHello() {
         return greetingService.greet("world " + counter.incrementAndGet());
+    }
+
+    @Path("goodbye")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getGoodbye() {
+        return goodbyeServices.get(0).goodbye("cruel world");
+    }
+
+    @Path("norwegian-goodbye")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getNorwegianGoodbye() {
+        return goodbyeServices.get(1).goodbye("på badet");
     }
 }

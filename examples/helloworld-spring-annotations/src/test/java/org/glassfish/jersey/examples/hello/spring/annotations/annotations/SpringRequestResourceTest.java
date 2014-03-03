@@ -63,9 +63,17 @@ public class SpringRequestResourceTest extends JerseyTest {
 
     @Test
     public void testGreet() throws Exception {
-        final String greeting = target("spring-hello").request().get(String.class);
+        final String greeting = target("spring-resource").request().get(String.class);
         Assert.assertEquals("hello, world 1!", greeting);
-        final String greeting2 = target("spring-hello").request().get(String.class);
+        final String greeting2 = target("spring-resource").request().get(String.class);
         Assert.assertEquals("hello, world 2!", greeting2);
+    }
+
+    @Test
+    public void testGoodbye() {
+        final String goodbye = target("spring-resource").path("goodbye").request().get(String.class);
+        Assert.assertEquals("goodbye, cruel world!", goodbye);
+        final String norwegianGoodbye = target("spring-resource").path("norwegian-goodbye").request().get(String.class);
+        Assert.assertEquals("hadet, på badet!", norwegianGoodbye);
     }
 }
