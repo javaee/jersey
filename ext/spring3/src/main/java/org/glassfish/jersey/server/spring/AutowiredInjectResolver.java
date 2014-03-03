@@ -42,9 +42,10 @@ package org.glassfish.jersey.server.spring;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-
 import javax.inject.Singleton;
 
 import org.glassfish.hk2.api.Injectee;
@@ -91,9 +92,12 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
             return ctx.getBean(beanName, bt);
         }
         Map<String, ?> beans = ctx.getBeansOfType(bt);
-        if(beans == null || beans.size() != 1) {
+        if(beans == null || beans.size() < 1) {
             LOGGER.warning(LocalizationMessages.NO_BEANS_FOUND_FOR_TYPE(beanType));
             return null;
+        }
+        if(beanType instanceof ParameterizedType && List.class.isAssignableFrom((Class<?>) ((ParameterizedType) beanType).getRawType())) {
+            return new ArrayList(beans.values());
         }
         return beans.values().iterator().next();
     }
@@ -105,7 +109,7 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
         if (type instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) type;
 
-            return (Class<?>) pt.getRawType();
+            return (Class<?>) pt.getActualTypeArguments()[0];
         }
         return null;
     }
