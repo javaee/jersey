@@ -77,8 +77,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <inherited>false</inherited>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>1.6</source>
+                    <target>1.6</target>
                     <compilerArguments>
                         <!-- Do not warn about using sun.misc.Unsafe -->
                         <XDignore.symbol.file />
@@ -107,9 +107,6 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <classifier>${java.classifier}</classifier>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -224,13 +221,6 @@
             <properties>
                 <!-- do not use security manager for xdk -->
                 <surefire.security.argline></surefire.security.argline>
-            </properties>
-        </profile>
-        <profile>
-            <id>jdk6</id>
-            <properties>
-                <java.version>1.6</java.version>
-                <java.classifier>jdk6</java.classifier>
             </properties>
         </profile>
     </profiles>

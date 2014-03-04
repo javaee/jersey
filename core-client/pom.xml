@@ -70,6 +70,22 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <compilerArguments>
+                        <!-- Do not warn about using sun.misc.Unsafe -->
+                        <XDignore.symbol.file />
+                    </compilerArguments>
+                    <showWarnings>false</showWarnings>
+                    <fork>false</fork>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>
@@ -78,9 +94,6 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
-                        <configuration>
-                            <classifier>${java.classifier}</classifier>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -91,16 +104,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>jdk6</id>
-            <properties>
-                <java.version>1.6</java.version>
-                <java.classifier>jdk6</java.classifier>
-            </properties>
-        </profile>
-    </profiles>
 
     <dependencies>
         <dependency>
