@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,10 +44,13 @@ import javax.ws.rs.BeanParam;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.Injections;
-import org.glassfish.jersey.server.model.Parameter;
-
+import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
+import org.glassfish.hk2.utilities.BuilderHelper;
+
+import org.glassfish.jersey.process.internal.RequestScoped;
+import org.glassfish.jersey.server.model.Parameter;
 
 /**
  * Value factory provider for {@link BeanParam bean parameters}.
@@ -85,10 +88,21 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
 
         @Override
         public Object provide() {
-            return Injections.getOrCreate(locator, parameter.getRawType());
+
+            final Class<?> rawType = parameter.getRawType();
+
+            final Object fromHk2 = locator.getService(rawType);
+            if (fromHk2 != null) { // the bean parameter type is already bound in HK2, let's just take it from there
+                return fromHk2;
+            }
+
+            // bellow we make sure HK2 behaves as if injection happens into a request scoped type
+            // this is to avoid having proxies injected (see JERSEY-2386)
+            final AbstractActiveDescriptor<Object> descriptor = BuilderHelper.activeLink(rawType).in(RequestScoped.class).build();
+            final ActiveDescriptor<?> reifiedDescriptor = locator.reifyDescriptor(descriptor);
+            return reifiedDescriptor.create(locator.getServiceHandle(reifiedDescriptor));
         }
     }
-
 
     /**
      * Creates new instance initialized from parameters injected by HK2.
