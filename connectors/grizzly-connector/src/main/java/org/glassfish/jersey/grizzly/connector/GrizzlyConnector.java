@@ -78,9 +78,13 @@ import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Request;
 import com.ning.http.client.RequestBuilder;
+import com.ning.http.client.providers.grizzly.FeedableBodyGenerator;
 import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
 
 import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
+
+import org.glassfish.grizzly.memory.Buffers;
+import org.glassfish.grizzly.memory.MemoryManager;
 
 /**
  * The transport using the AsyncHttpClient.
@@ -318,16 +322,78 @@ class GrizzlyConnector implements Connector {
         builder.setFollowRedirects(requestContext.resolveProperty(ClientProperties.FOLLOW_REDIRECTS, true));
 
         if (requestContext.hasEntity()) {
-            Boolean enableBuffering = requestContext.resolveProperty(ClientProperties.REQUEST_ENTITY_PROCESSING,
-                    RequestEntityProcessing.class) == RequestEntityProcessing.BUFFERED;
-            if (enableBuffering) {
+
+            final RequestEntityProcessing entityProcessing =
+                    requestContext.resolveProperty(ClientProperties.REQUEST_ENTITY_PROCESSING, RequestEntityProcessing.class);
+
+            if (entityProcessing == RequestEntityProcessing.BUFFERED) {
                 byte[] entityBytes = bufferEntity(requestContext);
                 builder = builder.setBody(entityBytes);
+            } else if (entityProcessing == RequestEntityProcessing.CHUNKED) {
+                final FeedableBodyGenerator bodyGenerator = new FeedableBodyGenerator();
+                final Integer chunkSize = requestContext.resolveProperty(ClientProperties.CHUNKED_ENCODING_SIZE, Integer.valueOf(0));
+                if (chunkSize > 0) {
+                    bodyGenerator.setMaxPendingBytes(chunkSize);
+                }
+                final FeedableBodyGenerator.Feeder feeder = new FeedableBodyGenerator.SimpleFeeder(bodyGenerator) {
+                    @Override
+                    public void flush() throws IOException {
+                        requestContext.writeEntity();
+                    }
+                };
+                requestContext.setStreamProvider(new OutboundMessageContext.StreamProvider() {
+
+                    @Override
+                    public OutputStream getOutputStream(int contentLength) throws IOException {
+                        return new FeederAdapter(feeder);
+                    }
+                });
+                bodyGenerator.setFeeder(feeder);
+                builder.setBody(bodyGenerator);
             } else {
                 builder.setBody(getEntityWriter(requestContext));
             }
         }
         return builder.build();
+    }
+
+    /**
+     * Utility OutputStream implementation that can feed Grizzly chunk-encoded body generator.
+     */
+    private class FeederAdapter extends OutputStream {
+
+        final FeedableBodyGenerator.Feeder delegate;
+
+        /**
+         * Get me a new adapter for given feeder.
+         *
+         * @param bodyFeeder adaptee to get fed as an output stream.
+         */
+        FeederAdapter(FeedableBodyGenerator.Feeder bodyFeeder) {
+            this.delegate = bodyFeeder;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            final byte[] buffer = new byte[1];
+            buffer[0] = (byte)b;
+            delegate.feed(Buffers.wrap(MemoryManager.DEFAULT_MEMORY_MANAGER, buffer), false);
+        }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            delegate.feed(Buffers.wrap(MemoryManager.DEFAULT_MEMORY_MANAGER, b), false);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            delegate.feed(Buffers.wrap(MemoryManager.DEFAULT_MEMORY_MANAGER, b, off, len), false);
+        }
+
+        @Override
+        public void close() throws IOException {
+            delegate.feed(Buffers.EMPTY_BUFFER, true);
+        }
     }
 
     @SuppressWarnings("MagicNumber")
