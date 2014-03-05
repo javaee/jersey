@@ -58,7 +58,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 @Path("/request_token")
 public class RequestTokenResource {
 
@@ -92,7 +91,6 @@ public class RequestTokenResource {
 
         return "oauth_token=hh5s93j4hdidpola&oauth_token_secret=hdhd0244k9j7ao03";
     }
-
 
 }
 

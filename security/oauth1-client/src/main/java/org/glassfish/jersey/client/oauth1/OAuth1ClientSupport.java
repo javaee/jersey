@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,6 +76,7 @@ public final class OAuth1ClientSupport {
      * </p>
      */
     public static final String OAUTH_PROPERTY_CONSUMER_CREDENTIALS = "jersey.config.client.oauth1.consumer.credentials";
+
     /**
      * Key of the property that can be attached to the
      * {@link javax.ws.rs.client.ClientRequestContext client request} using
@@ -88,6 +89,7 @@ public final class OAuth1ClientSupport {
      * </p>
      */
     public static final String OAUTH_PROPERTY_ACCESS_TOKEN = "jersey.config.client.oauth1.access.token";
+
     /**
      * Key of the property that can be attached to the
      * {@link javax.ws.rs.client.ClientRequestContext client request} using
@@ -104,8 +106,13 @@ public final class OAuth1ClientSupport {
      * configuration inconsistent for
      * the request and can produce unwanted results.
      * </p>
+     * <p>
+     * This property should be used only for configuring an instance of {@link OAuth1ClientFeature OAuth feature}, not the
+     * {@link OAuth1AuthorizationFlow Authorization flow}.
+     * </p>
      */
     public static final String OAUTH_PROPERTY_OAUTH_PARAMETERS = "jersey.config.client.oauth1.parameters";
+
     /**
      * Key of the property that can be attached to the
      * {@link javax.ws.rs.client.ClientRequestContext client request} using
@@ -122,6 +129,10 @@ public final class OAuth1ClientSupport {
      * property is for advanced usage and should not be used if not needed as it can make the filter
      * configuration inconsistent for
      * the request and can produce unwanted results.
+     * </p>
+     * <p>
+     * This property should be used only for configuring an instance of {@link OAuth1ClientFeature OAuth feature}, not the
+     * {@link OAuth1AuthorizationFlow Authorization flow}.
      * </p>
      */
     public static final String OAUTH_PROPERTY_OAUTH_SECRETS = "jersey.config.client.oauth1.secrets";
