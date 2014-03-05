@@ -73,8 +73,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <inherited>false</inherited>
                 <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <compilerArguments>
                         <!-- Do not warn about using sun.misc.Unsafe -->
                         <XDignore.symbol.file />
@@ -136,4 +136,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <properties>
+        <java.version>1.6</java.version>
+    </properties>
 </project>
