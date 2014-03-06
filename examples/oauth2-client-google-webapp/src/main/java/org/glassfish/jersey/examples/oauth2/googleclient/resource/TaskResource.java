@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -130,7 +130,8 @@ public class TaskResource {
             for (TaskBean taskBean : fullTaskListBean.getTasks()) {
                 taskList.add(new TaskModel(taskBean.getTitle()));
             }
-            TaskListModel listModel = new TaskListModel(taskListBean.getTitle(), taskList);
+            TaskListModel listModel = new TaskListModel(taskListBean == null ? "No tasks were found. Define some tasks."
+                    : taskListBean.getTitle(), taskList);
             listOfTaskLists.add(listModel);
 
         }
