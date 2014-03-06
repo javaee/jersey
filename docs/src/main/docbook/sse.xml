@@ -684,7 +684,7 @@ eventSource.close();</programlisting>
                     that include a <literal>Retry-After</literal> HTTP header with a valid value. The
                     <literal>HTTP 503 + Retry-After</literal> technique is often used by HTTP endpoints as a means of
                     connection and traffic throttling. In case a <literal>HTTP 503 + Retry-After</literal> response is received
-                    in return to a connection request from SSE endpoint, Jersey {@code EventSource} will automatically
+                    in return to a connection request from SSE endpoint, Jersey <literal>EventSource</literal> will automatically
                     schedule a reconnect attempt  and use the received <literal>Retry-After</literal> HTTP header value as a
                     one-time override of the reconnect delay.
                 </para>
