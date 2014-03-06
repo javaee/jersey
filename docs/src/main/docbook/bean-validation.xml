@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -204,15 +204,6 @@
                     <para>&bv.ParameterNameProvider; - provides names for method and constructor parameters.</para>
                 </listitem>
             </itemizedlist>
-
-            <tip>
-                <para>
-                    In the latest versions of Jersey, the old-style setter methods (<literal>set*</literal>) on
-                    &jersey.ext.ValidationConfig; are deprecated and replaced with methods that allow the fluent use of the API
-                    (e.g. <literal>ValidationConfig#messageInterpolator(MessageInterpolator)</literal>). Use of the new fluent methods
-                    is encouraged as the old setters will be removed from the API soon.
-                </para>
-            </tip>
 
             <example xml:id="bv.example.ValidationConfig">
                 <title>Using &lit.jersey.ext.ValidationConfig; to configure &lit.bv.Validator;.</title>

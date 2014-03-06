@@ -112,10 +112,10 @@ public final class ValidationHelper {
      * @return path to a property that caused constraint violations.
      */
     private static String getViolationPath(final ConstraintViolation violation) {
-        final String leafBeanName = violation.getLeafBean().getClass().getSimpleName();
+        final String rootBeanName = violation.getRootBean().getClass().getSimpleName();
         final String propertyPath = violation.getPropertyPath().toString();
 
-        return leafBeanName + (!"".equals(propertyPath) ? '.' + propertyPath : "");
+        return rootBeanName + (!"".equals(propertyPath) ? '.' + propertyPath : "");
     }
 
     /**

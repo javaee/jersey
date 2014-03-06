@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -209,7 +209,7 @@ public class ContactCardTest extends JerseyTest {
 
         final List<ValidationError> validationErrorList = getValidationErrorList(response);
         for (final ValidationError validationError : validationErrorList) {
-            assertTrue(validationError.getPath().contains("ContactCard.addContact.contact."));
+            assertTrue(validationError.getPath().contains("ContactCardResource.addContact.contact."));
         }
 
         final Set<String> messageTemplates = getValidationMessageTemplates(validationErrorList);
