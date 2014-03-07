@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,6 +58,7 @@ import org.glassfish.jersey.server.validation.ValidationError;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
+import org.junit.Assert;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -85,7 +86,7 @@ public class ResourcesTest extends JerseyTest {
         final Response response = target().request("text/html").get();
 
         assertThat(response.getStatus(), equalTo(200));
-        assertThat(response.getMediaType(), equalTo(MediaType.TEXT_HTML_TYPE));
+        Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
 
         assertThat(response.readEntity(String.class),
                 equalTo(resolveTemplate("mustache/form.mustache", Collections.singletonMap("greeting", "Link Shortener"))));
@@ -97,7 +98,7 @@ public class ResourcesTest extends JerseyTest {
         final Response response = target().request("text/html").post(Entity.form(form));
 
         assertThat(response.getStatus(), equalTo(200));
-        assertThat(response.getMediaType(), equalTo(MediaType.TEXT_HTML_TYPE));
+        Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
 
         assertThat(response.readEntity(String.class),
                 equalTo(resolveTemplate("mustache/short-link.mustache", ShortenerService.shortenLink(getBaseUri(), "https://java.net/"))));
@@ -109,7 +110,7 @@ public class ResourcesTest extends JerseyTest {
         final Response response = target().request("text/html").post(Entity.form(form));
 
         assertThat(response.getStatus(), equalTo(400));
-        assertThat(response.getMediaType(), equalTo(MediaType.TEXT_HTML_TYPE));
+        Assert.assertTrue(response.getMediaType().isCompatible(MediaType.TEXT_HTML_TYPE));
 
         assertThat(response.readEntity(String.class),
                 equalTo(resolveTemplate("mustache/error-form.mustache", getCreateFormValidationErrors())));

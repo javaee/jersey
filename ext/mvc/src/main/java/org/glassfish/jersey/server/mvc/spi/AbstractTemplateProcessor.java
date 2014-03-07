@@ -45,9 +45,12 @@ import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -55,7 +58,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import javax.servlet.ServletContext;
 
@@ -65,6 +70,7 @@ import org.glassfish.jersey.internal.util.collection.DataStructures;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.mvc.MvcFeature;
 import org.glassfish.jersey.server.mvc.internal.LocalizationMessages;
+import org.glassfish.jersey.server.mvc.internal.TemplateHelper;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -97,6 +103,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
 
     private final String basePath;
     private final Set<String> supportedExtensions;
+    private final Charset encoding;
 
     /**
      * Create an instance of the processor with injected {@link javax.ws.rs.core.Configuration config} and
@@ -139,6 +146,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
             cacheEnabled = PropertiesHelper.getValue(properties, MvcFeature.CACHE_TEMPLATES, false);
         }
         this.cache = cacheEnabled ? DataStructures.<String, T>createConcurrentMap() : null;
+        this.encoding = TemplateHelper.getTemplateOutputEncoding(config, suffix);
     }
 
     /**
@@ -289,5 +297,45 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
         }
 
         return defaultValue.get();
+    }
+
+    /**
+     * Set the {@link HttpHeaders#CONTENT_TYPE} header to the {@code httpHeaders} based on {@code mediaType} and
+     * {@link #getEncoding() default encoding} defined in this processor. If {@code mediaType} defines encoding
+     * then this encoding will be used otherwise the default processor encoding is used. The chosen encoding
+     * is returned from the method.
+     *
+     * @param mediaType Media type of the entity.
+     * @param httpHeaders Http headers.
+     * @return Selected encoding.
+     */
+    protected Charset setContentType(MediaType mediaType, MultivaluedMap<String, Object> httpHeaders) {
+        Charset encoding;
+
+        final String charset = mediaType.getParameters().get(MediaType.CHARSET_PARAMETER);
+        MediaType finalMediaType;
+        if (charset == null) {
+            encoding = getEncoding();
+            final HashMap<String, String> params = new HashMap<String, String>(mediaType.getParameters());
+            params.put(MediaType.CHARSET_PARAMETER, encoding.name());
+            finalMediaType = new MediaType(mediaType.getType(), mediaType.getSubtype(), params);
+        } else {
+            encoding = Charset.forName(charset);
+            finalMediaType = mediaType;
+        }
+        final ArrayList<Object> typeList = new ArrayList<Object>(1);
+        typeList.add(finalMediaType.toString());
+        httpHeaders.put(HttpHeaders.CONTENT_TYPE, typeList);
+        return encoding;
+    }
+
+
+    /**
+     * Get the output encoding.
+     *
+     * @return Not-{@code null} encoding.
+     */
+    protected Charset getEncoding() {
+        return encoding;
     }
 }

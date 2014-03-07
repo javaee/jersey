@@ -131,7 +131,7 @@ final class ViewableMessageBodyWriter implements MessageBodyWriter<Viewable> {
             }
 
             httpHeaders.putSingle(HttpHeaders.CONTENT_TYPE, resolvedViewable.getMediaType());
-            resolvedViewable.writeTo(entityStream);
+            resolvedViewable.writeTo(entityStream, httpHeaders);
         } catch (ViewableContextException vce) {
             throw new NotFoundException(vce);
         }

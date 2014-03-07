@@ -105,6 +105,22 @@ public final class FreemarkerMvcFeature implements Feature {
      */
     public static final String TEMPLATE_OBJECT_FACTORY = MvcFeature.TEMPLATE_OBJECT_FACTORY + SUFFIX;
 
+
+    /**
+     * Property defines output encoding produced by {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor}.
+     * The value must be a valid encoding defined that can be passed
+     * to the {@link java.nio.charset.Charset#forName(String)} method.
+     *
+     * <p/>
+     * The default value is {@code UTF-8}.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * <p/>
+     *
+     * @since 2.7
+     */
+    public static final String ENCODING = MvcFeature.ENCODING + SUFFIX;
+
     @Override
     public boolean configure(final FeatureContext context) {
         final Configuration config = context.getConfiguration();
