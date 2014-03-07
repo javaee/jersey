@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,8 @@ import org.glassfish.jersey.server.Uri;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class Parameter implements AnnotatedElement {
+
+
     private static final Logger LOGGER = Logger.getLogger(Parameter.class.getName());
 
     /**
@@ -619,5 +622,63 @@ public class Parameter implements AnnotatedElement {
     public String toString() {
         return String.format("Parameter [type=%s, source=%s, defaultValue=%s]",
                 getRawType(), getSourceName(), getDefaultValue());
+    }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(annotations);
+        result = prime * result + ((defaultValue == null) ? 0 : defaultValue.hashCode());
+        result = prime * result + (encoded ? 1231 : 1237);
+        result = prime * result + ((rawType == null) ? 0 : rawType.hashCode());
+        result = prime * result + ((source == null) ? 0 : source.hashCode());
+        result = prime * result + ((sourceAnnotation == null) ? 0 : sourceAnnotation.hashCode());
+        result = prime * result + ((sourceName == null) ? 0 : sourceName.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Parameter other = (Parameter) obj;
+        if (!Arrays.equals(annotations, other.annotations))
+            return false;
+        if (defaultValue == null) {
+            if (other.defaultValue != null)
+                return false;
+        } else if (!defaultValue.equals(other.defaultValue))
+            return false;
+        if (encoded != other.encoded)
+            return false;
+        if (rawType == null) {
+            if (other.rawType != null)
+                return false;
+        } else if (!rawType.equals(other.rawType))
+            return false;
+        if (source != other.source)
+            return false;
+        if (sourceAnnotation == null) {
+            if (other.sourceAnnotation != null)
+                return false;
+        } else if (!sourceAnnotation.equals(other.sourceAnnotation))
+            return false;
+        if (sourceName == null) {
+            if (other.sourceName != null)
+                return false;
+        } else if (!sourceName.equals(other.sourceName))
+            return false;
+        if (type == null) {
+            if (other.type != null)
+                return false;
+        } else if (!type.equals(other.type))
+            return false;
+        return true;
     }
 }
