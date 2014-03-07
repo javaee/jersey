@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,9 +42,12 @@ package org.glassfish.jersey.client.oauth2;
 
 import java.io.IOException;
 
+import javax.ws.rs.Priorities;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
+
+import javax.annotation.Priority;
 
 /**
  * Client filter that adds access token to the {@code Authorization} http header. The filter uses {@code bearer}
@@ -53,6 +56,7 @@ import javax.ws.rs.core.HttpHeaders;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @since 2.3
  */
+@Priority(Priorities.AUTHENTICATION)
 class OAuth2ClientFilter implements ClientRequestFilter {
 
     private final String accessToken;

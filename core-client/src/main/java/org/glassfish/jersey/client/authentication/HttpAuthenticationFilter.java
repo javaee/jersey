@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import javax.ws.rs.Priorities;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -66,6 +67,8 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import javax.annotation.Priority;
+
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
@@ -75,6 +78,7 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
+@Priority(Priorities.AUTHENTICATION)
 class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFilter {
     /**
      * Authentication type.
@@ -128,8 +132,8 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
         int limit = getMaximumCacheLimit(configuration);
 
         final int uriCacheLimit = limit * 2; // 2 is chosen to estimate there will be two times URIs
-                                             // for basic and digest together than only digest
-                                             // (limit estimates digest max URI number)
+        // for basic and digest together than only digest
+        // (limit estimates digest max URI number)
 
         uriCache = Collections.synchronizedMap(new LinkedHashMap<String, Type>(uriCacheLimit) {
             private static final long serialVersionUID = 1946245645415625L;
