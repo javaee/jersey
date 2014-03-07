@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -95,6 +95,7 @@ import javax.ws.rs.core.Feature;
  * @since 2.3
  */
 public interface OAuth1AuthorizationFlow {
+
     /**
      * Start the authorization process and return redirection URI on which the user should give a consent
      * for our application to access resources.
@@ -110,8 +111,22 @@ public interface OAuth1AuthorizationFlow {
      * Finish the authorization process and return the {@link AccessToken}. The method must be called on the
      * same instance after the {@link #start()} method was called and user granted access to this application.
      * <p>
+     * The method makes a request to the Authorization Server but does not exchange verifier for access token. This method is
+     * intended only for some flows/cases in OAuth1.
+     * </p>
+     *
+     * @return Access token.
+     * @since 2.7
+     */
+    public AccessToken finish();
+
+    /**
+     * Finish the authorization process and return the {@link AccessToken}. The method must be called on the
+     * same instance after the {@link #start()} method was called and user granted access to this application.
+     * <p>
      * The method makes a request to the Authorization Server in order to exchange verifier for access token.
      * </p>
+     *
      * @param verifier Verifier provided from the user authorization.
      * @return Access token.
      */
@@ -130,8 +145,7 @@ public interface OAuth1AuthorizationFlow {
      * Return the {@link javax.ws.rs.core.Feature oauth filter feature} that can be used to configure
      * {@link Client client} instances to perform authenticated requests to the Service Provider.
      * <p>
-     * The
-     * authorization process must be successfully finished by instance by calling methods {@link #start()} and
+     * The authorization process must be successfully finished by instance by calling methods {@link #start()} and
      * {@link #finish(String)}.
      * </p>
      *

@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -672,6 +672,35 @@ Feature filterFeature = OAuth1ClientSupport.builder(consumerCredentials)
                     a &lit.jaxrs.client.Client; to be used for the authorization flow requests (for performance
                     and/or resource management reasons) using &jersey.client.oauth1.OAuth1Builder; methods.
                 </para>
+
+                <section xml:id="oauth1-client-signatures">
+                    <title>Public/Private Keys for RSA-SHA1 signature method</title>
+
+                    <para>
+                        Follow the steps below in case the outgoing requests sent from client to server have to be signed with
+                        RSA-SHA1 signature method instead of the default one (HMAC-SHA1).
+                    </para>
+
+                    <example>
+                        <title>Creating Public/Private RSA-SHA1 keys</title>
+                        <programlisting language="prompt" linenumbering="numbered"><![CDATA[$ # Create the private key.
+$ openssl genrsa -out private.key 2048
+$ # Convert the key into PKCS8 format.
+$ openssl pkcs8 -topk8 -in private.key -nocrypt
+$ # Extract the public key.
+$ openssl rsa -in private.key -pubout]]></programlisting>
+                    </example>
+
+                    <para>
+                        The output of the second command can be used as a consumer secret to sign the outgoing request:
+                        <literal>new ConsumerCredentials("consumer-key", CONSUMER_PRIVATE_KEY)</literal>. Public key obtained from
+                        the third command can be then used on the service provider to verify the signed data.
+                    </para>
+                    <para>
+                        For more advanced cases (i.e. other formats of keys) a custom <literal>OAuth1SignatureMethod</literal>
+                        should be implemented and used.
+                    </para>
+                </section>
             </section>
         </section>
 
