@@ -60,6 +60,7 @@ import org.glassfish.hk2.api.ServiceHandle;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import jersey.repackaged.com.google.common.base.Objects;
+import jersey.repackaged.com.google.common.collect.Sets;
 
 import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
 
@@ -295,8 +296,8 @@ public class RequestScope implements Context<RequestScoped> {
             currentScopeInstance.set(scopeInstance.getReference());
             Errors.process(task);
         } finally {
-            currentScopeInstance.set(oldInstance);
             scopeInstance.release();
+            currentScopeInstance.set(oldInstance);
         }
     }
 
@@ -318,8 +319,8 @@ public class RequestScope implements Context<RequestScoped> {
             currentScopeInstance.set(instance);
             Errors.process(task);
         } finally {
-            currentScopeInstance.set(oldInstance);
             instance.release();
+            currentScopeInstance.set(oldInstance);
         }
     }
 
@@ -345,8 +346,8 @@ public class RequestScope implements Context<RequestScoped> {
             currentScopeInstance.set(scopeInstance.getReference());
             return Errors.process(task);
         } finally {
-            currentScopeInstance.set(oldInstance);
             scopeInstance.release();
+            currentScopeInstance.set(oldInstance);
         }
     }
 
@@ -371,8 +372,8 @@ public class RequestScope implements Context<RequestScoped> {
             currentScopeInstance.set(instance);
             return Errors.process(task);
         } finally {
-            currentScopeInstance.set(oldInstance);
             instance.release();
+            currentScopeInstance.set(oldInstance);
         }
     }
 
@@ -397,8 +398,8 @@ public class RequestScope implements Context<RequestScoped> {
             currentScopeInstance.set(scopeInstance.getReference());
             return Errors.process(task);
         } finally {
-            currentScopeInstance.set(oldInstance);
             scopeInstance.release();
+            currentScopeInstance.set(oldInstance);
         }
     }
 
@@ -422,8 +423,8 @@ public class RequestScope implements Context<RequestScoped> {
             currentScopeInstance.set(instance);
             return Errors.process(task);
         } finally {
-            currentScopeInstance.set(oldInstance);
             instance.release();
+            currentScopeInstance.set(oldInstance);
         }
     }
 
@@ -504,8 +505,11 @@ public class RequestScope implements Context<RequestScoped> {
          *
          * @param descriptor key for the value to be removed.
          */
-        void remove(ActiveDescriptor<?> descriptor) {
-            store.remove(descriptor);
+        <T> void remove(ActiveDescriptor<T> descriptor) {
+            final T removed = (T) store.remove(descriptor);
+            if (removed != null) {
+                descriptor.dispose(removed);
+            }
         }
 
         private <T> boolean contains(ActiveDescriptor<T> provider) {
@@ -520,7 +524,9 @@ public class RequestScope implements Context<RequestScoped> {
         public void release() {
             if (referenceCounter.decrementAndGet() < 1) {
                 try {
-                    store.clear();
+                    for (final ActiveDescriptor<?> descriptor : Sets.newHashSet(store.keySet())) {
+                        remove(descriptor);
+                    }
                 } finally {
                     logger.debugLog("Released scope instance {0}", this);
                 }
