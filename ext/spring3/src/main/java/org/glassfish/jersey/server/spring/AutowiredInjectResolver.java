@@ -43,14 +43,17 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Logger;
+
 import javax.inject.Singleton;
 
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
@@ -77,9 +80,9 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
     public Object resolve(Injectee injectee, ServiceHandle<?> root) {
         AnnotatedElement parent = injectee.getParent();
         String beanName = null;
-        if(parent != null) {
+        if (parent != null) {
             Qualifier an = parent.getAnnotation(Qualifier.class);
-            if(an != null) {
+            if (an != null) {
                 beanName = an.value();
             }
         }
@@ -88,17 +91,24 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
 
     private Object getBeanFromSpringContext(String beanName, Type beanType) {
         Class<?> bt = getClassFromType(beanType);
-        if(beanName != null) {
+        if (beanName != null) {
             return ctx.getBean(beanName, bt);
         }
         Map<String, ?> beans = ctx.getBeansOfType(bt);
-        if(beans == null || beans.size() < 1) {
+        if (beans == null || beans.size() < 1) {
             LOGGER.warning(LocalizationMessages.NO_BEANS_FOUND_FOR_TYPE(beanType));
             return null;
         }
-        if(beanType instanceof ParameterizedType && List.class.isAssignableFrom((Class<?>) ((ParameterizedType) beanType).getRawType())) {
-            return new ArrayList(beans.values());
+
+        if (beanType instanceof ParameterizedType) {
+            final Class<?> rawType = (Class<?>) ((ParameterizedType) beanType).getRawType();
+            if (rawType.isAssignableFrom(ArrayList.class)) {
+                return Collections.unmodifiableList(new ArrayList(beans.values()));
+            } else if (rawType.isAssignableFrom(HashSet.class)) {
+                return new HashSet<>(beans.values());
+            }
         }
+
         return beans.values().iterator().next();
     }
 
