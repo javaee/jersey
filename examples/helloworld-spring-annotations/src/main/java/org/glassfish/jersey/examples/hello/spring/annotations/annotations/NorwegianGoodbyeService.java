@@ -39,54 +39,13 @@
  */
 package org.glassfish.jersey.examples.hello.spring.annotations.annotations;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import javax.inject.Singleton;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import org.springframework.stereotype.Component;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+@Component
+public class NorwegianGoodbyeService implements GoodbyeService {
 
-/**
- * Integration of jersey and spring.
- * This rest controller is a singleton spring bean with an autowired depency
- * from spring
- *
- * @author Geoffroy Warin (http://geowarin.github.io)
- */
-@Singleton
-@Path("spring-resource")
-@Service
-public class SpringRequestResource {
-
-    AtomicInteger counter = new AtomicInteger();
-
-    @Autowired
-    private GreetingService greetingService;
-
-    @Autowired
-    private List<GoodbyeService> goodbyeServices;
-
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getHello() {
-        return greetingService.greet("world " + counter.incrementAndGet());
-    }
-
-    @Path("goodbye")
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getGoodbye() {
-        return goodbyeServices.get(0).goodbye("cruel world");
-    }
-
-    @Path("norwegian-goodbye")
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getNorwegianGoodbye() {
-        return goodbyeServices.get(1).goodbye("på badet");
+    @Override
+    public String goodbye(final String who) {
+        return String.format("hadet, %s!", who);
     }
 }
