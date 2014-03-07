@@ -68,6 +68,37 @@
                             then you need to modify the method signature of the implementation.
                         </para>
                     </listitem>
+                    <listitem>
+                        <para>
+                            A minor JAX-RS incompatibility issue has been recently discovered and reported
+                            (see <link xlink:href="https://java.net/jira/browse/JERSEY-2387">JERSEY-2387</link>). As part of the
+                            fix, minor breaking changes related to URI resolving and creation have been introduced in the
+                            behavior of &jaxrs.core.UriBuilder;, &jaxrs.core.Link.Builder; and &jaxrs.client.WebTarget; classes.
+                            It is no longer possible to successfully build a new &lit.jdk6.URI; instance from a
+                            &lit.jaxrs.core.UriBuilder; that contains unresolved template parameters.
+                            An <literal>IllegalArgumentException</literal> will be thrown in such case, as mandated by
+                            JAX-RS API javadoc. Similarly, it is not possible to successfully create a &jaxrs.core.Link;
+                            instance from a URI template with unresolved template parameters.
+                            Also, it is not possible to successfully send a request on a &lit.jaxrs.client.WebTarget; that
+                            represents a URI template that does not have all the template parameters properly resolved.
+                            Any attempt to do so will fail with an exception. Note that this also applies to any managed clients
+                            injected into JAX-RS server-side components using &jersey.server.Uri; annotation.
+                        </para>
+                        <para>
+                            In Jersey 2.6 and earlier, producing a URI from an incompletely resolved URI template would succeed
+                            and all unresolved template parameter locations would be encoded without change into the resulting
+                            URI, for example <literal>"/path/{param}"</literal> would be implicitly encoded as
+                            <literal>"/path/%7Bparam%7D"</literal>. While we do not expect our users to depend on this
+                            functionality, if the former behavior is desired for some reason,
+                            <literal>UriComponent.encodeTemplateNames</literal> method can be used instead:
+
+                            <programlisting language="java" linenumbering="unnumbered">URI.create(UriComponent.encodeTemplateNames(UriBuilder.fromUri("/path/{param}").toTemplate()));</programlisting>
+
+                            or simply
+
+                            <programlisting language="java" linenumbering="unnumbered">URI.create(UriComponent.encodeTemplateNames("/path/{param}"));</programlisting>
+                        </para>
+                    </listitem>
                 </itemizedlist>
             </para>
         </section>

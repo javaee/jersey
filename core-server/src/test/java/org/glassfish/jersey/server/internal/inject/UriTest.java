@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,7 @@ import org.glassfish.jersey.server.Uri;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -185,12 +186,16 @@ public class UriTest extends AbstractTest {
     public void testGetParam1() throws ExecutionException, InterruptedException {
         initiateWebApplication(Resource2.class);
 
-        final ContainerResponse response = apply(
-                RequestContextBuilder.from("/test/1", "GET").build()
-        );
-
-        // Uri Templates should not be resolved.
-        assertThat(response.getEntity().toString(), equalTo("http://oracle.com/%7Bparam%7D"));
+        try {
+            apply(
+                    RequestContextBuilder.from("/test/1", "GET").build()
+            );
+        } catch (ExecutionException ex) {
+            // ISE thrown from WebTarget
+            assertThat(ex.getCause(), instanceOf(IllegalStateException.class));
+            // IAE thrown from UriBuilder - unresolved template parameter value
+            assertThat(ex.getCause().getCause(), instanceOf(IllegalArgumentException.class));
+        }
     }
 
     @Test
@@ -210,12 +215,16 @@ public class UriTest extends AbstractTest {
     public void testGetRelative1() throws ExecutionException, InterruptedException {
         initiateWebApplication(Resource3.class);
 
-        final ContainerResponse response = apply(
-                RequestContextBuilder.from("/test/1", "GET").build()
-        );
-
-        // Uri Templates should not be resolved.
-        assertThat(response.getEntity().toString(), equalTo("/%7Bparam%7D"));
+        try {
+            apply(
+                    RequestContextBuilder.from("/test/1", "GET").build()
+            );
+        } catch (ExecutionException ex) {
+            // ISE thrown from WebTarget
+            assertThat(ex.getCause(), instanceOf(IllegalStateException.class));
+            // IAE thrown from UriBuilder - unresolved template parameter value
+            assertThat(ex.getCause().getCause(), instanceOf(IllegalArgumentException.class));
+        }
     }
 
     @Test

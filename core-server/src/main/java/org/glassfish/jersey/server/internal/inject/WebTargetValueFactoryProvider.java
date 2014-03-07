@@ -55,7 +55,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriBuilder;
 
 import javax.inject.Inject;
 
@@ -72,6 +71,7 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.Uri;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.Parameter;
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -271,15 +271,15 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
                     return input.isEmpty() ? null : input.get(0);
                 }
             });
-            UriBuilder uriBuilder = UriBuilder.fromUri(this.uri).resolveTemplates(pathParamValues);
+            JerseyUriBuilder uriBuilder = new JerseyUriBuilder().uri(this.uri).resolveTemplates(pathParamValues);
 
             final ManagedClient managedClient = client.get();
 
-            if (!uriBuilder.build().isAbsolute()) {
+            if (!uriBuilder.isAbsolute()) {
                 final String customBaseUri = managedClient.customBaseUri;
                 final String rootUri = customBaseUri.isEmpty() ? uriInfo.getBaseUri().toString() : customBaseUri;
 
-                uriBuilder = UriBuilder.fromUri(rootUri).path(uriBuilder.toTemplate());
+                uriBuilder = new JerseyUriBuilder().uri(rootUri).path(uriBuilder.toTemplate());
             }
 
             return managedClient.instance.target(uriBuilder);
