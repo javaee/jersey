@@ -379,6 +379,7 @@
 <!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MONITORING_STATISTICS_MBEANS_ENABLED'>ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED</link>" >
 <!ENTITY jersey.server.ServerProperties.APPLICATION_NAME "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#APPLICATION_NAME'>ServerProperties.APPLICATION_NAME</link>" >
 <!ENTITY jersey.server.ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#RESPONSE_SET_STATUS_OVER_SEND_ERROR'>ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR</link>" >
+<!ENTITY jersey.server.Uri "<link xlink:href='&jersey.javadoc.path;/server/Uri.html'>Uri</link>">
 <!ENTITY jersey.server.UriConnegFilter "<link xlink:href='&jersey.javadoc.path;/server/filter/UriConnegFilter.html'>UriConnegFilter</link>">
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlFeature.html'>WadlFeature</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
@@ -718,6 +719,7 @@
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
 <!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
 <!ENTITY lit.jersey.server.RolesAllowedDynamicFeature "<literal>RolesAllowedDynamicFeature</literal>">
+<!ENTITY lit.jersey.server.Uri "<literal>Uri</literal>">
 <!ENTITY lit.jersey.server.WadlGenerator "<literal>WadlGenerator</literal>">
 <!ENTITY lit.jersey.server.WadlGeneratorConfig "<literal>WadlGeneratorConfig</literal>">
 <!ENTITY lit.jersey.sse.EventOutput "<literal>EventOutput</literal>">

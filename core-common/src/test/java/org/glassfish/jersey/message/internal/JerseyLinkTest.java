@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,6 +53,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Tests for LinkTest class.
@@ -117,5 +118,27 @@ public class JerseyLinkTest {
     @Test
     public void buildRelativeLinkTest() {
         assertEquals(URI.create("aa%20bb"), Link.fromUri("aa bb").build().getUri());
+    }
+
+    /**
+     * Reproducer for JERSEY-2387: IAE expected on unresolved URI template parameters.
+     */
+    @Test
+    public void testLinkBuilderWithUnresolvedTemplates() {
+        Link.Builder linkBuilder;
+        try {
+            linkBuilder = Link.fromUri("scheme://authority/{x1}/{x2}/{x3}");
+            linkBuilder.build("p");
+            fail("IllegalArgumentException is expected to be thrown from Link.Builder when there are unresolved templates.");
+        } catch (IllegalArgumentException expected) {
+            // exception expected, move on...
+        }
+        try {
+            linkBuilder = Link.fromUri("scheme://authority/{x1}/{x2}/{x3}");
+            linkBuilder.build();
+            fail("IllegalArgumentException is expected to be thrown from Link.Builder when there are unresolved templates.");
+        } catch (IllegalArgumentException expected) {
+            // exception expected, move on...
+        }
     }
 }
