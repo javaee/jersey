@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,10 @@
  */
 package org.glassfish.jersey.examples.jackson;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -51,6 +53,8 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Ignore;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -134,5 +138,19 @@ public class JacksonTest extends JerseyTest {
         String serviceWadl = target.path("application.wadl").request(MediaTypes.WADL).get(String.class);
 
         assertTrue(serviceWadl.length() > 0);
+    }
+
+    /**
+     * Test, that in case of malformed JSON, the jackson exception mappers will be used and the response will be
+     * 400 - bad request instead of 500 - server error
+     */
+    @Test
+    public void testExceptionMapping() {
+        enable(TestProperties.LOG_TRAFFIC);
+        // create a request with invalid json string to cause an exception in Jackson
+        Response response = target().path("parseExceptionTest").request("application/json")
+                .put(Entity.entity("Malformed json string.", MediaType.valueOf("application/json")));
+
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
     }
 }
