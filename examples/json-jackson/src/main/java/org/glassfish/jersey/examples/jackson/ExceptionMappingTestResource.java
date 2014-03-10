@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,36 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jackson;
+package org.glassfish.jersey.examples.jackson;
 
-import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.FeatureContext;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-
-import org.glassfish.jersey.CommonProperties;
-
-import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
-import org.codehaus.jackson.jaxrs.JsonMappingExceptionMapper;
-import org.codehaus.jackson.jaxrs.JsonParseExceptionMapper;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.MediaType;
 
 /**
- * Feature used to register Jackson JSON providers.
+ * Testing bean that accepts JSON for the PUT method.
  *
- * @author Stepan Kopriva (stepan.kopriva at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class JacksonFeature implements Feature {
+@Path("parseExceptionTest")
+public class ExceptionMappingTestResource {
 
-    @Override
-    public boolean configure(final FeatureContext context) {
-        final String disableMoxy = CommonProperties.MOXY_JSON_FEATURE_DISABLE + '.'
-                + context.getConfiguration().getRuntimeType().name().toLowerCase();
-        context.property(disableMoxy, true);
-
-        // add the default Jackson exception mappers
-        context.register(JsonParseExceptionMapper.class);
-        context.register(JsonMappingExceptionMapper.class);
-        context.register(JacksonJaxbJsonProvider.class, MessageBodyReader.class, MessageBodyWriter.class);
-        return true;
+    @Consumes(MediaType.APPLICATION_JSON)
+    @PUT
+    public DummyBean getAccount(DummyBean bean) {
+        return bean;
     }
 }
