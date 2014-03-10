@@ -58,6 +58,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -472,13 +473,13 @@ class ApacheConnector implements Connector {
             final ClientResponse responseContext = new ClientResponse(status, clientRequest);
             final List<URI> redirectLocations = context.getRedirectLocations();
             if (redirectLocations != null && !redirectLocations.isEmpty()) {
-                responseContext.setResolvedRequestUri(redirectLocations.get(redirectLocations.size()-1));
+                responseContext.setResolvedRequestUri(redirectLocations.get(redirectLocations.size() - 1));
             }
 
             final Header[] respHeaders = response.getAllHeaders();
+            final MultivaluedMap<String, String> headers = responseContext.getHeaders();
             for (final Header header : respHeaders) {
                 final String headerName = header.getName();
-                final MultivaluedMap<String, String> headers = responseContext.getHeaders();
                 List<String> list = headers.get(headerName);
                 if (list == null) {
                     list = new ArrayList<String>();
@@ -486,6 +487,20 @@ class ApacheConnector implements Connector {
                 list.add(header.getValue());
                 headers.put(headerName, list);
             }
+
+            final HttpEntity entity = response.getEntity();
+
+            if (entity != null) {
+                if (headers.get(HttpHeaders.CONTENT_LENGTH) == null) {
+                    headers.add(HttpHeaders.CONTENT_LENGTH, String.valueOf(entity.getContentLength()));
+                }
+
+                final Header contentEncoding = entity.getContentEncoding();
+                if (headers.get(HttpHeaders.CONTENT_ENCODING) == null && contentEncoding != null) {
+                    headers.add(HttpHeaders.CONTENT_ENCODING, contentEncoding.getValue());
+                }
+            }
+
 
             try {
                 responseContext.setEntityStream(new HttpClientResponseInputStream(response));
