@@ -55,24 +55,33 @@ import javax.ws.rs.Produces;
 public class Issue2255Resource {
 	
 	public static class A {
-		public String fieldA1 = "fieldA1Value";
+		public A() {}
+		public A(String fieldA1) {
+			this.fieldA1 = fieldA1;
+		}
+		public String fieldA1;
 	}
 	
 	public static class B extends A {
-		public String fieldB1 = "fieldB1Value";
+		public B(){}
+		public B(String fieldA1, String fieldB1) {
+			super(fieldA1);
+			this.fieldB1 = fieldB1;
+		}
+		public String fieldB1;
 	}
 
 
     @Path("A")
     @GET
     public A getA() {
-        return new A();
+        return new A("fieldA1Value");
     }
     
     @Path("B")
     @GET
     public B getB() {
-        return new B();
+        return new B("fieldA1Value", "fieldB1Value");
     }
 
 }
