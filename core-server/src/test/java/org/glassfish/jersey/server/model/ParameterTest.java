@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,16 @@
  */
 package org.glassfish.jersey.server.model;
 
+
+import javax.inject.Inject;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * Parameter model creation test.
@@ -147,6 +153,30 @@ public class ParameterTest {
         Parameter parameter = parameters.get(0);
         assertEquals(String.class, parameter.getRawType());
         assertEquals(String.class, parameter.getType());
+    }
+
+    /**
+     * JERSEY-2408 Fix test - missing hashCode() and equals() in {@link Parameter} caused
+     * the descriptorCache in {@link org.glassfish.jersey.server.internal.inject.DelegatedInjectionValueFactoryProvider} not to
+     * reuse the Parameter instances (Parameter was used as a key in a {@link org.glassfish.hk2.utilities.cache.Cache},
+     * which delegates to an underlying {@link java.util.concurrent.ConcurrentHashMap}.
+     */
+    @Test
+    public void testParameterHashCode() {
+        Annotation[] annotations = new Annotation[]{new Annotation() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return Inject.class;
+            }
+        }};
+        Parameter param1 = Parameter.create(String.class, String.class, false, String.class, String.class, annotations);
+        Parameter param2 = Parameter.create(String.class, String.class, false, String.class, String.class, annotations);
+        Parameter param3 = Parameter.create(Integer.class, Integer.class, false, Integer.class, Integer.class, annotations);
+
+        assertEquals(param1, param2);
+        assertEquals(param1.hashCode(), param2.hashCode());
+        assertNotEquals(param1, param3);
+        assertNotEquals(param1.hashCode(), param3.hashCode());
     }
 
 }
