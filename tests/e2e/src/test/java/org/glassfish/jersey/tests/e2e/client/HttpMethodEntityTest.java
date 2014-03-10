@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.client;
 
 import java.util.concurrent.Future;
@@ -49,6 +48,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -67,7 +67,7 @@ import static org.junit.Assert.fail;
  * Tests HTTP methods and entity presence.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class HttpMethodEntityTest extends JerseyTest {
 
@@ -112,6 +112,39 @@ public class HttpMethodEntityTest extends JerseyTest {
         _test("OPTIONS", false, false);
     }
 
+    /**
+     * Reproducer for JERSEY-2370: Sending POST without body.
+     */
+    @Test
+    public void testEmptyPostWithoutContentType() {
+        final WebTarget resource = target().path("resource");
+        try {
+            final Future<Response> future = resource.request().async().post(null);
+            assertEquals(200, future.get().getStatus());
+
+            final Response response = resource.request().post(null);
+            assertEquals(200, response.getStatus());
+        } catch (Exception e) {
+            fail("Sending POST method without entity should not fail.");
+        }
+    }
+
+    /**
+     * Reproducer for JERSEY-2370: Sending POST without body.
+     */
+    @Test
+    public void testEmptyPostWithContentType() {
+        final WebTarget resource = target().path("resource");
+        try {
+            final Future<Response> future = resource.request().async().post(Entity.entity(null, "text/plain"));
+            assertEquals(200, future.get().getStatus());
+
+            final Response response = resource.request().post(Entity.entity(null, "text/plain"));
+            assertEquals(200, response.getStatus());
+        } catch (Exception e) {
+            fail("Sending POST method without entity should not fail.");
+        }
+    }
 
     public void _test(String method, boolean entityPresent, boolean shouldFail) {
         Entity entity = entityPresent ? Entity.entity("entity", MediaType.TEXT_PLAIN_TYPE) : null;
