@@ -1453,6 +1453,6 @@
         <weld.version>2.0.0.Final</weld.version>
         <xerces.version>2.11.0</xerces.version>
 
-        <foo>2</foo>
+        <foo>3</foo>
     </properties>
 </project>
