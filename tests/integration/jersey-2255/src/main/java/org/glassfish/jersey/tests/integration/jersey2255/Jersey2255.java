@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2255;
 
+import org.glassfish.jersey.message.filtering.SelectableEntityFilteringFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -50,5 +51,6 @@ public class Jersey2255 extends ResourceConfig {
 
     public Jersey2255() {
         register(Issue2255Resource.class);
+        register(SelectableEntityFilteringFeature.class);
     }
 }
