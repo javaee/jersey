@@ -39,49 +39,28 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.ws.rs.ApplicationPath;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 
 /**
- * JAX-RS application to configure resources.
+ * JAX-RS resource class backed by CDI bean.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
+@Path("echo")
+public class EchoResource {
 
-    public static class MyInjection {
+    // CDI injection, HK2 should back off
+    // even if EchoImpl is not directly used here
+    // and could appear as HK2 custom bound type
+    // to Jersey CDI extension
+    @Inject Echo echoService;
 
-        private final String name;
-
-        public MyInjection(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
+    @GET
+    public String cdiEcho(@QueryParam("s") String s) {
+        return echoService.echo(s);
     }
 
-    public MyApplication() {
-
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
-
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
-
-        // Jersey monitoring
-        register(MonitoringFeature.class);
-    }
 }

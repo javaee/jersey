@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,11 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.ws.rs.ApplicationPath;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
 
 /**
  * JAX-RS application to configure resources.
@@ -51,37 +51,11 @@ import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 @ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
-
-    public static class MyInjection {
-
-        private final String name;
-
-        public MyInjection(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    public MyApplication() {
-
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
-
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
-
-        // Jersey monitoring
-        register(MonitoringFeature.class);
+public class MyApplication extends Application {
+    @Override
+    public Set<Class<?>> getClasses() {
+        final Set<Class<?>> classes = new HashSet<Class<?>>();
+        classes.add(EchoResource.class);
+        return classes;
     }
 }

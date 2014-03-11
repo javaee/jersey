@@ -40,7 +40,6 @@
 package org.glassfish.jersey.tests.cdi.resources;
 
 import javax.ws.rs.ApplicationPath;
-
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
@@ -77,7 +76,8 @@ public class MyApplication extends ResourceConfig {
         register(new AbstractBinder() {
             @Override
             protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
+                bind(new MyInjection("1st: no way CDI would chime in")).to(MyInjection.class);
+                bind(new Hk2InjectedType("2nd: no way CDI would chime in")).to(Hk2InjectedType.class);
             }
         });
 

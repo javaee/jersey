@@ -37,51 +37,23 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.cdi.resources;
+package org.glassfish.jersey.gf.cdi.hk2ban;
 
-import javax.ws.rs.ApplicationPath;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.Set;
+import org.glassfish.jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider;
 
 /**
- * JAX-RS application to configure resources.
+ * Utility class that effectively disables any attempts of Jersey/CDI integration layer
+ * to delegate injection from CDI to HK2.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
+public final class EmptyHk2CustomInjectionTypeProvider implements Hk2CustomBoundTypesProvider {
 
-    public static class MyInjection {
-
-        private final String name;
-
-        public MyInjection(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    public MyApplication() {
-
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
-
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
-
-        // Jersey monitoring
-        register(MonitoringFeature.class);
+    @Override
+    public Set<Type> getHk2Types() {
+        return Collections.<Type>emptySet();
     }
 }

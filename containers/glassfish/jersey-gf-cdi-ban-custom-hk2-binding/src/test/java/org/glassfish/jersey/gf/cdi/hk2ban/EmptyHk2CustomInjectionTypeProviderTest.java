@@ -37,51 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.cdi.resources;
+package org.glassfish.jersey.gf.cdi.hk2ban;
 
-import javax.ws.rs.ApplicationPath;
+import java.lang.reflect.Type;
+import org.glassfish.jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider;
+import org.glassfish.jersey.internal.ServiceFinder;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import org.junit.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.emptyCollectionOf;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
- * JAX-RS application to configure resources.
+ * Test for {@link EmptyHk2CustomInjectionTypeProvider}.
+ * Make sure that the empty provider could be loaded and provides an empty type set.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
+public class EmptyHk2CustomInjectionTypeProviderTest {
 
-    public static class MyInjection {
+    /**
+     * Test sub-resource detection.
+     */
+    @Test
+    public void testEmptyProviderLookup() {
 
-        private final String name;
+        final Hk2CustomBoundTypesProvider[] providers = ServiceFinder.find(Hk2CustomBoundTypesProvider.class).toArray();
+        assertThat(providers, is(notNullValue()));
+        assertThat(providers.length, is(1));
 
-        public MyInjection(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    public MyApplication() {
-
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
-
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
-
-        // Jersey monitoring
-        register(MonitoringFeature.class);
+        final Hk2CustomBoundTypesProvider theOnlyProvider = providers[0];
+        assertThat(theOnlyProvider, is(instanceOf(EmptyHk2CustomInjectionTypeProvider.class)));
+        assertThat(theOnlyProvider.getHk2Types(), is(emptyCollectionOf(Type.class)));
     }
 }

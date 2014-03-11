@@ -39,49 +39,32 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.ws.rs.ApplicationPath;
+import java.net.URI;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.test.JerseyTest;
 
 /**
- * JAX-RS application to configure resources.
+ * Test for CDI web application resources.
+ * Run with:
+ * <pre>
+ * mvn clean package
+ * $AS_HOME/bin/asadmin deploy target/cdi-with-jersey-injection-webapp
+ * mvn -DskipTests=false test</pre>
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
+public class CdiTest extends JerseyTest {
 
-    public static class MyInjection {
-
-        private final String name;
-
-        public MyInjection(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
+    @Override
+    protected Application configure() {
+        return new MyApplication();
     }
 
-    public MyApplication() {
-
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
-
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
-
-        // Jersey monitoring
-        register(MonitoringFeature.class);
+    @Override
+    protected URI getBaseUri() {
+        return UriBuilder.fromUri(super.getBaseUri()).path("cdi-with-jersey-injection-custom-cfg-webapp").build();
     }
 }

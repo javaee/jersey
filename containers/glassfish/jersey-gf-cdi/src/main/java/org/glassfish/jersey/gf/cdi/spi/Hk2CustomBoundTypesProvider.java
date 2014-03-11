@@ -37,51 +37,39 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.cdi.resources;
+package org.glassfish.jersey.gf.cdi.spi;
 
-import javax.ws.rs.ApplicationPath;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import java.lang.reflect.Type;
+import java.util.Set;
 
 /**
- * JAX-RS application to configure resources.
+ * Helper SPI to help specify Jersey HK2 custom bound types that should
+ * be HK2-injectable into CDI components.
+ *
+ * <p>Implementation of this type must be registered via META-INF/services
+ * mechanism. I.e. fully qualified name of an implementation class
+ * must be written into <code>META-INF/services/org.glassfish.jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider</code>
+ * file.
+ *
+ * <p>If more than one implementation is found, only a single one is selected that has the highest priority.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
+public interface Hk2CustomBoundTypesProvider {
 
-    public static class MyInjection {
-
-        private final String name;
-
-        public MyInjection(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    public MyApplication() {
-
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
-
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
-
-        // Jersey monitoring
-        register(MonitoringFeature.class);
-    }
+    /**
+     * Provide a set of types that should became accessible
+     * by CDI container in a form of CDI beans backed by HK2.
+     *
+     * <p>Jersey will ask CDI container to veto these types
+     * and will register HK2 backed beans into CDI, so that @{@link javax.inject.Inject}
+     * marked injection points could be satisfied.
+     *
+     * <p>The end user is responsible for defining necessary HK2 bindings
+     * within Jersey application. Should any of such bindings remain
+     * undefined, runtime errors are likely to occur.
+     *
+     * @return set of types for which HK2 backed CDI beans shall be registered.
+     */
+    public Set<Type> getHk2Types();
 }

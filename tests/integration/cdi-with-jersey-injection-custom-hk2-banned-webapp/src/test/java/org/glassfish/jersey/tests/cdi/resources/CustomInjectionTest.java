@@ -39,49 +39,69 @@
  */
 package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.ws.rs.ApplicationPath;
+import java.util.Arrays;
+import java.util.List;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.equalTo;
 
 /**
- * JAX-RS application to configure resources.
+ * Test custom HK2 injection.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends ResourceConfig {
+@RunWith(Parameterized.class)
+public class CustomInjectionTest extends CdiTest {
 
-    public static class MyInjection {
-
-        private final String name;
-
-        public MyInjection(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
+    @Parameterized.Parameters
+    public static List<Object[]> testData() {
+        return Arrays.asList(new Object[][]{
+            {"app-field-injected"}
+            ,{"app-ctor-injected"}
+            ,{"request-field-injected"}
+            ,{"request-ctor-injected"}
+        });
     }
 
-    public MyApplication() {
+    final String resource;
 
-        // JAX-RS resource classes
-        register(AppScopedFieldInjectedResource.class);
-        register(AppScopedCtorInjectedResource.class);
-        register(RequestScopedFieldInjectedResource.class);
-        register(RequestScopedCtorInjectedResource.class);
+    /**
+     * Construct instance with the above test data injected.
+     *
+     * @param resource query parameter.
+     */
+    public CustomInjectionTest(String resource) {
+        this.resource = resource;
+    }
 
-        register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                bind(new MyInjection("no way CDI would chime in")).to(MyInjection.class);
-            }
-        });
+    /**
+     * Check that for one no NPE happens on the server side,
+     * and the custom bound instance of {@link CdiInjectedType} gets CDI injected.
+     */
+    @Test
+    public void testCustomHk2Injection1() {
+        WebTarget target = target().path(resource).path("custom");
+        final Response response = target.request().get();
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("CDI injected"));
+    }
 
-        // Jersey monitoring
-        register(MonitoringFeature.class);
+    /**
+     * Check that for one no NPE happens on the server side,
+     * and the custom bound instance of {@link MyApplication.MyInjection} gets CDI injected.
+     */
+    @Test
+    public void testCustomHk2Injection2() {
+        WebTarget target = target().path(resource).path("custom2");
+        final Response response = target.request().get();
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(response.readEntity(String.class), equalTo("CDI would love this"));
     }
 }

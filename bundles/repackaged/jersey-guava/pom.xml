@@ -95,8 +95,8 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
-                            javax.annotation;resolution:=optional,
-                            javax.inject;resolution:=optional,
+                            javax.annotation;resolution:=optional;version="[1.2,2)",
+                            javax.inject;resolution:=optional;version="[1.0,2)",
                             sun.misc.*;resolution:=optional,
                             *
                         </Import-Package>
