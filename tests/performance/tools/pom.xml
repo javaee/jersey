@@ -38,26 +38,52 @@
   ~ only if the new code is made subject to such option by the copyright
   ~ holder.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
-        <groupId>org.glassfish.jersey.tests</groupId>
+        <groupId>org.glassfish.jersey.tests.performance</groupId>
         <artifactId>project</artifactId>
         <version>2.7-SNAPSHOT</version>
     </parent>
+    <groupId>org.glassfish.jersey.tests.performance.tools</groupId>
+    <artifactId>performance-test-tools</artifactId>
+    <packaging>jar</packaging>
 
-    <groupId>org.glassfish.jersey.tests.performance</groupId>
-    <artifactId>project</artifactId>
-    <packaging>pom</packaging>
-    <name>jersey-tests-performance</name>
+    <name>performance-test-tools</name>
 
-    <description>
-        Performance tests.
-    </description>
+    <dependencies>
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-grizzly2-http</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
-    <modules>
-        <module>test-cases/mbw-parametrized</module>
-        <module>tools</module>
-    </modules>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-server</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>org.glassfish.jersey.tests.performance.tools.TestDataGeneratorApp</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
 </project>
