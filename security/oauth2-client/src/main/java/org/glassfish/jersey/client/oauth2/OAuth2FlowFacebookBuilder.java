@@ -106,7 +106,7 @@ class OAuth2FlowFacebookBuilder {
                                     MediaType mediaType, MultivaluedMap<String, String> httpHeaders,
                                     InputStream entityStream) throws IOException, WebApplicationException {
 
-            Map<String, String> map = Maps.newHashMap();
+            Map<String, Object> map = Maps.newHashMap();
             final String str = ReaderWriter.readFromAsString(entityStream, mediaType);
             final String[] splitArray = str.split("&");
             for (String s : splitArray) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.client.oauth2;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -54,16 +55,16 @@ import java.util.Map;
  * @since 2.3
  */
 public class TokenResult {
-    private final Map<String, String> properties;
+
+    private final Map<String, Object> properties;
 
     /**
      * Create a new instance initiated from the property map.
      * @param properties Access properties.
      */
-    public TokenResult(Map<String, String> properties) {
+    public TokenResult(final Map<String, Object> properties) {
         this.properties = properties;
     }
-
 
     /**
      * Get access token.
@@ -71,7 +72,7 @@ public class TokenResult {
      * @return Access token.
      */
     public String getAccessToken() {
-        return properties.get("access_token");
+        return getProperty("access_token");
     }
 
     /**
@@ -80,7 +81,7 @@ public class TokenResult {
      * @return Expiration time in seconds or {@code null} if the value is not provided.
      */
     public Long getExpiresIn() {
-        final String expiration = properties.get("expires_in");
+        final String expiration = getProperty("expires_in");
         if (expiration == null) {
             return null;
         }
@@ -96,7 +97,7 @@ public class TokenResult {
      * @return Refresh token or {@code null} if the value is not provided.
      */
     public String getRefreshToken() {
-        return properties.get("refresh_token");
+        return getProperty("refresh_token");
     }
 
     /**
@@ -106,7 +107,7 @@ public class TokenResult {
      * @return Token type.
      */
     public String getTokenType() {
-        return properties.get("token_type");
+        return getProperty("token_type");
     }
 
     /**
@@ -114,7 +115,25 @@ public class TokenResult {
      *
      * @return Map with all token properties.
      */
-    public Map<String, String> getAllProperties() {
+    public Map<String, Object> getAllProperties() {
         return properties;
+    }
+
+    private String getProperty(final String name) {
+        final Object property = properties.get(name);
+
+        if (property != null) {
+            if (property instanceof Collection) {
+                for (final Object value : (Collection) property) {
+                    if (value != null) {
+                        return value.toString();
+                    }
+                }
+            } else {
+                return property.toString();
+            }
+        }
+
+        return null;
     }
 }

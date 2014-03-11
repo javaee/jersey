@@ -40,15 +40,23 @@
 
 package org.glassfish.jersey.tests.e2e.oauth;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.logging.Logger;
+
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -62,12 +70,16 @@ import org.glassfish.jersey.client.oauth2.OAuth2ClientSupport;
 import org.glassfish.jersey.client.oauth2.OAuth2CodeGrantFlow;
 import org.glassfish.jersey.client.oauth2.OAuth2Parameters;
 import org.glassfish.jersey.client.oauth2.TokenResult;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * Tests OAuth 2 client.
@@ -82,7 +94,7 @@ public class OAuth2Test extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(MoxyJsonFeature.class, AuthorizationResource.class);
+        return new ResourceConfig(MoxyJsonFeature.class, AuthorizationResource.class).register(new LoggingFilter(Logger.getAnonymousLogger(), true));
     }
 
     @Path("oauth")
@@ -136,8 +148,9 @@ public class OAuth2Test extends JerseyTest {
         @POST
         @Path("refresh-token")
         @Produces(MediaType.APPLICATION_JSON)
-        public MyTokenResult refreshToken(@FormParam("grant_type") String grantType,
-                                          @FormParam("refresh_token") String refreshToken) {
+        public String refreshToken(@FormParam("grant_type") String grantType,
+                                   @FormParam("refresh_token") String refreshToken,
+                                   @HeaderParam("isArray") @DefaultValue("false") boolean isArray) {
             try {
                 assertEquals("refresh_token", grantType);
                 assertEquals("refresh-xyz", refreshToken);
@@ -146,26 +159,44 @@ public class OAuth2Test extends JerseyTest {
                 throw new BadRequestException(Response.status(400).entity(e.getMessage()).build());
             }
 
-            final MyTokenResult myTokenResult = new MyTokenResult();
-            myTokenResult.setAccessToken("access-token-new");
-            myTokenResult.setExpiresIn("3600");
-            myTokenResult.setTokenType("access-token");
-            return myTokenResult;
+            return isArray ?
+                    "{\"access_token\":[\"access-token-new\"],\"expires_in\":\"3600\",\"token_type\":\"access-token\"}" :
+                    "{\"access_token\":\"access-token-new\",\"expires_in\":\"3600\",\"token_type\":\"access-token\"}";
         }
     }
 
 
     @Test
     public void testFlow() {
+        testFlow(false);
+    }
+
+    @Test
+    public void testFlowWithArrayInResponse() {
+        testFlow(true);
+    }
+
+    private void testFlow(final boolean isArray) {
         ClientIdentifier clientId = new ClientIdentifier(CLIENT_PUBLIC, CLIENT_SECRET);
         final String authUri = UriBuilder.fromUri(getBaseUri()).path("oauth").path("authorization").build().toString();
         final String accessTokenUri = UriBuilder.fromUri(getBaseUri()).path("oauth").path("access-token").build().toString();
         final String refreshTokenUri = UriBuilder.fromUri(getBaseUri()).path("oauth").path("refresh-token").build().toString();
         final String state = STATE;
 
+        final Client client = ClientBuilder.newClient();
+        if (isArray) {
+            client.register(new ClientRequestFilter() {
+                @Override
+                public void filter(final ClientRequestContext requestContext) throws IOException {
+                    requestContext.getHeaders().putSingle("isArray", true);
+                }
+            });
+        }
+
         final OAuth2CodeGrantFlow.Builder builder =
                 OAuth2ClientSupport.authorizationCodeGrantFlowBuilder(clientId, authUri, accessTokenUri);
         final OAuth2CodeGrantFlow flow = builder
+                .client(client)
                 .refreshTokenUri(refreshTokenUri)
                 .property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, "readOnly", "true")
                 .property(OAuth2CodeGrantFlow.Phase.AUTHORIZATION, OAuth2Parameters.STATE, state)
@@ -173,8 +204,7 @@ public class OAuth2Test extends JerseyTest {
                 .build();
         final String finalAuthorizationUri = flow.start();
 
-        final Client client = ClientBuilder.newBuilder().build();
-        final Response response = client.target(finalAuthorizationUri).request().get();
+        final Response response = ClientBuilder.newClient().target(finalAuthorizationUri).request().get();
         assertEquals(200, response.getStatus());
 
         final String code = response.readEntity(String.class);
@@ -189,6 +219,13 @@ public class OAuth2Test extends JerseyTest {
         assertEquals("access-token-new", refreshResult.getAccessToken());
         assertEquals(new Long(3600), refreshResult.getExpiresIn());
         assertEquals("access-token", refreshResult.getTokenType());
+
+        if (isArray) {
+            final Collection<String> array = (Collection<String>) refreshResult.getAllProperties().get("access_token");
+
+            assertThat(array.size(), is(1));
+            assertThat(array, hasItem("access-token-new"));
+        }
     }
 
 
