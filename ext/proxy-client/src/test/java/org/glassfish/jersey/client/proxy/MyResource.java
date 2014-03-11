@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,6 +66,26 @@ public class MyResource implements MyResourceIfc {
     }
 
     @Override
+    public String getByNameCookie(String name) {
+        return name;
+    }
+
+    @Override
+    public String getByNameHeader(String name) {
+        return name;
+    }
+
+    @Override
+    public String getByNameMatrix(String name) {
+        return name;
+    }
+
+    @Override
+    public String postByNameFormParam(String name) {
+        return name;
+    }
+
+    @Override
     public String getByNameList(List<String> name) {
         return name.size() + ":" + name;
     }
@@ -81,7 +101,32 @@ public class MyResource implements MyResourceIfc {
     }
 
     @Override
+    public String getByNameCookieList(List<String> name) {
+        return name.size() + ":" + name;
+    }
+
+    @Override
+    public String getByNameCookieSet(Set<String> name) {
+        return name.size() + ":" + name;
+    }
+
+    @Override
+    public String getByNameCookieSortedSet(SortedSet<String> name) {
+        return name.size() + ":" + name;
+    }
+
+    @Override
     public String getByNameHeaderList(List<String> name) {
+        return name.size() + ":" + name;
+    }
+
+    @Override
+    public String getByNameHeaderSet(Set<String> name) {
+        return name.size() + ":" + name;
+    }
+
+    @Override
+    public String getByNameHeaderSortedSet(SortedSet<String> name) {
         return name.size() + ":" + name;
     }
 
@@ -97,6 +142,21 @@ public class MyResource implements MyResourceIfc {
 
     @Override
     public String getByNameMatrixSortedSet(SortedSet<String> name) {
+        return name.size() + ":" + name;
+    }
+
+    @Override
+    public String postByNameFormList(List<String> name) {
+        return name.size() + ":" + name;
+    }
+
+    @Override
+    public String postByNameFormSet(Set<String> name) {
+        return name.size() + ":" + name;
+    }
+
+    @Override
+    public String postByNameFormSortedSet(SortedSet<String> name) {
         return name.size() + ":" + name;
     }
 

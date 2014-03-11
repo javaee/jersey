@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -207,13 +207,13 @@ public final class WebResourceFactory implements InvocationHandler {
                         newTarget = newTarget.resolveTemplate(((PathParam) ann).value(), value);
                     } else if ((ann = anns.get((QueryParam.class))) != null) {
                         if (value instanceof Collection) {
-                            newTarget = newTarget.queryParam(((QueryParam) ann).value(), convert(value));
+                            newTarget = newTarget.queryParam(((QueryParam) ann).value(), convert((Collection) value));
                         } else {
                             newTarget = newTarget.queryParam(((QueryParam) ann).value(), value);
                         }
                     } else if ((ann = anns.get((HeaderParam.class))) != null) {
                         if (value instanceof Collection) {
-                            headers.addAll(((HeaderParam) ann).value(), convert(value));
+                            headers.addAll(((HeaderParam) ann).value(), convert((Collection) value));
                         } else {
                             headers.addAll(((HeaderParam) ann).value(), value);
                         }
@@ -234,10 +234,21 @@ public final class WebResourceFactory implements InvocationHandler {
                                 }
                                 cookies.add(c);
                             }
+                        } else {
+                            if (!(value instanceof Cookie)) {
+                                cookies.add(new Cookie(name, value.toString()));
+                            } else {
+                                c = (Cookie) value;
+                                if (!name.equals(((Cookie) value).getName())) {
+                                    // is this the right thing to do? or should I fail? or ignore the difference?
+                                    cookies.add(new Cookie(name, c.getValue(), c.getPath(), c.getDomain(),
+                                            c.getVersion()));
+                                }
+                            }
                         }
                     } else if ((ann = anns.get((MatrixParam.class))) != null) {
                         if (value instanceof Collection) {
-                            newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), convert(value));
+                            newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), convert((Collection) value));
                         } else {
                             newTarget = newTarget.matrixParam(((MatrixParam) ann).value(), value);
                         }
@@ -246,6 +257,8 @@ public final class WebResourceFactory implements InvocationHandler {
                             for (Object v : ((Collection) value)) {
                                 form.param(((FormParam) ann).value(), v.toString());
                             }
+                        } else {
+                            form.param(((FormParam) ann).value(), value.toString());
                         }
                     }
                 }
@@ -285,10 +298,11 @@ public final class WebResourceFactory implements InvocationHandler {
         }
 
         // apply header params and cookies
+        builder.headers(headers);
+
         for (Cookie c : cookies) {
             builder = builder.cookie(c);
         }
-        builder.headers(headers);
 
         Object result;
 
@@ -321,8 +335,8 @@ public final class WebResourceFactory implements InvocationHandler {
         return result;
     }
 
-    private Object[] convert(Object value) {
-        return ((Collection) value).toArray();
+    private Object[] convert(Collection value) {
+        return value.toArray();
     }
 
     private static WebTarget addPathFromAnnotation(AnnotatedElement ae, WebTarget target) {
