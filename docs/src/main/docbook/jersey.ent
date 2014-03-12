@@ -466,6 +466,8 @@
 <!ENTITY jersey.client.oauth2.TokenResult "<link xlink:href='&jersey.javadoc.path;/client/oauth2/TokenResult.html'>TokenResult</link>">
 <!ENTITY jersey.client.oauth2.OAuth2ClientSupport "<link xlink:href='&jersey.javadoc.path;/client/oauth2/OAuth2ClientSupport.html'>OAuth2ClientSupport</link>">
 
+<!ENTITY jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider "<link xlink:href='&jersey.javadoc.path;/gf/cdi/spi/Hk2CustomBoundTypesProvider.html'>Hk2CustomBoundTypesProvider</link>">
+
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
 <!ENTITY jersey-declarative-linking "<link xlink:href='&jersey.site.path;/jersey-declarative-linking/dependencies.html'>jersey-declarative-linking</link>" >
