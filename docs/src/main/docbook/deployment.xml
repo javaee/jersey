@@ -1010,13 +1010,26 @@ public class StatelessEjbResource implements LocalEjb {
             <title>Java EE Servers</title>
 
             <section xml:id="deployment.appservers.glassfish">
-                <title>Glassfish Application Server</title>
+                <title>GlassFish Application Server</title>
 
                 <para>
                     As explained in <link linkend="servlet-app-glassfish">2.3.1</link> , you don't need to add any specific
-                    dependencies on Glassfish, Jersey is already packaged within Glassfish. You only need to add the
-                    <literal>provided</literal>-scoped dependencies to you project to eb able to compile it. At runtime,
+                    dependencies on GlassFish, Jersey is already packaged within GlassFish. You only need to add the
+                    <literal>provided</literal>-scoped dependencies to you project to be able to compile it. At runtime,
                     GlassFish will make sure that your application has access to the Jersey libraries.
+                </para>
+
+                <para>
+                  Started with version 2.7, Jersey allows injecting Jersey specific types into CDI enabled JAX-RS components
+                  using the <literal>@javax.inject.Inject</literal> annotation. This covers also custom HK2 bindings, that are configured
+                  as part of Jersey application. The feature specifically enables usage of Jersey monitoring statistics (provided that the statistic feature is turned on)
+                  in CDI environment, where injection is the only mean to get access to monitoring data.
+                </para>
+                <para>
+                  Since both CDI and HK2 use the same injection annotation, Jersey could get confused in certain
+                  cases, which could lead to nasty runtime issues. The get better control over what Jersey evaluates
+                  as HK2 injection, end-users could take advantage of newly introduced, &jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider;, SPI.
+                  Please see the linked javadoc to get detailed information on how to use the SPI in your application.
                 </para>
             </section>
 
