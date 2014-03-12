@@ -39,18 +39,18 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2255;
 
-import org.glassfish.jersey.message.filtering.SelectableEntityFilteringFeature;
+import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * JAX-RS application for the JERSEY-2255 reproducer test.
  *
- * @author Eric Mile (emilesvt at gmail.com)
+ * @author Eric Miles (emilesvt at gmail.com)
  */
 public class Jersey2255 extends ResourceConfig {
 
     public Jersey2255() {
         register(Issue2255Resource.class);
-        register(SelectableEntityFilteringFeature.class);
+        register(EntityFilteringFeature.class);
     }
 }

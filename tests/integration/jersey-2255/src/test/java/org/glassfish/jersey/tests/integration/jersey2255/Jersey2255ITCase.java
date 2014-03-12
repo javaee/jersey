@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2255;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -52,7 +49,11 @@ import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.glassfish.jersey.tests.integration.jersey2255.Issue2255Resource.A;
 import org.glassfish.jersey.tests.integration.jersey2255.Issue2255Resource.B;
+
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNull;
 
 /**
  * Reproducer tests for JERSEY-2255.
@@ -65,6 +66,7 @@ public class Jersey2255ITCase extends JerseyTest {
     protected Application configure() {
         enable(TestProperties.LOG_TRAFFIC);
         enable(TestProperties.DUMP_ENTITY);
+
         return new Jersey2255();
     }
 
@@ -82,20 +84,38 @@ public class Jersey2255ITCase extends JerseyTest {
         final A entity = response.readEntity(A.class);
 
         assertThat(response.getStatus(), equalTo(200));
-        assertThat(entity.fieldA1, equalTo("fieldA1Value"));
+        assertNull(entity.getFieldA1());
+    }
+
+    @Test
+    public void testDetailedClassAGet() {
+        final Response response = target("A").queryParam("detailed", true).request().get();
+        final A entity = response.readEntity(A.class);
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(entity.getFieldA1(), equalTo("fieldA1Value"));
     }
 
     /**
      * Server side response is returned as orig class.
      */
     @Test
+    public void testDetailedClassBGet() {
+        final Response response = target("B").queryParam("detailed", true).request().get();
+        final B entity = response.readEntity(B.class);
+
+        assertThat(response.getStatus(), equalTo(200));
+        assertThat(entity.getFieldA1(), equalTo("fieldA1Value"));
+        assertThat(entity.getFieldB1(), equalTo("fieldB1Value"));
+    }
+
+    @Test
     public void testClassBGet() {
         final Response response = target("B").request().get();
         final B entity = response.readEntity(B.class);
 
         assertThat(response.getStatus(), equalTo(200));
-        assertThat(entity.fieldA1, equalTo("fieldA1Value"));
-        assertThat(entity.fieldB1, equalTo("fieldB1Value"));
+        assertNull(entity.getFieldA1());
+        assertThat(entity.getFieldB1(), equalTo("fieldB1Value"));
     }
-
 }
