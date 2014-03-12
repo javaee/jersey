@@ -46,7 +46,7 @@
     <parent>
         <groupId>org.glassfish.jersey</groupId>
         <artifactId>project</artifactId>
-        <version>2.7-SNAPSHOT</version>
+        <version>2.7</version>
     </parent>
 
     <groupId>org.glassfish.jersey.core</groupId>
@@ -201,13 +201,13 @@
         <profile>
             <id>moxy</id>
             <properties>
-               <surefire.security.argline></surefire.security.argline>
+               <surefire.security.argline />
             </properties>
         </profile>
         <profile>
             <id>xdk</id>
             <properties>
-                <surefire.security.argline></surefire.security.argline>
+                <surefire.security.argline />
             </properties>
         </profile>
     </profiles>
