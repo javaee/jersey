@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,8 +55,8 @@ import org.glassfish.jersey.spi.Contract;
  * The created container is responsible for listening on a communication chanel
  * for new client requests, dispatching these requests to the registered
  * {@link ApplicationHandler Jersey application handler} using the handler's
- * {@link ApplicationHandler#apply(org.glassfish.jersey.server.ContainerRequest)}
- * apply(requestContext)} method and sending the responses provided by the
+ * {@link ApplicationHandler#handle(org.glassfish.jersey.server.ContainerRequest)}
+ * handle(requestContext)} method and sending the responses provided by the
  * application back to the client.
  * <p />
  * A provider shall support a one-to-one mapping between a type that is not of
@@ -66,7 +66,7 @@ import org.glassfish.jersey.spi.Contract;
  * providers.
  * <p />
  * An implementation (a service-provider) identifies itself by registering a proper
- * HK2 {@code ContainterProvider} contract binding in a custom HK2 binder configured
+ * HK2 {@code ContainerProvider} contract binding in a custom HK2 binder configured
  * in the Jersey application handler.
  * Alternatively, the implementation can identify itself by placing a provider-configuration
  * file (if not already present), {@code org.glassfish.jersey.server.spi.ContainerProvider}

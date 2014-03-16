@@ -786,7 +786,7 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
      * Get the flag indicating whether the resource method is extended or is a core of exposed RESTful API.
      * <p>
      * Extended resource model components are helper components that are not considered as a core of a
-     * RESTful API. These can be for example {@code OPTIONS} {@link ResourceMethod resource methods}
+     * RESTful API. These can be for example {@code OPTIONS} resource methods
      * added by {@link org.glassfish.jersey.server.model.ModelProcessor model processors}
      * or {@code application.wadl} resource producing the WADL. Both resource are rather supportive
      * than the core of RESTful API.

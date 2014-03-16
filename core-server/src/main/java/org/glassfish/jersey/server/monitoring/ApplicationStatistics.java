@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.monitoring;
 
 import java.util.Date;
@@ -69,18 +68,6 @@ public interface ApplicationStatistics {
      * @return Time when an application initialization has been finished.
      */
     public Date getStartTime();
-
-    /**
-     * Get the time when application destroy (stop) has been finished.
-     *
-     * @return Destroy time.
-     *
-     * @deprecated deprecated since 2.5 (destroy time will always be {@code null}). Use
-     * {@link org.glassfish.jersey.server.spi.ContainerLifecycleListener#onShutdown(org.glassfish.jersey.server.spi.Container)}
-     * to listen on the destroy.
-     */
-    public Date getDestroyTime();
-
 
     /**
      * Get resource classes registered by the user in the current application. The set contains only

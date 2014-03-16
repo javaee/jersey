@@ -553,7 +553,7 @@ public final class ApplicationHandler {
                     processingProviders.getPreMatchFilters(), sb);
             printProviders(LocalizationMessages.LOGGING_GLOBAL_REQUEST_FILTERS(),
                     processingProviders.getGlobalRequestFilters(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_RESPOSE_FILTERS(),
+            printProviders(LocalizationMessages.LOGGING_GLOBAL_RESPONSE_FILTERS(),
                     processingProviders.getGlobalResponseFilters(), sb);
             printProviders(LocalizationMessages.LOGGING_GLOBAL_READER_INTERCEPTORS(),
                     processingProviders.getGlobalReaderInterceptors(), sb);
@@ -561,7 +561,7 @@ public final class ApplicationHandler {
                     processingProviders.getGlobalWriterInterceptors(), sb);
             printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_REQUEST_FILTERS(),
                     processingProviders.getNameBoundRequestFilters(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_RESPOSE_FILTERS(),
+            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_RESPONSE_FILTERS(),
                     processingProviders.getNameBoundResponseFilters(), sb);
             printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_READER_INTERCEPTORS(),
                     processingProviders.getNameBoundReaderInterceptors(), sb);

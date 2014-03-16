@@ -54,7 +54,7 @@ import java.util.TimeZone;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class HttpDateFormat {
+public final class HttpDateFormat {
 
     private HttpDateFormat() {
     }
@@ -70,7 +70,7 @@ public class HttpDateFormat {
      * The date format pattern for ANSI C asctime().
      */
     private static final String ANSI_C_ASCTIME_DATE_FORMAT_PATTERN = "EEE MMM d HH:mm:ss yyyy";
-    private static ThreadLocal<List<SimpleDateFormat>> dateFormats = new ThreadLocal<List<SimpleDateFormat>>() {
+    private static final ThreadLocal<List<SimpleDateFormat>> dateFormats = new ThreadLocal<List<SimpleDateFormat>>() {
 
         @Override
         protected synchronized List<SimpleDateFormat> initialValue() {
@@ -114,21 +114,6 @@ public class HttpDateFormat {
      * used without requiring to synchronize access to the instance when
      * parsing or formatting.
      *
-     * @deprecated typo in the method name. Use {@link #getPreferredDateFormat()} instead.
-     * @return the preferred of data format.
-     */
-    @Deprecated
-    public static SimpleDateFormat getPreferedDateFormat() {
-        return getPreferredDateFormat();
-    }
-
-    /**
-     * Get the preferred HTTP specified date format (RFC 1123).
-     * <p>
-     * The date format is scoped to the current thread and may be
-     * used without requiring to synchronize access to the instance when
-     * parsing or formatting.
-     *
      * @return the preferred of data format.
      */
     public static SimpleDateFormat getPreferredDateFormat() {
@@ -141,7 +126,7 @@ public class HttpDateFormat {
      * @param date the date as a string.
      *
      * @return the date
-     * @throws java.text.ParseException
+     * @throws java.text.ParseException in case the date string cannot be parsed.
      */
     public static Date readDate(final String date) throws ParseException {
         ParseException pe = null;
