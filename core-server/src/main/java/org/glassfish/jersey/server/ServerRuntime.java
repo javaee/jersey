@@ -103,13 +103,12 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import jersey.repackaged.com.google.common.base.Preconditions;
 
@@ -622,8 +621,7 @@ class ServerRuntime {
                                     request,
                                     response,
                                     connectionCallbackRunner,
-                                    runtime.asyncContextProvider,
-                                    runtime.uriRoutingContextProvider.get());
+                                    runtime.asyncContextProvider);
                         } catch (IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                             close = true;

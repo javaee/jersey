@@ -52,8 +52,27 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.8">
+        <title>Migrating from Jersey 2.6 to 2.7</title>
+
+        <section xml:id="mig-2.8-breaking-changes">
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Deprecated <literal>getDestroyTime</literal> method has been removed from
+                            &jersey.server.monitoring.ApplicationStatistics;. To get the application shutdown information,
+                            a &jersey.server.ContainerLifecycleListener; should be registered and its
+                            <literal>onShutdown</literal> method implemented to listen to and process the application
+                            shutdown event.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
     <section xml:id="mig-2.7">
-    <title>Migrating from Jersey 2.6 to 2.7</title>
+        <title>Migrating from Jersey 2.6 to 2.7</title>
 
         <section xml:id="mig-2.7-breaking-changes">
             <title>Changes</title>

@@ -387,7 +387,7 @@ final class WebTargetValueFactoryProvider extends AbstractValueFactoryProvider {
                     }
                     return new WebTargetValueFactory(targetUriTemplate, client);
                 } else {
-                    Errors.warning(this, LocalizationMessages.UNSUPPORTED_CLIENT_ARTEFACT_INJECTION_TYPE(rawParameterType));
+                    Errors.warning(this, LocalizationMessages.UNSUPPORTED_URI_INJECTION_TYPE(rawParameterType));
                     return null;
                 }
             }
