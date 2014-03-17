@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,9 +45,6 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Response;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.model.internal.RankedComparator;
@@ -57,12 +54,8 @@ import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.MappableException;
-import org.glassfish.jersey.server.internal.process.RespondingContext;
-import org.glassfish.jersey.server.internal.routing.RoutingContext;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * Container filtering stage responsible for execution of request and response filters
@@ -71,91 +64,58 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
+class ContainerFilteringStage extends AbstractChainableStage<RequestProcessingContext> {
 
-    private final ServiceLocator locator;
     private final Iterable<RankedProvider<ContainerRequestFilter>> requestFilters;
     private final Iterable<RankedProvider<ContainerResponseFilter>> responseFilters;
-    private final Provider<RespondingContext> respondingContextFactory;
 
     /**
-     * Injectable container filtering stage builder.
-     */
-    static class Builder {
-        @Inject
-        private ServiceLocator locator;
-
-        @Inject
-        private Provider<RespondingContext> respondingContextFactory;
-
-        /**
-         * Build a new container filtering stage specifying global request and response filters. This stage class
-         * is reused for both pre and post match filtering phases.
-         * <p>
-         * All global response filters are passed in the pre-match stage, since if a pre-match filter aborts,
-         * response filters should still be executed. For the post-match filter stage creation, {@code null} is passed
-         * to the responseFilters parameter.
-         * </p>
-         *
-         * @param requestFilters  list of global (unbound) request filters (either pre or post match - depending on the
-         *                        stage being created).
-         * @param responseFilters list of global response filters (for pre-match stage) or {@code null} (for post-match
-         *                        stage).
-         * @return new container filtering stage.
-         */
-        public ContainerFilteringStage build(Iterable<RankedProvider<ContainerRequestFilter>> requestFilters,
-                                             Iterable<RankedProvider<ContainerResponseFilter>> responseFilters) {
-            return new ContainerFilteringStage(respondingContextFactory, locator,
-                    requestFilters, responseFilters);
-        }
-
-    }
-
-    /**
-     * Injection constructor.
+     * Create a new container filtering stage specifying global request and response filters. This stage class
+     * is reused for both pre and post match filtering phases.
+     * <p>
+     * All global response filters are passed in the pre-match stage, since if a pre-match filter aborts,
+     * response filters should still be executed. For the post-match filter stage creation, {@code null} is passed
+     * to the responseFilters parameter.
+     * </p>
      *
-     * @param respondingContextFactory responding context factory.
-     * @param locator                  HK2 service locator.
-     * @param requestFilters           global request filters (pre or post match).
-     * @param responseFilters          global response filters or {@code null}.
+     * @param requestFilters  list of global (unbound) request filters (either pre or post match - depending on the
+     *                        stage being created).
+     * @param responseFilters list of global response filters (for pre-match stage) or {@code null} (for post-match
+     *                        stage).
      */
-    private ContainerFilteringStage(
-            Provider<RespondingContext> respondingContextFactory,
-            ServiceLocator locator,
+    ContainerFilteringStage(
             Iterable<RankedProvider<ContainerRequestFilter>> requestFilters,
             Iterable<RankedProvider<ContainerResponseFilter>> responseFilters) {
 
-        this.respondingContextFactory = respondingContextFactory;
-        this.locator = locator;
         this.requestFilters = requestFilters;
         this.responseFilters = responseFilters;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Continuation<ContainerRequest> apply(ContainerRequest requestContext) {
+    public Continuation<RequestProcessingContext> apply(RequestProcessingContext context) {
         Iterable<ContainerRequestFilter> sortedRequestFilters;
-
         final boolean postMatching = responseFilters == null;
 
-        final TracingLogger tracingLogger = TracingLogger.getInstance(requestContext);
+        final ContainerRequest request = context.request();
+
+        final TracingLogger tracingLogger = TracingLogger.getInstance(request);
         if (postMatching) {
             // post-matching
-            RoutingContext rc = locator.getService(RoutingContext.class);
             final ArrayList<Iterable<RankedProvider<ContainerRequestFilter>>> rankedProviders =
-                    new ArrayList<Iterable<RankedProvider<ContainerRequestFilter>>>(2);
+                    new ArrayList<>(2);
             rankedProviders.add(requestFilters);
-            rankedProviders.add(rc.getBoundRequestFilters());
+            rankedProviders.add(request.getBoundRequestFilters());
             sortedRequestFilters = Providers.mergeAndSortRankedProviders(
                     new RankedComparator<ContainerRequestFilter>(), rankedProviders);
 
-            requestContext.getRequestEventBuilder().setContainerRequestFilters(sortedRequestFilters);
-            requestContext.triggerEvent(RequestEvent.Type.REQUEST_MATCHED);
+            context.monitoringEventBuilder().setContainerRequestFilters(sortedRequestFilters);
+            context.triggerEvent(RequestEvent.Type.REQUEST_MATCHED);
 
         } else {
             // pre-matching (response filter stage is pushed in pre-matching phase, so that if pre-matching filter
             // throws exception, response filters get still invoked)
-            respondingContextFactory.get().push(new ResponseFilterStage(responseFilters, locator, tracingLogger));
+            context.push(new ResponseFilterStage(context, responseFilters, tracingLogger));
             sortedRequestFilters = Providers.sortRankedProviders(new RankedComparator<ContainerRequestFilter>(), requestFilters);
         }
 
@@ -168,7 +128,7 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
             for (ContainerRequestFilter filter : sortedRequestFilters) {
                 final long filterTimestamp = tracingLogger.timestamp(filterEvent);
                 try {
-                    filter.filter(requestContext);
+                    filter.filter(request);
                 } catch (Exception exception) {
                     throw new MappableException(exception);
                 } finally {
@@ -176,58 +136,55 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
                     tracingLogger.logDuration(filterEvent, filterTimestamp, filter);
                 }
 
-                final Response abortResponse = requestContext.getAbortResponse();
+                final Response abortResponse = request.getAbortResponse();
                 if (abortResponse != null) {
                     // abort accepting & return response
-                    return Continuation.of(requestContext, Stages.asStage(
+                    return Continuation.of(context, Stages.asStage(
                             new Endpoint() {
                                 @Override
                                 public ContainerResponse apply(
-                                        final ContainerRequest requestContext) {
-                                    return new ContainerResponse(requestContext, abortResponse);
+                                        final RequestProcessingContext requestContext) {
+                                    return new ContainerResponse(requestContext.request(), abortResponse);
                                 }
                             }));
                 }
             }
         } finally {
             if (postMatching) {
-                requestContext.triggerEvent(RequestEvent.Type.REQUEST_FILTERED);
+                context.triggerEvent(RequestEvent.Type.REQUEST_FILTERED);
             }
             tracingLogger.logDuration(summaryEvent, timestamp, processedCount);
         }
 
-        return Continuation.of(requestContext, getDefaultNext());
+        return Continuation.of(context, getDefaultNext());
     }
 
     private static class ResponseFilterStage extends AbstractChainableStage<ContainerResponse> {
+        // TODO remove the field - processing context should be made available on the response chain directly.
+        private final RequestProcessingContext processingContext;
         private final Iterable<RankedProvider<ContainerResponseFilter>> filters;
-        private final ServiceLocator locator;
         private final TracingLogger tracingLogger;
 
-        private ResponseFilterStage(Iterable<RankedProvider<ContainerResponseFilter>> filters,
-                                    ServiceLocator locator,
-                                    TracingLogger tracingLogger) {
+        private ResponseFilterStage(final RequestProcessingContext processingContext,
+                                    final Iterable<RankedProvider<ContainerResponseFilter>> filters,
+                                    final TracingLogger tracingLogger) {
+            this.processingContext = processingContext;
             this.filters = filters;
-            this.locator = locator;
             this.tracingLogger = tracingLogger;
         }
 
         @Override
         @SuppressWarnings("unchecked")
         public Continuation<ContainerResponse> apply(ContainerResponse responseContext) {
-
-            RoutingContext rc = locator.getService(RoutingContext.class);
-
-            final ArrayList<Iterable<RankedProvider<ContainerResponseFilter>>> rankedProviders =
-                    new ArrayList<Iterable<RankedProvider<ContainerResponseFilter>>>(2);
+            final ArrayList<Iterable<RankedProvider<ContainerResponseFilter>>> rankedProviders = new ArrayList<>(2);
             rankedProviders.add(filters);
-            rankedProviders.add(rc.getBoundResponseFilters());
+            rankedProviders.add(responseContext.getRequestContext().getBoundResponseFilters());
             Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.mergeAndSortRankedProviders(
                     new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), rankedProviders);
 
             final ContainerRequest request = responseContext.getRequestContext();
-            request.getRequestEventBuilder().setContainerResponseFilters(sortedResponseFilters);
-            request.triggerEvent(RequestEvent.Type.RESP_FILTERS_START);
+            processingContext.monitoringEventBuilder().setContainerResponseFilters(sortedResponseFilters);
+            processingContext.triggerEvent(RequestEvent.Type.RESP_FILTERS_START);
 
             final long timestamp = tracingLogger.timestamp(ServerTraceEvent.RESPONSE_FILTER_SUMMARY);
             int processedCount = 0;
@@ -244,22 +201,11 @@ class ContainerFilteringStage extends AbstractChainableStage<ContainerRequest> {
                     }
                 }
             } finally {
-                request.triggerEvent(RequestEvent.Type.RESP_FILTERS_FINISHED);
+                processingContext.triggerEvent(RequestEvent.Type.RESP_FILTERS_FINISHED);
                 tracingLogger.logDuration(ServerTraceEvent.RESPONSE_FILTER_SUMMARY, timestamp, processedCount);
             }
 
             return Continuation.of(responseContext, getDefaultNext());
-        }
-    }
-
-    /**
-     * Container filter processing injection binder.
-     */
-    static class Binder extends AbstractBinder {
-
-        @Override
-        protected void configure() {
-            bindAsContract(ContainerFilteringStage.Builder.class);
         }
     }
 }

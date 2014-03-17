@@ -393,8 +393,6 @@ public class ValidatorTest {
     }
 
     @Test
-    @Ignore("Async GET void validation not updated to new API.")
-    // TODO update validation
     public void testAsyncGetRMReturningVoid() throws Exception {
         LOGGER.info("An issue should NOT be reported if a async get method returns void:");
         List<ResourceModelIssue> issues = testResourceValidation(TestAsyncGetRMReturningVoid.class);

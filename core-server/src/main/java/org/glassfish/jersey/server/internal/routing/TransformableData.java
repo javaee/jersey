@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -65,7 +65,7 @@ public final class TransformableData<DATA, RESULT> {
      */
     public static <REQUEST, RESPONSE> TransformableData<REQUEST, RESPONSE> of(
             final REQUEST data, final Inflector<REQUEST, RESPONSE> inflector) {
-        return new TransformableData<REQUEST, RESPONSE>(data, inflector);
+        return new TransformableData<>(data, inflector);
     }
 
     /**
@@ -77,7 +77,7 @@ public final class TransformableData<DATA, RESULT> {
      * @return new transformable data with {@code null} inflector instance.
      */
     public static <REQUEST, RESPONSE> TransformableData<REQUEST, RESPONSE> of(final REQUEST data) {
-        return new TransformableData<REQUEST, RESPONSE>(data, null);
+        return new TransformableData<>(data, null);
     }
 
     private TransformableData(final DATA data, final Inflector<DATA, RESULT> inflector) {

@@ -39,18 +39,11 @@
  */
 package org.glassfish.jersey.server;
 
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ReaderInterceptor;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.internal.util.collection.Value;
-import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -62,38 +55,34 @@ import jersey.repackaged.com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ReferencesInitializer implements Function<ContainerRequest, ContainerRequest> {
+final class ReferencesInitializer implements Function<RequestProcessingContext, RequestProcessingContext> {
 
-    @Inject
-    private ServiceLocator locator;
-    @Inject
-    private Provider<Ref<Request>> requestRefProvider;
-    @Inject
-    private Provider<Ref<ContainerRequest>> containerRequestRefProvider;
-    @Inject
-    private Provider<UriRoutingContext> uriRoutingCtxProvider;
-    @Inject
-    private Provider<Ref<UriInfo>> uriInfoRef;
-    @Inject
-    private Provider<Ref<ResourceInfo>> resourceInfoRef;
-    @Inject
-    private Provider<Ref<HttpHeaders>> httpHeadersRef;
-    @Inject
-    private Provider<Ref<Request>> requestRef;
-
+    private final ServiceLocator locator;
+    private final Provider<Ref<ContainerRequest>> containerRequestRefProvider;
 
     /**
-     * Initialize the request references using the incoming request and register
-     * a response reference initialization stage in the
-     * {@link org.glassfish.jersey.server.internal.process.RespondingContext
-     * responding context}.
+     * Injection constructor.
      *
-     * @param containerRequest incoming request context.
+     * @param locator application service locator.
+     * @param containerRequestRefProvider container request reference provider (request-scoped).
+     */
+    @Inject
+    ReferencesInitializer(
+            final ServiceLocator locator,
+            final Provider<Ref<ContainerRequest>> containerRequestRefProvider) {
+        this.locator = locator;
+        this.containerRequestRefProvider = containerRequestRefProvider;
+    }
+
+    /**
+     * Initialize the request references using the incoming request processing context.
+     *
+     * @param context incoming request context.
      * @return same (unmodified) request context.
      */
     @Override
-    public ContainerRequest apply(final ContainerRequest containerRequest) {
-        requestRefProvider.get().set(containerRequest.getRequest());
+    public RequestProcessingContext apply(final RequestProcessingContext context) {
+        final ContainerRequest containerRequest = context.request();
         containerRequestRefProvider.get().set(containerRequest);
 
         final RequestScopedInitializer requestScopedInitializer = containerRequest.getRequestScopedInitializer();
@@ -101,24 +90,6 @@ class ReferencesInitializer implements Function<ContainerRequest, ContainerReque
             requestScopedInitializer.initialize(locator);
         }
 
-        final UriRoutingContext uriRoutingCtx = uriRoutingCtxProvider.get();
-
-        containerRequest.setUriRoutingContext(uriRoutingCtx);
-        containerRequest.getRequestEventBuilder().setExtendedUriInfo(uriRoutingCtx);
-
-        containerRequest.setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
-            @Override
-            public Iterable<ReaderInterceptor> get() {
-                return uriRoutingCtx.getBoundReaderInterceptors();
-            }
-        });
-
-        // JAX-RS proxies initialization
-        requestRef.get().set(containerRequest);
-        uriInfoRef.get().set(uriRoutingCtx);
-        resourceInfoRef.get().set(uriRoutingCtx);
-        httpHeadersRef.get().set(containerRequest);
-
-        return containerRequest;
+        return context;
     }
 }

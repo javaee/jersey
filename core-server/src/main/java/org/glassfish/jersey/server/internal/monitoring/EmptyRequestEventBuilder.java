@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ public class EmptyRequestEventBuilder implements RequestEventBuilder {
     /**
      * Instance of empty request event builder.
      */
-    public static final EmptyRequestEventBuilder EMPTY_EVENT_BUILDER = new EmptyRequestEventBuilder();
+    public static final EmptyRequestEventBuilder INSTANCE = new EmptyRequestEventBuilder();
 
     @Override
     public RequestEventBuilder setExceptionMapper(ExceptionMapper<?> exceptionMapper) {

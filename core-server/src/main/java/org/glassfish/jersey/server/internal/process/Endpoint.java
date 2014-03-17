@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,7 +40,6 @@
 package org.glassfish.jersey.server.internal.process;
 
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 
 /**
@@ -48,6 +47,6 @@ import org.glassfish.jersey.server.ContainerResponse;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface Endpoint extends Inflector<ContainerRequest, ContainerResponse> {
+public interface Endpoint extends Inflector<RequestProcessingContext, ContainerResponse> {
 
 }
