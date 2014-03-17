@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 
 /**
  * Terminal router that pushes the URI matched so far to the stack returned
@@ -52,13 +49,10 @@ import org.glassfish.jersey.server.ContainerRequest;
  */
 class PushMatchedUriRouter implements Router {
 
-    @Inject
-    private Provider<RoutingContext> routingContextFactory;
-
     @Override
-    public Continuation apply(final ContainerRequest data) {
-        routingContextFactory.get().pushLeftHandPath();
+    public Continuation apply(final RequestProcessingContext context) {
+        context.routingContext().pushLeftHandPath();
 
-        return Continuation.of(data);
+        return Continuation.of(context);
     }
 }

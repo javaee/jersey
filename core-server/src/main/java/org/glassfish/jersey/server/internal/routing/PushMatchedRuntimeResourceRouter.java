@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.RuntimeResource;
 
 /**
@@ -54,39 +51,20 @@ import org.glassfish.jersey.server.model.RuntimeResource;
 
 class PushMatchedRuntimeResourceRouter implements Router {
 
-    /**
-     * Builder for creating
-     * {@link org.glassfish.jersey.server.internal.routing.PushMatchedRuntimeResourceRouter push matched resource router}
-     * instances.  New builder instance must be injected and not directly created by constructor call.
-     */
-    static class Builder {
-        @Inject
-        private Provider<RoutingContext> routingContext;
-
-        /**
-         * Builds new instance of the router.
-         * @param runtimeResource RuntimeResource runtime to be pushed into the {@link RoutingContext routing context}.
-         * @return New instance of router created from this builder.
-         */
-        PushMatchedRuntimeResourceRouter build(RuntimeResource runtimeResource) {
-            return new PushMatchedRuntimeResourceRouter(runtimeResource, routingContext);
-        }
-    }
-
-
     private final RuntimeResource resource;
 
-
-    private final Provider<RoutingContext> routingContext;
-
-    private PushMatchedRuntimeResourceRouter(RuntimeResource resource, Provider<RoutingContext> routingContext) {
+    /**
+     * Create a new instance of push matched resource router.
+     *
+     * @param resource RuntimeResource runtime to be pushed into the {@link RoutingContext routing context}.
+     */
+    PushMatchedRuntimeResourceRouter(RuntimeResource resource) {
         this.resource = resource;
-        this.routingContext = routingContext;
     }
 
     @Override
-    public Continuation apply(ContainerRequest data) {
-        routingContext.get().pushMatchedRuntimeResource(resource);
-        return Continuation.of(data);
+    public Continuation apply(final RequestProcessingContext context) {
+        context.routingContext().pushMatchedRuntimeResource(resource);
+        return Continuation.of(context);
     }
 }

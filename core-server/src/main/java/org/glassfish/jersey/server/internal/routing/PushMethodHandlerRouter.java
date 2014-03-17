@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,13 +39,8 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.MethodHandler;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Terminal router that pushes the matched method's handler instance to the stack
@@ -55,54 +50,30 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 class PushMethodHandlerRouter implements Router {
 
-    /**
-     * An injectable factory of {@link PushMethodHandlerRouter} instances.
-     */
-    static class Builder {
-
-        @Inject
-        private Provider<RoutingContext> routingContextFactory;
-        @Inject
-        private ServiceLocator locator;
-
-        /**
-         * Build a new {@link PushMethodHandlerRouter} instance.
-         *
-         * @param methodHandler method handler model providing the method handler
-         *                      instance.
-         * @param next          next router to be invoked after the this one.
-         * @return new {@code PushMethodHandlerRouter} instance.
-         */
-        public PushMethodHandlerRouter build(final MethodHandler methodHandler, Router next) {
-            return new PushMethodHandlerRouter(routingContextFactory, locator, methodHandler, next);
-        }
-
-    }
-
-    private final ServiceLocator locator;
-    private final Provider<RoutingContext> routingContextFactory;
     private final MethodHandler methodHandler;
     private final Router next;
 
-    private PushMethodHandlerRouter(
-            final Provider<RoutingContext> routingContextFactory,
-            final ServiceLocator locator,
-            final MethodHandler methodHandler,
-            final Router next) {
-        this.locator = locator;
-        this.routingContextFactory = routingContextFactory;
+    /**
+     * Create a new {@code PushMethodHandlerRouter} instance.
+     *
+     * @param methodHandler method handler model providing the method handler
+     *                      instance.
+     * @param next          next router to be invoked after the this one.
+     */
+    PushMethodHandlerRouter(final MethodHandler methodHandler, final Router next) {
         this.methodHandler = methodHandler;
         this.next = next;
     }
 
     @Override
-    public Continuation apply(final ContainerRequest request) {
+    public Continuation apply(final RequestProcessingContext context) {
+        final RoutingContext routingContext = context.routingContext();
 
-        final Object storedResource = routingContextFactory.get().peekMatchedResource();
+        final Object storedResource = routingContext.peekMatchedResource();
         if (storedResource == null || !storedResource.getClass().equals(methodHandler.getHandlerClass())) {
-            Object handlerInstance = methodHandler.getInstance(locator);
-            routingContextFactory.get().pushMatchedResource(handlerInstance);
+            Object handlerInstance = methodHandler.getInstance(context.serviceLocator());
+            routingContext.pushMatchedResource(handlerInstance);
         }
-        return Continuation.of(request, next);
+        return Continuation.of(context, next);
     }
 }

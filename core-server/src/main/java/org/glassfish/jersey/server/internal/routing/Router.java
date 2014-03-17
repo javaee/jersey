@@ -41,7 +41,7 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.Collections;
 
-import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 
@@ -62,7 +62,7 @@ public interface Router {
      * </p>
      */
     public static final class Continuation {
-        private final ContainerRequest request;
+        private final RequestProcessingContext requestProcessingContext;
         private final Iterable<Router> next;
 
         /**
@@ -72,7 +72,7 @@ public interface Router {
          * @return terminal continuation with no {@link #next() next level routers}
          *         in the routing hierarchy and the supplied routed request.
          */
-        public static Continuation of(final ContainerRequest result) {
+        public static Continuation of(final RequestProcessingContext result) {
             return new Continuation(result, null);
         }
 
@@ -86,7 +86,7 @@ public interface Router {
          *         {@link #next() next} in the routing chain and the supplied routed
          *         request.
          */
-        public static Continuation of(final ContainerRequest result, Iterable<Router> next) {
+        public static Continuation of(final RequestProcessingContext result, Iterable<Router> next) {
             return new Continuation(result, next);
         }
 
@@ -100,12 +100,12 @@ public interface Router {
          *         {@link #next() next} in the routing chain and the supplied routed
          *         request.
          */
-        public static Continuation of(final ContainerRequest request, final Router next) {
+        public static Continuation of(final RequestProcessingContext request, final Router next) {
             return new Continuation(request, Lists.newArrayList(next));
         }
 
-        private Continuation(final ContainerRequest request, final Iterable<Router> next) {
-            this.request = request;
+        private Continuation(final RequestProcessingContext request, final Iterable<Router> next) {
+            this.requestProcessingContext = request;
             this.next = (next == null) ? Collections.<Router>emptyList() : next;
         }
 
@@ -114,8 +114,8 @@ public interface Router {
          *
          * @return routed request context.
          */
-        public ContainerRequest requestContext() {
-            return request;
+        public RequestProcessingContext requestContext() {
+            return requestProcessingContext;
         }
 
         /**
@@ -174,5 +174,5 @@ public interface Router {
      * @param data data to be transformed.
      * @return a processing continuation.
      */
-    public Continuation apply(ContainerRequest data);
+    public Continuation apply(RequestProcessingContext data);
 }

@@ -37,13 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.internal.process;
 
 import org.glassfish.jersey.process.internal.ChainableStage;
-import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.internal.process.RespondingContext;
+import org.glassfish.jersey.server.ContainerResponse;
 
 import jersey.repackaged.com.google.common.base.Function;
 
@@ -53,7 +52,6 @@ import jersey.repackaged.com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@RequestScoped
 class DefaultRespondingContext implements RespondingContext {
 
     private Stage<ContainerResponse> rootStage;
@@ -61,8 +59,8 @@ class DefaultRespondingContext implements RespondingContext {
     @Override
     public void push(Function<ContainerResponse, ContainerResponse> responseTransformation) {
         rootStage = (rootStage == null)
-                ? new Stages.LinkedStage<ContainerResponse>(responseTransformation)
-                : new Stages.LinkedStage<ContainerResponse>(responseTransformation, rootStage);
+                ? new Stages.LinkedStage<>(responseTransformation)
+                : new Stages.LinkedStage<>(responseTransformation, rootStage);
     }
 
     @Override

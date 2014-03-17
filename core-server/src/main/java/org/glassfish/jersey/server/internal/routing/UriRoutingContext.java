@@ -57,8 +57,6 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.model.internal.RankedProvider;
@@ -69,6 +67,7 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
@@ -102,7 +101,8 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private ImmutableMultivaluedMap<String, String> decodedQueryParamsView;
 
     private final LinkedList<String> paths = Lists.newLinkedList();
-    private Inflector<ContainerRequest, ContainerResponse> inflector;
+    // TODO re-type to endpoint?
+    private Inflector<RequestProcessingContext, ContainerResponse> inflector;
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
     volatile private ResourceMethod matchedResourceMethod = null;
     private final ProcessingProviders processingProviders;
@@ -117,8 +117,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
      * @param requestContext      request reference.
      * @param processingProviders processing providers.
      */
-    @Inject
-    UriRoutingContext(ContainerRequest requestContext, ProcessingProviders processingProviders) {
+    public UriRoutingContext(ContainerRequest requestContext, ProcessingProviders processingProviders) {
         this.requestContext = requestContext;
         this.tracingLogger = TracingLogger.getInstance(requestContext);
         this.processingProviders = processingProviders;
@@ -221,35 +220,31 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
 
     @Override
-    public void setInflector(final Inflector<ContainerRequest, ContainerResponse> inflector) {
+    public void setInflector(final Inflector<RequestProcessingContext, ContainerResponse> inflector) {
         this.inflector = inflector;
     }
 
     @Override
-    public Inflector<ContainerRequest, ContainerResponse> getInflector() {
+    public Inflector<RequestProcessingContext, ContainerResponse> getInflector() {
         return inflector;
     }
 
-    @Override
     public Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters() {
         return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
     }
 
-    @Override
     public Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters() {
         return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
     }
 
-    @Override
     public Iterable<ReaderInterceptor> getBoundReaderInterceptors() {
         return inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getReaderInterceptors()
                 : processingProviders.getSortedGlobalReaderInterceptors();
     }
 
-    @Override
     public Iterable<WriterInterceptor> getBoundWriterInterceptors() {
         return inflector instanceof ResourceMethodInvoker ?
                 ((ResourceMethodInvoker) inflector).getWriterInterceptors()
@@ -282,7 +277,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     // UriInfo
-    private ContainerRequest requestContext;
+    private final ContainerRequest requestContext;
 
     private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
         return iterable == null ? Collections.<T>emptyList() : iterable;
@@ -318,19 +313,21 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
         return getMatchedURIs(true);
     }
 
+    // TODO Replace with Java SE 8 lambda sometime in the future.
+    private static final Function<String, String> PATH_DECODER = new Function<String, String>() {
+
+        @Override
+        public String apply(String input) {
+            return UriComponent.decode(input, UriComponent.Type.PATH);
+        }
+
+    };
+
     @Override
     public List<String> getMatchedURIs(boolean decode) {
         final List<String> result;
         if (decode) {
-            result = Lists.transform(paths, new Function<String, String>() {
-
-                @Override
-                public String apply(String input) {
-                    return UriComponent.decode(input, UriComponent.Type.PATH);
-                }
-
-            });
-
+            result = Lists.transform(paths, PATH_DECODER);
         } else {
             result = paths;
         }

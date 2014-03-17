@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,16 +42,11 @@ package org.glassfish.jersey.server.internal.routing;
 import java.util.List;
 import java.util.regex.MatchResult;
 
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
-import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.RuntimeResource;
@@ -93,6 +88,7 @@ public interface RoutingContext extends ResourceInfo {
      *
      * @return last successful request URI routing pattern match result.
      */
+    // TODO: consider removing unused method
     public MatchResult peekMatchResult();
 
     /**
@@ -131,6 +127,7 @@ public interface RoutingContext extends ResourceInfo {
      * @return a read-only reverse list of request URI routing pattern match
      *         results.
      */
+    // TODO: consider removing unused method
     public List<MatchResult> getMatchedResults();
 
     /**
@@ -151,7 +148,7 @@ public interface RoutingContext extends ResourceInfo {
      *
      * @param inflector matched request to response inflector.
      */
-    public void setInflector(Inflector<ContainerRequest, ContainerResponse> inflector);
+    public void setInflector(Inflector<RequestProcessingContext, ContainerResponse> inflector);
 
     /**
      * Get the matched request to response data inflector if present, or {@code null}
@@ -159,41 +156,7 @@ public interface RoutingContext extends ResourceInfo {
      *
      * @return matched request to response inflector, or {@code null} if not available.
      */
-    public Inflector<ContainerRequest, ContainerResponse> getInflector();
-
-    /**
-     * Get all bound request filters applicable to this request.
-     *
-     * @return All bound (dynamically or by name) request filters applicable to the matched inflector (or an empty
-     *         collection if no inflector matched yet).
-     */
-    public Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters();
-
-    /**
-     * Get all bound response filters applicable to this request.
-     * This is populated once the right resource method is matched.
-     *
-     * @return All bound (dynamically or by name) response filters applicable to the matched inflector (or an empty
-     *         collection if no inflector matched yet).
-     */
-    public Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters();
-
-    /**
-     * Get all reader interceptors applicable to this request.
-     * This is populated once the right resource method is matched.
-     *
-     * @return All reader interceptors applicable to the matched inflector (or an empty
-     *         collection if no inflector matched yet).
-     */
-    public Iterable<ReaderInterceptor> getBoundReaderInterceptors();
-
-    /**
-     * Get all writer interceptors applicable to this request.
-     *
-     * @return All writer interceptors applicable to the matched inflector (or an empty
-     *         collection if no inflector matched yet).
-     */
-    public Iterable<WriterInterceptor> getBoundWriterInterceptors();
+    public Inflector<RequestProcessingContext, ContainerResponse> getInflector();
 
     /**
      * Set the matched {@link ResourceMethod resource method}. This method needs to be called only if the method was

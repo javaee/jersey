@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.ResourceMethod;
 
 /**
@@ -53,46 +50,33 @@ import org.glassfish.jersey.server.model.ResourceMethod;
  */
 class PushMatchedMethodRouter implements Router {
 
-    /**
-     * Builder for creating {@link PushMatchedMethodRouter push matched method router} instances. New builder instance
-     * must be injected and not directly created by constructor call.
-     */
-    static class Builder {
-        @Inject
-        private Provider<RoutingContext> routingContext;
-
-        /**
-         * Builds new instance of router.
-         *
-         * @param resourceMethod The matched resource method that should be pushed into the
-         *                       {@link RoutingContext routing context}.
-         * @return New instance of the router.
-         */
-        PushMatchedMethodRouter build(ResourceMethod resourceMethod) {
-            return new PushMatchedMethodRouter(resourceMethod, routingContext);
-        }
-    }
-
     private final ResourceMethod resourceMethod;
-    private final Provider<RoutingContext> routingContext;
 
-    private PushMatchedMethodRouter(ResourceMethod resourceMethod, Provider<RoutingContext> routingContext) {
+    /**
+     * Create a new instance of push matched resource router.
+     *
+     * @param resourceMethod The matched resource method that should be pushed into the
+     *                       {@link RoutingContext routing context}.
+     */
+    PushMatchedMethodRouter(ResourceMethod resourceMethod) {
         this.resourceMethod = resourceMethod;
-        this.routingContext = routingContext;
     }
 
     @Override
-    public Continuation apply(ContainerRequest data) {
+    public Continuation apply(final RequestProcessingContext processingContext) {
+
+        final RoutingContext rc = processingContext.routingContext();
+
         switch (resourceMethod.getType()) {
             case RESOURCE_METHOD:
             case SUB_RESOURCE_METHOD:
-                routingContext.get().setMatchedResourceMethod(resourceMethod);
+                rc.setMatchedResourceMethod(resourceMethod);
                 break;
             case SUB_RESOURCE_LOCATOR:
-                routingContext.get().pushMatchedLocator(resourceMethod);
+                rc.pushMatchedLocator(resourceMethod);
                 break;
         }
 
-        return Continuation.of(data);
+        return Continuation.of(processingContext);
     }
 }
