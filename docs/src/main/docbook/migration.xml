@@ -61,6 +61,15 @@
                 <itemizedlist>
                     <listitem>
                         <para>
+                            Until version 2.6, Jersey was compiled with Java SE 6. This has changes in Jersey 2.7.
+                            Now almost all Jersey components are compiled with Java SE 7 target. It means, that you will need at least Java
+                            SE 7 to be able to compile and run your application that is using latest Jersey.
+                            Only <literal>core-common</literal> and <literal>core-client</literal> modules are still compiled with Java class
+                            version runnable with Java SE 6.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
                             MVC support: method <literal>writeTo</literal> of &jersey.server.mvc.TemplateProcessor;
                             was modified by adding an argument <literal>MultivaluedMap&lt;String, Object&gt; httpHeaders</literal>.
                             This is an incompatible change (the method was modified directly in the interface). All
