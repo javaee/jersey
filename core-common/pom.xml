@@ -151,6 +151,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>${surefire.security.argline}</argLine>
+                    <!-- Execute test classes in parallel - 1 thread per CPU core. -->
+                    <parallel>classesAndMethods</parallel>
+                    <perCoreThreadCount>true</perCoreThreadCount>
+                    <threadCount>1</threadCount>
                 </configuration>
             </plugin>
         </plugins>
