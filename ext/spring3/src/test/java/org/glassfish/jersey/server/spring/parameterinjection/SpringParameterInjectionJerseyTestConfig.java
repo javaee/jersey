@@ -37,42 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spring.test2;
+package org.glassfish.jersey.server.spring.parameterinjection;
 
-import org.glassfish.jersey.server.spring.SpringTestConfiguration;
-import org.glassfish.jersey.server.spring.test1.SpringFieldInjectionJerseyTestConfig;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 
-import javax.ws.rs.core.Application;
-
-import static org.junit.Assert.assertEquals;
-
-public class SpringParameterInjectionTest extends JerseyTest {
-    @Override
-    protected Application configure() {
-        ApplicationContext context = new AnnotationConfigApplicationContext(SpringTestConfiguration.class);
-        return new SpringFieldInjectionJerseyTestConfig()
-                .property("contextConfig", context);
-    }
-
-    @Test
-    public void testInjectionOfSingleBean() {
-        String result = target("test1").request().get(String.class);
-        assertEquals("test ok", result);
-    }
-
-    @Test
-    public void testInjectionOfListOfBeans() {
-        String result = target("test2").request().get(String.class);
-        assertEquals("test ok", result);
-    }
-
-    @Test
-    public void testInjectionOfSetOfBeans() {
-        String result = target("test3").request().get(String.class);
-        assertEquals("test ok", result);
+public class SpringParameterInjectionJerseyTestConfig extends ResourceConfig {
+    public SpringParameterInjectionJerseyTestConfig() {
+        register(RequestContextFilter.class);
+        register(SpringParameterInjectionTestResource.class);
     }
 }

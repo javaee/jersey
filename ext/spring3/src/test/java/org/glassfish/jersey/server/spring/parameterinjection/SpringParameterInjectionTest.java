@@ -37,14 +37,42 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spring.test1;
+package org.glassfish.jersey.server.spring.parameterinjection;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
+import org.glassfish.jersey.server.spring.SpringTestConfiguration;
+import org.glassfish.jersey.server.spring.fieldinjection.SpringFieldInjectionJerseyTestConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-public class SpringFieldInjectionJerseyTestConfig extends ResourceConfig {
-    public SpringFieldInjectionJerseyTestConfig() {
-        register(RequestContextFilter.class);
-        register(SpringFieldInjectionTestResource.class);
+import javax.ws.rs.core.Application;
+
+import static org.junit.Assert.assertEquals;
+
+public class SpringParameterInjectionTest extends JerseyTest {
+    @Override
+    protected Application configure() {
+        ApplicationContext context = new AnnotationConfigApplicationContext(SpringTestConfiguration.class);
+        return new SpringParameterInjectionJerseyTestConfig()
+                .property("contextConfig", context);
+    }
+
+    @Test
+    public void testInjectionOfSingleBean() {
+        String result = target("test1").request().get(String.class);
+        assertEquals("test ok", result);
+    }
+
+    @Test
+    public void testInjectionOfListOfBeans() {
+        String result = target("test2").request().get(String.class);
+        assertEquals("test ok", result);
+    }
+
+    @Test
+    public void testInjectionOfSetOfBeans() {
+        String result = target("test3").request().get(String.class);
+        assertEquals("test ok", result);
     }
 }

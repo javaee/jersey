@@ -37,15 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spring.test2;
+package org.glassfish.jersey.server.spring.fieldinjection;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
-import org.glassfish.jersey.server.spring.test1.SpringFieldInjectionTestResource;
 
-public class SpringParameterInjectionJerseyTestConfig extends ResourceConfig {
-    public SpringParameterInjectionJerseyTestConfig() {
+public class SpringFieldInjectionJerseyTestConfig extends ResourceConfig {
+    public SpringFieldInjectionJerseyTestConfig() {
         register(RequestContextFilter.class);
-        register(SpringParameterInjectionTestResource.class);
+        register(SpringFieldInjectionTestResource.class);
     }
 }

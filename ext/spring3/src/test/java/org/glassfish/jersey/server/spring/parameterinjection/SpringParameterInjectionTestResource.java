@@ -37,41 +37,52 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spring.test1;
+package org.glassfish.jersey.server.spring.parameterinjection;
 
-import org.glassfish.jersey.server.spring.SpringTestConfiguration;
-import org.glassfish.jersey.test.JerseyTest;
-import org.junit.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.glassfish.jersey.server.spring.TestComponent1;
+import org.glassfish.jersey.server.spring.TestComponent2;
+import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.ws.rs.core.Application;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
+@Path("/")
+public class SpringParameterInjectionTestResource {
 
-public class SpringFieldInjectionTest extends JerseyTest {
-    @Override
-    protected Application configure() {
-        ApplicationContext context = new AnnotationConfigApplicationContext(SpringTestConfiguration.class);
-        return new SpringFieldInjectionJerseyTestConfig()
-                .property("contextConfig", context);
+    private final TestComponent1 testComponent1;
+    private final List<TestComponent2> testComponent2List;
+    private final Set<TestComponent2> testComponent2Set;
+
+    @Autowired
+    public SpringParameterInjectionTestResource(final TestComponent1 testComponent1,
+                                                final List<TestComponent2> testComponent2List,
+                                                final Set<TestComponent2> testComponent2Set) {
+        this.testComponent1 = testComponent1;
+        this.testComponent2List = testComponent2List;
+        this.testComponent2Set = testComponent2Set;
     }
 
-    @Test
-    public void testInjectionOfSingleBean() {
-        String result = target("test1").request().get(String.class);
-        assertEquals("test ok", result);
+    @Path("test1")
+    @GET
+    public String test1() {
+        return testComponent1.result();
     }
 
-    @Test
-    public void testInjectionOfListOfBeans() {
-        String result = target("test2").request().get(String.class);
-        assertEquals("test ok", result);
+    @Path("test2")
+    @GET
+    public String test2() {
+        return (testComponent2List.size() == 2 && "test ok".equals(testComponent2List.get(0).result())
+                && "test ok".equals(testComponent2List.get(1).result())) ? "test ok" : "test failed";
     }
 
-    @Test
-    public void testInjectionOfSetOfBeans() {
-        String result = target("test3").request().get(String.class);
-        assertEquals("test ok", result);
+    @Path("test3")
+    @GET
+    public String test3() {
+        Iterator<TestComponent2> iterator = testComponent2Set.iterator();
+        return (testComponent2Set.size() == 2 && "test ok".equals(iterator.next().result())
+                && "test ok".equals(iterator.next().result())) ? "test ok" : "test failed";
     }
 }

@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.spring.test1;
+package org.glassfish.jersey.server.spring.fieldinjection;
 
 import org.glassfish.jersey.server.spring.TestComponent1;
 import org.glassfish.jersey.server.spring.TestComponent2;
