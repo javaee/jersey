@@ -42,6 +42,8 @@ package org.glassfish.jersey.server.spring;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.inject.Singleton;
 
@@ -93,7 +95,10 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
     private Object getBeanFromSpringContext(String beanName, Injectee injectee) {
         try {
             DependencyDescriptor dependencyDescriptor = createSpringDependencyDescriptor(injectee);
-            return ctx.getAutowireCapableBeanFactory().resolveDependency(dependencyDescriptor, beanName);
+            Set<String> autowiredBeanNames = new HashSet<>(1);
+            autowiredBeanNames.add(beanName);
+            return ctx.getAutowireCapableBeanFactory().resolveDependency(dependencyDescriptor, null,
+                    autowiredBeanNames, null);
         } catch (NoSuchBeanDefinitionException e) {
             LOGGER.warning(e.getMessage());
             throw e;
