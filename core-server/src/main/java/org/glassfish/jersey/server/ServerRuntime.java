@@ -70,6 +70,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.ReaderInterceptor;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -90,26 +91,27 @@ import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.BackgroundScheduler;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
+import org.glassfish.jersey.server.internal.monitoring.EmptyRequestEventBuilder;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventImpl;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.MappableException;
-import org.glassfish.jersey.server.internal.process.RespondingContext;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.spi.ExceptionMappers;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.COMPLETED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RESUMED;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.RUNNING;
 import static org.glassfish.jersey.server.internal.process.AsyncContext.State.SUSPENDED;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import jersey.repackaged.com.google.common.base.Preconditions;
 
@@ -119,7 +121,8 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class ServerRuntime {
-    private final Stage<ContainerRequest> requestProcessingRoot;
+    private final Stage<RequestProcessingContext> requestProcessingRoot;
+    private final ProcessingProviders processingProviders;
 
     private final ServiceLocator locator;
 
@@ -127,11 +130,9 @@ class ServerRuntime {
 
     private final RequestScope requestScope;
     private final ExceptionMappers exceptionMappers;
-    private final Provider<RespondingContext> respondingContextProvider;
     private final Provider<CloseableService> closeableServiceProvider;
     private final Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider;
     private final Provider<AsyncContext> asyncContextProvider;
-    private final Provider<UriRoutingContext> uriRoutingContextProvider;
     private final RequestExecutorFactory asyncExecutorFactory;
     private final ApplicationEventListener applicationEventListener;
     private final Configuration configuration;
@@ -153,15 +154,11 @@ class ServerRuntime {
         @Inject
         private ExceptionMappers exceptionMappers;
         @Inject
-        private Provider<RespondingContext> respondingContextProvider;
-        @Inject
         private Provider<CloseableService> closeableServiceProvider;
         @Inject
         private Provider<Ref<Value<AsyncContext>>> asyncContextRefProvider;
         @Inject
         private Provider<AsyncContext> asyncContextProvider;
-        @Inject
-        private Provider<UriRoutingContext> uriRoutingContextProvider;
         @Inject
         private RequestExecutorFactory asyncExecutorFactory;
         @Inject
@@ -170,51 +167,53 @@ class ServerRuntime {
         /**
          * Create new server-side request processing runtime.
          *
-         * @param processingRoot application request processing root stage.
-         * @param eventListener  Application event listener registered for this runtime.
+         * @param processingRoot      application request processing root stage.
+         * @param eventListener       application event listener registered for this runtime.
+         * @param processingProviders application processing providers.
          * @return new server-side request processing runtime.
          */
-        public ServerRuntime build(final Stage<ContainerRequest> processingRoot, ApplicationEventListener eventListener) {
+        public ServerRuntime build(
+                final Stage<RequestProcessingContext> processingRoot,
+                final ApplicationEventListener eventListener,
+                final ProcessingProviders processingProviders) {
+
             return new ServerRuntime(
                     processingRoot,
+                    processingProviders,
                     locator,
                     backgroundScheduler,
                     requestScope,
                     exceptionMappers,
-                    respondingContextProvider,
                     closeableServiceProvider,
                     asyncContextRefProvider,
                     asyncContextProvider,
-                    uriRoutingContextProvider,
                     asyncExecutorFactory,
                     eventListener,
                     configuration);
         }
     }
 
-    private ServerRuntime(Stage<ContainerRequest> requestProcessingRoot,
-                          ServiceLocator locator,
-                          ScheduledExecutorService backgroundScheduler,
-                          RequestScope requestScope,
-                          ExceptionMappers exceptionMappers,
-                          Provider<RespondingContext> respondingContextProvider,
-                          Provider<CloseableService> closeableServiceProvider,
-                          Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider,
-                          Provider<AsyncContext> asyncContextProvider,
-                          Provider<UriRoutingContext> uriRoutingContextProvider,
-                          RequestExecutorFactory asyncExecutorFactory,
-                          ApplicationEventListener applicationEventListener,
-                          Configuration configuration) {
+    private ServerRuntime(final Stage<RequestProcessingContext> requestProcessingRoot,
+                          final ProcessingProviders processingProviders,
+                          final ServiceLocator locator,
+                          final ScheduledExecutorService backgroundScheduler,
+                          final RequestScope requestScope,
+                          final ExceptionMappers exceptionMappers,
+                          final Provider<CloseableService> closeableServiceProvider,
+                          final Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider,
+                          final Provider<AsyncContext> asyncContextProvider,
+                          final RequestExecutorFactory asyncExecutorFactory,
+                          final ApplicationEventListener applicationEventListener,
+                          final Configuration configuration) {
         this.requestProcessingRoot = requestProcessingRoot;
+        this.processingProviders = processingProviders;
         this.locator = locator;
         this.backgroundScheduler = backgroundScheduler;
         this.requestScope = requestScope;
         this.exceptionMappers = exceptionMappers;
-        this.respondingContextProvider = respondingContextProvider;
         this.closeableServiceProvider = closeableServiceProvider;
         this.asyncContextFactoryProvider = asyncContextFactoryProvider;
         this.asyncContextProvider = asyncContextProvider;
-        this.uriRoutingContextProvider = uriRoutingContextProvider;
         this.asyncExecutorFactory = asyncExecutorFactory;
         this.applicationEventListener = applicationEventListener;
         this.configuration = configuration;
@@ -226,10 +225,38 @@ class ServerRuntime {
     /**
      * Process a container request.
      *
-     * @param request request to be processed.
+     * @param request container request to be processed.
      */
     public void process(final ContainerRequest request) {
-        initRequestEventListeners(request);
+        RequestEventBuilder monitoringEventBuilder = EmptyRequestEventBuilder.INSTANCE;
+        RequestEventListener monitoringEventListener = null;
+
+        if (applicationEventListener != null) {
+            monitoringEventBuilder = new RequestEventImpl.Builder().setContainerRequest(request);
+            monitoringEventListener = applicationEventListener.onRequest(
+                    monitoringEventBuilder.build(RequestEvent.Type.START));
+        }
+
+        // TODO refactor UriRoutingContext initialization logic
+        final UriRoutingContext routingContext = new UriRoutingContext(request, processingProviders);
+
+        request.setUriRoutingContext(routingContext);
+        monitoringEventBuilder.setExtendedUriInfo(routingContext);
+
+        // TODO: wtf???
+        request.setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
+            @Override
+            public Iterable<ReaderInterceptor> get() {
+                return request.getBoundReaderInterceptors();
+            }
+        });
+
+        final RequestProcessingContext context = new RequestProcessingContext(
+                locator,
+                request,
+                routingContext,
+                monitoringEventBuilder,
+                monitoringEventListener);
 
         TracingUtils.initTracingSupport(tracingConfig, tracingThreshold, request);
         request.checkState();
@@ -238,16 +265,16 @@ class ServerRuntime {
             public void run() {
                 TracingUtils.logStart(request);
 
-                final Responder responder = new Responder(request, ServerRuntime.this);
-                final AsyncResponderHolder asyncResponderHolder = new AsyncResponderHolder(
-                        responder, requestScope.referenceCurrent());
+                final Responder responder = new Responder(context, ServerRuntime.this);
+                final AsyncResponderHolder asyncResponderHolder =
+                        new AsyncResponderHolder(responder, requestScope.referenceCurrent());
 
                 try {
                     final Ref<Endpoint> endpointRef = Refs.emptyRef();
                     // set base URI into response builder thread-local variable
-                    // for later absolutization of relative location URIs
+                    // for later resolving of relative location URIs
                     OutboundJaxrsResponse.Builder.setBaseUri(request.getBaseUri());
-                    final ContainerRequest data = Stages.process(request, requestProcessingRoot, endpointRef);
+                    final RequestProcessingContext data = Stages.process(context, requestProcessingRoot, endpointRef);
 
                     final Endpoint endpoint = endpointRef.get();
                     if (endpoint == null) {
@@ -272,22 +299,11 @@ class ServerRuntime {
         });
     }
 
-    private void initRequestEventListeners(ContainerRequest request) {
-        if (applicationEventListener != null) {
-            final RequestEventBuilder requestEventBuilder = new RequestEventImpl.Builder().setContainerRequest(request);
-            final RequestEventListener requestEventEventListener =
-                    applicationEventListener.onRequest(requestEventBuilder.build(RequestEvent.Type.START));
-
-            if (requestEventEventListener != null) {
-                request.setRequestEventListener(requestEventEventListener, requestEventBuilder);
-            }
-        }
-    }
-
     /**
      * Get the Jersey server runtime background scheduler.
      *
      * @return server runtime background scheduler.
+     *
      * @see BackgroundScheduler
      */
     ScheduledExecutorService getBackgroundScheduler() {
@@ -347,7 +363,7 @@ class ServerRuntime {
     private static class Responder {
         private static final Logger LOGGER = Logger.getLogger(Responder.class.getName());
 
-        private final ContainerRequest request;
+        private final RequestProcessingContext processingContext;
         private final ServerRuntime runtime;
 
         private final CompletionCallbackRunner completionCallbackRunner = new CompletionCallbackRunner();
@@ -356,21 +372,21 @@ class ServerRuntime {
         private final TracingLogger tracingLogger;
 
 
-        public Responder(final ContainerRequest request, final ServerRuntime runtime) {
-            this.request = request;
+        public Responder(final RequestProcessingContext processingContext, final ServerRuntime runtime) {
+            this.processingContext = processingContext;
             this.runtime = runtime;
 
-            this.tracingLogger = TracingLogger.getInstance(request);
+            this.tracingLogger = TracingLogger.getInstance(processingContext.request());
         }
 
         public void process(ContainerResponse response) {
-            request.getRequestEventBuilder().setContainerResponse(response);
+            processingContext.monitoringEventBuilder().setContainerResponse(response);
             response = processResponse(response);
             release(response);
         }
 
         private ContainerResponse processResponse(ContainerResponse response) {
-            Stage<ContainerResponse> respondingRoot = runtime.respondingContextProvider.get().createRespondingRoot();
+            Stage<ContainerResponse> respondingRoot = processingContext.createRespondingRoot();
 
             if (respondingRoot != null) {
                 response = Stages.process(response, respondingRoot);
@@ -393,15 +409,17 @@ class ServerRuntime {
          * we do not log exceptions that are mapped by ExceptionMappers.
          * </li><li>
          * All other exceptions are logged: WebApplicationExceptions with entities,
-         *      exceptions that were unsuccessfully mapped
+         * exceptions that were unsuccessfully mapped
          * </li>
          * </ul>
          * </p>
+         *
          * @param throwable Exception to be processed.
          */
         public void process(Throwable throwable) {
-            request.getRequestEventBuilder().setException(throwable, RequestEvent.ExceptionCause.ORIGINAL);
-            request.triggerEvent(RequestEvent.Type.ON_EXCEPTION);
+            final ContainerRequest request = processingContext.request();
+            processingContext.monitoringEventBuilder().setException(throwable, RequestEvent.ExceptionCause.ORIGINAL);
+            processingContext.triggerEvent(RequestEvent.Type.ON_EXCEPTION);
 
             ContainerResponse response = null;
             try {
@@ -410,16 +428,16 @@ class ServerRuntime {
                     try {
                         response = convertResponse(exceptionResponse);
                         ensureAbsolute(response.getLocation(), response.getHeaders(), request);
-                        request.getRequestEventBuilder().setContainerResponse(response).setResponseSuccessfullyMapped(true);
+                        processingContext.monitoringEventBuilder().setContainerResponse(response).setResponseSuccessfullyMapped(true);
                     } finally {
-                        request.triggerEvent(RequestEvent.Type.EXCEPTION_MAPPING_FINISHED);
+                        processingContext.triggerEvent(RequestEvent.Type.EXCEPTION_MAPPING_FINISHED);
                     }
 
                     processResponse(response);
                 } catch (Throwable respError) {
                     LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_PROCESSING_RESPONSE_FROM_ALREADY_MAPPED_EXCEPTION());
-                    request.getRequestEventBuilder().setException(respError, RequestEvent.ExceptionCause.MAPPED_RESPONSE);
-                    request.triggerEvent(RequestEvent.Type.ON_EXCEPTION);
+                    processingContext.monitoringEventBuilder().setException(respError, RequestEvent.ExceptionCause.MAPPED_RESPONSE);
+                    processingContext.triggerEvent(RequestEvent.Type.ON_EXCEPTION);
                     throw respError;
                 }
             } catch (Throwable responseError) {
@@ -440,7 +458,7 @@ class ServerRuntime {
         }
 
         private ContainerResponse convertResponse(Response exceptionResponse) {
-            final ContainerResponse containerResponse = new ContainerResponse(request, exceptionResponse);
+            final ContainerResponse containerResponse = new ContainerResponse(processingContext.request(), exceptionResponse);
             containerResponse.setMappedFromException(true);
             return containerResponse;
         }
@@ -473,8 +491,8 @@ class ServerRuntime {
                     final long timestamp = tracingLogger.timestamp(ServerTraceEvent.EXCEPTION_MAPPING);
                     ExceptionMapper mapper = runtime.exceptionMappers.findMapping(throwable);
                     if (mapper != null) {
-                        request.getRequestEventBuilder().setExceptionMapper(mapper);
-                        request.triggerEvent(RequestEvent.Type.EXCEPTION_MAPPER_FOUND);
+                        processingContext.monitoringEventBuilder().setExceptionMapper(mapper);
+                        processingContext.triggerEvent(RequestEvent.Type.EXCEPTION_MAPPER_FOUND);
                         try {
                             final Response mappedResponse = mapper.toResponse(throwable);
 
@@ -533,6 +551,7 @@ class ServerRuntime {
         }
 
         private ContainerResponse writeResponse(final ContainerResponse response) {
+            final ContainerRequest request = processingContext.request();
             final ContainerResponseWriter writer = request.getResponseWriter();
             ServerRuntime.ensureAbsolute(response.getLocation(), response.getHeaders(),
                     response.getRequestContext());
@@ -577,7 +596,7 @@ class ServerRuntime {
                             response.getHeaders(),
                             request.getPropertiesDelegate(),
                             response.getEntityStream(),
-                            runtime.uriRoutingContextProvider.get().getBoundWriterInterceptors()));
+                            request.getBoundWriterInterceptors()));
                 } catch (MappableException mpe) {
                     if (mpe.getCause() instanceof IOException) {
                         connectionCallbackRunner.onDisconnect(runtime.asyncContextProvider.get());
@@ -622,8 +641,7 @@ class ServerRuntime {
                                     request,
                                     response,
                                     connectionCallbackRunner,
-                                    runtime.asyncContextProvider,
-                                    runtime.uriRoutingContextProvider.get());
+                                    runtime.asyncContextProvider);
                         } catch (IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                             close = true;
@@ -651,9 +669,10 @@ class ServerRuntime {
         }
 
         private void setWrittenResponse(ContainerResponse response) {
-            request.getRequestEventBuilder().setContainerResponse(response);
-            request.getRequestEventBuilder().setSuccess(response.getStatus() < Response.Status.BAD_REQUEST.getStatusCode());
-            request.getRequestEventBuilder().setResponseWritten(true);
+            processingContext.monitoringEventBuilder()
+                    .setContainerResponse(response)
+                    .setSuccess(response.getStatus() < Response.Status.BAD_REQUEST.getStatusCode())
+                    .setResponseWritten(true);
         }
 
         private void release(ContainerResponse responseContext) {
@@ -670,7 +689,7 @@ class ServerRuntime {
             } catch (Throwable throwable) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.RELEASING_REQUEST_PROCESSING_RESOURCES_FAILED(), throwable);
             } finally {
-                request.triggerEvent(RequestEvent.Type.FINISHED);
+                processingContext.triggerEvent(RequestEvent.Type.FINISHED);
             }
         }
     }
@@ -754,7 +773,8 @@ class ServerRuntime {
         public boolean suspend() {
             synchronized (stateLock) {
                 if (state == RUNNING) {
-                    if (responder.request.getResponseWriter().suspend(AsyncResponse.NO_TIMEOUT, TimeUnit.SECONDS, this)) {
+                    if (responder.processingContext.request().getResponseWriter().suspend(
+                            AsyncResponse.NO_TIMEOUT, TimeUnit.SECONDS, this)) {
                         state = SUSPENDED;
                         return true;
                     }
@@ -772,8 +792,8 @@ class ServerRuntime {
                         final Response jaxrsResponse =
                                 (response instanceof Response) ? (Response) response : Response.ok(response).build();
                         ServerRuntime.ensureAbsolute(
-                                jaxrsResponse.getLocation(), jaxrsResponse.getHeaders(), responder.request);
-                        responder.process(new ContainerResponse(responder.request, jaxrsResponse));
+                                jaxrsResponse.getLocation(), jaxrsResponse.getHeaders(), responder.processingContext.request());
+                        responder.process(new ContainerResponse(responder.processingContext.request(), jaxrsResponse));
                     } catch (Throwable t) {
                         responder.process(t);
                     }
@@ -862,7 +882,7 @@ class ServerRuntime {
                 public void run() {
                     try {
                         final Response response = responseValue.get();
-                        responder.process(new ContainerResponse(responder.request, response));
+                        responder.process(new ContainerResponse(responder.processingContext.request(), response));
                     } catch (Throwable t) {
                         responder.process(t);
                     }
@@ -901,7 +921,7 @@ class ServerRuntime {
         @Override
         public boolean setTimeout(long time, TimeUnit unit) {
             try {
-                responder.request.getResponseWriter().setSuspendTimeout(time, unit);
+                responder.processingContext.request().getResponseWriter().setSuspendTimeout(time, unit);
                 return true;
             } catch (IllegalStateException ex) {
                 LOGGER.log(Level.FINER, "Unable to set timeout on the AsyncResponse.", ex);
@@ -929,7 +949,7 @@ class ServerRuntime {
                 Preconditions.checkNotNull(additionalCallback, LocalizationMessages.CALLBACK_ARRAY_ELEMENT_NULL());
             }
 
-            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<Class<?>, Collection<Class<?>>>();
+            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<>();
 
             results.put(callback, register(callback));
 
@@ -944,7 +964,7 @@ class ServerRuntime {
         public Collection<Class<?>> register(Object callback) {
             Preconditions.checkNotNull(callback, LocalizationMessages.PARAM_NULL("callback"));
 
-            Collection<Class<?>> result = new LinkedList<Class<?>>();
+            Collection<Class<?>> result = new LinkedList<>();
             for (AbstractCallbackRunner<?> runner : callbackRunners) {
                 if (runner.supports(callback.getClass())) {
                     if (runner.register(callback)) {
@@ -964,7 +984,7 @@ class ServerRuntime {
                 Preconditions.checkNotNull(additionalCallback, LocalizationMessages.CALLBACK_ARRAY_ELEMENT_NULL());
             }
 
-            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<Class<?>, Collection<Class<?>>>();
+            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<>();
 
             results.put(callback.getClass(), register(callback));
 
@@ -977,7 +997,7 @@ class ServerRuntime {
     }
 
     private static abstract class AbstractCallbackRunner<T> {
-        private final Queue<T> callbacks = new ConcurrentLinkedQueue<T>();
+        private final Queue<T> callbacks = new ConcurrentLinkedQueue<>();
         private final Logger logger;
 
         protected AbstractCallbackRunner(Logger logger) {

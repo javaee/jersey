@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,57 +37,9 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.server.spring.profiles;
 
-import java.util.regex.Pattern;
+public interface TestService {
 
-import javax.inject.Inject;
-
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RootRouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteToBuilder;
-
-import org.glassfish.hk2.api.ServiceLocator;
-
-/**
- * {@link RouteBuilder} implementation that builds routes which use {@link Pattern}
- * to perform path matching.
- *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
- */
-class PatternRouteBuilder implements RootRouteBuilder<Pattern> {
-
-    @Inject
-    private ServiceLocator locator;
-    @Inject
-    private PatternRouter.Builder acceptorFactory;
-    @Inject
-    private MatchResultInitializerRouter.Builder initializerFactory;
-
-    @Override
-    public RouteToBuilder<Pattern> route(String pattern) {
-        return route(Pattern.compile(pattern));
-    }
-
-    @Override
-    public RouteToBuilder<Pattern> route(Pattern pattern) {
-        return new AbstractRouteToPathBuilder<Pattern>(locator, pattern) {
-
-            @Override
-            public RouteToBuilder<Pattern> route(String pattern) {
-                return super.route(Pattern.compile(pattern));
-            }
-
-            @Override
-            public Router build() {
-                return acceptorFactory.build(acceptedRoutes());
-            }
-        };
-    }
-
-    @Override
-    public Router root(Router routingRoot) {
-        return initializerFactory.build(routingRoot);
-    }
+    String test();
 }

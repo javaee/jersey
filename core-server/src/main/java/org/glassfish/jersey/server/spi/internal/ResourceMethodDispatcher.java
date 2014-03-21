@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,16 +63,20 @@ public interface ResourceMethodDispatcher {
     /**
      * Provider interface for creating a {@link ResourceMethodDispatcher resource
      * method dispatcher} instances.
-     * <p>
-     * TODO describe registration.
-     * <p>
-     * A provider will examine the model of the Web resource method and
+     *
+     * A provider examines the model of the Web resource method and
      * determine if an invoker can be created for that Web resource method.
      * <p>
      * Multiple providers can specify the support for different Web resource method
      * patterns, ranging from simple patterns (such as void return and input
      * parameters) to complex patterns that take type URI and query arguments
      * and HTTP request headers as typed parameters.
+     * </p>
+     * <p>
+     * Resource method dispatcher provider implementations can be registered in Jersey application
+     * by supplying a custom HK2 {@link org.glassfish.hk2.utilities.Binder} that binds the
+     * custom service implementation(s) to the {@code ResourceMethodDispatcher.Provider} contract.
+     * </p>
      *
      * @author Paul Sandoz
      * @author Marek Potociar (marek.potociar at oracle.com)

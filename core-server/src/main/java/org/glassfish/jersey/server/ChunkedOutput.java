@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,6 @@ import org.glassfish.jersey.process.internal.RequestScope;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.MappableException;
-import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 
 /**
  * Used for sending messages in "typed" chunks. Useful for long running processes,
@@ -83,7 +82,6 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     private volatile ContainerResponse responseContext;
     private volatile ServerRuntime.ConnectionCallbackRunner connectionCallbackRunner;
     private volatile Provider<AsyncContext> asyncContext;
-    private volatile UriRoutingContext uriRoutingContext;
 
     /**
      * Create new {@code ChunkedOutput}.
@@ -356,7 +354,6 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * @param responseContext          response context.
      * @param connectionCallbackRunner connection callback runner.
      * @param asyncContext             async context value.
-     * @param uriRoutingContext        URI routing context.
      * @throws IOException when encountered any problem during serializing or writing a chunk.
      */
     void setContext(final RequestScope requestScope,
@@ -364,15 +361,13 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                     final ContainerRequest requestContext,
                     final ContainerResponse responseContext,
                     final ServerRuntime.ConnectionCallbackRunner connectionCallbackRunner,
-                    final Provider<AsyncContext> asyncContext,
-                    final UriRoutingContext uriRoutingContext) throws IOException {
+                    final Provider<AsyncContext> asyncContext) throws IOException {
         this.requestScope = requestScope;
         this.requestScopeInstance = requestScopeInstance;
         this.requestContext = requestContext;
         this.responseContext = responseContext;
         this.connectionCallbackRunner = connectionCallbackRunner;
         this.asyncContext = asyncContext;
-        this.uriRoutingContext = uriRoutingContext;
         flushQueue();
     }
 }

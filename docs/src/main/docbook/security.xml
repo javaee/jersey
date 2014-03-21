@@ -683,7 +683,7 @@ Feature filterFeature = OAuth1ClientSupport.builder(consumerCredentials)
 
                     <example>
                         <title>Creating Public/Private RSA-SHA1 keys</title>
-                        <programlisting language="prompt" linenumbering="numbered"><![CDATA[$ # Create the private key.
+                        <programlisting language="bash" linenumbering="numbered"><![CDATA[$ # Create the private key.
 $ openssl genrsa -out private.key 2048
 $ # Convert the key into PKCS8 format.
 $ openssl pkcs8 -topk8 -in private.key -nocrypt

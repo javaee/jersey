@@ -375,7 +375,7 @@ public class Parameter implements AnnotatedElement {
      * injectable constructor.
      *
      * @param concreteClass  concrete resource method handler implementation class.
-     * @param declaringClass TODO ???
+     * @param declaringClass class where the method has been declared.
      * @param ctor           injectable constructor of the resource method handler.
      * @param keepEncoded    set to {@code true} to disable automatic decoding
      *                       of all the constructor parameters. (See {@link Encoded}.

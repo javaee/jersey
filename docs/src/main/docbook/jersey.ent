@@ -262,6 +262,8 @@
 <!ENTITY jersey.client.ChunkParser "<link xlink:href='&jersey.javadoc.path;/client/ChunkParser.html'>ChunkParser</link>">
 <!ENTITY jersey.server.Broadcaster "<link xlink:href='&jersey.javadoc.path;/server/Broadcaster.html'>Broadcaster</link>">
 <!ENTITY jersey.server.BroadcasterListener "<link xlink:href='&jersey.javadoc.path;/server/BroadcasterListener.html'>BroadcasterListener</link>">
+<!ENTITY jersey.server.ContainerRequest "<link xlink:href='&jersey.javadoc.path;/server/ContainerRequest.html'>ContainerRequest</link>">
+<!ENTITY jersey.server.ContainerResponse "<link xlink:href='&jersey.javadoc.path;/server/ContainerResponse.html'>ContainerResponse</link>">
 <!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.path;/server/model/ModelProcessor.html'>ModelProcessor</link>">
 <!ENTITY jersey.media.MoxyJsonFeature "<link xlink:href='&jersey.javadoc.path;/moxy/json/MoxyJsonFeature.html'>MoxyJsonFeature</link>">
 <!ENTITY jersey.apache.ApacheConnector "<link xlink:href='&jersey.javadoc.path;/apache/connector/ApacheConnector.html'>ApacheConnector</link>">
@@ -716,6 +718,8 @@
 <!ENTITY lit.jersey.media.multipart.FormDataMultiPart "<literal>FormDataMultiPart</literal>" >
 <!ENTITY lit.jersey.media.multipart.FormDataParam "<literal>@FormDataParam</literal>" >
 
+<!ENTITY lit.jersey.server.ContainerRequest "<literal>ContainerRequest</literal>">
+<!ENTITY lit.jersey.server.ContainerResponse "<literal>ContainerResponse</literal>">
 <!ENTITY lit.jersey.server.ChunkedOutput "<literal>ChunkedOutput</literal>">
 <!ENTITY lit.jersey.server.JSONP "<literal>@JSONP</literal>">
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">

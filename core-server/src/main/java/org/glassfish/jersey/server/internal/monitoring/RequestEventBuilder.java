@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,7 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 
 /**
- * Interface of builders of {@link org.glassfish.jersey.server.monitoring.RequestEvent request events}.
+ * A contract for {@link RequestEvent request monitoring event} builder.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
@@ -86,7 +86,8 @@ public interface RequestEventBuilder {
      *
      * @param success True if response processing was successful.
      * @return Builder instance.
-     * @see org.glassfish.jersey.server.monitoring.RequestEvent#isSuccess()
+     *
+     * @see RequestEvent#isSuccess()
      */
     public RequestEventBuilder setSuccess(boolean success);
 

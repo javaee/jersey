@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,45 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.spring.profiles;
 
-import org.glassfish.jersey.process.internal.ChainableStage;
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.internal.process.RespondingContext;
+import javax.inject.Singleton;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
-import jersey.repackaged.com.google.common.base.Function;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-/**
- * Default implementation of the request-scoped
- * {@link org.glassfish.jersey.server.internal.process.RespondingContext responding context}.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
- */
-@RequestScoped
-class DefaultRespondingContext implements RespondingContext {
 
-    private Stage<ContainerResponse> rootStage;
+@Singleton
+@Path("spring-resource")
+@Service
+public class SpringRequestResource {
 
-    @Override
-    public void push(Function<ContainerResponse, ContainerResponse> responseTransformation) {
-        rootStage = (rootStage == null)
-                ? new Stages.LinkedStage<ContainerResponse>(responseTransformation)
-                : new Stages.LinkedStage<ContainerResponse>(responseTransformation, rootStage);
+    @Autowired
+    private TestService testService;
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getGoodbye() {
+        return testService.test();
     }
 
-    @Override
-    public void push(final ChainableStage<ContainerResponse> stage) {
-        if (rootStage != null) {
-            stage.setDefaultNext(rootStage);
-        }
-
-        rootStage = stage;
-    }
-
-    @Override
-    public Stage<ContainerResponse> createRespondingRoot() {
-        return rootStage;
-    }
 }

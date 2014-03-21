@@ -84,6 +84,7 @@
         <module>jersey-2335</module>
         <module>portability-jersey-1</module>
         <module>portability-jersey-2</module>
+        <module>property-check</module>
         <module>security-digest</module>
         <module>servlet-2.5-autodiscovery-1</module>
         <module>servlet-2.5-autodiscovery-2</module>
