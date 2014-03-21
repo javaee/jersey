@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,12 +39,8 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.uri.UriTemplate;
-
 
 /**
  * Router that pushes {@link UriTemplate uri template} of matched resource of subResource
@@ -53,66 +49,47 @@ import org.glassfish.jersey.uri.UriTemplate;
  * and pushes the {@link java.util.regex.MatchResult matched result} into the routing context.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- * @see RoutingContext#pushTemplates(org.glassfish.jersey.uri.UriTemplate...)
+ * @see RoutingContext#pushTemplates(org.glassfish.jersey.uri.UriTemplate, org.glassfish.jersey.uri.UriTemplate)
  */
 class PushMatchedTemplateRouter implements Router {
-    private final Provider<RoutingContext> routingContextProvider;
+
     private final UriTemplate resourceTemplate;
     private final UriTemplate methodTemplate;
 
     /**
-     * Builder for creating
-     * {@link org.glassfish.jersey.server.internal.routing.PushMatchedTemplateRouter push matched template router}
-     * instances.  New builder instance must be injected and not directly created by constructor call.
+     * Create a new instance of the push matched template router.
+     * <p>
+     * This constructor should be used in case a path matching has been performed on both a resource and method paths
+     * (in case of sub-resource methods and locators).
+     * </p>
+     *
+     * @param resourceTemplate resource URI template that should be pushed.
+     * @param methodTemplate   (sub-resource) method or locator URI template that should be pushed.
      */
-    static class Builder {
-        @Inject
-        private Provider<RoutingContext> routingContext;
-
-        /**
-         * Builds new instance of the router.
-         * <p>
-         * This builder method should be used in case a path matching has been performed on both a resource and method paths
-         * (in case of sub-resource methods and locators).
-         * </p>
-         *
-         * @param resourceTemplate resource URI template that should be pushed.
-         * @param methodTemplate (sub-resource) method or locator URI template that should be pushed.
-         * @return New instance of router created from this builder.
-         */
-        PushMatchedTemplateRouter build(UriTemplate resourceTemplate, UriTemplate methodTemplate) {
-            return new PushMatchedTemplateRouter(routingContext, resourceTemplate, methodTemplate);
-        }
-
-        /**
-         * Builds new instance of the router.
-         * <p>
-         * This builder method should be used in case a single path matching has been performed (in case of resource methods,
-         * only the resource path is matched).
-         * </p>
-         *
-         * @param resourceTemplate resource URI template that should be pushed.
-         * @return New instance of router created from this builder.
-         */
-        PushMatchedTemplateRouter build(UriTemplate resourceTemplate) {
-            return new PushMatchedTemplateRouter(routingContext, resourceTemplate, null);
-        }
-    }
-
-    private PushMatchedTemplateRouter(Provider<RoutingContext> routingContextProvider,
-                                      UriTemplate resourceTemplate,
-                                      UriTemplate methodTemplate) {
-        this.routingContextProvider = routingContextProvider;
+    PushMatchedTemplateRouter(final UriTemplate resourceTemplate,
+                              final UriTemplate methodTemplate) {
         this.resourceTemplate = resourceTemplate;
         this.methodTemplate = methodTemplate;
+    }
 
+    /**
+     * Create a new instance of the push matched template router.
+     * <p>
+     * This constructor should be used in case a single path matching has been performed (in case of resource methods,
+     * only the resource path is matched).
+     * </p>
+     *
+     * @param resourceTemplate resource URI template that should be pushed.
+     */
+    PushMatchedTemplateRouter(final UriTemplate resourceTemplate) {
+        this.resourceTemplate = resourceTemplate;
+        this.methodTemplate = null;
     }
 
     @Override
-    public Continuation apply(final ContainerRequest request) {
-        final RoutingContext rc = routingContextProvider.get();
-        rc.pushTemplates(resourceTemplate, methodTemplate);
+    public Continuation apply(final RequestProcessingContext context) {
+        context.routingContext().pushTemplates(resourceTemplate, methodTemplate);
 
-        return Continuation.of(request);
+        return Continuation.of(context);
     }
 }

@@ -46,9 +46,9 @@ import org.glassfish.jersey.server.ContainerResponse;
 import jersey.repackaged.com.google.common.base.Function;
 
 /**
- * Injectable context that can be used during the data processing for
- * registering response processing functions that will be invoked during the
- * response processing.
+ * Context that can be used during the data processing for registering response
+ * processing stages and/or functions that will be invoked during the response processing
+ * to transform the response before it is written to the client.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */

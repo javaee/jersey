@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,57 +37,63 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.internal.inject;
 
-import java.util.regex.Pattern;
+import javax.inject.Provider;
 
-import javax.inject.Inject;
+import org.glassfish.jersey.internal.util.collection.Ref;
 
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RootRouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteToBuilder;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.api.Factory;
 
 /**
- * {@link RouteBuilder} implementation that builds routes which use {@link Pattern}
- * to perform path matching.
+ * An abstract injection factory that provides injection of an instance of target type {@code T}
+ * by {@link org.glassfish.jersey.internal.inject.ReferenceTransformingFactory.Transformer transforming}
+ * a value of injected source reference {@link org.glassfish.jersey.internal.util.collection.Ref Ref&lt;S&gt;}.
  *
- * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
+ *
+ * @param <S> the type of the injected source type {@link Ref reference}.
+ * @param <T> the type of provided entity.
  */
-class PatternRouteBuilder implements RootRouteBuilder<Pattern> {
+public abstract class ReferenceTransformingFactory<S, T> implements Factory<T> {
+    /**
+     * Transforming function responsible for transforming an instance of source type {@code S} into an instance of
+     * target type {@code T}.
+     *
+     * @param <S> source type.
+     * @param <T> target type.
+     */
+    public static interface Transformer<S, T> {
+        /**
+         * Transform an instance of source type into an instance of target type.
+         *
+         * @param value instance of source type.
+         * @return instance of target type.
+         */
+        T transform(S value);
+    }
 
-    @Inject
-    private ServiceLocator locator;
-    @Inject
-    private PatternRouter.Builder acceptorFactory;
-    @Inject
-    private MatchResultInitializerRouter.Builder initializerFactory;
+    private final Provider<Ref<S>> refProvider;
+    private final Transformer<S, T> transformer;
 
-    @Override
-    public RouteToBuilder<Pattern> route(String pattern) {
-        return route(Pattern.compile(pattern));
+    /**
+     * Initialize reference transforming factory.
+     *
+     * @param refProvider source type reference provider.
+     * @param transformer source to target type transforming function.
+     */
+    protected ReferenceTransformingFactory(final Provider<Ref<S>> refProvider, final Transformer<S, T> transformer) {
+        this.refProvider = refProvider;
+        this.transformer = transformer;
     }
 
     @Override
-    public RouteToBuilder<Pattern> route(Pattern pattern) {
-        return new AbstractRouteToPathBuilder<Pattern>(locator, pattern) {
-
-            @Override
-            public RouteToBuilder<Pattern> route(String pattern) {
-                return super.route(Pattern.compile(pattern));
-            }
-
-            @Override
-            public Router build() {
-                return acceptorFactory.build(acceptedRoutes());
-            }
-        };
+    public T provide() {
+        return transformer.transform(refProvider.get().get());
     }
 
     @Override
-    public Router root(Router routingRoot) {
-        return initializerFactory.build(routingRoot);
+    public void dispose(T instance) {
+        // not used
     }
 }

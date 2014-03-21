@@ -67,6 +67,13 @@
                             shutdown event.
                         </para>
                     </listitem>
+                    <listitem>
+                        <para>
+                            Method <literal>triggerEvent(RequestEvent.Type)</literal> has been removed from the public
+                            &jersey.server.ContainerRequest; API. This method has never been intended for public,
+                            application-level use.
+                        </para>
+                    </listitem>
                 </itemizedlist>
             </para>
         </section>

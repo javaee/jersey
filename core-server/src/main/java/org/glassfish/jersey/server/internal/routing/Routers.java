@@ -45,8 +45,10 @@ import java.util.List;
 
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Inflecting;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
+
+import org.glassfish.hk2.api.Factory;
 
 import jersey.repackaged.com.google.common.base.Function;
 
@@ -55,7 +57,7 @@ import jersey.repackaged.com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class Routers {
+public final class Routers {
 
     private Routers() {
         // prevents instantiation
@@ -65,15 +67,15 @@ class Routers {
      * Creates a leaf-node {@link Router} that implements {@link org.glassfish.jersey.process.internal.Inflecting}
      * interface and returns the provided {@link org.glassfish.jersey.process.Inflector} instance
      * when the {@link org.glassfish.jersey.process.internal.Inflecting#inflector()} method is called.
-     * {@link Router#apply(org.glassfish.jersey.server.ContainerRequest)} method of the created
-     * hierarchical router returns the unchanged request and an empty continuation iterator.
+     * {@link Router#apply} method of the created hierarchical router returns the unchanged request and an empty
+     * continuation iterator.
      *
      * @param inflector a request to response transformation to be wrapped in an
      *                  {@code Router} instance.
      * @return an {@code Router} that wraps the supplied {@code Inflector}.
      */
     @SuppressWarnings("unchecked")
-    public static Router asTreeAcceptor(final Inflector<ContainerRequest, ContainerResponse> inflector) {
+    public static Router asTreeAcceptor(final Inflector<RequestProcessingContext, ContainerResponse> inflector) {
         return new InflectingRouter(inflector);
     }
 
@@ -84,43 +86,69 @@ class Routers {
      * @return hierarchical accepting tree builder.
      */
     public static Router.Builder acceptingTree(
-            Function<ContainerRequest, ContainerRequest> transformation) {
+            Function<RequestProcessingContext, RequestProcessingContext> transformation) {
         return new RouterBuilder(transformation);
     }
 
+    public interface RootRouteBuilder<T> extends RouteBuilder<T> {
+
+        Router root(Router routingRoot);
+    }
+
+    public interface RouteBuilder<T> {
+
+        RouteToBuilder<T> route(String pattern);
+
+        RouteToBuilder<T> route(T pattern);
+    }
+
+    public interface RouteToBuilder<T> {
+
+        RouteToPathBuilder<T> to(Router.Builder ab);
+
+        RouteToPathBuilder<T> to(Router a);
+
+        RouteToPathBuilder<T> to(Class<? extends Router> ca);
+
+        RouteToPathBuilder<T> to(Factory<? extends Router> pa);
+    }
+
+    public interface RouteToPathBuilder<T> extends RouteBuilder<T>, RouteToBuilder<T>, Router.Builder {
+    }
+
     private static class InflectingRouter
-            implements Router, Inflecting<ContainerRequest, ContainerResponse> {
+            implements Router, Inflecting<RequestProcessingContext, ContainerResponse> {
 
-        private final Inflector<ContainerRequest, ContainerResponse> inflector;
+        private final Inflector<RequestProcessingContext, ContainerResponse> inflector;
 
-        public InflectingRouter(final Inflector<ContainerRequest, ContainerResponse> inflector) {
+        public InflectingRouter(final Inflector<RequestProcessingContext, ContainerResponse> inflector) {
             this.inflector = inflector;
         }
 
         @Override
-        public Inflector<ContainerRequest, ContainerResponse> inflector() {
+        public Inflector<RequestProcessingContext, ContainerResponse> inflector() {
             return inflector;
         }
 
         @Override
-        public Continuation apply(ContainerRequest request) {
-            return Continuation.of(request);
+        public Continuation apply(RequestProcessingContext context) {
+            return Continuation.of(context);
         }
     }
 
     private static class RouterBuilder implements Router.Builder {
 
-        private final Function<ContainerRequest, ContainerRequest> transformation;
+        private final Function<RequestProcessingContext, RequestProcessingContext> transformation;
         private List<Router> children;
 
-        public RouterBuilder(Function<ContainerRequest, ContainerRequest> transformation) {
+        public RouterBuilder(Function<RequestProcessingContext, RequestProcessingContext> transformation) {
             this.transformation = transformation;
         }
 
         @Override
         public Router.Builder child(Router child) {
             if (children == null) {
-                children = new LinkedList<Router>();
+                children = new LinkedList<>();
             }
             children.add(child);
 
@@ -136,22 +164,22 @@ class Routers {
 
     private static class LinkedRouter implements Router {
 
-        private final Function<ContainerRequest, ContainerRequest> transformation;
+        private final Function<RequestProcessingContext, RequestProcessingContext> transformation;
         private final List<Router> children;
 
         public LinkedRouter(
-                Function<ContainerRequest, ContainerRequest> transformation, List<Router> children) {
+                Function<RequestProcessingContext, RequestProcessingContext> transformation, List<Router> children) {
             this.transformation = transformation;
             this.children = children;
         }
 
-        public LinkedRouter(Function<ContainerRequest, ContainerRequest> transformation) {
+        public LinkedRouter(Function<RequestProcessingContext, RequestProcessingContext> transformation) {
             this.transformation = transformation;
             this.children = Collections.emptyList();
         }
 
         @Override
-        public Continuation apply(ContainerRequest data) {
+        public Continuation apply(RequestProcessingContext data) {
             return Continuation.of(transformation.apply(data), children);
         }
     }

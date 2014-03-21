@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
 import org.glassfish.jersey.process.internal.Inflecting;
@@ -49,6 +46,7 @@ import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 
 /**
@@ -62,32 +60,17 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @see RoutedInflectorExtractorStage
  */
-public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
-    /**
-     * Injectable {@link RoutingStage resource matching stage} builder.
-     */
-    public static class Builder {
-        @Inject
-        private Provider<RoutingContext> routingContextFactory;
-
-        /**
-         * Build a properly injected resource matching router.
-         *
-         * @param routingRoot root matching router.
-         * @return properly injected resource matching router.
-         */
-        public RoutingStage build(final Router routingRoot) {
-            return new RoutingStage(routingRoot, routingContextFactory);
-        }
-    }
+public class RoutingStage extends AbstractChainableStage<RequestProcessingContext> {
 
     private final Router routingRoot;
-    private final Provider<RoutingContext> routingContextFactory;
 
-    private RoutingStage(final Router routingRoot,
-                         final Provider<RoutingContext> routingContextFactory) {
+    /**
+     * Create a new routing stage instance.
+     *
+     * @param routingRoot root router.
+     */
+    public RoutingStage(final Router routingRoot) {
         this.routingRoot = routingRoot;
-        this.routingContextFactory = routingContextFactory;
     }
 
     /**
@@ -101,17 +84,18 @@ public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
      * to the {@link RoutingContext routing context}.
      */
     @Override
-    public Continuation<ContainerRequest> apply(ContainerRequest request) {
-        request.triggerEvent(RequestEvent.Type.MATCHING_START);
+    public Continuation<RequestProcessingContext> apply(final RequestProcessingContext context) {
+        final ContainerRequest request = context.request();
+        context.triggerEvent(RequestEvent.Type.MATCHING_START);
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(request);
         final long timestamp = tracingLogger.timestamp(ServerTraceEvent.MATCH_SUMMARY);
         try {
-            final TransformableData<ContainerRequest, ContainerResponse> result = _apply(request, routingRoot);
+            final TransformableData<RequestProcessingContext, ContainerResponse> result = _apply(context, routingRoot);
 
-            Stage<ContainerRequest> nextStage = null;
+            Stage<RequestProcessingContext> nextStage = null;
             if (result.hasInflector()) {
-                routingContextFactory.get().setInflector(result.inflector());
+                context.routingContext().setInflector(result.inflector());
                 nextStage = getDefaultNext();
             }
 
@@ -122,13 +106,13 @@ public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
     }
 
     @SuppressWarnings("unchecked")
-    private TransformableData<ContainerRequest, ContainerResponse> _apply(
-            final ContainerRequest request, final Router router) {
+    private TransformableData<RequestProcessingContext, ContainerResponse> _apply(
+            final RequestProcessingContext request, final Router router) {
 
         final Router.Continuation continuation = router.apply(request);
 
         for (Router child : continuation.next()) {
-            TransformableData<ContainerRequest, ContainerResponse> result =
+            TransformableData<RequestProcessingContext, ContainerResponse> result =
                     _apply(continuation.requestContext(), child);
 
             if (result.hasInflector()) {
@@ -137,11 +121,10 @@ public class RoutingStage extends AbstractChainableStage<ContainerRequest> {
             } // else continue
         }
 
-
         if (router instanceof Inflecting) {
             // inflector at terminal stage found
             return TransformableData.of(continuation.requestContext(),
-                    ((Inflecting<ContainerRequest, ContainerResponse>) router).inflector());
+                    ((Inflecting<RequestProcessingContext, ContainerResponse>) router).inflector());
         }
 
         // inflector at terminal stage not found

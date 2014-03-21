@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,12 +43,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.MatchResult;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import org.glassfish.jersey.message.internal.TracingLogger;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.uri.PathPattern;
 
 /**
@@ -60,54 +57,27 @@ import org.glassfish.jersey.uri.PathPattern;
  */
 class PathPatternRouter implements Router {
 
-    /**
-     * "Assisted injection" factory interface for {@link PathPatternRouter}.
-     *
-     * See also <a href="http://code.google.com/p/google-guice/wiki/AssistedInject">
-     * assisted injection in Guice</a>.
-     */
-    public static class Builder {
-
-        @Inject
-        private Provider<RoutingContext> contextProvider;
-
-        /**
-         * Build a path pattern request router.
-         *
-         * @param routes next-level request pre-processing stages to be returned in case the request
-         *               matching in the built router is successful.
-         * @return a path pattern request router.
-         */
-        public PathPatternRouter build(final List<Route<PathPattern>> routes) {
-            return new PathPatternRouter(contextProvider, routes);
-        }
-    }
-
-    private final Provider<RoutingContext> contextProvider;
     private final List<Route<PathPattern>> acceptedRoutes;
 
     /**
      * Constructs route methodAcceptorPair that uses {@link PathPattern} instances for
      * patch matching.
      *
-     * @param provider {@link RoutingContext} injection provider.
      * @param routes   next-level request routers to be returned in case the router matching
      *                 the built router is successful.
      */
-    private PathPatternRouter(final Provider<RoutingContext> provider,
-                              final List<Route<PathPattern>> routes) {
+    PathPatternRouter(final List<Route<PathPattern>> routes) {
 
-        this.contextProvider = provider;
         this.acceptedRoutes = routes;
     }
 
     @Override
-    public Router.Continuation apply(final ContainerRequest request) {
-        final RoutingContext rc = contextProvider.get();
+    public Router.Continuation apply(final RequestProcessingContext context) {
+        final RoutingContext rc = context.routingContext();
         // Peek at matching information to obtain path to match
         String path = rc.getFinalMatchingGroup();
 
-        final TracingLogger tracingLogger = TracingLogger.getInstance(request);
+        final TracingLogger tracingLogger = TracingLogger.getInstance(context.request());
         tracingLogger.log(ServerTraceEvent.MATCH_PATH_FIND, path);
 
         Router.Continuation result = null;
@@ -119,7 +89,7 @@ class PathPatternRouter implements Router {
             if (m != null) {
                 // Push match result information and rest of path to match
                 rc.pushMatchResult(m);
-                result = Router.Continuation.of(request, acceptedRoute.next());
+                result = Router.Continuation.of(context, acceptedRoute.next());
 
                 //tracing
                 tracingLogger.log(ServerTraceEvent.MATCH_PATH_SELECTED, routePattern.getRegex());
@@ -137,7 +107,7 @@ class PathPatternRouter implements Router {
 
         if (result == null) {
             // No match
-            result = Router.Continuation.of(request);
+            result = Router.Continuation.of(context);
         }
 
         return result;

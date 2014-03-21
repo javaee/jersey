@@ -104,6 +104,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.monitoring.ApplicationEventImpl;
 import org.glassfish.jersey.server.internal.monitoring.CompositeApplicationEventListener;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
@@ -136,7 +137,7 @@ import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
  * Jersey server-side application handler.
  * <p>
  * Container implementations use the {@code ApplicationHandler} API to process requests
- * by invoking the {@link #handle(ContainerRequest) handle(requestContext)}
+ * by invoking the {@link #handle(ContainerRequest) handle(request)}
  * method on a configured application  handler instance.
  * </p>
  * <p>
@@ -419,7 +420,7 @@ public final class ApplicationHandler {
             runtimeConfig.lock();
 
             // Registering Injection Bindings
-            componentProviders = new LinkedList<ComponentProvider>();
+            componentProviders = new LinkedList<>();
 
             // Registering Injection Bindings
             for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
@@ -488,26 +489,26 @@ public final class ApplicationHandler {
          */
         final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(resourceModel.getRuntimeResourceModel(), false);
 
-        final ContainerFilteringStage preMatchRequestFilteringStage =
-                locator.createAndInitialize(ContainerFilteringStage.Builder.class).build(processingProviders.getPreMatchFilters(),
+        final ReferencesInitializer referencesInitializer = locator.createAndInitialize(ReferencesInitializer.class);
+        final ContainerFilteringStage preMatchRequestFilteringStage = new ContainerFilteringStage(
+                        processingProviders.getPreMatchFilters(),
                         processingProviders.getGlobalResponseFilters());
-        final RoutingStage routingStage =
-                locator.createAndInitialize(RoutingStage.Builder.class).build(resourceRoutingRoot);
-        final ContainerFilteringStage resourceFilteringStage =
-                locator.createAndInitialize(ContainerFilteringStage.Builder.class)
-                        .build(processingProviders.getGlobalRequestFilters(), null);
-        final RoutedInflectorExtractorStage routedInflectorExtractorStage =
-                locator.createAndInitialize(RoutedInflectorExtractorStage.class);
+        final RoutingStage routingStage = new RoutingStage(resourceRoutingRoot);
+        final ContainerFilteringStage resourceFilteringStage = new ContainerFilteringStage(
+                processingProviders.getGlobalRequestFilters(), null);
+        final RoutedInflectorExtractorStage routedInflectorExtractorStage = new RoutedInflectorExtractorStage();
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
-        final Stage<ContainerRequest> rootStage = Stages
-                .chain(locator.createAndInitialize(ReferencesInitializer.class))
+        final Stage<RequestProcessingContext> rootStage = Stages
+                .chain(referencesInitializer)
                 .to(locator.createAndInitialize(ContainerMessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
                 .to(routingStage)
                 .to(resourceFilteringStage)
                 .build(routedInflectorExtractorStage);
+        this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class)
+                .build(rootStage, compositeListener, processingProviders);
 
         // Inject instances.
         for (final Object instance : componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS)) {
@@ -516,8 +517,6 @@ public final class ApplicationHandler {
         for (final Object instance : resourceBag.instances) {
             locator.inject(instance);
         }
-
-        this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class).build(rootStage, compositeListener);
 
         // inject self
         locator.inject(this);
@@ -1022,10 +1021,10 @@ public final class ApplicationHandler {
      * are initialized in the current request scope.
      * </p>
      *
-     * @param requestContext container request context of the current request.
+     * @param request container request context of the current request.
      */
-    public void handle(final ContainerRequest requestContext) {
-        runtime.process(requestContext);
+    public void handle(final ContainerRequest request) {
+        runtime.process(request);
     }
 
     /**
