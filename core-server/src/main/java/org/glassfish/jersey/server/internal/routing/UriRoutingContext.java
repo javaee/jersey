@@ -104,7 +104,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     // TODO re-type to endpoint?
     private Inflector<RequestProcessingContext, ContainerResponse> inflector;
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
-    volatile private ResourceMethod matchedResourceMethod = null;
+    private volatile ResourceMethod matchedResourceMethod = null;
     private final ProcessingProviders processingProviders;
     private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
     private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
@@ -150,19 +150,21 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     public void pushLeftHandPath() {
         final String rightHandPath = getFinalMatchingGroup();
         final int rhpLength = (rightHandPath != null) ? rightHandPath.length() : 0;
+
         final String encodedRequestPath = getPath(false);
-        // TODO: do we need to cut the starting slash ?
-//        paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
-        if (encodedRequestPath.length() != rhpLength) {
-            final int startIndex = ((encodedRequestPath.length() > 1) && (encodedRequestPath.charAt(0) == '/')) ? 1 : 0;
-            paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
+
+        int length = encodedRequestPath.length() - rhpLength;
+        if (length <= 0) {
+            paths.addFirst("");
+        } else {
+            paths.addFirst(encodedRequestPath.substring(0, length));
         }
     }
 
     @Override
     public void pushTemplates(UriTemplate resourceTemplate, UriTemplate methodTemplate) {
         if (encodedTemplateValues == null) {
-            encodedTemplateValues = new MultivaluedHashMap<String, String>();
+            encodedTemplateValues = new MultivaluedHashMap<>();
         }
 
         final Iterator<MatchResult> matchResultIterator = matchResults.iterator();
@@ -285,7 +287,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public URI getAbsolutePath() {
-        return URI.create(getEncodedPath());
+        return requestContext.getAbsolutePath();
     }
 
     @Override
@@ -355,12 +357,12 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             if (decodedTemplateValuesView != null) {
                 return decodedTemplateValuesView;
             } else if (decodedTemplateValues == null) {
-                decodedTemplateValues = new MultivaluedHashMap<String, String>();
+                decodedTemplateValues = new MultivaluedHashMap<>();
                 for (Map.Entry<String, List<String>> e : encodedTemplateValues.entrySet()) {
                     decodedTemplateValues.put(
                             UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
                             // we need to keep the ability to add new entries
-                            new LinkedList<String>(Lists.transform(e.getValue(), new Function<String, String>() {
+                            new LinkedList<>(Lists.transform(e.getValue(), new Function<String, String>() {
 
                                 @Override
                                 public String apply(String input) {
@@ -369,25 +371,18 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
                             })));
                 }
             }
-            decodedTemplateValuesView = new ImmutableMultivaluedMap<String, String>(decodedTemplateValues);
+            decodedTemplateValuesView = new ImmutableMultivaluedMap<>(decodedTemplateValues);
 
             return decodedTemplateValuesView;
         } else {
             if (encodedTemplateValuesView != null) {
                 return encodedTemplateValuesView;
             } else if (encodedTemplateValues == null) {
-                encodedTemplateValues = new MultivaluedHashMap<String, String>();
+                encodedTemplateValues = new MultivaluedHashMap<>();
             }
-            encodedTemplateValuesView = new ImmutableMultivaluedMap<String, String>(encodedTemplateValues);
+            encodedTemplateValuesView = new ImmutableMultivaluedMap<>(encodedTemplateValues);
             return encodedTemplateValuesView;
         }
-    }
-
-    private String getEncodedPath() {
-        final URI requestUri = getRequestUri();
-        final String rp = requestUri.toString();
-        final String qrp = requestUri.getRawQuery();
-        return qrp == null ? rp : rp.substring(0, rp.length() - qrp.length() - 1);
     }
 
     @Override
@@ -397,9 +392,8 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public List<PathSegment> getPathSegments(boolean decode) {
-        final String ep = getEncodedPath();
-        final String base = getBaseUri().toString();
-        return Collections.unmodifiableList(UriComponent.decodePath(ep.substring(base.length()), decode));
+        final String requestPath = requestContext.getPath(false);
+        return Collections.unmodifiableList(UriComponent.decodePath(requestPath, decode));
     }
 
     @Override
@@ -415,7 +409,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             }
 
             decodedQueryParamsView =
-                    new ImmutableMultivaluedMap<String, String>(UriComponent.decodeQuery(getRequestUri(), true));
+                    new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(getRequestUri(), true));
 
             return decodedQueryParamsView;
         } else {
@@ -424,7 +418,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             }
 
             encodedQueryParamsView =
-                    new ImmutableMultivaluedMap<String, String>(UriComponent.decodeQuery(getRequestUri(), false));
+                    new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(getRequestUri(), false));
 
             return encodedQueryParamsView;
 

@@ -205,8 +205,7 @@ public class PathParamAsPathSegmentTest {
         initiateWebApplication(PathSegs.class);
 
         assertEquals("z-b", app.apply(RequestContextBuilder.from("/x/y/z/edit/b", "GET").build()).get().getEntity());
-        // FIXME: gets x-z instead
-//        assertEquals("z-b", app.apply(Requests.from("///x/y/z/edit/b", "GET").build()).get().getEntity());
+        assertEquals("z-b", app.apply(RequestContextBuilder.from("///x/y/z/edit/b", "GET").build()).get().getEntity());
     }
 
     @Path("/{a: .+}")
@@ -236,7 +235,7 @@ public class PathParamAsPathSegmentTest {
                 @PathParam("b") List<PathSegment> b) {
             StringBuilder s = new StringBuilder();
             for (PathSegment p : a) {
-                if (p.getPath().length() == 0) {
+                if (p.getPath().isEmpty()) {
                     s.append('/');
                 } else {
                     s.append(p.getPath());
@@ -244,7 +243,7 @@ public class PathParamAsPathSegmentTest {
             }
             s.append('-');
             for (PathSegment p : b) {
-                if (p.getPath().length() == 0) {
+                if (p.getPath().isEmpty()) {
                     s.append('/');
                 } else {
                     s.append(p.getPath());
@@ -260,8 +259,8 @@ public class PathParamAsPathSegmentTest {
         initiateWebApplication(PathSegsList.class);
 
         assertEquals("xyz-b", app.apply(RequestContextBuilder.from("/x/y/z/edit/b", "GET").build()).get().getEntity());
-        // FIXME
-//        assertEquals("//xyz-b", app.apply(Requests.from("///x/y/z/edit/b", "GET").build()).get().getEntity());
+        assertEquals("//xyz-b", app.apply(RequestContextBuilder.from(
+                "http://localhost/", "http://localhost///x/y/z/edit/b", "GET").build()).get().getEntity());
     }
 
     @Path("/{a: .+}")

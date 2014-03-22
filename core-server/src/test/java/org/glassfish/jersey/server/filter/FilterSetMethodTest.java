@@ -41,7 +41,6 @@ package org.glassfish.jersey.server.filter;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
@@ -143,12 +142,8 @@ public class FilterSetMethodTest {
     public static class PreMatchChangingUriFilter implements ContainerRequestFilter {
         @Override
         public void filter(ContainerRequestContext requestContext) throws IOException {
-            try {
-                final URI requestUri = new URI(requestContext.getUriInfo().getPath() + "/a");
-                requestContext.setRequestUri(requestUri);
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            }
+            final URI requestUri = requestContext.getUriInfo().getRequestUriBuilder().path("a").build();
+            requestContext.setRequestUri(requestUri);
         }
     }
 

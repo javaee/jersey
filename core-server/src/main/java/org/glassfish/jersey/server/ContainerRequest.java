@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -83,6 +82,7 @@ import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.uri.UriComponent;
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.base.Preconditions;
@@ -101,10 +101,6 @@ public class ContainerRequest extends InboundMessageContext
 
     private static final URI DEFAULT_BASE_URI = URI.create("/");
 
-    private static URI normalizeBaseUri(URI baseUri) {
-        return baseUri.normalize();
-    }
-
     // Request-scoped properties delegate
     private final PropertiesDelegate propertiesDelegate;
     // Absolute application root URI (base URI)
@@ -115,6 +111,8 @@ public class ContainerRequest extends InboundMessageContext
     private String encodedRelativePath = null;
     // Lazily computed decoded request path (relative to application root URI)
     private String decodedRelativePath = null;
+    // Lazily computed "absolute path" URI
+    private URI absolutePathUri = null;
     // Request method
     private String httpMethod;
     // Request security context
@@ -132,14 +130,18 @@ public class ContainerRequest extends InboundMessageContext
     // True if the request is used in the response processing phase (for example in ContainerResponseFilter)
     private boolean inResponseProcessingPhase;
 
-    private static final Pattern UriPartPATTERN = Pattern.compile("[a-zA-Z][a-zA-Z\\+\\-\\.]*(:[^/]*)?://.+");
-
-    private static final String ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE();
-    private static final String ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE();
-    private static final String ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE();
-    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY("variants");
-    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_ETAG = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag");
-    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified");
+    private static final String ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE =
+            LocalizationMessages.ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE();
+    private static final String ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE =
+            LocalizationMessages.ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE();
+    private static final String ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE =
+            LocalizationMessages.ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE();
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY =
+            LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY("variants");
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_ETAG =
+            LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag");
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED =
+            LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified");
 
     /**
      * Create new Jersey container request context.
@@ -162,7 +164,7 @@ public class ContainerRequest extends InboundMessageContext
             PropertiesDelegate propertiesDelegate) {
         super(true);
 
-        this.baseUri = baseUri == null ? DEFAULT_BASE_URI : normalizeBaseUri(baseUri);
+        this.baseUri = baseUri == null ? DEFAULT_BASE_URI : baseUri.normalize();
         this.requestUri = requestUri;
         this.httpMethod = httpMethod;
         this.securityContext = securityContext;
@@ -176,7 +178,7 @@ public class ContainerRequest extends InboundMessageContext
      * the current request.
      *
      * @return custom container extensions initializer or {@code null} if not
-     *         available.
+     * available.
      */
     public RequestScopedInitializer getRequestScopedInitializer() {
         return requestScopedInitializer;
@@ -303,7 +305,6 @@ public class ContainerRequest extends InboundMessageContext
         this.uriRoutingContext = uriRoutingContext;
     }
 
-    // TODO move away from the API?
     UriRoutingContext getUriRoutingContext() {
         return uriRoutingContext;
     }
@@ -312,7 +313,7 @@ public class ContainerRequest extends InboundMessageContext
      * Get all bound request filters applicable to this request.
      *
      * @return All bound (dynamically or by name) request filters applicable to the matched inflector (or an empty
-     *         collection if no inflector matched yet).
+     * collection if no inflector matched yet).
      */
     Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters() {
         return uriRoutingContext.getBoundRequestFilters();
@@ -323,7 +324,7 @@ public class ContainerRequest extends InboundMessageContext
      * This is populated once the right resource method is matched.
      *
      * @return All bound (dynamically or by name) response filters applicable to the matched inflector (or an empty
-     *         collection if no inflector matched yet).
+     * collection if no inflector matched yet).
      */
     Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters() {
         return uriRoutingContext.getBoundResponseFilters();
@@ -334,7 +335,7 @@ public class ContainerRequest extends InboundMessageContext
      * This is populated once the right resource method is matched.
      *
      * @return All reader interceptors applicable to the matched inflector (or an empty
-     *         collection if no inflector matched yet).
+     * collection if no inflector matched yet).
      */
     Iterable<ReaderInterceptor> getBoundReaderInterceptors() {
         return uriRoutingContext.getBoundReaderInterceptors();
@@ -344,7 +345,7 @@ public class ContainerRequest extends InboundMessageContext
      * Get all writer interceptors applicable to this request.
      *
      * @return All writer interceptors applicable to the matched inflector (or an empty
-     *         collection if no inflector matched yet).
+     * collection if no inflector matched yet).
      */
     Iterable<WriterInterceptor> getBoundWriterInterceptors() {
         return uriRoutingContext.getBoundWriterInterceptors();
@@ -368,6 +369,18 @@ public class ContainerRequest extends InboundMessageContext
         return requestUri;
     }
 
+    /**
+     * Get the absolute path of the request. This includes everything preceding the path (host, port etc),
+     * but excludes query parameters or fragment.
+     *
+     * @return the absolute path of the request.
+     */
+    public URI getAbsolutePath() {
+        if (absolutePathUri != null) return absolutePathUri;
+
+        return absolutePathUri = new JerseyUriBuilder().uri(requestUri).replaceQuery("").fragment("").build();
+    }
+
     @Override
     public void setRequestUri(URI requestUri) throws IllegalStateException {
         if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
@@ -376,6 +389,7 @@ public class ContainerRequest extends InboundMessageContext
 
         this.encodedRelativePath = null;
         this.decodedRelativePath = null;
+        this.absolutePathUri = null;
         this.uriRoutingContext.invalidateUriComponentViews();
 
         this.requestUri = requestUri;
@@ -389,6 +403,7 @@ public class ContainerRequest extends InboundMessageContext
 
         this.encodedRelativePath = null;
         this.decodedRelativePath = null;
+        this.absolutePathUri = null;
         this.uriRoutingContext.invalidateUriComponentViews();
 
         this.baseUri = baseUri;
@@ -420,58 +435,15 @@ public class ContainerRequest extends InboundMessageContext
             return encodedRelativePath;
         }
 
-        String result;
-        String requestUriRawPath = getRequestUriRawPath();
+        String requestUriRawPath = requestUri.getRawPath();
 
         if (baseUri == null) {
-            result = requestUriRawPath;
-        } else {
-            final String applicationRootUriRawPath = baseUri.getRawPath();
-            if (applicationRootUriRawPath.length() > requestUriRawPath.length()) {
-                result = "";
-            } else {
-                result = requestUriRawPath.substring(applicationRootUriRawPath.length());
-            }
+            return encodedRelativePath = requestUriRawPath;
         }
 
-        if (result.isEmpty()) {
-            result = "/";
-        }
-
-        return encodedRelativePath = (result.charAt(0) == '/') ? result : '/' + result;
-    }
-
-    /**
-     * Return semi-normalized {@link URI} raw path of the request. If path contains another absolute {@code URI}
-     * (with {@code ://}) then part before this {@code URI} is normalized and the {@code URI} is appended to this path as is.
-     * Otherwise the whole path is normalized.
-     * <p/>
-     * This method make sure that if a {@code URI} is supposed to be a {@link javax.ws.rs.PathParam path parameter} value that
-     * it's not corrupted by normalization.
-     *
-     * @return raw path of the request {@code URI}.
-     */
-    private String getRequestUriRawPath() {
-        final String rawPath = requestUri.getRawPath();
-        final StringBuilder builder = new StringBuilder();
-
-        int lastSlashPos = 0;
-        int slashPos = rawPath.indexOf('/');
-
-        while (slashPos > -1) {
-            builder.append(rawPath.substring(lastSlashPos, slashPos + 1));
-
-            final String uriPart = rawPath.substring(slashPos + 1);
-
-            if (UriPartPATTERN.matcher(uriPart).matches()) {
-                return URI.create(builder.toString()).normalize().toString() + uriPart;
-            }
-
-            lastSlashPos = slashPos;
-            slashPos = rawPath.indexOf('/', slashPos + 1);
-        }
-
-        return requestUri.normalize().getRawPath();
+        final int baseUriRawPathLength = baseUri.getRawPath().length();
+        return encodedRelativePath = baseUriRawPathLength < requestUriRawPath.length() ?
+                requestUriRawPath.substring(baseUriRawPathLength) : "";
     }
 
     @Override
@@ -593,7 +565,7 @@ public class ContainerRequest extends InboundMessageContext
      * or {@code null} if no value is to be set.
      *
      * @return value of HTTP Vary response header to be set in the response if available,
-     *         {@code null} otherwise.
+     * {@code null} otherwise.
      */
     public String getVaryValue() {
         return varyValue;
@@ -809,6 +781,7 @@ public class ContainerRequest extends InboundMessageContext
      *
      * @param name the header name, case insensitive.
      * @return a read-only list of header values.
+     *
      * @throws IllegalStateException if called outside the scope of a request.
      */
     @Override
@@ -821,6 +794,7 @@ public class ContainerRequest extends InboundMessageContext
      * wrt. keys and is read-only. The method never returns {@code null}.
      *
      * @return a read-only map of header names and values.
+     *
      * @throws IllegalStateException if called outside the scope of a request.
      */
     @Override
