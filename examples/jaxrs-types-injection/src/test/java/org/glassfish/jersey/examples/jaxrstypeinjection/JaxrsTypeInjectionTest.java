@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,7 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
             // UriInfo
             "Absolute path : " + this.getBaseUri() + "programmatic/v1/v2",
             "Base URI : " + this.getBaseUri(),
-            "Path : /programmatic/v1/v2",
+            "Path : programmatic/v1/v2",
             "Path segments : [programmatic, v1, v2]",
             "p1 : v1", "p2 : v2", // path params
             "q1 : 1", "q2 : v2, v3", // query params
@@ -76,7 +76,7 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
             // UriInfo
             "Absolute path : " + this.getBaseUri() + "annotated/instance/v1/v2",
             "Base URI : " + this.getBaseUri(),
-            "Path : /annotated/instance/v1/v2",
+            "Path : annotated/instance/v1/v2",
             "Path segments : [annotated, instance, v1, v2]",
             "p1 : v1", "p2 : v2", // path params
             "q1 : 1", "q2 : v2, v3", // query params
@@ -93,7 +93,7 @@ public class JaxrsTypeInjectionTest extends JerseyTest {
             // UriInfo
             "Absolute path : " + this.getBaseUri() + "annotated/method/v1/v2",
             "Base URI : " + this.getBaseUri(),
-            "Path : /annotated/method/v1/v2",
+            "Path : annotated/method/v1/v2",
             "Path segments : [annotated, method, v1, v2]",
             "p1 : v1", "p2 : v2", // path params
             "q1 : 1", "q2 : v2, v3", // query params

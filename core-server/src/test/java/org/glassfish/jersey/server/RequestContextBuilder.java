@@ -150,7 +150,7 @@ public class RequestContextBuilder {
     }
 
     private RequestContextBuilder(String baseUri, String requestUri, String method) {
-        this(baseUri == null ? null : URI.create(baseUri), URI.create(requestUri), method);
+        this(baseUri == null || baseUri.isEmpty() ? null : URI.create(baseUri), URI.create(requestUri), method);
     }
 
     private RequestContextBuilder(URI baseUri, URI requestUri, String method) {

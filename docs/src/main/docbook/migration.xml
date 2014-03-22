@@ -60,6 +60,19 @@
                 <itemizedlist>
                     <listitem>
                         <para>
+                            Because of a bug fix for issue
+                            <link xlink:href='https://java.net/jira/browse/JERSEY-2458'>JERSEY-2458</link>, there has been
+                            a slight change in the behavior of &jaxrs.core.UriInfo; <literal>getPath</literal> and
+                            <literal>getPathSegments</literal> methods. The <literal>getPath</literal> methods no longer return
+                            a path prefixed with a slash (<literal>'/'</literal>), instead they now correctly return a request
+                            path <emphasis>relative</emphasis> to the base request URI. Also, the &lit.jaxrs.core.UriInfo;
+                            now correctly handles requests which URI contains empty path segments
+                            (e.g. <literal>http://localhost///a/b//c</literal>). These empty path segments are now correctly
+                            included in the lists returned by the <literal>UriInfo.getPathSegments</literal> methods.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
                             Deprecated <literal>getDestroyTime</literal> method has been removed from
                             &jersey.server.monitoring.ApplicationStatistics;. To get the application shutdown information,
                             a &jersey.server.ContainerLifecycleListener; should be registered and its

@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model;
 
 import java.util.List;
@@ -59,7 +58,6 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * {@link ResourceMethod resource methods} ...).
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- *
  */
 public class ResourceModel implements ResourceModelComponent {
 
@@ -74,9 +72,9 @@ public class ResourceModel implements ResourceModelComponent {
         /**
          * Create new builder pre initialized with {@code resourceModel}.
          *
-         * @param resourceModel Resource model.
+         * @param resourceModel    Resource model.
          * @param subResourceModel {@code true} if resource model created by this builder will be sub resource model,
-         *                  {@code false} if it is a application root resource model.
+         *                         {@code false} if it is a application root resource model.
          */
         public Builder(ResourceModel resourceModel, boolean subResourceModel) {
             this.resources = resourceModel.getResources();
@@ -86,9 +84,9 @@ public class ResourceModel implements ResourceModelComponent {
         /**
          * Create new builder pre initialized with {@code resource}.
          *
-         * @param resources Resources (root and non root).
+         * @param resources        Resources (root and non root).
          * @param subResourceModel {@code true} if resource model created by this builder will be sub resource model,
-         *                  {@code false} if it is a application root resource model.
+         *                         {@code false} if it is a application root resource model.
          */
         public Builder(List<Resource> resources, boolean subResourceModel) {
             this.resources = resources;
@@ -99,7 +97,7 @@ public class ResourceModel implements ResourceModelComponent {
          * Create new builder with empty resources.
          *
          * @param subResourceModel {@code true} if resource model created by this builder will be sub resource model,
-         *                  {@code false} if it is a application root resource model.
+         *                         {@code false} if it is a application root resource model.
          */
         public Builder(boolean subResourceModel) {
             this.resources = Lists.newArrayList();
@@ -164,6 +162,7 @@ public class ResourceModel implements ResourceModelComponent {
 
     /**
      * Creates new instance from root allResources.
+     *
      * @param allResources Root resource of the resource model.
      */
     private ResourceModel(List<Resource> rootResources, List<Resource> allResources) {
@@ -179,7 +178,8 @@ public class ResourceModel implements ResourceModelComponent {
 
 
     /**
-     * Return root resources from this {@link ResourceModel resource model}.
+     * Return root resources from this resource model.
+     *
      * @return List of root resources.
      */
     public List<Resource> getRootResources() {
@@ -187,7 +187,8 @@ public class ResourceModel implements ResourceModelComponent {
     }
 
     /**
-     * Return all resources from this {@link ResourceModel resource model}.
+     * Return all resources from this resource model.
+     *
      * @return List of all resources (root and non root resources).
      */
     public List<Resource> getResources() {

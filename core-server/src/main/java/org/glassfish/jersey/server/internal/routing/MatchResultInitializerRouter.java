@@ -63,7 +63,7 @@ final class MatchResultInitializerRouter implements Router {
     @Override
     public Continuation apply(final RequestProcessingContext processingContext) {
         final RoutingContext rc = processingContext.routingContext();
-        rc.pushMatchResult(new SingleMatchResult(processingContext.request().getPath(false)));
+        rc.pushMatchResult(new SingleMatchResult("/" + processingContext.request().getPath(false)));
 
         return Continuation.of(processingContext, rootRouter);
     }
