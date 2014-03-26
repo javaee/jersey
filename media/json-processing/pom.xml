@@ -97,12 +97,7 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- JSON-P API -->
-        <dependency>
-            <groupId>javax.json</groupId>
-            <artifactId>javax.json-api</artifactId>
-        </dependency>
-        <!-- JSON-P RI + JAX-RS Providers -->
+        <!-- JSON-P API + RI + JAX-RS Providers -->
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.json</artifactId>
