@@ -40,36 +40,39 @@
 package org.glassfish.jersey.server.spring;
 
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
-
 import javax.inject.Singleton;
 
 import org.glassfish.hk2.api.Injectee;
 import org.glassfish.hk2.api.InjectionResolver;
 import org.glassfish.hk2.api.ServiceHandle;
-
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.MethodParameter;
 
 /**
  * HK2 injection resolver for Spring framework {@link Autowired} annotation injection.
  *
  * @author Marko Asplund (marko.asplund at yahoo.com)
+ * @author Vetle Leinonen-Roeim (vetle at roeim.net)
  */
 @Singleton
 public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
+
     private static final Logger LOGGER = Logger.getLogger(AutowiredInjectResolver.class.getName());
+
     private volatile ApplicationContext ctx;
 
     /**
      * Create a new instance.
+     *
      * @param ctx Spring application context.
      */
     public AutowiredInjectResolver(ApplicationContext ctx) {
@@ -86,42 +89,31 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
                 beanName = an.value();
             }
         }
-        return getBeanFromSpringContext(beanName, injectee.getRequiredType());
+        return getBeanFromSpringContext(beanName, injectee);
     }
 
-    private Object getBeanFromSpringContext(String beanName, Type beanType) {
-        Class<?> bt = getClassFromType(beanType);
-        if (beanName != null) {
-            return ctx.getBean(beanName, bt);
+    private Object getBeanFromSpringContext(String beanName, Injectee injectee) {
+        try {
+            DependencyDescriptor dependencyDescriptor = createSpringDependencyDescriptor(injectee);
+            Set<String> autowiredBeanNames = new HashSet<>(1);
+            autowiredBeanNames.add(beanName);
+            return ctx.getAutowireCapableBeanFactory().resolveDependency(dependencyDescriptor, null,
+                    autowiredBeanNames, null);
+        } catch (NoSuchBeanDefinitionException e) {
+            LOGGER.warning(e.getMessage());
+            throw e;
         }
-        Map<String, ?> beans = ctx.getBeansOfType(bt);
-        if (beans == null || beans.size() < 1) {
-            LOGGER.warning(LocalizationMessages.NO_BEANS_FOUND_FOR_TYPE(beanType));
-            return null;
-        }
-
-        if (beanType instanceof ParameterizedType) {
-            final Class<?> rawType = (Class<?>) ((ParameterizedType) beanType).getRawType();
-            if (rawType.isAssignableFrom(ArrayList.class)) {
-                return Collections.unmodifiableList(new ArrayList(beans.values()));
-            } else if (rawType.isAssignableFrom(HashSet.class)) {
-                return new HashSet<>(beans.values());
-            }
-        }
-
-        return beans.values().iterator().next();
     }
 
-    private Class<?> getClassFromType(Type type) {
-        if (type instanceof Class) {
-            return (Class<?>) type;
+    private DependencyDescriptor createSpringDependencyDescriptor(final Injectee injectee) {
+        AnnotatedElement annotatedElement = injectee.getParent();
+        if (annotatedElement.getClass().isAssignableFrom(Field.class)) {
+            return new DependencyDescriptor((Field) annotatedElement,
+                    !injectee.isOptional());
+        } else {
+            return new DependencyDescriptor(
+                    new MethodParameter((Constructor) annotatedElement, injectee.getPosition()), !injectee.isOptional());
         }
-        if (type instanceof ParameterizedType) {
-            ParameterizedType pt = (ParameterizedType) type;
-
-            return (Class<?>) pt.getActualTypeArguments()[0];
-        }
-        return null;
     }
 
     @Override
