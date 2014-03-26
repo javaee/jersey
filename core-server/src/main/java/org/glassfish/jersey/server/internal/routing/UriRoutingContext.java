@@ -91,8 +91,9 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private final LinkedList<Object> matchedResources = Lists.newLinkedList();
     private final LinkedList<UriTemplate> templates = Lists.newLinkedList();
 
-    private MultivaluedHashMap<String, String> encodedTemplateValues;
-    private ImmutableMultivaluedMap<String, String> encodedTemplateValuesView;
+    private final MultivaluedHashMap<String, String> encodedTemplateValues = new MultivaluedHashMap<>();
+    private final ImmutableMultivaluedMap<String, String> encodedTemplateValuesView =
+            new ImmutableMultivaluedMap<>(encodedTemplateValues);
 
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private ImmutableMultivaluedMap<String, String> decodedTemplateValuesView;
@@ -163,10 +164,6 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public void pushTemplates(UriTemplate resourceTemplate, UriTemplate methodTemplate) {
-        if (encodedTemplateValues == null) {
-            encodedTemplateValues = new MultivaluedHashMap<>();
-        }
-
         final Iterator<MatchResult> matchResultIterator = matchResults.iterator();
         templates.push(resourceTemplate);
         if (methodTemplate != null) {
@@ -375,12 +372,6 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
             return decodedTemplateValuesView;
         } else {
-            if (encodedTemplateValuesView != null) {
-                return encodedTemplateValuesView;
-            } else if (encodedTemplateValues == null) {
-                encodedTemplateValues = new MultivaluedHashMap<>();
-            }
-            encodedTemplateValuesView = new ImmutableMultivaluedMap<>(encodedTemplateValues);
             return encodedTemplateValuesView;
         }
     }
