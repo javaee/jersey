@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,13 +37,18 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.apache.connector;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.client.Initializable;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
+
+import org.apache.http.client.HttpClient;
 
 /**
  * Connector provider for Jersey {@link Connector connectors} that utilize
@@ -108,5 +113,39 @@ public class ApacheConnectorProvider implements ConnectorProvider {
     @Override
     public Connector getConnector(Client client, Configuration runtimeConfig) {
         return new ApacheConnector(runtimeConfig);
+    }
+
+    /**
+     * Retrieve the underlying Apache {@link HttpClient} instance from
+     * {@link org.glassfish.jersey.client.JerseyClient} or {@link org.glassfish.jersey.client.JerseyWebTarget}
+     * configured to use {@code ApacheConnectorProvider}.
+     *
+     * @param component {@code JerseyClient} or {@code JerseyWebTarget} instance that is configured to use
+     *                  {@code ApacheConnectorProvider}.
+     * @return underlying Apache {@code HttpClient} instance.
+     *
+     * @throws java.lang.IllegalArgumentException in case the {@code component} is neither {@code JerseyClient}
+     *                                            nor {@code JerseyWebTarget} instance or in case the component
+     *                                            is not configured to use a {@code ApacheConnectorProvider}.
+     * @since 2.8
+     */
+    public static HttpClient getHttpClient(Configurable<?> component) {
+        if (!(component instanceof Initializable)) {
+            throw new IllegalArgumentException(
+                    LocalizationMessages.INVALID_CONFIGURABLE_COMPONENT_TYPE(component.getClass().getName()));
+        }
+
+        final Initializable<?> initializable = (Initializable<?>) component;
+        Connector connector = initializable.getConfiguration().getConnector();
+        if (connector == null) {
+            initializable.preInitialize();
+            connector = initializable.getConfiguration().getConnector();
+        }
+
+        if (connector instanceof ApacheConnector) {
+            return ((ApacheConnector) connector).getHttpClient();
+        }
+
+        throw new IllegalArgumentException(LocalizationMessages.EXPECTED_CONNECTOR_PROVIDER_NOT_USED());
     }
 }

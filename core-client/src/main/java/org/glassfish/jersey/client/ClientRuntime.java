@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,9 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.HttpHeaders;
@@ -54,6 +57,9 @@ import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -69,7 +75,10 @@ import com.google.common.util.concurrent.SettableFuture;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientRuntime {
+class ClientRuntime implements JerseyClient.ShutdownHook {
+
+    private static final Logger LOG = Logger.getLogger(ClientRuntime.class.getName());
+
     private final Stage<ClientRequest> requestProcessingRoot;
     private final Stage<ClientResponse> responseProcessingRoot;
 
@@ -80,6 +89,9 @@ class ClientRuntime {
     private final ClientAsyncExecutorFactory asyncExecutorsFactory;
 
     private final ServiceLocator locator;
+    private final Iterable<ClientLifecycleListener> lifecycleListeners;
+
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     /**
      * Create new client request processing runtime.
@@ -109,6 +121,16 @@ class ClientRuntime {
         this.asyncExecutorsFactory = new ClientAsyncExecutorFactory(locator, asyncThreadPoolSize);
 
         this.locator = locator;
+
+        this.lifecycleListeners = Providers.getAllProviders(locator, ClientLifecycleListener.class);
+
+        for (final ClientLifecycleListener listener : lifecycleListeners) {
+            try {
+                listener.onInit();
+            } catch (final Throwable t) {
+                LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_INIT(listener.getClass().getName()), t);
+            }
+        }
     }
 
     /**
@@ -218,6 +240,7 @@ class ClientRuntime {
      *
      * @param request client request to be invoked.
      * @return client response.
+     *
      * @throws javax.ws.rs.ProcessingException in case of an invocation failure.
      */
     public ClientResponse invoke(final ClientRequest request) {
@@ -256,13 +279,45 @@ class ClientRuntime {
     }
 
     /**
-     * Close the client runtime and release the underlying transport connector.
+     * This will be used as the last resort to clean things up
+     * in the case that this instance gets garbage collected
+     * before the client itself gets released.
+     *
+     * Close will be invoked either via finalizer
+     * or via JerseyClient onShutdown hook, whatever comes first.
      */
-    public void close() {
-        try {
-            connector.close();
-        } finally {
-            asyncExecutorsFactory.close();
+    @Override
+    protected void finalize() {
+        close();
+    }
+
+    @Override
+    public void onShutdown() {
+        close();
+    }
+
+    private void close() {
+        if (closed.compareAndSet(false, true)) {
+            try {
+                for (final ClientLifecycleListener listener : lifecycleListeners) {
+                    try {
+                        listener.onClose();
+                    } catch (final Throwable t) {
+                        LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_CLOSE(listener.getClass().getName()), t);
+                    }
+                }
+            } finally {
+                try {
+                    connector.close();
+                } finally {
+                    try {
+                        asyncExecutorsFactory.close();
+                    } finally {
+                        locator.shutdown();
+//                        Injections.shutdownLocator(locator);
+                    }
+                }
+            }
         }
     }
 

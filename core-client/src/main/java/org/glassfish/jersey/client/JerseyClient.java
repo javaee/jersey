@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,19 +37,24 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.UriBuilder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
@@ -65,22 +70,25 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyClient implements javax.ws.rs.client.Client {
+public class JerseyClient implements javax.ws.rs.client.Client, Initializable<JerseyClient> {
+    private static final Logger LOG = Logger.getLogger(JerseyClient.class.getName());
 
     private final AtomicBoolean closedFlag = new AtomicBoolean(false);
     private final ClientConfig config;
     private final HostnameVerifier hostnameVerifier;
     private final UnsafeValue<SSLContext, IllegalStateException> sslContext;
-    private final LinkedBlockingDeque<LifecycleListener> listeners = new LinkedBlockingDeque<LifecycleListener>();
+    private final LinkedBlockingDeque<WeakReference<JerseyClient.ShutdownHook>> shutdownHooks =
+                                        new LinkedBlockingDeque<WeakReference<JerseyClient.ShutdownHook>>();
+    private final ReferenceQueue<JerseyClient.ShutdownHook> shReferenceQueue = new ReferenceQueue<JerseyClient.ShutdownHook>();
 
     /**
-     * Client life-cycle event listener contract.
+     * Client instance shutdown hook.
      */
-    static interface LifecycleListener {
+    static interface ShutdownHook {
         /**
-         * Invoked when the client is closed.
+         * Invoked when the client instance is closed.
          */
-        public void onClose();
+        public void onShutdown();
     }
 
     /**
@@ -135,26 +143,53 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     private void release() {
-        LifecycleListener listener;
-        while ((listener = listeners.pollFirst()) != null) {
-            listener.onClose();
+        Reference<ShutdownHook> listenerRef;
+        while ((listenerRef = shutdownHooks.pollFirst()) != null) {
+            JerseyClient.ShutdownHook listener = listenerRef.get();
+            if (listener != null){
+                try {
+                    listener.onShutdown();
+                } catch (Throwable t) {
+                    LOG.log(Level.WARNING, LocalizationMessages.ERROR_SHUTDOWNHOOK_CLOSE(listenerRef.getClass().getName()), t);
+                }
+            }
         }
     }
 
     /**
-     * Add a new client lifecycle listener.
+     * Register a new client shutdown hook.
      *
-     * @param listener client lifecycle listener.
+     * @param shutdownHook client shutdown hook.
      */
-    public void addListener(LifecycleListener listener) {
+    /* package */ void registerShutdownHook(final ShutdownHook shutdownHook) {
         checkNotClosed();
-        listeners.push(listener);
+        shutdownHooks.push(new WeakReference<JerseyClient.ShutdownHook>(shutdownHook, shReferenceQueue));
+        cleanUpShutdownHooks();
+    }
+
+    /**
+     * Clean up shutdown hooks that have been garbage collected.
+     */
+    private void cleanUpShutdownHooks() {
+
+        Reference<? extends ShutdownHook> reference;
+
+        while ((reference = shReferenceQueue.poll()) != null) {
+
+            shutdownHooks.remove(reference);
+
+            final ShutdownHook shutdownHook = reference.get();
+            if (shutdownHook != null) { // close this one off if still accessible
+                shutdownHook.onShutdown();
+            }
+        }
     }
 
     /**
      * Check client state.
      *
      * @return {@code true} if current {@code JerseyClient} instance is closed, otherwise {@code false}.
+     *
      * @see #close()
      */
     public boolean isClosed() {
@@ -171,100 +206,100 @@ public class JerseyClient implements javax.ws.rs.client.Client {
     }
 
     @Override
-    public JerseyWebTarget target(String uri) {
+    public JerseyWebTarget target(final String uri) {
         checkNotClosed();
         checkNotNull(uri, LocalizationMessages.CLIENT_URI_TEMPLATE_NULL());
         return new JerseyWebTarget(uri, this);
     }
 
     @Override
-    public JerseyWebTarget target(URI uri) {
+    public JerseyWebTarget target(final URI uri) {
         checkNotClosed();
         checkNotNull(uri, LocalizationMessages.CLIENT_URI_NULL());
         return new JerseyWebTarget(uri, this);
     }
 
     @Override
-    public JerseyWebTarget target(UriBuilder uriBuilder) {
+    public JerseyWebTarget target(final UriBuilder uriBuilder) {
         checkNotClosed();
         checkNotNull(uriBuilder, LocalizationMessages.CLIENT_URI_BUILDER_NULL());
         return new JerseyWebTarget(uriBuilder, this);
     }
 
     @Override
-    public JerseyWebTarget target(Link link) {
+    public JerseyWebTarget target(final Link link) {
         checkNotClosed();
         checkNotNull(link, LocalizationMessages.CLIENT_TARGET_LINK_NULL());
         return new JerseyWebTarget(link, this);
     }
 
     @Override
-    public JerseyInvocation.Builder invocation(Link link) {
+    public JerseyInvocation.Builder invocation(final Link link) {
         checkNotClosed();
         checkNotNull(link, LocalizationMessages.CLIENT_INVOCATION_LINK_NULL());
-        JerseyWebTarget t = new JerseyWebTarget(link, this);
+        final JerseyWebTarget t = new JerseyWebTarget(link, this);
         final String acceptType = link.getType();
         return (acceptType != null) ? t.request(acceptType) : t.request();
     }
 
     @Override
-    public JerseyClient register(Class<?> providerClass) {
+    public JerseyClient register(final Class<?> providerClass) {
         checkNotClosed();
         config.register(providerClass);
         return this;
     }
 
     @Override
-    public JerseyClient register(Object provider) {
+    public JerseyClient register(final Object provider) {
         checkNotClosed();
         config.register(provider);
         return this;
     }
 
     @Override
-    public JerseyClient register(Class<?> providerClass, int bindingPriority) {
+    public JerseyClient register(final Class<?> providerClass, final int bindingPriority) {
         checkNotClosed();
         config.register(providerClass, bindingPriority);
         return this;
     }
 
     @Override
-    public JerseyClient register(Class<?> providerClass, Class<?>... contracts) {
+    public JerseyClient register(final Class<?> providerClass, final Class<?>... contracts) {
         checkNotClosed();
         config.register(providerClass, contracts);
         return this;
     }
 
     @Override
-    public JerseyClient register(Class<?> providerClass, Map<Class<?>, Integer> contracts) {
+    public JerseyClient register(final Class<?> providerClass, final Map<Class<?>, Integer> contracts) {
         checkNotClosed();
         config.register(providerClass, contracts);
         return this;
     }
 
     @Override
-    public JerseyClient register(Object provider, int bindingPriority) {
+    public JerseyClient register(final Object provider, final int bindingPriority) {
         checkNotClosed();
         config.register(provider, bindingPriority);
         return this;
     }
 
     @Override
-    public JerseyClient register(Object provider, Class<?>... contracts) {
+    public JerseyClient register(final Object provider, final Class<?>... contracts) {
         checkNotClosed();
         config.register(provider, contracts);
         return this;
     }
 
     @Override
-    public JerseyClient register(Object provider, Map<Class<?>, Integer> contracts) {
+    public JerseyClient register(final Object provider, final Map<Class<?>, Integer> contracts) {
         checkNotClosed();
         config.register(provider, contracts);
         return this;
     }
 
     @Override
-    public JerseyClient property(String name, Object value) {
+    public JerseyClient property(final String name, final Object value) {
         checkNotClosed();
         config.property(name, value);
         return this;
@@ -281,25 +316,12 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         return sslContext.get();
     }
 
-    /**
-     * Get the {@link javax.net.ssl.HostnameVerifier hostname verifier}.
-     *
-     * @return the configured hostname verifier, or {@code null} if not set.
-     */
     @Override
     public HostnameVerifier getHostnameVerifier() {
         return hostnameVerifier;
     }
 
-    /**
-     * Pre initializes the {@link Configuration configuration} of this client in order to improve
-     * performance during the first request.
-     * <p/>
-     * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
-     * on this pre initialized {@code JerseyClient} instance, otherwise configuration will change back to uninitialized.
-     *
-     * @return Jersey client.
-     */
+    @Override
     public JerseyClient preInitialize() {
         config.preInitialize();
         return this;

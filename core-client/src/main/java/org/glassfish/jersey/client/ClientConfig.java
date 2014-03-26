@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.util.Collection;
@@ -391,29 +392,29 @@ public class ClientConfig implements Configurable<ClientConfig>, Configuration {
 
             final Connector connector = connectorProvider.getConnector(client, configuration);
             final ClientRuntime crt = new ClientRuntime(configuration, connector, locator);
-            client.addListener(new JerseyClient.LifecycleListener() {
-                @Override
-                public void onClose() {
-                    try {
-                        crt.close();
-                    } finally {
-                        ServiceLocatorFactory.getInstance().destroy(locator.getName());
-                    }
-                }
-            });
+
+            client.registerShutdownHook(crt);
 
             return crt;
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             State state = (State) o;
 
-            if (client != null ? !client.equals(state.client) : state.client != null) return false;
-            if (!commonConfig.equals(state.commonConfig)) return false;
+            if (client != null ? !client.equals(state.client) : state.client != null) {
+                return false;
+            }
+            if (!commonConfig.equals(state.commonConfig)) {
+                return false;
+            }
             return connectorProvider == null ? state.connectorProvider == null
                     : connectorProvider.equals(state.connectorProvider);
         }

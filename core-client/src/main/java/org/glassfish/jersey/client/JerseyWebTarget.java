@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client;
 
 import java.net.URI;
@@ -44,7 +45,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
@@ -57,7 +57,7 @@ import com.google.common.base.Preconditions;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
+public class JerseyWebTarget implements javax.ws.rs.client.WebTarget, Initializable<JerseyWebTarget> {
 
     private final ClientConfig config;
     private final UriBuilder targetUri;
@@ -374,15 +374,7 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         return config.getConfiguration();
     }
 
-    /**
-     * Pre initializes the {@link Configuration configuration} of this web target in order to improve
-     * performance during the first request.
-     * <p/>
-     * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
-     * on this pre initialized web target otherwise configuration will change back to uninitialized.
-     *
-     * @return Jersey web target.
-     */
+    @Override
     public JerseyWebTarget preInitialize() {
         config.preInitialize();
         return this;

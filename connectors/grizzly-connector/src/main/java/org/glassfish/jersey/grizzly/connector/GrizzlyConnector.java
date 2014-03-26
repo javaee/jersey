@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.grizzly.connector;
 
 import java.io.ByteArrayOutputStream;
@@ -69,6 +70,9 @@ import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 
+import org.glassfish.grizzly.memory.Buffers;
+import org.glassfish.grizzly.memory.MemoryManager;
+
 import com.google.common.util.concurrent.SettableFuture;
 
 import com.ning.http.client.AsyncHandler;
@@ -80,6 +84,8 @@ import com.ning.http.client.HttpResponseStatus;
 import com.ning.http.client.Request;
 import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
+import com.ning.http.client.providers.grizzly.FeedableBodyGenerator;
+
 
 /**
  * The transport using the AsyncHttpClient.
@@ -88,6 +94,7 @@ import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class GrizzlyConnector implements Connector {
+
     private final AsyncHttpClient grizzlyClient;
 
     /**
@@ -97,6 +104,7 @@ class GrizzlyConnector implements Connector {
      * @param config Jersey client runtime configuration to be used to configure the connector parameters.
      */
     GrizzlyConnector(Client client, Configuration config) {
+
         AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
 
         ExecutorService executorService;
@@ -133,9 +141,18 @@ class GrizzlyConnector implements Connector {
         this.grizzlyClient = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(asyncClientConfig), asyncClientConfig);
     }
 
-    /*
-     * Sends the {@link javax.ws.rs.core.Request} via Grizzly transport and returns the {@link javax.ws.rs.core.Response}.
+    /**
+     * Get the underlying Grizzly {@link com.ning.http.client.AsyncHttpClient} instance.
+     *
+     * @return underlying Grizzly {@link com.ning.http.client.AsyncHttpClient} instance.
      */
+    public AsyncHttpClient getGrizzlyClient() {
+        return grizzlyClient;
+    }
+
+    /*
+         * Sends the {@link javax.ws.rs.core.Request} via Grizzly transport and returns the {@link javax.ws.rs.core.Response}.
+         */
     @Override
     public ClientResponse apply(final ClientRequest request) {
         final Request connectorRequest = translate(request);
@@ -323,6 +340,35 @@ class GrizzlyConnector implements Connector {
         writeOutBoundHeaders(requestContext.getHeaders(), result);
 
         return result;
+    }
+
+    /**
+     * Utility OutputStream implementation that can feed Grizzly chunk-encoded body generator.
+     */
+    private class FeederAdapter extends OutputStream {
+
+        final FeedableBodyGenerator.Feeder delegate;
+
+        /**
+         * Get me a new adapter for given feeder.
+         *
+         * @param bodyFeeder adaptee to get fed as an output stream.
+         */
+        FeederAdapter(FeedableBodyGenerator.Feeder bodyFeeder) {
+            this.delegate = bodyFeeder;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            final byte[] buffer = new byte[1];
+            buffer[0] = (byte) b;
+            delegate.feed(Buffers.wrap(MemoryManager.DEFAULT_MEMORY_MANAGER, buffer), false);
+        }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            delegate.feed(Buffers.wrap(MemoryManager.DEFAULT_MEMORY_MANAGER, b), false);
+        }
     }
 
     @SuppressWarnings("MagicNumber")

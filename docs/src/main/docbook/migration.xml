@@ -52,6 +52,22 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+
+    <section xml:id="mig-2.5.1">
+        <title>Migrating from Jersey 2.5 to 2.5.1</title>
+
+        <para>
+            <itemizedlist>
+                <listitem><para>
+                    WADL is by default displayed in the simplified form. It does not contain supporting resources
+                    like OPTIONS methods or <literal>/application.wadl</literal> itself. In order to get the
+                    full WADL use query param <literal>detail=true</literal>. For example make a GET request
+                    to <literal>http://localhost:8080/application.wadl?detail=true</literal>.
+                </para></listitem>
+            </itemizedlist>
+        </para>
+    </section>
+
     <section xml:id="mig-2.5">
         <title>Migrating from Jersey 2.4.1 to 2.5</title>
 
