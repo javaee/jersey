@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,10 +40,14 @@
 package org.glassfish.jersey.grizzly.connector;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configurable;
 import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.client.Initializable;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
+
+import com.ning.http.client.AsyncHttpClient;
 
 /**
  * Connector provider for Grizzly asynchronous HTTP client-based connectors.
@@ -54,7 +58,6 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- *
  * @since 2.5
  */
 public class GrizzlyConnectorProvider implements ConnectorProvider {
@@ -63,5 +66,37 @@ public class GrizzlyConnectorProvider implements ConnectorProvider {
         return new GrizzlyConnector(client, config);
     }
 
+    /**
+     * Retrieve the underlying Grizzly {@link AsyncHttpClient} instance from
+     * {@link org.glassfish.jersey.client.JerseyClient} or {@link org.glassfish.jersey.client.JerseyWebTarget}
+     * configured to use {@code GrizzlyConnectorProvider}.
+     *
+     * @param component {@code JerseyClient} or {@code JerseyWebTarget} instance that is configured to use
+     *                  {@code GrizzlyConnectorProvider}.
+     * @return underlying Grizzly {@code AsyncHttpClient} instance.
+     *
+     * @throws java.lang.IllegalArgumentException in case the {@code component} is neither {@code JerseyClient}
+     *                                            nor {@code JerseyWebTarget} instance or in case the component
+     *                                            is not configured to use a {@code GrizzlyConnectorProvider}.
+     * @since 2.8
+     */
+    public static AsyncHttpClient getHttpClient(Configurable<?> component) {
+        if (!(component instanceof Initializable)) {
+            throw new IllegalArgumentException(
+                    LocalizationMessages.INVALID_CONFIGURABLE_COMPONENT_TYPE(component.getClass().getName()));
+        }
 
+        final Initializable<?> initializable = (Initializable<?>) component;
+        Connector connector = initializable.getConfiguration().getConnector();
+        if (connector == null) {
+            initializable.preInitialize();
+            connector = initializable.getConfiguration().getConnector();
+        }
+
+        if (connector instanceof GrizzlyConnector) {
+            return ((GrizzlyConnector) connector).getGrizzlyClient();
+        }
+
+        throw new IllegalArgumentException(LocalizationMessages.EXPECTED_CONNECTOR_PROVIDER_NOT_USED());
+    }
 }
