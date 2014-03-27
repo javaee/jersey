@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,55 +39,37 @@
  */
 package org.glassfish.jersey.server.oauth1;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
+
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
- * {@link WebApplicationException Web application exception} that is mapped either
- * to {@link javax.ws.rs.core.Response.Status#BAD_REQUEST} (e.g. if problem with OAuth
- * parameters occurs) or
- * {@link javax.ws.rs.core.Response.Status#UNAUTHORIZED} (e.g. if signature is incorrect).
+ * {@link OAuth1Exception} unit tests.
  *
- * @author Martin Matula
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class OAuth1Exception extends WebApplicationException {
-
+public class OAuth1ExceptionTest {
     /**
-     * Create a new exception.
-     * @param status Response status.
-     * @param wwwAuthHeader {@code Authorization} header value of the request that cause the exception.
+     * Reproducer for JERSEY-2457.
      */
-    public OAuth1Exception(final Response.Status status, final String wwwAuthHeader) {
-        super(createResponse(status, wwwAuthHeader));
-    }
+    @Test
+    public void testExceptionGetters() {
+        OAuth1Exception exception;
 
-    /**
-     * Get the status of the error response.
-     *
-     * @return Response status code.
-     */
-    public Response.Status getStatus() {
-        return Response.Status.fromStatusCode(super.getResponse().getStatus());
-    }
+        exception = new OAuth1Exception(Response.Status.BAD_REQUEST, null);
+        assertEquals(Response.Status.BAD_REQUEST, exception.getStatus());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), exception.getResponse().getStatus());
+        assertNull(exception.getWwwAuthHeader());
+        assertNull(exception.getResponse().getHeaderString(HttpHeaders.WWW_AUTHENTICATE));
 
-    /**
-     * Get the {@code WWW-Authenticate} header of the request that cause the exception.
-     *
-     * @return {@code WWW-Authenticate} header value.
-     */
-    public String getWwwAuthHeader() {
-        return super.getResponse().getHeaderString(HttpHeaders.WWW_AUTHENTICATE);
-    }
 
-    private static Response createResponse(Response.Status status, String wwwAuthHeader) {
-        ResponseBuilder rb = Response.status(status);
-        if (wwwAuthHeader != null) {
-            rb.header(HttpHeaders.WWW_AUTHENTICATE, wwwAuthHeader);
-        }
-        return rb.build();
+        exception = new OAuth1Exception(Response.Status.INTERNAL_SERVER_ERROR, "testAuth");
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR, exception.getStatus());
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), exception.getResponse().getStatus());
+        assertEquals("testAuth", exception.getWwwAuthHeader());
+        assertEquals("testAuth", exception.getResponse().getHeaderString(HttpHeaders.WWW_AUTHENTICATE));
     }
 }
-
