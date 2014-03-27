@@ -70,6 +70,9 @@ import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.HeaderUtils;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 
+import org.glassfish.grizzly.memory.Buffers;
+import org.glassfish.grizzly.memory.MemoryManager;
+
 import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -82,9 +85,6 @@ import com.ning.http.client.providers.grizzly.FeedableBodyGenerator;
 import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
 
 import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
-
-import org.glassfish.grizzly.memory.Buffers;
-import org.glassfish.grizzly.memory.MemoryManager;
 
 /**
  * The transport using the AsyncHttpClient.
@@ -139,9 +139,18 @@ class GrizzlyConnector implements Connector {
         this.grizzlyClient = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(asyncClientConfig), asyncClientConfig);
     }
 
-    /*
-     * Sends the {@link javax.ws.rs.core.Request} via Grizzly transport and returns the {@link javax.ws.rs.core.Response}.
+    /**
+     * Get the underlying Grizzly {@link com.ning.http.client.AsyncHttpClient} instance.
+     *
+     * @return underlying Grizzly {@link com.ning.http.client.AsyncHttpClient} instance.
      */
+    public AsyncHttpClient getGrizzlyClient() {
+        return grizzlyClient;
+    }
+
+    /*
+         * Sends the {@link javax.ws.rs.core.Request} via Grizzly transport and returns the {@link javax.ws.rs.core.Response}.
+         */
     @Override
     public ClientResponse apply(final ClientRequest request) {
         final Request connectorRequest = translate(request);
@@ -376,7 +385,7 @@ class GrizzlyConnector implements Connector {
         @Override
         public void write(int b) throws IOException {
             final byte[] buffer = new byte[1];
-            buffer[0] = (byte)b;
+            buffer[0] = (byte) b;
             delegate.feed(Buffers.wrap(MemoryManager.DEFAULT_MEMORY_MANAGER, buffer), false);
         }
 
