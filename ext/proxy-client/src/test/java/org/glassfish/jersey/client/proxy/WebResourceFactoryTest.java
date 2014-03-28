@@ -61,10 +61,10 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory"
+        // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory
+        // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory
+        // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory
+        // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory
         enable(TestProperties.LOG_TRAFFIC);
 //        enable(TestProperties.DUMP_ENTITY);
         return new ResourceConfig(MyResource.class);
