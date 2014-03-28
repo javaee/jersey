@@ -279,7 +279,7 @@ public final class ApplicationHandler {
      *
      * @param application  an instance of a JAX-RS {@code Application} (sub-)class that
      *                     will be used to configure the new Jersey application handler.
-     * @param customBinder additional custom bindings used during {@link ServiceLocator} creation.
+     * @param customBinder additional custom bindings used to configure the application's {@link ServiceLocator}.
      */
     public ApplicationHandler(final Application application, final Binder customBinder) {
         this(application, customBinder, null);
@@ -623,13 +623,13 @@ public final class ApplicationHandler {
     }
 
     private Iterable<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
-        final List<RankedProvider<ComponentProvider>> result = new LinkedList<RankedProvider<ComponentProvider>>();
+        final List<RankedProvider<ComponentProvider>> result = new LinkedList<>();
 
         final boolean enableMetainfServicesLookup = !PropertiesHelper.getValue(application.getProperties(), RuntimeType.SERVER,
                 CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
         if (enableMetainfServicesLookup) {
             for (final ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-                result.add(new RankedProvider<ComponentProvider>(provider));
+                result.add(new RankedProvider<>(provider));
             }
             Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
         }
@@ -648,13 +648,13 @@ public final class ApplicationHandler {
                 ContainerResponseFilter.class);
 
         final MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> nameBoundResponseFiltersInverse =
-                new MultivaluedHashMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>>();
+                new MultivaluedHashMap<>();
         final MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> nameBoundRequestFiltersInverse =
-                new MultivaluedHashMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>>();
+                new MultivaluedHashMap<>();
         final MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> nameBoundReaderInterceptorsInverse =
-                new MultivaluedHashMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>>();
+                new MultivaluedHashMap<>();
         final MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> nameBoundWriterInterceptorsInverse =
-                new MultivaluedHashMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>>();
+                new MultivaluedHashMap<>();
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters
                 = filterNameBound(responseFilters, null, componentBag, applicationNameBindings, nameBoundResponseFiltersInverse);
@@ -751,7 +751,7 @@ public final class ApplicationHandler {
             final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> inverseNameBoundMap) {
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> result
-                = new MultivaluedHashMap<Class<? extends Annotation>, RankedProvider<T>>();
+                = new MultivaluedHashMap<>();
 
         for (final Iterator<RankedProvider<T>> it = all.iterator(); it.hasNext(); ) {
             final RankedProvider<T> provider = it.next();
@@ -765,7 +765,7 @@ public final class ApplicationHandler {
 
             if (preMatching != null && providerClass.getAnnotation(PreMatching.class) != null) {
                 it.remove();
-                preMatching.add(new RankedProvider<ContainerRequestFilter>((ContainerRequestFilter) provider.getProvider(),
+                preMatching.add(new RankedProvider<>((ContainerRequestFilter) provider.getProvider(),
                         model.getPriority(ContainerRequestFilter.class)));
             }
 
@@ -893,20 +893,6 @@ public final class ApplicationHandler {
             }
         }
         return false;
-    }
-
-    /**
-     * Registers HK2 binders into the HK2 service register.
-     *
-     * @param binders binders to be registered.
-     */
-    public void registerAdditionalBinders(final Iterable<Binder> binders) {
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-
-        for (final Binder binder : binders) {
-            binder.bind(dc);
-        }
-        dc.commit();
     }
 
     /**

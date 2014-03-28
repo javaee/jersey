@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,13 +46,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.SecurityContext;
 
 import javax.inject.Inject;
@@ -80,10 +80,8 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
-import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.eclipse.jetty.continuation.Continuation;
@@ -95,20 +93,19 @@ import org.eclipse.jetty.server.Response;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 /**
- * Jetty Jersey HTTP Container.
+ * Jersey {@code Container} implementation based on Jetty {@link org.eclipse.jetty.server.Handler}.
  *
  * @author Arul Dhesiaseelan (aruld@acm.org)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class JettyHttpContainer extends AbstractHandler implements Container {
 
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(JettyHttpContainer.class.getName()), Level.FINEST);
 
-    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {
-    }).getType();
-    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
-    }).getType();
+    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {}).getType();
+    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {}).getType();
 
     /**
      * Cached value of configuration property
@@ -140,18 +137,23 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     /**
      * An internal binder to enable Jetty HTTP container specific types injection.
      * This binder allows to inject underlying Jetty HTTP request and response instances.
+     * Note that since Jetty {@code Request} class is not proxiable as it does not expose an empty constructor,
+     * the injection of Jetty request instance into singleton JAX-RS and Jersey providers is only supported via
+     * {@link javax.inject.Provider injection provider}.
      */
     private static class JettyBinder extends AbstractBinder {
 
         @Override
         protected void configure() {
-            bindFactory(JettyRequestReferencingFactory.class).to(Request.class).in(PerLookup.class);
-            bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
-            }).in(RequestScoped.class);
+            bindFactory(JettyRequestReferencingFactory.class).to(Request.class)
+                    .proxy(false).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {})
+                    .in(RequestScoped.class);
 
-            bindFactory(JettyResponseReferencingFactory.class).to(Response.class).in(PerLookup.class);
-            bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new TypeLiteral<Ref<Response>>() {
-            }).in(RequestScoped.class);
+            bindFactory(JettyResponseReferencingFactory.class).to(Response.class)
+                    .proxy(false).in(RequestScoped.class);
+            bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new TypeLiteral<Ref<Response>>() {})
+                    .in(RequestScoped.class);
         }
     }
 
@@ -234,7 +236,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     private String getBasePath(final Request request) {
         final String contextPath = request.getContextPath();
 
-        if (contextPath == null || contextPath.length() == 0) {
+        if (contextPath == null || contextPath.isEmpty()) {
             return "/";
         } else if (contextPath.charAt(contextPath.length() - 1) != '/') {
             return contextPath + "/";
@@ -245,13 +247,11 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
 
     private final static class ResponseWriter implements ContainerResponseWriter {
         private final Response response;
-        private final String method;
         private final Continuation continuation;
         private final boolean configSetStatusOverSendError;
 
         ResponseWriter(Request request, Response response, boolean configSetStatusOverSendError) {
             this.response = response;
-            this.method = request.getMethod();
             this.continuation = ContinuationSupport.getContinuation(request);
             this.configSetStatusOverSendError = configSetStatusOverSendError;
         }
@@ -422,17 +422,14 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     }
 
     /**
-     * Creates a new Jetty container.
+     * Create a new Jetty HTTP container.
      *
-     * @param application Jersey application to be deployed on Jetty container.
+     * @param application JAX-RS / Jersey application to be deployed on Jetty HTTP container.
      */
-    JettyHttpContainer(final ApplicationHandler application) {
-        this.appHandler = application;
-        this.containerListener = ConfigHelper.getContainerLifecycleListener(application);
+    JettyHttpContainer(final Application application) {
+        this.appHandler = new ApplicationHandler(application, new JettyBinder());
+        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
 
-        this.appHandler.registerAdditionalBinders(new HashSet<Binder>() {{
-            add(new JettyBinder());
-        }});
         cacheConfigSetStatusOverSendError();
     }
 

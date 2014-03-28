@@ -47,6 +47,7 @@ import org.glassfish.jersey.test.DeploymentContext;
  * A test container factory responsible for creating test containers.
  *
  * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public interface TestContainerFactory {
 

@@ -49,7 +49,6 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.simple.SimpleContainerFactory;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
@@ -67,18 +66,25 @@ public class SimpleTestContainerFactory implements TestContainerFactory {
     private static class SimpleTestContainer implements TestContainer {
 
         private final URI baseUri;
-        private final ApplicationHandler appHandler;
+        private final DeploymentContext deploymentContext;
         private Closeable server;
         private static final Logger LOGGER = Logger.getLogger(SimpleTestContainer.class.getName());
 
         private SimpleTestContainer(final URI baseUri, final DeploymentContext context) {
-            this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+            final URI base = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+
+            if (!"/".equals(base.getRawPath())) {
+                throw new TestContainerException(String.format(
+                        "Cannot deploy on %s. Simple framework container only supports deployment on root path.",
+                        base.getRawPath()));
+            }
+
+            this.baseUri = base;
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Creating SimpleTestContainer configured at the base URI " + this.baseUri);
             }
-
-            this.appHandler = new ApplicationHandler(context.getResourceConfig());
+            this.deploymentContext = context;
         }
 
         @Override
@@ -96,7 +102,7 @@ public class SimpleTestContainerFactory implements TestContainerFactory {
             LOGGER.log(Level.FINE, "Starting SimpleTestContainer...");
 
             try {
-                this.server = SimpleContainerFactory.create(baseUri, appHandler);
+                this.server = SimpleContainerFactory.create(baseUri, deploymentContext.getResourceConfig());
             } catch (ProcessingException e) {
                 throw new TestContainerException(e);
             }

@@ -48,8 +48,6 @@ import java.util.concurrent.Executors;
 import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import com.sun.net.httpserver.HttpContext;
@@ -99,45 +97,7 @@ public final class JdkHttpServerFactory {
      * @since 2.8
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration, final boolean start) {
-        final JdkHttpHandlerContainer handler = ContainerFactory.createContainer(JdkHttpHandlerContainer.class, configuration);
-        return createHttpServer(uri, handler, start);
-    }
-
-    /**
-     * Create and start the {@link HttpServer JDK HttpServer} with the Jersey application deployed
-     * at the given {@link URI}.
-     * <p>
-     * The returned {@link HttpServer JDK HttpServer} is started.
-     * </p>
-     *
-     * @param uri        the {@link URI uri} on which the Jersey application will be deployed.
-     * @param appHandler the Jersey server-side application handler.
-     * @return Newly created {@link HttpServer}.
-     *
-     * @throws ProcessingException thrown when problems during server creation
-     *                             occurs.
-     */
-    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) {
-        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler), true);
-    }
-
-    /**
-     * Create (and possibly start) the {@link HttpServer JDK HttpServer} with the JAX-RS / Jersey application deployed
-     * on the given {@link URI}.
-     * <p>
-     * The {@code start} flag controls whether or not the returned {@link HttpServer JDK HttpServer} is started.
-     * </p>
-     *
-     * @param uri        the {@link URI uri} on which the Jersey application will be deployed.
-     * @param appHandler the Jersey server-side application handler.
-     * @param start      if set to {@code false}, the created server will not be automatically started.
-     * @return Newly created {@link HttpServer}.
-     *
-     * @throws ProcessingException thrown when problems during server creation occurs.
-     * @since 2.8
-     */
-    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler, boolean start) {
-        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler), start);
+        return createHttpServer(uri, new JdkHttpHandlerContainer(configuration), start);
     }
 
     private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler, boolean start) {

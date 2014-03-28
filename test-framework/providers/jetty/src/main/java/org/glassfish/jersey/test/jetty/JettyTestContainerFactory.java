@@ -70,7 +70,15 @@ public class JettyTestContainerFactory implements TestContainerFactory {
         private final Server server;
 
         private JettyTestContainer(final URI baseUri, final DeploymentContext context) {
-            this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+            final URI base = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+
+            if (!"/".equals(base.getRawPath())) {
+                throw new TestContainerException(String.format(
+                        "Cannot deploy on %s. Jetty HTTP container only supports deployment on root path.",
+                        base.getRawPath()));
+            }
+
+            this.baseUri = base;
 
             if (LOGGER.isLoggable(Level.INFO)) {
                 LOGGER.info("Creating JettyTestContainer configured at the base URI " + this.baseUri);

@@ -131,6 +131,32 @@
                             and will be removed in the subsequent Jersey release.
                         </para>
                     </listitem>
+                    <listitem>
+                        <para>
+                            It was previously possible to pass in a custom &jersey.server.spi.ContainerProvider; that was
+                            supposed to deploy and run the application as one of the JAX-RS / Jersey application providers.
+                            This ability has been removed without any substitute as the concept was fundamentally flawed.
+                            Typical use cases should not be affected by this change.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Factory methods <literal>createHttpServer</literal> which take Jersey
+                            &jersey.server.ApplicationHandler; as one of the input parameters have been removed from the
+                            Jersey container factory API as inherently broken. This impacts
+                            &jersey.grizzly.GrizzlyHttpServerFactory;, &jersey.jdkhttp.JdkHttpServerFactory;,
+                            &jersey.jetty.JettyHttpContainerFactory; and &jersey.simple.SimpleContainerFactory; implementations.
+                            The methods that take &jersey.server.ResourceConfig; as input parameter should be used instead.
+                            Typical use cases should not be affected by this change.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Method <literal>registerAdditionalBinders</literal> on &jersey.server.ApplicationHandler;
+                            has been removed from the public API. Please use the specific &lit.jersey.server.ApplicationHandler;
+                            constructor that accepts custom HK2 binders instead.
+                        </para>
+                    </listitem>
                 </itemizedlist>
             </para>
         </section>

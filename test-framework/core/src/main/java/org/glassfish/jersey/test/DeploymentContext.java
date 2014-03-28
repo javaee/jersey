@@ -45,9 +45,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * Basic application deployment context.
- *
- * A Servlet-based deployment context.
- *
  * <p>
  * An instance of this class is created by creating using {@link Builder}, that allows to configure the deployment
  * context state, and finally building the context by invoking the {@link Builder#build()} method.
