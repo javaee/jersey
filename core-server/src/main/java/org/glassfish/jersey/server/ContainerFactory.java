@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,10 +41,8 @@ package org.glassfish.jersey.server;
 
 import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
-
-import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * Factory for creating specific HTTP-based containers.
@@ -55,6 +53,9 @@ import org.glassfish.hk2.api.ServiceLocator;
  */
 public final class ContainerFactory {
 
+    /**
+     * Prevents instantiation.
+     */
     private ContainerFactory() {
     }
 
@@ -66,33 +67,24 @@ public final class ContainerFactory {
      * container instance.
      * <p>
      *
-     * @param <T> container type
-     * @param type Type of the container
-     * @param application Jersey application.
+     * @param <T>         container type
+     * @param type        type of the container
+     * @param application JAX-RS / Jersey application.
      * @return the container.
-     * @throws ContainerException if there is an error creating the container.
+     *
+     * @throws ContainerException       if there was an error creating the container.
      * @throws IllegalArgumentException if no container provider supports the type.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T createContainer(Class<T> type, Application application) {
-
-        ApplicationHandler handler = new ApplicationHandler(application);
-
-        final ServiceLocator locator = handler.getServiceLocator();
-        for (ContainerProvider cp : Providers.getCustomProviders(locator, ContainerProvider.class)) {
-            T c = cp.createContainer(type, handler);
-            if (c != null) {
-                return c;
-            }
-        }
-
-        for (ContainerProvider cp : Providers.getProviders(locator, ContainerProvider.class)) {
-            T c = cp.createContainer(type, handler);
-            if (c != null) {
-                return c;
+    public static <T> T createContainer(final Class<T> type, final Application application) {
+        for (ContainerProvider containerProvider : ServiceFinder.find(ContainerProvider.class)) {
+            T container = containerProvider.createContainer(type, application);
+            if (container != null) {
+                return container;
             }
         }
 
         throw new IllegalArgumentException("No container provider supports the type " + type);
     }
+
 }

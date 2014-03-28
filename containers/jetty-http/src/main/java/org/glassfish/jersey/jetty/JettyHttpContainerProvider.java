@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,21 +39,23 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.eclipse.jetty.server.Handler;
-import org.glassfish.jersey.server.ApplicationHandler;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.Application;
+
 import org.glassfish.jersey.server.spi.ContainerProvider;
 
-import javax.ws.rs.ProcessingException;
+import org.eclipse.jetty.server.Handler;
 
 /**
- * {@link ContainerProvider Container Service Provider} which provides {@link JettyHttpContainer Jetty Container}.
+ * Container provider for containers based on Jetty Server {@link org.eclipse.jetty.server.Handler}.
  *
  * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JettyHttpContainerProvider implements ContainerProvider {
 
     @Override
-    public <T> T createContainer(Class<T> type, ApplicationHandler application) throws ProcessingException {
+    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException {
         if (Handler.class == type || JettyHttpContainer.class == type) {
             return type.cast(new JettyHttpContainer(application));
         }

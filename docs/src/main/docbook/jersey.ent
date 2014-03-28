@@ -271,7 +271,6 @@
 <!ENTITY jersey.grizzly.GrizzlyConnectorProvider "<link xlink:href='&jersey.javadoc.path;/grizzly/connector/GrizzlyConnectorProvider.html'>GrizzlyConnectorProvider</link>">
 <!ENTITY jersey.jetty.JettyConnector "<link xlink:href='&jersey.javadoc.path;/jetty/connector/JettyConnector.html'>JettyConnector</link>">
 <!ENTITY jersey.jetty.JettyConnectorProvider "<link xlink:href='&jersey.javadoc.path;/jetty/connector/JettyConnectorProvider.html'>JettyConnectorProvider</link>">
-<!ENTITY jersey.grizzly.JdkHttpServerFactory "<link xlink:href='&jersey.javadoc.path;/jdkhttp/JdkHttpServerFactory.html'>JdkHttpServerFactory</link>">
 <!ENTITY jersey.client.ClientConfig "<link xlink:href='&jersey.javadoc.path;/client/ClientConfig.html'>ClientConfig</link>">
 <!ENTITY jersey.client.ClientProperties "<link xlink:href='&jersey.javadoc.path;/client/ClientProperties.html'>ClientProperties</link>">
 <!ENTITY jersey.client.EncodingFilter "<link xlink:href='&jersey.javadoc.path;/client/filter/EncodingFilter.html'>EncodingFilter</link>">
@@ -350,6 +349,7 @@
 <!ENTITY jersey.media.multipart.MultiPart "<link xlink:href='&jersey.javadoc.path;/media/multipart/MultiPart.html'>MultiPart</link>" >
 <!ENTITY jersey.media.multipart.StreamDataBodyPart "<link xlink:href='&jersey.javadoc.path;/media/multipart/file/StreamDataBodyPart.html'>StreamDataBodyPart</link>" >
 
+<!ENTITY jersey.server.ApplicationHandler "<link xlink:href='&jersey.javadoc.path;/server/ApplicationHandler.html'>ApplicationHandler</link>">
 <!ENTITY jersey.server.ChunkedOutput "<link xlink:href='&jersey.javadoc.path;/server/ChunkedOutput.html'>ChunkedOutput</link>">
 <!ENTITY jersey.server.ContainerLifecycleListener "<link xlink:href='&jersey.javadoc.path;/server/spi/ContainerLifecycleListener.html'>ContainerLifecycleListener</link>">
 <!ENTITY jersey.server.HttpMethodOverrideFilter "<link xlink:href='&jersey.javadoc.path;/server/filter/HttpMethodOverrideFilter.html'>HttpMethodOverrideFilter</link>">
@@ -470,6 +470,26 @@
 <!ENTITY jersey.client.oauth2.OAuth2ClientSupport "<link xlink:href='&jersey.javadoc.path;/client/oauth2/OAuth2ClientSupport.html'>OAuth2ClientSupport</link>">
 
 <!ENTITY jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider "<link xlink:href='&jersey.javadoc.path;/gf/cdi/spi/Hk2CustomBoundTypesProvider.html'>Hk2CustomBoundTypesProvider</link>">
+
+<!ENTITY jersey.grizzly.GrizzlyHttpContainerProvider "<link xlink:href='&jersey.javadoc.path;/grizzly2/httpserver/GrizzlyHttpContainerProvider.html'>GrizzlyHttpContainerProvider</link>">
+<!ENTITY jersey.grizzly.GrizzlyHttpContainer "<link xlink:href='&jersey.javadoc.path;/grizzly2/httpserver/GrizzlyHttpContainer.html'>GrizzlyHttpContainer</link>">
+<!ENTITY jersey.grizzly.GrizzlyHttpServerFactory "<link xlink:href='&jersey.javadoc.path;/grizzly2/httpserver/GrizzlyHttpServerFactory.html'>GrizzlyHttpServerFactory</link>">
+
+<!ENTITY jersey.grizzly.GrizzlyWebContainerFactory "<link xlink:href='&jersey.javadoc.path;/grizzly2/servlet/GrizzlyWebContainerFactory.html'>GrizzlyWebContainerFactory</link>">
+
+<!ENTITY jersey.jdkhttp.JdkHttpHandlerContainerProvider "<link xlink:href='&jersey.javadoc.path;/jdkhttp/JdkHttpHandlerContainerProvider.html'>JdkHttpHandlerContainerProvider</link>">
+<!ENTITY jersey.jdkhttp.JdkHttpHandlerContainer "<link xlink:href='&jersey.javadoc.path;/jdkhttp/JdkHttpHandlerContainer.html'>JdkHttpHandlerContainer</link>">
+<!ENTITY jersey.jdkhttp.JdkHttpServerFactory "<link xlink:href='&jersey.javadoc.path;/jdkhttp/JdkHttpServerFactory.html'>JdkHttpServerFactory</link>">
+
+<!ENTITY jersey.jetty.JettyHttpContainerProvider "<link xlink:href='&jersey.javadoc.path;/jetty/JettyHttpContainerProvider.html'>JettyHttpContainerProvider</link>">
+<!ENTITY jersey.jetty.JettyHttpContainer "<link xlink:href='&jersey.javadoc.path;/jetty/JettyHttpContainer.html'>JettyHttpContainer</link>">
+<!ENTITY jersey.jetty.JettyHttpContainerFactory "<link xlink:href='&jersey.javadoc.path;/jetty/JettyHttpContainerFactory.html'>JettyHttpContainerFactory</link>">
+
+<!ENTITY jersey.jetty.JettyWebContainerFactory "<link xlink:href='&jersey.javadoc.path;/jetty/servlet/JettyWebContainerFactory.html'>JettyWebContainerFactory</link>">
+
+<!ENTITY jersey.simple.SimpleContainerProvider "<link xlink:href='&jersey.javadoc.path;/simple/SimpleContainerProvider.html'>SimpleContainerProvider</link>">
+<!ENTITY jersey.simple.SimpleContainer "<link xlink:href='&jersey.javadoc.path;/simple/SimpleContainer.html'>SimpleContainer</link>">
+<!ENTITY jersey.simple.SimpleContainerFactory "<link xlink:href='&jersey.javadoc.path;/simple/SimpleContainerFactory.html'>SimpleContainerFactory</link>">
 
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
@@ -719,6 +739,7 @@
 <!ENTITY lit.jersey.media.multipart.FormDataMultiPart "<literal>FormDataMultiPart</literal>" >
 <!ENTITY lit.jersey.media.multipart.FormDataParam "<literal>@FormDataParam</literal>" >
 
+<!ENTITY lit.jersey.server.ApplicationHandler "<literal>ApplicationHandler</literal>">
 <!ENTITY lit.jersey.server.ContainerRequest "<literal>ContainerRequest</literal>">
 <!ENTITY lit.jersey.server.ContainerResponse "<literal>ContainerResponse</literal>">
 <!ENTITY lit.jersey.server.ChunkedOutput "<literal>ChunkedOutput</literal>">
@@ -802,6 +823,26 @@
 <!ENTITY lit.jersey.client.oauth2.OAuth2Parameters "<literal>OAuth2Parameters</literal>">
 <!ENTITY lit.jersey.client.oauth2.TokenResult "<literal>TokenResult</literal>">
 <!ENTITY lit.jersey.client.oauth2.OAuth2ClientSupport "<literal>OAuth2ClientSupport</literal>">
+
+<!ENTITY lit.jersey.grizzly.GrizzlyHttpContainerProvider "<literal>GrizzlyHttpContainerProvider</literal>">
+<!ENTITY lit.jersey.grizzly.GrizzlyHttpContainer "<literal>GrizzlyHttpContainer</literal>">
+<!ENTITY lit.jersey.grizzly.GrizzlyHttpServerFactory "<literal>GrizzlyHttpServerFactory</literal>">
+
+<!ENTITY lit.jersey.grizzly.GrizzlyWebContainerFactory "<literal>GrizzlyWebContainerFactory</literal>">
+
+<!ENTITY lit.jersey.jdkhttp.JdkHttpHandlerContainerProvider "<literal>JdkHttpHandlerContainerProvider</literal>">
+<!ENTITY lit.jersey.jdkhttp.JdkHttpHandlerContainer "<literal>JdkHttpHandlerContainer</literal>">
+<!ENTITY lit.jersey.jdkhttp.JdkHttpServerFactory "<literal>JdkHttpServerFactory</literal>">
+
+<!ENTITY lit.jersey.jetty.JettyHttpContainerProvider "<literal>JettyHttpContainerProvider</literal>">
+<!ENTITY lit.jersey.jetty.JettyHttpContainer "<literal>JettyHttpContainer</literal>">
+<!ENTITY lit.jersey.jetty.JettyHttpContainerFactory "<literal>JettyHttpContainerFactory</literal>">
+
+<!ENTITY lit.jersey.jetty.JettyWebContainerFactory "<literal>JettyWebContainerFactory</literal>">
+
+<!ENTITY lit.jersey.simple.SimpleContainerProvider "<literal>SimpleContainerProvider</literal>">
+<!ENTITY lit.jersey.simple.SimpleContainer "<literal>SimpleContainer</literal>">
+<!ENTITY lit.jersey.simple.SimpleContainerFactory "<literal>SimpleContainerFactory</literal>">
 
 <!--JDK 6 literals -->
 <!ENTITY lit.jdk6.HttpUrlConnection "<literal>HttpUrlConnection</literal>">

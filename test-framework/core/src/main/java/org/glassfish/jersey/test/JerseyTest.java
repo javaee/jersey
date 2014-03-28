@@ -120,7 +120,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * </ol>
  * </p>
  * <p>
- * The test container is configured by a {@link org.glassfish.jersey.test.DeploymentContext} that is either provided
+ * The test container is configured by a {@link DeploymentContext} that is either provided
  * by  subclass or automatically created by {@code JerseyTest} based on the provided JAX-RS / Jersey {@code Application}
  * class or instance to be tested. A {@link TestContainerException} will be thrown if the configured test container
  * factory cannot support the deployment context type.
@@ -470,7 +470,7 @@ public abstract class JerseyTest {
      * <p>
      * The method is invoked from {@code JerseyTest} constructors to provide deployment context for the tested application.
      * Default implementation of this method creates
-     * {@link org.glassfish.jersey.test.DeploymentContext#newInstance(javax.ws.rs.core.Application) new deployment context}
+     * {@link DeploymentContext#newInstance(javax.ws.rs.core.Application) new deployment context}
      * using JAX-RS application instance obtained by calling the {@link #configure()} method.
      * </p>
      * <p>

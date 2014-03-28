@@ -44,6 +44,7 @@ import java.net.URI;
 
 import javax.ws.rs.ProcessingException;
 
+import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -55,212 +56,175 @@ import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 
 /**
  * Factory for creating Grizzly Http Server.
- * Should you need to fine tune the underlying
- * Grizzly transport layer, you could obtain direct access to the corresponding Grizzly
- * structures with {@code server.getListener("grizzly").getTransport()}. To make certain
- * options take effect, you need to work with a non-started-yet HttpServer instance.
- * To obtain such an instance, use one of the bellow factory methods with {@code start}
- * parameter set to false. When the {@code start} parameter is not present,
- * the factory method returns an already started instance.
+ * <p>
+ * Should you need to fine tune the underlying Grizzly transport layer, you can obtain direct access to the corresponding
+ * Grizzly structures with <tt>server.getListener("grizzly").getTransport()</tt>. To make certain options take effect,
+ * you need to work with an inactive HttpServer instance (that is the one that has not been started yet).
+ * To obtain such an instance, use one of the bellow factory methods with {@code start} parameter set to {@code false}.
+ * When the {@code start} parameter is not present, the factory method returns an already started instance.
+ * </p>
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  * @see HttpServer
  * @see GrizzlyHttpContainer
  */
-public class GrizzlyHttpServerFactory {
+public final class GrizzlyHttpServerFactory {
+
+    private static final int DEFAULT_HTTP_PORT = 80;
 
     /**
-     * Creates HttpServer instance.
+     * Create new {@link HttpServer} instance.
      *
      * @param uri uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used as
      *            context path, the rest will be ignored.
-     * @return newly created {@link HttpServer}.
-     * @throws ProcessingException
+     * @return newly created {@code HttpServer}.
+     *
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
-    public static HttpServer createHttpServer(final URI uri) throws ProcessingException {
+    public static HttpServer createHttpServer(final URI uri) {
         return createHttpServer(uri, (GrizzlyHttpContainer) null, false, null, true);
     }
 
     /**
-     * Creates HttpServer instance.
+     * Create new {@link HttpServer} instance.
      *
      * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
      *              as context path, the rest will be ignored.
      * @param start if set to false, server will not get started, which allows to configure the underlying transport
      *              layer, see above for details.
-     * @return newly created {@link HttpServer}.
-     * @throws ProcessingException
+     * @return newly created {@code HttpServer}.
+     *
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
-    public static HttpServer createHttpServer(final URI uri, final boolean start) throws ProcessingException {
+    public static HttpServer createHttpServer(final URI uri, final boolean start) {
         return createHttpServer(uri, (GrizzlyHttpContainer) null, false, null, start);
     }
 
     /**
-     * Creates HttpServer instance.
+     * Create new {@link HttpServer} instance.
      *
      * @param uri           URI on which the Jersey web application will be deployed. Only first path segment will be
      *                      used as context path, the rest will be ignored.
      * @param configuration web application configuration.
-     * @return newly created {@link HttpServer}.
-     * @throws ProcessingException
+     * @return newly created {@code HttpServer}.
+     *
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
-    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) throws ProcessingException {
-        return createHttpServer(uri, createContainer(configuration), false, null, true);
+    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) {
+        return createHttpServer(
+                uri,
+                new GrizzlyHttpContainer(configuration),
+                false,
+                null,
+                true
+        );
     }
 
     /**
-     * Creates HttpServer instance.
+     * Create new {@link HttpServer} instance.
      *
      * @param uri           URI on which the Jersey web application will be deployed. Only first path segment will be
      *                      used as context path, the rest will be ignored.
      * @param configuration web application configuration.
      * @param start         if set to false, server will not get started, which allows to configure the underlying
      *                      transport layer, see above for details.
-     * @return newly created {@link HttpServer}.
-     * @throws ProcessingException
-     */
-    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration, final boolean start) throws ProcessingException {
-        return createHttpServer(uri, createContainer(configuration), false, null, start);
-    }
-
-    /**
-     * Creates HttpServer instance.
+     * @return newly created {@code HttpServer}.
      *
-     * @param uri        URI on which the Jersey web application will be deployed. Only first path segment will be used
-     *                   as context path, the rest will be ignored.
-     * @param appHandler web application handler.
-     * @return newly created {@link HttpServer}.
-     * @throws ProcessingException
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
-    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
-        return createHttpServer(uri, new GrizzlyHttpContainer(appHandler), false, null, true);
+    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration, final boolean start) {
+        return createHttpServer(
+                uri,
+                new GrizzlyHttpContainer(configuration),
+                false,
+                null,
+                start);
     }
 
     /**
-     * Creates HttpServer instance.
-     *
-     * @param uri        URI on which the Jersey web application will be deployed. Only first path segment will be used
-     *                   as context path, the rest will be ignored.
-     * @param appHandler web application handler.
-     * @param start      if set to false, server will not get started, which allows to configure the underlying
-     *                   transport, see above for details.
-     * @return newly created {@link HttpServer}.
-     * @throws ProcessingException
-     */
-    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler, final boolean start) throws ProcessingException {
-        return createHttpServer(uri, new GrizzlyHttpContainer(appHandler), false, null, start);
-    }
-
-    /**
-     * Creates HttpServer instance.
+     * Create new {@link HttpServer} instance.
      *
      * @param uri                   URI on which the Jersey web application will be deployed. Only first path segment
      *                              will be used as context path, the rest will be ignored.
      * @param configuration         web application configuration.
      * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
-     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig(org.glassfish.grizzly.ssl.SSLEngineConfigurator)}.
-     * @return newly created {@link HttpServer}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
+     * @return newly created {@code HttpServer}.
+     *
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
     public static HttpServer createHttpServer(final URI uri,
                                               final ResourceConfig configuration,
                                               final boolean secure,
                                               final SSLEngineConfigurator sslEngineConfigurator) {
-        return createHttpServer(uri, createContainer(configuration), secure, sslEngineConfigurator, true);
+        return createHttpServer(
+                uri,
+                new GrizzlyHttpContainer(configuration),
+                secure,
+                sslEngineConfigurator,
+                true);
     }
 
     /**
-     * Creates HttpServer instance.
+     * Create new {@link HttpServer} instance.
      *
      * @param uri                   URI on which the Jersey web application will be deployed. Only first path segment
      *                              will be used as context path, the rest will be ignored.
      * @param configuration         web application configuration.
      * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
-     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig(org.glassfish.grizzly.ssl.SSLEngineConfigurator)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
      * @param start                 if set to false, server will not get started, which allows to configure the
      *                              underlying transport, see above for details.
-     * @return newly created {@link HttpServer}.
+     * @return newly created {@code HttpServer}.
+     *
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      */
     public static HttpServer createHttpServer(final URI uri,
                                               final ResourceConfig configuration,
                                               final boolean secure,
                                               final SSLEngineConfigurator sslEngineConfigurator,
                                               final boolean start) {
-        return createHttpServer(uri, createContainer(configuration), secure, sslEngineConfigurator, start);
-    }
-
-    private static GrizzlyHttpContainer createContainer(ResourceConfig configuration) {
-        return new GrizzlyHttpContainer(new ApplicationHandler(configuration));
-    }
-
-    /**
-     * Creates HttpServer instance.
-     *
-     * @param uri                   URI on which the Jersey web application will be deployed. Only first path segment
-     *                              will be used as context path, the rest will be ignored.
-     * @param appHandler            web application handler.
-     * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
-     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig(org.glassfish.grizzly.ssl.SSLEngineConfigurator)}.
-     * @return newly created {@link HttpServer}.
-     */
-    public static HttpServer createHttpServer(final URI uri,
-                                              final ApplicationHandler appHandler,
-                                              final boolean secure,
-                                              final SSLEngineConfigurator sslEngineConfigurator) {
-        return createHttpServer(uri, new GrizzlyHttpContainer(appHandler), secure, sslEngineConfigurator, true);
+        return createHttpServer(
+                uri,
+                new GrizzlyHttpContainer(configuration),
+                secure,
+                sslEngineConfigurator,
+                start);
     }
 
     /**
-     * Creates HttpServer instance.
-     *
-     * @param uri                   URI on which the Jersey web application will be deployed. Only first path segment
-     *                              will be used as context path, the rest will be ignored.
-     * @param appHandler            web application handler.
-     * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
-     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig(org.glassfish.grizzly.ssl.SSLEngineConfigurator)}.
-     * @param start                 if set to false, server will not get started, which allows to configure the
-     *                              underlying transport, see above for details.
-     * @return newly created {@link HttpServer}.
-     */
-    public static HttpServer createHttpServer(final URI uri,
-                                              final ApplicationHandler appHandler,
-                                              final boolean secure,
-                                              final SSLEngineConfigurator sslEngineConfigurator,
-                                              final boolean start) {
-        return createHttpServer(uri, new GrizzlyHttpContainer(appHandler), secure, sslEngineConfigurator, start);
-    }
-
-
-    /**
-     * Creates HttpServer instance.
+     * Create new {@link HttpServer} instance.
      *
      * @param uri                   uri on which the {@link ApplicationHandler} will be deployed. Only first path
      *                              segment will be used as context path, the rest will be ignored.
      * @param handler               {@link HttpHandler} instance.
      * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
-     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig(org.glassfish.grizzly.ssl.SSLEngineConfigurator)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
      * @param start                 if set to false, server will not get started, this allows end users to set
      *                              additional properties on the underlying listener.
-     * @return newly created {@link HttpServer}.
-     * @throws ProcessingException
+     * @return newly created {@code HttpServer}.
+     *
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      * @see GrizzlyHttpContainer
      */
     public static HttpServer createHttpServer(final URI uri,
-                                               final GrizzlyHttpContainer handler,
-                                               final boolean secure,
-                                               final SSLEngineConfigurator sslEngineConfigurator,
-                                               final boolean start)
-            throws ProcessingException {
-        final String host = (uri.getHost() == null) ? NetworkListener.DEFAULT_NETWORK_HOST
-                : uri.getHost();
-        final int port = (uri.getPort() == -1) ? 80 : uri.getPort();
-        final HttpServer server = new HttpServer();
+                                              final GrizzlyHttpContainer handler,
+                                              final boolean secure,
+                                              final SSLEngineConfigurator sslEngineConfigurator,
+                                              final boolean start) {
+
+        final String host = (uri.getHost() == null) ? NetworkListener.DEFAULT_NETWORK_HOST : uri.getHost();
+        final int port = (uri.getPort() == -1) ? DEFAULT_HTTP_PORT : uri.getPort();
+
         final NetworkListener listener = new NetworkListener("grizzly", host, port);
         listener.setSecure(secure);
         if (sslEngineConfigurator != null) {
             listener.setSSLEngineConfig(sslEngineConfigurator);
         }
 
+        final HttpServer server = new HttpServer();
         server.addListener(listener);
 
         // Map the path to the processor.
@@ -276,7 +240,7 @@ public class GrizzlyHttpServerFactory {
                 // Start the server.
                 server.start();
             } catch (IOException ex) {
-                throw new ProcessingException("IOException thrown when trying to start grizzly server", ex);
+                throw new ProcessingException(LocalizationMessages.FAILED_TO_START_SERVER(ex.getMessage()), ex);
             }
         }
 
