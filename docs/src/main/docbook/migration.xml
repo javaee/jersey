@@ -56,6 +56,7 @@
         <title>Migrating from Jersey 2.6 to 2.7</title>
 
         <section xml:id="mig-2.8-breaking-changes">
+            <title>Changes</title>
             <para>
                 <itemizedlist>
                     <listitem>
@@ -85,6 +86,49 @@
                             Method <literal>triggerEvent(RequestEvent.Type)</literal> has been removed from the public
                             &jersey.server.ContainerRequest; API. This method has never been intended for public,
                             application-level use.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            In Jersey 2.7 and earlier it was (under certain conditions) possible to supply custom
+                            &jersey.test.spi.TestContainerFactory; as part of the tested JAX-RS / Jersey application.
+                            This factory would be picked and used by &jersey.test.JerseyTest; to instantiate
+                            &jersey.test.spi.TestContainer; that will host the tested application. This feature was
+                            unreliable and redundant. As such, support for the feature has been removed. To specify a custom
+                            &lit.jersey.test.spi.TestContainerFactory; to be used by your &lit.jersey.test.JerseyTest;
+                            subclass, please override the <literal>JerseyTest.getTestContainerFactory</literal> method instead.
+                            Overriding <literal>getTestContainerFactory</literal> now remains the only reliable way of specifying
+                            custom &lit.jersey.test.spi.TestContainerFactory; implementation to be used in your tests.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Protected method <literal>setTestContainerFactory</literal> has been removed from the
+                            &lit.jersey.test.JerseyTest; API as calling the method had no effect on the
+                            &lit.jersey.test.spi.TestContainerFactory; instance used by the &lit.jersey.test.JerseyTest;
+                            subclass.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Protected method <literal>getClient</literal> has been removed from the &lit.jersey.test.JerseyTest;
+                            API. To configure test client instances, please override the <literal>configureClient</literal>
+                            method instead.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Utility methods &lit.jersey.test.JerseyTest; that provide access to pre-configured
+                            &jaxrs.client.Client; and &jaxrs.client.WebTarget; instances (<literal>client()</literal>,
+                            <literal>target(...)</literal>) have been made final to prevent overriding in subclasses
+                            and thus ensure consistency of the jersey test framework functionality.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            &lit.jersey.test.JerseyTest; constructor
+                            <literal>JerseyTest(Class&lt;? extends Application&gt;)</literal> has been made deprecated
+                            and will be removed in the subsequent Jersey release.
                         </para>
                     </listitem>
                 </itemizedlist>

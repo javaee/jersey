@@ -37,73 +37,64 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.server;
-
-import java.util.Set;
+package org.glassfish.jersey.test.grizzly.pckg;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Application;
 
-import javax.annotation.PreDestroy;
-
-import org.glassfish.jersey.test.DeploymentContext;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.AfterClass;
 import org.junit.Test;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.collect.Sets;
+import static org.junit.Assert.assertEquals;
 
 
 /**
- * Assert that {@link Application} pre destroy method is invoked.
+ * Test picking up resources for Grizzly test container via packages.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ApplicationPreDestroyTest extends JerseyTest {
-
-    private static boolean appDestroyInvoked = false;
-
-    @Path("/")
-    public static class Resource {
-
-        @GET
-        public String get() {
-            return "Hi!";
-        }
-    }
-
-    public static class MyApplication extends Application {
-
-        @PreDestroy
-        public void preDestroy() {
-            appDestroyInvoked = true;
-        }
-
-        @Override
-        public Set<Class<?>> getClasses() {
-            return Sets.<Class<?>>newHashSet(Resource.class);
-        }
+public class GrizzlyPackageTest extends JerseyTest {
+    @Override
+    protected ResourceConfig configure() {
+        enable(TestProperties.LOG_TRAFFIC);
+        return new ResourceConfig().packages(this.getClass().getPackage().getName());
     }
 
     @Override
-    protected DeploymentContext configureDeployment() {
-        return DeploymentContext.newInstance(MyApplication.class);
+    protected TestContainerFactory getTestContainerFactory() {
+        return new GrizzlyTestContainerFactory();
+    }
+
+    @Path("root")
+    public static class TestResource {
+        @GET
+        public String get() {
+            return "GET";
+        }
+
+        @Path("sub")
+        @GET
+        public String getSub() {
+            return "sub";
+        }
     }
 
     @Test
-    public void testApplicationResource() throws Exception {
-        assertThat(target().request().get(String.class), is("Hi!"));
-        assertFalse(appDestroyInvoked);
+    public void testGet() {
+        String s = target().path("root").request().get(String.class);
+        assertEquals("GET", s);
     }
 
-    @AfterClass
-    public static void afterClass() {
-        assertTrue(appDestroyInvoked);
+    @Test
+    public void testSub() {
+        String s = target().path("root/sub").request().get(String.class);
+        assertEquals("sub", s);
     }
+
+
 }

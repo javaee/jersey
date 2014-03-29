@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,73 +37,69 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.server;
-
-import java.util.Set;
+package org.glassfish.jersey.test.grizzly;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Application;
+import javax.ws.rs.client.WebTarget;
 
-import javax.annotation.PreDestroy;
-
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Test;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.collect.Sets;
-
 
 /**
- * Assert that {@link Application} pre destroy method is invoked.
+ * Grizzly test container base URI tests.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ApplicationPreDestroyTest extends JerseyTest {
+public class BaseUriTest extends JerseyTest {
 
-    private static boolean appDestroyInvoked = false;
-
-    @Path("/")
-    public static class Resource {
-
-        @GET
-        public String get() {
-            return "Hi!";
-        }
+    @Override
+    protected TestContainerFactory getTestContainerFactory() {
+        return new GrizzlyTestContainerFactory();
     }
 
-    public static class MyApplication extends Application {
-
-        @PreDestroy
-        public void preDestroy() {
-            appDestroyInvoked = true;
+    @Path("root")
+    public static class TestResource {
+        @GET
+        public String get() {
+            return "GET";
         }
 
-        @Override
-        public Set<Class<?>> getClasses() {
-            return Sets.<Class<?>>newHashSet(Resource.class);
+        @Path("sub")
+        @GET
+        public String getSub() {
+            return "sub";
         }
     }
 
     @Override
     protected DeploymentContext configureDeployment() {
-        return DeploymentContext.newInstance(MyApplication.class);
+        set(TestProperties.CONTAINER_PORT, 9998);
+        return DeploymentContext.builder(new ResourceConfig(TestResource.class))
+                .contextPath("context")
+                .build();
     }
 
     @Test
-    public void testApplicationResource() throws Exception {
-        assertThat(target().request().get(String.class), is("Hi!"));
-        assertFalse(appDestroyInvoked);
+    public void testGet() {
+        WebTarget target = target("root");
+
+        String s = target.request().get(String.class);
+        Assert.assertEquals("GET", s);
     }
 
-    @AfterClass
-    public static void afterClass() {
-        assertTrue(appDestroyInvoked);
+    @Test
+    public void testGetSub() {
+        WebTarget target = target("root/sub");
+
+        String s = target.request().get(String.class);
+        Assert.assertEquals("sub", s);
     }
+
 }

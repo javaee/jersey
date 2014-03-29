@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,7 @@ import org.glassfish.grizzly.servlet.WebappContext;
 
 /**
  * Factory for creating and starting Grizzly 2 {@link HttpServer} instances
- * for deploying a Servlet.
+ * for deploying a {@code Servlet}.
  * <p/>
  * The default deployed server is an instance of {@link ServletContainer}.
  * <p/>
@@ -79,9 +79,10 @@ public final class GrizzlyWebContainerFactory {
      *          are ignored If the URI port is not present then port 80 will be
      *          used. The URI query and fragment components are ignored. Only first path segment will be used
      *          as context path, the rest will be ignored.
-     * @return the http server, with the endpoint started
+     * @return the http server, with the endpoint started.
+     *
      * @throws java.io.IOException      if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(String u)
             throws IOException, IllegalArgumentException {
@@ -101,9 +102,10 @@ public final class GrizzlyWebContainerFactory {
      *                   used. The URI query and fragment components are ignored. Only first path segment will be used
      *                   as context path, the rest will be ignored.
      * @param initParams the servlet initialization parameters.
-     * @return the http server, with the endpoint started
+     * @return the http server, with the endpoint started.
+     *
      * @throws IOException              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(String u, Map<String, String> initParams)
             throws IOException, IllegalArgumentException {
@@ -122,9 +124,10 @@ public final class GrizzlyWebContainerFactory {
      *          are ignored If the URI port is not present then port 80 will be
      *          used. The URI query and fragment components are ignored. Only first path segment will be used
      *          as context path, the rest will be ignored.
-     * @return the http server, with the endpoint started
+     * @return the http server, with the endpoint started.
+     *
      * @throws IOException              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(URI u)
             throws IOException, IllegalArgumentException {
@@ -140,9 +143,10 @@ public final class GrizzlyWebContainerFactory {
      *                   used. The URI query and fragment components are ignored. Only first path segment will be used
      *                   as context path, the rest will be ignored.
      * @param initParams the servlet initialization parameters.
-     * @return the http server, with the endpoint started
+     * @return the http server, with the endpoint started.
+     *
      * @throws IOException              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(URI u,
                                     Map<String, String> initParams) throws IOException {
@@ -158,10 +162,11 @@ public final class GrizzlyWebContainerFactory {
      *          are ignored If the URI port is not present then port 80 will be
      *          used. The URI query and fragment components are ignored. Only first path segment will be used
      *          as context path, the rest will be ignored.
-     * @param c the servlet class
-     * @return the http server, with the endpoint started
+     * @param c the servlet class.
+     * @return the http server, with the endpoint started.
+     *
      * @throws IOException              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(String u, Class<? extends Servlet> c) throws IOException {
         if (u == null) {
@@ -180,11 +185,12 @@ public final class GrizzlyWebContainerFactory {
      *                   are ignored If the URI port is not present then port 80 will be
      *                   used. The URI query and fragment components are ignored. Only first path segment will be used
      *                   as context path, the rest will be ignored.
-     * @param c          the servlet class
+     * @param c          the servlet class.
      * @param initParams the servlet initialization parameters.
-     * @return the http server, with the endpoint started
+     * @return the http server, with the endpoint started.
+     *
      * @throws IOException              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(String u, Class<? extends Servlet> c,
                                     Map<String, String> initParams) throws IOException {
@@ -205,9 +211,10 @@ public final class GrizzlyWebContainerFactory {
      *          used. The URI query and fragment components are ignored. Only first path segment will be used
      *          as context path, the rest will be ignored.
      * @param c the servlet class
-     * @return the http server, with the endpoint started
+     * @return the http server, with the endpoint started.
+     *
      * @throws IOException              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(URI u, Class<? extends Servlet> c) throws IOException {
         return create(u, c, null);
@@ -224,9 +231,10 @@ public final class GrizzlyWebContainerFactory {
      *                   as context path, the rest will be ignored.
      * @param c          the servlet class
      * @param initParams the servlet initialization parameters.
-     * @return the http server, with the endpoint started
+     * @return the http server, with the endpoint started.
+     *
      * @throws IOException              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(URI u, Class<? extends Servlet> c,
                                     Map<String, String> initParams) throws IOException {
@@ -234,7 +242,7 @@ public final class GrizzlyWebContainerFactory {
     }
 
     private static HttpServer create(URI u, Class<? extends Servlet> c, Servlet servlet,
-                                    Map<String, String> initParams, Map<String, String> contextInitParams)
+                                     Map<String, String> initParams, Map<String, String> contextInitParams)
             throws IOException {
         if (u == null) {
             throw new IllegalArgumentException("The URI must not be null");
@@ -253,23 +261,20 @@ public final class GrizzlyWebContainerFactory {
 
         WebappContext context = new WebappContext("GrizzlyContext", path);
         ServletRegistration registration;
-        if(c != null) {
+        if (c != null) {
             registration = context.addServlet(c.getName(), c);
         } else {
             registration = context.addServlet(servlet.getClass().getName(), servlet);
         }
         registration.addMapping("/*");
 
-        if(contextInitParams != null) {
-            for(Map.Entry<String, String> e : contextInitParams.entrySet()) {
+        if (contextInitParams != null) {
+            for (Map.Entry<String, String> e : contextInitParams.entrySet()) {
                 context.setInitParameter(e.getKey(), e.getValue());
             }
         }
 
-        if (initParams == null) {
-//            registration.setInitParameter(ClassPathResourceConfig.PROPERTY_CLASSPATH,
-//                    System.getProperty("java.class.path").replace(File.pathSeparatorChar, ';'));
-        } else {
+        if (initParams != null) {
             registration.setInitParameters(initParams);
         }
 
@@ -279,20 +284,20 @@ public final class GrizzlyWebContainerFactory {
     }
 
     /**
-     * Create a {@link HttpServer} that registers the declared
-     * servlet instance.
+     * Create a {@link HttpServer} that registers the declared servlet instance.
      *
-     * @param u          the URI to create the http server. The URI scheme must be
-     *                   equal to "http". The URI user information and host
-     *                   are ignored If the URI port is not present then port 80 will be
-     *                   used. The URI query and fragment components are ignored. Only first path segment will be used
-     *                   as context path, the rest will be ignored.
-     * @param servlet    the servlet instance
-     * @param initParams the servlet initialization parameters
+     * @param u                 the URI to create the http server. The URI scheme must be
+     *                          equal to "http". The URI user information and host
+     *                          are ignored If the URI port is not present then port 80 will be
+     *                          used. The URI query and fragment components are ignored. Only first path segment will be used
+     *                          as context path, the rest will be ignored.
+     * @param servlet           the servlet instance.
+     * @param initParams        the servlet initialization parameters.
      * @param contextInitParams the servlet context initialization parameters.
-     * @return the http server, with the endpoint started
+     * @return the http server, with the endpoint started.
+     *
      * @throws IOException              if an error occurs creating the container.
-     * @throws IllegalArgumentException if <code>u</code> is null
+     * @throws IllegalArgumentException if {@code u} is {@code null}.
      */
     public static HttpServer create(URI u, Servlet servlet, Map<String, String> initParams, Map<String, String> contextInitParams)
             throws IOException {

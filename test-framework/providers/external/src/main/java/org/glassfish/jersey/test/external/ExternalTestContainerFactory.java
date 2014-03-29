@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,12 +41,15 @@ package org.glassfish.jersey.test.external;
 
 import java.net.URI;
 import java.security.AccessController;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.DeploymentContext;
+import org.glassfish.jersey.test.ServletDeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
@@ -60,6 +63,7 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
  * IP address or fully-qualified domain name to the System Property <I>jersey.test.host</I>.
  *
  * @author Srinivas Bhimisetty
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ExternalTestContainerFactory implements TestContainerFactory {
 
@@ -75,15 +79,14 @@ public class ExternalTestContainerFactory implements TestContainerFactory {
     public static final String JERSEY_TEST_HOST = "jersey.test.host";
 
     @Override
-    public TestContainer create(URI baseUri, ApplicationHandler application) throws IllegalArgumentException {
-        return new ExternalTestContainer(getBaseURI(baseUri));
+    public TestContainer create(final URI baseUri, final DeploymentContext context) throws IllegalArgumentException {
+        return new ExternalTestContainer(getBaseURI(baseUri), context);
     }
 
-    private URI getBaseURI(URI baseUri) {
+    private URI getBaseURI(final URI baseUri) {
         String stagingHostName = AccessController.doPrivileged(PropertiesHelper.getSystemProperty(JERSEY_TEST_HOST));
         if (stagingHostName != null) {
-            return UriBuilder.fromUri(baseUri)
-                .host(stagingHostName).build();
+            return UriBuilder.fromUri(baseUri).host(stagingHostName).build();
         }
 
         return baseUri;
@@ -95,25 +98,39 @@ public class ExternalTestContainerFactory implements TestContainerFactory {
      * pre-deployed.
      */
     private static class ExternalTestContainer implements TestContainer {
+        private static final Logger LOGGER = Logger.getLogger(ExternalTestContainer.class.getName());
 
-        final URI baseUri;
+        private final URI baseUri;
 
-        private ExternalTestContainer(URI baseUri) {
-            this.baseUri = UriBuilder.fromUri(baseUri).build();
+        private ExternalTestContainer(final URI baseUri, final DeploymentContext context) {
+            final UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path(context.getContextPath());
+            if (context instanceof ServletDeploymentContext) {
+                uriBuilder.path(((ServletDeploymentContext) context).getServletPath());
+            }
+
+            this.baseUri = uriBuilder.build();
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Creating ExternalTestContainer configured at the base URI " + this.baseUri);
+            }
         }
 
+        @Override
         public ClientConfig getClientConfig() {
             return null;
         }
 
+        @Override
         public URI getBaseUri() {
             return baseUri;
         }
 
+        @Override
         public void start() {
             // do nothing
         }
 
+        @Override
         public void stop() {
             // do nothing
         }

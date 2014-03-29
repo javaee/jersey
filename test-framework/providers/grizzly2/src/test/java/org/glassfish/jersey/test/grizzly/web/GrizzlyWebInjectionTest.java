@@ -37,73 +37,71 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.server;
-
-import java.util.Set;
+package org.glassfish.jersey.test.grizzly.web;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Application;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Context;
 
-import javax.annotation.PreDestroy;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.ServletDeploymentContext;
+import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Test;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.collect.Sets;
-
 
 /**
- * Assert that {@link Application} pre destroy method is invoked.
+ * Test injection support in the {@link org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory}.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ApplicationPreDestroyTest extends JerseyTest {
+public class GrizzlyWebInjectionTest extends JerseyTest {
 
-    private static boolean appDestroyInvoked = false;
+    @Path("GrizzlyWebInjectionTest")
+    public static class TestResource {
 
-    @Path("/")
-    public static class Resource {
+        @Context
+        ServletConfig servletConfig;
+        @Context
+        ServletContext servletContext;
 
         @GET
         public String get() {
-            return "Hi!";
-        }
-    }
-
-    public static class MyApplication extends Application {
-
-        @PreDestroy
-        public void preDestroy() {
-            appDestroyInvoked = true;
-        }
-
-        @Override
-        public Set<Class<?>> getClasses() {
-            return Sets.<Class<?>>newHashSet(Resource.class);
+            if (servletConfig != null && servletContext != null &&
+                    servletConfig.getInitParameter(ServerProperties.PROVIDER_PACKAGES)
+                            .equals(this.getClass().getPackage().getName()))
+                return "SUCCESS";
+            else
+                return "FAIL";
         }
     }
 
     @Override
     protected DeploymentContext configureDeployment() {
-        return DeploymentContext.newInstance(MyApplication.class);
+        return ServletDeploymentContext.builder(new ResourceConfig())
+                .initParam(ServerProperties.PROVIDER_PACKAGES, this.getClass().getPackage().getName())
+                .build();
+    }
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory() {
+        return new GrizzlyWebTestContainerFactory();
     }
 
     @Test
-    public void testApplicationResource() throws Exception {
-        assertThat(target().request().get(String.class), is("Hi!"));
-        assertFalse(appDestroyInvoked);
-    }
+    public void testGet() {
+        WebTarget target = target("GrizzlyWebInjectionTest");
 
-    @AfterClass
-    public static void afterClass() {
-        assertTrue(appDestroyInvoked);
+        String s = target.request().get(String.class);
+        Assert.assertEquals("SUCCESS", s);
     }
 }

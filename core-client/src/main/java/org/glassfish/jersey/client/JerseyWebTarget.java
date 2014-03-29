@@ -378,4 +378,9 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget, Initializa
         config.preInitialize();
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "JerseyWebTarget { " + targetUri.toTemplate() + " }";
+    }
 }

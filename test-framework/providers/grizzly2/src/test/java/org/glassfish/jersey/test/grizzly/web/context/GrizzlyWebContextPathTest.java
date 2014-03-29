@@ -37,73 +37,72 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.e2e.server;
-
-import java.util.Set;
+package org.glassfish.jersey.test.grizzly.web.context;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.core.Application;
-
-import javax.annotation.PreDestroy;
+import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.ServletDeploymentContext;
+import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.AfterClass;
 import org.junit.Test;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
-import jersey.repackaged.com.google.common.collect.Sets;
-
+import static org.junit.Assert.assertEquals;
 
 /**
- * Assert that {@link Application} pre destroy method is invoked.
+ * Test support for context path in {@link org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory}.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class ApplicationPreDestroyTest extends JerseyTest {
+public class GrizzlyWebContextPathTest extends JerseyTest {
 
-    private static boolean appDestroyInvoked = false;
-
-    @Path("/")
-    public static class Resource {
-
-        @GET
-        public String get() {
-            return "Hi!";
-        }
+    @Override
+    protected TestContainerFactory getTestContainerFactory() {
+        return new GrizzlyWebTestContainerFactory();
     }
 
-    public static class MyApplication extends Application {
-
-        @PreDestroy
-        public void preDestroy() {
-            appDestroyInvoked = true;
+    @Path("contextroot")
+    public static class TestResource {
+        @GET
+        public String get() {
+            return "GET";
         }
 
-        @Override
-        public Set<Class<?>> getClasses() {
-            return Sets.<Class<?>>newHashSet(Resource.class);
+        @Path("sub")
+        @GET
+        public String getSub() {
+            return "sub";
         }
     }
 
     @Override
     protected DeploymentContext configureDeployment() {
-        return DeploymentContext.newInstance(MyApplication.class);
+        return ServletDeploymentContext.forPackages(this.getClass().getPackage().getName())
+                .contextPath("context")
+                .build();
     }
 
     @Test
-    public void testApplicationResource() throws Exception {
-        assertThat(target().request().get(String.class), is("Hi!"));
-        assertFalse(appDestroyInvoked);
+    public void testGet() {
+        WebTarget target = target("contextroot");
+
+        String s = target.request().get(String.class);
+        assertEquals("GET", s);
+
+        assertEquals("/context/contextroot", target.getUri().getRawPath());
     }
 
-    @AfterClass
-    public static void afterClass() {
-        assertTrue(appDestroyInvoked);
+    @Test
+    public void testGetSub() {
+        WebTarget target = target("contextroot/sub");
+
+        String s = target.request().get(String.class);
+        assertEquals("sub", s);
+
+        assertEquals("/context/contextroot/sub", target.getUri().getRawPath());
     }
 }

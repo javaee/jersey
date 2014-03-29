@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,33 +39,44 @@
  */
 package org.glassfish.jersey.test.grizzly;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
+/**
+ * Jersey test framework container factory implementation based on Grizzly 2.x HTTP server.
+ *
+ * @author Marek Potociar (marek.potociar at oracle.com)
+ */
 public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
     private static class GrizzlyTestContainer implements TestContainer {
 
-        private final URI uri;
-        private final ApplicationHandler appHandler;
-        private HttpServer server;
         private static final Logger LOGGER = Logger.getLogger(GrizzlyTestContainer.class.getName());
 
-        private GrizzlyTestContainer(URI uri, ApplicationHandler appHandler) {
-            this.appHandler = appHandler;
-            this.uri = uri;
+        private final URI baseUri;
+        private final HttpServer server;
+
+        private GrizzlyTestContainer(final URI baseUri, final DeploymentContext context) {
+            this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Creating GrizzlyTestContainer configured at the base URI " + this.baseUri);
+            }
+
+            this.server = GrizzlyHttpServerFactory.createHttpServer(this.baseUri, context.getResourceConfig(), false);
         }
 
         @Override
@@ -75,33 +86,37 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
         @Override
         public URI getBaseUri() {
-            return uri;
+            return baseUri;
         }
 
         @Override
         public void start() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Starting GrizzlyTestContainer...");
-            }
+            if (server.isStarted()) {
+                LOGGER.log(Level.WARNING, "Ignoring start request - GrizzlyTestContainer is already started.");
 
-            try {
-                this.server = GrizzlyHttpServerFactory.createHttpServer(uri, appHandler);
-            } catch (ProcessingException e) {
-                throw new TestContainerException(e);
+            } else {
+                LOGGER.log(Level.FINE, "Starting GrizzlyTestContainer...");
+                try {
+                    this.server.start();
+                } catch (IOException e) {
+                    throw new TestContainerException(e);
+                }
             }
         }
 
         @Override
         public void stop() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Stopping GrizzlyTestContainer...");
+            if (server.isStarted()) {
+                LOGGER.log(Level.FINE, "Stopping GrizzlyTestContainer...");
+                this.server.shutdownNow();
+            } else {
+                LOGGER.log(Level.WARNING, "Ignoring stop request - GrizzlyTestContainer is already stopped.");
             }
-            this.server.shutdownNow();
         }
     }
 
     @Override
-    public TestContainer create(URI uri, ApplicationHandler appHandler) throws IllegalArgumentException {
-        return new GrizzlyTestContainer(uri, appHandler);
+    public TestContainer create(final URI baseUri, final DeploymentContext context) {
+        return new GrizzlyTestContainer(baseUri, context);
     }
 }

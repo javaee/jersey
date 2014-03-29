@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,16 +40,16 @@
 package org.glassfish.jersey.test.jdkhttp;
 
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
-import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
-import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import com.sun.net.httpserver.HttpServer;
@@ -58,19 +58,25 @@ import com.sun.net.httpserver.HttpServer;
  * Factory for testing {@link org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
 
     private static class JdkHttpServerTestContainer implements TestContainer {
 
-        private final URI uri;
-        private final ApplicationHandler appHandler;
-        private HttpServer server;
+        private final URI baseUri;
+        private final HttpServer server;
+        private final AtomicBoolean started = new AtomicBoolean(false);
         private static final Logger LOGGER = Logger.getLogger(JdkHttpServerTestContainer.class.getName());
 
-        private JdkHttpServerTestContainer(URI uri, ApplicationHandler application) {
-            this.appHandler = application;
-            this.uri = uri;
+        private JdkHttpServerTestContainer(final URI baseUri, final DeploymentContext context) {
+            this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Creating JdkHttpServerTestContainer configured at the base URI " + this.baseUri);
+            }
+
+            this.server = JdkHttpServerFactory.createHttpServer(this.baseUri, context.getResourceConfig(), false);
         }
 
         @Override
@@ -80,33 +86,32 @@ public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
 
         @Override
         public URI getBaseUri() {
-            return uri;
+            return baseUri;
         }
 
         @Override
         public void start() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Starting JdkHttpServerTestContainer...");
-            }
-
-            try {
-                this.server = JdkHttpServerFactory.createHttpServer(uri, appHandler);
-            } catch (ProcessingException e) {
-                throw new TestContainerException(e);
+            if (started.compareAndSet(false, true)) {
+                LOGGER.log(Level.FINE, "Starting JdkHttpServerTestContainer...");
+                server.start();
+            } else {
+                LOGGER.log(Level.WARNING, "Ignoring start request - JdkHttpServerTestContainer is already started.");
             }
         }
 
         @Override
         public void stop() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Stopping JdkHttpServerTestContainer...");
+            if (started.compareAndSet(true, false)) {
+                LOGGER.log(Level.FINE, "Stopping JdkHttpServerTestContainer...");
+                this.server.stop(3);
+            } else {
+                LOGGER.log(Level.WARNING, "Ignoring stop request - JdkHttpServerTestContainer is already stopped.");
             }
-            this.server.stop(3);
         }
     }
 
     @Override
-    public TestContainer create(URI uri, ApplicationHandler application) throws IllegalArgumentException {
-        return new JdkHttpServerTestContainer(uri, application);
+    public TestContainer create(final URI baseUri, final DeploymentContext context) throws IllegalArgumentException {
+        return new JdkHttpServerTestContainer(baseUri, context);
     }
 }

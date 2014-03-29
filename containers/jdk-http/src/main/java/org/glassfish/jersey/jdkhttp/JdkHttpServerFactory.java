@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,47 +58,89 @@ import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsServer;
 
 /**
- * Factory for creating {@link HttpServer JDK HttpServer} instances adapted to
- * the {@link ApplicationHandler}.
+ * Factory for creating {@link HttpServer JDK HttpServer} instances to run Jersey applications.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JdkHttpServerFactory {
+public final class JdkHttpServerFactory {
 
     /**
-     * Creates and starts the {@link HttpServer JDK HttpServer} with the Jersey
-     * application deployed on the given {@link URI}.
+     * Create and start the {@link HttpServer JDK HttpServer} with the Jersey application deployed
+     * at the given {@link URI}.
+     * <p>
+     * The returned {@link HttpServer JDK HttpServer} is started.
+     * </p>
      *
-     * <p>The returned {@link HttpServer JDK HttpServer} is started.</p>
-     *
-     * @param uri The {@link URI uri} on which the Jersey application will be deployed.
-     * @param configuration The Jersey server-side application configuration.
+     * @param uri           the {@link URI uri} on which the Jersey application will be deployed.
+     * @param configuration the Jersey server-side application configuration.
      * @return Newly created {@link HttpServer}.
-     * @throws ProcessingException Thrown when problems during server creation
-     * occurs.
+     *
+     * @throws ProcessingException thrown when problems during server creation
+     *                             occurs.
      */
-    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) throws ProcessingException {
+    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration) {
+        return createHttpServer(uri, configuration, true);
+    }
+
+    /**
+     * Create (and possibly start) the {@link HttpServer JDK HttpServer} with the JAX-RS / Jersey application deployed
+     * on the given {@link URI}.
+     * <p>
+     * The {@code start} flag controls whether or not the returned {@link HttpServer JDK HttpServer} is started.
+     * </p>
+     *
+     * @param uri           the {@link URI uri} on which the Jersey application will be deployed.
+     * @param configuration the Jersey server-side application configuration.
+     * @param start         if set to {@code false}, the created server will not be automatically started.
+     * @return Newly created {@link HttpServer}.
+     *
+     * @throws ProcessingException thrown when problems during server creation occurs.
+     * @since 2.8
+     */
+    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration, final boolean start) {
         final JdkHttpHandlerContainer handler = ContainerFactory.createContainer(JdkHttpHandlerContainer.class, configuration);
-        return createHttpServer(uri, handler);
+        return createHttpServer(uri, handler, start);
     }
 
     /**
-     * Creates and starts the {@link HttpServer JDK HttpServer} with the
-     * Jersey application deployed on the given {@link URI}.
+     * Create and start the {@link HttpServer JDK HttpServer} with the Jersey application deployed
+     * at the given {@link URI}.
+     * <p>
+     * The returned {@link HttpServer JDK HttpServer} is started.
+     * </p>
      *
-     * <p>The returned {@link HttpServer JDK HttpServer} is started.</p>
-     *
-     * @param uri The {@link URI uri} on which the Jersey application will be deployed.
-     * @param appHandler The Jersey server-side application handler.
+     * @param uri        the {@link URI uri} on which the Jersey application will be deployed.
+     * @param appHandler the Jersey server-side application handler.
      * @return Newly created {@link HttpServer}.
-     * @throws ProcessingException Thrown when problems during server creation
-     * occurs.
+     *
+     * @throws ProcessingException thrown when problems during server creation
+     *                             occurs.
      */
-    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) throws ProcessingException {
-        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler));
+    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler) {
+        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler), true);
     }
 
-    private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler) throws ProcessingException {
+    /**
+     * Create (and possibly start) the {@link HttpServer JDK HttpServer} with the JAX-RS / Jersey application deployed
+     * on the given {@link URI}.
+     * <p>
+     * The {@code start} flag controls whether or not the returned {@link HttpServer JDK HttpServer} is started.
+     * </p>
+     *
+     * @param uri        the {@link URI uri} on which the Jersey application will be deployed.
+     * @param appHandler the Jersey server-side application handler.
+     * @param start      if set to {@code false}, the created server will not be automatically started.
+     * @return Newly created {@link HttpServer}.
+     *
+     * @throws ProcessingException thrown when problems during server creation occurs.
+     * @since 2.8
+     */
+    public static HttpServer createHttpServer(final URI uri, final ApplicationHandler appHandler, boolean start) {
+        return createHttpServer(uri, new JdkHttpHandlerContainer(appHandler), start);
+    }
+
+    private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler, boolean start) {
 
         if (uri == null) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_NULL());
@@ -112,7 +154,7 @@ public class JdkHttpServerFactory {
         final String path = uri.getPath();
         if (path == null) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_PATH_NULL(uri));
-        } else if (path.length() == 0) {
+        } else if (path.isEmpty()) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_PATH_EMPTY(uri));
         } else if (path.charAt(0) != '/') {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_PATH_START(uri));
@@ -186,7 +228,9 @@ public class JdkHttpServerFactory {
             }
         };
 
-        wrapper.start();
+        if (start) {
+            wrapper.start();
+        }
 
         return wrapper;
     }
