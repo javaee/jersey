@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,7 @@ public final class TestProperties {
      * <p />
      * The default value is {@code false}.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String LOG_TRAFFIC = "jersey.config.test.logging.enable";
     /**
@@ -67,7 +67,7 @@ public final class TestProperties {
      * <p />
      * The default value is {@code false}.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String DUMP_ENTITY = "jersey.config.test.logging.dumpEntity";
     /**
@@ -77,9 +77,9 @@ public final class TestProperties {
      * name of a test container factory implementation class, otherwise it will
      * be ignored.
      * <p />
-     * The default value is <code>{@value #DEFAULT_CONTAINER_FACTORY}</code>.
+     * The default value is <tt>{@value #DEFAULT_CONTAINER_FACTORY}</tt>.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      *
      * @see #CONTAINER_PORT
      */
@@ -99,13 +99,14 @@ public final class TestProperties {
      * for test application deployment. The value of the property must be a valid
      * positive integer, otherwise it will be ignored.
      * <p />
-     * The default value is <code>{@value #DEFAULT_CONTAINER_PORT}</code>.
+     * The default value is <tt>{@value #DEFAULT_CONTAINER_PORT}</tt>.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      *
      * @see #CONTAINER_FACTORY
      */
     public static final String CONTAINER_PORT = "jersey.config.test.container.port";
+
     /**
      * Specifies the default network connection port to be used by an active test
      * container for test application deployment.
@@ -119,7 +120,7 @@ public final class TestProperties {
      * value (or higher) defined by the value of this property.
      * Log records can be retrieved in tests using {@link org.glassfish.jersey.test.JerseyTest#getLoggedRecords()}.
      * <p />
-     * The name of the configuration property is <code>{@value}</code>.
+     * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String RECORD_LOG_LEVEL = "jersey.config.test.logging.record.level";
 

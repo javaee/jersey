@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Application;
@@ -58,17 +57,16 @@ import javax.ws.rs.ext.Provider;
 
 import javax.xml.bind.JAXBContext;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.junit.Test;
@@ -318,20 +316,17 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(final TestContainer tc, final ApplicationHandler applicationHandler) {
-        final Client client = super.getClient(tc, applicationHandler);
-        client.register(getJsonTestSetup().getJsonProvider().getFeature());
+    protected void configureClient(ClientConfig config) {
+        config.register(getJsonTestSetup().getJsonProvider().getFeature());
 
-        client.register(getJaxbContextResolver(jsonTestSetup));
+        config.register(getJaxbContextResolver(jsonTestSetup));
 
         // Register additional providers.
         if (getJsonTestSetup().getProviders() != null) {
             for (Object provider : getJsonTestSetup().getProviders()) {
-                client.register(provider);
+                config.register(provider);
             }
         }
-
-        return client;
     }
 
     @Test

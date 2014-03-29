@@ -93,9 +93,10 @@ public class MvcEncodingTest extends JerseyTest {
     private final String defaultEncoding;
 
     public MvcEncodingTest(Feature feature, String propertySuffix, String templateName, String defaultEncoding) {
-
-        super(new ResourceConfig().register(feature).register(FreemarkerResource.class
-        ).property(MvcFeature.ENCODING + "." + propertySuffix, defaultEncoding));
+        super(new ResourceConfig()
+                .register(feature)
+                .register(FreemarkerResource.class)
+                .property(MvcFeature.ENCODING + "." + propertySuffix, defaultEncoding));
         MvcEncodingTest.templateName = templateName;
         this.defaultEncoding = defaultEncoding;
     }

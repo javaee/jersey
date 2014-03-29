@@ -51,6 +51,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -172,7 +173,11 @@ public class ResponseWriter implements ContainerResponseWriter {
             return null;
         } else {
             try {
-                return response.getOutputStream();
+                final OutputStream outputStream = response.getOutputStream();
+
+                // delegating output stream prevents closing the underlying servlet output stream,
+                // so that any Servlet filters in the chain can still write to the response after us.
+                return new NonCloseableOutputStreamWrapper(outputStream);
             } catch (IOException e) {
                 throw new ContainerException(e);
             }
@@ -195,7 +200,7 @@ public class ResponseWriter implements ContainerResponseWriter {
                         }
                     } catch (IOException ex) {
                         throw new ContainerException(
-                                LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(status, reason!=null?reason:"--"),
+                                LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(status, reason != null ? reason : "--"),
                                 ex);
                     }
                 }
@@ -212,17 +217,17 @@ public class ResponseWriter implements ContainerResponseWriter {
                 try {
                     if (configSetStatusOverSendError) {
                         response.reset();
-                        response.setStatus(500, "Request failed.");
+                        //noinspection deprecation
+                        response.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Request failed.");
                     } else {
-                        response.sendError(500, "Request failed.");
+                        response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Request failed.");
                     }
                 } catch (IllegalStateException ex) {
                     // a race condition externally committing the response can still occur...
                     LOGGER.log(Level.FINER, "Unable to reset failed response.", ex);
                 } catch (IOException ex) {
-                    throw new ContainerException(
-                            LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(500, "Request failed."),
-                            ex);
+                    throw new ContainerException(LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(
+                            Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Request failed."), ex);
                 } finally {
                     asyncExt.complete();
                 }
@@ -251,7 +256,8 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     /**
-     * Provides response status captured when {@link #writeResponseStatusAndHeaders(long, org.glassfish.jersey.server.ContainerResponse)} has been invoked.
+     * Provides response status captured when {@link #writeResponseStatusAndHeaders(long, org.glassfish.jersey.server.ContainerResponse)}
+     * has been invoked.
      * The method will block if the write method has not been called yet.
      *
      * @return response status
@@ -263,10 +269,41 @@ public class ResponseWriter implements ContainerResponseWriter {
     private ContainerResponse getResponseContext() {
         try {
             return responseContext.get();
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException | ExecutionException ex) {
             throw new ContainerException(ex);
-        } catch (ExecutionException ex) {
-            throw new ContainerException(ex);
+        }
+    }
+
+    private static class NonCloseableOutputStreamWrapper extends OutputStream {
+        private final OutputStream delegate;
+
+        public NonCloseableOutputStreamWrapper(OutputStream delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            delegate.write(b);
+        }
+
+        @Override
+        public void write(byte[] b) throws IOException {
+            delegate.write(b);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            delegate.write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            delegate.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            // do not close - let the servlet container close the stream
         }
     }
 }

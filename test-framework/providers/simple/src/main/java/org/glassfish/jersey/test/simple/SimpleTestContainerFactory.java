@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,10 +46,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.simple.SimpleContainerFactory;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -58,19 +60,25 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
  * Factory for testing {@link org.glassfish.jersey.simple.SimpleContainer}.
  *
  * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class SimpleTestContainerFactory implements TestContainerFactory {
 
     private static class SimpleTestContainer implements TestContainer {
 
-        private final URI uri;
+        private final URI baseUri;
         private final ApplicationHandler appHandler;
         private Closeable server;
         private static final Logger LOGGER = Logger.getLogger(SimpleTestContainer.class.getName());
 
-        private SimpleTestContainer(URI uri, ApplicationHandler appHandler) {
-            this.appHandler = appHandler;
-            this.uri = uri;
+        private SimpleTestContainer(final URI baseUri, final DeploymentContext context) {
+            this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Creating SimpleTestContainer configured at the base URI " + this.baseUri);
+            }
+
+            this.appHandler = new ApplicationHandler(context.getResourceConfig());
         }
 
         @Override
@@ -80,17 +88,15 @@ public class SimpleTestContainerFactory implements TestContainerFactory {
 
         @Override
         public URI getBaseUri() {
-            return uri;
+            return baseUri;
         }
 
         @Override
         public void start() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Starting SimpleTestContainer...");
-            }
+            LOGGER.log(Level.FINE, "Starting SimpleTestContainer...");
 
             try {
-                this.server = SimpleContainerFactory.create(uri, appHandler);
+                this.server = SimpleContainerFactory.create(baseUri, appHandler);
             } catch (ProcessingException e) {
                 throw new TestContainerException(e);
             }
@@ -98,19 +104,19 @@ public class SimpleTestContainerFactory implements TestContainerFactory {
 
         @Override
         public void stop() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Stopping SimpleTestContainer...");
-            }
+            LOGGER.log(Level.FINE, "Stopping SimpleTestContainer...");
             try {
                 this.server.close();
             } catch (IOException ex) {
-                LOGGER.log(Level.INFO, "Error Stopping SimpleTestContainer...", ex);
+                LOGGER.log(Level.WARNING, "Error Stopping SimpleTestContainer...", ex);
+            } finally {
+                this.server = null;
             }
         }
     }
 
     @Override
-    public TestContainer create(URI uri, ApplicationHandler appHandler) throws IllegalArgumentException {
-        return new SimpleTestContainer(uri, appHandler);
+    public TestContainer create(final URI baseUri, final DeploymentContext context) throws IllegalArgumentException {
+        return new SimpleTestContainer(baseUri, context);
     }
 }

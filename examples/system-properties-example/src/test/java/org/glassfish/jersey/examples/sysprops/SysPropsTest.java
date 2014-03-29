@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,19 +41,18 @@ package org.glassfish.jersey.examples.sysprops;
 
 import java.util.Set;
 
-import javax.ws.rs.client.Client;
-
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.proxy.WebResourceFactory;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * System properties example unit test.
+ *
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class SysPropsTest extends JerseyTest {
@@ -64,10 +63,8 @@ public class SysPropsTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(TestContainer tc, ApplicationHandler application) {
-        Client origClient = super.getClient(tc, application);
-        origClient.register(PropertiesReader.class);
-        return origClient;
+    protected void configureClient(ClientConfig config) {
+        config.register(PropertiesReader.class);
     }
 
     @Test

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,7 +41,7 @@ package org.glassfish.jersey.test.spi;
 
 import java.net.URI;
 
-import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.DeploymentContext;
 
 /**
  * A test container factory responsible for creating test containers.
@@ -51,15 +51,14 @@ import org.glassfish.jersey.server.ApplicationHandler;
 public interface TestContainerFactory {
 
     /**
-     * Create a test container.
+     * Create a test container instance.
      *
-     * @param baseUri the base URI of the application.
+     * @param baseUri base URI for the test container to run at.
+     * @param deploymentContext deployment context of the tested JAX-RS / Jersey application .
+     * @return new test container configured to run the tested application.
      *
-     * @param application Jersey server-side application handler instance.
-     * @return the test container.
-     * @throws IllegalArgumentException if <code>ad</code> is not an
-     *         appropriate instance of an application descriptor supported
-     *         by this test container factory.
+     * @throws IllegalArgumentException if {@code deploymentContext} is not supported
+     *                                  by this test container factory.
      */
-    TestContainer create(URI baseUri, ApplicationHandler application) throws IllegalArgumentException;
+    TestContainer create(URI baseUri, DeploymentContext deploymentContext);
 }

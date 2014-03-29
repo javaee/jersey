@@ -71,7 +71,7 @@ public class JerseyAppTestContainer implements TestContainer {
 
     @Override
     public ClientConfig getClientConfig() {
-        return new ClientConfig();
+        return null;
     }
 
     @Override

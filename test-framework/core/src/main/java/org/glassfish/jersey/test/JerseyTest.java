@@ -53,7 +53,6 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -63,12 +62,9 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.internal.ServiceFinderBinder;
-import org.glassfish.jersey.internal.inject.Providers;
+import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -81,22 +77,81 @@ import jersey.repackaged.com.google.common.collect.Maps;
 import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
- * Parent class for all tests written using Jersey test framework.
+ * Parent class for testing JAX-RS and Jersey-based applications using Jersey test framework.
+ * <p>
+ * At construction this class will obtain a {@link org.glassfish.jersey.test.spi.TestContainerFactory
+ * test container factory} implementation, and use the factory to obtain a configured
+ * {@link org.glassfish.jersey.test.spi.TestContainer test container}.
+ * </p>
+ * <p>
+ * Before each test method in an extending class is run, the {@link TestContainer#start()} method is invoked
+ * on the configured test container. After each test method has run, the {@link TestContainer#stop()} method
+ * is invoked on the test container.
+ * Every test method in the {@code JerseyTest} subclass can invoke the {@link #client()} to obtain a JAX-RS
+ * {@link javax.ws.rs.client.Client}, from which {@link javax.ws.rs.client.WebTarget} instances can be created
+ * to send arbitrary requests.
+ * Also, one of the {@code target} methods ({@link #target()} or {@link #target(String)}) may be invoked to obtain
+ * a JAX-RS {@link javax.ws.rs.client.WebTarget} instances from which requests can be sent to and responses
+ * received from the Web application under test.
+ * </p>
+ * <p>
+ * If a test container factory is not explicitly declared using the appropriate constructor
+ * (see {@link #JerseyTest(TestContainerFactory)}) or by overriding the {@link #getTestContainerFactory()} method,
+ * then a default test container factory will be obtained as follows:
+ * <ol>
+ * <li>
+ * If a system property <tt>{@value org.glassfish.jersey.test.TestProperties#CONTAINER_FACTORY}</tt> is set
+ * and the value is a fully qualified class name of a class that extends from {@code TestContainerFactory}
+ * then the test container factory used by default will be an instance of that class.
+ * A {@link TestContainerException} will be thrown if the class cannot be loaded or instantiated.
+ * </li>
+ * <li>
+ * Otherwise, {@code META-INF/services} locations on the class path will be scanned for implementation providers
+ * of {@code TestContainerFactory} SPI. If a single implementation is found, it will be used. If multiple implementations
+ * are found, the default <tt>{@value org.glassfish.jersey.test.TestProperties#CONTAINER_FACTORY}</tt> implementation
+ * will be selected if present, otherwise the first found implementation will be selected and a warning message will be logged.
+ * </li>
+ * <li>
+ * If no {@code TestContainerFactory} has been selected in the steps above, Jersey test framework will try to
+ * instantiate the default test container factory implementation (
+ * <tt>{@value org.glassfish.jersey.test.TestProperties#DEFAULT_CONTAINER_FACTORY}</tt>) directly.
+ * A {@link TestContainerException} will be thrown if this class cannot be loaded or instantiated.
+ * </li>
+ * </ol>
+ * </p>
+ * <p>
+ * The test container is configured by a {@link org.glassfish.jersey.test.DeploymentContext} that is either provided
+ * by  subclass or automatically created by {@code JerseyTest} based on the provided JAX-RS / Jersey {@code Application}
+ * class or instance to be tested. A {@link TestContainerException} will be thrown if the configured test container
+ * factory cannot support the deployment context type.
+ * Two deployment context are provided:
+ * <ol>
+ * <li>A basic deployment context, of type {@link DeploymentContext}, compatible with all test containers that are not
+ * based on Servlet deployment model.</li>
+ * <li>A Servlet-based deployment context, of type {@link ServletDeploymentContext}, compatible with Servlet-based test
+ * containers.</li>
+ * </ol>
+ * </p>
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Srinivas Bhimisetty
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @SuppressWarnings("UnusedDeclaration")
 public abstract class JerseyTest {
 
     private static final Logger LOGGER = Logger.getLogger(JerseyTest.class.getName());
     /**
-     * Holds the default test container factory class to be used for running the
-     * tests.
+     * Holds the test container factory class to be used for running the tests by default
+     * (if testContainerFactory has not been set).
+     * This static field is initialized in {@link #getDefaultTestContainerFactory()} method
+     * and is reused by any instances of {@code JerseyTest} that are subsequently run.
+     * This is done to optimize the number of TestContainerFactory service provider look-ups
+     * and class loading.
      */
-    private static Class<? extends TestContainerFactory> testContainerFactoryClass;
+    private static Class<? extends TestContainerFactory> defaultTestContainerFactoryClass;
     /**
      * The test container factory which creates an instance of the test container
      * on which the tests would be run.
@@ -105,9 +160,8 @@ public abstract class JerseyTest {
     /**
      * The test container on which the tests would be run.
      */
-    private final TestContainer tc;
-    private final ApplicationHandler application;
-    private final AtomicReference<Client> client = new AtomicReference<Client>(null);
+    private final TestContainer testContainer;
+    private final AtomicReference<Client> client = new AtomicReference<>(null);
     /**
      * JerseyTest property bag that can be used to configure the test behavior.
      * These properties can be overridden with a system property.
@@ -125,22 +179,32 @@ public abstract class JerseyTest {
     private final Map<Logger, Level> logLevelMap = Maps.newIdentityHashMap();
 
     /**
-     * An extending class must implement the {@link #configure()} method to
-     * provide an application descriptor.
+     * Initialize JerseyTest instance.
      *
-     * @throws TestContainerException if the default test container factory
-     *                                cannot be obtained, or the application descriptor is not
-     *                                supported by the test container factory.
+     * This constructor can be used from an extending subclass.
+     * <p>
+     * When this constructor is used, the extending concrete subclass must implement one of the
+     * {@link #configure()} or {@link #configureDeployment()} methods to provide the tested application
+     * configuration and deployment context.
+     * </p>
+     *
+     * @throws TestContainerException if the default test container factory cannot be obtained,
+     *                                or the test application deployment context is not supported
+     *                                by the test container factory.
      */
     public JerseyTest() throws TestContainerException {
-        ResourceConfig config = getResourceConfig(configure());
-        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class, null, RuntimeType.SERVER));
+        // Note: this must be the first call in the constructor to allow setting config
+        // properties (especially around logging) in the configure() or configureDeployment()
+        // method overridden in subclass, otherwise the properties set in the subclass would
+        // not be set soon enough
+        final DeploymentContext context = configureDeployment();
 
         if (isLogRecordingEnabled()) {
             registerLogHandler();
         }
-        this.application = new ApplicationHandler(config);
-        this.tc = getContainer(application, getTestContainerFactory());
+
+        this.testContainer = getTestContainer(context);
+
         if (isLogRecordingEnabled()) {
             loggedStartupRecords.addAll(loggedRuntimeRecords);
             loggedRuntimeRecords.clear();
@@ -149,25 +213,34 @@ public abstract class JerseyTest {
     }
 
     /**
-     * Construct a new instance with a test container factory.
-     * <p/>
-     * An extending class must implement the {@link #configure()} method to
-     * provide an application descriptor.
+     * Initialize JerseyTest instance and specify the test container factory to be used by this test.
+     *
+     * This constructor can be used from an extending subclass.
+     * <p>
+     * When this constructor is used, the extending concrete subclass must implement one of the
+     * {@link #configure()} or {@link #configureDeployment()} methods to provide the tested application
+     * configuration and deployment context.
+     * </p>
      *
      * @param testContainerFactory the test container factory to use for testing.
-     * @throws TestContainerException if the application descriptor is not
-     *                                supported by the test container factory.
+     * @throws TestContainerException if the test application deployment context is not supported by the test
+     *                                container factory.
      */
     public JerseyTest(TestContainerFactory testContainerFactory) {
-        setTestContainerFactory(testContainerFactory);
+        // Note: this must be the first call in the constructor to allow setting config
+        // properties (especially around logging) in the configure() or configureDeployment()
+        // method overridden in subclass, otherwise the properties set in the subclass would
+        // not be set soon enough
+        final DeploymentContext context = configureDeployment();
 
-        ResourceConfig config = getResourceConfig(configure());
-        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class, null, RuntimeType.SERVER));
+        this.testContainerFactory = testContainerFactory;
+
         if (isLogRecordingEnabled()) {
             registerLogHandler();
         }
-        this.application = new ApplicationHandler(config);
-        this.tc = getContainer(application, testContainerFactory);
+
+        this.testContainer = getTestContainer(context);
+
         if (isLogRecordingEnabled()) {
             loggedStartupRecords.addAll(loggedRuntimeRecords);
             loggedRuntimeRecords.clear();
@@ -176,23 +249,36 @@ public abstract class JerseyTest {
     }
 
     /**
-     * Construct a new instance with an application descriptor that defines
-     * how the test container is configured.
+     * Initialize JerseyTest instance.
      *
-     * @param jaxrsApplication an application describing how to configure the
-     *                         test container.
-     * @throws TestContainerException if the default test container factory
-     *                                cannot be obtained, or the application descriptor is not
-     *                                supported by the test container factory.
+     * This constructor can be used from an extending subclass.
+     * <p>
+     * When this constructor is used, the extending concrete subclass must implement one of the
+     * {@link #configure()} or {@link #configureDeployment()} methods are ignored.
+     * </p>
+     * <p>
+     * Please note that when this constructor is used, recording of startup logs as well as configuring
+     * other {@code JerseyTest} properties and features may not work properly. While using this constructor
+     * should generally be avoided, in certain scenarios it may be necessary to use this constructor.
+     * (E.g. when running parameterized tests in which application is created based on test parameters
+     * passed in by JUnit framework via test constructor - in such case it is not possible to propagate
+     * the necessary information to one of the overridden {@code JerseyTest.configure...} methods).
+     * </p>
+     *
+     * @param jaxrsApplication tested application.
+     * @throws TestContainerException if the default test container factory cannot be obtained,
+     *                                or the test application deployment context is not supported
+     *                                by the test container factory.
      */
     public JerseyTest(Application jaxrsApplication) throws TestContainerException {
-        ResourceConfig config = getResourceConfig(jaxrsApplication);
-        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class, null, RuntimeType.SERVER));
+        // configure method is not invoked in this constructor - log recording can only be enabled via system props.
         if (isLogRecordingEnabled()) {
             registerLogHandler();
         }
-        this.application = new ApplicationHandler(config);
-        this.tc = getContainer(application, getTestContainerFactory());
+
+        final DeploymentContext context = DeploymentContext.newInstance(jaxrsApplication);
+        this.testContainer = getTestContainer(context);
+
         if (isLogRecordingEnabled()) {
             loggedStartupRecords.addAll(loggedRuntimeRecords);
             loggedRuntimeRecords.clear();
@@ -201,22 +287,34 @@ public abstract class JerseyTest {
     }
 
     /**
-     * Construct a new instance with an {@link Application} class.
+     * Initialize JerseyTest instance.
      *
-     * @param jaxrsApplicationClass an application describing how to configure the
-     *                              test container.
-     * @throws TestContainerException if the default test container factory
-     *                                cannot be obtained, or the application descriptor is not
-     *                                supported by the test container factory.
+     * This constructor can be used from an extending subclass.
+     * <p>
+     * When this constructor is used, the extending concrete subclass must implement one of the
+     * {@link #configure()} or {@link #configureDeployment()} methods are ignored.
+     * </p>
+     * <p>
+     * Please note that when this constructor is used, recording of startup logs as well as configuring
+     * other {@code JerseyTest} properties and features may not work properly.
+     * </p>
+     *
+     * @param jaxrsApplicationClass tested application class.
+     * @throws TestContainerException if the default test container factory cannot be obtained,
+     *                                or the test application deployment context is not supported
+     *                                by the test container factory.
+     * @deprecated Please override the {@link #configure()} or {@link #configureDeployment()} method instead.
      */
+    @Deprecated
     public JerseyTest(Class<? extends Application> jaxrsApplicationClass) throws TestContainerException {
-        ResourceConfig config = ResourceConfig.forApplicationClass(jaxrsApplicationClass);
-        config.register(new ServiceFinderBinder<TestContainerFactory>(TestContainerFactory.class, null, RuntimeType.SERVER));
+        // configure method is not invoked in this constructor - log recording can only be enabled via system props.
         if (isLogRecordingEnabled()) {
             registerLogHandler();
         }
-        this.application = new ApplicationHandler(config);
-        this.tc = getContainer(application, getTestContainerFactory());
+
+        final DeploymentContext context = DeploymentContext.newInstance(jaxrsApplicationClass);
+        this.testContainer = getTestContainer(context);
+
         if (isLogRecordingEnabled()) {
             loggedStartupRecords.addAll(loggedRuntimeRecords);
             loggedRuntimeRecords.clear();
@@ -224,8 +322,8 @@ public abstract class JerseyTest {
         }
     }
 
-    private ResourceConfig getResourceConfig(Application app) {
-        return ResourceConfig.forApplication(app);
+    private TestContainer getTestContainer(DeploymentContext context) {
+        return getTestContainerFactory().create(getBaseUri(), context);
     }
 
     /**
@@ -331,148 +429,220 @@ public abstract class JerseyTest {
         return null;
     }
 
+    private static String getSystemProperty(final String propertyName) {
+        final Properties systemProperties = AccessController.doPrivileged(PropertiesHelper.getSystemProperties());
+        return systemProperties.getProperty(propertyName);
+    }
+
     /**
-     * Return an JAX-RS application that defines how the application in the
-     * test container is configured.
-     * <p/>
-     * If a constructor is utilized that does not supply an application
-     * descriptor then this method must be overridden to return an application
-     * descriptor, otherwise an {@link UnsupportedOperationException} exception
-     * will be thrown.
-     * <p/>
-     * If a constructor is utilized that does supply an application descriptor
-     * then this method does not require to be overridden and will not be
-     * invoked.
+     * Create the tested JAX-RS /Jersey application.
      *
-     * @return the application descriptor.
+     * This method may be overridden by subclasses to provide the configured JAX-RS /Jersey application to be tested.
+     * The method may be also used to configure {@code JerseyTest} instance properties.
+     * <p>
+     * Unless {@link #configureDeployment()} method is overridden in the subclass, the {@code configure()} method is invoked
+     * by {@code configureDeployment()} to create default deployment context for the tested application. As such, the method
+     * is invoked in the scope of one of the {@code JerseyTest} constructors.
+     * Default implementation of this method throws {@link UnsupportedOperationException}, so that construction of
+     * {@code JerseyTest} instance fails unless one of the {@code configure()} or {@code configureDeployment()} methods is
+     * overridden in the subclass.
+     * </p>
+     * <p>
+     * Note that since the method is invoked from {@code JerseyTest} constructor, the overriding implementation of the method
+     * must not depend on any subclass fields as those will not be initialized yet when the method is invoked.
+     * </p>
+     * <p>
+     * Also note that in case the {@link #JerseyTest(javax.ws.rs.core.Application)} or {@link #JerseyTest(Class)} constructor
+     * is used, the method is never invoked.
+     * </p>
+     *
+     * @return tested JAX-RS /Jersey application.
      */
     protected Application configure() {
-        throw new UnsupportedOperationException(
-                "The configure method must be implemented by the extending class");
+        throw new UnsupportedOperationException("The configure method must be implemented by the extending class");
     }
 
     /**
-     * Sets the test container factory to to be used for testing.
+     * Create and configure deployment context for the tested application.
      *
-     * @param testContainerFactory the test container factory to to be used for
-     *                             testing.
+     * This method may be overridden by subclasses to provide custom test container deployment context for the tested
+     * application. The method may be also used to configure {@code JerseyTest} instance properties.
+     * <p>
+     * The method is invoked from {@code JerseyTest} constructors to provide deployment context for the tested application.
+     * Default implementation of this method creates
+     * {@link org.glassfish.jersey.test.DeploymentContext#newInstance(javax.ws.rs.core.Application) new deployment context}
+     * using JAX-RS application instance obtained by calling the {@link #configure()} method.
+     * </p>
+     * <p>
+     * Note that since the method is invoked from {@code JerseyTest} constructor, the overriding implementation of the method
+     * must not depend on any subclass fields as those will not be initialized yet when the method is invoked.
+     * </p>
+     * <p>
+     * Also note that in case the {@link #JerseyTest(javax.ws.rs.core.Application)} or {@link #JerseyTest(Class)} constructor
+     * is used, the method is never invoked.
+     * </p>
+     *
+     * @return configured deployment context for the tested application.
+     *
+     * @since 2.8
      */
-    protected final void setTestContainerFactory(TestContainerFactory testContainerFactory) {
-        this.testContainerFactory = testContainerFactory;
+    protected DeploymentContext configureDeployment() {
+        return DeploymentContext.builder(configure()).build();
     }
 
     /**
-     * Returns an instance of {@link TestContainerFactory} class. This instance can be set by a constructor ({@link
-     * #JerseyTest(org.glassfish.jersey.test.spi.TestContainerFactory)}, as an application {@link Providers Provider} or the
-     * {@link TestContainerFactory} class can be set as a {@value org.glassfish.jersey.test.TestProperties#CONTAINER_FACTORY}
-     * property.
+     * Return an instance of {@link TestContainerFactory} class.
+     *
+     * <p>
+     * This method is used only once during {@code JerseyTest} instance construction to retrieve the factory responsible
+     * for providing {@link org.glassfish.jersey.test.spi.TestContainer} that will be used to deploy the tested application.
+     * </p>
+     * <p>
+     * A default implementation first searches for the {@code TestContainerFactory} set via
+     * {@link #JerseyTest(org.glassfish.jersey.test.spi.TestContainerFactory) constructor}, then it looks for a
+     * {@code TestContainerFactory} implementation class name set via
+     * <tt>{@value org.glassfish.jersey.test.TestProperties#CONTAINER_FACTORY}</tt> system property with a fallback to
+     * searching for {@code TestContainerFactory} service providers on the class path. At last, if no
+     * {@code TestContainerFactory} has been found, the method attempts to create new default
+     * {@code TestContainerFactory} implementation instance
+     * (<tt>{@value org.glassfish.jersey.test.TestProperties#DEFAULT_CONTAINER_FACTORY}</tt>).
+     * </p>
+     * <p>
+     * Alternatively, this method may be overridden to directly provide a custom {@code TestContainerFactory} instance.
+     * Note that since the method is invoked from {@code JerseyTest} constructor, the overriding implementation of the method
+     * must not depend on any subclass fields as those will not be initialized yet when the method is invoked.
+     * </p>
      *
      * @return an instance of {@link TestContainerFactory} class.
+     *
      * @throws TestContainerException if the initialization of {@link TestContainerFactory} instance is not successful.
      */
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         if (testContainerFactory == null) {
-            if (testContainerFactoryClass == null) {
-
-                final String tcfClassName = getProperty(TestProperties.CONTAINER_FACTORY);
-                if ((tcfClassName == null)) {
-                    Set<TestContainerFactory> testContainerFactories =
-                            Providers.getProviders(application.getServiceLocator(), TestContainerFactory.class);
-
-                    if (testContainerFactories.size() >= 1) {
-                        // if default factory is present, use it.
-                        for (TestContainerFactory tcFactory : testContainerFactories) {
-
-                            if (tcFactory.getClass().getName().equals(TestProperties.DEFAULT_CONTAINER_FACTORY)) {
-                                LOGGER.log(
-                                        Level.CONFIG,
-                                        "Found multiple TestContainerFactory implementations, using default {0}",
-                                        tcFactory.getClass().getName());
-
-                                testContainerFactoryClass = tcFactory.getClass(); // is this necessary?
-                                return tcFactory;
-                            }
-                        }
-
-                        if (testContainerFactories.size() != 1) {
-                            LOGGER.log(
-                                    Level.WARNING,
-                                    "Found multiple TestContainerFactory implementations, using {0}",
-                                    testContainerFactories.iterator().next().getClass().getName());
-                        }
-
-                        testContainerFactoryClass = testContainerFactories.iterator().next().getClass();
-                        return testContainerFactories.iterator().next();
-
-                    }
-                } else {
-                    final Class<Object> tfClass = AccessController.doPrivileged(ReflectionHelper.classForNamePA(tcfClassName, null));
-                    if (tfClass == null) {
-                        throw new TestContainerException(
-                                "The default test container factory class name, "
-                                        + tcfClassName
-                                        + ", cannot be loaded");
-                    }
-                    try {
-                        testContainerFactoryClass =
-                                tfClass.asSubclass(TestContainerFactory.class);
-                    } catch (ClassCastException ex) {
-                        throw new TestContainerException(
-                                "The default test container factory class, "
-                                        + tcfClassName
-                                        + ", is not an instance of TestContainerFactory", ex);
-                    }
-                }
-            }
-
-            try {
-                return testContainerFactoryClass.newInstance();
-            } catch (Exception ex) {
-                throw new TestContainerException(
-                        "The default test container factory, "
-                                + testContainerFactoryClass
-                                + ", could not be instantiated", ex);
-            }
+            testContainerFactory = getDefaultTestContainerFactory();
         }
-
         return testContainerFactory;
     }
 
-    /**
-     * Create a web resource whose URI refers to the base URI the Web
-     * application is deployed at.
-     *
-     * @return the created web resource
-     */
-    public WebTarget target() {
-        return client().target(tc.getBaseUri());
+    private static TestContainerFactory getDefaultTestContainerFactory() {
+
+        if (defaultTestContainerFactoryClass == null) {
+            final String factoryClassName = getSystemProperty(TestProperties.CONTAINER_FACTORY);
+            if (factoryClassName != null) {
+                LOGGER.log(Level.CONFIG,
+                        "Loading test container factory '{0}' specified in the '{1}' system property.",
+                        new Object[]{factoryClassName, TestProperties.CONTAINER_FACTORY});
+
+                defaultTestContainerFactoryClass = loadFactoryClass(factoryClassName);
+            } else {
+                TestContainerFactory[] factories = ServiceFinder.find(TestContainerFactory.class).toArray();
+                if (factories.length > 0) {
+                    // if there is only one factory instance, just return it
+                    if (factories.length == 1) {
+                        // cache the class for future reuse
+                        defaultTestContainerFactoryClass = factories[0].getClass();
+                        LOGGER.log(
+                                Level.CONFIG,
+                                "Using the single found TestContainerFactory service provider '{0}'",
+                                defaultTestContainerFactoryClass.getName());
+                        return factories[0];
+                    }
+
+                    // if default factory is present, use it.
+                    for (TestContainerFactory tcf : factories) {
+                        if (TestProperties.DEFAULT_CONTAINER_FACTORY.equals(tcf.getClass().getName())) {
+                            // cache the class for future reuse
+                            defaultTestContainerFactoryClass = tcf.getClass();
+                            LOGGER.log(
+                                    Level.CONFIG,
+                                    "Found multiple TestContainerFactory service providers, using the default found '{0}'",
+                                    TestProperties.DEFAULT_CONTAINER_FACTORY);
+                            return tcf;
+                        }
+                    }
+
+                    // default factory is not in the list - log warning and return the first found factory instance
+                    // cache the class for future reuse
+                    defaultTestContainerFactoryClass = factories[0].getClass();
+                    LOGGER.log(
+                            Level.WARNING,
+                            "Found multiple TestContainerFactory service providers, using the first found '{0}'",
+                            defaultTestContainerFactoryClass.getName());
+                    return factories[0];
+                }
+
+                LOGGER.log(
+                        Level.CONFIG,
+                        "No TestContainerFactory configured, trying to load and instantiate the default implementation '{0}'",
+                        TestProperties.DEFAULT_CONTAINER_FACTORY);
+                defaultTestContainerFactoryClass = loadFactoryClass(TestProperties.DEFAULT_CONTAINER_FACTORY);
+            }
+        }
+
+        try {
+            return defaultTestContainerFactoryClass.newInstance();
+        } catch (Exception ex) {
+            throw new TestContainerException(String.format(
+                    "Could not instantiate test container factory '%s'", defaultTestContainerFactoryClass.getName()), ex);
+        }
+    }
+
+    private static Class<? extends TestContainerFactory> loadFactoryClass(String factoryClassName) {
+        Class<? extends TestContainerFactory> factoryClass;
+        final Class<Object> loadedClass = AccessController.doPrivileged(ReflectionHelper.classForNamePA(factoryClassName, null));
+        if (loadedClass == null) {
+            throw new TestContainerException(String.format(
+                    "Test container factory class '%s' cannot be loaded", factoryClassName));
+        }
+        try {
+            return loadedClass.asSubclass(TestContainerFactory.class);
+        } catch (ClassCastException ex) {
+            throw new TestContainerException(String.format(
+                    "Class '%s' does not implement TestContainerFactory SPI.", factoryClassName), ex);
+        }
     }
 
     /**
-     * Create a web resource whose URI refers to the base URI the Web
-     * application is deployed at plus the path specified in the argument.
-     * <p/>
-     * This method is an equivalent of calling {@code target().path(path)}.
+     * Create a JAX-RS web target whose URI refers to the {@link #getBaseUri() base URI} the tested
+     * JAX-RS / Jersey application is deployed at, plus the path specified in the {@code path} argument.
+     * <p>
+     * This method is an equivalent of calling <tt>client().target(getBaseUri())</tt>.
+     * </p>
      *
-     * @param path Relative path (from base URI) this target should point to.
-     * @return the created web resource
+     * @return the created JAX-RS web target.
      */
-    public WebTarget target(String path) {
+    public final WebTarget target() {
+        return client().target(testContainer.getBaseUri());
+    }
+
+    /**
+     * Create a JAX-RS web target whose URI refers to the {@link #getBaseUri() base URI} the tested
+     * JAX-RS / Jersey application is deployed at, plus the path specified in the {@code path} argument.
+     * <p>
+     * This method is an equivalent of calling {@code target().path(path)}.
+     * </p>
+     *
+     * @param path relative path (from tested application base URI) this web target should point to.
+     * @return the created JAX-RS web target.
+     */
+    public final WebTarget target(String path) {
         return target().path(path);
     }
 
     /**
-     * Get the client that is configured for this test.
+     * Get the JAX-RS test client that is {@link #configureClient(org.glassfish.jersey.client.ClientConfig) pre-configured}
+     * for this test.
      *
-     * @return the configured client.
+     * @return the configured test client.
      */
-    public Client client() {
+    public final Client client() {
         return client.get();
     }
 
     /**
-     * Set up the test by invoking {@link TestContainer#start() } on
-     * the test container obtained from the test container factory.
+     * Set up the test by {@link TestContainer#start() starting} the test container obtained from the
+     * {@link #getTestContainerFactory() test container factory} and by creating a new
+     * {@link #configureClient(org.glassfish.jersey.client.ClientConfig) pre-configured} test client.
      *
      * @throws Exception if an exception is thrown during setting up the test environment.
      */
@@ -483,14 +653,16 @@ public abstract class JerseyTest {
             registerLogHandler();
         }
 
-        tc.start();
-        Client old = client.getAndSet(getClient(tc, application));
-        close(old);
+        testContainer.start();
+        Client old = client.getAndSet(getClient(testContainer.getClientConfig()));
+        closeIfNotNull(old);
     }
 
     /**
-     * Tear down the test by invoking {@link TestContainer#stop() } on
-     * the test container obtained from the test container factory.
+     * Tear down the test by {@link TestContainer#stop() stopping} the test container obtained from the
+     * {@link #getTestContainerFactory() test container factory} and by {@link javax.ws.rs.client.Client#close() closing}
+     * and discarding the {@link #configureClient(org.glassfish.jersey.client.ClientConfig) pre-configured} test client
+     * that was {@link #setUp() set up} for the test.
      *
      * @throws Exception if an exception is thrown during tearing down the test environment.
      */
@@ -502,69 +674,85 @@ public abstract class JerseyTest {
         }
 
         try {
-            tc.stop();
+            testContainer.stop();
         } finally {
             Client old = client.getAndSet(null);
-            close(old);
+            closeIfNotNull(old);
         }
-    }
-
-    private TestContainer getContainer(ApplicationHandler application, TestContainerFactory tcf) {
-        if (application == null) {
-            throw new IllegalArgumentException("The application cannot be null");
-        }
-
-        return tcf.create(getBaseUri(), application);
     }
 
     /**
-     * Creates an instance of {@link Client}.
-     * <p/>
-     * Checks whether TestContainer provides ClientConfig instance and
-     * if not, empty new {@link org.glassfish.jersey.client.ClientConfig} instance
-     * will be used to create new client instance.
-     * <p/>
-     * This method is called exactly once when JerseyTest is created.
+     * Create an instance of test {@link Client} using the client configuration provided by the configured
+     * {@link org.glassfish.jersey.test.spi.TestContainer}.
+     * <p>
+     * If the {@code TestContainer} does not provide any client configuration (passed {@code clientConfig} is {@code null}),
+     * the default implementation of this method first creates an empty new {@link org.glassfish.jersey.client.ClientConfig}
+     * instance. The client configuration (provided by test container or created) is then passed to
+     * {@link #configureClient(org.glassfish.jersey.client.ClientConfig)} which can be overridden in the {@code JerseyTest}
+     * subclass to provide custom client configuration. At last, new JAX-RS {@link Client} instance is created based on the
+     * resulting client configuration.
+     * </p>
      *
-     * @param tc                 instance of {@link TestContainer}
-     * @param applicationHandler instance of {@link ApplicationHandler}
+     * @param clientConfig test client default configuration. May be {@code null}.
      * @return A Client instance.
      */
-    protected Client getClient(TestContainer tc, ApplicationHandler applicationHandler) {
-        ClientConfig cc = tc.getClientConfig();
-
-        if (cc == null) {
-            cc = new ClientConfig();
+    private Client getClient(ClientConfig clientConfig) {
+        if (clientConfig == null) {
+            clientConfig = new ClientConfig();
         }
 
         //check if logging is required
         if (isEnabled(TestProperties.LOG_TRAFFIC)) {
-            cc.register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
+            clientConfig.register(new LoggingFilter(LOGGER, isEnabled(TestProperties.DUMP_ENTITY)));
         }
 
-        configureClient(cc);
+        configureClient(clientConfig);
 
-        return ClientBuilder.newClient(cc);
+        return ClientBuilder.newClient(clientConfig);
     }
 
     /**
-     * Can be overridden by subclasses to conveniently configure the client instance
-     * used by the test.
+     * Configure the test client.
      *
+     * The method can be overridden by {@code JerseyTest} subclasses to conveniently configure the test client instance
+     * used by Jersey test framework (either returned from {@link #client()} method or used to create
+     * {@link javax.ws.rs.client.WebTarget} instances returned from one of the {@code target} methods
+     * ({@link #target()} or {@link #target(String)}).
+     * <p>
+     * Prior to every test method run, a new client instance is configured and created using the client configuration
+     * provided by the {@link org.glassfish.jersey.test.spi.TestContainer} as well as any internal {@code JerseyTest}
+     * client configuration settings.
+     * </p>
+     * <p>
+     * Before the actual client instance creation, Jersey test framework invokes this method in order to allow the subclasses
+     * to further customize created client instance.
+     * </p>
+     * <p>
+     * After each test method is run, the existing client instance is {@link javax.ws.rs.client.Client#close() closed}
+     * and discarded.
+     * </p>
+     * <p>
      * Default implementation of the method is "no-op".
+     * </p>
      *
      * @param config Jersey test client configuration that can be modified before the client is created.
      */
     protected void configureClient(ClientConfig config) {
-        // nothing
+        // do nothing
     }
 
     /**
-     * Returns the base URI of the application.
+     * Returns the base URI of the tested application.
      *
-     * @return The base URI of the application
+     * @return the base URI of the tested application.
      */
+    // TODO make final
     protected URI getBaseUri() {
+        if (testContainer != null) {
+            // called from outside of JerseyTest constructor
+            return testContainer.getBaseUri();
+        }
+        // called from within JerseyTest constructor
         return UriBuilder.fromUri("http://localhost/").port(getPort()).build();
     }
 
@@ -574,6 +762,12 @@ public abstract class JerseyTest {
      * @return The HTTP port of the URI
      */
     protected final int getPort() {
+        if (testContainer != null) {
+            // called from outside of JerseyTest constructor
+            return testContainer.getBaseUri().getPort();
+        }
+
+        // called from within JerseyTest constructor
         final String value = getProperty(TestProperties.CONTAINER_PORT);
         if (value != null) {
 
@@ -588,7 +782,8 @@ public abstract class JerseyTest {
                         "Value of " + TestProperties.CONTAINER_PORT
                                 + " property is not a valid positive integer [" + value + "]."
                                 + " Reverting to default [" + TestProperties.DEFAULT_CONTAINER_PORT + "].",
-                        e);
+                        e
+                );
             }
         }
         return TestProperties.DEFAULT_CONTAINER_PORT;
@@ -599,7 +794,7 @@ public abstract class JerseyTest {
      *
      * @return list of log records or an empty list.
      */
-    protected List<LogRecord> getLoggedRecords() {
+    protected final List<LogRecord> getLoggedRecords() {
         final List<LogRecord> logRecords = Lists.newArrayList();
         logRecords.addAll(loggedStartupRecords);
         logRecords.addAll(loggedRuntimeRecords);
@@ -607,11 +802,12 @@ public abstract class JerseyTest {
     }
 
     /**
-     * Get last stored {@link LogRecord log record} if enabled by setting {@link TestProperties#RECORD_LOG_LEVEL} or {@code null}.
+     * Get last stored {@link LogRecord log record} if enabled by setting {@link TestProperties#RECORD_LOG_LEVEL}
+     * or {@code null}.
      *
      * @return last stored {@link LogRecord log record} or {@code null}.
      */
-    protected LogRecord getLastLoggedRecord() {
+    protected final LogRecord getLastLoggedRecord() {
         final List<LogRecord> loggedRecords = getLoggedRecords();
         return loggedRecords.isEmpty() ? null : loggedRecords.get(loggedRecords.size() - 1);
     }
@@ -743,7 +939,7 @@ public abstract class JerseyTest {
      * @param clients client instances to close. Each instance may be {@code null}.
      * @since 2.5
      */
-    public final void close(final Client... clients) {
+    public static void closeIfNotNull(final Client... clients) {
         if (clients == null || clients.length == 0) {
             return;
         }

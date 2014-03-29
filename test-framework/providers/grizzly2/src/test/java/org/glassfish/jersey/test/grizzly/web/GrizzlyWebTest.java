@@ -37,36 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.grizzly;
+package org.glassfish.jersey.test.grizzly.web;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.client.WebTarget;
 
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.ServletDeploymentContext;
+import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
+import org.junit.Assert;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-
 
 /**
+ * Basic GrizzlyWebTestContainerFactory unit tests.
+ *
  * @author Paul Sandoz
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class GrizzlyPackageTest extends JerseyTest {
-    @Override
-    protected ResourceConfig configure() {
-        enable(TestProperties.LOG_TRAFFIC);
-        ResourceConfig rc = new ResourceConfig();
-        rc.packages(this.getClass().getPackage().getName());
-        return rc;
-    }
-
+public class GrizzlyWebTest extends JerseyTest {
 
     @Override
     protected TestContainerFactory getTestContainerFactory() {
-        return new GrizzlyTestContainerFactory();
+        return new GrizzlyWebTestContainerFactory();
     }
 
     @Path("root")
@@ -83,17 +81,25 @@ public class GrizzlyPackageTest extends JerseyTest {
         }
     }
 
+
+    @Override
+    protected DeploymentContext configureDeployment() {
+        return ServletDeploymentContext.forServlet(new ServletContainer(new ResourceConfig(TestResource.class))).build();
+    }
+
     @Test
     public void testGet() {
-        String s = target().path("root").request().get(String.class);
-        assertEquals("GET", s);
+        WebTarget target = target("root");
+
+        String s = target.request().get(String.class);
+        Assert.assertEquals("GET", s);
     }
 
     @Test
-    public void testSub() {
-        String s = target().path("root/sub").request().get(String.class);
-        assertEquals("sub", s);
+    public void testGetSub() {
+        WebTarget target = target("root/sub");
+
+        String s = target.request().get(String.class);
+        Assert.assertEquals("sub", s);
     }
-
-
 }

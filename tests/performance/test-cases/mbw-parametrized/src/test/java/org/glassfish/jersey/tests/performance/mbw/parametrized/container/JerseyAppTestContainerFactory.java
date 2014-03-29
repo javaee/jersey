@@ -41,7 +41,7 @@ package org.glassfish.jersey.tests.performance.mbw.parametrized.container;
 
 import java.net.URI;
 
-import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
@@ -57,7 +57,7 @@ public class JerseyAppTestContainerFactory implements TestContainerFactory {
     }
 
     @Override
-    public TestContainer create(URI baseUri, ApplicationHandler application) throws IllegalArgumentException {
+    public TestContainer create(final URI baseUri, final DeploymentContext context) throws IllegalArgumentException {
         return new JerseyAppTestContainer(baseUri, args);
     }
 }

@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server;
 
 import java.util.HashMap;
@@ -53,8 +52,8 @@ import javax.ws.rs.core.UriInfo;
 
 import javax.annotation.PostConstruct;
 
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.spi.TestContainerException;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -113,8 +112,9 @@ public class PostConstructTest extends JerseyTest {
         }
     }
 
-    public PostConstructTest() throws TestContainerException {
-        super(MyApplication.class);
+    @Override
+    protected DeploymentContext configureDeployment() {
+        return DeploymentContext.newInstance(MyApplication.class);
     }
 
     @Test

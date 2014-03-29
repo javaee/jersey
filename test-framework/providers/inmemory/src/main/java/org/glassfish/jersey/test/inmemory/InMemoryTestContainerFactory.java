@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,11 +40,15 @@
 package org.glassfish.jersey.test.inmemory;
 
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.UriBuilder;
+
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
@@ -52,6 +56,7 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
  * In-memory test container factory.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class InMemoryTestContainerFactory implements TestContainerFactory {
 
@@ -59,11 +64,17 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
 
         private final URI baseUri;
         private final ApplicationHandler appHandler;
+        private final AtomicBoolean started = new AtomicBoolean(false);
         private static final Logger LOGGER = Logger.getLogger(InMemoryTestContainer.class.getName());
 
-        private InMemoryTestContainer(final URI baseUri, final ApplicationHandler application) {
-            this.baseUri = baseUri;
-            this.appHandler = application;
+        private InMemoryTestContainer(final URI baseUri, final DeploymentContext context) {
+            this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Creating InMemoryTestContainer configured at the base URI " + this.baseUri);
+            }
+
+            this.appHandler = new ApplicationHandler(context.getResourceConfig());
         }
 
         @Override
@@ -78,21 +89,25 @@ public class InMemoryTestContainerFactory implements TestContainerFactory {
 
         @Override
         public void start() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Starting InMemoryContainer...");
+            if (started.compareAndSet(false, true)) {
+                LOGGER.log(Level.FINE, "Starting InMemoryContainer...");
+            } else {
+                LOGGER.log(Level.WARNING, "Ignoring start request - InMemoryTestContainer is already started.");
             }
         }
 
         @Override
         public void stop() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Stopping InMemoryContainer...");
+            if (started.compareAndSet(true, false)) {
+                LOGGER.log(Level.FINE, "Stopping InMemoryContainer...");
+            } else {
+                LOGGER.log(Level.WARNING, "Ignoring stop request - InMemoryTestContainer is already stopped.");
             }
         }
     }
 
     @Override
-    public TestContainer create(final URI baseUri, final ApplicationHandler application) throws IllegalArgumentException {
-        return new InMemoryTestContainer(baseUri, application);
+    public TestContainer create(final URI baseUri, final DeploymentContext context) throws IllegalArgumentException {
+        return new InMemoryTestContainer(baseUri, context);
     }
 }
