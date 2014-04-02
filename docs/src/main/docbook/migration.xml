@@ -53,7 +53,7 @@
     <title>Migration Guide</title>
 
     <section xml:id="mig-2.8">
-        <title>Migrating from Jersey 2.6 to 2.7</title>
+        <title>Migrating from Jersey 2.7 to 2.8</title>
 
         <section xml:id="mig-2.8-breaking-changes">
             <title>Changes</title>
