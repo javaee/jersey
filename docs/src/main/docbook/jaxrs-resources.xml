@@ -888,7 +888,7 @@ public class ItemResource {
         <para>
             <example>
                 <title>Injection</title>
-                <programlisting language="java" linenumbering="numbered">@Path("id: \d+")
+                <programlisting language="java" linenumbering="numbered">@Path("{id:\\d+}")
 public class InjectedResource {
     // Injection onto field
     @DefaultValue("q") @QueryParam("p")
