@@ -398,6 +398,11 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         cacheConfigSetStatusOverSendError();
     }
 
+    @Override
+    public ApplicationHandler getApplicationHandler() {
+        return appHandler;
+    }
+
     /**
      * Inform this container that the server has been started.
      *

@@ -331,6 +331,11 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
         containerListener.onStartup(this);
     }
 
+    @Override
+    public ApplicationHandler getApplicationHandler() {
+        return appHandler;
+    }
+
     /**
      * Inform this container that the server has been started.
      *

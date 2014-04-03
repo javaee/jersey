@@ -70,7 +70,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.ReaderInterceptor;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -237,19 +236,11 @@ class ServerRuntime {
                     monitoringEventBuilder.build(RequestEvent.Type.START));
         }
 
-        // TODO refactor UriRoutingContext initialization logic
-        final UriRoutingContext routingContext = new UriRoutingContext(request, processingProviders);
+        final UriRoutingContext routingContext = new UriRoutingContext(request);
 
         request.setUriRoutingContext(routingContext);
+        request.setProcessingProviders(processingProviders);
         monitoringEventBuilder.setExtendedUriInfo(routingContext);
-
-        // TODO: wtf???
-        request.setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
-            @Override
-            public Iterable<ReaderInterceptor> get() {
-                return request.getBoundReaderInterceptors();
-            }
-        });
 
         final RequestProcessingContext context = new RequestProcessingContext(
                 locator,
@@ -596,7 +587,7 @@ class ServerRuntime {
                             response.getHeaders(),
                             request.getPropertiesDelegate(),
                             response.getEntityStream(),
-                            request.getBoundWriterInterceptors()));
+                            request.getWriterInterceptors()));
                 } catch (MappableException mpe) {
                     if (mpe.getCause() instanceof IOException) {
                         connectionCallbackRunner.onDisconnect(runtime.asyncContextProvider.get());

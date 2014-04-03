@@ -214,6 +214,11 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         containerListener.onStartup(this);
     }
 
+    @Override
+    public ApplicationHandler getApplicationHandler() {
+        return appHandler;
+    }
+
     /**
      * Inform this container that the server has been started.
      *

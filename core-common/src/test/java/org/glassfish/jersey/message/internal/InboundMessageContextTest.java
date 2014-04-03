@@ -43,6 +43,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
@@ -50,6 +51,7 @@ import java.util.Set;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.internal.TestRuntimeDelegate;
@@ -71,15 +73,24 @@ public class InboundMessageContextTest {
         RuntimeDelegate.setInstance(new TestRuntimeDelegate());
     }
 
+    private static InboundMessageContext createInboundMessageContext() {
+        return new InboundMessageContext() {
+            @Override
+            protected Iterable<ReaderInterceptor> getReaderInterceptors() {
+                return Collections.emptyList();
+            }
+        };
+    }
+
     @Test
     public void testNoLength() {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         assertEquals(-1, r.getLength());
     }
 
     @Test
     public void testRequestCookies() throws URISyntaxException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.COOKIE, "oreo=chocolate");
         r.header(HttpHeaders.COOKIE, "nilla=vanilla");
         assertEquals(r.getRequestCookies().size(), 2);
@@ -92,7 +103,7 @@ public class InboundMessageContextTest {
 
     @Test
     public void testDate() throws URISyntaxException, ParseException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.DATE, "Tue, 29 Jan 2002 22:14:02 -0500");
         SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
@@ -101,7 +112,7 @@ public class InboundMessageContextTest {
 
     @Test
     public void testHeader() throws URISyntaxException, ParseException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.ACCEPT, "application/xml, text/plain");
         r.header(HttpHeaders.ACCEPT, "application/json");
         r.header("FOO", "");
@@ -114,7 +125,7 @@ public class InboundMessageContextTest {
 
     @Test
     public void testHeaderMap() throws URISyntaxException, ParseException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.ACCEPT, "application/xml, text/plain");
         r.header(HttpHeaders.ACCEPT, "application/json");
         r.header("Allow", "GET, PUT");
@@ -127,7 +138,7 @@ public class InboundMessageContextTest {
 
     @Test
     public void testAllowedMethods() throws URISyntaxException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header("Allow", "GET, PUT");
         r.header("Allow", "POST");
         assertEquals(3, r.getAllowedMethods().size());
@@ -139,7 +150,7 @@ public class InboundMessageContextTest {
 
     @Test
     public void testResponseCookies() throws URISyntaxException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.SET_COOKIE, "oreo=chocolate");
         r.header(HttpHeaders.SET_COOKIE, "nilla=vanilla");
         assertEquals(2, r.getResponseCookies().size());
@@ -149,14 +160,14 @@ public class InboundMessageContextTest {
 
     @Test
     public void testEntityTag() throws URISyntaxException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.ETAG, "\"tag\"");
         assertEquals(EntityTag.valueOf("\"tag\""), r.getEntityTag());
     }
 
     @Test
     public void testLastModified() throws URISyntaxException, ParseException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.LAST_MODIFIED, "Tue, 29 Jan 2002 22:14:02 -0500");
         SimpleDateFormat f = new SimpleDateFormat("E, dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH);
         Date date = f.parse("Tue, 29 Jan 2002 22:14:02 -0500");
@@ -165,14 +176,14 @@ public class InboundMessageContextTest {
 
     @Test
     public void testLocation() throws URISyntaxException {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.LOCATION, "http://example.org/app");
         assertEquals(URI.create("http://example.org/app"), r.getLocation());
     }
 
     @Test
     public void testGetLinks() {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method",
                 "GET").rel("self").build();
         Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method",
@@ -186,7 +197,7 @@ public class InboundMessageContextTest {
 
     @Test
     public void testGetLink() {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         Link link1 = Link.fromUri("http://example.org/app/link1").param("produces", "application/json").param("method",
                 "GET").rel("self").build();
         Link link2 = Link.fromUri("http://example.org/app/link2").param("produces", "application/xml").param("method",
@@ -203,7 +214,7 @@ public class InboundMessageContextTest {
 
     @Test
     public void testGetAllowedMethods() {
-        InboundMessageContext r = new InboundMessageContext();
+        InboundMessageContext r = createInboundMessageContext();
         r.header(HttpHeaders.ALLOW, "a,B,CcC,dDd");
         final Set<String> allowedMethods = r.getAllowedMethods();
         assertEquals(4, allowedMethods.size());

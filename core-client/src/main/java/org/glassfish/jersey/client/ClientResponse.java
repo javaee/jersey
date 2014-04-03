@@ -61,7 +61,6 @@ import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.ServiceLocatorSupplier;
-import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.Statuses;
@@ -152,14 +151,6 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
         this.requestContext = requestContext;
 
         setWorkers(requestContext.getWorkers());
-
-        final Iterable<ReaderInterceptor> readerInterceptors = requestContext.getReaderInterceptors();
-        setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
-            @Override
-            public Iterable<ReaderInterceptor> get() {
-                return readerInterceptors;
-            }
-        });
     }
 
     @Override
@@ -466,5 +457,10 @@ public class ClientResponse extends InboundMessageContext implements ClientRespo
     @Override
     public ServiceLocator getServiceLocator() {
         return getRequestContext().getServiceLocator();
+    }
+
+    @Override
+    protected Iterable<ReaderInterceptor> getReaderInterceptors() {
+        return requestContext.getReaderInterceptors();
     }
 }
