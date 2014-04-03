@@ -45,6 +45,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -77,8 +78,12 @@ import org.glassfish.jersey.message.internal.MatchingEntityTag;
 import org.glassfish.jersey.message.internal.TracingAwarePropertiesDelegate;
 import org.glassfish.jersey.message.internal.VariantSelector;
 import org.glassfish.jersey.model.internal.RankedProvider;
+import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.ProcessingProviders;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
+import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.uri.UriComponent;
@@ -123,6 +128,8 @@ public class ContainerRequest extends InboundMessageContext
     private String varyValue;
     // UriInfo reference
     private UriRoutingContext uriRoutingContext;
+    // Processing providers
+    private ProcessingProviders processingProviders;
     // Custom Jersey container request scoped initializer
     private RequestScopedInitializer requestScopedInitializer;
     // Request-scoped response writer of the invoking container
@@ -305,6 +312,10 @@ public class ContainerRequest extends InboundMessageContext
         this.uriRoutingContext = uriRoutingContext;
     }
 
+    void setProcessingProviders(final ProcessingProviders providers) {
+        this.processingProviders = providers;
+    }
+
     UriRoutingContext getUriRoutingContext() {
         return uriRoutingContext;
     }
@@ -315,8 +326,10 @@ public class ContainerRequest extends InboundMessageContext
      * @return All bound (dynamically or by name) request filters applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters() {
-        return uriRoutingContext.getBoundRequestFilters();
+    Iterable<RankedProvider<ContainerRequestFilter>> getRequestFilters() {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
     }
 
     /**
@@ -326,8 +339,10 @@ public class ContainerRequest extends InboundMessageContext
      * @return All bound (dynamically or by name) response filters applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters() {
-        return uriRoutingContext.getBoundResponseFilters();
+    Iterable<RankedProvider<ContainerResponseFilter>> getResponseFilters() {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
     }
 
     /**
@@ -337,8 +352,12 @@ public class ContainerRequest extends InboundMessageContext
      * @return All reader interceptors applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    Iterable<ReaderInterceptor> getBoundReaderInterceptors() {
-        return uriRoutingContext.getBoundReaderInterceptors();
+    @Override
+    protected Iterable<ReaderInterceptor> getReaderInterceptors() {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
+        return inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getReaderInterceptors()
+                : processingProviders.getSortedGlobalReaderInterceptors();
     }
 
     /**
@@ -347,8 +366,19 @@ public class ContainerRequest extends InboundMessageContext
      * @return All writer interceptors applicable to the matched inflector (or an empty
      * collection if no inflector matched yet).
      */
-    Iterable<WriterInterceptor> getBoundWriterInterceptors() {
-        return uriRoutingContext.getBoundWriterInterceptors();
+    Iterable<WriterInterceptor> getWriterInterceptors() {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
+        return inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getWriterInterceptors()
+                : processingProviders.getSortedGlobalWriterInterceptors();
+    }
+
+    private Inflector<RequestProcessingContext, ContainerResponse> getInflector() {
+        return uriRoutingContext.getInflector();
+    }
+
+    private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
+        return iterable == null ? Collections.<T>emptyList() : iterable;
     }
 
     /**

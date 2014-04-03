@@ -389,6 +389,11 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     }
 
     @Override
+    public ApplicationHandler getApplicationHandler() {
+        return appHandler;
+    }
+
+    @Override
     public void destroy() {
         super.destroy();
         containerListener.onShutdown(this);

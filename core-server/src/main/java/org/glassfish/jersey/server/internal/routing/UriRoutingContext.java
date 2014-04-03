@@ -48,24 +48,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.message.internal.TracingLogger;
-import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ExtendedUriInfo;
-import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.Resource;
@@ -106,7 +100,6 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private Inflector<RequestProcessingContext, ContainerResponse> inflector;
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
     private volatile ResourceMethod matchedResourceMethod = null;
-    private final ProcessingProviders processingProviders;
     private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
     private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
 
@@ -116,12 +109,10 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
      * Injection constructor.
      *
      * @param requestContext      request reference.
-     * @param processingProviders processing providers.
      */
-    public UriRoutingContext(ContainerRequest requestContext, ProcessingProviders processingProviders) {
+    public UriRoutingContext(ContainerRequest requestContext) {
         this.requestContext = requestContext;
         this.tracingLogger = TracingLogger.getInstance(requestContext);
-        this.processingProviders = processingProviders;
     }
 
     // RoutingContext
@@ -228,28 +219,6 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
         return inflector;
     }
 
-    public Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters() {
-        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
-    }
-
-    public Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters() {
-        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
-    }
-
-    public Iterable<ReaderInterceptor> getBoundReaderInterceptors() {
-        return inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getReaderInterceptors()
-                : processingProviders.getSortedGlobalReaderInterceptors();
-    }
-
-    public Iterable<WriterInterceptor> getBoundWriterInterceptors() {
-        return inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getWriterInterceptors()
-                : processingProviders.getSortedGlobalWriterInterceptors();
-    }
-
     @Override
     public void setMatchedResourceMethod(ResourceMethod resourceMethod) {
         tracingLogger.log(ServerTraceEvent.MATCH_RESOURCE_METHOD, resourceMethod.getInvocable().getHandlingMethod());
@@ -277,10 +246,6 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     // UriInfo
     private final ContainerRequest requestContext;
-
-    private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
-        return iterable == null ? Collections.<T>emptyList() : iterable;
-    }
 
     @Override
     public URI getAbsolutePath() {

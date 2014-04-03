@@ -58,7 +58,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.ext.ReaderInterceptor;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
@@ -69,7 +68,6 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -310,12 +308,6 @@ class InMemoryConnector implements Connector {
     private ClientResponse createClientResponse(final ClientRequest clientRequest,
                                                 final InMemoryResponseWriter responseWriter) {
         final ClientResponse clientResponse = new ClientResponse(responseWriter.getStatusInfo(), clientRequest);
-        clientResponse.setReaderInterceptors(new Value<Iterable<ReaderInterceptor>>() {
-            @Override
-            public Iterable<ReaderInterceptor> get() {
-                return clientRequest.getReaderInterceptors();
-            }
-        });
         clientResponse.getHeaders().putAll(responseWriter.getHeaders());
         clientResponse.setEntityStream(new ByteArrayInputStream(responseWriter.getEntity()));
         return clientResponse;
