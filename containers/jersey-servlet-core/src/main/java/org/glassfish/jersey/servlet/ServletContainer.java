@@ -64,6 +64,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -582,5 +583,10 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         } catch (ServletException ex) {
             logger.log(Level.SEVERE, "Reload failed", ex);
         }
+    }
+
+    @Override
+    public ApplicationHandler getApplicationHandler() {
+        return webComponent.appHandler;
     }
 }

@@ -83,11 +83,11 @@ public class UriRoutingContextTest {
     }
 
     private UriRoutingContext createContext(String requestUri, String method) {
-        return new UriRoutingContext(RequestContextBuilder.from(requestUri, method).build(), null);
+        return new UriRoutingContext(RequestContextBuilder.from(requestUri, method).build());
     }
 
     private UriRoutingContext createContext(String appBaseUri, String requestUri, String method) {
-        return new UriRoutingContext(RequestContextBuilder.from(appBaseUri, requestUri, method).build(), null);
+        return new UriRoutingContext(RequestContextBuilder.from(appBaseUri, requestUri, method).build());
     }
 
     @Test

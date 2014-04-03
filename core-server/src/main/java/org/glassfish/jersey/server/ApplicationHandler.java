@@ -491,8 +491,8 @@ public final class ApplicationHandler {
 
         final ReferencesInitializer referencesInitializer = locator.createAndInitialize(ReferencesInitializer.class);
         final ContainerFilteringStage preMatchRequestFilteringStage = new ContainerFilteringStage(
-                        processingProviders.getPreMatchFilters(),
-                        processingProviders.getGlobalResponseFilters());
+                processingProviders.getPreMatchFilters(),
+                processingProviders.getGlobalResponseFilters());
         final RoutingStage routingStage = new RoutingStage(resourceRoutingRoot);
         final ContainerFilteringStage resourceFilteringStage = new ContainerFilteringStage(
                 processingProviders.getGlobalRequestFilters(), null);
@@ -518,62 +518,7 @@ public final class ApplicationHandler {
             locator.inject(instance);
         }
 
-        // inject self
-        locator.inject(this);
-
-        if (LOGGER.isLoggable(Level.CONFIG)) {
-            final StringBuilder sb = new StringBuilder(LocalizationMessages.LOGGING_APPLICATION_INITIALIZED()).append('\n');
-
-            final List<Resource> rootResourceClasses = resourceBag.getRootResources();
-
-            if (!rootResourceClasses.isEmpty()) {
-                sb.append(LocalizationMessages.LOGGING_ROOT_RESOURCE_CLASSES()).append(":");
-                for (final Resource r : rootResourceClasses) {
-                    for (final Class clazz : r.getHandlerClasses()) {
-                        sb.append('\n').append("  ").append(clazz.getName());
-                    }
-                }
-            }
-
-            sb.append('\n');
-
-            final Set<MessageBodyReader> messageBodyReaders;
-            final Set<MessageBodyWriter> messageBodyWriters;
-
-            if (LOGGER.isLoggable(Level.FINE)) {
-                messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyReader.class));
-                messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyWriter.class));
-            } else {
-                messageBodyReaders = Providers.getCustomProviders(locator, MessageBodyReader.class);
-                messageBodyWriters = Providers.getCustomProviders(locator, MessageBodyWriter.class);
-            }
-
-            printProviders(LocalizationMessages.LOGGING_PRE_MATCH_FILTERS(),
-                    processingProviders.getPreMatchFilters(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_REQUEST_FILTERS(),
-                    processingProviders.getGlobalRequestFilters(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_RESPONSE_FILTERS(),
-                    processingProviders.getGlobalResponseFilters(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_READER_INTERCEPTORS(),
-                    processingProviders.getGlobalReaderInterceptors(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_WRITER_INTERCEPTORS(),
-                    processingProviders.getGlobalWriterInterceptors(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_REQUEST_FILTERS(),
-                    processingProviders.getNameBoundRequestFilters(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_RESPONSE_FILTERS(),
-                    processingProviders.getNameBoundResponseFilters(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_READER_INTERCEPTORS(),
-                    processingProviders.getNameBoundReaderInterceptors(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_WRITER_INTERCEPTORS(),
-                    processingProviders.getNameBoundWriterInterceptors(), sb);
-            printProviders(LocalizationMessages.LOGGING_DYNAMIC_FEATURES(),
-                    processingProviders.getDynamicFeatures(), sb);
-            printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_READERS(),
-                    Collections2.transform(messageBodyReaders, new WorkersToStringTransform<MessageBodyReader>()), sb);
-            printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_WRITERS(),
-                    Collections2.transform(messageBodyWriters, new WorkersToStringTransform<MessageBodyWriter>()), sb);
-            LOGGER.log(Level.CONFIG, sb.toString());
-        }
+        logApplicationInitConfiguration(locator, resourceBag, processingProviders);
 
         if (compositeListener != null) {
             final ApplicationEvent initFinishedEvent = new ApplicationEventImpl(
@@ -587,7 +532,68 @@ public final class ApplicationHandler {
         }
     }
 
-    private class WorkersToStringTransform<T> implements Function<T, String> {
+    private static void logApplicationInitConfiguration(final ServiceLocator locator,
+                                                        final ResourceBag resourceBag,
+                                                        final ProcessingProviders processingProviders) {
+        if (!LOGGER.isLoggable(Level.CONFIG)) {
+            return;
+        }
+
+        final StringBuilder sb = new StringBuilder(LocalizationMessages.LOGGING_APPLICATION_INITIALIZED()).append('\n');
+
+        final List<Resource> rootResourceClasses = resourceBag.getRootResources();
+
+        if (!rootResourceClasses.isEmpty()) {
+            sb.append(LocalizationMessages.LOGGING_ROOT_RESOURCE_CLASSES()).append(":");
+            for (final Resource r : rootResourceClasses) {
+                for (final Class clazz : r.getHandlerClasses()) {
+                    sb.append('\n').append("  ").append(clazz.getName());
+                }
+            }
+        }
+
+        sb.append('\n');
+
+        final Set<MessageBodyReader> messageBodyReaders;
+        final Set<MessageBodyWriter> messageBodyWriters;
+
+        if (LOGGER.isLoggable(Level.FINE)) {
+            messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyReader.class));
+            messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyWriter.class));
+        } else {
+            messageBodyReaders = Providers.getCustomProviders(locator, MessageBodyReader.class);
+            messageBodyWriters = Providers.getCustomProviders(locator, MessageBodyWriter.class);
+        }
+
+        printProviders(LocalizationMessages.LOGGING_PRE_MATCH_FILTERS(),
+                processingProviders.getPreMatchFilters(), sb);
+        printProviders(LocalizationMessages.LOGGING_GLOBAL_REQUEST_FILTERS(),
+                processingProviders.getGlobalRequestFilters(), sb);
+        printProviders(LocalizationMessages.LOGGING_GLOBAL_RESPONSE_FILTERS(),
+                processingProviders.getGlobalResponseFilters(), sb);
+        printProviders(LocalizationMessages.LOGGING_GLOBAL_READER_INTERCEPTORS(),
+                processingProviders.getGlobalReaderInterceptors(), sb);
+        printProviders(LocalizationMessages.LOGGING_GLOBAL_WRITER_INTERCEPTORS(),
+                processingProviders.getGlobalWriterInterceptors(), sb);
+        printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_REQUEST_FILTERS(),
+                processingProviders.getNameBoundRequestFilters(), sb);
+        printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_RESPONSE_FILTERS(),
+                processingProviders.getNameBoundResponseFilters(), sb);
+        printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_READER_INTERCEPTORS(),
+                processingProviders.getNameBoundReaderInterceptors(), sb);
+        printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_WRITER_INTERCEPTORS(),
+                processingProviders.getNameBoundWriterInterceptors(), sb);
+        printProviders(LocalizationMessages.LOGGING_DYNAMIC_FEATURES(),
+                processingProviders.getDynamicFeatures(), sb);
+        printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_READERS(),
+                Collections2.transform(messageBodyReaders, new WorkersToStringTransform<MessageBodyReader>()), sb);
+        printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_WRITERS(),
+                Collections2.transform(messageBodyWriters, new WorkersToStringTransform<MessageBodyWriter>()), sb);
+
+        LOGGER.log(Level.CONFIG, sb.toString());
+    }
+
+    private static class WorkersToStringTransform<T> implements Function<T, String> {
         @Override
         public String apply(final T t) {
             if (t != null) {
@@ -597,7 +603,9 @@ public final class ApplicationHandler {
         }
     }
 
-    private <T> void printNameBoundProviders(final String title, final Map<Class<? extends Annotation>, List<RankedProvider<T>>> providers, final StringBuilder sb) {
+    private static <T> void printNameBoundProviders(final String title,
+                                                    final Map<Class<? extends Annotation>, List<RankedProvider<T>>> providers,
+                                                    final StringBuilder sb) {
         if (!providers.isEmpty()) {
             sb.append(title).append(":").append('\n');
 
@@ -609,7 +617,7 @@ public final class ApplicationHandler {
         }
     }
 
-    private <T> void printProviders(final String title, final Iterable<T> providers, final StringBuilder sb) {
+    private static <T> void printProviders(final String title, final Iterable<T> providers, final StringBuilder sb) {
         final Iterator<T> iterator = providers.iterator();
         boolean first = true;
         while (iterator.hasNext()) {
@@ -810,7 +818,8 @@ public final class ApplicationHandler {
                                 !registeredClasses.contains(componentClass),
                                 resourceClasses.contains(componentClass));
                     }
-                }));
+                }
+        ));
         classes.addAll(resourceClasses);
 
         // Bind classes.
@@ -857,7 +866,8 @@ public final class ApplicationHandler {
                                 !registeredClasses.contains(componentClass),
                                 resourceInstances.contains(component));
                     }
-                }));
+                }
+        ));
         instances.addAll(resourceInstances);
 
         // Bind instances.

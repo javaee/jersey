@@ -105,7 +105,7 @@ class ContainerFilteringStage extends AbstractChainableStage<RequestProcessingCo
             final ArrayList<Iterable<RankedProvider<ContainerRequestFilter>>> rankedProviders =
                     new ArrayList<>(2);
             rankedProviders.add(requestFilters);
-            rankedProviders.add(request.getBoundRequestFilters());
+            rankedProviders.add(request.getRequestFilters());
             sortedRequestFilters = Providers.mergeAndSortRankedProviders(
                     new RankedComparator<ContainerRequestFilter>(), rankedProviders);
 
@@ -178,7 +178,7 @@ class ContainerFilteringStage extends AbstractChainableStage<RequestProcessingCo
         public Continuation<ContainerResponse> apply(ContainerResponse responseContext) {
             final ArrayList<Iterable<RankedProvider<ContainerResponseFilter>>> rankedProviders = new ArrayList<>(2);
             rankedProviders.add(filters);
-            rankedProviders.add(responseContext.getRequestContext().getBoundResponseFilters());
+            rankedProviders.add(responseContext.getRequestContext().getResponseFilters());
             Iterable<ContainerResponseFilter> sortedResponseFilters = Providers.mergeAndSortRankedProviders(
                     new RankedComparator<ContainerResponseFilter>(RankedComparator.Order.DESCENDING), rankedProviders);
 
