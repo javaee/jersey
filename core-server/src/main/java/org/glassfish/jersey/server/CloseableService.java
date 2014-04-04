@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,22 +53,28 @@ import java.io.Closeable;
  * of scope, more specifically after the request has been processed and the
  * response has been returned.
  *
+ * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
 public interface CloseableService {
 
     /**
-     * Adds an instance of {@link Closeable} that is to be closed when the
-     * request goes out of scope.
+     * Register a new instance of {@link Closeable} that is to be closed when the request goes out of scope.
+     * <p>
+     * After {@link #close()} has been called, this method will not accept any new instance registrations and
+     * will return {@code false} instead.
+     * </p>
      *
      * @param c the instance of {@link Closeable}.
+     * @return {@code true} if the closeable service has not been closed yet and the closeable instance was successfully
+     * registered with the service, {@code false} otherwise.
      */
-    public void add(Closeable c);
+    public boolean add(Closeable c);
 
     /**
-     * Invokes {@code Closeable#close()} method on all instances of {@link Closeable} added by the {@code #add(Closeable)} method.
+     * Invokes {@code Closeable#close()} method on all instances of {@link Closeable} added by the {@code #add(Closeable)}
+     * method.
      * Subsequent calls of this method should not do anything.
      */
     public void close();
-
 }

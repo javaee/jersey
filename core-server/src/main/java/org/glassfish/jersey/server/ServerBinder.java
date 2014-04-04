@@ -42,17 +42,9 @@ package org.glassfish.jersey.server;
 import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.WriterInterceptor;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.ContextResolverFactory;
@@ -62,28 +54,21 @@ import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
-import org.glassfish.jersey.internal.inject.ReferenceTransformingFactory;
-import org.glassfish.jersey.internal.inject.ReferencingFactory;
-import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.MessageBodyFactory;
 import org.glassfish.jersey.message.internal.MessagingBinders;
 import org.glassfish.jersey.process.internal.RequestScope;
-import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.JsonWithPaddingInterceptor;
 import org.glassfish.jersey.server.internal.MappableExceptionWrapperInterceptor;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
-import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
-import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
+import org.glassfish.jersey.server.internal.process.ServerProcessingBinder;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 
-import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
@@ -95,19 +80,6 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 class ServerBinder extends AbstractBinder {
 
     private final Map<String, Object> applicationProperties;
-
-    private static class RequestContextInjectionFactory extends ReferencingFactory<ContainerRequest> {
-        @Inject
-        public RequestContextInjectionFactory(Provider<Ref<ContainerRequest>> referenceFactory) {
-            super(referenceFactory);
-        }
-
-        @Override
-        @RequestScoped
-        public ContainerRequest provide() {
-            return super.provide();
-        }
-    }
 
     /**
      * Create new {@code ServerBinder} instance.
@@ -122,7 +94,7 @@ class ServerBinder extends AbstractBinder {
     protected void configure() {
         install(new RequestScope.Binder(), // must go first as it registers the request scope instance.
                 new JerseyErrorService.Binder(),
-                new ProcessingBinder(),
+                new ServerProcessingBinder(),
                 new ContextInjectionResolver.Binder(),
                 new ParameterInjectionBinder(),
                 new JerseyClassAnalyzer.Binder(),
@@ -135,62 +107,15 @@ class ServerBinder extends AbstractBinder {
                 new ResourceModelBinder(),
                 new RuntimeExecutorsBinder(),
                 new ServiceFinderBinder<>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
-                new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
                 new ServiceFinderBinder<>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
                 new MappableExceptionWrapperInterceptor.Binder(),
                 new MonitoringContainerListener.Binder());
-
-        // Request/Response injection interfaces
-        bindFactory(RequestContextInjectionFactory.class)
-                .to(ContainerRequest.class).to(ContainerRequestContext.class)
-                .in(RequestScoped.class)
-                .proxy(false);
-        bindFactory(RequestContextInjectionFactory.class)
-                .to(HttpHeaders.class).to(Request.class)
-                .in(RequestScoped.class)
-                .proxy(true).proxyForSameScope(false);
-
-        bindFactory(ReferencingFactory.<ContainerRequest>referenceFactory()).to(new TypeLiteral<Ref<ContainerRequest>>() {
-        }).in(RequestScoped.class);
 
         //ChunkedResponseWriter
         bind(ChunkedResponseWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
 
         // JSONP
         bind(JsonWithPaddingInterceptor.class).to(WriterInterceptor.class).in(Singleton.class);
-
-        bindAsContract(ReferencesInitializer.class);
-
-        bindFactory(UriRoutingContextFactory.class)
-                .to(UriInfo.class).to(ExtendedUriInfo.class).to(ResourceInfo.class)
-                .in(RequestScoped.class)
-                .proxy(true)
-                .proxyForSameScope(false);
-
-        // SecurityContext must be injected using the Injectee. The reason is that
-        // SecurityContext can be changed by filters but it looks like the proxy internally caches
-        // the first SecurityContext value injected in the RequestScope. This is
-        bindAsContract(SecurityContextInjectee.class).to(SecurityContext.class).in(RequestScoped.class)
-                .proxy(true).proxyForSameScope(false);
-    }
-
-    private static class UriRoutingContextFactory extends ReferenceTransformingFactory<ContainerRequest, UriRoutingContext> {
-
-        @Inject
-        protected UriRoutingContextFactory(final Provider<Ref<ContainerRequest>> refProvider) {
-            super(refProvider, new Transformer<ContainerRequest, UriRoutingContext>() {
-                @Override
-                public UriRoutingContext transform(ContainerRequest value) {
-                    return value.getUriRoutingContext();
-                }
-            });
-        }
-
-        @Override
-        @RequestScoped
-        public UriRoutingContext provide() {
-            return super.provide();
-        }
     }
 }
