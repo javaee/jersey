@@ -37,65 +37,57 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.inject;
+package org.glassfish.jersey.server.internal.process;
 
-import java.io.Closeable;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.inject.Inject;
+import javax.inject.Provider;
 
-import org.glassfish.jersey.process.internal.RequestScoped;
-import org.glassfish.jersey.server.CloseableService;
-import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.hk2.api.ServiceLocator;
 
-import jersey.repackaged.com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.base.Function;
 
 /**
- * Binder and Factory implementations for {@code CloseableService}.
+ * Request/response scoped injection support initialization stage.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class CloseableServiceBinder extends AbstractBinder {
+public final class ReferencesInitializer implements Function<RequestProcessingContext, RequestProcessingContext> {
+
+    private final ServiceLocator locator;
+    private final Provider<Ref<RequestProcessingContext>> processingContextRefProvider;
 
     /**
-     * {@code CloseableService} implementation that stores instances of {@code Closeable} into the properties map obtained from
-     * {@code HttpContext}.
+     * Injection constructor.
+     *
+     * @param locator application service locator.
+     * @param processingContextRefProvider container request reference provider (request-scoped).
      */
-    private static class DefaultCloseableService implements CloseableService {
-
-        private final static Logger LOGGER = Logger.getLogger(DefaultCloseableService.class.getName());
-
-        private final AtomicBoolean closed = new AtomicBoolean(false);
-
-        private final Set<Closeable> closeables = Sets.newIdentityHashSet();
-
-        @Override
-        public void add(final Closeable closeable) {
-            if (!closed.get()) {
-                closeables.add(closeable);
-            }
-        }
-
-        @Override
-        public void close() {
-            if (closed.compareAndSet(false, true)) {
-                for (final Closeable closeable : closeables) {
-                    try {
-                        closeable.close();
-                    } catch (Exception ex) {
-                        LOGGER.log(Level.SEVERE,
-                                LocalizationMessages.CLOSEABLE_UNABLE_TO_CLOSE(closeable.getClass().getName()), ex);
-                    }
-                }
-            }
-        }
+    @Inject
+    ReferencesInitializer(
+            final ServiceLocator locator,
+            final Provider<Ref<RequestProcessingContext>> processingContextRefProvider) {
+        this.locator = locator;
+        this.processingContextRefProvider = processingContextRefProvider;
     }
 
+    /**
+     * Initialize the request references using the incoming request processing context.
+     *
+     * @param context incoming request context.
+     * @return same (unmodified) request context.
+     */
     @Override
-    protected void configure() {
-        bind(DefaultCloseableService.class).to(CloseableService.class).in(RequestScoped.class);
+    public RequestProcessingContext apply(final RequestProcessingContext context) {
+        processingContextRefProvider.get().set(context);
+
+        final RequestScopedInitializer requestScopedInitializer = context.request().getRequestScopedInitializer();
+        if (requestScopedInitializer != null) {
+            requestScopedInitializer.initialize(locator);
+        }
+
+        return context;
     }
 }

@@ -37,14 +37,14 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.inject;
+package org.glassfish.jersey.server.internal.process;
 
 import java.io.IOException;
 import java.security.Principal;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.BeanParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
@@ -57,9 +57,9 @@ import javax.ws.rs.ext.Provider;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.internal.inject.AbstractTest;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 
 import org.junit.Test;

@@ -56,7 +56,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  * @since 2.3
  */
-final class TracingUtils {
+public final class TracingUtils {
 
     private static final List<String> SUMMARY_HEADERS = Lists.newArrayList();
 
@@ -82,8 +82,7 @@ final class TracingUtils {
      * @param containerRequest request instance to get runtime properties to store {@link TracingLogger} instance to
      *                         if tracing support is enabled for the request.
      */
-    /*package*/
-    static void initTracingSupport(TracingConfig type, TracingLogger.Level appThreshold, ContainerRequest containerRequest) {
+    public static void initTracingSupport(TracingConfig type, TracingLogger.Level appThreshold, ContainerRequest containerRequest) {
         final TracingLogger tracingLogger;
         if (isTracingSupportEnabled(type, containerRequest)) {
             tracingLogger = TracingLogger.create(
@@ -102,8 +101,7 @@ final class TracingUtils {
      * @param request container request instance to get runtime properties
      *                to check if tracing support is enabled for the request.
      */
-    /*package*/
-    static void logStart(ContainerRequest request) {
+    public static void logStart(ContainerRequest request) {
         TracingLogger tracingLogger = TracingLogger.getInstance(request);
         if (tracingLogger.isLogEnabled(ServerTraceEvent.START)) {
             StringBuilder textSB = new StringBuilder();
@@ -149,8 +147,7 @@ final class TracingUtils {
      * @param configuration application configuration.
      * @return configuration type, transformed text value to enum read from configuration or default.
      */
-    /*package*/
-    static TracingConfig getTracingConfig(Configuration configuration) {
+    public static TracingConfig getTracingConfig(Configuration configuration) {
         final String tracingText = PropertiesHelper.getValue(configuration.getProperties(),
                 ServerProperties.TRACING, String.class);
 
@@ -179,8 +176,7 @@ final class TracingUtils {
      * @param configuration application configuration.
      * @return tracing level threshold.
      */
-    /*package*/
-    static TracingLogger.Level getTracingThreshold(Configuration configuration) {
+    public static TracingLogger.Level getTracingThreshold(Configuration configuration) {
         final String thresholdText = PropertiesHelper.getValue(
                 configuration.getProperties(),
                 ServerProperties.TRACING_THRESHOLD, String.class);

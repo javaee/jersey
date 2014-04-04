@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,11 +42,7 @@ package org.glassfish.jersey.server.internal.process;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.core.Response;
 
-import javax.inject.Inject;
-
 import org.glassfish.jersey.internal.util.Producer;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.internal.util.collection.Value;
 
 /**
  * Injectable asynchronous processing context that can be used to control various aspects
@@ -55,25 +51,6 @@ import org.glassfish.jersey.internal.util.collection.Value;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public interface AsyncContext extends AsyncResponse {
-
-    /**
-     * {@link AsyncContext Asynchronous processing context} injection factory.
-     */
-    static class Factory implements org.glassfish.hk2.api.Factory<AsyncContext> {
-        @Inject
-        private Ref<Value<? extends AsyncContext>> contextValueRef;
-
-        @Override
-        public AsyncContext provide() {
-            final Value<? extends AsyncContext> contextValue = contextValueRef.get();
-            return contextValue == null ? null : contextValue.get();
-        }
-
-        @Override
-        public void dispose(AsyncContext instance) {
-            // do nothing
-        }
-    }
 
     /**
      * Asynchronous processing context state.

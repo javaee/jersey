@@ -37,59 +37,70 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server;
+package org.glassfish.jersey.server.internal.process;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
-import org.glassfish.jersey.server.spi.RequestScopedInitializer;
+import org.glassfish.jersey.process.internal.RequestExecutorFactory;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.spi.RequestExecutorProvider;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
-import jersey.repackaged.com.google.common.base.Function;
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
- * Request/response injection references initialization stage.
+ * {@link org.glassfish.jersey.process.internal.RequestExecutorFactory Executors factory}
+ * used on the server side for managed asynchronous request invocations.
  *
+ * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class ReferencesInitializer implements Function<RequestProcessingContext, RequestProcessingContext> {
-
-    private final ServiceLocator locator;
-    private final Provider<Ref<ContainerRequest>> containerRequestRefProvider;
+class ServerManagedAsyncExecutorFactory extends RequestExecutorFactory implements ContainerLifecycleListener {
 
     /**
-     * Injection constructor.
+     * Creates a new instance.
      *
-     * @param locator application service locator.
-     * @param containerRequestRefProvider container request reference provider (request-scoped).
+     * @param locator HK2 service locator.
      */
     @Inject
-    ReferencesInitializer(
-            final ServiceLocator locator,
-            final Provider<Ref<ContainerRequest>> containerRequestRefProvider) {
-        this.locator = locator;
-        this.containerRequestRefProvider = containerRequestRefProvider;
+    public ServerManagedAsyncExecutorFactory(ServiceLocator locator) {
+        super(locator);
     }
 
-    /**
-     * Initialize the request references using the incoming request processing context.
-     *
-     * @param context incoming request context.
-     * @return same (unmodified) request context.
-     */
     @Override
-    public RequestProcessingContext apply(final RequestProcessingContext context) {
-        final ContainerRequest containerRequest = context.request();
-        containerRequestRefProvider.get().set(containerRequest);
+    protected RequestExecutorProvider getDefaultProvider(Object... initArgs) {
+        return new RequestExecutorProvider() {
 
-        final RequestScopedInitializer requestScopedInitializer = containerRequest.getRequestScopedInitializer();
-        if (requestScopedInitializer != null) {
-            requestScopedInitializer.initialize(locator);
-        }
+            @Override
+            public ExecutorService getRequestingExecutor() {
+                return Executors.newCachedThreadPool(
+                        new ThreadFactoryBuilder().setNameFormat("jersey-server-managed-async-executor-%d").build());
+            }
 
-        return context;
+            @Override
+            public void releaseRequestingExecutor(ExecutorService executor) {
+                executor.shutdownNow();
+            }
+        };
+    }
+
+    @Override
+    public void onStartup(Container container) {
+        // do nothing
+    }
+
+    @Override
+    public void onReload(Container container) {
+        // do nothing
+    }
+
+    @Override
+    public void onShutdown(Container container) {
+        close();
     }
 }

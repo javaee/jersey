@@ -63,7 +63,6 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
@@ -78,7 +77,6 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
-import org.glassfish.jersey.server.internal.process.AsyncContext;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.internal.ResourceMethodDispatcherFactory;
@@ -104,7 +102,6 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
-    private final Provider<AsyncContext> asyncContextProvider;
     private final ResourceMethod method;
     private final ResourceMethodDispatcher dispatcher;
     private final Method resourceMethod;
@@ -122,8 +119,6 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
      */
     public static class Builder {
 
-        @Inject
-        private Provider<AsyncContext> asyncContextProvider;
         @Inject
         private ResourceMethodDispatcherFactory dispatcherProviderFactory;
         @Inject
@@ -145,7 +140,6 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                 final ProcessingProviders processingProviders
         ) {
             return new ResourceMethodInvoker(
-                    asyncContextProvider,
                     dispatcherProviderFactory,
                     invocationHandlerProviderFactory,
                     method,
@@ -156,7 +150,6 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
     }
 
     private ResourceMethodInvoker(
-            final Provider<AsyncContext> asyncContextProvider,
             final ResourceMethodDispatcher.Provider dispatcherProvider,
             final ResourceMethodInvocationHandlerProvider invocationHandlerProvider,
             final ResourceMethod method,
@@ -164,7 +157,6 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             ServiceLocator locator,
             final Configuration globalConfig) {
 
-        this.asyncContextProvider = asyncContextProvider;
 
         this.method = method;
         final Invocable invocable = method.getInvocable();
@@ -316,13 +308,13 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         final Object resource = processingContext.routingContext().peekMatchedResource();
 
         if (method.isSuspendDeclared() || method.isManagedAsyncDeclared()) {
-            if (!asyncContextProvider.get().suspend()) {
+            if (!processingContext.asyncContext().suspend()) {
                 throw new ProcessingException(LocalizationMessages.ERROR_SUSPENDING_ASYNC_REQUEST());
             }
         }
 
         if (method.isManagedAsyncDeclared()) {
-            asyncContextProvider.get().invokeManaged(new Producer<Response>() {
+            processingContext.asyncContext().invokeManaged(new Producer<Response>() {
                 @Override
                 public Response call() {
                     final Response response = invoke(processingContext, resource);

@@ -72,7 +72,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.util.Closure;
@@ -119,7 +118,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ServerRuntime {
+public class ServerRuntime {
     private final Stage<RequestProcessingContext> requestProcessingRoot;
     private final ProcessingProviders processingProviders;
 
@@ -129,9 +128,6 @@ class ServerRuntime {
 
     private final RequestScope requestScope;
     private final ExceptionMappers exceptionMappers;
-    private final Provider<CloseableService> closeableServiceProvider;
-    private final Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider;
-    private final Provider<AsyncContext> asyncContextProvider;
     private final RequestExecutorFactory asyncExecutorFactory;
     private final ApplicationEventListener applicationEventListener;
     private final Configuration configuration;
@@ -152,12 +148,6 @@ class ServerRuntime {
         private RequestScope requestScope;
         @Inject
         private ExceptionMappers exceptionMappers;
-        @Inject
-        private Provider<CloseableService> closeableServiceProvider;
-        @Inject
-        private Provider<Ref<Value<AsyncContext>>> asyncContextRefProvider;
-        @Inject
-        private Provider<AsyncContext> asyncContextProvider;
         @Inject
         private RequestExecutorFactory asyncExecutorFactory;
         @Inject
@@ -183,9 +173,6 @@ class ServerRuntime {
                     backgroundScheduler,
                     requestScope,
                     exceptionMappers,
-                    closeableServiceProvider,
-                    asyncContextRefProvider,
-                    asyncContextProvider,
                     asyncExecutorFactory,
                     eventListener,
                     configuration);
@@ -198,9 +185,6 @@ class ServerRuntime {
                           final ScheduledExecutorService backgroundScheduler,
                           final RequestScope requestScope,
                           final ExceptionMappers exceptionMappers,
-                          final Provider<CloseableService> closeableServiceProvider,
-                          final Provider<Ref<Value<AsyncContext>>> asyncContextFactoryProvider,
-                          final Provider<AsyncContext> asyncContextProvider,
                           final RequestExecutorFactory asyncExecutorFactory,
                           final ApplicationEventListener applicationEventListener,
                           final Configuration configuration) {
@@ -210,9 +194,6 @@ class ServerRuntime {
         this.backgroundScheduler = backgroundScheduler;
         this.requestScope = requestScope;
         this.exceptionMappers = exceptionMappers;
-        this.closeableServiceProvider = closeableServiceProvider;
-        this.asyncContextFactoryProvider = asyncContextFactoryProvider;
-        this.asyncContextProvider = asyncContextProvider;
         this.asyncExecutorFactory = asyncExecutorFactory;
         this.applicationEventListener = applicationEventListener;
         this.configuration = configuration;
@@ -227,20 +208,23 @@ class ServerRuntime {
      * @param request container request to be processed.
      */
     public void process(final ContainerRequest request) {
+        TracingUtils.initTracingSupport(tracingConfig, tracingThreshold, request);
+        TracingUtils.logStart(request);
+
+        final UriRoutingContext routingContext = request.getUriRoutingContext();
+
         RequestEventBuilder monitoringEventBuilder = EmptyRequestEventBuilder.INSTANCE;
         RequestEventListener monitoringEventListener = null;
 
         if (applicationEventListener != null) {
-            monitoringEventBuilder = new RequestEventImpl.Builder().setContainerRequest(request);
+            monitoringEventBuilder = new RequestEventImpl.Builder()
+                    .setContainerRequest(request)
+                    .setExtendedUriInfo(routingContext);
             monitoringEventListener = applicationEventListener.onRequest(
                     monitoringEventBuilder.build(RequestEvent.Type.START));
         }
 
-        final UriRoutingContext routingContext = new UriRoutingContext(request);
-
-        request.setUriRoutingContext(routingContext);
         request.setProcessingProviders(processingProviders);
-        monitoringEventBuilder.setExtendedUriInfo(routingContext);
 
         final RequestProcessingContext context = new RequestProcessingContext(
                 locator,
@@ -249,22 +233,22 @@ class ServerRuntime {
                 monitoringEventBuilder,
                 monitoringEventListener);
 
-        TracingUtils.initTracingSupport(tracingConfig, tracingThreshold, request);
         request.checkState();
-        requestScope.runInScope(new Runnable() {
+        final Responder responder = new Responder(context, ServerRuntime.this);
+        final RequestScope.Instance requestScopeInstance = requestScope.createInstance();
+        final AsyncResponderHolder asyncResponderHolder =
+                new AsyncResponderHolder(responder, requestScopeInstance);
+        context.initAsyncContext(asyncResponderHolder);
+
+        requestScope.runInScope(requestScopeInstance, new Runnable() {
             @Override
             public void run() {
-                TracingUtils.logStart(request);
-
-                final Responder responder = new Responder(context, ServerRuntime.this);
-                final AsyncResponderHolder asyncResponderHolder =
-                        new AsyncResponderHolder(responder, requestScope.referenceCurrent());
-
                 try {
-                    final Ref<Endpoint> endpointRef = Refs.emptyRef();
                     // set base URI into response builder thread-local variable
                     // for later resolving of relative location URIs
                     OutboundJaxrsResponse.Builder.setBaseUri(request.getBaseUri());
+
+                    final Ref<Endpoint> endpointRef = Refs.emptyRef();
                     final RequestProcessingContext data = Stages.process(context, requestProcessingRoot, endpointRef);
 
                     final Endpoint endpoint = endpointRef.get();
@@ -273,7 +257,6 @@ class ServerRuntime {
                         throw new NotFoundException();
                     }
 
-                    asyncContextFactoryProvider.get().set(asyncResponderHolder);
                     final ContainerResponse response = endpoint.apply(data);
 
                     if (!asyncResponderHolder.isAsync()) {
@@ -318,22 +301,19 @@ class ServerRuntime {
         headers.putSingle(HttpHeaders.LOCATION, request.getBaseUri().resolve(location));
     }
 
-
     private static class AsyncResponderHolder implements Value<AsyncContext> {
-
         private final Responder responder;
         private final RequestScope.Instance scopeInstance;
 
         private volatile AsyncResponder asyncResponder;
 
-        private AsyncResponderHolder(Responder responder,
-                                     RequestScope.Instance scopeInstance) {
+        private AsyncResponderHolder(Responder responder, RequestScope.Instance scopeInstance) {
             this.responder = responder;
             this.scopeInstance = scopeInstance;
         }
 
         @Override
-        public AsyncResponder get() {
+        public AsyncContext get() {
             final AsyncResponder ar = new AsyncResponder(responder, scopeInstance);
             asyncResponder = ar;
             return ar;
@@ -590,7 +570,7 @@ class ServerRuntime {
                             request.getWriterInterceptors()));
                 } catch (MappableException mpe) {
                     if (mpe.getCause() instanceof IOException) {
-                        connectionCallbackRunner.onDisconnect(runtime.asyncContextProvider.get());
+                        connectionCallbackRunner.onDisconnect(processingContext.asyncContext());
                     }
                     throw mpe;
                 } finally {
@@ -632,7 +612,7 @@ class ServerRuntime {
                                     request,
                                     response,
                                     connectionCallbackRunner,
-                                    runtime.asyncContextProvider);
+                                    processingContext.asyncContextValue());
                         } catch (IOException ex) {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                             close = true;
@@ -668,7 +648,7 @@ class ServerRuntime {
 
         private void release(ContainerResponse responseContext) {
             try {
-                runtime.closeableServiceProvider.get().close();
+                processingContext.closeableService().close();
 
                 // Commit the container response writer if not in chunked mode
                 // responseContext may be null in case the request processing was cancelled.
@@ -700,6 +680,7 @@ class ServerRuntime {
         private boolean cancelled = false;
 
         private final Responder responder;
+        // TODO this instance should be released once async invocation is finished.
         private final RequestScope.Instance scopeInstance;
 
         private volatile TimeoutHandler timeoutHandler = DEFAULT_TIMEOUT_HANDLER;
@@ -987,10 +968,23 @@ class ServerRuntime {
         }
     }
 
-    private static abstract class AbstractCallbackRunner<T> {
+    /**
+     * Abstract composite callback runner.
+     *
+     * The runner supports registering multiple callbacks of a specific type and the execute the callback method
+     * on all the registered callbacks.
+     *
+     * @param <T> callback type
+     */
+    static abstract class AbstractCallbackRunner<T> {
         private final Queue<T> callbacks = new ConcurrentLinkedQueue<>();
         private final Logger logger;
 
+        /**
+         * Create new callback runner.
+         *
+         * @param logger logger instance to be used by the runner to fire logging events.
+         */
         protected AbstractCallbackRunner(Logger logger) {
             this.logger = logger;
         }
@@ -1012,11 +1006,22 @@ class ServerRuntime {
          */
         public abstract Class<?> getCallbackContract();
 
+        /**
+         * Register new callback instance.
+         *
+         * @param callback new callback instance to be registered.
+         * @return {@code true} upon successful registration, {@code false} otherwise.
+         */
         @SuppressWarnings("unchecked")
         public boolean register(Object callback) {
             return callbacks.offer((T) callback);
         }
 
+        /**
+         * Execute all registered callbacks using the supplied invoker.
+         *
+         * @param invoker invoker responsible for to executing all registered callbacks.
+         */
         protected final void executeCallbacks(Closure<T> invoker) {
             for (T callback : callbacks) {
                 try {
@@ -1053,10 +1058,7 @@ class ServerRuntime {
         }
     }
 
-    /**
-     * Executor of {@link ConnectionCallback connection callbacks}.
-     */
-    static class ConnectionCallbackRunner
+    private static class ConnectionCallbackRunner
             extends AbstractCallbackRunner<ConnectionCallback> implements ConnectionCallback {
 
         private static final Logger LOGGER = Logger.getLogger(ConnectionCallbackRunner.class.getName());
