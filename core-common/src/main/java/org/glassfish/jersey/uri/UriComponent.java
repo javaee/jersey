@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -109,15 +109,19 @@ public class UriComponent {
          */
         MATRIX_PARAM,
         /**
-         * The URI query component type.
+         * The URI query component type, encoded using application/x-www-form-urlencoded rules.
          */
         QUERY,
         /**
-         * The URI query component type that is a query parameter, space character is encoded as {@code +}.
+         * The URI query component type that is a query parameter, encoded using
+         * application/x-www-form-urlencoded rules (space character is encoded
+         * as {@code +}).
          */
         QUERY_PARAM,
         /**
-         * The URI query component type that is a query parameter, space character is encoded as {@code %20}.
+         * The URI query component type that is a query parameter, encoded using
+         * application/x-www-form-urlencoded (space character is encoded as
+         * {@code %20}).
          */
         QUERY_PARAM_SPACE_ENCODED,
         /**
@@ -403,8 +407,22 @@ public class UriComponent {
         l.add("?");
 
         tables[Type.QUERY.ordinal()] = initEncodingTable(l);
+        tables[Type.QUERY.ordinal()]['!'] = false;
+        tables[Type.QUERY.ordinal()]['*'] = false;
+        tables[Type.QUERY.ordinal()]['\''] = false;
+        tables[Type.QUERY.ordinal()]['('] = false;
+        tables[Type.QUERY.ordinal()][')'] = false;
+        tables[Type.QUERY.ordinal()][';'] = false;
+        tables[Type.QUERY.ordinal()][':'] = false;
+        tables[Type.QUERY.ordinal()]['@'] = false;
+        tables[Type.QUERY.ordinal()]['$'] = false;
+        tables[Type.QUERY.ordinal()][','] = false;
+        tables[Type.QUERY.ordinal()]['/'] = false;
+        tables[Type.QUERY.ordinal()]['?'] = false;
 
-        tables[Type.QUERY_PARAM.ordinal()] = initEncodingTable(l);
+        tables[Type.QUERY_PARAM.ordinal()] = Arrays.copyOf(
+                tables[Type.QUERY.ordinal()],
+                tables[Type.QUERY.ordinal()].length);
         tables[Type.QUERY_PARAM.ordinal()]['='] = false;
         tables[Type.QUERY_PARAM.ordinal()]['+'] = false;
         tables[Type.QUERY_PARAM.ordinal()]['&'] = false;

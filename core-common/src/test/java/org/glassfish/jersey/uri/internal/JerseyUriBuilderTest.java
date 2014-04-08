@@ -735,7 +735,7 @@ public class JerseyUriBuilderTest {
         ubu.replaceQueryParam("limit", 100);
 
         URI uri = ubu.build();
-        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+*+from+users"), uri);
+        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+%2A+from+users"), uri);
     }
 
     @Test
@@ -745,7 +745,7 @@ public class JerseyUriBuilderTest {
         ubu.replaceQueryParam("limit", 100);
 
         URI uri = ubu.build();
-        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+*+from+users"), uri);
+        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+%2A+from+users"), uri);
     }
 
     @Test
@@ -755,7 +755,7 @@ public class JerseyUriBuilderTest {
         ubu.replaceQueryParam("limit", 100);
 
         URI uri = ubu.build();
-        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+*+from+users"), uri);
+        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+%2A+from+users"), uri);
     }
 
     @Test
@@ -765,7 +765,7 @@ public class JerseyUriBuilderTest {
         ubu.replaceQueryParam("limit", 100);
 
         URI uri = ubu.build();
-        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+*+from+users"), uri);
+        Assert.assertEquals(URI.create("http://localhost/?limit=100&sql=select+%2A+from+users"), uri);
     }
 
     @Test
@@ -1466,7 +1466,7 @@ public class JerseyUriBuilderTest {
         m.put("a", "ignored-a");
         m.put("b", "param-b/aaa");
         m.put("q", "ignored-q");
-        Assert.assertEquals("http://localhost:8080/x/y/z%3F%20/param-b/aaa/paramc1%2Fparamc2?query=q?%20%26",
+        Assert.assertEquals("http://localhost:8080/x/y/z%3F%20/param-b/aaa/paramc1%2Fparamc2?query=q%3F%20%26",
                 uriBuilder.buildFromEncodedMap(m).toString());
     }
 
@@ -1481,7 +1481,7 @@ public class JerseyUriBuilderTest {
         m.put("a", "ignored-a");
         m.put("b", "param-b/aaa");
         m.put("q", "ignored-q");
-        Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q?%2520%2526",
+        Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q%3F%2520%2526",
                 uriBuilder.buildFromMap(m).toString());
     }
 
@@ -1523,7 +1523,7 @@ public class JerseyUriBuilderTest {
         uriBuilder.resolveTemplatesFromEncoded(resolveMap);
         Map<String, Object> buildMap = new HashMap<String, Object>();
         buildMap.put("b", "param-b/aaa");
-        Assert.assertEquals("http://localhost:8080/x/y/z%3F%20/param-b/aaa/paramc1/paramc2?query=q?%20%26",
+        Assert.assertEquals("http://localhost:8080/x/y/z%3F%20/param-b/aaa/paramc1/paramc2?query=q%3F%20%26",
                 uriBuilder.buildFromEncodedMap(buildMap).toString());
     }
 
@@ -1539,7 +1539,7 @@ public class JerseyUriBuilderTest {
         uriBuilder.resolveTemplates(resolveMap);
         Map<String, Object> buildMap = new HashMap<String, Object>();
         buildMap.put("b", "param-b/aaa");
-        Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q?%2520%2526",
+        Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q%3F%2520%2526",
                 uriBuilder.buildFromMap(buildMap).toString());
     }
 
@@ -1556,7 +1556,7 @@ public class JerseyUriBuilderTest {
         uriBuilder.resolveTemplates(resolveMap, false);
         Map<String, Object> buildMap = new HashMap<String, Object>();
         buildMap.put("b", "param-b/aaa");
-        Assert.assertEquals("http://localhost:8080/x/y/z%253F%2520/param-b/aaa/paramc1/paramc2?query=q?%2520%2526",
+        Assert.assertEquals("http://localhost:8080/x/y/z%253F%2520/param-b/aaa/paramc1/paramc2?query=q%3F%2520%2526",
                 uriBuilder.buildFromMap(buildMap, false).toString());
     }
 
@@ -1667,4 +1667,14 @@ public class JerseyUriBuilderTest {
         uriBuilder.queryParam("query", "{param}");
         Assert.assertEquals("http://localhost:8080/path?query=%25test", uriBuilder.buildFromEncoded("%25test").toString());
     }
+    
+	@Test
+	public void testQueryParamEncoded5() {
+		final UriBuilder uriBuilder = UriBuilder.fromUri("http://localhost:8080/path");
+		uriBuilder.queryParam("query", "! # $ & ' ( ) * + , / : ; = ? @ [ ]");
+		Assert.assertEquals(
+				"http://localhost:8080/path?query=%21+%23+%24+%26+%27+%28+%29+%2A+%2B+%2C+%2F+%3A+%3B+%3D+%3F+%40+%5B+%5D",
+				uriBuilder.build().toString());
+	}    
+    
 }
