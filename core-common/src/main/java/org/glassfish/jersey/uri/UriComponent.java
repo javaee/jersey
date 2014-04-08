@@ -404,8 +404,6 @@ public class UriComponent {
 
         tables[Type.PATH.ordinal()] = initEncodingTable(l);
 
-        l.add("?");
-
         tables[Type.QUERY.ordinal()] = initEncodingTable(l);
         tables[Type.QUERY.ordinal()]['!'] = false;
         tables[Type.QUERY.ordinal()]['*'] = false;
