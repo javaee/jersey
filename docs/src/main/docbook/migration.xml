@@ -157,6 +157,91 @@
                             constructor that accepts custom HK2 binders instead.
                         </para>
                     </listitem>
+                    <listitem>
+                        <para>
+                            Several configuration properties were renamed, especially those having client and server versions
+                            along with the common version in &lit.jersey.common.CommonProperties;. Please see following table
+                            for complete reference:
+                            <table>
+                                <title>List of changed configuration properties:</title>
+                                <tgroup cols="3">
+                                    <thead>
+                                        <row>
+                                            <entry>Constant</entry>
+                                            <entry>Old value (Jersey 2.7 and before)</entry>
+                                            <entry>New value (Jersey 2.8+)</entry>
+                                        </row>
+                                    </thead>
+                                    <tbody>
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableAutoDiscovery.client</literal></entry>
+                                            <entry><literal>jersey.config.client.disableAutoDiscovery</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableAutoDiscovery.server</literal></entry>
+                                            <entry><literal>jersey.config.server.disableAutoDiscovery</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableJsonProcessing.client</literal></entry>
+                                            <entry><literal>jersey.config.client.disableJsonProcessing</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.JSON_PROCESSING_FEATURE_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableJsonProcessing.server</literal></entry>
+                                            <entry><literal>jersey.config.server.disableJsonProcessing</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.METAINF_SERVICES_LOOKUP_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableMetainfServicesLookup.client</literal></entry>
+                                            <entry><literal>jersey.config.client.disableMetainfServicesLookup</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableMetainfServicesLookup.server</literal></entry>
+                                            <entry><literal>jersey.config.server.disableMetainfServicesLookup</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.MOXY_JSON_FEATURE_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableMoxyJson.client</literal></entry>
+                                            <entry><literal>jersey.config.client.disableMoxyJson</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.MOXY_JSON_FEATURE_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableMoxyJson.server</literal></entry>
+                                            <entry><literal>jersey.config.server.disableMoxyJson</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER;</entry>
+                                            <entry><literal>jersey.config.contentLength.buffer.client</literal></entry>
+                                            <entry><literal>jersey.config.client.contentLength.buffer</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER;</entry>
+                                            <entry><literal>jersey.config.contentLength.buffer.server</literal></entry>
+                                            <entry><literal>jersey.config.server.contentLength.buffer</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.TRACING;</entry>
+                                            <entry><literal>jersey.config.server.tracing</literal></entry>
+                                            <entry><literal>jersey.config.server.tracing.type</literal></entry>
+                                        </row>
+                                    </tbody>
+                                </tgroup>
+                            </table>
+                            The old names are still working for now, but are deprecated. There is a fallback mechanism
+                            implemented while reading the property and each get, that resolves the value from the old-named
+                            property, will log a <literal>CONFIG</literal> level warning.
+                        </para>
+
+                    </listitem>
                 </itemizedlist>
             </para>
         </section>

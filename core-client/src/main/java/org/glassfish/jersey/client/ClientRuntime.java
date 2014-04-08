@@ -51,7 +51,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -102,7 +101,7 @@ class ClientRuntime {
 
         this.requestScope = locator.getService(RequestScope.class);
 
-        int asyncThreadPoolSize = PropertiesHelper.getValue(config.getProperties(), ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
+        int asyncThreadPoolSize = ClientProperties.getValue(config.getProperties(), ClientProperties.ASYNC_THREADPOOL_SIZE, 0);
         asyncThreadPoolSize = (asyncThreadPoolSize < 0) ? 0 : asyncThreadPoolSize;
         this.asyncExecutorsFactory = new ClientAsyncExecutorFactory(locator, asyncThreadPoolSize);
 

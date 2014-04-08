@@ -147,8 +147,9 @@ public final class TracingUtils {
      * @param configuration application configuration.
      * @return configuration type, transformed text value to enum read from configuration or default.
      */
-    public static TracingConfig getTracingConfig(Configuration configuration) {
-        final String tracingText = PropertiesHelper.getValue(configuration.getProperties(),
+    /*package*/
+    static TracingConfig getTracingConfig(Configuration configuration) {
+        final String tracingText = ServerProperties.getValue(configuration.getProperties(),
                 ServerProperties.TRACING, String.class);
 
         final TracingConfig result;
@@ -176,8 +177,9 @@ public final class TracingUtils {
      * @param configuration application configuration.
      * @return tracing level threshold.
      */
-    public static TracingLogger.Level getTracingThreshold(Configuration configuration) {
-        final String thresholdText = PropertiesHelper.getValue(
+    /*package*/
+    static TracingLogger.Level getTracingThreshold(Configuration configuration) {
+        final String thresholdText = ServerProperties.getValue(
                 configuration.getProperties(),
                 ServerProperties.TRACING_THRESHOLD, String.class);
 

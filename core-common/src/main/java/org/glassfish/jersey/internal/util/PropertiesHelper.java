@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -127,10 +127,11 @@ public final class PropertiesHelper {
      * @param key          Name of the property.
      * @param defaultValue Default value to be returned if the specified property is not set or cannot be read.
      * @param <T>          Type of the property value.
+     * @param legacyMap    Legacy fallback map, where key is the actual property name, value is the old property name
      * @return Value of the property or defaultValue.
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue) {
-        return getValue(properties, null, key, defaultValue);
+    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Map<String, String> legacyMap) {
+        return getValue(properties, null, key, defaultValue, legacyMap);
     }
 
 
@@ -146,11 +147,12 @@ public final class PropertiesHelper {
      * @param key          Name of the property.
      * @param defaultValue Default value to be returned if the specified property is not set or cannot be read.
      * @param <T>          Type of the property value.
+     * @param legacyMap    Legacy fallback map, where key is the actual property name, value is the old property name
      * @return Value of the property or defaultValue.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, T defaultValue) {
-        return getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass());
+    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, T defaultValue, Map<String, String> legacyMap) {
+        return getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass(), legacyMap);
     }
 
     /**
@@ -162,10 +164,11 @@ public final class PropertiesHelper {
      * @param defaultValue Default value of the property.
      * @param type         Type to retrieve the value as.
      * @param <T>          Type of the property value.
+     * @param legacyMap    Legacy fallback map, where key is the actual property name, value is the old property name
      * @return Value of the property or null.
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type) {
-        return getValue(properties, null, key, defaultValue, type);
+    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type, Map<String, String> legacyMap) {
+        return getValue(properties, null, key, defaultValue, type, legacyMap);
     }
 
 
@@ -181,11 +184,12 @@ public final class PropertiesHelper {
      * @param defaultValue Default value of the property.
      * @param type         Type to retrieve the value as.
      * @param <T>          Type of the property value.
+     * @param legacyMap    Legacy fallback map, where key is the actual property name, value is the old property name
      * @return Value of the property or null.
      */
     public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key,
-                                 T defaultValue, Class<T> type) {
-        T value = getValue(properties, runtimeType, key, type);
+                                 T defaultValue, Class<T> type, Map<String, String> legacyMap) {
+        T value = getValue(properties, runtimeType, key, type, legacyMap);
         if (value == null) {
             value = defaultValue;
         }
@@ -200,10 +204,11 @@ public final class PropertiesHelper {
      * @param key        Name of the property.
      * @param type       Type to retrieve the value as.
      * @param <T>        Type of the property value.
+     * @param legacyMap  Legacy fallback map, where key is the actual property name, value is the old property name
      * @return Value of the property or null.
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
-        return getValue(properties, null, key, type);
+    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type, Map<String, String> legacyMap) {
+        return getValue(properties, null, key, type, legacyMap);
     }
 
 
@@ -220,19 +225,66 @@ public final class PropertiesHelper {
      * @param <T>         Type of the property value.
      * @return Value of the property or null.
      */
-    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, Class<T> type) {
+    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, Class<T> type,
+                                 Map<String, String> legacyMap) {
         Object value = null;
         if (runtimeType != null) {
-            value = properties.get(key + '.' + runtimeType.name().toLowerCase());
+            String runtimeAwareKey = getPropertyNameForRuntime(key, runtimeType);
+            if (key.equals(runtimeAwareKey)) {
+                // legacy behaviour
+                runtimeAwareKey = key + "." + runtimeType.name().toLowerCase();
+            }
+            value = properties.get(runtimeAwareKey);
         }
         if (value == null) {
             value = properties.get(key);
+        }
+        if (value == null) {
+            value = getLegacyFallbackValue(properties, legacyMap, key);
         }
         if (value == null) {
             return null;
         }
 
         return convertValue(value, type);
+    }
+
+    /**
+     * Returns specific property value for given {@link RuntimeType}.
+     *
+     * Some properties have complementary client and server versions along with a common version (effective for both environments,
+     * if the specific one is not set). This methods returns a specific name for the environment (determined by convention),
+     * if runtime is not null, the property is a Jersey property name (starts with {@code jersey.config}) and does not contain
+     * a runtime specific part already. If those conditions are not met, original property name is returned.
+     *
+     * @param key property name
+     * @param runtimeType runtime type
+     * @return runtime-specific property name, where possible, original key in other cases.
+     * original key
+     */
+    public static String getPropertyNameForRuntime(String key, RuntimeType runtimeType) {
+        if (runtimeType != null && key.startsWith("jersey.config")) {
+            RuntimeType[] types = RuntimeType.values();
+            for (RuntimeType type : types) {
+                if (key.startsWith("jersey.config." + type.name().toLowerCase())) {
+                    return key;
+                }
+            }
+            return key.replace("jersey.config", "jersey.config." + runtimeType.name().toLowerCase());
+        }
+        return key;
+    }
+
+    private static Object getLegacyFallbackValue(Map<String, ?> properties, Map<String, String> legacyFallbackMap, String key) {
+        if (legacyFallbackMap == null || !legacyFallbackMap.containsKey(key)) {
+            return null;
+        }
+        String fallbackKey = legacyFallbackMap.get(key);
+        Object value = properties.get(fallbackKey);
+        if (value != null && LOGGER.isLoggable(Level.CONFIG)) {
+            LOGGER.config(LocalizationMessages.PROPERTIES_HELPER_DEPRECATED_PROPERTY_NAME(fallbackKey, key));
+        }
+        return value;
     }
 
     /**

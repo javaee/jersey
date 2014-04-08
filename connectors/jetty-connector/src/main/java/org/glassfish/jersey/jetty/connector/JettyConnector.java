@@ -69,7 +69,6 @@ import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.HeaderUtils;
@@ -163,7 +162,8 @@ class JettyConnector implements Connector {
     JettyConnector(final Configuration config) {
         SslConfigurator sslConfig = null;
         if (config != null) {
-            sslConfig = PropertiesHelper.getValue(config.getProperties(), JettyClientProperties.SSL_CONFIG, SslConfigurator.class);
+            sslConfig = JettyClientProperties.getValue(config.getProperties(), JettyClientProperties.SSL_CONFIG,
+                    SslConfigurator.class);
         }
         if (sslConfig != null) {
             final SslContextFactory sslContextFactory = new SslContextFactory();

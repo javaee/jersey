@@ -134,16 +134,16 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
         final Map<String,Object> properties = config.getProperties();
 
         // Base Path.
-        String basePath = PropertiesHelper.getValue(properties, MvcFeature.TEMPLATE_BASE_PATH + suffix, String.class);
+        String basePath = PropertiesHelper.getValue(properties, MvcFeature.TEMPLATE_BASE_PATH + suffix, String.class, null);
         if (basePath == null) {
-            basePath = PropertiesHelper.getValue(properties, MvcFeature.TEMPLATE_BASE_PATH, "");
+            basePath = PropertiesHelper.getValue(properties, MvcFeature.TEMPLATE_BASE_PATH, "", null);
         }
         this.basePath = basePath;
 
         // Cache.
-        Boolean cacheEnabled = PropertiesHelper.getValue(properties, MvcFeature.CACHE_TEMPLATES + suffix, Boolean.class);
+        Boolean cacheEnabled = PropertiesHelper.getValue(properties, MvcFeature.CACHE_TEMPLATES + suffix, Boolean.class, null);
         if (cacheEnabled == null) {
-            cacheEnabled = PropertiesHelper.getValue(properties, MvcFeature.CACHE_TEMPLATES, false);
+            cacheEnabled = PropertiesHelper.getValue(properties, MvcFeature.CACHE_TEMPLATES, false, null);
         }
         this.cache = cacheEnabled ? DataStructures.<String, T>createConcurrentMap() : null;
         this.encoding = TemplateHelper.getTemplateOutputEncoding(config, suffix);

@@ -62,7 +62,6 @@ import javax.inject.Provider;
 import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ApplicationHandler;
@@ -465,7 +464,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      * {@link org.glassfish.jersey.server.ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR} for future purposes.
      */
     private void cacheConfigSetStatusOverSendError() {
-        this.configSetStatusOverSendError = PropertiesHelper.getValue(getConfiguration().getProperties(), null,
+        this.configSetStatusOverSendError = ServerProperties.getValue(getConfiguration().getProperties(),
                 ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
     }
 }

@@ -164,7 +164,7 @@ public final class TemplateHelper {
      */
     public static Charset getTemplateOutputEncoding(Configuration configuration, String suffix) {
         final String enc = PropertiesHelper.getValue(configuration.getProperties(), MvcFeature.ENCODING + suffix,
-                String.class);
+                String.class, null);
         if (enc == null) {
             return DEFAULT_ENCODING;
         } else {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,7 +51,6 @@ import javax.ws.rs.core.Configuration;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Default Jersey client {@link org.glassfish.jersey.client.spi.Connector connector} provider
@@ -232,16 +231,16 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
     public Connector getConnector(Client client, Configuration config) {
         final Map<String, Object> properties = config.getProperties();
 
-        int computedChunkSize = PropertiesHelper.getValue(properties,
+        int computedChunkSize = ClientProperties.getValue(properties,
                 ClientProperties.CHUNKED_ENCODING_SIZE, chunkSize, Integer.class);
         if (computedChunkSize < 0) {
             LOGGER.warning(LocalizationMessages.NEGATIVE_CHUNK_SIZE(computedChunkSize, chunkSize));
             computedChunkSize = chunkSize;
         }
 
-        final boolean computedUseFixedLengthStreaming = PropertiesHelper.getValue(properties,
+        final boolean computedUseFixedLengthStreaming = ClientProperties.getValue(properties,
                 USE_FIXED_LENGTH_STREAMING, useFixedLengthStreaming, Boolean.class);
-        final boolean computedUseSetMethodWorkaround = PropertiesHelper.getValue(properties,
+        final boolean computedUseSetMethodWorkaround = ClientProperties.getValue(properties,
                 SET_METHOD_WORKAROUND, useSetMethodWorkaround, Boolean.class);
 
         return new HttpUrlConnector(

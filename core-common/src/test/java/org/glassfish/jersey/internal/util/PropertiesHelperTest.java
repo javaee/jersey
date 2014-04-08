@@ -44,10 +44,12 @@ import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import jersey.repackaged.com.google.common.collect.Maps;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
@@ -60,9 +62,9 @@ public class PropertiesHelperTest {
         final String key = "my.property";
         properties.put(key, "15");
 
-        Assert.assertEquals("15", PropertiesHelper.getValue(properties, key, String.class));
-        Assert.assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, key, Integer.class));
-        Assert.assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, key, Long.class));
+        assertEquals("15", PropertiesHelper.getValue(properties, key, String.class, null));
+        assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, key, Integer.class, null));
+        assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, key, Long.class, null));
     }
 
 
@@ -72,9 +74,9 @@ public class PropertiesHelperTest {
         final String key = "my.property";
         properties.put(key, "15");
 
-        Assert.assertEquals("15", PropertiesHelper.getValue(properties, key, "80", String.class));
-        Assert.assertEquals(Integer.valueOf(30), PropertiesHelper.getValue(properties, "non.existing", 30, Integer.class));
-        Assert.assertEquals(Long.valueOf(20), PropertiesHelper.getValue(properties, "non.existing", 20l, Long.class));
+        assertEquals("15", PropertiesHelper.getValue(properties, key, "80", String.class, null));
+        assertEquals(Integer.valueOf(30), PropertiesHelper.getValue(properties, "non.existing", 30, Integer.class, null));
+        assertEquals(Long.valueOf(20), PropertiesHelper.getValue(properties, "non.existing", 20l, Long.class, null));
     }
 
 
@@ -84,9 +86,9 @@ public class PropertiesHelperTest {
         final String key = "my.property";
         properties.put(key, "15");
 
-        Assert.assertEquals("15", PropertiesHelper.getValue(properties, key, "80"));
-        Assert.assertEquals(Integer.valueOf(30), PropertiesHelper.getValue(properties, "non.existing", 30));
-        Assert.assertEquals(Long.valueOf(20), PropertiesHelper.getValue(properties, "non.existing", 20l));
+        assertEquals("15", PropertiesHelper.getValue(properties, key, "80", null));
+        assertEquals(Integer.valueOf(30), PropertiesHelper.getValue(properties, "non.existing", 30, null));
+        assertEquals(Long.valueOf(20), PropertiesHelper.getValue(properties, "non.existing", 20l, null));
     }
 
     @Test
@@ -95,57 +97,60 @@ public class PropertiesHelperTest {
         final String key = "my.property";
         properties.put(key, "15");
 
-        Assert.assertEquals("15", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class));
-        Assert.assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, Integer.class));
-        Assert.assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, Long.class));
+        assertEquals("15", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class, null));
+        assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, Integer.class,
+                null));
+        assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, Long.class, null));
     }
 
     @Test
     public void testGetValueByRuntime1() {
         Map<String, String> properties = Maps.newHashMap();
-        final String key = "my.property";
+        final String key = "jersey.config.my.property";
         properties.put(key, "15");
-        properties.put(key + ".client", "999");
-        properties.put(key + ".server", "1");
+        properties.put("jersey.config.client.my.property", "999");
+        properties.put("jersey.config.server.my.property", "1");
 
-        Assert.assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class));
-        Assert.assertEquals(Integer.valueOf(999), PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, Integer.class));
-        Assert.assertEquals(Long.valueOf(1), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, Long.class));
+        assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class, null));
+        assertEquals(Integer.valueOf(999), PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, Integer.class,
+         null));
+        assertEquals(Long.valueOf(1), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, Long.class, null));
 
-        Assert.assertEquals("15", PropertiesHelper.getValue(properties, key, String.class));
-        Assert.assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, key, Integer.class));
-        Assert.assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, key, Long.class));
+        assertEquals("15", PropertiesHelper.getValue(properties, key, String.class, null));
+        assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, key, Integer.class, null));
+        assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, key, Long.class, null));
     }
 
 
     @Test
     public void testGetValueByRuntime2() {
         Map<String, String> properties = Maps.newHashMap();
-        final String key = "my.property";
+        final String key = "jersey.config.my.property";
         properties.put(key, "15");
-        properties.put(key + ".client", "999");
+        properties.put("jersey.config.client.my.property", "999");
 
-        Assert.assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class));
-        Assert.assertEquals(Integer.valueOf(999), PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, Integer.class));
-        Assert.assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, Long.class));
-        Assert.assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, 800l, Long.class));
+        assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class, null));
+        assertEquals(Integer.valueOf(999), PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, Integer.class,
+         null));
+        assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, Long.class, null));
+        assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, 800l, Long.class,
+                null));
 
-        Assert.assertEquals("15", PropertiesHelper.getValue(properties, key, String.class));
-        Assert.assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, key, Integer.class));
-        Assert.assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, key, Long.class));
+        assertEquals("15", PropertiesHelper.getValue(properties, key, String.class, null));
+        assertEquals(Integer.valueOf(15), PropertiesHelper.getValue(properties, key, Integer.class, null));
+        assertEquals(Long.valueOf(15), PropertiesHelper.getValue(properties, key, Long.class, null));
     }
 
     @Test
     public void testGetValueByRuntime3() {
         Map<String, String> properties = Maps.newHashMap();
-        final String key = "my.property";
-        properties.put(key + ".client", "999");
+        final String key = "jersey.config.my.property";
+        properties.put("jersey.config.client.my.property", "999");
 
-        Assert.assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class));
-        Assert.assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key + ".client", String.class));
-        Assert.assertNull(PropertiesHelper.getValue(properties, key, String.class));
-        Assert.assertNull(PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, String.class));
-        Assert.assertEquals("55", PropertiesHelper.getValue(properties, key, "55", String.class));
+        assertEquals("999", PropertiesHelper.getValue(properties, RuntimeType.CLIENT, key, String.class, null));
+        assertNull(PropertiesHelper.getValue(properties, key, String.class, null));
+        assertNull(PropertiesHelper.getValue(properties, RuntimeType.SERVER, key, String.class, null));
+        assertEquals("55", PropertiesHelper.getValue(properties, key, "55", String.class, null));
     }
 
     /**
@@ -157,9 +162,43 @@ public class PropertiesHelperTest {
         final String key = "my.property";
         properties.put(key, Boolean.TRUE);
 
-        Assert.assertNull(PropertiesHelper.getValue(properties, key, Integer.class));
+        assertNull(PropertiesHelper.getValue(properties, key, Integer.class, null));
         //look at System.out, there is a message:
         //      WARNING: There is no way how to transform value "true" [java.lang.Boolean] to type [java.lang.Integer].
+    }
+
+    @Test
+    public void testFallback() {
+        Map<String, String> fallback = Maps.newHashMap();
+        fallback.put("my.property", "my.old.property");
+
+        Map<String, Object> properties = Maps.newHashMap();
+        properties.put("my.old.property", "foo");
+
+        assertEquals("foo", PropertiesHelper.getValue(properties, "my.property", String.class, fallback));
+    }
+
+    @Test
+    public void testPropertyNameDeclination() {
+        String myProperty = "jersey.config.my.property";
+        String myClientProperty = "jersey.config.client.my.property";
+        String myServerProperty = "jersey.config.server.my.property";
+        String myNonJerseyProperty = "my.property";
+
+        assertEquals(myProperty, PropertiesHelper.getPropertyNameForRuntime(myProperty, null));
+
+        assertEquals(myClientProperty, PropertiesHelper.getPropertyNameForRuntime(myProperty, RuntimeType.CLIENT));
+        assertEquals(myServerProperty, PropertiesHelper.getPropertyNameForRuntime(myProperty, RuntimeType.SERVER));
+
+        assertEquals(myServerProperty, PropertiesHelper.getPropertyNameForRuntime(myServerProperty, RuntimeType.SERVER));
+        assertEquals(myServerProperty, PropertiesHelper.getPropertyNameForRuntime(myServerProperty, RuntimeType.CLIENT));
+
+        assertEquals(myClientProperty, PropertiesHelper.getPropertyNameForRuntime(myClientProperty, RuntimeType.SERVER));
+        assertEquals(myClientProperty, PropertiesHelper.getPropertyNameForRuntime(myClientProperty, RuntimeType.CLIENT));
+
+        assertEquals(myNonJerseyProperty, PropertiesHelper.getPropertyNameForRuntime(myNonJerseyProperty, RuntimeType.CLIENT));
+        assertEquals(myNonJerseyProperty, PropertiesHelper.getPropertyNameForRuntime(myNonJerseyProperty, RuntimeType.CLIENT));
+        assertEquals(myNonJerseyProperty, PropertiesHelper.getPropertyNameForRuntime(myNonJerseyProperty, null));
     }
 
 }
