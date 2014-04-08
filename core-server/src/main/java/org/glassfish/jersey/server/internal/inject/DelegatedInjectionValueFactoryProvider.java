@@ -166,7 +166,7 @@ class DelegatedInjectionValueFactoryProvider implements ValueFactoryProvider {
             }
 
             @Override
-            public Object create(ServiceHandle sh) {
+            public T create(ServiceHandle sh) {
                 return null;
             }
 

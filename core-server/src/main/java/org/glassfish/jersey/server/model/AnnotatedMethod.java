@@ -94,6 +94,7 @@ public final class AnnotatedMethod implements AnnotatedElement {
             PathParam.class,
             FormParam.class);
 
+    @SafeVarargs
     private static Set<Class<? extends Annotation>> getSet(Class<? extends Annotation>... cs) {
         Set<Class<? extends Annotation>> s = new HashSet<Class<? extends Annotation>>();
         s.addAll(Arrays.asList(cs));
@@ -363,6 +364,7 @@ public final class AnnotatedMethod implements AnnotatedElement {
         return false;
     }
 
+    @SafeVarargs
     private static <T> List<T> asList(T... ts) {
         List<T> l = new ArrayList<T>();
         l.addAll(Arrays.asList(ts));

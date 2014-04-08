@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.wadl.internal;
 
 import java.net.URI;
 import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

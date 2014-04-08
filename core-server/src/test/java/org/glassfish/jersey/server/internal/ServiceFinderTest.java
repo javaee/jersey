@@ -86,7 +86,7 @@ public class ServiceFinderTest {
         final ClassLoader ocl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(cl);
         try {
-            final Class prc = cl.loadClass("org.glassfish.jersey.internal.ServiceFinder");
+            final Class<?> prc = cl.loadClass("org.glassfish.jersey.internal.ServiceFinder");
             final Method m = prc.getMethod("find", String.class);
 
             return (ServiceFinder<?>) m.invoke(null, serviceName);
