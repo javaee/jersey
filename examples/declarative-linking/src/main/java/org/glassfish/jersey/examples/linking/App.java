@@ -63,7 +63,7 @@ import org.glassfish.jersey.examples.linking.resources.ItemsResource;
 public class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/");
-    public static final String ROOT_PATH = "items/0";
+    public static final String ROOT_PATH = "items";
 
     public static void main(String[] args) {
         try {
@@ -77,7 +77,7 @@ public class App {
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
 
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
+            System.out.println(String.format("Application started.\nTry out curl -L %s%s\nHit enter to stop it...",
                     BASE_URI, ROOT_PATH));
             System.in.read();
             server.shutdownNow();

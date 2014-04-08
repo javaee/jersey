@@ -54,6 +54,7 @@ import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Naresh (Srinivas.Bhimisetty@Sun.Com)
@@ -75,12 +76,15 @@ public class LinkWebAppTest extends JerseyTest {
     @Test
     public void testLinks() throws Exception {
         
-        String wadl = target().path("application.wadl").request().get(String.class);
-        Response response = target().path("items/1").request().accept(MediaType.APPLICATION_XML_TYPE).get(Response.class);
+        Response response = target().path("items").queryParam("offset", 10).queryParam("limit", "10").request().accept(MediaType.APPLICATION_XML_TYPE).get(Response.class);
         final Response.StatusType statusInfo = response.getStatusInfo();
-        Object content = response.readEntity(String.class);
+        assertEquals("Should have succeeded", 200, statusInfo.getStatusCode());
+
+        
+        String content = response.readEntity(String.class);
         List<Object> linkHeaders = response.getHeaders().get("Link");
 
-        assertEquals(2, linkHeaders.size());
+        assertEquals("Should have two link headers", 2, linkHeaders.size());
+        assertTrue("Content should contain next link",content.contains("http://localhost:9998/items?offset=20&amp;limit=10"));
     }
 }
