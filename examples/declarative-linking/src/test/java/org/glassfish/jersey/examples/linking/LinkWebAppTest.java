@@ -41,11 +41,12 @@
 package org.glassfish.jersey.examples.linking;
 
 import java.util.List;
+import javax.ws.rs.core.MediaType;
 
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+import org.glassfish.jersey.client.ClientResponse;
 
-import org.glassfish.jersey.examples.linking.resources.ItemResource;
+import org.glassfish.jersey.examples.linking.resources.ItemsResource;
 import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -63,7 +64,7 @@ public class LinkWebAppTest extends JerseyTest {
     @Override
     protected ResourceConfig configure() {
         enable(TestProperties.LOG_TRAFFIC);
-        ResourceConfig rc = new ResourceConfig(ItemResource.class);
+        ResourceConfig rc = new ResourceConfig(ItemsResource.class);
         rc.register(DeclarativeLinkingFeature.class);
         return rc;
     }
@@ -73,7 +74,11 @@ public class LinkWebAppTest extends JerseyTest {
      */
     @Test
     public void testLinks() throws Exception {
-        Response response = target().path("items/1").request().get(Response.class);
+        
+        String wadl = target().path("application.wadl").request().get(String.class);
+        Response response = target().path("items/1").request().accept(MediaType.APPLICATION_XML_TYPE).get(Response.class);
+        final Response.StatusType statusInfo = response.getStatusInfo();
+        Object content = response.readEntity(String.class);
         List<Object> linkHeaders = response.getHeaders().get("Link");
 
         assertEquals(2, linkHeaders.size());

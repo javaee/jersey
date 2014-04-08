@@ -44,10 +44,16 @@ import org.glassfish.jersey.linking.InjectLink.Extension;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.MatchResult;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.model.RuntimeResource;
+import org.glassfish.jersey.uri.UriTemplate;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -60,7 +66,7 @@ import org.junit.Test;
  */
 public class HeaderProcessorTest  {
 
-    UriInfo mockUriInfo = new UriInfo() {
+    ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
             private final static String baseURI = "http://example.com/application/resources";
 
@@ -143,8 +149,68 @@ public class HeaderProcessorTest  {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
 
+            @Override
+            public Throwable getMappedThrowable() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public List<MatchResult> getMatchedResults() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public List<UriTemplate> getMatchedTemplates() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public List<PathSegment> getPathSegments(String name) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public List<PathSegment> getPathSegments(String name, boolean decode) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public List<RuntimeResource> getMatchedRuntimeResources() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public ResourceMethod getMatchedResourceMethod() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public Resource getMatchedModelResource() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public List<ResourceMethod> getMatchedResourceLocators() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public List<Resource> getLocatorSubResources() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
         };  
 
+    
+      ResourceMappingContext mockRmc = new ResourceMappingContext() {
+
+        @Override
+        public ResourceMappingContext.Mapping getMapping(Class<?> resource) {
+            return null;
+        }
+    };
+  
+    
      
     @InjectLink(value="A")
     public static class EntityA {
@@ -155,7 +221,7 @@ public class HeaderProcessorTest  {
         System.out.println("Literal");
         HeaderProcessor<EntityA> instance = new HeaderProcessor(EntityA.class);
         EntityA testClass = new EntityA();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertEquals("</application/resources/A>", headerValue);
@@ -173,7 +239,7 @@ public class HeaderProcessorTest  {
         System.out.println("EL");
         HeaderProcessor<EntityB> instance = new HeaderProcessor(EntityB.class);
         EntityB testClass = new EntityB();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertEquals("</application/resources/B>", headerValue);
@@ -191,7 +257,7 @@ public class HeaderProcessorTest  {
         System.out.println("Template Literal");
         HeaderProcessor<EntityC> instance = new HeaderProcessor(EntityC.class);
         EntityC testClass = new EntityC();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertEquals("</application/resources/C>", headerValue);
@@ -209,7 +275,7 @@ public class HeaderProcessorTest  {
         System.out.println("Multiple Literal");
         HeaderProcessor<EntityD> instance = new HeaderProcessor(EntityD.class);
         EntityD testClass = new EntityD();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
         assertEquals(2, headerValues.size());
         // not sure if annotation order is supposed to be preserved but it seems
         // to work as expected
@@ -240,7 +306,7 @@ public class HeaderProcessorTest  {
         System.out.println("Parameters");
         HeaderProcessor<EntityE> instance = new HeaderProcessor(EntityE.class);
         EntityE testClass = new EntityE();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertTrue(headerValue.contains("</application/resources/E>"));
@@ -279,7 +345,7 @@ public class HeaderProcessorTest  {
         System.out.println("EL");
         HeaderProcessor<EntityF> instance = new HeaderProcessor(EntityF.class);
         EntityF testClass = new EntityF();
-        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo);
+        List<String> headerValues = instance.getLinkHeaderValues(testClass, mockUriInfo, mockRmc);
         assertEquals(1, headerValues.size());
         String headerValue = headerValues.get(0);
         assertEquals("</application/resources/1>", headerValue);

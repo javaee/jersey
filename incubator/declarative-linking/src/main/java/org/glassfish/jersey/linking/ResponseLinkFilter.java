@@ -41,12 +41,14 @@
 package org.glassfish.jersey.linking;
 
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Link;
+import javax.ws.rs.core.UriInfo;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.server.ExtendedUriInfo;
 
 /**
  * Filter that processes {@link Link} annotated fields in returned response
@@ -73,15 +75,20 @@ class ResponseLinkFilter implements ContainerResponseFilter {
     @Context
     private UriInfo uriInfo;
 
+    @Context
+    private ResourceMappingContext rmc;
+    
     public void filter(ContainerRequestContext request, ContainerResponseContext response) {
         final Object entity = response.getEntity();
 
         if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
             Class<?> entityClass = entity.getClass();
             HeaderProcessor lhp = new HeaderProcessor(entityClass);
-            lhp.processLinkHeaders(entity, uriInfo, response.getHeaders());
+            lhp.processLinkHeaders(entity, uriInfo, rmc, response.getHeaders());
             FieldProcessor lp = new FieldProcessor(entityClass);
-            lp.processLinks(entity, uriInfo);
+            lp.processLinks(entity, uriInfo, rmc); 
+            
+            int i = 0;
         }
 
     }

@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.examples.linking.representation;
 
+import java.util.ArrayList;
 import org.glassfish.jersey.examples.linking.resources.ItemResource;
 import org.glassfish.jersey.linking.Binding;
 import org.glassfish.jersey.linking.InjectLinks;
@@ -52,61 +53,96 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import org.glassfish.jersey.examples.linking.model.ItemsModel;
+import org.glassfish.jersey.examples.linking.resources.ItemsResource;
 
 /**
- * JAXB representation of an item
+ * JAXB representation of a sublist of items
  *
  *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name = "item")
+@XmlRootElement(name = "items")
 @InjectLinks({
     @InjectLink(
-            resource = ItemResource.class,
+            resource = ItemsResource.class,
             style = Style.ABSOLUTE,
-            condition = "${resource.next}",
-            bindings = @Binding(name = "id", value = "${resource.nextId}"),
+            method = "query",
+            condition = "${instance.offset + instance.limit < instance.modelLimit}",
+            bindings = {
+                @Binding(name = "offset", value = "${instance.offset + instance.limit}"),
+                @Binding(name = "limit", value = "${instance.limit}")
+            },
             rel = "next"
     ),
     @InjectLink(
-            resource = ItemResource.class,
+            resource = ItemsResource.class,
             style = Style.ABSOLUTE,
-            condition = "${resource.prev}",
-            bindings = @Binding(name = "id", value = "${resource.prevId}"),
+            method = "query",
+            condition = "${instance.offset - instance.limit >= 0}",
+            bindings = {
+                @Binding(name = "offset", value = "${instance.offset - instance.limit}"),
+                @Binding(name = "limit", value = "${instance.limit}")
+            },
             rel = "prev"
-    )
-})
-public class ItemRepresentation {
+    )})
 
-    @XmlElement
-    private String name;
+public class ItemsRepresentation {
 
+
+    @XmlElement(name="items")
+    private List<ItemRepresentation> items;
+    
+    @XmlTransient
+    private int offset, limit;
+    
+    @XmlTransient
+    private ItemsModel itemsModel;
+    
+    
+    
+    
+    
     @InjectLink(
-            resource = ItemResource.class,
+            resource = ItemsResource.class,
+            method = "query",
             style = Style.ABSOLUTE,
-            bindings = @Binding(name = "id", value = "${resource.id}"),
+            bindings = {@Binding(name = "offset", value="${instance.offset}"),
+                @Binding(name = "limit", value="${instance.limit}")
+            },
             rel = "self"
     )
     @XmlJavaTypeAdapter(Link.JaxbAdapter.class)
     @XmlElement(name="link")
     Link self;
 
+    
+    
     @InjectLinks({
         @InjectLink(
-                resource = ItemResource.class,
+                resource = ItemsResource.class,
                 style = Style.ABSOLUTE,
-                condition = "${resource.next}",
-                bindings = @Binding(name = "id", value = "${resource.nextId}"),
+                method = "query",
+                condition = "${instance.offset + instance.limit < instance.modelLimit}",
+                bindings = {
+                    @Binding(name = "offset", value = "${instance.offset + instance.limit}"),
+                    @Binding(name = "limit", value = "${instance.limit}")
+                },
                 rel = "next"
         ),
         @InjectLink(
-                resource = ItemResource.class,
+                resource = ItemsResource.class,
                 style = Style.ABSOLUTE,
-                condition = "${resource.prev}",
-                bindings = @Binding(name = "id", value = "${resource.prevId}"),
+                method = "query",
+                condition = "${instance.offset - instance.limit >= 0}",
+                bindings = {
+                    @Binding(name = "offset", value = "${instance.offset - instance.limit}"),
+                    @Binding(name = "limit", value = "${instance.limit}")
+                },
                 rel = "prev"
         )})
     @XmlElement(name="link")
@@ -114,12 +150,46 @@ public class ItemRepresentation {
     @XmlJavaTypeAdapter(Link.JaxbAdapter.class)
     List<Link> links;
 
-    public ItemRepresentation() {
-        this.name = "";
+
+    
+    
+    
+    public ItemsRepresentation() {
+        offset = 0;
+        limit = 10;
+    }    
+    
+    public ItemsRepresentation(ItemsModel itemsModel, int offset, int limit) {
+        
+        this.offset = offset;
+        this.limit = limit;
+        this.itemsModel = itemsModel;
+        
+        items = new ArrayList<ItemRepresentation>();
+        for (int i = offset; i < (offset + limit) && i < itemsModel.getSize(); i++)
+        {
+            items.add(new ItemRepresentation(
+                itemsModel,
+                Integer.toString(i),
+                itemsModel.getItem(Integer.toString(i)).getName()));
+        }
+        
     }
 
-    public ItemRepresentation(String name) {
-        this.name = name;
+    
+    
+    public int getOffset()
+    {
+        return offset;
     }
-
+    
+    public int getLimit()
+    {
+        return limit;
+    }
+    
+    public int getModelLimit()
+    {
+        return itemsModel.getSize();
+    }
 }

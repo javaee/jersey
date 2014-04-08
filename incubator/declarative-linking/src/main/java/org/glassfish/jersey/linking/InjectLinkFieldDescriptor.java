@@ -48,9 +48,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Link;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.model.AnnotatedMethod;
   
 import org.glassfish.jersey.server.model.MethodList;
@@ -115,33 +117,51 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
         return link.style();
     }
 
-    public String getLinkTemplate() {
-        return getLinkTemplate(link);
+    public String getLinkTemplate(ResourceMappingContext rmc) {
+        return getLinkTemplate(rmc, link);
     }
 
-    public static String getLinkTemplate(InjectLink link) {
+    
+    public static String getLinkTemplate(ResourceMappingContext rmc, InjectLink link) {
         String template = null;
         if (!link.resource().equals(Class.class)) {
+            
+            
+            ResourceMappingContext.Mapping map = rmc.getMapping(link.resource());
+            if (map!=null)
+            {
+                template  = map.getTemplate().getTemplate().toString();
+            }
+            else
+            {
+                // extract template from specified class' @Path annotation
+                Path path = link.resource().getAnnotation(Path.class);
+                template = path==null ? "" : path.value(); 
+            }
+
             // extract template from specified class' @Path annotation
-            Path path = link.resource().getAnnotation(Path.class);
-            template = path==null ? "" : path.value(); 
             if (link.method().length() > 0) { 
                 // append value of method's @Path annotation
                 MethodList methods = new MethodList(link.resource());
-                methods = methods.withAnnotation(Path.class);
+                methods = methods.withMetaAnnotation(HttpMethod.class);
                 Iterator<AnnotatedMethod> iterator = methods.iterator();
                 while (iterator.hasNext()) {
                     AnnotatedMethod method = iterator.next();
                     if (!method.getMethod().getName().equals(link.method()))
                         continue;
-                    Path methodPath = method.getAnnotation(Path.class);
-                    String methodTemplate = methodPath.value();
                     StringBuilder builder = new StringBuilder();
                     builder.append(template);
-                    if (!(template.endsWith("/") || methodTemplate.startsWith("/")))
-                        builder.append("/");
-                    builder.append(methodTemplate);
-                    
+
+                    Path methodPath = method.getAnnotation(Path.class);
+                    if (methodPath!=null)
+                    {
+                        String methodTemplate = methodPath.value();
+
+                        if (!(template.endsWith("/") || methodTemplate.startsWith("/")))
+                            builder.append("/");
+                        builder.append(methodTemplate);
+                    }
+
                     // append query parameters
                     StringBuilder querySubString = new StringBuilder();
                     for (Annotation paramAnns[] : method.getParameterAnnotations()){
@@ -152,15 +172,15 @@ class InjectLinkFieldDescriptor extends FieldDescriptor implements InjectLinkDes
                             }
                         }
                     }
-                    
+
                     if (querySubString.length() > 0)
                     {
                         builder.append("{?");
                         builder.append(querySubString.subSequence(0, querySubString.length()-1));
                         builder.append("}");
                     }
-                    
-                    
+
+
                     template = builder.toString();
                     break;
                 }

@@ -103,7 +103,7 @@ public class UriTemplateParser {
      */
     public UriTemplateParser(final String template) throws IllegalArgumentException {
         if (template == null || template.length() == 0) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Template is null or has zero length");
         }
 
         this.template = template;

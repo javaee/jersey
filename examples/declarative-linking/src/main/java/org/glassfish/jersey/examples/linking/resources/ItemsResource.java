@@ -40,71 +40,63 @@
 
 package org.glassfish.jersey.examples.linking.resources;
 
-import org.glassfish.jersey.examples.linking.model.ItemModel;
+import javax.ws.rs.DefaultValue;
 import org.glassfish.jersey.examples.linking.model.ItemsModel;
-import org.glassfish.jersey.examples.linking.representation.ItemRepresentation;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException; 
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.examples.linking.representation.ItemsRepresentation;
 
 /**
- * Resource that provides access to one item from a set of items managed
- * by ItemsModel
+ * Resource that provides access to the entire list of items
  *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-@Path("items/{id}")
+@Path("items")
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-public class ItemResource {
+public class ItemsResource {
 
     private ItemsModel itemsModel;
-    private ItemModel itemModel;
-    private String id;
 
-    public ItemResource(@PathParam("id") String id) {
-        this.id = id;
+    public ItemsResource() {
         itemsModel = ItemsModel.getInstance();
-        try {
-            itemModel = itemsModel.getItem(id);
-        } catch (IndexOutOfBoundsException ex) {
-            throw new NotFoundException();
-        }
     }
 
+    
     @GET
-    public ItemRepresentation get() {
-        return new ItemRepresentation(itemModel.getName());
+    public ItemsRepresentation query(
+            @Context javax.ws.rs.core.UriInfo info, 
+            @QueryParam("offset") @DefaultValue("-1") int offset, @DefaultValue("-1") @QueryParam("limit") int limit) {
+        
+
+        if (offset==-1 || limit == -1)
+        {
+            offset = offset == -1 ? 0 : offset;
+            limit = limit == -1 ? 10 : limit;
+            
+            throw new WebApplicationException(
+                    Response.seeOther(info.getRequestUriBuilder().queryParam("offset", offset)
+                    .queryParam("limit", limit).build())
+                            .build()
+               );
+        }
+        
+        
+        
+        return new ItemsRepresentation(itemsModel, offset, limit );
+    }
+    
+    
+    @Path("{id}")
+    public ItemResource get(@PathParam("id") String id ) {
+        return new ItemResource(itemsModel, id);
     }
 
-    /**
-     * Determines whether there is a next item.
-     * @return
-     */
-    public boolean isNext() {
-        return itemsModel.hasNext(id);
-    }
-
-    /**
-     * Determines whether there is a previous item
-     * @return
-     */
-    public boolean isPrev() {
-        return itemsModel.hasPrev(id);
-    }
-
-    public String getNextId() {
-        return itemsModel.getNextId(id);
-    }
-
-    public String getPrevId() {
-        return itemsModel.getPrevId(id);
-    }
-
-    public String getId() {
-        return id;
-    }
 }

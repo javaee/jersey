@@ -44,10 +44,13 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.el.ELException;
 import javax.el.ExpressionFactory;
 import javax.el.ValueExpression;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.uri.UriTemplate;
 import org.glassfish.jersey.uri.internal.UriTemplateParser;
 
 /**
@@ -68,13 +71,22 @@ class ELLinkBuilder {
         LinkELContext context = new LinkELContext(entity, resource, instance);
         ValueExpression expr = expressionFactory.createValueExpression(context,
                 condition, boolean.class);
-        Object result = expr.getValue(context).toString();
-        return result.equals("true");
+        try
+        {
+            Object result = expr.getValue(context).toString();
+            return result.equals("true");
+        }
+        catch (ELException ex)
+        {
+            throw ex;
+        }
     }
 
     public static URI buildURI(InjectLinkDescriptor link, Object entity, Object resource, Object instance,
-            UriInfo uriInfo) {
-        String template = link.getLinkTemplate();
+            UriInfo uriInfo, ResourceMappingContext rmc) {
+        String template = link.getLinkTemplate(rmc);
+        
+        
 
         // first process any embedded EL expressions
         LinkELContext context = new LinkELContext(entity, resource, instance);
@@ -114,8 +126,15 @@ class ELLinkBuilder {
             String elExpression = getEL(name, linkField);
             ValueExpression expr = expressionFactory.createValueExpression(context,
                     elExpression, String.class);
-            Object value = expr.getValue(context);
-            values.put(name, value);
+            try
+            {
+                Object value = expr.getValue(context);
+                values.put(name, value!=null ? value.toString() : null);
+            }
+            catch (ELException ex)
+            {
+                throw ex;
+            }
         }
         return values;
     }
