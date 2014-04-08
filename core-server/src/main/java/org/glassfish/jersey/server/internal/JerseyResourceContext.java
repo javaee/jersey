@@ -83,9 +83,8 @@ public class JerseyResourceContext implements ExtendedResourceContext {
 
     private volatile ResourceModel resourceModel;
 
-
     /**
-     * Injection constructor.
+     * Create new JerseyResourceContext.
      *
      * @param locator HK2 service locator.
      */

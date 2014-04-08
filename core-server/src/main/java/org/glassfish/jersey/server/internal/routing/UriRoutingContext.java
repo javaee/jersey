@@ -48,27 +48,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
 
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.ext.ReaderInterceptor;
-import javax.ws.rs.ext.WriterInterceptor;
-
-import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.message.internal.TracingLogger;
-import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ExtendedUriInfo;
-import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
@@ -92,8 +85,9 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private final LinkedList<Object> matchedResources = Lists.newLinkedList();
     private final LinkedList<UriTemplate> templates = Lists.newLinkedList();
 
-    private MultivaluedHashMap<String, String> encodedTemplateValues;
-    private ImmutableMultivaluedMap<String, String> encodedTemplateValuesView;
+    private final MultivaluedHashMap<String, String> encodedTemplateValues = new MultivaluedHashMap<>();
+    private final ImmutableMultivaluedMap<String, String> encodedTemplateValuesView =
+            new ImmutableMultivaluedMap<>(encodedTemplateValues);
 
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private ImmutableMultivaluedMap<String, String> decodedTemplateValuesView;
@@ -102,10 +96,10 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private ImmutableMultivaluedMap<String, String> decodedQueryParamsView;
 
     private final LinkedList<String> paths = Lists.newLinkedList();
-    private Inflector<ContainerRequest, ContainerResponse> inflector;
+    // TODO re-type to endpoint?
+    private Inflector<RequestProcessingContext, ContainerResponse> inflector;
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
-    volatile private ResourceMethod matchedResourceMethod = null;
-    private final ProcessingProviders processingProviders;
+    private volatile ResourceMethod matchedResourceMethod = null;
     private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
     private final LinkedList<Resource> locatorSubResources = Lists.newLinkedList();
 
@@ -115,13 +109,10 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
      * Injection constructor.
      *
      * @param requestContext      request reference.
-     * @param processingProviders processing providers.
      */
-    @Inject
-    UriRoutingContext(ContainerRequest requestContext, ProcessingProviders processingProviders) {
+    public UriRoutingContext(ContainerRequest requestContext) {
         this.requestContext = requestContext;
         this.tracingLogger = TracingLogger.getInstance(requestContext);
-        this.processingProviders = processingProviders;
     }
 
     // RoutingContext
@@ -151,21 +142,19 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     public void pushLeftHandPath() {
         final String rightHandPath = getFinalMatchingGroup();
         final int rhpLength = (rightHandPath != null) ? rightHandPath.length() : 0;
+
         final String encodedRequestPath = getPath(false);
-        // TODO: do we need to cut the starting slash ?
-//        paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
-        if (encodedRequestPath.length() != rhpLength) {
-            final int startIndex = ((encodedRequestPath.length() > 1) && (encodedRequestPath.charAt(0) == '/')) ? 1 : 0;
-            paths.addFirst(encodedRequestPath.substring(startIndex, encodedRequestPath.length() - rhpLength));
+
+        int length = encodedRequestPath.length() - rhpLength;
+        if (length <= 0) {
+            paths.addFirst("");
+        } else {
+            paths.addFirst(encodedRequestPath.substring(0, length));
         }
     }
 
     @Override
     public void pushTemplates(UriTemplate resourceTemplate, UriTemplate methodTemplate) {
-        if (encodedTemplateValues == null) {
-            encodedTemplateValues = new MultivaluedHashMap<String, String>();
-        }
-
         final Iterator<MatchResult> matchResultIterator = matchResults.iterator();
         templates.push(resourceTemplate);
         if (methodTemplate != null) {
@@ -221,39 +210,13 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
 
     @Override
-    public void setInflector(final Inflector<ContainerRequest, ContainerResponse> inflector) {
+    public void setInflector(final Inflector<RequestProcessingContext, ContainerResponse> inflector) {
         this.inflector = inflector;
     }
 
     @Override
-    public Inflector<ContainerRequest, ContainerResponse> getInflector() {
+    public Inflector<RequestProcessingContext, ContainerResponse> getInflector() {
         return inflector;
-    }
-
-    @Override
-    public Iterable<RankedProvider<ContainerRequestFilter>> getBoundRequestFilters() {
-        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
-    }
-
-    @Override
-    public Iterable<RankedProvider<ContainerResponseFilter>> getBoundResponseFilters() {
-        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
-    }
-
-    @Override
-    public Iterable<ReaderInterceptor> getBoundReaderInterceptors() {
-        return inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getReaderInterceptors()
-                : processingProviders.getSortedGlobalReaderInterceptors();
-    }
-
-    @Override
-    public Iterable<WriterInterceptor> getBoundWriterInterceptors() {
-        return inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getWriterInterceptors()
-                : processingProviders.getSortedGlobalWriterInterceptors();
     }
 
     @Override
@@ -282,15 +245,11 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     // UriInfo
-    private ContainerRequest requestContext;
-
-    private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
-        return iterable == null ? Collections.<T>emptyList() : iterable;
-    }
+    private final ContainerRequest requestContext;
 
     @Override
     public URI getAbsolutePath() {
-        return URI.create(getEncodedPath());
+        return requestContext.getAbsolutePath();
     }
 
     @Override
@@ -318,19 +277,21 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
         return getMatchedURIs(true);
     }
 
+    // TODO Replace with Java SE 8 lambda sometime in the future.
+    private static final Function<String, String> PATH_DECODER = new Function<String, String>() {
+
+        @Override
+        public String apply(String input) {
+            return UriComponent.decode(input, UriComponent.Type.PATH);
+        }
+
+    };
+
     @Override
     public List<String> getMatchedURIs(boolean decode) {
         final List<String> result;
         if (decode) {
-            result = Lists.transform(paths, new Function<String, String>() {
-
-                @Override
-                public String apply(String input) {
-                    return UriComponent.decode(input, UriComponent.Type.PATH);
-                }
-
-            });
-
+            result = Lists.transform(paths, PATH_DECODER);
         } else {
             result = paths;
         }
@@ -358,12 +319,12 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             if (decodedTemplateValuesView != null) {
                 return decodedTemplateValuesView;
             } else if (decodedTemplateValues == null) {
-                decodedTemplateValues = new MultivaluedHashMap<String, String>();
+                decodedTemplateValues = new MultivaluedHashMap<>();
                 for (Map.Entry<String, List<String>> e : encodedTemplateValues.entrySet()) {
                     decodedTemplateValues.put(
                             UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
                             // we need to keep the ability to add new entries
-                            new LinkedList<String>(Lists.transform(e.getValue(), new Function<String, String>() {
+                            new LinkedList<>(Lists.transform(e.getValue(), new Function<String, String>() {
 
                                 @Override
                                 public String apply(String input) {
@@ -372,25 +333,12 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
                             })));
                 }
             }
-            decodedTemplateValuesView = new ImmutableMultivaluedMap<String, String>(decodedTemplateValues);
+            decodedTemplateValuesView = new ImmutableMultivaluedMap<>(decodedTemplateValues);
 
             return decodedTemplateValuesView;
         } else {
-            if (encodedTemplateValuesView != null) {
-                return encodedTemplateValuesView;
-            } else if (encodedTemplateValues == null) {
-                encodedTemplateValues = new MultivaluedHashMap<String, String>();
-            }
-            encodedTemplateValuesView = new ImmutableMultivaluedMap<String, String>(encodedTemplateValues);
             return encodedTemplateValuesView;
         }
-    }
-
-    private String getEncodedPath() {
-        final URI requestUri = getRequestUri();
-        final String rp = requestUri.toString();
-        final String qrp = requestUri.getRawQuery();
-        return qrp == null ? rp : rp.substring(0, rp.length() - qrp.length() - 1);
     }
 
     @Override
@@ -400,9 +348,8 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public List<PathSegment> getPathSegments(boolean decode) {
-        final String ep = getEncodedPath();
-        final String base = getBaseUri().toString();
-        return Collections.unmodifiableList(UriComponent.decodePath(ep.substring(base.length()), decode));
+        final String requestPath = requestContext.getPath(false);
+        return Collections.unmodifiableList(UriComponent.decodePath(requestPath, decode));
     }
 
     @Override
@@ -418,7 +365,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             }
 
             decodedQueryParamsView =
-                    new ImmutableMultivaluedMap<String, String>(UriComponent.decodeQuery(getRequestUri(), true));
+                    new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(getRequestUri(), true));
 
             return decodedQueryParamsView;
         } else {
@@ -427,7 +374,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             }
 
             encodedQueryParamsView =
-                    new ImmutableMultivaluedMap<String, String>(UriComponent.decodeQuery(getRequestUri(), false));
+                    new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(getRequestUri(), false));
 
             return encodedQueryParamsView;
 

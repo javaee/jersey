@@ -309,7 +309,7 @@ resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
                     integration with this Java SE HTTP server through the <literal>jersey-container-jdk-http</literal>
                     container extension module.
                     Instead of creating the <literal>&jdk6.HttpServer;</literal> instance directly, use the
-                    <literal>createHttpServer()</literal> method of <literal>&jersey.grizzly.JdkHttpServerFactory;</literal>,
+                    <literal>createHttpServer()</literal> method of <literal>&jersey.jdkhttp.JdkHttpServerFactory;</literal>,
                     which creates the <literal>HttpServer</literal> instance configured as a Jersey container and
                     initialized with the supplied &lit.jaxrs.core.Application; subclass.
                 </para>
@@ -342,11 +342,21 @@ HttpServer server = JdkHttpServerFactory.createHttpServer(baseUri, config);</pro
                     a JAX-RS or Jersey application is one of the most lightweight and easy ways how to expose a functional
                     RESTful services application.
                 </para>
+                <para>
+                    Grizzly HTTP container supports injection of Grizzly-specific
+                    <literal>org.glassfish.grizzly.http.server.Request</literal> and
+                    <literal>org.glassfish.grizzly.http.server.Response</literal> instances into JAX-RS and Jersey
+                    application resources and providers. However, since Grizzly <literal>Request</literal> is not proxiable,
+                    the injection of Grizzly <literal>Request</literal> into singleton (by default) JAX-RS / Jersey providers
+                    is only possible via <literal>javax.inject.Provider</literal> instance. (Grizzly <literal>Response</literal>
+                    does not suffer the same restriction.)
+                </para>
+
                 <example>
                     <title>Using Jersey with Grizzly HTTP Server</title>
                     <programlisting language="java" linenumbering="numbered">URI baseUri = UriBuilder.fromUri("http://localhost/").port(9998).build();
     ResourceConfig config = new ResourceConfig(MyResource.class);
-    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, appHandler);</programlisting>
+    HttpServer server = GrizzlyHttpServerFactory.createHttpServer(uri, config);</programlisting>
 
                     The container extension module dependency to be added is:
 
@@ -371,6 +381,13 @@ HttpServer server = JdkHttpServerFactory.createHttpServer(baseUri, config);</pro
                     an application. Again, creating the server instance is achieved by calling a factory method from the
                     <literal>jersey-container-simple-http</literal> container extension module.
                 </para>
+                <para>
+                    Simple framework HTTP container supports injection of Simple framework-specific
+                    <literal>org.simpleframework.http.Request</literal> and
+                    <literal>org.simpleframework.http.Response</literal> instances into JAX-RS and Jersey
+                    application resources and providers.
+                </para>
+
                 <example>
                     <title>Using Jersey with the Simple framework</title>
                     <programlisting language="java" linenumbering="numbered">URI baseUri = UriBuilder.fromUri("http://localhost/").port(9998).build();
@@ -385,6 +402,12 @@ HttpServer server = JdkHttpServerFactory.createHttpServer(baseUri, config);</pro
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
                 </example>
+                <note>
+                    <para>
+                        Simple framework HTTP container does not support deployment on context paths other than
+                        root path ("<literal>/</literal>"). Non-root context path is ignored during deployment.
+                    </para>
+                </note>
             </section>
 
             <section xml:id="deployment.http.jetty">
@@ -395,6 +418,15 @@ HttpServer server = JdkHttpServerFactory.createHttpServer(baseUri, config);</pro
                     to Jetty when using a Servlet-based deployment model, which is extensively described later in our
                     <xref linkend="deployment.servlet"/> section. We will here only focus on describing how to use
                     Jetty's HTTP server.
+                </para>
+                <para>
+                    Jetty HTTP container supports injection of Jetty-specific
+                    <literal>org.eclipse.jetty.server.Request</literal> and
+                    <literal>org.eclipse.jetty.server.Response</literal> instances into JAX-RS and Jersey
+                    application resources and providers. However, since Jetty HTTP <literal>Request</literal> is not proxiable,
+                    the injection of Jetty <literal>Request</literal> into singleton (by default) JAX-RS / Jersey providers
+                    is only possible via <literal>javax.inject.Provider</literal> instance. (Jetty <literal>Response</literal>
+                    does not suffer the same restriction.)
                 </para>
 
                 <example>
@@ -412,6 +444,12 @@ Server server = JettyHttpContainerFactory.createServer(baseUri, config);</progra
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
                 </example>
+                <note>
+                    <para>
+                        Jetty HTTP container does not support deployment on context paths other than
+                        root path ("<literal>/</literal>"). Non-root context path is ignored during deployment.
+                    </para>
+                </note>
             </section>
         </section>
     </section>
@@ -914,7 +952,7 @@ public class MyApplication extends ResourceConfig {
             </para>
 
             <para>
-                In the code bellow, you can find an example of a bean, that uses a managed-bean interceptor defined as a JAX-RS
+                In the code below, you can find an example of a bean, that uses a managed-bean interceptor defined as a JAX-RS
                 bean. The bean is used to intercept calls to the resource method <literal>getIt()</literal>:
 
                 <programlisting language="java" linenumbering="numbered">@ManagedBean
@@ -933,7 +971,7 @@ public class ManagedBeanResource {
     @Produces("text/plain")
     @Interceptors(MyInterceptor.class)
     public String getIt() {
-        return "Hi managedbean!";
+        return "Hi managed bean!";
     }
 }</programlisting>
             </para>
@@ -1010,13 +1048,26 @@ public class StatelessEjbResource implements LocalEjb {
             <title>Java EE Servers</title>
 
             <section xml:id="deployment.appservers.glassfish">
-                <title>Glassfish Application Server</title>
+                <title>GlassFish Application Server</title>
 
                 <para>
                     As explained in <link linkend="servlet-app-glassfish">2.3.1</link> , you don't need to add any specific
-                    dependencies on Glassfish, Jersey is already packaged within Glassfish. You only need to add the
-                    <literal>provided</literal>-scoped dependencies to you project to eb able to compile it. At runtime,
+                    dependencies on GlassFish, Jersey is already packaged within GlassFish. You only need to add the
+                    <literal>provided</literal>-scoped dependencies to you project to be able to compile it. At runtime,
                     GlassFish will make sure that your application has access to the Jersey libraries.
+                </para>
+
+                <para>
+                  Started with version 2.7, Jersey allows injecting Jersey specific types into CDI enabled JAX-RS components
+                  using the <literal>@javax.inject.Inject</literal> annotation. This covers also custom HK2 bindings, that are configured
+                  as part of Jersey application. The feature specifically enables usage of Jersey monitoring statistics (provided that the statistic feature is turned on)
+                  in CDI environment, where injection is the only mean to get access to monitoring data.
+                </para>
+                <para>
+                  Since both CDI and HK2 use the same injection annotation, Jersey could get confused in certain
+                  cases, which could lead to nasty runtime issues. The get better control over what Jersey evaluates
+                  as HK2 injection, end-users could take advantage of newly introduced, &jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider;, SPI.
+                  Please see the linked javadoc to get detailed information on how to use the SPI in your application.
                 </para>
             </section>
 

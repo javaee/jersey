@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.List;
@@ -58,14 +57,14 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-abstract class AbstractRouteToPathBuilder<T> implements RouterBinder.RouteToPathBuilder<T> {
+abstract class AbstractRouteToPathBuilder<T> implements Routers.RouteToPathBuilder<T> {
 
     private final ServiceLocator serviceLocator;
     private final List<Route<T>> acceptedRoutes = Lists.newLinkedList();
     private List<Factory<Router>> currentRouters;
 
     /**
-     * Initialize the abstract {@link RouterBinder.RouteToPathBuilder route to path builder}.
+     * Initialize the abstract {@link org.glassfish.jersey.server.internal.routing.Routers.RouteToPathBuilder route to path builder}.
      *
      * @param serviceLocator HK2 service locator.
      * @param pattern  request path routing pattern.
@@ -83,7 +82,7 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterBinder.RouteToPath
      * @param pattern routing pattern for the new sub-route.
      * @return updated builder.
      */
-    protected final RouterBinder.RouteToBuilder<T> _route(final T pattern) {
+    protected final Routers.RouteToBuilder<T> _route(final T pattern) {
         currentRouters = Lists.newLinkedList();
         acceptedRoutes.add(Route.of(pattern, currentRouters));
         return this;
@@ -96,7 +95,7 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterBinder.RouteToPath
      * @return updated builder.
      */
     @SuppressWarnings("unchecked")
-    protected final RouterBinder.RouteToPathBuilder<T> _to(final Factory<? extends Router> pa) {
+    protected final Routers.RouteToPathBuilder<T> _to(final Factory<? extends Router> pa) {
         currentRouters.add((Factory<Router>) pa);
         return this;
     }
@@ -112,19 +111,17 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterBinder.RouteToPath
 
     // RouteToBuilder<T>
     @Override
-    public final RouterBinder.RouteToPathBuilder<T> to(final Router.Builder ab) {
+    public final Routers.RouteToPathBuilder<T> to(final Router.Builder ab) {
         return to(ab.build());
     }
 
     @Override
-    public final RouterBinder.RouteToPathBuilder<T> to(final Router a) {
-        // TODO    return to(Providers.of(a));
-
+    public final Routers.RouteToPathBuilder<T> to(final Router a) {
         return to(Providers.factoryOf(a));
     }
 
     @Override
-    public final RouterBinder.RouteToPathBuilder<T> to(final Class<? extends Router> ca) {
+    public final Routers.RouteToPathBuilder<T> to(final Class<? extends Router> ca) {
         final ServiceHandle<? extends Router> serviceHandle = serviceLocator.getServiceHandle(ca);
         final Factory<? extends Router> factory = new Factory<Router>() {
             @Override
@@ -141,16 +138,16 @@ abstract class AbstractRouteToPathBuilder<T> implements RouterBinder.RouteToPath
     }
 
     @Override
-    public final RouterBinder.RouteToPathBuilder<T> to(final Factory<? extends Router> pa) {
+    public final Routers.RouteToPathBuilder<T> to(final Factory<? extends Router> pa) {
         return _to(pa);
     }
 
     // RouteBuilder<T>
     @Override
-    public abstract RouterBinder.RouteToBuilder<T> route(String pattern);
+    public abstract Routers.RouteToBuilder<T> route(String pattern);
 
     @Override
-    public RouterBinder.RouteToBuilder<T> route(final T pattern) {
+    public Routers.RouteToBuilder<T> route(final T pattern) {
         return _route(pattern);
     }
 

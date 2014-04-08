@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,14 +39,11 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 
 /**
  * Request pre-processing stage that {@link RoutingContext#getInflector() extracts
@@ -60,26 +57,15 @@ import org.glassfish.jersey.server.ContainerResponse;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @see RoutingStage
  */
-public class RoutedInflectorExtractorStage implements Stage<ContainerRequest> {
-    private final Provider<RoutingContext> routingContextFactory;
-
-    /**
-     * Create new inflector extracting acceptor.
-     *
-     * @param routingContextFactory accepting context factory;
-     */
-    @Inject
-    public RoutedInflectorExtractorStage(Provider<RoutingContext> routingContextFactory) {
-        this.routingContextFactory = routingContextFactory;
-    }
+public class RoutedInflectorExtractorStage implements Stage<RequestProcessingContext> {
 
     @Override
-    public Continuation<ContainerRequest> apply(final ContainerRequest requestContext) {
-        final Inflector<ContainerRequest, ContainerResponse> inflector =
-                routingContextFactory.get().getInflector();
+    public Continuation<RequestProcessingContext> apply(final RequestProcessingContext processingContext) {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector =
+                processingContext.routingContext().getInflector();
 
         return inflector != null
-                ? Continuation.of(requestContext, Stages.asStage(inflector))
-                : Continuation.of(requestContext);
+                ? Continuation.of(processingContext, Stages.asStage(inflector))
+                : Continuation.of(processingContext);
     }
 }

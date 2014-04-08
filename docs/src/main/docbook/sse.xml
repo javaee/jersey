@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -190,7 +190,7 @@
             There is no restriction for a media type used in individual event messages; however the media type used for a SSE
             stream as whole is <emphasis>"text/event-stream"</emphasis> and this media type should be set on messages that
             are used to serve SSE events (for example on the server side using &jaxrs.Produces; on the method that returns an
-            &lit.jersey.sse.EventOutput; - see bellow).
+            &lit.jersey.sse.EventOutput; - see below).
             The &lit.jersey.sse.InboundEvent; and &lit.jersey.sse.OutboundEvent; contain all the fields needed for composing
             and processing individual SSE events. These entities represent the <emphasis>chunks</emphasis> sent or received over
             an open server-to-client connection that is represented by an &jersey.server.ChunkedOutput; on the servers side and
@@ -419,7 +419,7 @@ public static class BroadcasterResource {
 
         broadcaster.broadcast(event);
 
-        return "Message was '" + message + "' broadcast.";
+        return "Message '" + message + "' has been broadcast.";
     }
 
     @GET
@@ -684,7 +684,7 @@ eventSource.close();</programlisting>
                     that include a <literal>Retry-After</literal> HTTP header with a valid value. The
                     <literal>HTTP 503 + Retry-After</literal> technique is often used by HTTP endpoints as a means of
                     connection and traffic throttling. In case a <literal>HTTP 503 + Retry-After</literal> response is received
-                    in return to a connection request from SSE endpoint, Jersey {@code EventSource} will automatically
+                    in return to a connection request from SSE endpoint, Jersey <literal>EventSource</literal> will automatically
                     schedule a reconnect attempt  and use the received <literal>Retry-After</literal> HTTP header value as a
                     one-time override of the reconnect delay.
                 </para>

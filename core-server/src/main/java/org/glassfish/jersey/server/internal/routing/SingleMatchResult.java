@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,21 +51,23 @@ import java.util.regex.MatchResult;
  */
 final class SingleMatchResult implements MatchResult {
 
-    private final String s;
+    private final String path;
 
     /**
-     * Construct a match result matching the whole supplied string.
+     * Construct a match result matching the whole supplied path.
      *
-     * @param s matched string.
+     * @param path matched path.
      */
-    public SingleMatchResult(String s) {
-        this.s = stripMatrixParams(s);
+    public SingleMatchResult(String path) {
+        this.path = stripMatrixParams(path);
     }
 
     /**
-     * Strip the matrix parameters from a path
+     * Strip the matrix parameters from a path.
+     *
+     * @return path stripped of matrix parameters.
      */
-    private String stripMatrixParams(String path) {
+    private static String stripMatrixParams(String path) {
         int e = path.indexOf(";");
         if (e == -1) {
             return path;
@@ -109,7 +111,7 @@ final class SingleMatchResult implements MatchResult {
 
     @Override
     public int end() {
-        return s.length();
+        return path.length();
     }
 
     @Override
@@ -122,7 +124,7 @@ final class SingleMatchResult implements MatchResult {
 
     @Override
     public String group() {
-        return s;
+        return path;
     }
 
     @Override

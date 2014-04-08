@@ -46,6 +46,7 @@ import java.io.OutputStream;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.spi.Contract;
@@ -91,8 +92,17 @@ public interface TemplateProcessor<T> {
      * javax.ws.rs.core.MediaType)} method with a template name and media type.
      * @param viewable the viewable that contains the model to be passed to the template.
      * @param mediaType media type the {@code templateReference} should be transformed into.
+     * @param httpHeaders http headers that will be send in the response. Headers can be modified to
+     *                    influence response headers before the the first byte is written
+     *                    to the {@code out}. After the response buffer is committed the headers modification
+     *                    has no effect. Template processor can for example set the content type of
+     *                    the response.
      * @param out the output stream to write the result of processing the template.
      * @throws java.io.IOException if there was an error processing the template.
+     *
+     * @since 2.7
      */
-    public void writeTo(T templateReference, Viewable viewable, MediaType mediaType, OutputStream out) throws IOException;
+    public void writeTo(T templateReference, Viewable viewable, MediaType mediaType,
+                        final MultivaluedMap<String, Object> httpHeaders, OutputStream out) throws IOException;
+
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,13 +62,30 @@ class OAuth1BuilderImpl implements OAuth1Builder {
      *
      * @param consumerCredentials Consumer credentials.
      */
-    OAuth1BuilderImpl(ConsumerCredentials consumerCredentials) {
-        this.params = new OAuth1Parameters();
-        this.secrets = new OAuth1Secrets();
+    OAuth1BuilderImpl(final ConsumerCredentials consumerCredentials) {
+        this(new OAuth1Parameters(), new OAuth1Secrets(), consumerCredentials);
+    }
+
+    /**
+     * Create a new builder instance.
+     *
+     * @param params Pre-configured oauth parameters.
+     * @param secrets Pre-configured oauth secrets.
+     */
+    OAuth1BuilderImpl(final OAuth1Parameters params, final OAuth1Secrets secrets) {
+        this(params, secrets, new ConsumerCredentials(params.getConsumerKey(), secrets.getConsumerSecret()));
+    }
+
+    private OAuth1BuilderImpl(final OAuth1Parameters params, final OAuth1Secrets secrets,
+                              final ConsumerCredentials consumerCredentials) {
+        this.params = params;
+        this.secrets = secrets;
 
         // spec defines that when no callback uri is used (e.g. client is unable to receive callback
         // as it is a mobile application), the "oob" value should be used.
-        this.params.setCallback(OAuth1Parameters.NO_CALLBACK_URI_VALUE);
+        if (this.params.getCallback() == null) {
+            this.params.setCallback(OAuth1Parameters.NO_CALLBACK_URI_VALUE);
+        }
         this.consumerCredentials = consumerCredentials;
     }
 
@@ -116,7 +133,7 @@ class OAuth1BuilderImpl implements OAuth1Builder {
     @Override
     public FlowBuilder authorizationFlow(String requestTokenUri, String accessTokenUri, String authorizationUri) {
         defineCredentialsParams();
-        return new OAuth1AuthorizationFlowImpl.Builder(consumerCredentials, requestTokenUri, accessTokenUri, authorizationUri);
+        return new OAuth1AuthorizationFlowImpl.Builder(params, secrets, requestTokenUri, accessTokenUri, authorizationUri);
     }
 
     /**

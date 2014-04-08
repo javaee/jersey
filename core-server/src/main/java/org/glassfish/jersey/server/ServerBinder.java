@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,6 +62,7 @@ import org.glassfish.jersey.internal.JerseyErrorService;
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.inject.ContextInjectionResolver;
 import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
+import org.glassfish.jersey.internal.inject.ReferenceTransformingFactory;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.inject.SecurityContextInjectee;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
@@ -78,8 +79,7 @@ import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.internal.inject.CloseableServiceBinder;
 import org.glassfish.jersey.server.internal.inject.ParameterInjectionBinder;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
-import org.glassfish.jersey.server.internal.process.RespondingContext;
-import org.glassfish.jersey.server.internal.routing.RouterBinder;
+import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
 import org.glassfish.jersey.server.model.internal.ResourceModelBinder;
 import org.glassfish.jersey.server.spi.ContainerProvider;
 
@@ -132,29 +132,27 @@ class ServerBinder extends AbstractBinder {
                 new ContextResolverFactory.Binder(),
                 new JaxrsProviders.Binder(),
                 new ProcessingProviders.Binder(),
-                new ContainerFilteringStage.Binder(),
                 new ResourceModelBinder(),
                 new RuntimeExecutorsBinder(),
-                new RouterBinder(),
-                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
+                new ServiceFinderBinder<>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
                 new CloseableServiceBinder(),
                 new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
+                new ServiceFinderBinder<>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
                 new MappableExceptionWrapperInterceptor.Binder(),
                 new MonitoringContainerListener.Binder());
 
         // Request/Response injection interfaces
-        bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
-        }).in(RequestScoped.class);
-
-        // server-side processing chain
-        bindFactory(RequestContextInjectionFactory.class).to(ContainerRequest.class).in(RequestScoped.class);
-        bindFactory(RequestContextInjectionFactory.class).to(ContainerRequestContext.class).in(RequestScoped.class);
+        bindFactory(RequestContextInjectionFactory.class)
+                .to(ContainerRequest.class).to(ContainerRequestContext.class)
+                .in(RequestScoped.class)
+                .proxy(false);
+        bindFactory(RequestContextInjectionFactory.class)
+                .to(HttpHeaders.class).to(Request.class)
+                .in(RequestScoped.class)
+                .proxy(true).proxyForSameScope(false);
 
         bindFactory(ReferencingFactory.<ContainerRequest>referenceFactory()).to(new TypeLiteral<Ref<ContainerRequest>>() {
         }).in(RequestScoped.class);
-
-        bind(DefaultRespondingContext.class).to(RespondingContext.class).in(RequestScoped.class);
 
         //ChunkedResponseWriter
         bind(ChunkedResponseWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
@@ -164,63 +162,35 @@ class ServerBinder extends AbstractBinder {
 
         bindAsContract(ReferencesInitializer.class);
 
-        bindFactory(UriInfoReferencingFactory.class).to(UriInfo.class)
-                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-        bindFactory(ReferencingFactory.<UriInfo>referenceFactory()).to(new TypeLiteral<Ref<UriInfo>>() {
-        }).in(RequestScoped.class);
-
-        bindFactory(ResourceInfoReferencingFactory.class).to(ResourceInfo.class)
-                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-        bindFactory(ReferencingFactory.<ResourceInfo>referenceFactory()).to(new TypeLiteral<Ref<ResourceInfo>>() {
-        }).in(RequestScoped.class);
-
-        bindFactory(HttpHeadersReferencingFactory.class).to(HttpHeaders.class)
-                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-        bindFactory(ReferencingFactory.<HttpHeaders>referenceFactory()).to(new TypeLiteral<Ref<HttpHeaders>>() {
-        }).in(RequestScoped.class);
-
-        bindFactory(RequestReferencingFactory.class).to(Request.class)
-                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-        bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
-        }).in(RequestScoped.class);
+        bindFactory(UriRoutingContextFactory.class)
+                .to(UriInfo.class).to(ExtendedUriInfo.class).to(ResourceInfo.class)
+                .in(RequestScoped.class)
+                .proxy(true)
+                .proxyForSameScope(false);
 
         // SecurityContext must be injected using the Injectee. The reason is that
         // SecurityContext can be changed by filters but it looks like the proxy internally caches
         // the first SecurityContext value injected in the RequestScope. This is
-        bindAsContract(SecurityContextInjectee.class).to(SecurityContext.class)
-                .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
-
+        bindAsContract(SecurityContextInjectee.class).to(SecurityContext.class).in(RequestScoped.class)
+                .proxy(true).proxyForSameScope(false);
     }
 
-    @SuppressWarnings("JavaDoc")
-    private static class UriInfoReferencingFactory extends ReferencingFactory<UriInfo> {
+    private static class UriRoutingContextFactory extends ReferenceTransformingFactory<ContainerRequest, UriRoutingContext> {
+
         @Inject
-        public UriInfoReferencingFactory(Provider<Ref<UriInfo>> referenceFactory) {
-            super(referenceFactory);
+        protected UriRoutingContextFactory(final Provider<Ref<ContainerRequest>> refProvider) {
+            super(refProvider, new Transformer<ContainerRequest, UriRoutingContext>() {
+                @Override
+                public UriRoutingContext transform(ContainerRequest value) {
+                    return value.getUriRoutingContext();
+                }
+            });
         }
-    }
 
-    @SuppressWarnings("JavaDoc")
-    private static class ResourceInfoReferencingFactory extends ReferencingFactory<ResourceInfo> {
-        @Inject
-        public ResourceInfoReferencingFactory(Provider<Ref<ResourceInfo>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
-    @SuppressWarnings("JavaDoc")
-    private static class HttpHeadersReferencingFactory extends ReferencingFactory<HttpHeaders> {
-        @Inject
-        public HttpHeadersReferencingFactory(Provider<Ref<HttpHeaders>> referenceFactory) {
-            super(referenceFactory);
-        }
-    }
-
-    @SuppressWarnings("JavaDoc")
-    private static class RequestReferencingFactory extends ReferencingFactory<Request> {
-        @Inject
-        public RequestReferencingFactory(Provider<Ref<Request>> referenceFactory) {
-            super(referenceFactory);
+        @Override
+        @RequestScoped
+        public UriRoutingContext provide() {
+            return super.provide();
         }
     }
 }

@@ -135,7 +135,7 @@ public class JerseyWebTargetTest {
         assertEquals("/v", uri.toString());
 
         uriBuilder = target.path("{a}").resolveTemplate("qqq", "qqq").getUriBuilder();
-        assertEquals("/%7Ba%7D", uriBuilder.build().toString());
+        assertEquals("/{a}", uriBuilder.toTemplate());
 
         uriBuilder = target.path("{a}").resolveTemplate("a", "v").resolveTemplate("a", "x").getUriBuilder();
         assertEquals("/v", uriBuilder.build().toString());
@@ -164,13 +164,13 @@ public class JerseyWebTargetTest {
     public void testResolveTemplate3() {
         final JerseyWebTarget webTarget = target.path("path/{a}").path("{b}").queryParam("query", "{q}")
                 .resolveTemplate("a", "param-a").resolveTemplate("q", "param-q");
-        assertEquals("/path/param-a/%7Bb%7D?query=param-q", webTarget.getUri().toString());
+        assertEquals("/path/param-a/{b}?query=param-q", webTarget.getUriBuilder().toTemplate());
         // resolve b in webTarget
         assertEquals(URI.create("/path/param-a/param-b?query=param-q"), webTarget.resolveTemplate("b",
                 "param-b").getUri());
 
         // check that original webTarget has not been changed
-        assertEquals("/path/param-a/%7Bb%7D?query=param-q", webTarget.getUri().toString());
+        assertEquals("/path/param-a/{b}?query=param-q", webTarget.getUriBuilder().toTemplate());
 
         // resolve b in UriBuilder
         assertEquals(URI.create("/path/param-a/param-b?query=param-q"), ((JerseyUriBuilder) webTarget.getUriBuilder())

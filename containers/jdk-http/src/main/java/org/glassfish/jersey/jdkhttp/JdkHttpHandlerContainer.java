@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
@@ -75,9 +76,10 @@ import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsExchange;
 
 /**
- * Container adapter between {@link HttpServer JDK HttpServer} and {@link ApplicationHandler Jersey application}.
+ * Jersey {@code Container} implementation based on Java SE {@link HttpServer}.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JdkHttpHandlerContainer implements HttpHandler, Container {
     private static final Logger LOGGER = Logger.getLogger(JdkHttpHandlerContainer.class.getName());
@@ -86,13 +88,12 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
     private volatile ContainerLifecycleListener containerListener;
 
     /**
-     * Creates a new Container connected to given {@link ApplicationHandler Jersey application}.
+     * Create new lightweight Java SE HTTP server container.
      *
-     * @param appHandler Jersey application handler for which the container should be
-     *                   initialized.
+     * @param application JAX-RS / Jersey application to be deployed on the container.
      */
-    JdkHttpHandlerContainer(ApplicationHandler appHandler) {
-        this.appHandler = appHandler;
+    JdkHttpHandlerContainer(Application application) {
+        this.appHandler = new ApplicationHandler(application);
         this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
     }
 
@@ -211,6 +212,11 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
         containerListener.onReload(this);
         containerListener.onStartup(this);
+    }
+
+    @Override
+    public ApplicationHandler getApplicationHandler() {
+        return appHandler;
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,22 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 import org.glassfish.hk2.api.ServiceLocator;
 
 /**
- *
+ * A resource method dispatcher provider factory.
+ * <p>
+ * This class is used by {@link org.glassfish.jersey.server.model.ResourceMethodInvoker} to
+ * create a {@link org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher.Provider} instance
+ * that will be used to provide a {@link org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher}
+ * instances for all resource method invocations.
+ * </p>
+ * <p>
+ * JAX-RS resource methods are invoked by {@link org.glassfish.jersey.server.model.ResourceMethodInvoker
+ * resource method invoker}. Whenever a new incoming request has been routed to a resource method and the
+ * method is being invoked by the resource method invoker, the invoker consults a registered
+ * {@link org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher.Provider} instance to retrieve
+ * a {@link org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher} that will be ultimately used
+ * to dispatch the resource method invocation. This mechanism is useful for implementing any resource method
+ * interception logic.
+ * </p>
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)

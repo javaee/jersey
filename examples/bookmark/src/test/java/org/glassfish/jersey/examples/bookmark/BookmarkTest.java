@@ -41,17 +41,15 @@ package org.glassfish.jersey.examples.bookmark;
 
 import java.net.URI;
 
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jettison.JettisonFeature;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
-import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
@@ -87,10 +85,8 @@ public class BookmarkTest extends JerseyTest {
     }
 
     @Override
-    protected Client getClient(final TestContainer tc, final ApplicationHandler applicationHandler) {
-        final Client client = super.getClient(tc, applicationHandler);
-        client.register(JettisonFeature.class);
-        return client;
+    protected void configureClient(ClientConfig config) {
+        config.register(JettisonFeature.class);
     }
 
     @Test

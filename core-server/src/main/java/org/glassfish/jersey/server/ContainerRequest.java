@@ -45,14 +45,16 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.HttpHeaders;
@@ -62,6 +64,8 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.Variant;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.WriterInterceptor;
 
 import org.glassfish.jersey.internal.PropertiesDelegate;
 import org.glassfish.jersey.internal.util.collection.Ref;
@@ -73,15 +77,17 @@ import org.glassfish.jersey.message.internal.InboundMessageContext;
 import org.glassfish.jersey.message.internal.MatchingEntityTag;
 import org.glassfish.jersey.message.internal.TracingAwarePropertiesDelegate;
 import org.glassfish.jersey.message.internal.VariantSelector;
+import org.glassfish.jersey.model.internal.RankedProvider;
+import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
-import org.glassfish.jersey.server.internal.monitoring.EmptyRequestEventBuilder;
-import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
+import org.glassfish.jersey.server.internal.ProcessingProviders;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.internal.routing.UriRoutingContext;
-import org.glassfish.jersey.server.monitoring.RequestEvent;
-import org.glassfish.jersey.server.monitoring.RequestEventListener;
+import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 import org.glassfish.jersey.uri.UriComponent;
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.base.Preconditions;
@@ -98,11 +104,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
 public class ContainerRequest extends InboundMessageContext
         implements ContainerRequestContext, Request, HttpHeaders, PropertiesDelegate {
 
-    private static URI DEFAULT_BASE_URI = URI.create("/");
-
-    private static URI normalizeBaseUri(URI baseUri) {
-        return baseUri.normalize();
-    }
+    private static final URI DEFAULT_BASE_URI = URI.create("/");
 
     // Request-scoped properties delegate
     private final PropertiesDelegate propertiesDelegate;
@@ -114,6 +116,8 @@ public class ContainerRequest extends InboundMessageContext
     private String encodedRelativePath = null;
     // Lazily computed decoded request path (relative to application root URI)
     private String decodedRelativePath = null;
+    // Lazily computed "absolute path" URI
+    private URI absolutePathUri = null;
     // Request method
     private String httpMethod;
     // Request security context
@@ -124,24 +128,27 @@ public class ContainerRequest extends InboundMessageContext
     private String varyValue;
     // UriInfo reference
     private UriRoutingContext uriRoutingContext;
+    // Processing providers
+    private ProcessingProviders processingProviders;
     // Custom Jersey container request scoped initializer
     private RequestScopedInitializer requestScopedInitializer;
     // Request-scoped response writer of the invoking container
     private ContainerResponseWriter responseWriter;
     // True if the request is used in the response processing phase (for example in ContainerResponseFilter)
     private boolean inResponseProcessingPhase;
-    // Event listener registered to this request.
-    private RequestEventListener requestEventListener = null;
-    private RequestEventBuilder requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
 
-    private static final Pattern UriPartPATTERN = Pattern.compile("[a-zA-Z][a-zA-Z\\+\\-\\.]*(:[^/]*)?://.+");
-
-    private static final String ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE();
-    private static final String ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE();
-    private static final String ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE = LocalizationMessages.ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE();
-    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY("variants");
-    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_ETAG = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag");
-    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED = LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified");
+    private static final String ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE =
+            LocalizationMessages.ERROR_REQUEST_SET_ENTITY_STREAM_IN_RESPONSE_PHASE();
+    private static final String ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE =
+            LocalizationMessages.ERROR_REQUEST_SET_SECURITY_CONTEXT_IN_RESPONSE_PHASE();
+    private static final String ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE =
+            LocalizationMessages.ERROR_REQUEST_ABORT_IN_RESPONSE_PHASE();
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY =
+            LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL_OR_EMPTY("variants");
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_ETAG =
+            LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("eTag");
+    private static final String METHOD_PARAMETER_CANNOT_BE_NULL_LAST_MODIFIED =
+            LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("lastModified");
 
     /**
      * Create new Jersey container request context.
@@ -164,7 +171,7 @@ public class ContainerRequest extends InboundMessageContext
             PropertiesDelegate propertiesDelegate) {
         super(true);
 
-        this.baseUri = baseUri == null ? DEFAULT_BASE_URI : normalizeBaseUri(baseUri);
+        this.baseUri = baseUri == null ? DEFAULT_BASE_URI : baseUri.normalize();
         this.requestUri = requestUri;
         this.httpMethod = httpMethod;
         this.securityContext = securityContext;
@@ -178,7 +185,7 @@ public class ContainerRequest extends InboundMessageContext
      * the current request.
      *
      * @return custom container extensions initializer or {@code null} if not
-     *         available.
+     * available.
      */
     public RequestScopedInitializer getRequestScopedInitializer() {
         return requestScopedInitializer;
@@ -305,6 +312,75 @@ public class ContainerRequest extends InboundMessageContext
         this.uriRoutingContext = uriRoutingContext;
     }
 
+    void setProcessingProviders(final ProcessingProviders providers) {
+        this.processingProviders = providers;
+    }
+
+    UriRoutingContext getUriRoutingContext() {
+        return uriRoutingContext;
+    }
+
+    /**
+     * Get all bound request filters applicable to this request.
+     *
+     * @return All bound (dynamically or by name) request filters applicable to the matched inflector (or an empty
+     * collection if no inflector matched yet).
+     */
+    Iterable<RankedProvider<ContainerRequestFilter>> getRequestFilters() {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getRequestFilters() : null);
+    }
+
+    /**
+     * Get all bound response filters applicable to this request.
+     * This is populated once the right resource method is matched.
+     *
+     * @return All bound (dynamically or by name) response filters applicable to the matched inflector (or an empty
+     * collection if no inflector matched yet).
+     */
+    Iterable<RankedProvider<ContainerResponseFilter>> getResponseFilters() {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
+        return emptyIfNull(inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getResponseFilters() : null);
+    }
+
+    /**
+     * Get all reader interceptors applicable to this request.
+     * This is populated once the right resource method is matched.
+     *
+     * @return All reader interceptors applicable to the matched inflector (or an empty
+     * collection if no inflector matched yet).
+     */
+    @Override
+    protected Iterable<ReaderInterceptor> getReaderInterceptors() {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
+        return inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getReaderInterceptors()
+                : processingProviders.getSortedGlobalReaderInterceptors();
+    }
+
+    /**
+     * Get all writer interceptors applicable to this request.
+     *
+     * @return All writer interceptors applicable to the matched inflector (or an empty
+     * collection if no inflector matched yet).
+     */
+    Iterable<WriterInterceptor> getWriterInterceptors() {
+        final Inflector<RequestProcessingContext, ContainerResponse> inflector = getInflector();
+        return inflector instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) inflector).getWriterInterceptors()
+                : processingProviders.getSortedGlobalWriterInterceptors();
+    }
+
+    private Inflector<RequestProcessingContext, ContainerResponse> getInflector() {
+        return uriRoutingContext.getInflector();
+    }
+
+    private static <T> Iterable<T> emptyIfNull(Iterable<T> iterable) {
+        return iterable == null ? Collections.<T>emptyList() : iterable;
+    }
+
     /**
      * Get base request URI.
      *
@@ -323,6 +399,18 @@ public class ContainerRequest extends InboundMessageContext
         return requestUri;
     }
 
+    /**
+     * Get the absolute path of the request. This includes everything preceding the path (host, port etc),
+     * but excludes query parameters or fragment.
+     *
+     * @return the absolute path of the request.
+     */
+    public URI getAbsolutePath() {
+        if (absolutePathUri != null) return absolutePathUri;
+
+        return absolutePathUri = new JerseyUriBuilder().uri(requestUri).replaceQuery("").fragment("").build();
+    }
+
     @Override
     public void setRequestUri(URI requestUri) throws IllegalStateException {
         if (!uriRoutingContext.getMatchedURIs().isEmpty()) {
@@ -331,6 +419,7 @@ public class ContainerRequest extends InboundMessageContext
 
         this.encodedRelativePath = null;
         this.decodedRelativePath = null;
+        this.absolutePathUri = null;
         this.uriRoutingContext.invalidateUriComponentViews();
 
         this.requestUri = requestUri;
@@ -344,6 +433,7 @@ public class ContainerRequest extends InboundMessageContext
 
         this.encodedRelativePath = null;
         this.decodedRelativePath = null;
+        this.absolutePathUri = null;
         this.uriRoutingContext.invalidateUriComponentViews();
 
         this.baseUri = baseUri;
@@ -375,58 +465,15 @@ public class ContainerRequest extends InboundMessageContext
             return encodedRelativePath;
         }
 
-        String result;
-        String requestUriRawPath = getRequestUriRawPath();
+        String requestUriRawPath = requestUri.getRawPath();
 
         if (baseUri == null) {
-            result = requestUriRawPath;
-        } else {
-            final String applicationRootUriRawPath = baseUri.getRawPath();
-            if (applicationRootUriRawPath.length() > requestUriRawPath.length()) {
-                result = "";
-            } else {
-                result = requestUriRawPath.substring(applicationRootUriRawPath.length());
-            }
+            return encodedRelativePath = requestUriRawPath;
         }
 
-        if (result.isEmpty()) {
-            result = "/";
-        }
-
-        return encodedRelativePath = (result.charAt(0) == '/') ? result : '/' + result;
-    }
-
-    /**
-     * Return semi-normalized {@link URI} raw path of the request. If path contains another absolute {@code URI}
-     * (with {@code ://}) then part before this {@code URI} is normalized and the {@code URI} is appended to this path as is.
-     * Otherwise the whole path is normalized.
-     * <p/>
-     * This method make sure that if a {@code URI} is supposed to be a {@link javax.ws.rs.PathParam path parameter} value that
-     * it's not corrupted by normalization.
-     *
-     * @return raw path of the request {@code URI}.
-     */
-    private String getRequestUriRawPath() {
-        final String rawPath = requestUri.getRawPath();
-        final StringBuilder builder = new StringBuilder();
-
-        int lastSlashPos = 0;
-        int slashPos = rawPath.indexOf('/');
-
-        while (slashPos > -1) {
-            builder.append(rawPath.substring(lastSlashPos, slashPos + 1));
-
-            final String uriPart = rawPath.substring(slashPos + 1);
-
-            if (UriPartPATTERN.matcher(uriPart).matches()) {
-                return URI.create(builder.toString()).normalize().toString() + uriPart;
-            }
-
-            lastSlashPos = slashPos;
-            slashPos = rawPath.indexOf('/', slashPos + 1);
-        }
-
-        return requestUri.normalize().getRawPath();
+        final int baseUriRawPathLength = baseUri.getRawPath().length();
+        return encodedRelativePath = baseUriRawPathLength < requestUriRawPath.length() ?
+                requestUriRawPath.substring(baseUriRawPathLength) : "";
     }
 
     @Override
@@ -440,54 +487,6 @@ public class ContainerRequest extends InboundMessageContext
             throw new IllegalStateException("Method could be called only in pre-matching request filter.");
         }
         this.httpMethod = method;
-    }
-
-    /**
-     * Set {@link RequestEventListener request event listener} that will listen to events of this request and
-     * {@link RequestEventBuilder request event builder} that will be used to build these events.
-     *
-     * <p>
-     * Do not use this method to set empty mock event listener which has no internal functionality in order to
-     * disable event listener and set {@code requestEventListener} to null instead. Request event listeners are usually created from
-     * {@link org.glassfish.jersey.server.monitoring.ApplicationEventListener#onRequest(org.glassfish.jersey.server.monitoring.RequestEvent)}.
-     * If this method is never called on the request the default no functionality event listener
-     * and event builder will be used.
-     * <p/>
-     *
-     *
-     * @param requestEventListener Request event listener or null if the listening to events should be disabled.
-     * @param requestEventBuilder Request event builder.
-     */
-    void setRequestEventListener(RequestEventListener requestEventListener,
-                                 RequestEventBuilder requestEventBuilder) {
-        if (requestEventListener != null) {
-            this.requestEventListener = requestEventListener;
-            this.requestEventBuilder = requestEventBuilder;
-        } else {
-            // use mock builder
-            this.requestEventBuilder = EmptyRequestEventBuilder.EMPTY_EVENT_BUILDER;
-        }
-    }
-
-    /**
-     * Get an event builder bound to the current container request.
-     *
-     * @return event builder bound to the current container request.
-     */
-    RequestEventBuilder getRequestEventBuilder() {
-        return requestEventBuilder;
-    }
-
-
-    /**
-     * Trigger a new monitoring event for the current request.
-     *
-     * @param requestEventType request event type.
-     */
-    public void triggerEvent(RequestEvent.Type requestEventType) {
-        if (requestEventListener != null) {
-            requestEventListener.onEvent(requestEventBuilder.build(requestEventType));
-        }
     }
 
     /**
@@ -596,7 +595,7 @@ public class ContainerRequest extends InboundMessageContext
      * or {@code null} if no value is to be set.
      *
      * @return value of HTTP Vary response header to be set in the response if available,
-     *         {@code null} otherwise.
+     * {@code null} otherwise.
      */
     public String getVaryValue() {
         return varyValue;
@@ -649,14 +648,14 @@ public class ContainerRequest extends InboundMessageContext
             return r;
         }
 
-        final boolean isGetOrHead = getMethod().equals("GET") || getMethod().equals("HEAD");
+        final boolean isGetOrHead = "GET".equals(getMethod()) || "HEAD".equals(getMethod());
         final Set<MatchingEntityTag> matchingTags = getIfNoneMatch();
         if (matchingTags != null) {
             r = evaluateIfNoneMatch(eTag, matchingTags, isGetOrHead);
             // If the If-None-Match header is present and there is no
             // match then the If-Modified-Since header must be ignored
             if (r == null) {
-                return r;
+                return null;
             }
 
             // Otherwise if the If-None-Match header is present and there
@@ -665,7 +664,7 @@ public class ContainerRequest extends InboundMessageContext
         }
 
         final String ifModifiedSinceHeader = getHeaderString(HttpHeaders.IF_MODIFIED_SINCE);
-        if (ifModifiedSinceHeader != null && ifModifiedSinceHeader.length() > 0 && isGetOrHead) {
+        if (ifModifiedSinceHeader != null && !ifModifiedSinceHeader.isEmpty() && isGetOrHead) {
             r = evaluateIfModifiedSince(lastModifiedTime, ifModifiedSinceHeader);
             if (r != null) {
                 r.tag(eTag);
@@ -716,7 +715,7 @@ public class ContainerRequest extends InboundMessageContext
         }
 
         final String httpMethod = getMethod();
-        return evaluateIfNoneMatch(eTag, matchingTags, httpMethod.equals("GET") || httpMethod.equals("HEAD"));
+        return evaluateIfNoneMatch(eTag, matchingTags, "GET".equals(httpMethod) || "HEAD".equals(httpMethod));
     }
 
     private Response.ResponseBuilder evaluateIfNoneMatch(EntityTag eTag, Set<? extends EntityTag> matchingTags,
@@ -752,7 +751,7 @@ public class ContainerRequest extends InboundMessageContext
 
     private Response.ResponseBuilder evaluateIfUnmodifiedSince(long lastModified) {
         String ifUnmodifiedSinceHeader = getHeaderString(HttpHeaders.IF_UNMODIFIED_SINCE);
-        if (ifUnmodifiedSinceHeader != null && ifUnmodifiedSinceHeader.length() > 0) {
+        if (ifUnmodifiedSinceHeader != null && !ifUnmodifiedSinceHeader.isEmpty()) {
             try {
                 long ifUnmodifiedSince = HttpHeaderReader.readDate(ifUnmodifiedSinceHeader).getTime();
                 if (roundDown(lastModified) > ifUnmodifiedSince) {
@@ -769,12 +768,12 @@ public class ContainerRequest extends InboundMessageContext
 
     private Response.ResponseBuilder evaluateIfModifiedSince(long lastModified) {
         String ifModifiedSinceHeader = getHeaderString(HttpHeaders.IF_MODIFIED_SINCE);
-        if (ifModifiedSinceHeader == null || ifModifiedSinceHeader.length() == 0) {
+        if (ifModifiedSinceHeader == null || ifModifiedSinceHeader.isEmpty()) {
             return null;
         }
 
         final String httpMethod = getMethod();
-        if (httpMethod.equals("GET") || httpMethod.equals("HEAD")) {
+        if ("GET".equals(httpMethod) || "HEAD".equals(httpMethod)) {
             return evaluateIfModifiedSince(lastModified, ifModifiedSinceHeader);
         } else {
             return null;
@@ -812,6 +811,7 @@ public class ContainerRequest extends InboundMessageContext
      *
      * @param name the header name, case insensitive.
      * @return a read-only list of header values.
+     *
      * @throws IllegalStateException if called outside the scope of a request.
      */
     @Override
@@ -824,6 +824,7 @@ public class ContainerRequest extends InboundMessageContext
      * wrt. keys and is read-only. The method never returns {@code null}.
      *
      * @return a read-only map of header names and values.
+     *
      * @throws IllegalStateException if called outside the scope of a request.
      */
     @Override

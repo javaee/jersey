@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,10 +37,10 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.oauth1;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
@@ -54,17 +54,14 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class OAuth1Exception extends WebApplicationException {
-    private final Response.Status status;
-    private final String wwwAuthHeader;
 
     /**
      * Create a new exception.
      * @param status Response status.
      * @param wwwAuthHeader {@code Authorization} header value of the request that cause the exception.
      */
-    public OAuth1Exception(Response.Status status, String wwwAuthHeader) {
-        this.status = status;
-        this.wwwAuthHeader = wwwAuthHeader;
+    public OAuth1Exception(final Response.Status status, final String wwwAuthHeader) {
+        super(createResponse(status, wwwAuthHeader));
     }
 
     /**
@@ -73,23 +70,22 @@ public class OAuth1Exception extends WebApplicationException {
      * @return Response status code.
      */
     public Response.Status getStatus() {
-        return status;
+        return Response.Status.fromStatusCode(super.getResponse().getStatus());
     }
 
     /**
-     * Get the {@code Authorization} header of the request that cause the exception.
+     * Get the {@code WWW-Authenticate} header of the request that cause the exception.
      *
-     * @return Authorization header value.
+     * @return {@code WWW-Authenticate} header value.
      */
     public String getWwwAuthHeader() {
-        return wwwAuthHeader;
+        return super.getResponse().getHeaderString(HttpHeaders.WWW_AUTHENTICATE);
     }
 
-    @Override
-    public Response getResponse() {
+    private static Response createResponse(Response.Status status, String wwwAuthHeader) {
         ResponseBuilder rb = Response.status(status);
         if (wwwAuthHeader != null) {
-            rb.header("WWW-Authenticate", wwwAuthHeader);
+            rb.header(HttpHeaders.WWW_AUTHENTICATE, wwwAuthHeader);
         }
         return rb.build();
     }

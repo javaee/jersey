@@ -92,9 +92,9 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
         private ClientIdentifier clientIdentifier;
         private Client client;
         private String scope;
-        private Map<String, String> authorizationProperties = new HashMap<String, String>();
-        private Map<String, String> accessTokenProperties = new HashMap<String, String>();
-        private Map<String, String> refreshTokenProperties = new HashMap<String, String>();
+        private Map<String, String> authorizationProperties = new HashMap<>();
+        private Map<String, String> accessTokenProperties = new HashMap<>();
+        private Map<String, String> refreshTokenProperties = new HashMap<>();
 
 
         /**
@@ -357,9 +357,7 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
             throw new ProcessingException(LocalizationMessages.ERROR_FLOW_REQUEST_REFRESH_TOKEN(response.getStatus()));
         }
 
-        final Map<String, String> tokenMap = response.readEntity(new GenericType<Map<String, String>>() {
-        });
-        this.tokenResult = new TokenResult(tokenMap);
+        this.tokenResult = response.readEntity(TokenResult.class);
         return tokenResult;
     }
 
@@ -385,7 +383,7 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
         @Inject
         private Provider<PropertiesDelegate> propertiesDelegateProvider;
 
-        private static Iterable<ReaderInterceptor> EMPTY_INTERCEPTORS = new ArrayList<ReaderInterceptor>();
+        private static Iterable<ReaderInterceptor> EMPTY_INTERCEPTORS = new ArrayList<>();
 
         @Override
         public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations, final MediaType mediaType) {
@@ -397,11 +395,10 @@ class AuthCodeGrantImpl implements OAuth2CodeGrantFlow {
                                     final MediaType mediaType, final MultivaluedMap<String, String> httpHeaders,
                                     final InputStream entityStream) throws IOException, WebApplicationException {
 
-
-            final GenericType<Map<String, String>> mapType = new GenericType<Map<String, String>>() {
+            final GenericType<Map<String, Object>> mapType = new GenericType<Map<String, Object>>() {
             };
 
-            final Map<String, String> map = (Map<String, String>) workers.get().readFrom(mapType.getRawType(),
+            final Map<String, Object> map = (Map<String, Object>) workers.get().readFrom(mapType.getRawType(),
                     mapType.getType(), annotations,
                     mediaType, httpHeaders,
                     propertiesDelegateProvider.get(),

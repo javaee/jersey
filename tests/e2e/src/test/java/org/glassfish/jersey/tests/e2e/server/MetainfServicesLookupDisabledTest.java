@@ -60,7 +60,7 @@ public class MetainfServicesLookupDisabledTest extends AbstractDisableMetainfSer
 
     @Override
     protected Application configure() {
-        ResourceConfig resourceConfig = (ResourceConfig)super.configure();
+        ResourceConfig resourceConfig = (ResourceConfig) super.configure();
         resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
 
         return resourceConfig;

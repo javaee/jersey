@@ -100,7 +100,7 @@ holder.
             It is quite straight forward to get the appropriate &lit.jee6.servlet.HttpSession; instance out of the
             injected request instance.
             Let say, you want to get &lit.jee6.servlet.HttpSession; instance directly injected into your JAX-RS
-            types like in the code snippet bellow.
+            types like in the code snippet below.
 
             <programlisting language="java">@Path("di-resource")
 public class MyDiResource {

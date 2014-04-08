@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.Date;
@@ -77,28 +76,29 @@ class ApplicationStatisticsImpl implements ApplicationStatistics {
         this.providers = providers;
     }
 
+    @Override
     public ResourceConfig getResourceConfig() {
         return resourceConfig;
     }
 
+    @Override
     public Date getStartTime() {
         return startTime;
     }
 
+    @Override
     public Set<Class<?>> getRegisteredClasses() {
         return registeredClasses;
     }
 
+    @Override
     public Set<Object> getRegisteredInstances() {
         return registeredInstances;
     }
 
+    @Override
     public Set<Class<?>> getProviders() {
         return providers;
-    }
-
-    public Date getDestroyTime() {
-        return null;
     }
 
     @Override

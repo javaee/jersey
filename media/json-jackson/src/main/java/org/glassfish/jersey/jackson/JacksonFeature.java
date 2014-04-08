@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,6 +47,8 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import org.glassfish.jersey.CommonProperties;
 
 import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
+import org.codehaus.jackson.jaxrs.JsonMappingExceptionMapper;
+import org.codehaus.jackson.jaxrs.JsonParseExceptionMapper;
 
 /**
  * Feature used to register Jackson JSON providers.
@@ -61,6 +63,9 @@ public class JacksonFeature implements Feature {
                 + context.getConfiguration().getRuntimeType().name().toLowerCase();
         context.property(disableMoxy, true);
 
+        // add the default Jackson exception mappers
+        context.register(JsonParseExceptionMapper.class);
+        context.register(JsonMappingExceptionMapper.class);
         context.register(JacksonJaxbJsonProvider.class, MessageBodyReader.class, MessageBodyWriter.class);
         return true;
     }

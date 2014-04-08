@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,8 @@ import java.util.Set;
 import java.util.SortedSet;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.MatrixParam;
@@ -75,6 +77,27 @@ public interface MyResourceIfc {
     @Produces(MediaType.TEXT_PLAIN)
     String getByName(@QueryParam("name") String name);
 
+    @Path("cookie")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameCookie(@CookieParam("cookie-name") String name);
+
+    @Path("header")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameHeader(@HeaderParam("header-name") String name);
+
+    @Path("matrix")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameMatrix(@MatrixParam("matrix-name") String name);
+
+    @Path("form")
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    String postByNameFormParam(@FormParam("form-name") String name);
+
+
     @Path("query-list")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
@@ -83,17 +106,42 @@ public interface MyResourceIfc {
     @Path("query-set")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    String getByNameSet(@QueryParam("name-list") Set<String> name);
+    String getByNameSet(@QueryParam("name-set") Set<String> name);
 
     @Path("query-sortedset")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    String getByNameSortedSet(@QueryParam("name-list") SortedSet<String> name);
+    String getByNameSortedSet(@QueryParam("name-sorted") SortedSet<String> name);
+
+    @Path("cookie-list")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameCookieList(@CookieParam("cookie-name-list") List<String> name);
+
+    @Path("cookie-set")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameCookieSet(@CookieParam("cookie-name-set") Set<String> name);
+
+    @Path("cookie-sortedset")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameCookieSortedSet(@CookieParam("cookie-name-sorted") SortedSet<String> name);
 
     @Path("header-list")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     String getByNameHeaderList(@HeaderParam("header-name-list") List<String> name);
+
+    @Path("header-set")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameHeaderSet(@HeaderParam("header-name-set") Set<String> name);
+
+    @Path("header-sortedset")
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    String getByNameHeaderSortedSet(@HeaderParam("header-name-sorted") SortedSet<String> name);
 
     @Path("matrix-list")
     @GET
@@ -109,6 +157,21 @@ public interface MyResourceIfc {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     String getByNameMatrixSortedSet(@MatrixParam("matrix-name-sorted") SortedSet<String> name);
+
+    @Path("form-list")
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    String postByNameFormList(@FormParam("form-name-list") List<String> name);
+
+    @Path("form-set")
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    String postByNameFormSet(@FormParam("form-name-set") Set<String> name);
+
+    @Path("form-sortedset")
+    @POST
+    @Produces(MediaType.TEXT_PLAIN)
+    String postByNameFormSortedSet(@FormParam("form-name-sorted") SortedSet<String> name);
 
     @Path("subresource")
     MySubResourceIfc getSubResource();

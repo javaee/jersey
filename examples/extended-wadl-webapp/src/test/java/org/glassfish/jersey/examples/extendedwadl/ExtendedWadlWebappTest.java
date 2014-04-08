@@ -45,9 +45,7 @@ import java.nio.charset.Charset;
 import java.util.logging.Logger;
 
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -63,6 +61,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.wadl.internal.WadlUtils;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
@@ -72,6 +71,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * WADL extension example tests.
+ *
  * @author Naresh
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
@@ -80,7 +81,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     private static final Logger LOGGER = Logger.getLogger(ExtendedWadlWebappTest.class.getName());
 
     @Override
-    protected Application configure() {
+    protected DeploymentContext configureDeployment() {
         final ResourceConfig resourceConfig = new ResourceConfig(new MyApplication().getClasses());
         resourceConfig.property(ServerProperties.WADL_GENERATOR_CONFIG, "org.glassfish.jersey.examples.extendedwadl" +
                 ".SampleWadlGeneratorConfig");
@@ -90,19 +91,14 @@ public class ExtendedWadlWebappTest extends JerseyTest {
 
                 .handledBy(new ProgrammaticResource());
         resourceConfig.registerResources(resourceBuilder.build());
-        return resourceConfig;
-    }
-
-    @Override
-    protected URI getBaseUri() {
-        return UriBuilder.fromUri(super.getBaseUri()).path("extended-wadl-webapp").build();
+        return DeploymentContext.builder(resourceConfig).contextPath("extended-wadl-webapp").build();
     }
 
     /**
      * Test checks that the WADL generated using the WadlGenerator api doesn't
      * contain the expected text.
      *
-     * @throws java.lang.Exception
+     * @throws java.lang.Exception in case of test error.
      */
     @Test
     public void testExtendedWadl() throws Exception {

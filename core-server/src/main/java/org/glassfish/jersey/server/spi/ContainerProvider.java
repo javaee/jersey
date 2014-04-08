@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.spi;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.spi.Contract;
@@ -51,28 +52,27 @@ import org.glassfish.jersey.spi.Contract;
  *
  * If supported by the provider, a container instance of the requested Java type
  * will be created.
- * <p />
+ * <p>
  * The created container is responsible for listening on a communication chanel
  * for new client requests, dispatching these requests to the registered
  * {@link ApplicationHandler Jersey application handler} using the handler's
- * {@link ApplicationHandler#apply(org.glassfish.jersey.server.ContainerRequest)}
- * apply(requestContext)} method and sending the responses provided by the
+ * {@link ApplicationHandler#handle(org.glassfish.jersey.server.ContainerRequest)}
+ * handle(requestContext)} method and sending the responses provided by the
  * application back to the client.
- * <p />
- * A provider shall support a one-to-one mapping between a type that is not of
- * the type Object. A provider may support
- * more than one one-to-one mapping or a mapping of sub-types of a type
- * (that is not of the type Object). A provider shall not conflict with other
- * providers.
- * <p />
- * An implementation (a service-provider) identifies itself by registering a proper
- * HK2 {@code ContainterProvider} contract binding in a custom HK2 binder configured
- * in the Jersey application handler.
- * Alternatively, the implementation can identify itself by placing a provider-configuration
- * file (if not already present), {@code org.glassfish.jersey.server.spi.ContainerProvider}
- * in the resource directory <tt>META-INF/services</tt>, and adding the fully
+ * </p>
+ * <p>
+ * A provider shall support a one-to-one mapping between a type, provided the type
+ * is not {@link Object}. A provider may also support mapping of sub-types of a type
+ * (provided the type is not {@code Object}). It is expected that each provider
+ * supports mapping for distinct set of types and subtypes so that different providers
+ * do not conflict with each other.
+ * </p>
+ * <p>
+ * An implementation can identify itself by placing a Java service provider configuration
+ * file (if not already present) - {@code org.glassfish.jersey.server.spi.ContainerProvider}
+ * - in the resource directory {@code META-INF/services}, and adding the fully
  * qualified service-provider-class of the implementation in the file.
- *
+ * </p>
  *
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
@@ -84,18 +84,13 @@ public interface ContainerProvider {
 
     /**
      * Create an container of a given type.
-     * <p />
-     * The container provider SHOULD NOT initiate the web application. The container
-     * provider MAY modify the resource configuration.
      *
-     * @param <T> the type of the container.
+     * @param <T>         the type of the container.
+     * @param type        the type of the container.
+     * @param application JAX-RS / Jersey application.
+     * @return the container, otherwise {@code null} if the provider does not support the requested {@code type}.
      *
-     * @return the container, otherwise null if the provider does not support
-     *     the requested {@code type}.
-     * @param type the type of the container.
-     * @param appHandler the Web application handler the container delegates to
-     *     for the handling of HTTP requests.
      * @throws ProcessingException if there is an error creating the container.
      */
-    public <T> T createContainer(Class<T> type, ApplicationHandler appHandler) throws ProcessingException;
+    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException;
 }

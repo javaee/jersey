@@ -519,6 +519,13 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
                             <literal>jersey.config.server.mvc.factory.mustache</literal></para>
                         <para>Property used to pass user-configured <literal>MustacheFactory</literal>.</para>
                     </listitem>
+                    <listitem>
+                        <para><literal>MustacheMvcFeature.ENCODING</literal> -
+                            <literal>jersey.config.server.mvc.encoding.mustache</literal></para>
+                        <para>Property used to configure a default encoding that will be used
+                            if none is specified in &jaxrs.Produces; annotation. If property is not defined
+                            the UTF-8 encoding will be used as a default value.</para>
+                    </listitem>
                 </itemizedlist>
             </para>
             <para>
@@ -594,6 +601,14 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
                             <literal>jersey.config.server.mvc.factory.freemarker</literal></para>
                         <para>Property used to pass user-configured <literal>FreemarkerFactory</literal>.</para>
                     </listitem>
+                    <listitem>
+                        <para><literal>FreemarkerMvcFeature.ENCODING</literal> -
+                            <literal>jersey.config.server.mvc.encoding.freemarker</literal></para>
+                        <para>Property used to configure a default encoding that will be used
+                            if none is specified in &jaxrs.Produces; annotation. If property is not defined
+                            the UTF-8 encoding will be used as a default value.</para>
+                    </listitem>
+
                 </itemizedlist>
             </para>
             <para>
@@ -690,7 +705,7 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
                 <itemizedlist>
                     <listitem>
                         <para><literal>JspMvcFeature.TEMPLATE_BASE_PATH</literal> -
-                            <literal>jersey.config.server.mvc.templateBasepath.jsp</literal></para>
+                            <literal>jersey.config.server.mvc.templateBasePath.jsp</literal></para>
                         <para>The base path where JSP templates are located.</para>
                     </listitem>
                 </itemizedlist>

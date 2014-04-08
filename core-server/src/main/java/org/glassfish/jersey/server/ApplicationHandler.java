@@ -104,6 +104,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.monitoring.ApplicationEventImpl;
 import org.glassfish.jersey.server.internal.monitoring.CompositeApplicationEventListener;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
 import org.glassfish.jersey.server.internal.routing.RoutingStage;
@@ -136,7 +137,7 @@ import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
  * Jersey server-side application handler.
  * <p>
  * Container implementations use the {@code ApplicationHandler} API to process requests
- * by invoking the {@link #handle(ContainerRequest) handle(requestContext)}
+ * by invoking the {@link #handle(ContainerRequest) handle(request)}
  * method on a configured application  handler instance.
  * </p>
  * <p>
@@ -278,7 +279,7 @@ public final class ApplicationHandler {
      *
      * @param application  an instance of a JAX-RS {@code Application} (sub-)class that
      *                     will be used to configure the new Jersey application handler.
-     * @param customBinder additional custom bindings used during {@link ServiceLocator} creation.
+     * @param customBinder additional custom bindings used to configure the application's {@link ServiceLocator}.
      */
     public ApplicationHandler(final Application application, final Binder customBinder) {
         this(application, customBinder, null);
@@ -419,7 +420,7 @@ public final class ApplicationHandler {
             runtimeConfig.lock();
 
             // Registering Injection Bindings
-            componentProviders = new LinkedList<ComponentProvider>();
+            componentProviders = new LinkedList<>();
 
             // Registering Injection Bindings
             for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
@@ -488,26 +489,26 @@ public final class ApplicationHandler {
          */
         final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(resourceModel.getRuntimeResourceModel(), false);
 
-        final ContainerFilteringStage preMatchRequestFilteringStage =
-                locator.createAndInitialize(ContainerFilteringStage.Builder.class).build(processingProviders.getPreMatchFilters(),
-                        processingProviders.getGlobalResponseFilters());
-        final RoutingStage routingStage =
-                locator.createAndInitialize(RoutingStage.Builder.class).build(resourceRoutingRoot);
-        final ContainerFilteringStage resourceFilteringStage =
-                locator.createAndInitialize(ContainerFilteringStage.Builder.class)
-                        .build(processingProviders.getGlobalRequestFilters(), null);
-        final RoutedInflectorExtractorStage routedInflectorExtractorStage =
-                locator.createAndInitialize(RoutedInflectorExtractorStage.class);
+        final ReferencesInitializer referencesInitializer = locator.createAndInitialize(ReferencesInitializer.class);
+        final ContainerFilteringStage preMatchRequestFilteringStage = new ContainerFilteringStage(
+                processingProviders.getPreMatchFilters(),
+                processingProviders.getGlobalResponseFilters());
+        final RoutingStage routingStage = new RoutingStage(resourceRoutingRoot);
+        final ContainerFilteringStage resourceFilteringStage = new ContainerFilteringStage(
+                processingProviders.getGlobalRequestFilters(), null);
+        final RoutedInflectorExtractorStage routedInflectorExtractorStage = new RoutedInflectorExtractorStage();
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
-        final Stage<ContainerRequest> rootStage = Stages
-                .chain(locator.createAndInitialize(ReferencesInitializer.class))
+        final Stage<RequestProcessingContext> rootStage = Stages
+                .chain(referencesInitializer)
                 .to(locator.createAndInitialize(ContainerMessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
                 .to(routingStage)
                 .to(resourceFilteringStage)
                 .build(routedInflectorExtractorStage);
+        this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class)
+                .build(rootStage, compositeListener, processingProviders);
 
         // Inject instances.
         for (final Object instance : componentBag.getInstances(ComponentBag.EXCLUDE_META_PROVIDERS)) {
@@ -517,64 +518,7 @@ public final class ApplicationHandler {
             locator.inject(instance);
         }
 
-        this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class).build(rootStage, compositeListener);
-
-        // inject self
-        locator.inject(this);
-
-        if (LOGGER.isLoggable(Level.CONFIG)) {
-            final StringBuilder sb = new StringBuilder(LocalizationMessages.LOGGING_APPLICATION_INITIALIZED()).append('\n');
-
-            final List<Resource> rootResourceClasses = resourceBag.getRootResources();
-
-            if (!rootResourceClasses.isEmpty()) {
-                sb.append(LocalizationMessages.LOGGING_ROOT_RESOURCE_CLASSES()).append(":");
-                for (final Resource r : rootResourceClasses) {
-                    for (final Class clazz : r.getHandlerClasses()) {
-                        sb.append('\n').append("  ").append(clazz.getName());
-                    }
-                }
-            }
-
-            sb.append('\n');
-
-            final Set<MessageBodyReader> messageBodyReaders;
-            final Set<MessageBodyWriter> messageBodyWriters;
-
-            if (LOGGER.isLoggable(Level.FINE)) {
-                messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyReader.class));
-                messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyWriter.class));
-            } else {
-                messageBodyReaders = Providers.getCustomProviders(locator, MessageBodyReader.class);
-                messageBodyWriters = Providers.getCustomProviders(locator, MessageBodyWriter.class);
-            }
-
-            printProviders(LocalizationMessages.LOGGING_PRE_MATCH_FILTERS(),
-                    processingProviders.getPreMatchFilters(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_REQUEST_FILTERS(),
-                    processingProviders.getGlobalRequestFilters(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_RESPOSE_FILTERS(),
-                    processingProviders.getGlobalResponseFilters(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_READER_INTERCEPTORS(),
-                    processingProviders.getGlobalReaderInterceptors(), sb);
-            printProviders(LocalizationMessages.LOGGING_GLOBAL_WRITER_INTERCEPTORS(),
-                    processingProviders.getGlobalWriterInterceptors(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_REQUEST_FILTERS(),
-                    processingProviders.getNameBoundRequestFilters(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_RESPOSE_FILTERS(),
-                    processingProviders.getNameBoundResponseFilters(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_READER_INTERCEPTORS(),
-                    processingProviders.getNameBoundReaderInterceptors(), sb);
-            printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_WRITER_INTERCEPTORS(),
-                    processingProviders.getNameBoundWriterInterceptors(), sb);
-            printProviders(LocalizationMessages.LOGGING_DYNAMIC_FEATURES(),
-                    processingProviders.getDynamicFeatures(), sb);
-            printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_READERS(),
-                    Collections2.transform(messageBodyReaders, new WorkersToStringTransform<MessageBodyReader>()), sb);
-            printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_WRITERS(),
-                    Collections2.transform(messageBodyWriters, new WorkersToStringTransform<MessageBodyWriter>()), sb);
-            LOGGER.log(Level.CONFIG, sb.toString());
-        }
+        logApplicationInitConfiguration(locator, resourceBag, processingProviders);
 
         if (compositeListener != null) {
             final ApplicationEvent initFinishedEvent = new ApplicationEventImpl(
@@ -588,7 +532,68 @@ public final class ApplicationHandler {
         }
     }
 
-    private class WorkersToStringTransform<T> implements Function<T, String> {
+    private static void logApplicationInitConfiguration(final ServiceLocator locator,
+                                                        final ResourceBag resourceBag,
+                                                        final ProcessingProviders processingProviders) {
+        if (!LOGGER.isLoggable(Level.CONFIG)) {
+            return;
+        }
+
+        final StringBuilder sb = new StringBuilder(LocalizationMessages.LOGGING_APPLICATION_INITIALIZED()).append('\n');
+
+        final List<Resource> rootResourceClasses = resourceBag.getRootResources();
+
+        if (!rootResourceClasses.isEmpty()) {
+            sb.append(LocalizationMessages.LOGGING_ROOT_RESOURCE_CLASSES()).append(":");
+            for (final Resource r : rootResourceClasses) {
+                for (final Class clazz : r.getHandlerClasses()) {
+                    sb.append('\n').append("  ").append(clazz.getName());
+                }
+            }
+        }
+
+        sb.append('\n');
+
+        final Set<MessageBodyReader> messageBodyReaders;
+        final Set<MessageBodyWriter> messageBodyWriters;
+
+        if (LOGGER.isLoggable(Level.FINE)) {
+            messageBodyReaders = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyReader.class));
+            messageBodyWriters = Sets.newHashSet(Providers.getAllProviders(locator, MessageBodyWriter.class));
+        } else {
+            messageBodyReaders = Providers.getCustomProviders(locator, MessageBodyReader.class);
+            messageBodyWriters = Providers.getCustomProviders(locator, MessageBodyWriter.class);
+        }
+
+        printProviders(LocalizationMessages.LOGGING_PRE_MATCH_FILTERS(),
+                processingProviders.getPreMatchFilters(), sb);
+        printProviders(LocalizationMessages.LOGGING_GLOBAL_REQUEST_FILTERS(),
+                processingProviders.getGlobalRequestFilters(), sb);
+        printProviders(LocalizationMessages.LOGGING_GLOBAL_RESPONSE_FILTERS(),
+                processingProviders.getGlobalResponseFilters(), sb);
+        printProviders(LocalizationMessages.LOGGING_GLOBAL_READER_INTERCEPTORS(),
+                processingProviders.getGlobalReaderInterceptors(), sb);
+        printProviders(LocalizationMessages.LOGGING_GLOBAL_WRITER_INTERCEPTORS(),
+                processingProviders.getGlobalWriterInterceptors(), sb);
+        printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_REQUEST_FILTERS(),
+                processingProviders.getNameBoundRequestFilters(), sb);
+        printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_RESPONSE_FILTERS(),
+                processingProviders.getNameBoundResponseFilters(), sb);
+        printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_READER_INTERCEPTORS(),
+                processingProviders.getNameBoundReaderInterceptors(), sb);
+        printNameBoundProviders(LocalizationMessages.LOGGING_NAME_BOUND_WRITER_INTERCEPTORS(),
+                processingProviders.getNameBoundWriterInterceptors(), sb);
+        printProviders(LocalizationMessages.LOGGING_DYNAMIC_FEATURES(),
+                processingProviders.getDynamicFeatures(), sb);
+        printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_READERS(),
+                Collections2.transform(messageBodyReaders, new WorkersToStringTransform<MessageBodyReader>()), sb);
+        printProviders(LocalizationMessages.LOGGING_MESSAGE_BODY_WRITERS(),
+                Collections2.transform(messageBodyWriters, new WorkersToStringTransform<MessageBodyWriter>()), sb);
+
+        LOGGER.log(Level.CONFIG, sb.toString());
+    }
+
+    private static class WorkersToStringTransform<T> implements Function<T, String> {
         @Override
         public String apply(final T t) {
             if (t != null) {
@@ -598,7 +603,9 @@ public final class ApplicationHandler {
         }
     }
 
-    private <T> void printNameBoundProviders(final String title, final Map<Class<? extends Annotation>, List<RankedProvider<T>>> providers, final StringBuilder sb) {
+    private static <T> void printNameBoundProviders(final String title,
+                                                    final Map<Class<? extends Annotation>, List<RankedProvider<T>>> providers,
+                                                    final StringBuilder sb) {
         if (!providers.isEmpty()) {
             sb.append(title).append(":").append('\n');
 
@@ -610,7 +617,7 @@ public final class ApplicationHandler {
         }
     }
 
-    private <T> void printProviders(final String title, final Iterable<T> providers, final StringBuilder sb) {
+    private static <T> void printProviders(final String title, final Iterable<T> providers, final StringBuilder sb) {
         final Iterator<T> iterator = providers.iterator();
         boolean first = true;
         while (iterator.hasNext()) {
@@ -624,13 +631,13 @@ public final class ApplicationHandler {
     }
 
     private Iterable<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
-        final List<RankedProvider<ComponentProvider>> result = new LinkedList<RankedProvider<ComponentProvider>>();
+        final List<RankedProvider<ComponentProvider>> result = new LinkedList<>();
 
         final boolean enableMetainfServicesLookup = !PropertiesHelper.getValue(application.getProperties(), RuntimeType.SERVER,
                 CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
         if (enableMetainfServicesLookup) {
             for (final ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-                result.add(new RankedProvider<ComponentProvider>(provider));
+                result.add(new RankedProvider<>(provider));
             }
             Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
         }
@@ -649,13 +656,13 @@ public final class ApplicationHandler {
                 ContainerResponseFilter.class);
 
         final MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> nameBoundResponseFiltersInverse =
-                new MultivaluedHashMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>>();
+                new MultivaluedHashMap<>();
         final MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> nameBoundRequestFiltersInverse =
-                new MultivaluedHashMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>>();
+                new MultivaluedHashMap<>();
         final MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> nameBoundReaderInterceptorsInverse =
-                new MultivaluedHashMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>>();
+                new MultivaluedHashMap<>();
         final MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> nameBoundWriterInterceptorsInverse =
-                new MultivaluedHashMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>>();
+                new MultivaluedHashMap<>();
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters
                 = filterNameBound(responseFilters, null, componentBag, applicationNameBindings, nameBoundResponseFiltersInverse);
@@ -752,7 +759,7 @@ public final class ApplicationHandler {
             final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> inverseNameBoundMap) {
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> result
-                = new MultivaluedHashMap<Class<? extends Annotation>, RankedProvider<T>>();
+                = new MultivaluedHashMap<>();
 
         for (final Iterator<RankedProvider<T>> it = all.iterator(); it.hasNext(); ) {
             final RankedProvider<T> provider = it.next();
@@ -766,7 +773,7 @@ public final class ApplicationHandler {
 
             if (preMatching != null && providerClass.getAnnotation(PreMatching.class) != null) {
                 it.remove();
-                preMatching.add(new RankedProvider<ContainerRequestFilter>((ContainerRequestFilter) provider.getProvider(),
+                preMatching.add(new RankedProvider<>((ContainerRequestFilter) provider.getProvider(),
                         model.getPriority(ContainerRequestFilter.class)));
             }
 
@@ -811,7 +818,8 @@ public final class ApplicationHandler {
                                 !registeredClasses.contains(componentClass),
                                 resourceClasses.contains(componentClass));
                     }
-                }));
+                }
+        ));
         classes.addAll(resourceClasses);
 
         // Bind classes.
@@ -858,7 +866,8 @@ public final class ApplicationHandler {
                                 !registeredClasses.contains(componentClass),
                                 resourceInstances.contains(component));
                     }
-                }));
+                }
+        ));
         instances.addAll(resourceInstances);
 
         // Bind instances.
@@ -894,20 +903,6 @@ public final class ApplicationHandler {
             }
         }
         return false;
-    }
-
-    /**
-     * Registers HK2 binders into the HK2 service register.
-     *
-     * @param binders binders to be registered.
-     */
-    public void registerAdditionalBinders(final Iterable<Binder> binders) {
-        final DynamicConfiguration dc = Injections.getConfiguration(locator);
-
-        for (final Binder binder : binders) {
-            binder.bind(dc);
-        }
-        dc.commit();
     }
 
     /**
@@ -1022,10 +1017,10 @@ public final class ApplicationHandler {
      * are initialized in the current request scope.
      * </p>
      *
-     * @param requestContext container request context of the current request.
+     * @param request container request context of the current request.
      */
-    public void handle(final ContainerRequest requestContext) {
-        runtime.process(requestContext);
+    public void handle(final ContainerRequest request) {
+        runtime.process(request);
     }
 
     /**

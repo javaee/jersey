@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server;
 
 import java.io.IOException;
@@ -59,7 +58,6 @@ import javax.ws.rs.container.Suspended;
 
 import javax.inject.Singleton;
 
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -72,35 +70,36 @@ import static org.junit.Assert.fail;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class AsyncCallbackServerTest {
-    public static boolean onResumeCalled;
-    public static boolean onCompletionCalled;
-    public static boolean onCompletionCalledWithError;
-    public static boolean onResumeFailedCalled;
 
-    @Before
-    public void reset() {
-        onResumeCalled = false;
-        onCompletionCalled = false;
-        onCompletionCalledWithError = false;
-        onResumeFailedCalled = false;
+    private static class Flags {
+        public volatile boolean onResumeCalled;
+        public volatile boolean onCompletionCalled;
+        public volatile boolean onCompletionCalledWithError;
+        public volatile boolean onResumeFailedCalled;
     }
 
     @Test
     public void testCompletionCallback() throws ExecutionException, InterruptedException {
-        ApplicationHandler app = new ApplicationHandler(new ResourceConfig(CompletionResource.class,
-                CheckingCompletionFilter.class));
+        final Flags flags = new Flags();
+
+        ApplicationHandler app = new ApplicationHandler(
+                new ResourceConfig().register(new CompletionResource(flags))
+                .register(new CheckingCompletionFilter(flags)));
         ContainerRequest req = RequestContextBuilder.from(
                 "/completion/onCompletion", "GET").build();
 
         final ContainerResponse response = app.apply(req).get();
         assertEquals(200, response.getStatus());
-        assertTrue("onComplete() was not called.", onCompletionCalled);
+        assertTrue("onComplete() was not called.", flags.onCompletionCalled);
     }
 
     @Test
     public void testCompletionFail() throws ExecutionException, InterruptedException {
-        ApplicationHandler app = new ApplicationHandler(new ResourceConfig(CompletionResource.class,
-                CheckingCompletionFilter.class));
+        final Flags flags = new Flags();
+
+        ApplicationHandler app = new ApplicationHandler(
+                new ResourceConfig().register(new CompletionResource(flags))
+                        .register(new CheckingCompletionFilter(flags)));
 
         try {
             final ContainerResponse response = app.apply(RequestContextBuilder.from(
@@ -109,7 +108,7 @@ public class AsyncCallbackServerTest {
         } catch (Exception e) {
             // ok - should throw an exception
         }
-        assertTrue("onError().", onCompletionCalledWithError);
+        assertTrue("onError().", flags.onCompletionCalledWithError);
     }
 
     @Test
@@ -133,47 +132,66 @@ public class AsyncCallbackServerTest {
     @CompletionBinding
     public static class CheckingCompletionFilter implements ContainerResponseFilter {
 
+        private final Flags flags;
+
+        public CheckingCompletionFilter(Flags flags) {
+            this.flags = flags;
+        }
+
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             assertFalse("onComplete() callback has already been called.",
-                    onCompletionCalled);
+                    flags.onCompletionCalled);
         }
     }
 
     public static class MyCompletionCallback implements CompletionCallback {
+
+        private final Flags flags;
+
+        public MyCompletionCallback(Flags flags) {
+            this.flags = flags;
+        }
+
         @Override
         public void onComplete(Throwable throwable) {
-            assertFalse("onComplete() has already been called.", onCompletionCalled);
-            assertFalse("onComplete() has already been called with error.", onCompletionCalledWithError);
+            assertFalse("onComplete() has already been called.", flags.onCompletionCalled);
+            assertFalse("onComplete() has already been called with error.", flags.onCompletionCalledWithError);
             if (throwable == null) {
-                onCompletionCalled = true;
+                flags.onCompletionCalled = true;
             } else {
-                onCompletionCalledWithError = true;
+                flags.onCompletionCalledWithError = true;
             }
         }
     }
 
     @Path("completion")
-    @Singleton
     public static class CompletionResource {
+
+        private final Flags flags;
+
+        public CompletionResource(Flags flags) {
+            this.flags = flags;
+        }
+
         @GET
         @Path("onCompletion")
         @CompletionBinding
         public void onComplete(@Suspended AsyncResponse asyncResponse) {
-            assertFalse(onCompletionCalled);
-            asyncResponse.register(MyCompletionCallback.class);
+            assertFalse(flags.onCompletionCalled);
+            asyncResponse.register(new MyCompletionCallback(flags));
             asyncResponse.resume("ok");
-            assertTrue(onCompletionCalled);
+            assertTrue(flags.onCompletionCalled);
         }
 
         @GET
         @Path("onError")
         @CompletionBinding
         public void onError(@Suspended AsyncResponse asyncResponse) {
-            assertFalse(onCompletionCalledWithError);
-            asyncResponse.register(MyCompletionCallback.class);
+            assertFalse(flags.onCompletionCalledWithError);
+            asyncResponse.register(new MyCompletionCallback(flags));
             asyncResponse.resume(new RuntimeException("test-exception"));
-            assertTrue(onCompletionCalledWithError);
+            assertTrue(flags.onCompletionCalledWithError);
         }
     }
 
@@ -228,21 +246,21 @@ public class AsyncCallbackServerTest {
             }
 
             try {
-                asyncResponse.register(null, new MyCompletionCallback());
+                asyncResponse.register(null, new MyCompletionCallback(new Flags()));
                 fail("NullPointerException expected.");
             } catch (NullPointerException npe) {
                 // Expected.
             }
 
             try {
-                asyncResponse.register(new MyCompletionCallback(), null);
+                asyncResponse.register(new MyCompletionCallback(new Flags()), null);
                 fail("NullPointerException expected.");
             } catch (NullPointerException npe) {
                 // Expected.
             }
 
             try {
-                asyncResponse.register(new MyCompletionCallback(), new MyCompletionCallback(), null);
+                asyncResponse.register(new MyCompletionCallback(new Flags()), new MyCompletionCallback(new Flags()), null);
                 fail("NullPointerException expected.");
             } catch (NullPointerException npe) {
                 // Expected.

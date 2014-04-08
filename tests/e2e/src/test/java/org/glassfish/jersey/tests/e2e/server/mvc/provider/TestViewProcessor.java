@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import java.net.URL;
 import java.util.Collection;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.TemplateProcessor;
@@ -72,12 +73,15 @@ public class TestViewProcessor implements TemplateProcessor<String> {
         return path;
     }
 
+
     protected boolean acceptMediaType(final MediaType mediaType) {
         return true;
     }
 
     @Override
-    public void writeTo(String templateReference, Viewable viewable, final MediaType mediaType, OutputStream out) throws IOException {
+    public void writeTo(String templateReference, Viewable viewable, MediaType mediaType,
+                        MultivaluedMap<String, Object> httpHeaders, OutputStream out) throws IOException {
+
         final PrintStream ps = new PrintStream(out);
         ps.print("name=");
         ps.print(getViewProcessorName());

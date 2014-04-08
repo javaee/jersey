@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,33 +43,48 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.UriBuilder;
 
-import org.eclipse.jetty.server.Server;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jetty.JettyHttpContainerFactory;
-import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+
+import org.eclipse.jetty.server.Server;
 
 /**
  * Factory for testing {@link org.glassfish.jersey.jetty.JettyHttpContainer}.
  *
  * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JettyTestContainerFactory implements TestContainerFactory {
 
     private static class JettyTestContainer implements TestContainer {
 
-        private final URI uri;
-        private final ApplicationHandler appHandler;
-        private Server server;
         private static final Logger LOGGER = Logger.getLogger(JettyTestContainer.class.getName());
 
-        private JettyTestContainer(URI uri, ApplicationHandler appHandler) {
-            this.appHandler = appHandler;
-            this.uri = uri;
+        private final URI baseUri;
+        private final Server server;
+
+        private JettyTestContainer(final URI baseUri, final DeploymentContext context) {
+            final URI base = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
+
+            if (!"/".equals(base.getRawPath())) {
+                throw new TestContainerException(String.format(
+                        "Cannot deploy on %s. Jetty HTTP container only supports deployment on root path.",
+                        base.getRawPath()));
+            }
+
+            this.baseUri = base;
+
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.info("Creating JettyTestContainer configured at the base URI " + this.baseUri);
+            }
+
+            this.server = JettyHttpContainerFactory.createServer(this.baseUri, context.getResourceConfig(), false);
         }
 
         @Override
@@ -79,37 +94,40 @@ public class JettyTestContainerFactory implements TestContainerFactory {
 
         @Override
         public URI getBaseUri() {
-            return uri;
+            return baseUri;
         }
 
         @Override
         public void start() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Starting JettyTestContainer...");
-            }
-
-            try {
-                this.server = JettyHttpContainerFactory.createServer(uri, appHandler);
-            } catch (ProcessingException e) {
-                throw new TestContainerException(e);
+            if (server.isStarted()) {
+                LOGGER.log(Level.WARNING, "Ignoring start request - JettyTestContainer is already started.");
+            } else {
+                LOGGER.log(Level.FINE, "Starting JettyTestContainer...");
+                try {
+                    this.server.start();
+                } catch (Exception e) {
+                    throw new TestContainerException(e);
+                }
             }
         }
 
         @Override
         public void stop() {
-            if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.log(Level.INFO, "Stopping JettyTestContainer...");
-            }
-            try {
-                this.server.stop();
-            } catch (Exception ex) {
-                LOGGER.log(Level.INFO, "Error Stopping JettyTestContainer...", ex);
+            if (server.isStarted()) {
+                LOGGER.log(Level.FINE, "Stopping JettyTestContainer...");
+                try {
+                    this.server.stop();
+                } catch (Exception ex) {
+                    LOGGER.log(Level.WARNING, "Error Stopping JettyTestContainer...", ex);
+                }
+            } else {
+                LOGGER.log(Level.WARNING, "Ignoring stop request - JettyTestContainer is already stopped.");
             }
         }
     }
 
     @Override
-    public TestContainer create(URI uri, ApplicationHandler appHandler) throws IllegalArgumentException {
-        return new JettyTestContainer(uri, appHandler);
+    public TestContainer create(final URI baseUri, final DeploymentContext context) throws IllegalArgumentException {
+        return new JettyTestContainer(baseUri, context);
     }
 }

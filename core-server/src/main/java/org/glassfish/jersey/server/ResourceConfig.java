@@ -1212,13 +1212,16 @@ public class ResourceConfig extends Application implements Configurable<Resource
             });
         }
 
-        private RuntimeConfig(Application application) {
+        private RuntimeConfig(final Application application) {
             super();
 
             this.application = application;
 
             if (application != null) {
                 registerComponentsOf(application);
+
+                // Copy all available properties.
+                addProperties(application.getProperties());
             }
 
             originalRegistrations = super.getRegisteredClasses();

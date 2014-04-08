@@ -44,7 +44,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
@@ -57,7 +56,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
+public class JerseyWebTarget implements javax.ws.rs.client.WebTarget, Initializable<JerseyWebTarget> {
 
     private final ClientConfig config;
     private final UriBuilder targetUri;
@@ -374,17 +373,14 @@ public class JerseyWebTarget implements javax.ws.rs.client.WebTarget {
         return config.getConfiguration();
     }
 
-    /**
-     * Pre initializes the {@link Configuration configuration} of this web target in order to improve
-     * performance during the first request.
-     * <p/>
-     * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
-     * on this pre initialized web target otherwise configuration will change back to uninitialized.
-     *
-     * @return Jersey web target.
-     */
+    @Override
     public JerseyWebTarget preInitialize() {
         config.preInitialize();
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "JerseyWebTarget { " + targetUri.toTemplate() + " }";
     }
 }

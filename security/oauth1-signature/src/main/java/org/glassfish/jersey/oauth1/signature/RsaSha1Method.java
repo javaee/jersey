@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,7 +49,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -59,8 +58,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
-
+import org.glassfish.jersey.oauth1.signature.internal.LocalizationMessages;
 
 /**
  * An OAuth signature method that implements RSA-SHA1.
@@ -70,6 +68,8 @@ import java.util.logging.Logger;
  */
 public final class RsaSha1Method implements OAuth1SignatureMethod {
 
+    private static final Logger LOGGER = Logger.getLogger(RsaSha1Method.class.getName());
+
     public static final String NAME = "RSA-SHA1";
 
     private static final String SIGNATURE_ALGORITHM = "SHA1withRSA";
@@ -77,7 +77,6 @@ public final class RsaSha1Method implements OAuth1SignatureMethod {
     private static final String KEY_TYPE = "RSA";
 
     private static final String BEGIN_CERT = "-----BEGIN CERTIFICATE";
-
 
     @Override
     public String name() {
@@ -93,68 +92,59 @@ public final class RsaSha1Method implements OAuth1SignatureMethod {
      * @throws InvalidSecretException if the supplied secret is not valid.
      */
     @Override
-    public String sign(String baseString, OAuth1Secrets secrets) throws InvalidSecretException {
+    public String sign(final String baseString, final OAuth1Secrets secrets) throws InvalidSecretException {
 
-        Signature sig;
-
+        final Signature signature;
         try {
-            sig = Signature.getInstance(SIGNATURE_ALGORITHM);
-        }
-        catch (NoSuchAlgorithmException nsae) {
+            signature = Signature.getInstance(SIGNATURE_ALGORITHM);
+        } catch (final NoSuchAlgorithmException nsae) {
             throw new IllegalStateException(nsae);
         }
 
-        byte[] decodedPrivKey;
+        byte[] decodedPrivateKey;
         try {
-            decodedPrivKey = Base64.decode(secrets.getConsumerSecret());
-        } catch (IOException e) {
-            throw new InvalidSecretException("invalid consumer secret");
+            decodedPrivateKey = Base64.decode(secrets.getConsumerSecret());
+        } catch (final IOException ioe) {
+            throw new InvalidSecretException(LocalizationMessages.ERROR_INVALID_CONSUMER_SECRET(ioe));
         }
 
-        KeyFactory keyf;
-
+        final KeyFactory keyFactory;
         try {
-            keyf = KeyFactory.getInstance(KEY_TYPE);
-        }
-        catch (NoSuchAlgorithmException nsae) {
+            keyFactory = KeyFactory.getInstance(KEY_TYPE);
+        } catch (final NoSuchAlgorithmException nsae) {
             throw new IllegalStateException(nsae);
         }
 
-        EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decodedPrivKey);
+        final EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decodedPrivateKey);
 
-        RSAPrivateKey rsaPrivKey;
-
+        final RSAPrivateKey rsaPrivateKey;
         try {
-            rsaPrivKey = (RSAPrivateKey) keyf.generatePrivate(keySpec);
-        }
-        catch (InvalidKeySpecException ikse) {
+            rsaPrivateKey = (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
+        } catch (final InvalidKeySpecException ikse) {
             throw new IllegalStateException(ikse);
         }
 
         try {
-            sig.initSign(rsaPrivKey);
-        }
-        catch (InvalidKeyException ike) {
+            signature.initSign(rsaPrivateKey);
+        } catch (final InvalidKeyException ike) {
             throw new IllegalStateException(ike);
         }
 
         try {
-            sig.update(baseString.getBytes());
-        }
-        catch (SignatureException se) {
+            signature.update(baseString.getBytes());
+        } catch (final SignatureException se) {
             throw new IllegalStateException(se);
         }
 
-        byte[] rsasha1;
+        final byte[] rsasha1;
 
         try {
-            rsasha1 = sig.sign();
-        }
-        catch (SignatureException se) {
+            rsasha1 = signature.sign();
+        } catch (final SignatureException se) {
             throw new IllegalStateException(se);
         }
 
-        return new String(Base64.encode(rsasha1));
+        return Base64.encode(rsasha1);
     }
 
     /**
@@ -166,63 +156,57 @@ public final class RsaSha1Method implements OAuth1SignatureMethod {
      * @throws InvalidSecretException if the supplied secret is not valid.
      */
     @Override
-    public boolean verify(String elements, OAuth1Secrets secrets, String signature) throws InvalidSecretException {
+    public boolean verify(final String elements, final OAuth1Secrets secrets, final String signature) throws InvalidSecretException {
 
-        Signature sig;
+        final Signature sig;
 
         try {
             sig = Signature.getInstance(SIGNATURE_ALGORITHM);
-        }
-        catch (NoSuchAlgorithmException nsae) {
+        } catch (final NoSuchAlgorithmException nsae) {
             throw new IllegalStateException(nsae);
         }
 
         RSAPublicKey rsaPubKey = null;
 
-        String tmpkey = secrets.getConsumerSecret();
+        final String tmpkey = secrets.getConsumerSecret();
         if (tmpkey.startsWith(BEGIN_CERT)) {
             try {
                 Certificate cert = null;
-                ByteArrayInputStream bais = new ByteArrayInputStream(tmpkey.getBytes());
-                BufferedInputStream bis = new BufferedInputStream(bais);
-                CertificateFactory certfac = CertificateFactory.getInstance("X.509");
+                final ByteArrayInputStream bais = new ByteArrayInputStream(tmpkey.getBytes());
+                final BufferedInputStream bis = new BufferedInputStream(bais);
+                final CertificateFactory certfac = CertificateFactory.getInstance("X.509");
                 while (bis.available() > 0) {
                     cert = certfac.generateCertificate(bis);
                 }
                 rsaPubKey = (RSAPublicKey) cert.getPublicKey();
-            } catch (IOException ex) {
-                Logger.getLogger(RsaSha1Method.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (CertificateException ex) {
-                Logger.getLogger(RsaSha1Method.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (final Exception ex) {
+                LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_CANNOT_OBTAIN_PUBLIC_KEY(), ex);
+                return false;
             }
-
         }
 
-        byte[] decodedSignature;
+        final byte[] decodedSignature;
         try {
             decodedSignature = Base64.decode(signature);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             return false;
         }
 
         try {
             sig.initVerify(rsaPubKey);
-        }
-        catch (InvalidKeyException ike) {
+        } catch (final InvalidKeyException ike) {
             throw new IllegalStateException(ike);
         }
 
         try {
             sig.update(elements.getBytes());
-        }
-        catch (SignatureException se) {
+        } catch (final SignatureException se) {
             throw new IllegalStateException(se);
         }
 
         try {
             return sig.verify(decodedSignature);
-        }
-        catch (SignatureException se) {
+        } catch (final SignatureException se) {
             throw new IllegalStateException(se);
         }
     }

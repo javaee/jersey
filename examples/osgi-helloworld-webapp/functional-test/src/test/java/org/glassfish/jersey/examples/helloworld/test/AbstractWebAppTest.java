@@ -127,7 +127,7 @@ public abstract class AbstractWebAppTest {
      */
     public List<Option> genericOsgiOptions() {
 
-        // uncomment for debugging using felix console (lookup gogo string in the commnented lines bellow)
+        // uncomment for debugging using felix console (lookup gogo string in the commnented lines below)
         String gogoVersion = "0.8.0";
 
         @SuppressWarnings("RedundantStringToString")
@@ -369,7 +369,7 @@ public abstract class AbstractWebAppTest {
             try {
                 return Integer.parseInt(varValue);
             } catch (NumberFormatException e) {
-                // will return default value bellow
+                // will return default value below
             }
         }
         return defaultValue;

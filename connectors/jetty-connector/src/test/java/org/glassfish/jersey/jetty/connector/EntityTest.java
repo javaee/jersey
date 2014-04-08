@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,14 +56,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.spi.TestContainer;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
 
 /**
  * Tests the Http content negotiation.
@@ -134,14 +131,8 @@ public class EntityTest extends JerseyTest {
 
     @Override
     protected void configureClient(ClientConfig config) {
-        config.connectorProvider(new JettyConnectorProvider());
-    }
-
-    @Override
-    protected javax.ws.rs.client.Client getClient(TestContainer tc, ApplicationHandler application) {
-        javax.ws.rs.client.Client origClient = super.getClient(tc, application);
-        origClient.register(JacksonFeature.class);
-        return origClient;
+        config.connectorProvider(new JettyConnectorProvider())
+                .register(JacksonFeature.class);
     }
 
     @Test

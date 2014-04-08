@@ -82,7 +82,11 @@ public class RequestContextBuilder {
         private GenericType entityType;
         private final PropertiesDelegate propertiesDelegate;
 
-        public TestContainerRequest(URI baseUri, URI requestUri, String method, SecurityContext securityContext, PropertiesDelegate propertiesDelegate) {
+        public TestContainerRequest(URI baseUri,
+                                    URI requestUri,
+                                    String method,
+                                    SecurityContext securityContext,
+                                    PropertiesDelegate propertiesDelegate) {
             super(baseUri, requestUri, method, securityContext, propertiesDelegate);
             this.propertiesDelegate = propertiesDelegate;
         }
@@ -150,7 +154,7 @@ public class RequestContextBuilder {
     }
 
     private RequestContextBuilder(String baseUri, String requestUri, String method) {
-        this(baseUri == null ? null : URI.create(baseUri), URI.create(requestUri), method);
+        this(baseUri == null || baseUri.isEmpty() ? null : URI.create(baseUri), URI.create(requestUri), method);
     }
 
     private RequestContextBuilder(URI baseUri, URI requestUri, String method) {

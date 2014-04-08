@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,13 +45,13 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.Principal;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.SecurityContext;
 
 import javax.inject.Inject;
@@ -73,10 +73,8 @@ import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
 import org.glassfish.jersey.server.spi.RequestScopedInitializer;
 
-import org.glassfish.hk2.api.PerLookup;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
-import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.simpleframework.http.Address;
@@ -85,16 +83,19 @@ import org.simpleframework.http.Response;
 import org.simpleframework.http.Status;
 
 /**
- * Simple Jersey HTTP Container.
+ * Jersey {@code Container} implementation based on Simple framework {@link org.simpleframework.http.core.Container}.
  *
  * @author Arul Dhesiaseelan (aruld@acm.org)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class SimpleContainer implements org.simpleframework.http.core.Container, Container {
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(SimpleContainer.class.getName()), Level.FINEST);
 
-    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>(){}).getType();
-    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>(){}).getType();
+    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {
+    }).getType();
+    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
+    }).getType();
 
     /**
      * Referencing factory for Simple request.
@@ -124,13 +125,17 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
 
         @Override
         protected void configure() {
-            bindFactory(SimpleRequestReferencingFactory.class).to(Request.class).in(PerLookup.class);
+            bindFactory(SimpleRequestReferencingFactory.class).to(Request.class)
+                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
             bindFactory(ReferencingFactory.<Request>referenceFactory()).to(new TypeLiteral<Ref<Request>>() {
-            }).in(RequestScoped.class);
+            })
+                    .in(RequestScoped.class);
 
-            bindFactory(SimpleResponseReferencingFactory.class).to(Response.class).in(PerLookup.class);
+            bindFactory(SimpleResponseReferencingFactory.class).to(Response.class)
+                    .proxy(true).proxyForSameScope(false).in(RequestScoped.class);
             bindFactory(ReferencingFactory.<Response>referenceFactory()).to(new TypeLiteral<Ref<Response>>() {
-            }).in(RequestScoped.class);
+            })
+                    .in(RequestScoped.class);
         }
     }
 
@@ -326,6 +331,11 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
         containerListener.onStartup(this);
     }
 
+    @Override
+    public ApplicationHandler getApplicationHandler() {
+        return appHandler;
+    }
+
     /**
      * Inform this container that the server has been started.
      *
@@ -345,16 +355,12 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     }
 
     /**
-     * Creates a new Grizzly container.
+     * Create a new Simple framework HTTP container.
      *
-     * @param application Jersey application to be deployed on Grizzly container.
+     * @param application JAX-RS / Jersey application to be deployed on Simple framework HTTP container.
      */
-    SimpleContainer(final ApplicationHandler application) {
-        this.appHandler = application;
-        this.containerListener = ConfigHelper.getContainerLifecycleListener(application);
-
-        this.appHandler.registerAdditionalBinders(new HashSet<Binder>() {{
-            add(new SimpleBinder());
-        }});
+    SimpleContainer(final Application application) {
+        this.appHandler = new ApplicationHandler(application, new SimpleBinder());
+        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
     }
 }

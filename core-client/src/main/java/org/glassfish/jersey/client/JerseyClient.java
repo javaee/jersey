@@ -65,7 +65,7 @@ import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JerseyClient implements javax.ws.rs.client.Client {
+public class JerseyClient implements javax.ws.rs.client.Client, Initializable<JerseyClient> {
 
     private final AtomicBoolean closedFlag = new AtomicBoolean(false);
     private final ClientConfig config;
@@ -281,25 +281,12 @@ public class JerseyClient implements javax.ws.rs.client.Client {
         return sslContext.get();
     }
 
-    /**
-     * Get the {@link javax.net.ssl.HostnameVerifier hostname verifier}.
-     *
-     * @return the configured hostname verifier, or {@code null} if not set.
-     */
     @Override
     public HostnameVerifier getHostnameVerifier() {
         return hostnameVerifier;
     }
 
-    /**
-     * Pre initializes the {@link Configuration configuration} of this client in order to improve
-     * performance during the first request.
-     * <p/>
-     * Once this method is called no other method implementing {@link javax.ws.rs.core.Configurable} should be called
-     * on this pre initialized {@code JerseyClient} instance, otherwise configuration will change back to uninitialized.
-     *
-     * @return Jersey client.
-     */
+    @Override
     public JerseyClient preInitialize() {
         config.preInitialize();
         return this;

@@ -39,13 +39,14 @@
  */
 package org.glassfish.jersey.examples.hello.spring.annotations.annotations;
 
+import javax.ws.rs.core.Application;
+
 import org.glassfish.jersey.test.JerseyTest;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
-import javax.ws.rs.core.Application;
 
 /**
  * Testing our service with our annotation context being passed directly to jersey-spring
@@ -63,9 +64,17 @@ public class SpringRequestResourceTest extends JerseyTest {
 
     @Test
     public void testGreet() throws Exception {
-        final String greeting = target("spring-hello").request().get(String.class);
+        final String greeting = target("spring-resource").request().get(String.class);
         Assert.assertEquals("hello, world 1!", greeting);
-        final String greeting2 = target("spring-hello").request().get(String.class);
+        final String greeting2 = target("spring-resource").request().get(String.class);
         Assert.assertEquals("hello, world 2!", greeting2);
+    }
+
+    @Test
+    public void testGoodbye() {
+        final String goodbye = target("spring-resource").path("goodbye").request().get(String.class);
+        Assert.assertEquals("goodbye, cruel world!", goodbye);
+        final String norwegianGoodbye = target("spring-resource").path("norwegian-goodbye").request().get(String.class);
+        Assert.assertEquals("hadet, på badet!", norwegianGoodbye);
     }
 }

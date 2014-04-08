@@ -149,7 +149,7 @@ final class EntityInspectorImpl implements EntityInspector {
      */
     private Map<String, Method> inspectEntityProperties(final Class<?> entityClass, final EntityGraph graph,
                                                         final Set<Class<?>> inspect, final boolean forWriter) {
-        final Field[] fields = AccessController.doPrivileged(ReflectionHelper.getDeclaredFieldsPA(entityClass));
+        final Field[] fields = AccessController.doPrivileged(ReflectionHelper.getAllFieldsPA(entityClass));
         final Map<String, Method> methods = FilteringHelper.getPropertyMethods(entityClass, forWriter);
 
         for (final Field field : fields) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,10 +39,7 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 
 /**
  * Request matching bootstrapping stage that pushes the whole request path to the routing
@@ -52,41 +49,22 @@ import org.glassfish.jersey.server.ContainerRequest;
  */
 final class MatchResultInitializerRouter implements Router {
 
-    /**
-     * "Assisted injection" factory interface for {@link MatchResultInitializerRouter}.
-     *
-     * See also <a href="http://code.google.com/p/google-guice/wiki/AssistedInject">
-     * assisted injection in Guice</a>.
-     */
-    public static class Builder {
-
-        @Inject
-        private Provider<RoutingContext> contextProvider;
-
-        /**
-         * Build a match result initializer.
-         *
-         * @param rootRoute matching root.
-         * @return a match result initializer.
-         */
-        public MatchResultInitializerRouter build(Router rootRoute) {
-            return new MatchResultInitializerRouter(contextProvider, rootRoute);
-        }
-    }
-
-    private final Provider<RoutingContext> contextProvider;
     private final Router rootRouter;
 
-    private MatchResultInitializerRouter(Provider<RoutingContext> contextProvider, Router rootRouter) {
-        this.contextProvider = contextProvider;
+    /**
+     * Create a new match result initializer.
+     *
+     * @param rootRouter root router.
+     */
+    MatchResultInitializerRouter(Router rootRouter) {
         this.rootRouter = rootRouter;
     }
 
     @Override
-    public Continuation apply(final ContainerRequest requestContext) {
-        final RoutingContext rc = contextProvider.get();
-        rc.pushMatchResult(new SingleMatchResult(requestContext.getPath(false)));
+    public Continuation apply(final RequestProcessingContext processingContext) {
+        final RoutingContext rc = processingContext.routingContext();
+        rc.pushMatchResult(new SingleMatchResult("/" + processingContext.request().getPath(false)));
 
-        return Continuation.of(requestContext, rootRouter);
+        return Continuation.of(processingContext, rootRouter);
     }
 }

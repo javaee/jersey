@@ -433,7 +433,7 @@ System.out.println("Response received.");]]></programlisting>
                 As with the synchronous client API, you can retrieve the response entity as a Java type directly without
                 requesting a &lit.jaxrs.core.Response; first. In case of an &lit.jaxrs.client.InvocationCallback;, you need
                 to set its generic type to the expected response entity type instead of using the &lit.jaxrs.core.Response;
-                type as demonstrated in the example bellow:
+                type as demonstrated in the example below:
                 <example>
                     <title>Client async callback for specific entity</title>
                     <programlisting language="java" linenumbering="numbered"><![CDATA[final Future<String> entityFuture = target().path("http://example.com/resource/")

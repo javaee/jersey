@@ -137,12 +137,16 @@
         </para>
 
         <para>
-            Following is a brief description of all containers supported in Jersey Test Framework.
+            Following is a brief description of all container factories supported in Jersey Test Framework.
             <itemizedlist>
                 <listitem>
                     <para>
-                        Grizzly container can run as a light-weight, plain HTTP container. Almost all Jersey tests are using
-                        Grizzly by default.
+                        Jersey provides 2 different test container factories based on Grizzly.
+                        The <literal>GrizzlyTestContainerFactory</literal> creates a container that can run as a light-weight,
+                        plain HTTP container. Almost all Jersey tests are using Grizzly HTTP test container factory.
+                        Second factory is <literal>GrizzlyWebTestContainerFactory</literal> that is Servlet-based and supports
+                        Servlet deployment context for tested applications. This factory can be useful when testing more complex
+                        Servlet-based application deployments.
 
                         <programlisting language="xml">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.test-framework.providers&lt;/groupId&gt;
@@ -217,7 +221,7 @@
                 and <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#disable(java.lang.String)">disable(...)</link>
                 methods, that give you control over configuring values of the properties defined and described in the
                 &lit.jersey.test.TestProperties; class. A typical code that overrides the default property values is listed
-                bellow:
+                below:
 
                 <programlisting language="java" linenumbering="numbered">public class SimpleTest extends JerseyTest {
     // ...

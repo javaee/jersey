@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -103,9 +103,7 @@ public abstract class AbstractDisableMetainfServicesLookupTest extends JerseyTes
 
     @Override
     protected Application configure() {
-        ResourceConfig resourceConfig = new ResourceConfig(Resource.class);
-
-        return resourceConfig;
+        return new ResourceConfig(Resource.class);
     }
 
 

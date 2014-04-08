@@ -159,11 +159,11 @@ public class JerseyUriBuilder extends UriBuilder {
             }
         }
 
-        if (uri.getRawPath() != null && uri.getRawPath().length() > 0) {
+        if (uri.getRawPath() != null && !uri.getRawPath().isEmpty()) {
             path.setLength(0);
             path.append(uri.getRawPath());
         }
-        if (uri.getRawQuery() != null && uri.getRawQuery().length() > 0) {
+        if (uri.getRawQuery() != null && !uri.getRawQuery().isEmpty()) {
             query.setLength(0);
             query.append(uri.getRawQuery());
 
@@ -302,7 +302,7 @@ public class JerseyUriBuilder extends UriBuilder {
     public JerseyUriBuilder host(String host) {
         checkSsp();
         if (host != null) {
-            if (host.length() == 0) {
+            if (host.isEmpty()) {
                 throw new IllegalArgumentException(LocalizationMessages.INVALID_HOST());
             }
             if (InetAddresses.isMappedIPv4Address(host) || InetAddresses.isUriInetAddress(host)) {
@@ -467,7 +467,7 @@ public class JerseyUriBuilder extends UriBuilder {
                 }
 
                 final String stringValue = value.toString();
-                if (stringValue.length() > 0) {
+                if (!stringValue.isEmpty()) {
                     path.append('=').append(encode(stringValue, UriComponent.Type.MATRIX_PARAM));
                 }
             }
@@ -710,7 +710,7 @@ public class JerseyUriBuilder extends UriBuilder {
         if (segments == null) {
             throw new IllegalArgumentException(LocalizationMessages.PARAM_NULL("segments"));
         }
-        if (segments.length() == 0) {
+        if (segments.isEmpty()) {
             return;
         }
 
@@ -727,7 +727,7 @@ public class JerseyUriBuilder extends UriBuilder {
             path.append('/');
         } else if (pathEndsInSlash && segmentStartsWithSlash) {
             segments = segments.substring(1);
-            if (segments.length() == 0) {
+            if (segments.isEmpty()) {
                 return;
             }
         }
@@ -745,7 +745,7 @@ public class JerseyUriBuilder extends UriBuilder {
 
             for (String value : e.getValue()) {
                 path.append(';').append(name);
-                if (value.length() > 0) {
+                if (!value.isEmpty()) {
                     path.append('=').append(value);
                 }
             }
@@ -839,7 +839,7 @@ public class JerseyUriBuilder extends UriBuilder {
                 hasAuthority = true;
                 sb.append("//");
 
-                if (userInfo != null && userInfo.length() > 0) {
+                if (userInfo != null && !userInfo.isEmpty()) {
                     sb.append(userInfo).append('@');
                 }
 
@@ -861,7 +861,7 @@ public class JerseyUriBuilder extends UriBuilder {
                     sb.append("/");
                 }
                 sb.append(path);
-            } else if (hasAuthority && (query.length() > 0 || (fragment != null && fragment.length() > 0))) {
+            } else if (hasAuthority && (query.length() > 0 || (fragment != null && !fragment.isEmpty()))) {
                 // if has authority and query or fragment and no path value, we need to append root '/' to the path
                 // see URI RFC 3986 section 3.3
                 sb.append("/");
@@ -872,7 +872,7 @@ public class JerseyUriBuilder extends UriBuilder {
             }
         }
 
-        if (fragment != null && fragment.length() > 0) {
+        if (fragment != null && !fragment.isEmpty()) {
             sb.append('#').append(fragment);
         }
 
@@ -880,11 +880,10 @@ public class JerseyUriBuilder extends UriBuilder {
     }
 
     private URI _build(boolean encode, boolean encodeSlashInPath, Object... values) {
-        if (values == null || values.length == 0) {
-            return createURI(create());
-        }
-
         if (ssp != null) {
+            if (values == null || values.length == 0) {
+                return createURI(create());
+            }
             throw new IllegalArgumentException(LocalizationMessages.URI_BUILDER_SCHEMA_PART_OPAQUE());
         }
 
@@ -908,5 +907,22 @@ public class JerseyUriBuilder extends UriBuilder {
         } catch (URISyntaxException ex) {
             throw new UriBuilderException(ex);
         }
+    }
+
+    @Override
+    public String toString() {
+        return toTemplate();
+    }
+
+    /**
+     * Check whether or not the URI represented by this {@code UriBuilder} is absolute.
+     *
+     * <p> A URI is absolute if, and only if, it has a scheme component.</p>
+     *
+     * @return {@code true} if, and only if, the URI represented by this {@code UriBuilder} is absolute.
+     * @since 2.7
+     */
+    public boolean isAbsolute() {
+        return scheme != null;
     }
 }

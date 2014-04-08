@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,10 +61,10 @@ public class WebResourceFactoryTest extends JerseyTest {
 
     @Override
     protected ResourceConfig configure() {
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory"
-        // mvn test -DargLine="-Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory"
+        // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory
+        // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory
+        // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.jdkhttp.JdkHttpServerTestContainerFactory
+        // mvn test -Djersey.config.test.container.factory=org.glassfish.jersey.test.simple.SimpleTestContainerFactory
         enable(TestProperties.LOG_TRAFFIC);
 //        enable(TestProperties.DUMP_ENTITY);
         return new ResourceConfig(MyResource.class);
@@ -99,9 +99,30 @@ public class WebResourceFactoryTest extends JerseyTest {
     }
 
     @Test
+    public void testFormParam() {
+        assertEquals("jiri", resource.postByNameFormParam("jiri"));
+    }
+
+    @Test
+    public void testCookieParam() {
+        assertEquals("jiri", resource.getByNameCookie("jiri"));
+    }
+
+    @Test
+    public void testHeaderParam() {
+        assertEquals("jiri", resource.getByNameHeader("jiri"));
+    }
+
+    @Test
+    public void testMatrixParam() {
+        assertEquals("jiri", resource.getByNameMatrix("jiri"));
+    }
+
+    @Test
     public void testSubResource() {
         assertEquals("Got it!", resource.getSubResource().getMyBean().name);
     }
+
 
     @Test
     public void testQueryParamsAsList() {
@@ -135,6 +156,41 @@ public class WebResourceFactoryTest extends JerseyTest {
         assertEquals("3:[a, bb, ccc]", result);
     }
 
+    @Test
+    @Ignore("See issue JERSEY-2441")
+    public void testHeaderCookieAsList() {
+        List<String> list = new ArrayList<String>();
+        list.add("a");
+        list.add("bb");
+        list.add("ccc");
+
+        assertEquals("3:[a, bb, ccc]", resource.getByNameCookieList(list));
+    }
+
+    @Test
+    @Ignore("See issue JERSEY-2441")
+    public void testHeaderCookieAsSet() {
+        Set<String> set = new HashSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.getByNameCookieSet(set);
+        checkSet(result);
+    }
+
+    @Test
+    @Ignore("See issue JERSEY-2441")
+    public void testHeaderCookieAsSortedSet() {
+        SortedSet<String> set = new TreeSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.getByNameCookieSortedSet(set);
+        assertEquals("3:[a, bb, ccc]", result);
+    }
+
     /**
      * This cannot work with jersey now. Server side parses header params only if they are send as more
      * lines in the request. Jersey has currently no possibility to do so. See JERSEY-2263.
@@ -150,6 +206,29 @@ public class WebResourceFactoryTest extends JerseyTest {
         assertEquals("3:[a, bb, ccc]", resource.getByNameHeaderList(list));
     }
 
+    @Test
+    @Ignore("See issue JERSEY-2263")
+    public void testHeaderParamsAsSet() {
+        Set<String> set = new HashSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.getByNameHeaderSet(set);
+        checkSet(result);
+    }
+
+    @Test
+    @Ignore("See issue JERSEY-2263")
+    public void testHeaderParamsAsSortedSet() {
+        SortedSet<String> set = new TreeSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.getByNameHeaderSortedSet(set);
+        assertEquals("3:[a, bb, ccc]", result);
+    }
 
     @Test
     public void testMatrixParamsAsList() {
@@ -161,7 +240,6 @@ public class WebResourceFactoryTest extends JerseyTest {
         assertEquals("3:[a, bb, ccc]", resource.getByNameMatrixList(list));
     }
 
-
     @Test
     public void testMatrixParamsAsSet() {
         Set<String> set = new HashSet<String>();
@@ -172,7 +250,6 @@ public class WebResourceFactoryTest extends JerseyTest {
         String result = resource.getByNameMatrixSet(set);
         checkSet(result);
     }
-
 
     @Test
     public void testMatrixParamsAsSortedSet() {
@@ -186,10 +263,42 @@ public class WebResourceFactoryTest extends JerseyTest {
     }
 
     private void checkSet(String result) {
-        assertTrue(result.startsWith("3:["));
-        assertTrue(result.contains("a"));
-        assertTrue(result.contains("bb"));
-        assertTrue(result.contains("ccc"));
+        assertTrue("Set does not contain 3 items.", result.startsWith("3:["));
+        assertTrue("Set does not contain 'a' item.", result.contains("a"));
+        assertTrue("Set does not contain 'bb' item.", result.contains("bb"));
+        assertTrue("Set does not contain 'ccc' item.", result.contains("ccc"));
     }
 
+
+    @Test
+    public void testFormParamsAsList() {
+        List<String> list = new ArrayList<String>();
+        list.add("a");
+        list.add("bb");
+        list.add("ccc");
+
+        assertEquals("3:[a, bb, ccc]", resource.postByNameFormList(list));
+    }
+
+    @Test
+    public void testFormParamsAsSet() {
+        Set<String> set = new HashSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.postByNameFormSet(set);
+        checkSet(result);
+    }
+
+    @Test
+    public void testFormParamsAsSortedSet() {
+        SortedSet<String> set = new TreeSet<String>();
+        set.add("a");
+        set.add("bb");
+        set.add("ccc");
+
+        String result = resource.postByNameFormSortedSet(set);
+        assertEquals("3:[a, bb, ccc]", result);
+    }
 }

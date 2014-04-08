@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -987,10 +987,9 @@ public class JerseyUriBuilderTest {
 
         try {
             UriBuilder.fromPath("http://localhost:8080").queryParam("name", "x", null).build();
+            fail("IllegalArgumentException expected.");
         } catch (IllegalArgumentException e) {
-            Assert.assertTrue(true);
-        } catch (NullPointerException e) {
-            Assert.assertTrue(false);
+            // exception expected, move on...
         }
     }
 
@@ -1428,13 +1427,18 @@ public class JerseyUriBuilderTest {
         Assert.assertEquals(URI.create(""), uri);
     }
 
-
+    /**
+     * This test has been rewritten as part of fix for JERSEY-2378.
+     * The new purpose of this test is to demonstrate how old behavior of UriBuilder.build() method
+     * wrt. unresolved templates can be achieved via {@link org.glassfish.jersey.uri.UriComponent#encodeTemplateNames(String)}
+     * method.
+     */
     @Test
     public void testEncodeTemplateNames() {
-        URI uri = UriBuilder.fromPath("http://localhost:8080").
+        URI uri = URI.create(UriComponent.encodeTemplateNames(UriBuilder.fromPath("http://localhost:8080").
                 path("/{a}/{b}").
                 replaceQuery("q={c}").
-                build();
+                toTemplate()));
         Assert.assertEquals(URI.create("http://localhost:8080/%7Ba%7D/%7Bb%7D?q=%7Bc%7D"), uri);
     }
 
@@ -1449,9 +1453,7 @@ public class JerseyUriBuilderTest {
         m.put("b", "param-b");
         m.put("q", "ignored-q");
         Assert.assertEquals(URI.create("http://localhost:8080/param-a/param-b?query=param-q"), uriBuilder.buildFromMap(m));
-        uriBuilder.build();
     }
-
 
     @Test
     public void resolveTemplateFromEncodedTest() {
@@ -1466,7 +1468,6 @@ public class JerseyUriBuilderTest {
         m.put("q", "ignored-q");
         Assert.assertEquals("http://localhost:8080/x/y/z%3F%20/param-b/aaa/paramc1%2Fparamc2?query=q?%20%26",
                 uriBuilder.buildFromEncodedMap(m).toString());
-        uriBuilder.build();
     }
 
     @Test
@@ -1482,9 +1483,7 @@ public class JerseyUriBuilderTest {
         m.put("q", "ignored-q");
         Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q?%2520%2526",
                 uriBuilder.buildFromMap(m).toString());
-        uriBuilder.build();
     }
-
 
     @Test
     public void resolveTemplateWithEncodedSlashTest() {
@@ -1510,7 +1509,6 @@ public class JerseyUriBuilderTest {
         buildMap.put("b", "param-b");
         buildMap.put("q", "ignored-q");
         Assert.assertEquals(URI.create("http://localhost:8080/param-a/param-b?query=param-q"), uriBuilder.buildFromMap(buildMap));
-        uriBuilder.build();
     }
 
     @Test
@@ -1527,7 +1525,6 @@ public class JerseyUriBuilderTest {
         buildMap.put("b", "param-b/aaa");
         Assert.assertEquals("http://localhost:8080/x/y/z%3F%20/param-b/aaa/paramc1/paramc2?query=q?%20%26",
                 uriBuilder.buildFromEncodedMap(buildMap).toString());
-        uriBuilder.build();
     }
 
     @Test
@@ -1544,7 +1541,6 @@ public class JerseyUriBuilderTest {
         buildMap.put("b", "param-b/aaa");
         Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q?%2520%2526",
                 uriBuilder.buildFromMap(buildMap).toString());
-        uriBuilder.build();
     }
 
 
@@ -1562,7 +1558,6 @@ public class JerseyUriBuilderTest {
         buildMap.put("b", "param-b/aaa");
         Assert.assertEquals("http://localhost:8080/x/y/z%253F%2520/param-b/aaa/paramc1/paramc2?query=q?%2520%2526",
                 uriBuilder.buildFromMap(buildMap, false).toString());
-        uriBuilder.build();
     }
 
     @Test

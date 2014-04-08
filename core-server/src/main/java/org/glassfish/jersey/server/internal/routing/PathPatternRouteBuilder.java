@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,9 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import javax.inject.Inject;
-
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RootRouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteBuilder;
-import org.glassfish.jersey.server.internal.routing.RouterBinder.RouteToBuilder;
+import org.glassfish.jersey.server.internal.routing.Routers.RootRouteBuilder;
+import org.glassfish.jersey.server.internal.routing.Routers.RouteBuilder;
+import org.glassfish.jersey.server.internal.routing.Routers.RouteToBuilder;
 import org.glassfish.jersey.uri.PathPattern;
 
 import org.glassfish.hk2.api.ServiceLocator;
@@ -55,14 +53,18 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class PathPatternRouteBuilder implements RootRouteBuilder<PathPattern> {
+final class PathPatternRouteBuilder implements RootRouteBuilder<PathPattern> {
 
-    @Inject
-    private ServiceLocator locator;
-    @Inject
-    private PathPatternRouter.Builder acceptorFactory;
-    @Inject
-    private MatchResultInitializerRouter.Builder initializerFactory;
+    private final ServiceLocator locator;
+
+    /**
+     * Create new {@link PathPattern}-based route builder.
+     *
+     * @param locator application service locator.
+     */
+    PathPatternRouteBuilder(final ServiceLocator locator) {
+        this.locator = locator;
+    }
 
     @Override
     public RouteToBuilder<PathPattern> route(String pattern) {
@@ -80,13 +82,13 @@ class PathPatternRouteBuilder implements RootRouteBuilder<PathPattern> {
 
             @Override
             public Router build() {
-                return acceptorFactory.build(acceptedRoutes());
+                return new PathPatternRouter(acceptedRoutes());
             }
         };
     }
 
     @Override
     public Router root(Router routingRoot) {
-        return initializerFactory.build(routingRoot);
+        return new MatchResultInitializerRouter(routingRoot);
     }
 }

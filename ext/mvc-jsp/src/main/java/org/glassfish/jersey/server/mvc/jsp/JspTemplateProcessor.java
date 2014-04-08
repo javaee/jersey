@@ -48,6 +48,7 @@ import java.io.Reader;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -102,7 +103,7 @@ final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {
 
     @Override
     public void writeTo(String templateReference, Viewable viewable, MediaType mediaType,
-                        final OutputStream out) throws IOException {
+                        final MultivaluedMap<String, Object> httpHeaders, final OutputStream out) throws IOException {
 
         if (!(viewable instanceof ResolvedViewable)) {
             // This should not happen with default MVC message body writer implementation

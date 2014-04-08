@@ -53,7 +53,7 @@ import javax.ws.rs.core.Response;
 /**
  * Request scoped transactional CDI bean registered as JAX-RS resource class.
  * Part of JERSEY-2137 reproducer. {@link javax.ws.rs.WebApplicationException}
- * thrown in the resource method bellow should drive the response as specified
+ * thrown in the resource method below should drive the response as specified
  * in the JAX-RS spec regardless
  * on the {@link javax.transaction.Transactional#dontRollbackOn()} value.
  *

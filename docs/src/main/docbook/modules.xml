@@ -516,6 +516,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-gf-cdi-ban-custom-hk2-binding/dependencies.html">
+    jersey-gf-cdi-ban-custom-hk2-binding
+</link>
+</entry>
+<entry>Jersey CDI for GlassFish integration - this module disables custom HK2 binding</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-gf-ejb/dependencies.html">
     jersey-gf-ejb
 </link>

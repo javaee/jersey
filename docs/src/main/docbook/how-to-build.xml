@@ -87,8 +87,8 @@
     <section xml:id="building">
         <title>Building the Source</title>
         <para>
-            Jersey source code requires Java SE 6 or greater. The build is based on Maven.
-            Maven 3 or greater is highly recommended. Also it is recommended you use the following
+            Jersey source code requires Java SE 7 or higher. The build is based on Maven.
+            Maven 3.1 or higher is highly recommended. Also it is recommended you use the following
             Maven options when building the workspace (can be set in <literal>MAVEN_OPTS</literal> environment
             variable):
             <programlisting language="bash" linenumbering="unnumbered">-Xmx1048m -XX:PermSize=64M -XX:MaxPermSize=128M</programlisting>

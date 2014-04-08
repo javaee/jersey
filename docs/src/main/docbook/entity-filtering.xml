@@ -345,7 +345,7 @@ public class ProjectsResource {
             </itemizedlist>
 
             An example of entity-filtering annotation applicable to a class, field or method can be seen in
-            <xref linkend="ef.annotations.sample.annotation"/> bellow.
+            <xref linkend="ef.annotations.sample.annotation"/> below.
 
             <example xml:id="ef.annotations.sample.annotation">
                     <title>ProjectDetailedView</title>

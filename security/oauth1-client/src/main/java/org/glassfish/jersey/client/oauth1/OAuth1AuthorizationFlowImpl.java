@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,10 +40,13 @@
 
 package org.glassfish.jersey.client.oauth1;
 
+import java.util.logging.Logger;
+
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MultivaluedMap;
@@ -51,6 +54,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.oauth1.internal.LocalizationMessages;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.oauth1.signature.OAuth1Parameters;
 import org.glassfish.jersey.oauth1.signature.OAuth1Secrets;
@@ -64,48 +68,64 @@ import org.glassfish.jersey.oauth1.signature.OAuth1Secrets;
  */
 class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
 
+    private final static Logger LOGGER = Logger.getLogger(OAuth1AuthorizationFlowImpl.class.getName());
+
     /**
      * OAuth1AuthorizationFlowImpl builder.
      */
     static class Builder implements OAuth1Builder.FlowBuilder {
 
-        private final ConsumerCredentials consumerCredentials;
+        private final OAuth1Parameters params;
+        private final OAuth1Secrets secrets;
+
         private String requestTokenUri;
         private String accessTokenUri;
         private String authorizationUri;
         private Client client;
         private String callbackUri;
 
+        private boolean enableLogging;
+
 
         /**
          * Create a new builder.
-         * @param consumerCredentials Consumer credentials.
+         * @param params Pre-configured oauth parameters.
+         * @param secrets Pre-configured oauth secrets.
          * @param requestTokenUri Request token uri.
          * @param accessTokenUri Access token uri.
          * @param authorizationUri Authorization uri.
          */
-        public Builder(ConsumerCredentials consumerCredentials, String requestTokenUri, String accessTokenUri,
-                       String authorizationUri) {
-            this.consumerCredentials = consumerCredentials;
+        public Builder(final OAuth1Parameters params, final OAuth1Secrets secrets, final String requestTokenUri, final String accessTokenUri,
+                       final String authorizationUri) {
+            this.params = params;
+            this.secrets = secrets;
+
             this.requestTokenUri = requestTokenUri;
             this.accessTokenUri = accessTokenUri;
             this.authorizationUri = authorizationUri;
         }
 
-        public Builder callbackUri(String callbackUri) {
+        @Override
+        public OAuth1Builder.FlowBuilder callbackUri(final String callbackUri) {
             this.callbackUri = callbackUri;
             return this;
         }
 
         @Override
-        public Builder client(Client client) {
+        public OAuth1Builder.FlowBuilder client(final Client client) {
             this.client = client;
             return this;
         }
 
+        @Override
+        public OAuth1Builder.FlowBuilder enableLogging() {
+            this.enableLogging = true;
+            return this;
+        }
+
         public OAuth1AuthorizationFlowImpl build() {
-            return new OAuth1AuthorizationFlowImpl(consumerCredentials, requestTokenUri, accessTokenUri, authorizationUri,
-                    callbackUri, client);
+            return new OAuth1AuthorizationFlowImpl(params, secrets, requestTokenUri, accessTokenUri, authorizationUri,
+                    callbackUri, client, enableLogging);
         }
     }
 
@@ -120,26 +140,24 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
     private final String accessTokenUri;
     private final String authorizationUri;
 
-
     private final Client client;
-    private final ConsumerCredentials consumerCredentials;
 
     private volatile AccessToken accessToken;
     private final Value<Feature> oAuth1ClientFilterFeature = new Value<Feature>() {
         @Override
         public Feature get() {
-            return OAuth1ClientSupport.builder(consumerCredentials).feature()
-                    .accessToken(accessToken).build();
+            return new OAuth1BuilderImpl(parameters, secrets).feature()
+                    .accessToken(accessToken)
+                    .build();
         }
     };
 
 
-    private OAuth1AuthorizationFlowImpl(ConsumerCredentials consumerCredentials, String requestTokenUri,
-                                        String accessTokenUri, String authorizationUri, String callbackUri,
-                                        Client client) {
-        this.parameters = new OAuth1Parameters().consumerKey(consumerCredentials.getConsumerKey());
-        this.secrets = new OAuth1Secrets().consumerSecret(consumerCredentials.getConsumerSecret());
-        this.consumerCredentials = consumerCredentials;
+    private OAuth1AuthorizationFlowImpl(final OAuth1Parameters params, final OAuth1Secrets secrets, final String requestTokenUri,
+                                        final String accessTokenUri, final String authorizationUri, final String callbackUri,
+                                        final Client client, final boolean enableLogging) {
+        this.parameters = params;
+        this.secrets = secrets;
         this.requestTokenUri = requestTokenUri;
         this.accessTokenUri = accessTokenUri;
         this.authorizationUri = authorizationUri;
@@ -151,10 +169,13 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
             this.client = ClientBuilder.newBuilder().build();
         }
 
-        if (!this.client.getConfiguration().isRegistered(OAuth1ClientFeature.class)) {
-            final Feature filterFeature = OAuth1ClientSupport.builder(consumerCredentials)
-                    .feature().build();
-            this.client.register(filterFeature);
+        final Configuration config = this.client.getConfiguration();
+
+        if (enableLogging && !config.isRegistered(LoggingFilter.class)) {
+            this.client.register(new LoggingFilter(LOGGER, true));
+        }
+        if (!config.isRegistered(OAuth1ClientFeature.class)) {
+            this.client.register(new OAuth1ClientFeature(params, secrets));
         }
 
         if (callbackUri != null) {
@@ -167,7 +188,7 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
     }
 
 
-    private Invocation.Builder addPropeties(Invocation.Builder invocationBuilder) {
+    private Invocation.Builder addProperties(final Invocation.Builder invocationBuilder) {
         return invocationBuilder
                 .property(OAuth1ClientSupport.OAUTH_PROPERTY_OAUTH_PARAMETERS, parameters)
                 .property(OAuth1ClientSupport.OAUTH_PROPERTY_OAUTH_SECRETS, secrets);
@@ -175,7 +196,7 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
 
 
     public String start() {
-        final Response response = addPropeties(client.target(requestTokenUri).request())
+        final Response response = addProperties(client.target(requestTokenUri).request())
                 .post(null);
         if (response.getStatus() != 200) {
             throw new RuntimeException(LocalizationMessages.ERROR_REQUEST_REQUEST_TOKEN(response.getStatus()));
@@ -188,15 +209,19 @@ class OAuth1AuthorizationFlowImpl implements OAuth1AuthorizationFlow {
                 .build().toString();
     }
 
-    public AccessToken finish(String verifier) {
+    public AccessToken finish() {
+        return finish(null);
+    }
+
+    public AccessToken finish(final String verifier) {
         parameters.setVerifier(verifier);
-        final Response response = addPropeties(client.target(accessTokenUri).request()).post(null);
+        final Response response = addProperties(client.target(accessTokenUri).request()).post(null);
         // accessToken request failed
         if (response.getStatus() >= 400) {
             throw new RuntimeException(LocalizationMessages.ERROR_REQUEST_ACCESS_TOKEN(response.getStatus()));
         }
         final Form form = response.readEntity(Form.class);
-        String accessToken = form.asMap().getFirst(OAuth1Parameters.TOKEN);
+        final String accessToken = form.asMap().getFirst(OAuth1Parameters.TOKEN);
         final String accessTokenSecret = form.asMap().getFirst(OAuth1Parameters.TOKEN_SECRET);
 
         if (accessToken == null) {

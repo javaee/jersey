@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,17 @@
  */
 package org.glassfish.jersey.server;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -56,6 +62,8 @@ import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -77,8 +85,6 @@ import static org.junit.Assert.fail;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class ApplicationHandlerTest {
-
-    ApplicationHandler application;
 
     private ApplicationHandler createApplication(Class<?>... classes) {
         final ResourceConfig resourceConfig = new ResourceConfig(classes);
@@ -395,5 +401,63 @@ public class ApplicationHandlerTest {
         response = ah.apply(RequestContextBuilder.from("/defaultinstance", "GET").build()).get();
         assertEquals(200, response.getStatus());
         assertEquals("2", response.getEntity());
+    }
+
+    public static class Jersey2402 extends Application {
+
+        @Override
+        public Set<Class<?>> getClasses() {
+            return new HashSet<Class<?>>() {{
+                add(Jersey2402Feature.class);
+                add(Jersey2402Resource.class);
+            }};
+        }
+
+        @Override
+        public Map<String, Object> getProperties() {
+            return Collections.<String, Object>singletonMap("foo", "bar");
+        }
+    }
+
+    public static class Jersey2402Feature implements Feature {
+
+        @Override
+        public boolean configure(final FeatureContext context) {
+            final String property = context.getConfiguration().getProperty("foo") != null ?
+                    (String) context.getConfiguration().getProperty("foo") : "baz";
+
+            context.register(new ReaderInterceptor() {
+                @Override
+                public Object aroundReadFrom(final ReaderInterceptorContext context) throws IOException, WebApplicationException {
+                    context.setInputStream(new ByteArrayInputStream(property.getBytes()));
+                    return context.proceed();
+                }
+            });
+
+            return true;
+        }
+    }
+
+    @Path("/")
+    public static class Jersey2402Resource {
+
+        @POST
+        public String post(final String post) {
+            return post;
+        }
+    }
+
+    /**
+     * JERSEY-2402 reproducer.
+     *
+     * Test that property set via Application#getProperties() are available in features.
+     */
+    @Test
+    public void testPropagationOfPropertiesToFeatures() throws Exception {
+        final ApplicationHandler handler = new ApplicationHandler(Jersey2402.class);
+
+        final ContainerResponse response = handler.apply(RequestContextBuilder.from("/", "POST").build()).get();
+        assertEquals(200, response.getStatus());
+        assertEquals("bar", response.getEntity());
     }
 }

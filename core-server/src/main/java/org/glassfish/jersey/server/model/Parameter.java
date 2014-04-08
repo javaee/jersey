@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -374,7 +375,7 @@ public class Parameter implements AnnotatedElement {
      * injectable constructor.
      *
      * @param concreteClass  concrete resource method handler implementation class.
-     * @param declaringClass TODO ???
+     * @param declaringClass class where the method has been declared.
      * @param ctor           injectable constructor of the resource method handler.
      * @param keepEncoded    set to {@code true} to disable automatic decoding
      *                       of all the constructor parameters. (See {@link Encoded}.
@@ -619,5 +620,38 @@ public class Parameter implements AnnotatedElement {
     public String toString() {
         return String.format("Parameter [type=%s, source=%s, defaultValue=%s]",
                 getRawType(), getSourceName(), getDefaultValue());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Parameter parameter = (Parameter) o;
+
+        if (encoded != parameter.encoded) return false;
+        if (!Arrays.equals(annotations, parameter.annotations)) return false;
+        if (defaultValue != null ? !defaultValue.equals(parameter.defaultValue) : parameter.defaultValue != null) return false;
+        if (rawType != null ? !rawType.equals(parameter.rawType) : parameter.rawType != null) return false;
+        if (source != parameter.source) return false;
+        if (sourceAnnotation != null ? !sourceAnnotation.equals(parameter.sourceAnnotation) : parameter.sourceAnnotation != null)
+            return false;
+        if (sourceName != null ? !sourceName.equals(parameter.sourceName) : parameter.sourceName != null) return false;
+        if (type != null ? !type.equals(parameter.type) : parameter.type != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = annotations != null ? Arrays.hashCode(annotations) : 0;
+        result = 31 * result + (sourceAnnotation != null ? sourceAnnotation.hashCode() : 0);
+        result = 31 * result + (source != null ? source.hashCode() : 0);
+        result = 31 * result + (sourceName != null ? sourceName.hashCode() : 0);
+        result = 31 * result + (encoded ? 1 : 0);
+        result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
+        result = 31 * result + (rawType != null ? rawType.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        return result;
     }
 }

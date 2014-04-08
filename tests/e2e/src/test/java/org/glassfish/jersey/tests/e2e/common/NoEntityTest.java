@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,7 +64,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-
 
 /**
  * Tests that no content type is sent when an entity is not present.
@@ -173,7 +172,6 @@ public class NoEntityTest extends JerseyTest {
         assertEquals(204, response.getStatus());
         assertEquals("text/plain", response.getMediaType());
     }
-
 
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {

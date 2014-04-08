@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -83,11 +83,11 @@ public class UriRoutingContextTest {
     }
 
     private UriRoutingContext createContext(String requestUri, String method) {
-        return new UriRoutingContext(RequestContextBuilder.from(requestUri, method).build(), null);
+        return new UriRoutingContext(RequestContextBuilder.from(requestUri, method).build());
     }
 
     private UriRoutingContext createContext(String appBaseUri, String requestUri, String method) {
-        return new UriRoutingContext(RequestContextBuilder.from(appBaseUri, requestUri, method).build(), null);
+        return new UriRoutingContext(RequestContextBuilder.from(appBaseUri, requestUri, method).build());
     }
 
     @Test
@@ -106,21 +106,21 @@ public class UriRoutingContextTest {
         UriRoutingContext context;
 
         context = createContext("http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
-        assertEquals("/my app/resource", context.getPath());
+        assertEquals("my app/resource", context.getPath());
 
-        context = createContext("http://example.org/my%20app", "http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
-        assertEquals("/resource", context.getPath());
+        context = createContext("http://example.org/my%20app/", "http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
+        assertEquals("resource", context.getPath());
 
         context = createContext("http://example.org/my%20app/",
                 "http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
-        assertEquals("/resource", context.getPath());
+        assertEquals("resource", context.getPath());
     }
 
     @Test
     public void testGetDecodedPath() throws URISyntaxException {
         UriRoutingContext ctx = createContext("http://example.org/my%20app/resource?foo1=bar1&foo2=bar2", "GET");
-        assertEquals("/my%20app/resource", ctx.getPath(false));
-        assertEquals("/my app/resource", ctx.getPath(true));
+        assertEquals("my%20app/resource", ctx.getPath(false));
+        assertEquals("my app/resource", ctx.getPath(true));
     }
 
     @Test
@@ -197,7 +197,7 @@ public class UriRoutingContextTest {
      * Migrated Jersey 1.x {@code com.sun.jersey.impl.PathSegmentsHttpRequestTest}.
      */
     @Test
-    public void testGetPathSegmetsGeneral() {
+    public void testGetPathSegmentsGeneral() {
         final UriInfo ui = createContext("/p1;x=1;y=1/p2;x=2;y=2/p3;x=3;y=3", "GET");
 
         List<PathSegment> segments = ui.getPathSegments();
@@ -229,7 +229,7 @@ public class UriRoutingContextTest {
      * Migrated Jersey 1.x {@code com.sun.jersey.impl.PathSegmentsHttpRequestTest}.
      */
     @Test
-    public void testGetPathSegmetsMultipleSlash() {
+    public void testGetPathSegmentsMultipleSlash() {
         final UriInfo ui = createContext("/p//p//p//", "GET");
         List<PathSegment> segments = ui.getPathSegments();
         assertEquals(7, segments.size());
@@ -270,7 +270,7 @@ public class UriRoutingContextTest {
      * Migrated Jersey 1.x {@code com.sun.jersey.impl.PathSegmentsHttpRequestTest}.
      */
     @Test
-    public void testGetPathSegmetsMultipleMatrix() {
+    public void testGetPathSegmentsMultipleMatrix() {
         final UriInfo ui = createContext("/p;x=1;x=2;x=3", "GET");
         List<PathSegment> segments = ui.getPathSegments();
         assertEquals(1, segments.size());
@@ -290,7 +290,7 @@ public class UriRoutingContextTest {
      * Migrated Jersey 1.x {@code com.sun.jersey.impl.PathSegmentsHttpRequestTest}.
      */
     @Test
-    public void testGetPathSegmetsMultipleSlashmulitpleMatrix() {
+    public void testGetPathSegmentsMultipleSlashmulitpleMatrix() {
         final UriInfo ui = createContext("/;x=1;y=1/;x=2;y=2/;x=3;y=3", "GET");
         List<PathSegment> segments = ui.getPathSegments();
         assertEquals(3, segments.size());

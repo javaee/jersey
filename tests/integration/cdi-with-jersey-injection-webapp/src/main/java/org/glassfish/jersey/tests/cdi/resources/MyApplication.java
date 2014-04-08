@@ -40,8 +40,7 @@
 package org.glassfish.jersey.tests.cdi.resources;
 
 import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
+
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringFeature;

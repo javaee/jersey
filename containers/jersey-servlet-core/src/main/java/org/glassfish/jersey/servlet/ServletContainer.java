@@ -64,6 +64,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.internal.util.ExtendedLogger;
 import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -261,7 +262,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             // and somebody would want to hit the root resource without the trailing slash
             int i = servletPath.lastIndexOf('/');
             if (servletPath.substring(i + 1).indexOf('.') < 0) {
-                // TODO (+ handle request URL with invalid characters - see the creation of absoluteUriBuilder bellow)
+                // TODO (+ handle request URL with invalid characters - see the creation of absoluteUriBuilder below)
 //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
 //                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
 //                            path("/").
@@ -582,5 +583,10 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         } catch (ServletException ex) {
             logger.log(Level.SEVERE, "Reload failed", ex);
         }
+    }
+
+    @Override
+    public ApplicationHandler getApplicationHandler() {
+        return webComponent.appHandler;
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import java.security.Principal;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Context;
@@ -232,5 +233,66 @@ public class ProxyInjectablesTest extends AbstractTest {
         initiateWebApplication(SingletonContextMethodParameterResource.class, SecurityContextFilter.class);
 
         assertEquals("GET", resource("/").getEntity());
+    }
+
+    /**
+     * Part of JERSEY-2386 reproducer. The request field
+     * should not get injected as a dynamic proxy.
+     */
+    public static class MyFieldInjectedBean {
+
+        @Context Request request;
+    }
+
+    /**
+     * Part of JERSEY-2386 reproducer. The request field
+     * should not get injected as a dynamic proxy.
+     */
+    public static class MyCtorInjectedBean {
+
+        /**
+         * This should get directly injected.
+         */
+        public MyCtorInjectedBean(@Context Request request) {
+            this.request = request;
+        }
+
+        Request request;
+    }
+
+    /**
+     * JERSEY-2386 reproducer. Bean parameter below must
+     * get injected directly as well as its internal field.
+     */
+    @Path("/")
+    public static class BeanParamInjectionResource {
+
+        @GET
+        @Path("field")
+        public String getViaField(@BeanParam MyFieldInjectedBean bean) {
+            assertEquals(MyFieldInjectedBean.class, bean.getClass());
+            assertEquals(REQUEST_CLASS, bean.request.getClass());
+            return "field";
+        }
+
+        @GET
+        @Path("ctor")
+        public String getViaCtor(@BeanParam MyCtorInjectedBean bean) {
+            assertEquals(MyCtorInjectedBean.class, bean.getClass());
+            assertEquals(REQUEST_CLASS, bean.request.getClass());
+            return "ctor";
+        }
+    }
+
+    /**
+     * JERSEY-2386 reproducer. Make sure no dynamic proxy gets involved
+     * when injecting into a bean parameter.
+     */
+    @Test
+    public void testBeanParam() throws Exception {
+        initiateWebApplication(BeanParamInjectionResource.class);
+
+        assertEquals("field", resource("/field").getEntity());
+        assertEquals("ctor", resource("/ctor").getEntity());
     }
 }

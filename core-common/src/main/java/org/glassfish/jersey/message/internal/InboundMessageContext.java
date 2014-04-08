@@ -75,7 +75,6 @@ import javax.xml.transform.Source;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 
 import jersey.repackaged.com.google.common.base.Function;
@@ -85,7 +84,7 @@ import jersey.repackaged.com.google.common.base.Function;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class InboundMessageContext {
+public abstract class InboundMessageContext {
     private static final InputStream EMPTY = new InputStream() {
 
         @Override
@@ -114,7 +113,6 @@ public class InboundMessageContext {
     private final EntityContent entityContent;
     private final boolean translateNce;
     private MessageBodyWorkers workers;
-    private Value<Iterable<ReaderInterceptor>> readerInterceptors;
 
     /**
      * Input stream and its state. State is represented by the {@link Type Type enum} and
@@ -858,7 +856,7 @@ public class InboundMessageContext {
                     headers,
                     propertiesDelegate,
                     entityContent.getWrappedStream(),
-                    entityContent.hasContent() ? readerInterceptors.get() : Collections.<ReaderInterceptor>emptyList(),
+                    entityContent.hasContent() ? getReaderInterceptors() : Collections.<ReaderInterceptor>emptyList(),
                     translateNce);
 
             shouldClose = shouldClose && !(t instanceof Closeable) && !(t instanceof Source);
@@ -912,11 +910,12 @@ public class InboundMessageContext {
     }
 
     /**
-     * Set reader interceptors for reading entity from this context.
+     * Get reader interceptors bound to this context.
+     * <p>
+     * Interceptors will be used when one of the {@code readEntity} methods is invoked.
+     * </p>
      *
-     * @param readerInterceptors A value that returns reader interceptors in the interceptor execution order.
+     * @return reader interceptors bound to this context.
      */
-    public void setReaderInterceptors(Value<Iterable<ReaderInterceptor>> readerInterceptors) {
-        this.readerInterceptors = readerInterceptors;
-    }
+    protected abstract Iterable<ReaderInterceptor> getReaderInterceptors();
 }

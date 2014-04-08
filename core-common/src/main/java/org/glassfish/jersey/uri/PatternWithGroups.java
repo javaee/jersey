@@ -50,8 +50,6 @@ import java.util.regex.PatternSyntaxException;
  * A pattern for matching a string against a regular expression
  * and returning capturing group values for any capturing groups present in
  * the expression.
- * <p/>
- * #renamed com.sun.jersey.api.uri.UriPattern
  *
  * @author Paul Sandoz
  * @author Gerard Davison (gerard.davison at oracle.com)
@@ -89,7 +87,7 @@ public class PatternWithGroups {
      * Construct a new pattern.
      *
      * @param regex the regular expression. If the expression is {@code null} or an empty string then the pattern will only match
-     * a {@code null} or empty string.
+     *              a {@code null} or empty string.
      * @throws java.util.regex.PatternSyntaxException if the regular expression could not be compiled.
      */
     public PatternWithGroups(final String regex) throws PatternSyntaxException {
@@ -99,8 +97,9 @@ public class PatternWithGroups {
     /**
      * Construct a new pattern.
      *
-     * @param regex the regular expression. If the expression is {@code null} or an empty string then the pattern will only match
-     * a {@code null} or empty string.
+     * @param regex        the regular expression. If the expression is {@code null} or an empty string then the pattern will only
+     *                     match
+     *                     a {@code null} or empty string.
      * @param groupIndexes the array of group indexes to capturing groups.
      * @throws java.util.regex.PatternSyntaxException if the regular expression could not be compiled.
      */
@@ -109,7 +108,7 @@ public class PatternWithGroups {
     }
 
     private static Pattern compile(final String regex) throws PatternSyntaxException {
-        return (regex == null || regex.length() == 0) ? null : Pattern.compile(regex);
+        return (regex == null || regex.isEmpty()) ? null : Pattern.compile(regex);
     }
 
     /**
@@ -294,10 +293,11 @@ public class PatternWithGroups {
      * <p/>
      * If a matched then the capturing group values (if any) will be added to a list passed in as parameter.
      *
-     * @param cs the char sequence to match against the template.
+     * @param cs          the char sequence to match against the template.
      * @param groupValues the list to add the values of a pattern's capturing groups if matching is successful. The values are
-     * added in the same order as the pattern's capturing groups. The list is cleared before values are added.
+     *                    added in the same order as the pattern's capturing groups. The list is cleared before values are added.
      * @return {@code true} if the char sequence matches the pattern, otherwise {@code false}.
+     *
      * @throws IllegalArgumentException if the group values is {@code null}.
      */
     public final boolean match(final CharSequence cs, final List<String> groupValues) throws IllegalArgumentException {
@@ -340,16 +340,18 @@ public class PatternWithGroups {
      * <p/>
      * If a matched then the capturing group values (if any) will be added to a list passed in as parameter.
      *
-     * @param cs the char sequence to match against the template.
-     * @param groupNames the list names associated with a pattern's capturing groups. The names MUST be in the same order as the
-     * pattern's capturing groups and the size MUST be equal to or less than the number of capturing groups.
+     * @param cs          the char sequence to match against the template.
+     * @param groupNames  the list names associated with a pattern's capturing groups. The names MUST be in the same order as the
+     *                    pattern's capturing groups and the size MUST be equal to or less than the number of capturing groups.
      * @param groupValues the map to add the values of a pattern's capturing groups if matching is successful. A values is put
-     * into the map using the group name associated with the capturing group. The map is cleared before values are added.
+     *                    into the map using the group name associated with the capturing group. The map is cleared before values
+     *                    are added.
      * @return {@code true} if the matches the pattern, otherwise {@code false}.
+     *
      * @throws IllegalArgumentException if group values is {@code null}.
      */
     public final boolean match(final CharSequence cs, final List<String> groupNames, final Map<String,
-            String> groupValues) throws IllegalArgumentException {
+                String> groupValues) throws IllegalArgumentException {
         if (groupValues == null) {
             throw new IllegalArgumentException();
         }

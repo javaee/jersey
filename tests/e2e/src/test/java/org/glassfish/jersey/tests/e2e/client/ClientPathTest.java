@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -123,18 +123,6 @@ public class ClientPathTest extends JerseyTest {
     @Test
     public void pathConcatenationTest4() {
         Response response = client().target("http://localhost:" + getPort()).path("/path").path("another/")
-                .request(MediaType.TEXT_PLAIN_TYPE).get();
-        assertEquals(200, response.getStatus());
-        assertEquals("test-another-path", response.readEntity(String.class));
-
-    }
-
-    /**
-     * Tests path concatenation. (regression test for JERSEY-1114)
-     */
-    @Test
-    public void pathConcatenationTest5() {
-        Response response = client().target("http://localhost:" + getPort()).path("/path/").path("//another//")
                 .request(MediaType.TEXT_PLAIN_TYPE).get();
         assertEquals(200, response.getStatus());
         assertEquals("test-another-path", response.readEntity(String.class));

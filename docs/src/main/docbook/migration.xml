@@ -52,7 +52,175 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.8">
+        <title>Migrating from Jersey 2.7 to 2.8</title>
 
+        <section xml:id="mig-2.8-breaking-changes">
+            <title>Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Because of a bug fix for issue
+                            <link xlink:href='https://java.net/jira/browse/JERSEY-2458'>JERSEY-2458</link>, there has been
+                            a slight change in the behavior of &jaxrs.core.UriInfo; <literal>getPath</literal> and
+                            <literal>getPathSegments</literal> methods. The <literal>getPath</literal> methods no longer return
+                            a path prefixed with a slash (<literal>'/'</literal>), instead they now correctly return a request
+                            path <emphasis>relative</emphasis> to the base request URI. Also, the &lit.jaxrs.core.UriInfo;
+                            now correctly handles requests which URI contains empty path segments
+                            (e.g. <literal>http://localhost///a/b//c</literal>). These empty path segments are now correctly
+                            included in the lists returned by the <literal>UriInfo.getPathSegments</literal> methods.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Deprecated <literal>getDestroyTime</literal> method has been removed from
+                            &jersey.server.monitoring.ApplicationStatistics;. To get the application shutdown information,
+                            a &jersey.server.ContainerLifecycleListener; should be registered and its
+                            <literal>onShutdown</literal> method implemented to listen to and process the application
+                            shutdown event.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Method <literal>triggerEvent(RequestEvent.Type)</literal> has been removed from the public
+                            &jersey.server.ContainerRequest; API. This method has never been intended for public,
+                            application-level use.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            In Jersey 2.7 and earlier it was (under certain conditions) possible to supply custom
+                            &jersey.test.spi.TestContainerFactory; as part of the tested JAX-RS / Jersey application.
+                            This factory would be picked and used by &jersey.test.JerseyTest; to instantiate
+                            &jersey.test.spi.TestContainer; that will host the tested application. This feature was
+                            unreliable and redundant. As such, support for the feature has been removed. To specify a custom
+                            &lit.jersey.test.spi.TestContainerFactory; to be used by your &lit.jersey.test.JerseyTest;
+                            subclass, please override the <literal>JerseyTest.getTestContainerFactory</literal> method instead.
+                            Overriding <literal>getTestContainerFactory</literal> now remains the only reliable way of specifying
+                            custom &lit.jersey.test.spi.TestContainerFactory; implementation to be used in your tests.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Protected method <literal>setTestContainerFactory</literal> has been removed from the
+                            &lit.jersey.test.JerseyTest; API as calling the method had no effect on the
+                            &lit.jersey.test.spi.TestContainerFactory; instance used by the &lit.jersey.test.JerseyTest;
+                            subclass.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Protected method <literal>getClient</literal> has been removed from the &lit.jersey.test.JerseyTest;
+                            API. To configure test client instances, please override the <literal>configureClient</literal>
+                            method instead.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Utility methods &lit.jersey.test.JerseyTest; that provide access to pre-configured
+                            &jaxrs.client.Client; and &jaxrs.client.WebTarget; instances (<literal>client()</literal>,
+                            <literal>target(...)</literal>) have been made final to prevent overriding in subclasses
+                            and thus ensure consistency of the jersey test framework functionality.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            &lit.jersey.test.JerseyTest; constructor
+                            <literal>JerseyTest(Class&lt;? extends Application&gt;)</literal> has been made deprecated
+                            and will be removed in the subsequent Jersey release.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            It was previously possible to pass in a custom &jersey.server.spi.ContainerProvider; that was
+                            supposed to deploy and run the application as one of the JAX-RS / Jersey application providers.
+                            This ability has been removed without any substitute as the concept was fundamentally flawed.
+                            Typical use cases should not be affected by this change.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Factory methods <literal>createHttpServer</literal> which take Jersey
+                            &jersey.server.ApplicationHandler; as one of the input parameters have been removed from the
+                            Jersey container factory API as inherently broken. This impacts
+                            &jersey.grizzly.GrizzlyHttpServerFactory;, &jersey.jdkhttp.JdkHttpServerFactory;,
+                            &jersey.jetty.JettyHttpContainerFactory; and &jersey.simple.SimpleContainerFactory; implementations.
+                            The methods that take &jersey.server.ResourceConfig; as input parameter should be used instead.
+                            Typical use cases should not be affected by this change.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Method <literal>registerAdditionalBinders</literal> on &jersey.server.ApplicationHandler;
+                            has been removed from the public API. Please use the specific &lit.jersey.server.ApplicationHandler;
+                            constructor that accepts custom HK2 binders instead.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+    <section xml:id="mig-2.7">
+        <title>Migrating from Jersey 2.6 to 2.7</title>
+
+        <section xml:id="mig-2.7-breaking-changes">
+            <title>Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Until version 2.6, Jersey was compiled with Java SE 6. This has changes in Jersey 2.7.
+                            Now almost all Jersey components are compiled with Java SE 7 target. It means, that you will need at least Java
+                            SE 7 to be able to compile and run your application that is using latest Jersey.
+                            Only <literal>core-common</literal> and <literal>core-client</literal> modules are still compiled with Java class
+                            version runnable with Java SE 6.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            MVC support: method <literal>writeTo</literal> of &jersey.server.mvc.TemplateProcessor;
+                            was modified by adding an argument <literal>MultivaluedMap&lt;String, Object&gt; httpHeaders</literal>.
+                            This is an incompatible change (the method was modified directly in the interface). All
+                            Jersey provided MVC implementation were adjusted but if you have your own MVC implementation
+                            then you need to modify the method signature of the implementation.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            A minor JAX-RS incompatibility issue has been recently discovered and reported
+                            (see <link xlink:href="https://java.net/jira/browse/JERSEY-2387">JERSEY-2387</link>). As part of the
+                            fix, minor breaking changes related to URI resolving and creation have been introduced in the
+                            behavior of &jaxrs.core.UriBuilder;, &jaxrs.core.Link.Builder; and &jaxrs.client.WebTarget; classes.
+                            It is no longer possible to successfully build a new &lit.jdk6.URI; instance from a
+                            &lit.jaxrs.core.UriBuilder; that contains unresolved template parameters.
+                            An <literal>IllegalArgumentException</literal> will be thrown in such case, as mandated by
+                            JAX-RS API javadoc. Similarly, it is not possible to successfully create a &jaxrs.core.Link;
+                            instance from a URI template with unresolved template parameters.
+                            Also, it is not possible to successfully send a request on a &lit.jaxrs.client.WebTarget; that
+                            represents a URI template that does not have all the template parameters properly resolved.
+                            Any attempt to do so will fail with an exception. Note that this also applies to any managed clients
+                            injected into JAX-RS server-side components using &jersey.server.Uri; annotation.
+                        </para>
+                        <para>
+                            In Jersey 2.6 and earlier, producing a URI from an incompletely resolved URI template would succeed
+                            and all unresolved template parameter locations would be encoded without change into the resulting
+                            URI, for example <literal>"/path/{param}"</literal> would be implicitly encoded as
+                            <literal>"/path/%7Bparam%7D"</literal>. While we do not expect our users to depend on this
+                            functionality, if the former behavior is desired for some reason,
+                            <literal>UriComponent.encodeTemplateNames</literal> method can be used instead:
+
+                            <programlisting language="java" linenumbering="unnumbered">URI.create(UriComponent.encodeTemplateNames(UriBuilder.fromUri("/path/{param}").toTemplate()));</programlisting>
+
+                            or simply
+
+                            <programlisting language="java" linenumbering="unnumbered">URI.create(UriComponent.encodeTemplateNames("/path/{param}"));</programlisting>
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
     <section xml:id="mig-2.6">
         <title>Migrating from Jersey 2.5.1 to 2.6</title>
 
