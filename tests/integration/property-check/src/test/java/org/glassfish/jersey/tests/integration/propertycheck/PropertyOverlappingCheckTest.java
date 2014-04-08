@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.internal.util.PropertyAlias;
 import org.glassfish.jersey.jetty.connector.JettyClientProperties;
 import org.glassfish.jersey.media.multipart.MultiPartProperties;
 import org.glassfish.jersey.message.MessageProperties;
@@ -138,7 +139,6 @@ public class PropertyOverlappingCheckTest {
         }
     }
 
-    @Ignore("Has to be ignored until naming conflicts resolved.")
     @Test
     public void test() throws IllegalAccessException {
         List<String> allPropertyNames = new ArrayList<>();
@@ -151,12 +151,19 @@ public class PropertyOverlappingCheckTest {
             for (Field field : fields) {
                 if (field.getType().isAssignableFrom(String.class)) {
                     String propertyValue = (String) field.get(null);
+                    if (field.getAnnotation(PropertyAlias.class) != null) {
+                        continue;
+                    }
                     allPropertyNames.add(propertyValue);
                     // check if there is already such property in the map; report a problem if true or store the
                     // property-to-class relationship into the map for later use
                     String propertyMapEntry = propertyToClassMap.get(propertyValue);
                     if (propertyToClassMap.get(propertyValue) != null) {
-                        problems.add(new ProblemReport(propertyValue, propertyValue, propertyMapEntry, clazz.getName(), true));
+//                        log.info("Duplicate property found: " + propertyValue + " in " + propertyMapEntry + " and "
+//                                + clazz.getName() + ". Test won't fail because of this, as the check is currently disabled.");
+                        // this cannot cause the test to fail, as there are aliases in ClientProperties and ServerProperties,
+                        // which are by definition equal to those defined in CommonProperties
+                        problems.add(new ProblemReport(propertyValue, propertyMapEntry, propertyValue, clazz.getName(), true));
                     } else {
                         propertyToClassMap.put(propertyValue, clazz.getName());
                     }

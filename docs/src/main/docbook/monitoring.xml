@@ -661,12 +661,12 @@ request count: 4, average request processing [ms]: 73</programlisting>
             headers of a response for the request. The information is also logged on the server side using a dedicated Java
             Logger instance.
         </para>
-        <section>
+        <section xml:id="tracing.configuration">
             <title>Configuration options</title>
             <para>
                 Tracing support is disabled by default. You can enable it either "globally" for all application requests
                 or selectively per request. The tracing support activation is controlled by setting the
-                <literal>jersey.config.server.tracing</literal> application configuration property. The property value
+                <literal>jersey.config.server.tracing.type</literal> application configuration property. The property value
                 is expected to be one of the following:
 
                 <itemizedlist>

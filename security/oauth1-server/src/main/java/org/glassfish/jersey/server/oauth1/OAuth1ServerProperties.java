@@ -40,6 +40,10 @@
 
 package org.glassfish.jersey.server.oauth1;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+
+import java.util.Map;
+
 /**
  * Properties used to configure OAuth server module.
  *
@@ -202,4 +206,60 @@ public final class OAuth1ServerProperties {
      * </p>
      */
     public static final String ACCESS_TOKEN_URI = "jersey.config.server.oauth1.resource.accessToken.uri";
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the real value type is not compatible with the specified value type,
+     * returns {@code null}.
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param key  Name of the property.
+     * @param type          Type to retrieve the value as.
+     * @param <T>           Type of the property value.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
+        return PropertiesHelper.getValue(properties, key, type, null);
+    }
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the real value type is not compatible with {@code defaultValue} type,
+     * the specified {@code defaultValue} is returned. Calling this method is equivalent to calling
+     * {@code OAuth1ServerProperties.getValue(properties, key, defaultValue, (Class<T>) defaultValue.getClass())}
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param key  Name of the property.
+     * @param defaultValue  Default value if property is not registered
+     * @param <T>           Type of the property value.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue) {
+        return PropertiesHelper.getValue(properties, key, defaultValue, null);
+    }
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the real value type is not compatible with the specified value type,
+     * returns {@code defaultValue}.
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param key  Name of the property.
+     * @param defaultValue  Default value if property is not registered
+     * @param type          Type to retrieve the value as.
+     * @param <T>           Type of the property value.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type) {
+        return PropertiesHelper.getValue(properties, key, defaultValue, type, null);
+    }
 }

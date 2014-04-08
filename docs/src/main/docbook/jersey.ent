@@ -381,6 +381,9 @@
 <!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MONITORING_STATISTICS_MBEANS_ENABLED'>ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED</link>" >
 <!ENTITY jersey.server.ServerProperties.APPLICATION_NAME "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#APPLICATION_NAME'>ServerProperties.APPLICATION_NAME</link>" >
 <!ENTITY jersey.server.ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#RESPONSE_SET_STATUS_OVER_SEND_ERROR'>ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR</link>" >
+<!ENTITY jersey.server.ServerProperties.TRACING "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#TRACING'>ServerProperties.TRACING</link>" >
+<!ENTITY jersey.server.ServerProperties.TRACING_THRESHOLD "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#TRACING_THRESHOLD'>ServerProperties.TRACING_THRESHOLD</link>" >
+<!ENTITY jersey.server.Uri "<link xlink:href='&jersey.javadoc.path;/server/Uri.html'>Uri</link>">
 <!ENTITY jersey.server.UriConnegFilter "<link xlink:href='&jersey.javadoc.path;/server/filter/UriConnegFilter.html'>UriConnegFilter</link>">
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlFeature.html'>WadlFeature</link>">
 <!ENTITY jersey.server.WadlGenerator "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlGenerator.html'>WadlGenerator</link>">
@@ -468,8 +471,6 @@
 <!ENTITY jersey.client.oauth2.TokenResult "<link xlink:href='&jersey.javadoc.path;/client/oauth2/TokenResult.html'>TokenResult</link>">
 <!ENTITY jersey.client.oauth2.OAuth2ClientSupport "<link xlink:href='&jersey.javadoc.path;/client/oauth2/OAuth2ClientSupport.html'>OAuth2ClientSupport</link>">
 
-<<<<<<< HEAD
-=======
 <!ENTITY jersey.gf.cdi.spi.Hk2CustomBoundTypesProvider "<link xlink:href='&jersey.javadoc.path;/gf/cdi/spi/Hk2CustomBoundTypesProvider.html'>Hk2CustomBoundTypesProvider</link>">
 
 <!ENTITY jersey.grizzly.GrizzlyHttpContainerProvider "<link xlink:href='&jersey.javadoc.path;/grizzly2/httpserver/GrizzlyHttpContainerProvider.html'>GrizzlyHttpContainerProvider</link>">
@@ -492,7 +493,6 @@
 <!ENTITY jersey.simple.SimpleContainer "<link xlink:href='&jersey.javadoc.path;/simple/SimpleContainer.html'>SimpleContainer</link>">
 <!ENTITY jersey.simple.SimpleContainerFactory "<link xlink:href='&jersey.javadoc.path;/simple/SimpleContainerFactory.html'>SimpleContainerFactory</link>">
 
->>>>>>> cf236e5... Fixed JERSEY-2462.
 <!-- Jersey Module Links -->
 <!ENTITY jersey-bean-validation "<link xlink:href='&jersey.site.path;/jersey-bean-validation/dependencies.html'>jersey-bean-validation</link>" >
 <!ENTITY jersey-declarative-linking "<link xlink:href='&jersey.site.path;/jersey-declarative-linking/dependencies.html'>jersey-declarative-linking</link>" >

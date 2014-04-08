@@ -64,7 +64,6 @@ import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.HeaderUtils;
@@ -117,10 +116,10 @@ class GrizzlyConnector implements Connector {
 
             builder = builder.setExecutorService(executorService);
 
-            builder.setConnectionTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
+            builder.setConnectionTimeoutInMs(ClientProperties.getValue(config.getProperties(),
                     ClientProperties.CONNECT_TIMEOUT, 0));
 
-            builder.setRequestTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
+            builder.setRequestTimeoutInMs(ClientProperties.getValue(config.getProperties(),
                     ClientProperties.READ_TIMEOUT, 0));
         } else {
             executorService = Executors.newCachedThreadPool();

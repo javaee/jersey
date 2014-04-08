@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,33 +38,23 @@
  * holder.
  */
 
-package org.glassfish.jersey.server.internal.monitoring;
+package org.glassfish.jersey.internal.util;
 
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.FeatureContext;
-
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.server.ServerProperties;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Autodiscoverable feature that registers {@link MonitoringFeature}
- * based on configuration properties.
+ * Annotation to mark property aliases.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * Jersey code should not contain overlapping nor duplicate property names. This is checked by the dedicated test case.
+ * However, sometimes having property aliases is useful. If the property name is equal to another property (from another file),
+ * it has to be marked by this annotation, otherwise the test will fail and prevent Jersey build to succeed.
+ *
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-@ConstrainedTo(RuntimeType.SERVER)
-public class MonitoringAutodiscoverable implements AutoDiscoverable {
-    @Override
-    public void configure(FeatureContext context) {
-        if (!context.getConfiguration().isRegistered(MonitoringFeature.class)) {
-            final Boolean monitoringEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
-                    ServerProperties.MONITORING_STATISTICS_ENABLED, Boolean.FALSE);
-            final Boolean mbeansEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
-                    ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, Boolean.FALSE);
-            if (monitoringEnabled || mbeansEnabled) {
-                context.register(MonitoringFeature.class);
-            }
-        }
-    }
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface PropertyAlias {
 }

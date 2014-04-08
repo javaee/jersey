@@ -44,7 +44,6 @@ import java.util.Map;
 import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
@@ -84,7 +83,7 @@ public class ServiceFinderBinder<T> extends AbstractBinder {
         final boolean METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT = false;
         boolean disableMetainfServicesLookup = METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT;
         if (applicationProperties != null) {
-            disableMetainfServicesLookup = PropertiesHelper.getValue(applicationProperties, runtimeType,
+            disableMetainfServicesLookup = CommonProperties.getValue(applicationProperties, runtimeType,
                     CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, METAINF_SERVICES_LOOKUP_DISABLE_DEFAULT, Boolean.class);
         }
         if (!disableMetainfServicesLookup) {

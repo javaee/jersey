@@ -114,20 +114,20 @@ class OAuth1ServerFilter implements ContainerRequestFilter {
         versions = Collections.unmodifiableSet(v);
 
         // optional initialization parameters (defaulted)
-        String realm = PropertiesHelper.getValue(rc.getProperties(), OAuth1ServerProperties.REALM, "default", String.class);
+        String realm = OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.REALM, "default", String.class);
         /* Maximum age (in milliseconds) of timestamp to accept in incoming messages. */
-        int maxAge = PropertiesHelper.getValue(rc.getProperties(), OAuth1ServerProperties.MAX_AGE, 300000);
+        int maxAge = OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.MAX_AGE, 300000);
         /* Average requests to process between nonce garbage collection passes. */
-        int gcPeriod = PropertiesHelper.getValue(rc.getProperties(), OAuth1ServerProperties.GC_PERIOD, 100);
-        ignorePathPattern = pattern(PropertiesHelper.getValue(rc.getProperties(), OAuth1ServerProperties.IGNORE_PATH_PATTERN,
+        int gcPeriod = OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.GC_PERIOD, 100);
+        ignorePathPattern = pattern(OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.IGNORE_PATH_PATTERN,
                 null, String.class)); // no pattern
         optional = PropertiesHelper.isProperty(rc.getProperties(), OAuth1ServerProperties.NO_FAIL);
 
-        final String timeUnitStr = PropertiesHelper.getValue(rc.getProperties(), OAuth1ServerProperties.TIMESTAMP_UNIT,
+        final String timeUnitStr = OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.TIMESTAMP_UNIT,
                 String.class);
         final TimeUnit timeUnit = timeUnitStr != null ? TimeUnit.valueOf(timeUnitStr) : TimeUnit.SECONDS;
 
-        final int maxCacheSize = PropertiesHelper.getValue(rc.getProperties(), OAuth1ServerProperties.MAX_NONCE_CACHE_SIZE,
+        final int maxCacheSize = OAuth1ServerProperties.getValue(rc.getProperties(), OAuth1ServerProperties.MAX_NONCE_CACHE_SIZE,
                 2000000);
 
         nonces = new NonceManager(maxAge, gcPeriod, timeUnit, maxCacheSize);

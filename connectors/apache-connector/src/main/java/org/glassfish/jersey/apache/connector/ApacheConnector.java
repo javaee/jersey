@@ -249,8 +249,8 @@ class ApacheConnector implements Connector {
         int socketTimeout = 0;
         boolean ignoreCookies = false;
         if (config != null) {
-            connectTimeout = PropertiesHelper.getValue(config.getProperties(), ClientProperties.CONNECT_TIMEOUT, 0);
-            socketTimeout = PropertiesHelper.getValue(config.getProperties(), ClientProperties.READ_TIMEOUT, 0);
+            connectTimeout = ClientProperties.getValue(config.getProperties(), ClientProperties.CONNECT_TIMEOUT, 0);
+            socketTimeout = ClientProperties.getValue(config.getProperties(), ClientProperties.READ_TIMEOUT, 0);
             ignoreCookies = PropertiesHelper.isProperty(config.getProperties(), ApacheClientProperties.DISABLE_COOKIES);
 
             final Object credentialsProvider = config.getProperty(ApacheClientProperties.CREDENTIALS_PROVIDER);
@@ -264,10 +264,10 @@ class ApacheConnector implements Connector {
                 final URI u = getProxyUri(proxyUri);
                 final HttpHost proxy = new HttpHost(u.getHost(), u.getPort(), u.getScheme());
                 String userName;
-                userName = PropertiesHelper.getValue(config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
+                userName = ClientProperties.getValue(config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
                 if (userName != null) {
                     String password;
-                    password = PropertiesHelper.getValue(config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
+                    password = ClientProperties.getValue(config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
 
                     if (password != null) {
                         final CredentialsProvider credsProvider = new BasicCredentialsProvider();
@@ -321,7 +321,7 @@ class ApacheConnector implements Connector {
     }
 
     private SSLContext getSslContext(final Configuration config) {
-        final SslConfigurator sslConfigurator = PropertiesHelper.getValue(
+        final SslConfigurator sslConfigurator = ApacheClientProperties.getValue(
                 config.getProperties(),
                 ApacheClientProperties.SSL_CONFIG,
                 SslConfigurator.class);
@@ -391,7 +391,7 @@ class ApacheConnector implements Connector {
                 .register("https", sslSocketFactory)
                 .build();
 
-        final Integer chunkSize = PropertiesHelper.getValue(config.getProperties(),
+        final Integer chunkSize = ClientProperties.getValue(config.getProperties(),
                 ClientProperties.CHUNKED_ENCODING_SIZE, 4096, Integer.class);
 
         final PoolingHttpClientConnectionManager connectionManager =

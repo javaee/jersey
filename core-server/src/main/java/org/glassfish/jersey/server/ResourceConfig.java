@@ -1265,8 +1265,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     private void setupApplicationName() {
-        final String appName = PropertiesHelper.getValue(getProperties(),
-                ServerProperties.APPLICATION_NAME, null, String.class);
+        final String appName = ServerProperties.getValue(getProperties(), ServerProperties.APPLICATION_NAME, null, String.class);
         if (appName != null && getApplicationName() == null) {
             setApplicationName(appName);
         }
