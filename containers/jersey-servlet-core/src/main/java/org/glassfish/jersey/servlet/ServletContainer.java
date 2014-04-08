@@ -262,7 +262,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             // and somebody would want to hit the root resource without the trailing slash
             int i = servletPath.lastIndexOf('/');
             if (servletPath.substring(i + 1).indexOf('.') < 0) {
-                // TODO (+ handle request URL with invalid characters - see the creation of absoluteUriBuilder bellow)
+                // TODO (+ handle request URL with invalid characters - see the creation of absoluteUriBuilder below)
 //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
 //                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
 //                            path("/").

@@ -60,7 +60,7 @@ import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
  * Should you need to fine tune the underlying Grizzly transport layer, you can obtain direct access to the corresponding
  * Grizzly structures with <tt>server.getListener("grizzly").getTransport()</tt>. To make certain options take effect,
  * you need to work with an inactive HttpServer instance (that is the one that has not been started yet).
- * To obtain such an instance, use one of the bellow factory methods with {@code start} parameter set to {@code false}.
+ * To obtain such an instance, use one of the below factory methods with {@code start} parameter set to {@code false}.
  * When the {@code start} parameter is not present, the factory method returns an already started instance.
  * </p>
  *

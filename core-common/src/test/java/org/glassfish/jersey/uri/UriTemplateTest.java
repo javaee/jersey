@@ -116,7 +116,7 @@ public class UriTemplateTest {
         assertThat(UriTemplate.resolve(baseUri, URI.create("g?y/../x")), equalTo(URI.create("http://a/b/c/g?y/../x")));
         assertThat(UriTemplate.resolve(baseUri, URI.create("g#s/./x")), equalTo(URI.create("http://a/b/c/g#s/./x")));
         assertThat(UriTemplate.resolve(baseUri, URI.create("g#s/../x")), equalTo(URI.create("http://a/b/c/g#s/../x")));
-        // Per RFC 3986, test bellow should resolve to "http:g" for strict parsers and "http://a/b/c/g" for backward compatibility
+        // Per RFC 3986, test below should resolve to "http:g" for strict parsers and "http://a/b/c/g" for backward compatibility
         assertThat(UriTemplate.resolve(baseUri, URI.create("http:g")), equalTo(URI.create("http:g")));
 
         // JDK bug http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4708535

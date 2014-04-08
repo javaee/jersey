@@ -221,7 +221,7 @@
                 and <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#disable(java.lang.String)">disable(...)</link>
                 methods, that give you control over configuring values of the properties defined and described in the
                 &lit.jersey.test.TestProperties; class. A typical code that overrides the default property values is listed
-                bellow:
+                below:
 
                 <programlisting language="java" linenumbering="numbered">public class SimpleTest extends JerseyTest {
     // ...

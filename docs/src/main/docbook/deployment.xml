@@ -952,7 +952,7 @@ public class MyApplication extends ResourceConfig {
             </para>
 
             <para>
-                In the code bellow, you can find an example of a bean, that uses a managed-bean interceptor defined as a JAX-RS
+                In the code below, you can find an example of a bean, that uses a managed-bean interceptor defined as a JAX-RS
                 bean. The bean is used to intercept calls to the resource method <literal>getIt()</literal>:
 
                 <programlisting language="java" linenumbering="numbered">@ManagedBean

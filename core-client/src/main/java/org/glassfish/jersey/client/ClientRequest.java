@@ -518,7 +518,7 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                 // In that case, exception is rethrown and the connectionFailed flag is set to prevent the attempt to commit.
                 // Calling commitStream() would lead to another wait time and the final timeout time would be twice as long
                 // as described in JERSEY-1984. Depending on a system and configuration, NoRouteToHostException may be thrown
-                // instead of SocketTimeoutException (see bellow).
+                // instead of SocketTimeoutException (see below).
                 connectionFailed = true;
                 throw e;
             } catch (NoRouteToHostException e) {

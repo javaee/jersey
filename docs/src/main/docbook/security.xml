@@ -757,7 +757,7 @@ $ openssl rsa -in private.key -pubout]]></programlisting>
                 </para>
 
                 <para>
-                    The most important entry points of Jersey client OAuth 2 API and SPI are explained bellow:
+                    The most important entry points of Jersey client OAuth 2 API and SPI are explained below:
 
                     <itemizedlist>
                         <listitem>

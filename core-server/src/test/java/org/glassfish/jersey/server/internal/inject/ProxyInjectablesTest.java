@@ -261,7 +261,7 @@ public class ProxyInjectablesTest extends AbstractTest {
     }
 
     /**
-     * JERSEY-2386 reproducer. Bean parameter bellow must
+     * JERSEY-2386 reproducer. Bean parameter below must
      * get injected directly as well as its internal field.
      */
     @Path("/")
