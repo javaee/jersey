@@ -132,7 +132,7 @@ public class BeanParamTest extends JerseyTest {
         Response response = doRequest(fullBean, "resource/encodedBean");
         Assert.assertEquals(200, response.getStatus());
 
-        EncodedBean bean = new EncodedBean("not-encoded/a?&&+./?", "encoded/a?%26%26%2B./?");
+        EncodedBean bean = new EncodedBean("not-encoded/a?&&+./?", "encoded%2Fa%3F%26%26%2B.%2F%3F");
         Assert.assertEquals(bean.toString(), response.readEntity(String.class));
     }
 
