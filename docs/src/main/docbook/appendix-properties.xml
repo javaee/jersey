@@ -420,6 +420,16 @@
                             </para>
                         </entry>
                     </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.PROCESSING_RESPONSE_ERRORS_ENABLED;</entry>
+                        <entry><literal>jersey.config.server.exception.processResponseErrors</literal></entry>
+                        <entry>
+                            <para>
+                                If property value is <literal>true</literal> then the errors raised during response processing are
+                                tried to be handled using available response error mappers.
+                            </para>
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

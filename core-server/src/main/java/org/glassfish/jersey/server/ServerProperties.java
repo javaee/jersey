@@ -593,6 +593,20 @@ public final class ServerProperties {
      */
     public static final String RESPONSE_SET_STATUS_OVER_SEND_ERROR = "jersey.config.server.response.setStatusOverSendError";
 
+    /**
+     * If property value is {@code true} then the errors raised during response processing are tried to handled using available
+     * {@link org.glassfish.jersey.server.spi.ResponseErrorMapper response error mappers}.
+     * <p>
+     * Type of the property value is {@code boolean}. The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.8
+     */
+    public static final String PROCESSING_RESPONSE_ERRORS_ENABLED = "jersey.config.server.exception.processResponseErrors";
+
     private ServerProperties() {
         // prevents instantiation
     }
