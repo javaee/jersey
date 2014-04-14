@@ -74,6 +74,15 @@
                     </listitem>
                     <listitem>
                         <para>
+                            &jersey.sse.SseFeature; now gets automatically discovered and enabled if the SSE module is present
+                            on the class path. This behavior can be suppressed by setting &jersey.sse.SseFeature.DISABLE_SSE;
+                            property to <literal>true</literal>. The behavior can also be selectively suppressed in either
+                            client or server runtime by setting the &jersey.sse.SseFeature.DISABLE_SSE_CLIENT; or
+                            &jersey.sse.SseFeature.DISABLE_SSE_SERVER; property respectively.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
                             Deprecated <literal>getDestroyTime</literal> method has been removed from
                             &jersey.server.monitoring.ApplicationStatistics;. To get the application shutdown information,
                             a &jersey.server.ContainerLifecycleListener; should be registered and its

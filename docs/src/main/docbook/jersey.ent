@@ -310,6 +310,9 @@
 <!ENTITY jersey.sse.OutboundEvent "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEvent.html'>OutboundEvent</link>">
 <!ENTITY jersey.sse.SseBroadcaster "<link xlink:href='&jersey.javadoc.path;/media/sse/SseBroadcaster.html'>SseBroadcaster</link>">
 <!ENTITY jersey.sse.SseFeature "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html'>SseFeature</link>">
+<!ENTITY jersey.sse.SseFeature.DISABLE_SSE "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html#DISABLE_SSE'>DISABLE_SSE</link>">
+<!ENTITY jersey.sse.SseFeature.DISABLE_SSE_CLIENT "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html#DISABLE_SSE_CLIENT'>DISABLE_SSE_CLIENT</link>">
+<!ENTITY jersey.sse.SseFeature.DISABLE_SSE_SERVER "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html#DISABLE_SSE_SERVER'>DISABLE_SSE_SERVER</link>">
 <!ENTITY jersey.containers.ServletContainer "<link xlink:href='&jersey.javadoc.path;/servlet/ServletContainer.html'>ServletContainer</link>">
 
 <!ENTITY jersey.common.Beta "<link xlink:href='&jersey.javadoc.path;/Beta.html'>Beta</link>">

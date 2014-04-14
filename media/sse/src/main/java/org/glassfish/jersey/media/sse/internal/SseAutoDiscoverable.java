@@ -38,27 +38,36 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.util;
+package org.glassfish.jersey.media.sse.internal;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.FeatureContext;
+
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.media.sse.SseFeature;
 
 /**
- * Marker annotation for static fields that represent property name aliases.
- * <p>
- * Jersey code should not contain overlapping nor duplicate property names. This is checked in a dedicated
- * (@code org.glassfish.jersey.tests.integration.propertycheck.PropertyOverlappingCheckTest) unit test.
- * However, sometimes having property aliases is useful. If the property name is equal to another property (from another file),
- * it has to be marked by this annotation, otherwise the test will fail and prevent Jersey build to succeed.
- * </p>
+ * Jersey {@link org.glassfish.jersey.internal.spi.AutoDiscoverable} responsible for registering {@link SseFeature}.
  *
- * @author Adam Lindenthal (adam.lindenthal at oracle.com)
- * @see org.glassfish.jersey.internal.util.PropertiesClass
- * @see org.glassfish.jersey.internal.util.Property
+ * If this feature is not already registered and the property
+ * {@link org.glassfish.jersey.media.sse.SseFeature#DISABLE_SSE} is not set to {@code true}, the {@code SseFeature}
+ * will be automatically registered.
+ *
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface PropertyAlias {
+public final class SseAutoDiscoverable implements AutoDiscoverable {
+    @Override
+    public void configure(final FeatureContext context) {
+        final Configuration config = context.getConfiguration();
+        if (context.getConfiguration().isRegistered(SseFeature.class)) {
+            return;
+        }
+
+        if (!PropertiesHelper.getValue(
+                config.getProperties(), config.getRuntimeType(), SseFeature.DISABLE_SSE, Boolean.FALSE, Boolean.class, null)) {
+            context.register(SseFeature.class);
+        }
+    }
 }

@@ -40,12 +40,13 @@
 
 package org.glassfish.jersey;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.RuntimeType;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.glassfish.jersey.internal.util.PropertiesClass;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Common (server/client) Jersey configuration properties.
@@ -53,6 +54,7 @@ import java.util.Map;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
+@PropertiesClass
 public final class CommonProperties {
 
     public static Map<String, String> LEGACY_FALLBACK_MAP = new HashMap<String, String>();

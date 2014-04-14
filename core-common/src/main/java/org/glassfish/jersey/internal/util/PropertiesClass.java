@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.internal.util;
 
 import java.lang.annotation.ElementType;
@@ -46,19 +45,24 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marker annotation for static fields that represent property name aliases.
+ * Marker annotation for property classes.
+ *
+ * All static {@code String} fields in a class annotated by this annotation are considered to represent
+ * property names recognized by Jersey runtime or one of the Jersey extension modules.
+ * <p>
+ * Putting this annotation on a class has the same effect as putting the {@link org.glassfish.jersey.internal.util.Property}
+ * annotation on each individual static {@code String} field in the class.
+ * </p>
  * <p>
  * Jersey code should not contain overlapping nor duplicate property names. This is checked in a dedicated
  * (@code org.glassfish.jersey.tests.integration.propertycheck.PropertyOverlappingCheckTest) unit test.
- * However, sometimes having property aliases is useful. If the property name is equal to another property (from another file),
- * it has to be marked by this annotation, otherwise the test will fail and prevent Jersey build to succeed.
  * </p>
  *
- * @author Adam Lindenthal (adam.lindenthal at oracle.com)
- * @see org.glassfish.jersey.internal.util.PropertiesClass
+ * @author Marek Potociar (marek.potociar at oracle.com)
  * @see org.glassfish.jersey.internal.util.Property
+ * @see org.glassfish.jersey.internal.util.PropertyAlias
  */
-@Target(ElementType.FIELD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PropertyAlias {
+public @interface PropertiesClass {
 }

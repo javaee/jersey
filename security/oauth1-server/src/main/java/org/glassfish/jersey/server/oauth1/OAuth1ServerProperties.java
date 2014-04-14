@@ -40,15 +40,17 @@
 
 package org.glassfish.jersey.server.oauth1;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-
 import java.util.Map;
+
+import org.glassfish.jersey.internal.util.PropertiesClass;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Properties used to configure OAuth server module.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
+@PropertiesClass
 public final class OAuth1ServerProperties {
     /**
      * OAuth realm (String property).

@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.test;
 
+import org.glassfish.jersey.internal.util.PropertiesClass;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 /**
@@ -46,6 +47,7 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@PropertiesClass
 public final class TestProperties {
     /**
      * If set to {@code true} the property enables basic logging of the request and

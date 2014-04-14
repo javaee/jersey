@@ -44,6 +44,7 @@ import java.util.Map;
 import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.util.PropertiesClass;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.PropertyAlias;
 
@@ -55,6 +56,7 @@ import org.glassfish.jersey.internal.util.PropertyAlias;
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
+@PropertiesClass
 public final class ServerProperties {
 
     /**
