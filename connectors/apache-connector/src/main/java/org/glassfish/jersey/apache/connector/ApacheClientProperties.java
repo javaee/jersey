@@ -39,9 +39,10 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-
 import java.util.Map;
+
+import org.glassfish.jersey.internal.util.PropertiesClass;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Configuration options specific to the Client API that utilizes {@link ApacheConnectorProvider}.
@@ -51,6 +52,7 @@ import java.util.Map;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
+@PropertiesClass
 public final class ApacheClientProperties {
 
     /**

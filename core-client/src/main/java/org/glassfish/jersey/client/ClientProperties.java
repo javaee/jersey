@@ -42,6 +42,7 @@ package org.glassfish.jersey.client;
 import java.util.Map;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.util.PropertiesClass;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.PropertyAlias;
 
@@ -52,6 +53,7 @@ import org.glassfish.jersey.internal.util.PropertyAlias;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
+@PropertiesClass
 public final class ClientProperties {
 
     /**

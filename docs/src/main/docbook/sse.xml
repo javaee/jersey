@@ -180,8 +180,18 @@
     <artifactId>jersey-media-sse</artifactId>
 </dependency>]]></programlisting>
             </example>
-            Then you need register &jersey.sse.SseFeature;. The &lit.jersey.sse.SseFeature; is a feature that can be registered
-            for both, the client and the server.
+            <note>
+                <para>
+                    Prior to Jersey 2.8, you had to manually register &jersey.sse.SseFeature; in your application.
+                    (The &lit.jersey.sse.SseFeature; is a feature that can be registered for both, the client and the server.)
+                    Since Jersey 2.8, the feature gets automatically discovered and registered when Jersey SSE module is
+                    put on the application's classpath. The automatic discovery and registration of SSE feature can be suppressed
+                    by setting &jersey.sse.SseFeature.DISABLE_SSE; property to <literal>true</literal>.
+                    The behavior can also be selectively suppressed in either client or server runtime by setting
+                    &jersey.sse.SseFeature.DISABLE_SSE_CLIENT; or &jersey.sse.SseFeature.DISABLE_SSE_SERVER; property
+                    respectively.
+                </para>
+            </note>
         </para>
         <para>
             &lit.jersey.sse.SseFeature; adds new supported entity (representation) Java types, namely &jersey.sse.OutboundEvent;

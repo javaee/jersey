@@ -39,15 +39,17 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-
 import java.util.Map;
+
+import org.glassfish.jersey.internal.util.PropertiesClass;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Configuration options specific to the Client API that utilizes {@link JettyConnectorProvider}.
  *
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
+@PropertiesClass
 public final class JettyClientProperties {
 
     /**
