@@ -179,7 +179,7 @@ public static class MyResource {
                     <literal>rest/admin/*</literal> will be accessible only for user group "admin" and
                     <literal>rest/orders/*</literal> will be accessible for "customer" user group. This security configuration
                     does not use JAX-RS or Jersey features at all as it is enforced by the Servlet container even before
-                    a request reaches the Jersey application. Keeping this security constrains up to date with your
+                    a request reaches the Jersey application. Keeping these security constrains up to date with your
                     JAX-RS application might not be easy as whenever you change the &jaxrs.Path; annotations on your resource
                     classes you may need to update also the <literal>web.xml</literal>
                     security configurations to reflect the changed JAX-RS resource paths. Therefore Jersey offers a
@@ -249,7 +249,7 @@ public class Resource {
                     annotation will only apply to the <literal>getSubResource()</literal> method as it is the only method
                     that does not override the annotation by defining custom role-based security settings using the
                     &jee6.annotations.RolesAllowed; annotation.
-                    &lit.jee6.annotations.RolesAllowed; annotation present on other methods defines a role or a set of
+                    &lit.jee6.annotations.RolesAllowed; annotations present on the other methods define a role or a set of
                     roles that are allowed to execute a particular method.
                 </para>
                 <para>
@@ -267,7 +267,7 @@ public class Resource {
     <section>
         <title>Client Security</title>
         <para>
-            For details about client security please see the<link linkend="client">Client chapter</link>. Jersey
+            For details about client security please see the <link linkend="client">Client chapter</link>. Jersey
             client allows to define parameters of SSL communication using <literal>HTTPS</literal> protocol.
             You can also use jersey built-in authentication filters which perform <emphasis>HTTP Basic Authentication</emphasis>
             or <emphasis>HTTP Digest Authentication</emphasis>. See the client chapter for more details.
@@ -300,32 +300,32 @@ public class Resource {
         <para>
             The first party represents a user, in our case Adam,
             who is called in the OAuth terminology a <emphasis>Resource Owner</emphasis>. Adam has an account on
-            the Twitter. Twitter represents the second party. This party is called a
-            <emphasis>Service Provider</emphasis>. Twitter offers web interface
+            Twitter. Twitter represents the second party. This party is called a
+            <emphasis>Service Provider</emphasis>. Twitter offers a web interface
             that Adam uses to create new tweets, read tweets of others etc. Now, Adam uses our new web site,
-            HelloWorldWeb, which is very simple web that says <literal>Hello World</literal> but it additionally
-            displays the last tweet of the logged user.
-            To do so, our Web site needs to have an access to the Twitter account of Adam. Our Web site is a 3rd party
-            application that wants to connect to the Twitter and get tweets. In OAuth, such party is called
+            HelloWorldWeb, which is a very simple web site that says <literal>Hello World</literal> but it additionally
+            displays the last tweet of the logged in user.
+            To do so, our web site needs to have access to the Twitter account of Adam. Our web site is a 3rd party
+            application that wants to connect to Twitter and get Adam's tweets. In OAuth, such party is called
             <emphasis>Consumer</emphasis>.
-            Consumer would like to use Twitter RESTful APIs to get some data associated with Adam's Twitter account.
-            In order to solve this situation Adam could directly give his password to the HelloWorldWeb.
-            This would however be rather unsafe, especially if we do not know much about authors of the application.
+            Our Consumer would like to use Twitter's RESTful APIs to get some data associated with Adam's Twitter account.
+            In order to solve this situation Adam could directly give his Twitter password to the HelloWorldWeb.
+            This would however be rather unsafe, especially if we do not know much about the authors of the application.
             If Adam would give his password to HelloWorldWeb, he would have to deal with the associated security risks.
             First of all, Adam would have to fully trust HelloWorldWeb
             that it will not misuse the full access to his Twitter account. Next, if Adam would change his password,
             he would need to remember to give the new password also to the HelloWorldWeb application.
-            And at last, if Adam would like to revoke the HelloWorldWeb access to his Twitter account,
+            And at last, if Adam would like to revoke the HelloWorldWeb's access to his Twitter account,
             he would need to change his password again. The OAuth protocol has been devised to address all these challenges.
         </para>
 
         <para>
-            With OAuth, a resource owner (Adam) grants an access to a consumer (HelloWorldWeb) without giving the web
-            his password. This access grant achieved by a procedure called
+            With OAuth, a resource owner (Adam) grants an access to a consumer (HelloWorldWeb) without giving it
+            his password. This access grant is achieved by a procedure called
             <emphasis>authorization flow</emphasis>. Authorization flow is out of the scope of this
-            documentation and it's description can be found in the OAuth specification linked above.
+            documentation and its description can be found in the OAuth specification linked above.
             The result of the authorization flow is an <emphasis>Access Token</emphasis> which is later
-            used by consumer to authenticate against service provider.
+            used by the consumer to authenticate against the service provider.
             While this brief description applies to both OAuth 1 and 2, note that there are some differences in details
             between these two specifications.
         </para>
@@ -372,13 +372,13 @@ public class Resource {
                     <listitem>
                         <para>
                             <literal>org.glassfish.jersey.security:oauth1-client</literal>: provides client
-                            OAuth 1 support for authorization flow and Authentication
+                            OAuth 1 support for authorization flow and authentication
                         </para>
                     </listitem>
                     <listitem>
                         <para>
                             <literal>org.glassfish.jersey.security:oauth1-server</literal>: provides server
-                            OAuth 1 support for authorization flow, SPI for Token Management including authentication
+                            OAuth 1 support for authorization flow, SPI for token management including authentication
                             filter.
                         </para>
                     </listitem>
@@ -422,7 +422,7 @@ public class Resource {
                                 &jersey.server.oauth1.OAuth1Provider;: Implementation of this SPI must be
                                 registered to the server runtime as a standard provider. The implementation will be used
                                 to create request and access token, get consumer by consumer key, etc. You can either
-                                implement your provider or use default implementation provided by Jersey by
+                                implement your provider or use the default implementation provided by Jersey by
                                 &jersey.server.oauth1.DefaultOAuth1Provider;.
                             </para>
                         </listitem>
@@ -436,7 +436,7 @@ public class Resource {
                             <para>
                                 &jersey.server.oauth1.OAuth1Consumer;, &jersey.server.oauth1.OAuth1Token;: classes
                                 that contain consumer key, request and access tokens. You need to
-                                implement them only if you implement also interface
+                                implement them only if you also implement the interface
                                 &lit.jersey.server.oauth1.OAuth1Provider;.
                             </para>
                         </listitem>
@@ -454,7 +454,7 @@ public class Resource {
                 <para>
                     Next, when a client initiates the OAuth authorization flow, the provided implementation of
                     &lit.jersey.server.oauth1.OAuth1Provider; will be invoked as to create new tokens,
-                    get tokens and finally to store issued Access Token. If a consumer already has a valid Access Token
+                    get tokens and finally to store the issued Access Token. If a consumer already has a valid Access Token
                     and makes Authenticated Requests (with OAuth 1 Authorization information in the HTTP header),
                     the provider will be invoked to provide the &lit.jersey.server.oauth1.OAuth1Token; for the
                     Access Token information in the header.
@@ -466,7 +466,7 @@ public class Resource {
                 <note>
                     <para>
                         OAuth client support in Jersey is almost identical for OAuth 1 and OAuth 2. As such, this chapter
-                        provides useful information even even for users that use OAuth 2 client support.
+                        provides useful information even for users that use OAuth 2 client support.
                     </para>
                 </note>
                 <para>
@@ -490,8 +490,8 @@ public class Resource {
                     is no longer part of a client OAuth filter. Authorization flow is now a standalone utility
                     and can be used without a support for subsequent authenticated requests.
                     The support for authenticated requests stays in the
-                    in the &lit.jaxrs.client.ClientRequestFilter; but is not part of a public API
-                    anymore and is is registered by a Jersey OAuth &jaxrs.core.Feature;.
+                    &lit.jaxrs.client.ClientRequestFilter; but is not part of a public API
+                    anymore and is registered by a Jersey OAuth &jaxrs.core.Feature;.
                 </para>
 
                 <para>
@@ -503,8 +503,8 @@ public class Resource {
                                 &jersey.client.oauth1.OAuth1ClientSupport;: The main class which contains builder
                                 methods to build features that enable the OAuth 1 support. Start with this class every time
                                 you need to add any OAuth 1 support to the Jersey Client (build an Authorization flow
-                                or initialize client to perform authenticated requests). The class contains
-                                static method that returns instance of &jersey.client.oauth1.OAuth1Builder; and also
+                                or initialize client to perform authenticated requests). The class contains a
+                                static method that returns an instance of &jersey.client.oauth1.OAuth1Builder; and also
                                 the class defines request properties to influence behaviour of the authenticated
                                 request support.
                             </para>
@@ -522,7 +522,7 @@ public class Resource {
                         <listitem>
                             <para>
                                 &jersey.client.oauth1.AccessToken;, &jersey.client.oauth1.ConsumerCredentials;:
-                                Interfaces that define Access Token classes and Consumer Credentials. Interfaces contains
+                                Interfaces that define Access Token classes and Consumer Credentials. Interfaces contain
                                 getters for public keys and secret keys of token and credentials.
                             </para>
                         </listitem>
@@ -533,8 +533,8 @@ public class Resource {
                     example and explain how to use the Jersey OAuth client API.
                 </para>
                 <para>
-                    Before, we start with any interaction with Twitter, we need to register our application
-                    on the Twitter. See the example <literal>README.TXT</literal> file for the instructions.
+                    Before we start with any interaction with Twitter, we need to register our application
+                    on Twitter. See the example <literal>README.TXT</literal> file for the instructions.
                     As a result of the registration, we get the consumer credentials that identify our application.
                     Consumer credentials consist of <literal>consumer key</literal> and <literal>consumer secret</literal>.
                 </para>
@@ -579,13 +579,13 @@ OAuth1AuthorizationFlow authFlow = OAuth1ClientSupport.builder(consumerCredentia
 AccessToken accessToken = authFlow.finish(verifier);]]></programlisting>
                     </example>
 
-                    In the first line, we start the authorization flow. The method internally makes request to the
+                    In the first line, we start the authorization flow. The method internally makes a request to the
                     <literal>http://api.twitter.com/oauth/request_token</literal> URL
                     and retrieves a Request Token. Details of this request can be found in the OAuth 1 specification.
-                    It then constructs a URI to which we must redirect the user. The URI is based on the Twitter's
+                    It then constructs a URI to which we must redirect the user. The URI is based on Twitter's
                     authorization URI (<literal>http://api.twitter.com/oauth/authorize</literal>) and contains
                     a Request Token as a query parameter. In the Twitter example, we have a simple console application therefore
-                    we print the URL to console and ask the user to open the URL in a browser to approve the authorization
+                    we print the URL to the console and ask the user to open the URL in a browser to approve the authorization
                     of our application.
                     Then the user gets a verifier and enters it back to the console. However, if our application would be a
                     web application, we would need to return a redirection response to the user in order to redirect the user
@@ -643,7 +643,7 @@ Feature filterFeature = OAuth1ClientSupport.builder(consumerCredentials)
                     Note that the OAuth feature builder API does not require the access token to be set.
                     The reason for it is that you might want to build a feature which would register the internal Jersey
                     OAuth &lit.jaxrs.client.ClientRequestFilter; and other related providers but which would not
-                    initialize the Oauth providers with a single fixed &jersey.client.oauth1.AccessToken; instance.
+                    initialize the OAuth providers with a single fixed &jersey.client.oauth1.AccessToken; instance.
                     In such case you would need to specify a token for every single request in the request properties.
                     Key names and API documentation of these properties can be found in
                     &lit.jersey.client.oauth1.OAuth1ClientSupport;.
@@ -744,7 +744,7 @@ $ openssl rsa -in private.key -pubout]]></programlisting>
                     This is the flow currently supported by Jersey (Jersey currently does not support other flows).
                     Please refer to the &oauth2.spec.link; for more details about authorization flows.
                     Another significant change compared to OAuth 1 is that OAuth 2 is not based on signatures and
-                    secret keys and therefore for most of the communication a SSL needs to be used
+                    secret keys and therefore for most of the communication SSL needs to be used
                     (i.e. the requests must be made through HTTPS). This means that all OAuth 2 endpoint URIs must use
                     the <literal>https</literal> scheme.
                 </para>
