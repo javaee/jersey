@@ -240,6 +240,7 @@ public final class GrizzlyHttpServerFactory {
                 // Start the server.
                 server.start();
             } catch (IOException ex) {
+                server.shutdownNow();
                 throw new ProcessingException(LocalizationMessages.FAILED_TO_START_SERVER(ex.getMessage()), ex);
             }
         }
