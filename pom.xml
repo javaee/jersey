@@ -160,8 +160,13 @@
 
     <licenses>
         <license>
-            <name>CDDL+GPL License</name>
-            <url>http://glassfish.java.net/public/CDDL+GPL_1_1.html</url>
+            <name>CDDL 1.1</name>
+            <url>https://jersey.java.net/license.html#cddl</url>
+            <distribution>repo</distribution>
+        </license>
+        <license>
+            <name>GPLv2 with classpath exception</name>
+            <url>https://jersey.java.net/license.html#gpl</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
