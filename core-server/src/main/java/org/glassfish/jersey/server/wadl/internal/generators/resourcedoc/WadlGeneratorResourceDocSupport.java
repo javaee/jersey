@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -95,10 +95,10 @@ import com.sun.research.ws.wadl.Response;
  */
 public class WadlGeneratorResourceDocSupport implements WadlGenerator {
 
-    private WadlGenerator _delegate;
-    private File _resourceDocFile;
-    private InputStream _resourceDocStream;
-    private ResourceDocAccessor _resourceDoc;
+    private WadlGenerator delegate;
+    private File resourceDocFile;
+    private InputStream resourceDocStream;
+    private ResourceDocAccessor resourceDoc;
     @Context
     private Provider<SAXParserFactory> saxFactoryProvider;
 
@@ -107,12 +107,12 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     public WadlGeneratorResourceDocSupport(WadlGenerator wadlGenerator, ResourceDocType resourceDoc) {
-        _delegate = wadlGenerator;
-        _resourceDoc = new ResourceDocAccessor(resourceDoc);
+        delegate = wadlGenerator;
+        this.resourceDoc = new ResourceDocAccessor(resourceDoc);
     }
 
     public void setWadlGeneratorDelegate(WadlGenerator delegate) {
-        _delegate = delegate;
+        this.delegate = delegate;
     }
 
     /**
@@ -121,11 +121,11 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      * @param resourceDocFile the resourcedoc file to set.
      */
     public void setResourceDocFile(File resourceDocFile) {
-        if (_resourceDocStream != null) {
+        if (resourceDocStream != null) {
             throw new IllegalStateException("The resourceDocStream property is already set," +
                     " therefore you cannot set the resourceDocFile property. Only one of both can be set at a time.");
         }
-        _resourceDocFile = resourceDocFile;
+        this.resourceDocFile = resourceDocFile;
     }
 
     /**
@@ -137,32 +137,35 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      * @param resourceDocStream the resourcedoc stream to set.
      */
     public void setResourceDocStream(InputStream resourceDocStream) {
-        if (_resourceDocStream != null) {
+        if (this.resourceDocStream != null) {
             throw new IllegalStateException("The resourceDocFile property is already set," +
                     " therefore you cannot set the resourceDocStream property. Only one of both can be set at a time.");
         }
-        _resourceDocStream = resourceDocStream;
+        this.resourceDocStream = resourceDocStream;
     }
 
     public void init() throws Exception {
-        if (_resourceDocFile == null && _resourceDocStream == null) {
+        if (resourceDocFile == null && resourceDocStream == null) {
             throw new IllegalStateException("Neither the resourceDocFile nor the resourceDocStream" +
                     " is set, one of both is required.");
         }
-        _delegate.init();
+        delegate.init();
 
-        final ResourceDocType resourceDocType = WadlUtils.unmarshall(_resourceDocFile != null
-                ? new FileInputStream(_resourceDocFile) : _resourceDocStream, saxFactoryProvider.get(), ResourceDocType.class);
-        _resourceDoc = new ResourceDocAccessor(resourceDocType);
+        try (final InputStream inputStream = resourceDocFile != null ? new FileInputStream(resourceDocFile) : resourceDocStream) {
+            final ResourceDocType resourceDocType = WadlUtils.unmarshall(inputStream, saxFactoryProvider.get(), ResourceDocType.class);
+            resourceDoc = new ResourceDocAccessor(resourceDocType);
+        } finally {
+            resourceDocFile = null;
+        }
     }
 
     public String getRequiredJaxbContextPath() {
         String name = Elements.class.getName();
         name = name.substring(0, name.lastIndexOf('.'));
 
-        return _delegate.getRequiredJaxbContextPath() == null
+        return delegate.getRequiredJaxbContextPath() == null
                 ? name
-                : _delegate.getRequiredJaxbContextPath() + ":" + name;
+                : delegate.getRequiredJaxbContextPath() + ":" + name;
     }
 
     /**
@@ -170,7 +173,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createApplication()
      */
     public Application createApplication() {
-        return _delegate.createApplication();
+        return delegate.createApplication();
     }
 
     /**
@@ -180,9 +183,9 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResource(org.glassfish.jersey.server.model.Resource, String)
      */
     public Resource createResource(org.glassfish.jersey.server.model.Resource r, String path) {
-        final Resource result = _delegate.createResource(r, path);
+        final Resource result = delegate.createResource(r, path);
         for (Class<?> resourceClass : r.getHandlerClasses()) {
-            final ClassDocType classDoc = _resourceDoc.getClassDoc(resourceClass);
+            final ClassDocType classDoc = resourceDoc.getClassDoc(resourceClass);
             if (classDoc != null && !isEmpty(classDoc.getCommentText())) {
                 final Doc doc = new Doc();
                 doc.getContent().add(classDoc.getCommentText());
@@ -201,9 +204,9 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      */
     public Method createMethod(org.glassfish.jersey.server.model.Resource resource,
                                ResourceMethod resourceMethod) {
-        final Method result = _delegate.createMethod(resource, resourceMethod);
+        final Method result = delegate.createMethod(resource, resourceMethod);
         final java.lang.reflect.Method method = resourceMethod.getInvocable().getDefinitionMethod();
-        final MethodDocType methodDoc = _resourceDoc.getMethodDoc(method.getDeclaringClass(), method);
+        final MethodDocType methodDoc = resourceDoc.getMethodDoc(method.getDeclaringClass(), method);
         if (methodDoc != null && !isEmpty(methodDoc.getCommentText())) {
             final Doc doc = new Doc();
             doc.getContent().add(methodDoc.getCommentText());
@@ -226,10 +229,11 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     public Representation createRequestRepresentation(org.glassfish.jersey.server.model.Resource r,
                                                       org.glassfish.jersey.server.model.ResourceMethod m,
                                                       MediaType mediaType) {
-        final Representation result = _delegate.createRequestRepresentation(r, m, mediaType);
-        final RepresentationDocType requestRepresentation = _resourceDoc.getRequestRepresentation(m.getInvocable()
-                .getDefinitionMethod().getDeclaringClass(),
-                m.getInvocable().getDefinitionMethod(), result.getMediaType());
+        final Representation result = delegate.createRequestRepresentation(r, m, mediaType);
+        final RepresentationDocType requestRepresentation = resourceDoc.getRequestRepresentation(m.getInvocable()
+                        .getDefinitionMethod().getDeclaringClass(),
+                m.getInvocable().getDefinitionMethod(), result.getMediaType()
+        );
         if (requestRepresentation != null) {
             result.setElement(requestRepresentation.getElement());
             addDocForExample(result.getDoc(), requestRepresentation.getExample());
@@ -246,7 +250,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      */
     public Request createRequest(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod
             m) {
-        return _delegate.createRequest(r, m);
+        return delegate.createRequest(r, m);
     }
 
     /**
@@ -258,7 +262,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      */
     public List<Response> createResponses(org.glassfish.jersey.server.model.Resource r,
                                           org.glassfish.jersey.server.model.ResourceMethod m) {
-        final ResponseDocType responseDoc = _resourceDoc.getResponse(m.getInvocable().getDefinitionMethod().getDeclaringClass(),
+        final ResponseDocType responseDoc = resourceDoc.getResponse(m.getInvocable().getDefinitionMethod().getDeclaringClass(),
                 m.getInvocable().getDefinitionMethod());
         List<Response> responses = new ArrayList<Response>();
         if (responseDoc != null && responseDoc.hasRepresentations()) {
@@ -297,7 +301,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
             }
 
         } else {
-            responses = _delegate.createResponses(r, m);
+            responses = delegate.createResponses(r, m);
         }
 
         return responses;
@@ -334,9 +338,9 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      */
     public Param createParam(org.glassfish.jersey.server.model.Resource r,
                              org.glassfish.jersey.server.model.ResourceMethod m, Parameter p) {
-        final Param result = _delegate.createParam(r, m, p);
+        final Param result = delegate.createParam(r, m, p);
         if (result != null) {
-            final ParamDocType paramDoc = _resourceDoc.getParamDoc(m.getInvocable().getDefinitionMethod().getDeclaringClass(),
+            final ParamDocType paramDoc = resourceDoc.getParamDoc(m.getInvocable().getDefinitionMethod().getDeclaringClass(),
                     m.getInvocable().getDefinitionMethod(), p);
             if (paramDoc != null && !isEmpty(paramDoc.getCommentText())) {
                 final Doc doc = new Doc();
@@ -352,7 +356,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResources()
      */
     public Resources createResources() {
-        return _delegate.createResources();
+        return delegate.createResources();
     }
 
     private boolean isEmpty(String text) {
@@ -363,12 +367,12 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
 
     @Override
     public ExternalGrammarDefinition createExternalGrammar() {
-        return _delegate.createExternalGrammar();
+        return delegate.createExternalGrammar();
     }
 
     @Override
     public void attachTypes(ApplicationDescription egd) {
-        _delegate.attachTypes(egd);
+        delegate.attachTypes(egd);
     }
 
 }
