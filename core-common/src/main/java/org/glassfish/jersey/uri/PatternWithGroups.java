@@ -147,9 +147,13 @@ public class PatternWithGroups {
     }
 
     /**
-     * Get the group indexes.
+     * Get the group indexes to capturing groups.
+     * <p>
+     * Any nested capturing groups will be ignored and the
+     * the group index will refer to the top-level capturing
+     * groups associated with the templates variables.
      *
-     * @return the group indexes.
+     * @return the group indexes to capturing groups.
      */
     public final int[] getGroupIndexes() {
         return groupIndexes.clone();

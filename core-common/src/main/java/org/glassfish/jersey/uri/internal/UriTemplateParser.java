@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -190,12 +190,7 @@ public class UriTemplateParser {
         for (int i = 1; i < indexes.length; i++) {
             indexes[i] = indexes[i - 1] + groupCounts.get(i - 1);
         }
-        for (int i = 0; i < indexes.length; i++) {
-            if (indexes[i] != i + 1) {
-                return indexes;
-            }
-        }
-        return EMPTY_INT_ARRAY;
+        return indexes;
     }
 
     /**
