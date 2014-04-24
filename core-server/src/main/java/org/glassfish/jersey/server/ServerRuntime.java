@@ -840,6 +840,7 @@ public class ServerRuntime {
         }
 
         private boolean resume(final Runnable handler) {
+            setTimeout(-1, TimeUnit.SECONDS);
             synchronized (stateLock) {
                 if (state != SUSPENDED) {
                     return false;
@@ -889,6 +890,7 @@ public class ServerRuntime {
         }
 
         private boolean cancel(final Value<Response> responseValue) {
+            setTimeout(-1, TimeUnit.SECONDS);
             synchronized (stateLock) {
                 if (cancelled) {
                     return true;
