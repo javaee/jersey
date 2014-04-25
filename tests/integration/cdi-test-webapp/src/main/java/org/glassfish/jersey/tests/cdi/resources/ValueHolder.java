@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,21 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-
 /**
- * JAX-RS application to configure resources.
+ * Helper type to check CDI producer mechanism is not broken
+ * by automatic HK2/CDI bindings.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
+public interface ValueHolder<T> {
 
-    private static final Logger LOGGER = Logger.getLogger(MyApplication.class.getName());
-
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        classes.add(StutteringEchoResource.class);
-        classes.add(StutteringEcho.class);
-        classes.add(ReversingEchoResource.class);
-        classes.add(CounterResource.class);
-        classes.add(ProducerResource.class);
-        return classes;
-    }
-
-    @PostConstruct
-    public void postConstruct() {
-        LOGGER.info(String.format("%s: POST CONSTRUCT.", this.getClass().getName()));
-    }
-
-    @PreDestroy
-    public void preDestroy() {
-        LOGGER.info(String.format("%s: PRE DESTROY.", this.getClass().getName()));
-    }
+    /**
+     * Value getter.
+     *
+     * @return value.
+     */
+    T getValue();
 }

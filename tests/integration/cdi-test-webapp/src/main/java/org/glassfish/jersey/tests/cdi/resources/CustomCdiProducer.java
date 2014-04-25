@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,32 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.cdi.resources;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.enterprise.inject.Produces;
 
 /**
- * JAX-RS application to configure resources.
+ * CDI producer to help us make sure HK2 do not mess up with
+ * types backed by CDI producers.
  *
- * @author Jonathan Benoit (jonathan.benoit at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/*")
-public class MyApplication extends Application {
+public class CustomCdiProducer {
 
-    private static final Logger LOGGER = Logger.getLogger(MyApplication.class.getName());
+    /**
+     * To cover field producer.
+     */
+    @Produces
+    public static FieldProducedBean<String> field = new FieldProducedBean<String>("field");
 
-    @Override
-    public Set<Class<?>> getClasses() {
-        final Set<Class<?>> classes = new HashSet<Class<?>>();
-        classes.add(JCDIBeanDependentResource.class);
-        classes.add(JDCIBeanException.class);
-        classes.add(JDCIBeanDependentException.class);
-        classes.add(JCDIBeanSingletonResource.class);
-        classes.add(JCDIBeanPerRequestResource.class);
-        classes.add(JCDIBeanExceptionMapper.class);
-        classes.add(JCDIBeanDependentSingletonResource.class);
-        classes.add(JCDIBeanDependentPerRequestResource.class);
-        classes.add(JCDIBeanDependentExceptionMapper.class);
-        classes.add(StutteringEchoResource.class);
-        classes.add(StutteringEcho.class);
-        classes.add(ReversingEchoResource.class);
-        classes.add(CounterResource.class);
-        classes.add(ProducerResource.class);
-        return classes;
-    }
-
-    @PostConstruct
-    public void postConstruct() {
-        LOGGER.info(String.format("%s: POST CONSTRUCT.", this.getClass().getName()));
-    }
-
-    @PreDestroy
-    public void preDestroy() {
-        LOGGER.info(String.format("%s: PRE DESTROY.", this.getClass().getName()));
+    /**
+     * To cover method producer.
+     *
+     * @return bean instance to inject
+     */
+    @Produces
+    public MethodProducedBean<String> produceBean() {
+        return new MethodProducedBean<String>("method");
     }
 }

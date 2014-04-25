@@ -85,6 +85,8 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+import javax.enterprise.inject.spi.ProcessProducerField;
+import javax.enterprise.inject.spi.ProcessProducerMethod;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
@@ -412,6 +414,16 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 jerseyVetoedTypes.add(baseType);
             }
         }
+    }
+
+    @SuppressWarnings("unused")
+    private void processProducerMethod(@Observes final ProcessProducerMethod processProducerMethod) {
+        typesSeenBeforeValidation.addAll(processProducerMethod.getAnnotatedProducerMethod().getTypeClosure());
+    }
+
+    @SuppressWarnings("unused")
+    private void processProducerField(@Observes final ProcessProducerField processProducerField) {
+        typesSeenBeforeValidation.addAll(processProducerField.getAnnotatedProducerField().getTypeClosure());
     }
 
     @SuppressWarnings("unused")
