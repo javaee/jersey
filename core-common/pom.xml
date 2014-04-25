@@ -221,12 +221,27 @@
 
     <profiles>
         <profile>
-            <id>xdk</id>
+            <id>securityOff</id>
             <properties>
-                <!-- do not use security manager for xdk -->
-                <surefire.security.argline />
+               <surefire.security.argline />
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration combine.self="append">
+                            <excludes>
+                                <exclude>**/SecurityManagerConfiguredTest.java</exclude>
+                                <exclude>**/ReflectionHelperTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
+
     </profiles>
 
     <properties>

@@ -721,6 +721,7 @@
             <build>
                 <plugins>
                     <plugin>
+                        <!-- add xdk sax parser to the classpath and exclude xerces -->
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <inherited>true</inherited>
@@ -731,12 +732,33 @@
                             <classpathDependencyExcludes>
                                 <classpathDependencyExcludes>xerces:xercesImpl</classpathDependencyExcludes>
                             </classpathDependencyExcludes>
-                            <excludes>
-                                <exclude>**/ReflectionHelperTest.java</exclude><!-- security is off for moxy, skip -->
-                                <exclude>**/e2e/server/monitoring/*.java</exclude><!-- contains jdk7 only tests -->
-                                <exclude>**/EntityExpansionTest.java</exclude><!-- does not work with xdk SaxParser -->
-                            </excludes>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                        <!-- ensure, that the path to the xdk sax parser has been set -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                               <id>enforce-property</id>
+                               <goals>
+                                   <goal>enforce</goal>
+                               </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireProperty>
+                                            <property>xdk.absolute.path</property>
+                                            <message>Property 'xdk.absolute.path' has to be specified.</message>
+                                            <regex>.*/xmlparserv2.jar$</regex>
+                                            <regexMessage>
+                                                Property 'xdk.absolute.path' has to point to the xdk parser jar (xmlparserv2.jar).
+                                            </regexMessage>
+                                        </requireProperty>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
@@ -755,25 +777,6 @@
                     <version>${moxy.version}</version>
                 </dependency>
             </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <inherited>true</inherited>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <javax.xml.bind.JAXBContext>org.eclipse.persistence.jaxb.JAXBContextFactory</javax.xml.bind.JAXBContext>
-                            </systemPropertyVariables>
-                            <excludes>
-                                <exclude>**/ReflectionHelperTest.java</exclude><!-- security is off for moxy, skip -->
-                                <exclude>**/e2e/server/monitoring/*.java</exclude><!-- contains jdk7 only tests -->
-                                <exclude>**/e2e/server/wadl/*.java</exclude><!-- works, but unstable with moxy -->
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
             <repositories>
                 <repository>
                     <id>eclipselink.repository</id>
@@ -782,6 +785,12 @@
                     <layout>default</layout>
                 </repository>
             </repositories>
+        </profile>
+        <profile>
+            <id>securityOff</id>
+            <properties>
+                <surefire.security.argline />
+            </properties>
         </profile>
         <profile>
             <id>project-info</id>
