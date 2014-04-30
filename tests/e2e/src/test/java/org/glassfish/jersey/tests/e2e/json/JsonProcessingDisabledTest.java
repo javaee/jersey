@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,6 +54,7 @@ import javax.ws.rs.core.Response;
 import javax.json.Json;
 import javax.json.JsonObject;
 
+import org.glassfish.jersey.internal.InternalProperties;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
@@ -89,8 +90,8 @@ public class JsonProcessingDisabledTest extends JerseyTest {
 
         return new ResourceConfig(Resource.class)
                 .property(ServerProperties.JSON_PROCESSING_FEATURE_DISABLE, true)
-                // Make sure MOXy Json is disabled as well (it is actually on classpath & auto-discoverable).
-                .property(ServerProperties.MOXY_JSON_FEATURE_DISABLE, true);
+                // Make sure other JSON providers are disabled as well.
+                .property(InternalProperties.JSON_FEATURE_SERVER, "JsonProcessing");
     }
 
     @Test

@@ -222,10 +222,8 @@
                         it means if you disable service loading the AutoDiscoverable feature is automatically disabled too</para>
                 </listitem>
                 <listitem>
-                    <para><literal>MessageBodyReader</literal> (server, client)</para>
-                </listitem>
-                <listitem>
-                    <para><literal>MessageBodyWriter</literal> (server, client)</para>
+                    <para><literal>ForcedAutoDiscoverable</literal> (server, client) -
+                        Jersey always looks for these auto discoverable features even if the service loading is disabled</para>
                 </listitem>
                 <listitem>
                     <para><literal>HeaderDelegateProvider</literal> (server, client)</para>
@@ -238,6 +236,19 @@
                 </listitem>
                 <listitem>
                     <para><literal>AsyncContextDelegateProvider</literal> (server/Servlet)</para>
+                </listitem>
+            </itemizedlist>
+
+            <itemizedlist>
+                <title>List of additional SPIs recognized by Jersey in case the <literal>metainf-services</literal> module is on the classpath</title>
+                <listitem>
+                    <para><literal>MessageBodyReader</literal> (server, client)</para>
+                </listitem>
+                <listitem>
+                    <para><literal>MessageBodyWriter</literal> (server, client)</para>
+                </listitem>
+                <listitem>
+                    <para><literal>ExceptionMapper</literal> (server, client)</para>
                 </listitem>
             </itemizedlist>
 

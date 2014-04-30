@@ -82,8 +82,7 @@
                                 <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="${jaxrs.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jaxb-api-jar-version" value="${jaxb.api.version}" />
-                                <!--<replace file="${src.dir}/jersey.ent" token="$jackson-version" value="${jackson.version}" />-->
-                                <replace file="${src.dir}/jersey.ent" token="$jackson-version" value="1.9.4" />
+                                <replace file="${src.dir}/jersey.ent" token="$jackson-version" value="${jackson.version}" />
                             </tasks>
                         </configuration>
                         <id>process-entities</id>

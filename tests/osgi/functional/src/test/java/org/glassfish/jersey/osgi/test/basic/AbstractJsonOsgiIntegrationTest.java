@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,8 +56,8 @@ import org.glassfish.grizzly.http.server.HttpServer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
-
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 
 /**
  * Abstract JSON OSGi integration test.
@@ -83,13 +83,18 @@ public abstract class AbstractJsonOsgiIntegrationTest {
             resourceConfig.register(jsonProviderFeature);
         }
 
-        final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
+        HttpServer server = null;
+        try {
+            server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
 
-        final String result = client.target(baseUri).path("/json").request(MediaType.APPLICATION_JSON).get(String.class);
+            final String result = client.target(baseUri).path("/json").request(MediaType.APPLICATION_JSON).get(String.class);
 
-        System.out.println("RESULT = " + result);
-        assertTrue(result.contains("Jim"));
-
-        server.shutdownNow();
+            System.out.println("RESULT = " + result);
+            assertThat(result, containsString("Jim"));
+        } finally {
+            if (server != null) {
+                server.shutdownNow();
+            }
+        }
     }
 }

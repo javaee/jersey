@@ -42,6 +42,7 @@ package org.glassfish.jersey.tests.e2e.server.validation;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -71,6 +72,7 @@ public class EntityInheritanceValidationTest extends JerseyTest {
     public static class Resource {
 
         @POST
+        @Produces("application/json")
         public Entity post(@Valid final Entity entity) {
             return entity;
         }

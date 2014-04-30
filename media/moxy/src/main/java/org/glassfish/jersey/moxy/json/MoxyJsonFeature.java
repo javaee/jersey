@@ -45,6 +45,8 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.InternalProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
 import org.glassfish.jersey.message.filtering.SecurityEntityFilteringFeature;
 import org.glassfish.jersey.moxy.internal.MoxyFilteringFeature;
@@ -59,6 +61,8 @@ import org.glassfish.jersey.moxy.json.internal.FilteringMoxyJsonProvider;
  */
 public class MoxyJsonFeature implements Feature {
 
+    private final static String JSON_FEATURE = MoxyJsonFeature.class.getSimpleName();
+
     @Override
     public boolean configure(final FeatureContext context) {
         final Configuration config = context.getConfiguration();
@@ -67,6 +71,17 @@ public class MoxyJsonFeature implements Feature {
                 CommonProperties.MOXY_JSON_FEATURE_DISABLE, Boolean.FALSE, Boolean.class)) {
             return false;
         }
+
+        final String jsonFeature = CommonProperties.getValue(config.getProperties(), config.getRuntimeType(),
+                InternalProperties.JSON_FEATURE, JSON_FEATURE, String.class);
+        // Other JSON providers registered.
+        if (!JSON_FEATURE.equalsIgnoreCase(jsonFeature)) {
+            return false;
+        }
+
+        // Disable other JSON providers.
+        context.property(PropertiesHelper.getPropertyNameForRuntime(InternalProperties.JSON_FEATURE, config.getRuntimeType()),
+                JSON_FEATURE);
 
         // Set a slightly lower priority of workers than JSON-P so MOXy is not pick-ed up for JsonStructures (if both are used).
         final int workerPriority = Priorities.USER + 2000;

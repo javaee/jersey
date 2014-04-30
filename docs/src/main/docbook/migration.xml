@@ -69,11 +69,27 @@
                             <literal>ServerProperties.WADL_FEATURE_DISABLE</literal>).
                         </para>
                     </listitem>
+                    <listitem>
+                        <para>
+                            Automatic registration of <literal>MessageBodyWriter</literal>, <literal>MessageBodyReaders</literal>
+                            and <literal>ExceptionMappers</literal> via <literal>META-INF/services</literal> mechanism has been
+                            removed. Disabling the automatic registration of providers via <literal>META-INF/services</literal>
+                            may affect 3rd party libraries (i.e. Jackson 2.x) that are using this mechanism to register it's
+                            providers. In order to restore this functionality the <literal>org.glassfish.jersey.ext:jersey-metainf-services</literal>
+                            has to be added on the classpath. Otherwise such providers has to be registered manually.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            The Jackson JSON Jersey module has been updated to use Jackson 2.x instead of Jackson 1.x. This means
+                            that all the code that has been using Jackson 1.x for JSON (de)serialization has to be migrated to
+                            Jackson 2.x.
+                        </para>
+                    </listitem>
                 </itemizedlist>
             </para>
         </section>
     </section>
-
     <section xml:id="mig-2.8">
         <title>Migrating from Jersey 2.7 to 2.8</title>
 
