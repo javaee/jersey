@@ -144,8 +144,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.glassfish.hk2.external</groupId>
-            <artifactId>asm-all-repackaged</artifactId>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-debug-all</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -291,7 +291,7 @@
                 <configuration>
                     <artifactSet>
                         <includes>
-                            <include>org.glassfish.hk2.external:asm-all-repackaged:*</include>
+                            <include>org.ow2.asm:asm-debug-all:*</include>
                         </includes>
                     </artifactSet>
                     <relocations>
