@@ -40,7 +40,6 @@
 
 package org.glassfish.jersey.linking;
 
-
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,10 +49,15 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.MatchResult;
 import java.util.zip.ZipEntry;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.*;
+import javax.ws.rs.core.Link;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.PathSegment;
+import javax.ws.rs.core.UriBuilder;
+
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.model.Resource;
@@ -61,168 +65,184 @@ import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.RuntimeResource;
 import org.glassfish.jersey.uri.UriTemplate;
 
-import static org.junit.Assert.*;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
- * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class FieldProcessorTest {
-    
+
     ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
-            private final static String baseURI = "http://example.com/application/resources";
+        private final static String baseURI = "http://example.com/application/resources";
 
-            public String getPath() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public String getPath() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public String getPath(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public String getPath(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<PathSegment> getPathSegments() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public List<PathSegment> getPathSegments() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<PathSegment> getPathSegments(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public List<PathSegment> getPathSegments(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public URI getRequestUri() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public URI getRequestUri() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public UriBuilder getRequestUriBuilder() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public UriBuilder getRequestUriBuilder() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public URI getAbsolutePath() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public URI getAbsolutePath() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public UriBuilder getAbsolutePathBuilder() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public UriBuilder getAbsolutePathBuilder() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public URI getBaseUri() {
-                return getBaseUriBuilder().build();
-            }
+        @Override
+        public URI getBaseUri() {
+            return getBaseUriBuilder().build();
+        }
 
-            public UriBuilder getBaseUriBuilder() {
-                return UriBuilder.fromUri(baseURI);
-            }
+        @Override
+        public UriBuilder getBaseUriBuilder() {
+            return UriBuilder.fromUri(baseURI);
+        }
 
-            public MultivaluedMap<String, String> getPathParameters() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public MultivaluedMap<String, String> getPathParameters() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public MultivaluedMap<String, String> getPathParameters(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public MultivaluedMap<String, String> getPathParameters(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public MultivaluedMap<String, String> getQueryParameters() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public MultivaluedMap<String, String> getQueryParameters() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public MultivaluedMap<String, String> getQueryParameters(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<String> getMatchedURIs() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public List<String> getMatchedURIs() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<String> getMatchedURIs(boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+        @Override
+        public List<String> getMatchedURIs(boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            public List<Object> getMatchedResources() {
-                Object dummyResource = new Object(){};
-                return Collections.singletonList(dummyResource);
-            }
+        @Override
+        public List<Object> getMatchedResources() {
+            Object dummyResource = new Object() {
+            };
+            return Collections.singletonList(dummyResource);
+        }
 
-            @Override
-            public URI resolve(URI uri) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public Throwable getMappedThrowable() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public URI relativize(URI uri) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<MatchResult> getMatchedResults() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public Throwable getMappedThrowable() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<UriTemplate> getMatchedTemplates() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public List<MatchResult> getMatchedResults() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<PathSegment> getPathSegments(String name) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public List<UriTemplate> getMatchedTemplates() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<PathSegment> getPathSegments(String name, boolean decode) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public List<PathSegment> getPathSegments(String name) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<RuntimeResource> getMatchedRuntimeResources() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public List<PathSegment> getPathSegments(String name, boolean decode) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public ResourceMethod getMatchedResourceMethod() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public List<RuntimeResource> getMatchedRuntimeResources() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public Resource getMatchedModelResource() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public ResourceMethod getMatchedResourceMethod() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<ResourceMethod> getMatchedResourceLocators() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public Resource getMatchedModelResource() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public List<Resource> getLocatorSubResources() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public List<ResourceMethod> getMatchedResourceLocators() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public URI resolve(URI uri) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
 
-            @Override
-            public List<Resource> getLocatorSubResources() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
+        @Override
+        public URI relativize(URI uri) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    };
 
-        };
-    
-    ResourceMappingContext mockRmc = new ResourceMappingContext() {
+    private final ResourceMappingContext mockRmc = new ResourceMappingContext() {
 
         @Override
         public ResourceMappingContext.Mapping getMapping(Class<?> resource) {
             return null;
         }
     };
-    
 
 
     private final static String TEMPLATE_A = "foo";
 
     public static class TestClassD {
-        @InjectLink(value=TEMPLATE_A, style=InjectLink.Style.RELATIVE_PATH)
+        @InjectLink(value = TEMPLATE_A, style = InjectLink.Style.RELATIVE_PATH)
         private String res1;
 
-        @InjectLink(value=TEMPLATE_A, style=InjectLink.Style.RELATIVE_PATH)
+        @InjectLink(value = TEMPLATE_A, style = InjectLink.Style.RELATIVE_PATH)
         private URI res2;
     }
 
@@ -239,7 +259,7 @@ public class FieldProcessorTest {
     private final static String TEMPLATE_B = "widgets/{id}";
 
     public static class TestClassE {
-        @InjectLink(value=TEMPLATE_B, style=InjectLink.Style.RELATIVE_PATH)
+        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
         private String link;
 
         private String id;
@@ -263,7 +283,7 @@ public class FieldProcessorTest {
     }
 
     public static class TestClassF {
-        @InjectLink(value=TEMPLATE_B, style=InjectLink.Style.RELATIVE_PATH)
+        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
         private String thelink;
 
         private String id;
@@ -315,13 +335,13 @@ public class FieldProcessorTest {
     }
 
     public static class TestClassG {
-        @InjectLink(value=TEMPLATE_B, style=InjectLink.Style.RELATIVE_PATH)
+        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
         private String relativePath;
 
-        @InjectLink(value=TEMPLATE_B, style=InjectLink.Style.ABSOLUTE_PATH)
+        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.ABSOLUTE_PATH)
         private String absolutePath;
 
-        @InjectLink(value=TEMPLATE_B, style=InjectLink.Style.ABSOLUTE)
+        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.ABSOLUTE)
         private String absolute;
 
         @InjectLink(TEMPLATE_B)
@@ -409,6 +429,7 @@ public class FieldProcessorTest {
         public String outerUri;
         @InjectLink("${instance.id}")
         public String innerUri;
+
         public String getId() {
             return "inner";
         }
@@ -416,6 +437,7 @@ public class FieldProcessorTest {
 
     public static class OuterBean {
         public DependentInnerBean inner = new DependentInnerBean();
+
         public String getId() {
             return "outer";
         }
@@ -432,7 +454,7 @@ public class FieldProcessorTest {
     }
 
     public static class BoundLinkBean {
-        @InjectLink(value="{id}", bindings={@Binding(name="id", value="${instance.name}")})
+        @InjectLink(value = "{id}", bindings = {@Binding(name = "id", value = "${instance.name}")})
         public String uri;
 
         public String getName() {
@@ -449,10 +471,10 @@ public class FieldProcessorTest {
         assertEquals("/application/resources/name", testClass.uri);
     }
 
-     public static class BoundLinkOnLinkBean {
-        @InjectLink(value="{id}",
-                bindings={@Binding(name="id", value="${instance.name}")},
-                rel="self")
+    public static class BoundLinkOnLinkBean {
+        @InjectLink(value = "{id}",
+                bindings = {@Binding(name = "id", value = "${instance.name}")},
+                rel = "self")
         public Link link;
 
         public String getName() {
@@ -470,31 +492,30 @@ public class FieldProcessorTest {
         assertEquals("self", testClass.link.getRel());
     }
 
-    
-     public static class BoundLinkOnLinksBean {
+
+    public static class BoundLinkOnLinksBean {
         @InjectLinks({
-        @InjectLink(value="{id}",
-                bindings={@Binding(name="id", value="${instance.name}")},
-                rel="self"),
-        @InjectLink(value="{id}",
-                bindings={@Binding(name="id", value="${instance.name}")},
-                rel="other"),
-        
-        }) 
+                @InjectLink(value = "{id}",
+                        bindings = {@Binding(name = "id", value = "${instance.name}")},
+                        rel = "self"),
+                @InjectLink(value = "{id}",
+                        bindings = {@Binding(name = "id", value = "${instance.name}")},
+                        rel = "other"),
+
+        })
         public List<Link> links;
-        
+
         @InjectLinks({
-        @InjectLink(value="{id}",
-                bindings={@Binding(name="id", value="${instance.name}")},
-                rel="self"),
-        @InjectLink(value="{id}",
-                bindings={@Binding(name="id", value="${instance.name}")},
-                rel="other"),
-        
-        }) 
+                @InjectLink(value = "{id}",
+                        bindings = {@Binding(name = "id", value = "${instance.name}")},
+                        rel = "self"),
+                @InjectLink(value = "{id}",
+                        bindings = {@Binding(name = "id", value = "${instance.name}")},
+                        rel = "other"),
+
+        })
         public Link[] linksArray;
-        
-        
+
 
         public String getName() {
             return "name";
@@ -514,16 +535,15 @@ public class FieldProcessorTest {
         assertEquals("/application/resources/name", testClass.linksArray[0].getUri().toString());
         assertEquals("self", testClass.linksArray[0].getRel());
         assertEquals("other", testClass.linksArray[1].getRel());
-    
+
     }
-    
-    
-    
+
+
     public static class ConditionalLinkBean {
-        @InjectLink(value="{id}", condition="${entity.uri1Enabled}")
+        @InjectLink(value = "{id}", condition = "${entity.uri1Enabled}")
         public String uri1;
 
-        @InjectLink(value="{id}", condition="${entity.uri2Enabled}")
+        @InjectLink(value = "{id}", condition = "${entity.uri2Enabled}")
         public String uri2;
 
         public String getId() {
@@ -559,7 +579,7 @@ public class FieldProcessorTest {
     }
 
     public static class SubResourceBean {
-        @InjectLink(resource=SubResource.class, method="getB")
+        @InjectLink(resource = SubResource.class, method = "getB")
         public String uri;
     }
 
@@ -572,10 +592,8 @@ public class FieldProcessorTest {
         assertEquals("/application/resources/a/b", testClass.uri);
     }
 
-    
     @Path("a")
     public static class QueryResource {
-        
         @Path("b")
         @GET
         public String getB(@QueryParam("query") String query, @QueryParam("query2") String query2) {
@@ -588,6 +606,7 @@ public class FieldProcessorTest {
         public String getQueryParam() {
             return queryExample;
         }
+
         private String queryExample;
 
         public QueryResourceBean(String queryExample, String queryExample2) {
@@ -598,37 +617,36 @@ public class FieldProcessorTest {
         public String getQueryParam2() {
             return queryExample2;
         }
+
         private String queryExample2;
-        
-        
-        @InjectLink(resource=QueryResource.class, method="getB",
-          bindings = {
-              @Binding(name="query", value = "${instance.queryParam}"),
-              @Binding(name="query2", value = "${instance.queryParam2}")
-          })
+
+
+        @InjectLink(resource = QueryResource.class, method = "getB",
+                bindings = {
+                        @Binding(name = "query", value = "${instance.queryParam}"),
+                        @Binding(name = "query2", value = "${instance.queryParam2}")
+                })
         public String uri;
     }
-    
 
     @Test
     public void testQueryResource() {
         System.out.println("QueryResource");
         FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
-        QueryResourceBean testClass = new QueryResourceBean("queryExample",null);
+        QueryResourceBean testClass = new QueryResourceBean("queryExample", null);
         instance.processLinks(testClass, mockUriInfo, mockRmc);
-        assertEquals("/application/resources/a/b?query=queryExample", testClass.uri);
+        assertEquals("/application/resources/a/b?query=queryExample&query2=", testClass.uri);
     }
-    
+
     @Test
     public void testDoubleQueryResource() {
         System.out.println("QueryResource");
         FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
-        QueryResourceBean testClass = new QueryResourceBean("queryExample","queryExample2");
+        QueryResourceBean testClass = new QueryResourceBean("queryExample", "queryExample2");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
         assertEquals("/application/resources/a/b?query=queryExample&query2=queryExample2", testClass.uri);
     }
-    
-    
+
     public static class TestClassK {
         public static final ZipEntry zipEntry = new ZipEntry("entry");
     }
@@ -639,9 +657,10 @@ public class FieldProcessorTest {
 
     private class LoggingFilter implements Filter {
         private int count = 0;
+
         @Override
         public synchronized boolean isLoggable(LogRecord logRecord) {
-            if(logRecord.getThrown() instanceof IllegalAccessException) {
+            if (logRecord.getThrown() instanceof IllegalAccessException) {
                 count++;
                 return false;
             }

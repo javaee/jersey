@@ -41,6 +41,7 @@ package org.glassfish.jersey.uri;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,7 +55,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import org.junit.Ignore;
 
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.uri.UriTemplateTest
@@ -275,15 +275,9 @@ public class UriTemplateTest {
         UriTemplate t = new UriTemplate(template);
         Map<String, String> m = new HashMap<String, String>();
 
-        System.out.println("TEMPLATE: " + template);
-        System.out.println("REGEX: " + t.getPattern().getRegex());
-        System.out.println("TEMPLATE NAMES: " + t.getTemplateVariables());
-
         boolean isMatch = t.match(uri, m);
         assertTrue(isMatch);
         assertEquals(values.length, t.getTemplateVariables().size());
-
-        System.out.println("MAP: " + m);
 
         Iterator<String> names = t.getTemplateVariables().iterator();
         for (String value : values) {
@@ -296,8 +290,6 @@ public class UriTemplateTest {
         isMatch = t.match(uri, matchedValues);
         assertTrue(isMatch);
         assertEquals(values.length, matchedValues.size());
-
-        System.out.println("LIST: " + matchedValues);
 
         for (int i = 0; i < values.length; i++) {
             assertEquals(values[i], matchedValues.get(i));
@@ -314,8 +306,8 @@ public class UriTemplateTest {
         assertEquals(0, mr.start(0));
         assertEquals(uri.length(), mr.end(0));
         for (int i = 0; i < mr.groupCount(); i++) {
-            assertEquals(values[i], mr.group(i+1));
-            assertEquals(values[i], uri.substring(mr.start(i+1), mr.end(i+1)));
+            assertEquals(values[i], mr.group(i + 1));
+            assertEquals(values[i], uri.substring(mr.start(i + 1), mr.end(i + 1)));
         }
     }
 
@@ -465,21 +457,19 @@ public class UriTemplateTest {
         assertEquals(expected, result.toString());
     }
 
-    
-    
     @Test
     public void testSingleQueryParameter() throws Exception {
         UriTemplate tmpl = new UriTemplate("/test{?query}");
 
-        Map<String,String> result = new HashMap<String,String>();
+        Map<String, String> result = new HashMap<String, String>();
         tmpl.match("/test?query=x", result);
-        
+
         assertEquals(
                 "incorrect size for match string",
                 1,
                 result.size()
         );
-        
+
         assertEquals(
                 "query parameter is not matched",
                 "x",
@@ -487,23 +477,22 @@ public class UriTemplateTest {
         );
     }
 
-
     @Test
     public void testDoubleQueryParameter() throws Exception {
         UriTemplate tmpl = new UriTemplate("/test{?query,secondQuery}");
 
         List<String> list = new ArrayList<String>();
         tmpl.match("/test?query=x&secondQuery=y", list);
-        
-        Map<String,String> result = new HashMap<String,String>();
+
+        Map<String, String> result = new HashMap<String, String>();
         tmpl.match("/test?query=x&secondQuery=y", result);
-        
+
         assertEquals(
                 "incorrect size for match string",
                 2,
                 result.size()
         );
-        
+
         assertEquals(
                 "query parameter is not matched",
                 "x",
@@ -516,121 +505,245 @@ public class UriTemplateTest {
         );
     }
 
-    
+
     @Test
     public void testSettingQueryParameter() throws Exception {
         UriTemplate tmpl = new UriTemplate("/test{?query}");
-        
-        Map<String,String> values = new HashMap<String,String>();
+
+        Map<String, String> values = new HashMap<String, String>();
         values.put("query", "example");
-        
+
         String uri = tmpl.createURI(values);
         assertEquals(
                 "query string is not set",
                 "/test?query=example",
                 uri
         );
-        
-    }    
+    }
 
-    @Test
-    public void testSettingMatrixParameter() throws Exception {
-        UriTemplate tmpl = new UriTemplate("/test{;matrix}/other");
-        
-        Map<String,String> values = new HashMap<String,String>();
-        values.put("matrix", "example");
-        
-        String uri = tmpl.createURI(values);
-        assertEquals(
-                "query string is not set",
-                "/test;matrix=example/other",
-                uri
-        );
-        
-    }    
-   
-    
-    
     @Test
     public void testSettingTwoQueryParameter() throws Exception {
         UriTemplate tmpl = new UriTemplate("/test{?query,other}");
-        
-        Map<String,String> values = new HashMap<String,String>();
+
+        Map<String, String> values = new HashMap<String, String>();
         values.put("query", "example");
         values.put("other", "otherExample");
-        
+
         String uri = tmpl.createURI(values);
         assertEquals(
                 "query string is not set",
                 "/test?query=example&other=otherExample",
                 uri
         );
-        
-    }    
 
-    @Test
-    public void testSettingTwoMatrixParameter() throws Exception {
-        UriTemplate tmpl = new UriTemplate("/test{;matrix,other}/other");
-        
-        Map<String,String> values = new HashMap<String,String>();
-        values.put("matrix", "example");
-        values.put("other", "otherExample");
-        
-        String uri = tmpl.createURI(values);
-        assertEquals(
-                "query string is not set",
-                "/test;matrix=example;other=otherExample/other",
-                uri
-        );
-        
-    }    
+    }
 
-    @Test
-    public void testSettingTwoSeperatedMatrixParameter() throws Exception {
-        UriTemplate tmpl = new UriTemplate("/test{;matrix}/other{;other}");
-        
-        Map<String,String> values = new HashMap<String,String>();
-        values.put("matrix", "example");
-        values.put("other", "otherExample");
-        
-        String uri = tmpl.createURI(values);
-        assertEquals(
-                "query string is not set",
-                "/test;matrix=example/other;other=otherExample",
-                uri
-        );
-        
-    }    
-
-    
     @Test
     public void testNotSettingQueryParameter() throws Exception {
         UriTemplate tmpl = new UriTemplate("/test{?query}");
-        
-        Map<String,String> values = new HashMap<String,String>();
-        
+
+        Map<String, String> values = new HashMap<String, String>();
+
         String uri = tmpl.createURI(values);
         assertEquals(
                 "query string is set",
                 "/test",
                 uri
         );
-        
-    }    
+
+    }
+
+    @Test
+    public void testSettingMatrixParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{;matrix}/other");
+
+        Map<String, String> values = new HashMap<String, String>();
+        values.put("matrix", "example");
+
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is not set",
+                "/test;matrix=example/other",
+                uri
+        );
+
+    }
+
+    @Test
+    public void testSettingTwoMatrixParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{;matrix,other}/other");
+
+        Map<String, String> values = new HashMap<String, String>();
+        values.put("matrix", "example");
+        values.put("other", "otherExample");
+
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is not set",
+                "/test;matrix=example;other=otherExample/other",
+                uri
+        );
+
+    }
+
+    @Test
+    public void testSettingTwoSeperatedMatrixParameter() throws Exception {
+        UriTemplate tmpl = new UriTemplate("/test{;matrix}/other{;other}");
+
+        Map<String, String> values = new HashMap<String, String>();
+        values.put("matrix", "example");
+        values.put("other", "otherExample");
+
+        String uri = tmpl.createURI(values);
+        assertEquals(
+                "query string is not set",
+                "/test;matrix=example/other;other=otherExample",
+                uri
+        );
+    }
 
     @Test
     public void testNotSettingMatrixParameter() throws Exception {
         UriTemplate tmpl = new UriTemplate("/test{;query}/other");
-        
-        Map<String,String> values = new HashMap<String,String>();
-        
+
+        Map<String, String> values = new HashMap<String, String>();
+
         String uri = tmpl.createURI(values);
         assertEquals(
                 "query string is set",
                 "/test/other",
                 uri
         );
-        
-    }    
+    }
 
+    /*
+        RFC 6570, section 3.2:
+
+             count := ("one", "two", "three")
+             dom   := ("example", "com")
+             dub   := "me/too"
+             hello := "Hello World!"
+             half  := "50%"
+             var   := "value"
+             who   := "fred"
+             base  := "http://example.com/home/"
+             path  := "/foo/bar"
+             list  := ("red", "green", "blue")
+             keys  := [("semi",";"),("dot","."),("comma",",")]
+             v     := "6"
+             x     := "1024"
+             y     := "768"
+             empty := ""
+             empty_keys  := []
+             undef := null
+     */
+    private static final List<String> count = Arrays.asList("one", "two", "three");
+    private static final List<String> dom = Arrays.asList("example", "com");
+    private static final String dub = "me/too";
+    private static final String hello = "Hello World!";
+    private static final String half = "50%";
+    private static final String var = "value";
+    private static final String who = "fred";
+    private static final String base = "http://example.com/home/";
+    private static final String path = "/foo/bar";
+    private static final List<String> list = Arrays.asList("red", "green", "blue");
+    private static final Map<String, String> keys = new HashMap<String, String>() {{
+        put("semi", ";");
+        put("dot", ".");
+        put("comma", ",");
+    }};
+    private static final String v = "6";
+    private static final String x = "1024";
+    private static final String y = "768";
+    private static final String empty = "";
+    private static final Map<String, String> emptyKeys = Collections.emptyMap();
+
+    @Test
+    public void testRfc6570QueryTemplateExamples() {
+        /*
+            RFC 6570, section 3.2.8:
+
+               {?who}             ?who=fred
+               {?half}            ?half=50%25
+               {?x,y}             ?x=1024&y=768
+               {?x,y,empty}       ?x=1024&y=768&empty=
+               {?x,y,undef}       ?x=1024&y=768
+               {?var:3}           ?var=val
+               {?list}            ?list=red,green,blue
+               {?list*}           ?list=red&list=green&list=blue
+               {?keys}            ?keys=semi,%3B,dot,.,comma,%2C
+               {?keys*}           ?semi=%3B&dot=.&comma=%2C
+       */
+        assertEncodedQueryTemplateExpansion("?who=fred", "{?who}", who);
+        assertEncodedQueryTemplateExpansion("?half=50%25", "{?half}", half);
+        assertEncodedQueryTemplateExpansion("?x=1024&y=768", "{?x,y}", x, y);
+        assertEncodedQueryTemplateExpansion("?x=1024&y=768&empty=", "{?x,y,empty}", x, y, empty);
+        assertEncodedQueryTemplateExpansion("?x=1024&y=768", "{?x,y,undef}", x, y);
+        // TODO assertEncodedQueryTemplateExpansion("?var=val", "{?var:3}", var);
+        // TODO assertEncodedQueryTemplateExpansion("?list=red,green,blue", "{?list}", list);
+        // TODO assertEncodedQueryTemplateExpansion("?list=red&list=green&list=blue", "{?list*}", list);
+        // TODO assertEncodedQueryTemplateExpansion("?keys=semi,%3B,dot,.,comma,%2C", "{?keys}", keys);
+        // assertEncodedQueryTemplateExpansion("?semi=%3B&dot=.&comma=%2C", "{?keys*}", keys);
+    }
+
+    private void assertEncodedQueryTemplateExpansion(String expectedExpansion, String queryTemplate, Object... values) {
+        assertEquals("Unexpected encoded query template expansion result.",
+                expectedExpansion,
+                UriTemplate.createURI(null, null, null, null, null, null, queryTemplate, null, values, true, false));
+    }
+
+    private void assertEncodedQueryTemplateExpansion(String expectedExpansion, String queryTemplate, Map<String, ?> values) {
+        assertEquals("Unexpected encoded query template expansion result.",
+                expectedExpansion,
+                UriTemplate.createURI(null, null, null, null, null, null, queryTemplate, null, values, true, false));
+    }
+
+    @Test
+    public void testRfc6570MatrixTemplateExamples() {
+        /*
+            RFC 6570, section 3.2.7:
+
+               {;who}             ;who=fred
+               {;half}            ;half=50%25
+               {;empty}           ;empty
+               {;v,empty,who}     ;v=6;empty;who=fred
+               {;v,bar,who}       ;v=6;who=fred
+               {;x,y}             ;x=1024;y=768
+               {;x,y,empty}       ;x=1024;y=768;empty
+               {;x,y,undef}       ;x=1024;y=768
+               {;hello:5}         ;hello=Hello
+               {;list}            ;list=red,green,blue
+               {;list*}           ;list=red;list=green;list=blue
+               {;keys}            ;keys=semi,%3B,dot,.,comma,%2C
+               {;keys*}           ;semi=%3B;dot=.;comma=%2C
+       */
+        assertEncodedPathTemplateExpansion(";who=fred", "{;who}", who);
+        assertEncodedPathTemplateExpansion(";half=50%25", "{;half}", half);
+        assertEncodedPathTemplateExpansion(";empty", "{;empty}", empty);
+        assertEncodedPathTemplateExpansion(";v=6;empty;who=fred", "{;v,empty,who}", v, empty, who);
+        assertEncodedPathTemplateExpansion(";v=6;who=fred", "{;v,bar,who}", new HashMap<String, String>() {{
+            put("v", v);
+            put("who", who);
+        }});
+        assertEncodedPathTemplateExpansion(";x=1024;y=768", "{;x,y}", x, y);
+        assertEncodedPathTemplateExpansion(";x=1024;y=768;empty", "{;x,y,empty}", x, y, empty);
+        assertEncodedPathTemplateExpansion(";x=1024;y=768", "{;x,y,undef}", x, y);
+        // TODO assertEncodedPathTemplateExpansion(";hello=Hello", "{;hello:5}", hello);
+        // TODO assertEncodedPathTemplateExpansion(";list=red,green,blue", "{;list}", list);
+        // TODO assertEncodedPathTemplateExpansion(";list=red;list=green;list=blue", "{;list*}", list);
+        // TODO assertEncodedPathTemplateExpansion(";keys=semi,%3B,dot,.,comma,%2C", "{;keys}", keys);
+        // TODO assertEncodedPathTemplateExpansion(";semi=%3B;dot=.;comma=%2C", "{;keys*}", keys);
+    }
+
+    private void assertEncodedPathTemplateExpansion(String expectedExpansion, String pathTemplate, Object... values) {
+        assertEquals("Unexpected encoded matrix parameter template expansion result.",
+                expectedExpansion,
+                UriTemplate.createURI(null, null, null, null, null, pathTemplate, null, null, values, true, false));
+    }
+
+    private void assertEncodedPathTemplateExpansion(String expectedExpansion, String pathTemplate, Map<String, ?> values) {
+        assertEquals("Unexpected encoded matrix parameter template expansion result.",
+                expectedExpansion,
+                UriTemplate.createURI(null, null, null, null, null, pathTemplate, null, null, values, true, false));
+    }
 }

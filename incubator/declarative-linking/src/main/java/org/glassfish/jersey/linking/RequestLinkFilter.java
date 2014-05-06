@@ -37,15 +37,15 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.linking;
 
 import java.io.IOException;
-import javax.ws.rs.core.Context;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Link;
+
 import org.glassfish.jersey.server.ExtendedUriInfo;
 
 /**
@@ -62,10 +62,9 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
  * </pre></blockquote>
  * <p/>
  *
- * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
- * @see LinkHeader
+ * @see Link
  */
 
 class RequestLinkFilter implements ContainerRequestFilter {
@@ -76,6 +75,5 @@ class RequestLinkFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
 
-        
     }
 }

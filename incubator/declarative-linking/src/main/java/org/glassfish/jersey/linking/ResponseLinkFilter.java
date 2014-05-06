@@ -37,18 +37,16 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.linking;
-
-import javax.ws.rs.core.Context;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
+
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
-import org.glassfish.jersey.server.ExtendedUriInfo;
 
 /**
  * Filter that processes {@link Link} annotated fields in returned response
@@ -64,10 +62,9 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
  * </pre></blockquote>
  * <p/>
  *
- * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
- * @see LinkHeader
+ * @see Link
  */
 
 class ResponseLinkFilter implements ContainerResponseFilter {
@@ -77,7 +74,9 @@ class ResponseLinkFilter implements ContainerResponseFilter {
 
     @Context
     private ResourceMappingContext rmc;
-    
+
+    @Override
+    @SuppressWarnings("unchecked")
     public void filter(ContainerRequestContext request, ContainerResponseContext response) {
         final Object entity = response.getEntity();
 
@@ -86,9 +85,7 @@ class ResponseLinkFilter implements ContainerResponseFilter {
             HeaderProcessor lhp = new HeaderProcessor(entityClass);
             lhp.processLinkHeaders(entity, uriInfo, rmc, response.getHeaders());
             FieldProcessor lp = new FieldProcessor(entityClass);
-            lp.processLinks(entity, uriInfo, rmc); 
-            
-            int i = 0;
+            lp.processLinks(entity, uriInfo, rmc);
         }
 
     }

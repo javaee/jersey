@@ -39,12 +39,7 @@
  */
 package org.glassfish.jersey.uri;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -132,8 +127,6 @@ public class PathPatternTest {
         );
     }
 
-
-
     @Test
     public void testLastElementOfMatchIsRestOfPath() throws Exception {
         PathPattern path = new PathPattern("{a: (\\d)(\\d*)}-{b: (\\d)(\\d*)}-{c: (\\d)(\\d*)}");
@@ -147,7 +140,5 @@ public class PathPatternTest {
                 "/d",
                 value
         );
-        
     }
-
 }
