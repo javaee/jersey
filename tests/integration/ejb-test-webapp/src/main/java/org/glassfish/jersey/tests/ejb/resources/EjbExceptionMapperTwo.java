@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,31 +37,35 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.tests.ejb.resources;
 
-import java.util.HashSet;
-import java.util.Set;
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 /**
- * JAX-RS application to configure resources.
+ * JERSEY-2320 reproducer. {@link CustomBaseExceptionTwo} will get mapped
+ * to an ordinary response. We make sure the mapper gets injected properly
+ * by both Jersey runtime and EJB container.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationPath("/rest")
-public class MyApplication extends Application {
+@Stateless
+public class EjbExceptionMapperTwo extends EjbExceptionMapperBase<CustomExceptionTwo> {
+
+    @Context UriInfo uriInfo;
+    @EJB EchoBean echoBean;
+
+    public static final String RESPONSE_BODY = "custom exception two thrown";
+
     @Override
-    public Set<Class<?>> getClasses() {
-        return new HashSet<Class<?>>() {{
-            add(ExceptionEjbResource.class);
-            add(EchoResource.class);
-            add(RawEchoResource.class);
-            add(CounterFilter.class);
-            add(AsyncResource.class);
-            add(EjbExceptionMapperOne.class);
-            add(EjbExceptionMapperTwo.class);
-        }};
+    public Response toResponse(CustomExceptionTwo exception) {
+        return Response.ok(RESPONSE_BODY)
+                .header("My-Location", uriInfo.getPath())
+                .header("My-Echo", echoBean.echo("2")).build();
     }
 }

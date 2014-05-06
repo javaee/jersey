@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -105,6 +105,36 @@ public class EjbTest extends JerseyTest {
                 target().path("servlet")
                   .queryParam("action", StandaloneServlet.ThrowCheckedExceptionACTION).request().get();
         _check500Response(servletResponse, ExceptionEjbResource.CheckedExceptionMESSAGE);
+    }
+
+    @Test
+    public void testCustomException1() {
+        Response jerseyResponse = target().path("rest/exception/custom1/big").request().get();
+        assertThat(jerseyResponse.getStatus(), is(200));
+        assertThat(jerseyResponse.readEntity(String.class), is(EjbExceptionMapperOne.RESPONSE_BODY));
+        assertThat(jerseyResponse.getHeaderString("My-Location"), is("exception/custom1/big"));
+        assertThat(jerseyResponse.getHeaderString("My-Echo"), is("ECHOED: 1"));
+
+        jerseyResponse = target().path("rest/exception/custom1/one").request().get();
+        assertThat(jerseyResponse.getStatus(), is(200));
+        assertThat(jerseyResponse.readEntity(String.class), is(EjbExceptionMapperOne.RESPONSE_BODY));
+        assertThat(jerseyResponse.getHeaderString("My-Location"), is("exception/custom1/one"));
+        assertThat(jerseyResponse.getHeaderString("My-Echo"), is("ECHOED: 1"));
+    }
+
+    @Test
+    public void testCustomException2() {
+        Response jerseyResponse = target().path("rest/exception/custom2/small").request().get();
+        assertThat(jerseyResponse.getStatus(), is(200));
+        assertThat(jerseyResponse.readEntity(String.class), is(EjbExceptionMapperTwo.RESPONSE_BODY));
+        assertThat(jerseyResponse.getHeaderString("My-Location"), is("exception/custom2/small"));
+        assertThat(jerseyResponse.getHeaderString("My-Echo"), is("ECHOED: 2"));
+
+        jerseyResponse = target().path("rest/exception/custom2/one").request().get();
+        assertThat(jerseyResponse.getStatus(), is(200));
+        assertThat(jerseyResponse.readEntity(String.class), is(EjbExceptionMapperTwo.RESPONSE_BODY));
+        assertThat(jerseyResponse.getHeaderString("My-Location"), is("exception/custom2/one"));
+        assertThat(jerseyResponse.getHeaderString("My-Echo"), is("ECHOED: 2"));
     }
 
     @Test
