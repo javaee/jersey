@@ -182,7 +182,7 @@ public final class Providers {
      * @return set of all available default service provider instances for the contract.
      */
     public static <T> Set<T> getProviders(final ServiceLocator locator, final Class<T> contract) {
-        final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract);
+        final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract);
         return getClasses(hk2Providers);
     }
 
@@ -196,7 +196,7 @@ public final class Providers {
      * @return set of all available service provider instances for the contract.
      */
     public static <T> Set<T> getCustomProviders(final ServiceLocator locator, final Class<T> contract) {
-        final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
+        final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract, new CustomAnnotationImpl());
         return getClasses(hk2Providers);
     }
 
@@ -223,8 +223,8 @@ public final class Providers {
      * @return iterable of all available ranked service providers for the contract. Return value is never null.
      */
     public static <T> Iterable<RankedProvider<T>> getAllRankedProviders(final ServiceLocator locator, final Class<T> contract) {
-        final List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
-        providers.addAll(getAllServiceHandles(locator, contract));
+        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, new CustomAnnotationImpl());
+        providers.addAll(getServiceHandles(locator, contract));
 
         final LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>> providerMap =
                 new LinkedHashMap<ActiveDescriptor<T>, RankedProvider<T>>();
@@ -308,7 +308,33 @@ public final class Providers {
         return sortRankedProviders(comparator, getAllRankedProviders(locator, contract));
     }
 
-    private static <T> List<ServiceHandle<T>> getAllServiceHandles(final ServiceLocator locator, final Class<T> contract,
+    /**
+     * Get collection of all {@link ServiceHandle}s bound for providers (custom and default) registered for the given service provider contract
+     * in the underlying {@link ServiceLocator HK2 service locator} container.
+     *
+     * @param <T>        service provider contract Java type.
+     * @param locator    underlying HK2 service locator.
+     * @param contract   service provider contract.
+     * @return set of all available service provider instances for the contract
+     */
+    public static <T> Collection<ServiceHandle<T>> getAllServiceHandles(final ServiceLocator locator, final Class<T> contract) {
+        final List<ServiceHandle<T>> providers = getServiceHandles(locator, contract, new CustomAnnotationImpl());
+        providers.addAll(getServiceHandles(locator, contract));
+
+        final LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap =
+                new LinkedHashMap<ActiveDescriptor, ServiceHandle<T>>();
+
+        for (final ServiceHandle<T> provider : providers) {
+            final ActiveDescriptor key = provider.getActiveDescriptor();
+            if (!providerMap.containsKey(key)) {
+                providerMap.put(key, provider);
+            }
+        }
+
+        return providerMap.values();
+    }
+
+    private static <T> List<ServiceHandle<T>> getServiceHandles(final ServiceLocator locator, final Class<T> contract,
                                                                    final Annotation... qualifiers) {
 
         final List<ServiceHandle<T>> allServiceHandles = qualifiers == null ?
@@ -335,20 +361,8 @@ public final class Providers {
      * {@link Comparator comparator}.
      */
     public static <T> Iterable<T> getAllProviders(final ServiceLocator locator, final Class<T> contract, final Comparator<T> comparator) {
-        final List<ServiceHandle<T>> providers = getAllServiceHandles(locator, contract, new CustomAnnotationImpl());
-        providers.addAll(getAllServiceHandles(locator, contract));
 
-        final LinkedHashMap<ActiveDescriptor, ServiceHandle<T>> providerMap =
-                new LinkedHashMap<ActiveDescriptor, ServiceHandle<T>>();
-
-        for (final ServiceHandle<T> provider : providers) {
-            final ActiveDescriptor key = provider.getActiveDescriptor();
-            if (!providerMap.containsKey(key)) {
-                providerMap.put(key, provider);
-            }
-        }
-
-        final List<T> providerList = new ArrayList<T>(getClasses(providerMap.values()));
+        final List<T> providerList = new ArrayList<T>(getClasses(getAllServiceHandles(locator, contract)));
 
         if (comparator != null) {
             Collections.sort(providerList, comparator);
@@ -377,7 +391,7 @@ public final class Providers {
      * @return set of all available service provider instances for the contract.
      */
     public static <T> SortedSet<T> getProviders(final ServiceLocator locator, final Class<T> contract, final Comparator<T> comparator) {
-        final Collection<ServiceHandle<T>> hk2Providers = getAllServiceHandles(locator, contract);
+        final Collection<ServiceHandle<T>> hk2Providers = getServiceHandles(locator, contract);
         if (hk2Providers.isEmpty()) {
             return Sets.newTreeSet(comparator);
         } else {

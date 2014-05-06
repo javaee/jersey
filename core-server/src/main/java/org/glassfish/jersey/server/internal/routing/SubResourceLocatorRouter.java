@@ -54,7 +54,6 @@ import javax.ws.rs.core.SecurityContext;
 import org.glassfish.jersey.internal.Errors;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
 import org.glassfish.jersey.server.ServerProperties;
@@ -115,11 +114,11 @@ class SubResourceLocatorRouter implements Router {
         this.resourceContext = locator.getService(JerseyResourceContext.class);
 
         final Configuration config = locator.getService(Configuration.class);
-        this.disableValidation = PropertiesHelper.getValue(config.getProperties(),
+        this.disableValidation = ServerProperties.getValue(config.getProperties(),
                 ServerProperties.RESOURCE_VALIDATION_DISABLE,
                 Boolean.FALSE,
                 Boolean.class);
-        this.ignoreValidationErrors = PropertiesHelper.getValue(config.getProperties(),
+        this.ignoreValidationErrors = ServerProperties.getValue(config.getProperties(),
                 ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS,
                 Boolean.FALSE,
                 Boolean.class);

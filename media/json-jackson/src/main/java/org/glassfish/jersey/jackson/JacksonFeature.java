@@ -49,6 +49,7 @@ import org.glassfish.jersey.CommonProperties;
 import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 import org.codehaus.jackson.jaxrs.JsonMappingExceptionMapper;
 import org.codehaus.jackson.jaxrs.JsonParseExceptionMapper;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Feature used to register Jackson JSON providers.
@@ -59,8 +60,8 @@ public class JacksonFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
-        final String disableMoxy = CommonProperties.MOXY_JSON_FEATURE_DISABLE + '.'
-                + context.getConfiguration().getRuntimeType().name().toLowerCase();
+        final String disableMoxy = PropertiesHelper.getPropertyNameForRuntime(CommonProperties.MOXY_JSON_FEATURE_DISABLE,
+                context.getConfiguration().getRuntimeType());
         context.property(disableMoxy, true);
 
         // add the default Jackson exception mappers

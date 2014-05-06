@@ -41,9 +41,9 @@
 package org.glassfish.jersey.server.validation.internal;
 
 import java.lang.annotation.ElementType;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.validation.Path;
@@ -99,7 +99,11 @@ class ValidateOnExecutionTraversableResolver implements TraversableResolver {
             final String propertyKey = traversableObjectClass.getName() + "#" + propertyName;
 
             if (!propertyToMethod.containsKey(propertyKey)) {
-                propertyToMethod.putIfAbsent(propertyKey, getGetterMethod(traversableObjectClass, propertyName));
+                final Method getter = getGetterMethod(traversableObjectClass, propertyName);
+
+                if (getter != null) {
+                    propertyToMethod.putIfAbsent(propertyKey, getter);
+                }
             }
 
             final Method getter = propertyToMethod.get(propertyKey);
@@ -127,20 +131,12 @@ class ValidateOnExecutionTraversableResolver implements TraversableResolver {
      */
     private Method getGetterMethod(final Class<?> clazz, final String propertyName) {
         // Property type.
-        final Class<?> propertyType = AccessController.doPrivileged(new PrivilegedAction<Class<?>>() {
-
-            @Override
-            public Class<?> run() {
-                try {
-                    return clazz.getDeclaredField(propertyName).getType();
-                } catch (SecurityException ex) {
-                    // NOOP.
-                } catch (NoSuchFieldException nsfe) {
-                    // NOOP.
-                }
-                return null;
+        Class<?> propertyType = null;
+        for (final Field field : AccessController.doPrivileged(ReflectionHelper.getAllFieldsPA(clazz))) {
+            if (field.getName().equals(propertyName)) {
+                propertyType = field.getType();
             }
-        });
+        }
 
         final char[] chars = propertyName.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]);
@@ -149,7 +145,7 @@ class ValidateOnExecutionTraversableResolver implements TraversableResolver {
         final String isGetter = "is" + getterPropertyName;
         final String getGetter = "get" + getterPropertyName;
 
-        for (final Method method : AccessController.doPrivileged(ReflectionHelper.getDeclaredMethodsPA(clazz))) {
+        for (final Method method : AccessController.doPrivileged(ReflectionHelper.getMethodsPA(clazz))) {
             final String methodName = method.getName();
 
             if ((methodName.equals(isGetter) || methodName.equals(getGetter))

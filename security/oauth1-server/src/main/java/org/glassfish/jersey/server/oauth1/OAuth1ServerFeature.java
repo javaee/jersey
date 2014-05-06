@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,7 +47,6 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.oauth1.signature.OAuth1SignatureFeature;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
@@ -129,20 +128,20 @@ public class OAuth1ServerFeature implements Feature {
         }
 
         final Map<String, Object> properties = context.getConfiguration().getProperties();
-        final Boolean propertyResourceEnabled = PropertiesHelper.getValue(properties,
+        final Boolean propertyResourceEnabled = OAuth1ServerProperties.getValue(properties,
                 OAuth1ServerProperties.ENABLE_TOKEN_RESOURCES, null, Boolean.class);
 
         boolean registerResources = propertyResourceEnabled != null ?
                 propertyResourceEnabled : requestTokenUri != null & accessTokenUri != null;
 
         if (registerResources) {
-            String requestUri = PropertiesHelper.getValue(properties, OAuth1ServerProperties.REQUEST_TOKEN_URI,
+            String requestUri = OAuth1ServerProperties.getValue(properties, OAuth1ServerProperties.REQUEST_TOKEN_URI,
                     null, String.class);
             if (requestUri == null) {
                 requestUri = requestTokenUri == null ? "requestToken" : requestTokenUri;
             }
 
-            String accessUri = PropertiesHelper.getValue(properties, OAuth1ServerProperties.ACCESS_TOKEN_URI,
+            String accessUri = OAuth1ServerProperties.getValue(properties, OAuth1ServerProperties.ACCESS_TOKEN_URI,
                     null, String.class);
             if (accessUri == null) {
                 accessUri = accessTokenUri == null ? "accessToken" : accessTokenUri;

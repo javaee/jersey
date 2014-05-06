@@ -392,6 +392,39 @@ public class UriTemplateTest {
                 "fred", "barney", "joe");
     }
 
+    @Test
+    public void testGroupIndexes() throws Exception {
+        UriTemplate template = new UriTemplate("/a");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[0]));
+
+        template = new UriTemplate("/{a}");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2}));
+
+        template = new UriTemplate("/{a}/b");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2}));
+
+        template = new UriTemplate("/{a}/{b}");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2, 3}));
+
+        template = new UriTemplate("/{a}/{b}");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2, 3}));
+
+        template = new UriTemplate("/{a}/b/{c}");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2, 3}));
+
+        template = new UriTemplate("/{a: (abc)+}");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3}));
+
+        template = new UriTemplate("/{a: (abc)+}/b");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3}));
+
+        template = new UriTemplate("/{a: (abc)+}/{b}");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3, 4}));
+
+        template = new UriTemplate("/{a: (abc)+}/b/{c}");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3, 4}));
+    }
+
     void _testSubstitutionArray(String template, String uri, String... values) {
         UriTemplate t = new UriTemplate(template);
 

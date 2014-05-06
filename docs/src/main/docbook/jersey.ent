@@ -310,6 +310,9 @@
 <!ENTITY jersey.sse.OutboundEvent "<link xlink:href='&jersey.javadoc.path;/media/sse/OutboundEvent.html'>OutboundEvent</link>">
 <!ENTITY jersey.sse.SseBroadcaster "<link xlink:href='&jersey.javadoc.path;/media/sse/SseBroadcaster.html'>SseBroadcaster</link>">
 <!ENTITY jersey.sse.SseFeature "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html'>SseFeature</link>">
+<!ENTITY jersey.sse.SseFeature.DISABLE_SSE "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html#DISABLE_SSE'>DISABLE_SSE</link>">
+<!ENTITY jersey.sse.SseFeature.DISABLE_SSE_CLIENT "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html#DISABLE_SSE_CLIENT'>DISABLE_SSE_CLIENT</link>">
+<!ENTITY jersey.sse.SseFeature.DISABLE_SSE_SERVER "<link xlink:href='&jersey.javadoc.path;/media/sse/SseFeature.html#DISABLE_SSE_SERVER'>DISABLE_SSE_SERVER</link>">
 <!ENTITY jersey.containers.ServletContainer "<link xlink:href='&jersey.javadoc.path;/servlet/ServletContainer.html'>ServletContainer</link>">
 
 <!ENTITY jersey.common.Beta "<link xlink:href='&jersey.javadoc.path;/Beta.html'>Beta</link>">
@@ -381,6 +384,9 @@
 <!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MONITORING_STATISTICS_MBEANS_ENABLED'>ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED</link>" >
 <!ENTITY jersey.server.ServerProperties.APPLICATION_NAME "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#APPLICATION_NAME'>ServerProperties.APPLICATION_NAME</link>" >
 <!ENTITY jersey.server.ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#RESPONSE_SET_STATUS_OVER_SEND_ERROR'>ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR</link>" >
+<!ENTITY jersey.server.ServerProperties.TRACING "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#TRACING'>ServerProperties.TRACING</link>" >
+<!ENTITY jersey.server.ServerProperties.TRACING_THRESHOLD "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#TRACING_THRESHOLD'>ServerProperties.TRACING_THRESHOLD</link>" >
+<!ENTITY jersey.server.ServerProperties.PROCESSING_RESPONSE_ERRORS_ENABLED "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#PROCESSING_RESPONSE_ERRORS_ENABLED'>ServerProperties.PROCESSING_RESPONSE_ERRORS_ENABLED</link>" >
 <!ENTITY jersey.server.Uri "<link xlink:href='&jersey.javadoc.path;/server/Uri.html'>Uri</link>">
 <!ENTITY jersey.server.UriConnegFilter "<link xlink:href='&jersey.javadoc.path;/server/filter/UriConnegFilter.html'>UriConnegFilter</link>">
 <!ENTITY jersey.server.WadlFeature "<link xlink:href='&jersey.javadoc.path;/server/wadl/WadlFeature.html'>WadlFeature</link>">

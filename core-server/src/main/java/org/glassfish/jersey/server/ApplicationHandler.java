@@ -85,7 +85,6 @@ import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.message.internal.NullOutputStream;
@@ -104,6 +103,7 @@ import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.monitoring.ApplicationEventImpl;
 import org.glassfish.jersey.server.internal.monitoring.CompositeApplicationEventListener;
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
+import org.glassfish.jersey.server.internal.process.ReferencesInitializer;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
 import org.glassfish.jersey.server.internal.routing.Router;
@@ -357,11 +357,11 @@ public final class ApplicationHandler {
             ((ResourceConfig) application).lock();
         }
 
-        final boolean ignoreValidationErrors = PropertiesHelper.getValue(runtimeConfig.getProperties(),
+        final boolean ignoreValidationErrors = ServerProperties.getValue(runtimeConfig.getProperties(),
                 ServerProperties.RESOURCE_VALIDATION_IGNORE_ERRORS,
                 Boolean.FALSE,
                 Boolean.class);
-        final boolean disableValidation = PropertiesHelper.getValue(runtimeConfig.getProperties(),
+        final boolean disableValidation = ServerProperties.getValue(runtimeConfig.getProperties(),
                 ServerProperties.RESOURCE_VALIDATION_DISABLE,
                 Boolean.FALSE,
                 Boolean.class);
@@ -377,7 +377,7 @@ public final class ApplicationHandler {
         Errors.mark(); // mark begin of validation phase
         try {
             // AutoDiscoverable.
-            if (!PropertiesHelper.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
+            if (!CommonProperties.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
                 runtimeConfig.configureAutoDiscoverableProviders(locator);
             }
@@ -633,7 +633,7 @@ public final class ApplicationHandler {
     private Iterable<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
         final List<RankedProvider<ComponentProvider>> result = new LinkedList<>();
 
-        final boolean enableMetainfServicesLookup = !PropertiesHelper.getValue(application.getProperties(), RuntimeType.SERVER,
+        final boolean enableMetainfServicesLookup = !CommonProperties.getValue(application.getProperties(), RuntimeType.SERVER,
                 CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
         if (enableMetainfServicesLookup) {
             for (final ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {

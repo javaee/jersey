@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,6 @@ import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ServerProperties;
 
 /**
@@ -59,9 +58,9 @@ public class MonitoringAutodiscoverable implements AutoDiscoverable {
     @Override
     public void configure(FeatureContext context) {
         if (!context.getConfiguration().isRegistered(MonitoringFeature.class)) {
-            final Boolean monitoringEnabled = PropertiesHelper.getValue(context.getConfiguration().getProperties(),
+            final Boolean monitoringEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
                     ServerProperties.MONITORING_STATISTICS_ENABLED, Boolean.FALSE);
-            final Boolean mbeansEnabled = PropertiesHelper.getValue(context.getConfiguration().getProperties(),
+            final Boolean mbeansEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
                     ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, Boolean.FALSE);
             if (monitoringEnabled || mbeansEnabled) {
                 context.register(MonitoringFeature.class);

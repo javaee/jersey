@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,15 @@
  */
 package org.glassfish.jersey.server;
 
+import java.util.Map;
+
+import javax.ws.rs.RuntimeType;
+
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.util.PropertiesClass;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.internal.util.PropertyAlias;
+
 
 /**
  * Jersey server-side configuration properties.
@@ -48,6 +56,7 @@ import org.glassfish.jersey.CommonProperties;
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
+@PropertiesClass
 public final class ServerProperties {
 
     /**
@@ -316,12 +325,14 @@ public final class ServerProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     * <p>This constant is an alias for {@link CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE_SERVER}</p>
      *
      * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
      * @see #BV_FEATURE_DISABLE
      * @see #WADL_FEATURE_DISABLE
      */
-    public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE + ".server";
+    @PropertyAlias
+    public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE_SERVER;
 
     /**
      * An integer value that defines the buffer size used to buffer server-side response entity in order to
@@ -338,10 +349,12 @@ public final class ServerProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     * <p>This constant is an alias for {@link CommonProperties#OUTBOUND_CONTENT_LENGTH_BUFFER_SERVER}</p>
      *
      * @since 2.2
      */
-    public static final String OUTBOUND_CONTENT_LENGTH_BUFFER = CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".server";
+    @PropertyAlias
+    public static final String OUTBOUND_CONTENT_LENGTH_BUFFER = CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER_SERVER;
 
     /**
      * If {@code true} then disable configuration of Json Processing (JSR-353) feature on server.
@@ -355,10 +368,12 @@ public final class ServerProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     * <p>This constant is an alias for {@link CommonProperties#JSON_PROCESSING_FEATURE_DISABLE_SERVER}</p>
      *
      * @see org.glassfish.jersey.CommonProperties#JSON_PROCESSING_FEATURE_DISABLE
      */
-    public static final String JSON_PROCESSING_FEATURE_DISABLE = CommonProperties.JSON_PROCESSING_FEATURE_DISABLE + ".server";
+    @PropertyAlias
+    public static final String JSON_PROCESSING_FEATURE_DISABLE = CommonProperties.JSON_PROCESSING_FEATURE_DISABLE_SERVER;
 
     /**
      * If {@code true} then disable META-INF/services lookup on server.
@@ -371,11 +386,13 @@ public final class ServerProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     * <p>This constant is an alias for {@link CommonProperties#METAINF_SERVICES_LOOKUP_DISABLE_SERVER}</p>
      *
      * @see org.glassfish.jersey.CommonProperties#METAINF_SERVICES_LOOKUP_DISABLE
      * @since 2.1
      */
-    public static final String METAINF_SERVICES_LOOKUP_DISABLE = CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE + ".server";
+    @PropertyAlias
+    public static final String METAINF_SERVICES_LOOKUP_DISABLE = CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE_SERVER;
 
     /**
      * If {@code true} then disable configuration of MOXy Json feature on server.
@@ -389,10 +406,12 @@ public final class ServerProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     * <p>This constant is an alias for {@link CommonProperties#MOXY_JSON_FEATURE_DISABLE_SERVER}</p>
      *
      * @see org.glassfish.jersey.CommonProperties#MOXY_JSON_FEATURE_DISABLE
      */
-    public static final String MOXY_JSON_FEATURE_DISABLE = CommonProperties.MOXY_JSON_FEATURE_DISABLE + ".server";
+    @PropertyAlias
+    public static final String MOXY_JSON_FEATURE_DISABLE = CommonProperties.MOXY_JSON_FEATURE_DISABLE_SERVER;
 
     /**
      * If {@code true} then the extensive validation of application resource model is disabled.
@@ -523,7 +542,7 @@ public final class ServerProperties {
      *
      * @since 2.3
      */
-    public static final String TRACING = "jersey.config.server.tracing";
+    public static final String TRACING = "jersey.config.server.tracing.type";
 
     /**
      * Set level o tracing information.
@@ -574,7 +593,100 @@ public final class ServerProperties {
      */
     public static final String RESPONSE_SET_STATUS_OVER_SEND_ERROR = "jersey.config.server.response.setStatusOverSendError";
 
+    /**
+     * If property value is {@code true} then the errors raised during response processing are tried to handled using available
+     * {@link org.glassfish.jersey.server.spi.ResponseErrorMapper response error mappers}.
+     * <p>
+     * Type of the property value is {@code boolean}. The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.8
+     */
+    public static final String PROCESSING_RESPONSE_ERRORS_ENABLED = "jersey.config.server.exception.processResponseErrors";
+
     private ServerProperties() {
         // prevents instantiation
+    }
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the real value type is not compatible with the specified value type,
+     * returns {@code null}.
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param key           Name of the property.
+     * @param type          Type to retrieve the value as.
+     * @param <T>           Type of the property value.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
+        return PropertiesHelper.getValue(properties, key, type, null);
+    }
+
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the real value type is not compatible with {@code defaultValue} type,
+     * the specified {@code defaultValue} is returned. Calling this method is equivalent to calling
+     * {@code ServerProperties.getValue(properties, key, defaultValue, (Class<T>) defaultValue.getClass())}.
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param key  Name of the property.
+     * @param defaultValue  Default value if property is not registered
+     * @param <T>           Type of the property value.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue) {
+        return PropertiesHelper.getValue(properties, key, defaultValue, null);
+    }
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the real value type is not compatible with the specified value type,
+     * returns {@code defaultValue}.
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param key  Name of the property.
+     * @param defaultValue  Default value if property is not registered
+     * @param type          Type to retrieve the value as.
+     * @param <T>           Type of the property value.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type) {
+        return PropertiesHelper.getValue(properties, key, defaultValue, type, null);
+    }
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the real value type is not compatible with the specified value type,
+     * returns {@code defaultValue}.
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param runtimeType   Runtime type which is used to check whether there is a property with the same
+     *                      {@code key} but post-fixed by runtime type (<tt>.server</tt>
+     *                      or {@code .client}) which would override the {@code key} property.
+     * @param key  Name of the property.
+     * @param defaultValue  Default value if property is not registered
+     * @param type          Type to retrieve the value as.
+     * @param <T>           Type of the property value.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, T defaultValue, Class<T> type) {
+        return PropertiesHelper.getValue(properties, runtimeType, key, defaultValue, type, null);
     }
 }

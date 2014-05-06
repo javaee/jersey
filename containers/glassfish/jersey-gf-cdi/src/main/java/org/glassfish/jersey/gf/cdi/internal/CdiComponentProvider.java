@@ -85,6 +85,8 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+import javax.enterprise.inject.spi.ProcessProducerField;
+import javax.enterprise.inject.spi.ProcessProducerMethod;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
@@ -227,7 +229,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
                 final AnnotatedType<T> annotatedType = beanManager.createAnnotatedType(clazz);
                 final InjectionTarget<T> injectionTarget = beanManager.createInjectionTarget(annotatedType);
-                final CreationalContext creationalContext = beanManager.createCreationalContext(null);
+                final CreationalContext<T> creationalContext = beanManager.createCreationalContext(null);
 
                 @Override
                 public T getInstance(final Class<T> clazz) {
@@ -415,6 +417,16 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     @SuppressWarnings("unused")
+    private void processProducerMethod(@Observes final ProcessProducerMethod processProducerMethod) {
+        typesSeenBeforeValidation.addAll(processProducerMethod.getAnnotatedProducerMethod().getTypeClosure());
+    }
+
+    @SuppressWarnings("unused")
+    private void processProducerField(@Observes final ProcessProducerField processProducerField) {
+        typesSeenBeforeValidation.addAll(processProducerField.getAnnotatedProducerField().getTypeClosure());
+    }
+
+    @SuppressWarnings("unused")
     private void afterTypeDiscovery(@Observes final AfterTypeDiscovery afterTypeDiscovery) {
         final List<Class<?>> interceptors = afterTypeDiscovery.getInterceptors();
         interceptors.add(WebApplicationExceptionPreservingInterceptor.class);
@@ -526,10 +538,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         return filteredInjectionPoints;
     }
 
-    private Set<Type> hk2ProvidedTypes = Collections.synchronizedSet(new HashSet<Type>());
-    private Set<Type> potentionalHk2CustomBoundTypes = Collections.synchronizedSet(new HashSet<Type>());
-    private Set<Type> typesSeenBeforeValidation = Collections.synchronizedSet(new HashSet<Type>());
-    private Set<Type> jerseyVetoedTypes = Collections.synchronizedSet(new HashSet<Type>());
+    private final Set<Type> hk2ProvidedTypes = Collections.synchronizedSet(new HashSet<Type>());
+    private final Set<Type> potentionalHk2CustomBoundTypes = Collections.synchronizedSet(new HashSet<Type>());
+    private final Set<Type> typesSeenBeforeValidation = Collections.synchronizedSet(new HashSet<Type>());
+    private final Set<Type> jerseyVetoedTypes = Collections.synchronizedSet(new HashSet<Type>());
 
     private boolean isInjectionProvider(final Type injectedType) {
         return injectedType instanceof ParameterizedType
@@ -586,7 +598,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         return providers.isEmpty() ? null : providers.get(0).getProvider();
     }
 
-    private Set<Type> _getContracts(Set<Type> types) {
+    private Set<Type> _getContracts(final Set<Type> types) {
         Set<Type> result = new HashSet<Type>();
 
         for (Type t : types) {
@@ -616,7 +628,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
     }
 
-    private boolean isNothingWeWantToMessUpWith(Type t) {
+    private boolean isNothingWeWantToMessUpWith(final Type t) {
         if (!(t instanceof Class)) {
             return false;
         }
@@ -635,7 +647,23 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         final String pkgName = pkg.getName();
 
-        return pkgName.startsWith("java.") || pkgName.startsWith("javax.");
+        if (pkgName.startsWith("java.") || pkgName.startsWith("javax.")) {
+            return true;
+        }
+
+        // rule out everyting implementing types from the "javax.enterprise.inject.spi" package
+        final Set<Type> contracts = _getContracts(new HashSet<Type>(){{add(t);}});
+        for (Type ct : contracts) {
+            final Class<?> cc = (Class<?>)ct;
+            if (!cc.isPrimitive() && !cc.isSynthetic()) {
+                final Package cp = cc.getPackage();
+                if (cp != null && cp.getName().startsWith("javax.enterprise.inject.spi")) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private <T> void addInjecteeToSkip(final Class<?> componentClass, final Map<Class<?>, Set<T>> toSkip, final T member) {
