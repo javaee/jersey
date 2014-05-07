@@ -59,7 +59,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.uri.UriTemplateTest
  *
- * @author Paul.Sandoz at Sun.Com
+ * @author Paul.Sandoz
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class UriTemplateTest {
@@ -398,31 +398,31 @@ public class UriTemplateTest {
         assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[0]));
 
         template = new UriTemplate("/{a}");
-        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2}));
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1}));
 
         template = new UriTemplate("/{a}/b");
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1}));
+
+        template = new UriTemplate("/{a}/{b}");
         assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2}));
 
         template = new UriTemplate("/{a}/{b}");
-        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2, 3}));
-
-        template = new UriTemplate("/{a}/{b}");
-        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2, 3}));
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2}));
 
         template = new UriTemplate("/{a}/b/{c}");
-        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2, 3}));
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 2}));
 
         template = new UriTemplate("/{a: (abc)+}");
-        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3}));
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1}));
 
         template = new UriTemplate("/{a: (abc)+}/b");
-        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3}));
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1}));
 
         template = new UriTemplate("/{a: (abc)+}/{b}");
-        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3, 4}));
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3}));
 
         template = new UriTemplate("/{a: (abc)+}/b/{c}");
-        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3, 4}));
+        assertThat(template.getPattern().getGroupIndexes(), equalTo(new int[] {1, 3}));
     }
 
     void _testSubstitutionArray(String template, String uri, String... values) {
