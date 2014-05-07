@@ -426,6 +426,9 @@
 <!ENTITY jersey.server.mvc.Viewable "<link xlink:href='&jersey.javadoc.path;/server/mvc/Viewable.html'>Viewable</link>">
 
 <!ENTITY jersey.test.JerseyTest "<link xlink:href='&jersey.javadoc.path;/test/JerseyTest.html'>JerseyTest</link>">
+<!ENTITY jersey.test.JerseyTestNg "<link xlink:href='&jersey.javadoc.path;/test/JerseyTestNg.html'>JerseyTestNg</link>">
+<!ENTITY jersey.test.JerseyTestNg.ContainerPerClassTest "<link xlink:href='&jersey.javadoc.path;/test/JerseyTestNg.ContainerPerClassTest.html'>JerseyTestNg.ContainerPerClassTest</link>">
+<!ENTITY jersey.test.JerseyTestNg.ContainerPerMethodTest "<link xlink:href='&jersey.javadoc.path;/test/JerseyTestNg.ContainerPerMethodTest.html'>JerseyTestNg.ContainerPerMethodTest</link>">
 <!ENTITY jersey.test.TestProperties "<link xlink:href='&jersey.javadoc.path;/test/TestProperties.html'>TestProperties</link>">
 <!ENTITY jersey.test.spi.TestContainer "<link xlink:href='&jersey.javadoc.path;/test/spi/TestContainer.html'>TestContainer</link>">
 <!ENTITY jersey.test.spi.TestContainerFactory "<link xlink:href='&jersey.javadoc.path;/test/spi/TestContainerFactory.html'>TestContainerFactory</link>">

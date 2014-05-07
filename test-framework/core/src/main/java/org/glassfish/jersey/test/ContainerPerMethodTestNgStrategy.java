@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,68 +37,57 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.grizzly;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
+package org.glassfish.jersey.test;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.DeploymentContext;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
+import javax.ws.rs.client.Client;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.glassfish.jersey.test.spi.TestContainer;
+import org.glassfish.jersey.test.spi.TestNgStrategy;
 
 /**
- * Grizzly test container base URI tests.
+ * TestNG strategy that creates separate test container / client per test method.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class BaseUriTest extends JerseyTest {
+public class ContainerPerMethodTestNgStrategy implements TestNgStrategy {
+
+    private final ThreadLocal<TestContainer> testContainerLocal = new ThreadLocal<>();
+    private final ThreadLocal<Client> clientLocal = new ThreadLocal<>();
 
     @Override
-    protected TestContainerFactory getTestContainerFactory() {
-        return new GrizzlyTestContainerFactory();
-    }
-
-    @Path("root")
-    public static class TestResource {
-        @GET
-        public String get() {
-            return "GET";
-        }
-
-        @Path("sub")
-        @GET
-        public String getSub() {
-            return "sub";
-        }
+    public TestContainer testContainer() {
+        return testContainerLocal.get();
     }
 
     @Override
-    protected DeploymentContext configureDeployment() {
-        return DeploymentContext.builder(new ResourceConfig(TestResource.class))
-                .contextPath("context")
-                .build();
+    public TestContainer testContainer(final TestContainer testContainer) {
+        final TestContainer old = testContainerLocal.get();
+
+        if (testContainer == null) {
+            testContainerLocal.remove();
+        } else {
+            testContainerLocal.set(testContainer);
+        }
+
+        return old;
     }
 
-    @Test
-    public void testGet() {
-        WebTarget target = target("root");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("GET", s);
+    @Override
+    public Client client() {
+        return clientLocal.get();
     }
 
-    @Test
-    public void testGetSub() {
-        WebTarget target = target("root/sub");
+    @Override
+    public Client client(final Client client) {
+        final Client old = clientLocal.get();
 
-        String s = target.request().get(String.class);
-        Assert.assertEquals("sub", s);
+        if (client == null) {
+            clientLocal.remove();
+        } else  {
+            clientLocal.set(client);
+        }
+
+        return old;
     }
-
 }

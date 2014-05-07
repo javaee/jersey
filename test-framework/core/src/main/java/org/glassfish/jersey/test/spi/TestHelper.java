@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,68 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.grizzly;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
+package org.glassfish.jersey.test.spi;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.DeploymentContext;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-
-import org.junit.Assert;
-import org.junit.Test;
+import java.net.URI;
 
 /**
- * Grizzly test container base URI tests.
+ * Helper class for Jersey Test Framework.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class BaseUriTest extends JerseyTest {
+public final class TestHelper {
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() {
-        return new GrizzlyTestContainerFactory();
+    /**
+     * Create a human readable string from given URI. This method replaces {@code 0} port (start container at first available
+     * port) in given URI with string {@code <AVAILABLE-PORT>}.
+     *
+     * @param uri an URI.
+     * @return stringified URI.
+     */
+    public static String zeroPortToAvailablePort(final URI uri) {
+        return uri.getPort() != 0
+                ? uri.toString()
+                : uri.toString().replaceFirst(":0", ":<AVAILABLE-PORT>");
     }
 
-    @Path("root")
-    public static class TestResource {
-        @GET
-        public String get() {
-            return "GET";
-        }
-
-        @Path("sub")
-        @GET
-        public String getSub() {
-            return "sub";
-        }
+    /**
+     * Prevent instantiation.
+     */
+    private TestHelper() {
     }
-
-    @Override
-    protected DeploymentContext configureDeployment() {
-        return DeploymentContext.builder(new ResourceConfig(TestResource.class))
-                .contextPath("context")
-                .build();
-    }
-
-    @Test
-    public void testGet() {
-        WebTarget target = target("root");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("GET", s);
-    }
-
-    @Test
-    public void testGetSub() {
-        WebTarget target = target("root/sub");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("sub", s);
-    }
-
 }

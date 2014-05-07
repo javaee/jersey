@@ -90,7 +90,7 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static Closeable create(URI address, ResourceConfig config) {
+    public static SimpleServer create(final URI address, final ResourceConfig config) {
         return create(address, null,  new SimpleContainer(config));
     }
 
@@ -110,7 +110,7 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static Closeable create(URI address, ResourceConfig config, int count, int select) {
+    public static SimpleServer create(final URI address, final ResourceConfig config, final int count, final int select) {
         return create(address, null,  new SimpleContainer(config), count, select);
     }
 
@@ -129,7 +129,7 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static Closeable create(URI address, SSLContext context, ResourceConfig config) {
+    public static SimpleServer create(final URI address, final SSLContext context, final ResourceConfig config) {
         return create(address, context,  new SimpleContainer(config));
     }
 
@@ -150,7 +150,7 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static Closeable create(URI address, SSLContext context, ResourceConfig config, int count, int select) {
+    public static SimpleServer create(final URI address, final SSLContext context, final ResourceConfig config, final int count, final int select) {
         return create(address, context, new SimpleContainer(config), count, select);
     }
 
@@ -169,7 +169,7 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static Closeable create(final URI address,
+    public static SimpleServer create(final URI address,
                                    final SSLContext context,
                                    final SimpleContainer container) {
 
@@ -198,7 +198,7 @@ public final class SimpleContainerFactory {
      * @throws ProcessingException      thrown when problems during server creation.
      * @throws IllegalArgumentException if {@code address} is {@code null}.
      */
-    public static Closeable create(final URI address,
+    public static SimpleServer create(final URI address,
                                    final SSLContext context,
                                    final SimpleContainer container,
                                    final int count,
@@ -212,14 +212,14 @@ public final class SimpleContainerFactory {
         });
     }
 
-    private static Closeable _create(final URI address,
+    private static SimpleServer _create(final URI address,
                                      final SSLContext context,
                                      final SimpleContainer container,
                                      final UnsafeValue<Server, IOException> serverProvider) throws ProcessingException {
         if (address == null) {
             throw new IllegalArgumentException("The URI must not be null");
         }
-        String scheme = address.getScheme();
+        final String scheme = address.getScheme();
         int defaultPort = 80;
 
         if (context == null) {
@@ -237,23 +237,30 @@ public final class SimpleContainerFactory {
         if (port == -1) {
             port = defaultPort;
         }
-        SocketAddress listen = new InetSocketAddress(port);
+        final InetSocketAddress listen = new InetSocketAddress(port);
         final Connection connection;
         try {
-            Server server = serverProvider.get();
+            final Server server = serverProvider.get();
             connection = new SocketConnection(server);
 
-            connection.connect(listen, context);
+            final SocketAddress socketAddr = connection.connect(listen, context);
             container.onServerStart();
-        } catch (IOException ex) {
+
+            return new SimpleServer() {
+
+                @Override
+                public void close() throws IOException {
+                    container.onServerStop();
+                    connection.close();
+                }
+
+                @Override
+                public int getPort() {
+                    return ((InetSocketAddress)socketAddr).getPort();
+                }
+            };
+        } catch (final IOException ex) {
             throw new ProcessingException("IOException thrown when trying to create simple server", ex);
         }
-        return new Closeable() {
-            @Override
-            public void close() throws IOException {
-                container.onServerStop();
-                connection.close();
-            }
-        };
     }
 }

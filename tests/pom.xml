@@ -61,6 +61,7 @@
 
     <modules>
         <module>e2e</module>
+        <module>e2e-testng</module>
         <module>integration</module>
         <module>osgi</module>
         <module>performance</module>
