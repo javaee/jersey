@@ -54,7 +54,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * A feature to enable the declarative linking functionality.
- *
+ * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
