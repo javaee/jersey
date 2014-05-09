@@ -43,32 +43,45 @@ package org.glassfish.jersey.linking;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
+
+import javax.inject.Singleton;
+
 import org.glassfish.jersey.Beta;
+import org.glassfish.jersey.linking.mapping.NaiveResourceMappingContext;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
- * A feature to enable the declarative linking functionality
+ * A feature to enable the declarative linking functionality.
  * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 
 @Beta
-public class DeclarativeLinkingFeature
-    implements Feature
-{
+public class DeclarativeLinkingFeature implements Feature {
 
     @Override
     public boolean configure(FeatureContext context) {
-        
+
         Configuration config = context.getConfiguration();
-        
-        if (!config.isRegistered(LinkFilter.class))
-        {
-            context.register(LinkFilter.class);
+        if (!config.isRegistered(ResponseLinkFilter.class)) {
+            context.register(new AbstractBinder() {
+
+                @Override
+                protected void configure() {
+                    bindAsContract(NaiveResourceMappingContext.class)
+                            .to(ResourceMappingContext.class).in(Singleton.class);
+                }
+            });
+
+            context.register(ResponseLinkFilter.class);
+
+// Todo map values back?
+//            context.register(RequestLinkFilter.class);
             return true;
         }
-        
         return false;
     }
-    
 }

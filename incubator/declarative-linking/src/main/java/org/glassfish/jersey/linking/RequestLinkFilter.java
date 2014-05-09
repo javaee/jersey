@@ -37,42 +37,43 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import java.io.IOException;
+
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Link;
+
+import org.glassfish.jersey.server.ExtendedUriInfo;
 
 /**
- * Utility for working with @Ref annotations
- * 
+ * Filter that processes {@link Link} annotated fields in returned response
+ * entities.
+ * <p/>
+ * When an application is deployed as a Servlet or Filter this filter can be
+ * registered using the following initialization parameters:
+ * <blockquote><pre>
+ *     &lt;init-param&gt
+ *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
+ *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
+ *     &lt;/init-param&gt;
+ * </pre></blockquote>
+ * <p/>
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
+ * @see Link
  */
-interface InjectLinkDescriptor {
-    /**
-     * Get the style
-     * @return the style
-     */
-    InjectLink.Style getLinkStyle();
 
-    /**
-     * Get the link template, either directly from the value() or from the
-     * @Path of the class referenced in resource()
-     * @return the link template
-     */
-    String getLinkTemplate(ResourceMappingContext rmc);
+class RequestLinkFilter implements ContainerRequestFilter {
 
-    /**
-     * Get the binding as an EL expression for a particular URI template parameter
-     * @param name
-     * @return the EL binding
-     */
-    String getBinding(String name);
+    @Context
+    private ExtendedUriInfo uriInfo;
 
-    /**
-     * Get the condition.
-     * @return the condition
-     */
-    String getCondition();
+    @Override
+    public void filter(ContainerRequestContext requestContext) throws IOException {
+
+    }
 }

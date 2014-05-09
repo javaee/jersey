@@ -47,6 +47,8 @@ import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.server.ExtendedUriInfo;
 
 
 /**
@@ -70,14 +72,14 @@ class HeaderProcessor<T> {
      * @param uriInfo the uriInfo for the request
      * @param headers the map into which the headers will be added
      */
-    public void processLinkHeaders(T entity, UriInfo uriInfo, MultivaluedMap<String, Object> headers) {
-        List<String> headerValues = getLinkHeaderValues(entity, uriInfo);
+    public void processLinkHeaders(T entity, UriInfo uriInfo, ResourceMappingContext rmc, MultivaluedMap<String, Object> headers) {
+        List<String> headerValues = getLinkHeaderValues(entity, uriInfo,rmc);
         for (String headerValue: headerValues) {
             headers.add("Link", headerValue);
         }
     }
 
-    List<String> getLinkHeaderValues(Object entity, UriInfo uriInfo) {
+    List<String> getLinkHeaderValues(Object entity, UriInfo uriInfo, ResourceMappingContext rmc) {
         final List<Object> matchedResources = uriInfo.getMatchedResources();
 
         if (!matchedResources.isEmpty()) {
@@ -86,7 +88,7 @@ class HeaderProcessor<T> {
 
             for (LinkHeaderDescriptor desc: instanceDescriptor.getLinkHeaders()) {
                 if (ELLinkBuilder.evaluateCondition(desc.getCondition(), entity, resource, entity)) {
-                    String headerValue = getLinkHeaderValue(desc, entity, resource, uriInfo);
+                    String headerValue = getLinkHeaderValue(desc, entity, resource, uriInfo, rmc);
                     headerValues.add(headerValue);
                 }
             }
@@ -96,8 +98,9 @@ class HeaderProcessor<T> {
         return Collections.emptyList(); 
     }
 
-    static String getLinkHeaderValue(LinkHeaderDescriptor desc, Object entity, Object resource, UriInfo uriInfo) {
-        URI uri = ELLinkBuilder.buildURI(desc, entity, resource, entity, uriInfo);
+    static String getLinkHeaderValue(LinkHeaderDescriptor desc, Object entity, Object resource, UriInfo uriInfo,
+            ResourceMappingContext rmc) {
+        URI uri = ELLinkBuilder.buildURI(desc, entity, resource, entity, uriInfo, rmc);
         InjectLink link = desc.getLinkHeader();
         return InjectLink.Util.buildLinkFromUri(uri, link).toString(); 
     }

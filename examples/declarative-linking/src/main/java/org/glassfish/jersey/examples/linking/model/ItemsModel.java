@@ -64,11 +64,10 @@ public class ItemsModel {
 
     private ItemsModel() {
         items = new ArrayList<ItemModel>();
-        items.add(new ItemModel("Item 0"));
-        items.add(new ItemModel("Item 1"));
-        items.add(new ItemModel("Item 2"));
-        items.add(new ItemModel("Item 3"));
-        items.add(new ItemModel("Item 4"));
+        for(int i=0; i < 100; i++)
+        {
+            items.add(new ItemModel("Item " + i));
+        }
     }
 
     public boolean hasNext(String currentId) {
@@ -93,5 +92,11 @@ public class ItemsModel {
 
     private int getIndex(String id) {
         return Integer.parseInt(id);
+    }
+    
+    
+    public int getSize()
+    {
+        return items.size();
     }
 }

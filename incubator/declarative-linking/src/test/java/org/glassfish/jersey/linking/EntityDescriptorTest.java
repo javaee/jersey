@@ -44,6 +44,7 @@ import java.net.URI;
 import java.util.Iterator;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.UriBuilder;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -65,6 +66,15 @@ public class EntityDescriptorTest  {
 
         public String baz;
     }
+    
+    ResourceMappingContext mockRmc = new ResourceMappingContext() {
+
+        @Override
+        public ResourceMappingContext.Mapping getMapping(Class<?> resource) {
+            return null;
+        }
+    };
+    
 
     /**
      * Test for declared properties
@@ -111,7 +121,7 @@ public class EntityDescriptorTest  {
         assertEquals(1, instance.getLinkFields().size());
         assertEquals(0, instance.getNonLinkFields().size());
         InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor)instance.getLinkFields().iterator().next();
-        assertEquals(TEMPLATE_A, linkDesc.getLinkTemplate());
+        assertEquals(TEMPLATE_A, linkDesc.getLinkTemplate(mockRmc));
         assertEquals("baz", linkDesc.getBinding("bar"));
     }
 
@@ -132,7 +142,7 @@ public class EntityDescriptorTest  {
         Iterator<FieldDescriptor> i = instance.getLinkFields().iterator();
         while (i.hasNext()) {
             InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor)i.next();
-            assertEquals(TEMPLATE_A, linkDesc.getLinkTemplate());
+            assertEquals(TEMPLATE_A, linkDesc.getLinkTemplate(mockRmc));
         }
     }
 
@@ -144,7 +154,7 @@ public class EntityDescriptorTest  {
         TestClassD testClass = new TestClassD();
         while (i.hasNext()) {
             InjectLinkFieldDescriptor linkDesc = (InjectLinkFieldDescriptor)i.next();
-            URI value = UriBuilder.fromPath(linkDesc.getLinkTemplate()).build();
+            URI value = UriBuilder.fromPath(linkDesc.getLinkTemplate(mockRmc)).build();
             linkDesc.setPropertyValue(testClass, value);
         }
         assertEquals(TEMPLATE_A, testClass.res1);

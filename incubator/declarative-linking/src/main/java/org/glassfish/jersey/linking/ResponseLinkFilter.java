@@ -37,17 +37,16 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.linking;
-
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Link;
-import javax.ws.rs.ext.Provider;
+import javax.ws.rs.core.UriInfo;
+
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
  * Filter that processes {@link Link} annotated fields in returned response
@@ -58,32 +57,35 @@ import javax.ws.rs.ext.Provider;
  * <blockquote><pre>
  *     &lt;init-param&gt
  *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *         &lt;param-value&gt;com.sun.jersey.server.linking.LinkFilter&lt;/param-value&gt;
+ *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
  *     &lt;/init-param&gt;
  * </pre></blockquote>
  * <p/>
  *
- * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
- * @see LinkHeader
+ * @see Link
  */
 
-@Provider
-class LinkFilter implements ContainerResponseFilter {
+class ResponseLinkFilter implements ContainerResponseFilter {
 
     @Context
     private UriInfo uriInfo;
 
+    @Context
+    private ResourceMappingContext rmc;
+
+    @Override
+    @SuppressWarnings("unchecked")
     public void filter(ContainerRequestContext request, ContainerResponseContext response) {
         final Object entity = response.getEntity();
 
         if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
             Class<?> entityClass = entity.getClass();
             HeaderProcessor lhp = new HeaderProcessor(entityClass);
-            lhp.processLinkHeaders(entity, uriInfo, response.getHeaders());
+            lhp.processLinkHeaders(entity, uriInfo, rmc, response.getHeaders());
             FieldProcessor lp = new FieldProcessor(entityClass);
-            lp.processLinks(entity, uriInfo);
+            lp.processLinks(entity, uriInfo, rmc);
         }
 
     }

@@ -57,7 +57,6 @@ import javax.ws.rs.core.MediaType;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-@Path("items/{id}")
 @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 public class ItemResource {
 
@@ -65,9 +64,13 @@ public class ItemResource {
     private ItemModel itemModel;
     private String id;
 
-    public ItemResource(@PathParam("id") String id) {
+    public ItemResource() {
+        throw new IllegalStateException("Only for JAX-B dressing");
+    }
+    
+    public ItemResource(ItemsModel itemsModel, String id) {
         this.id = id;
-        itemsModel = ItemsModel.getInstance();
+        this.itemsModel = itemsModel;
         try {
             itemModel = itemsModel.getItem(id);
         } catch (IndexOutOfBoundsException ex) {
@@ -77,32 +80,9 @@ public class ItemResource {
 
     @GET
     public ItemRepresentation get() {
-        return new ItemRepresentation(itemModel.getName());
+        return new ItemRepresentation(itemsModel, id, itemModel.getName());
     }
 
-    /**
-     * Determines whether there is a next item.
-     * @return
-     */
-    public boolean isNext() {
-        return itemsModel.hasNext(id);
-    }
-
-    /**
-     * Determines whether there is a previous item
-     * @return
-     */
-    public boolean isPrev() {
-        return itemsModel.hasPrev(id);
-    }
-
-    public String getNextId() {
-        return itemsModel.getNextId(id);
-    }
-
-    public String getPrevId() {
-        return itemsModel.getPrevId(id);
-    }
 
     public String getId() {
         return id;

@@ -38,41 +38,65 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.examples.linking.resources;
 
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import javax.ws.rs.DefaultValue;
+import org.glassfish.jersey.examples.linking.model.ItemsModel;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException; 
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.examples.linking.representation.ItemsRepresentation;
 
 /**
- * Utility for working with @Ref annotations
- * 
+ * Resource that provides access to the entire list of items
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-interface InjectLinkDescriptor {
-    /**
-     * Get the style
-     * @return the style
-     */
-    InjectLink.Style getLinkStyle();
+@Path("items")
+@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+public class ItemsResource {
 
-    /**
-     * Get the link template, either directly from the value() or from the
-     * @Path of the class referenced in resource()
-     * @return the link template
-     */
-    String getLinkTemplate(ResourceMappingContext rmc);
+    private ItemsModel itemsModel;
 
-    /**
-     * Get the binding as an EL expression for a particular URI template parameter
-     * @param name
-     * @return the EL binding
-     */
-    String getBinding(String name);
+    public ItemsResource() {
+        itemsModel = ItemsModel.getInstance();
+    }
 
-    /**
-     * Get the condition.
-     * @return the condition
-     */
-    String getCondition();
+    
+    @GET
+    public ItemsRepresentation query(
+            @Context javax.ws.rs.core.UriInfo info, 
+            @QueryParam("offset") @DefaultValue("-1") int offset, @DefaultValue("-1") @QueryParam("limit") int limit) {
+        
+
+        if (offset==-1 || limit == -1)
+        {
+            offset = offset == -1 ? 0 : offset;
+            limit = limit == -1 ? 10 : limit;
+            
+            throw new WebApplicationException(
+                    Response.seeOther(info.getRequestUriBuilder().queryParam("offset", offset)
+                    .queryParam("limit", limit).build())
+                            .build()
+               );
+        }
+        
+        
+        
+        return new ItemsRepresentation(itemsModel, offset, limit );
+    }
+    
+    
+    @Path("{id}")
+    public ItemResource get(@PathParam("id") String id ) {
+        return new ItemResource(itemsModel, id);
+    }
+
 }

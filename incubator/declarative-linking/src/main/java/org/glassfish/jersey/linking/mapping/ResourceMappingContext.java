@@ -38,41 +38,25 @@
  * holder.
  */
 
-package org.glassfish.jersey.linking;
+package org.glassfish.jersey.linking.mapping;
 
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.uri.UriTemplate;
 
 /**
- * Utility for working with @Ref annotations
+ * This service tries to work out the UriTemplate required for a particular
+ * resource class.
  * 
- * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-interface InjectLinkDescriptor {
-    /**
-     * Get the style
-     * @return the style
-     */
-    InjectLink.Style getLinkStyle();
 
-    /**
-     * Get the link template, either directly from the value() or from the
-     * @Path of the class referenced in resource()
-     * @return the link template
-     */
-    String getLinkTemplate(ResourceMappingContext rmc);
 
-    /**
-     * Get the binding as an EL expression for a particular URI template parameter
-     * @param name
-     * @return the EL binding
-     */
-    String getBinding(String name);
-
-    /**
-     * Get the condition.
-     * @return the condition
-     */
-    String getCondition();
+public interface ResourceMappingContext {
+    
+    public interface Mapping
+    {
+        public UriTemplate getTemplate();
+    }
+    
+    
+    public Mapping getMapping(Class<?> resource);
 }

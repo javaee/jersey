@@ -52,6 +52,7 @@ import java.util.regex.PatternSyntaxException;
  * the expression.
  *
  * @author Paul Sandoz
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class PatternWithGroups {
 
@@ -96,7 +97,8 @@ public class PatternWithGroups {
     /**
      * Construct a new pattern.
      *
-     * @param regex        the regular expression. If the expression is {@code null} or an empty string then the pattern will only
+     * @param regex        the regular expression. If the expression is {@code null} or an empty string then the pattern will
+     *                     only
      *                     match
      *                     a {@code null} or empty string.
      * @param groupIndexes the array of group indexes to capturing groups.
@@ -260,7 +262,7 @@ public class PatternWithGroups {
 
         @Override
         public int groupCount() {
-            return groupIndexes.length - 1;
+            return groupIndexes.length;
         }
     }
 
@@ -323,7 +325,7 @@ public class PatternWithGroups {
 
         groupValues.clear();
         if (groupIndexes.length > 0) {
-            for (int i = 0; i < groupIndexes.length - 1; i++) {
+            for (int i = 0; i < groupIndexes.length; i++) {
                 groupValues.add(m.group(groupIndexes[i]));
             }
         } else {
@@ -354,7 +356,7 @@ public class PatternWithGroups {
      * @throws IllegalArgumentException if group values is {@code null}.
      */
     public final boolean match(final CharSequence cs, final List<String> groupNames, final Map<String,
-                String> groupValues) throws IllegalArgumentException {
+            String> groupValues) throws IllegalArgumentException {
         if (groupValues == null) {
             throw new IllegalArgumentException();
         }
@@ -374,6 +376,7 @@ public class PatternWithGroups {
 
         // Assign the matched group values to group names
         groupValues.clear();
+
         for (int i = 0; i < groupNames.size(); i++) {
             String name = groupNames.get(i);
             String currentValue = m.group((groupIndexes.length > 0) ? groupIndexes[i] : i + 1);

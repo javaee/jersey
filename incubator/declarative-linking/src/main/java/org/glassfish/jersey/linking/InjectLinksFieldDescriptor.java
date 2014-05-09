@@ -42,71 +42,65 @@ package org.glassfish.jersey.linking;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.Path;
+
 import javax.ws.rs.core.Link;
-import org.glassfish.jersey.server.model.AnnotatedMethod;
-  
-import org.glassfish.jersey.server.model.MethodList;
-  
+
 /**
- * Utility class for working with {@link InjectLinks} annotated fields
- * 
+ * Utility class for working with {@link InjectLinks} annotated fields.
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-class InjectLinksFieldDescriptor extends FieldDescriptor  {
+class InjectLinksFieldDescriptor extends FieldDescriptor {
 
-    private InjectLinks link;
-    private Class<?> type;
+    private final InjectLinks link;
+    private final Class<?> type;
 
+    /**
+     * TODO javadoc.
+     */
     public InjectLinksFieldDescriptor(Field f, InjectLinks l, Class<?> t) {
         super(f);
         link = l;
         type = t;
     }
-    
+
+    /**
+     * TODO javadoc.
+     */
     public void setPropertyValue(Object instance, List<Link> list) {
         setAccessibleField(field);
         try {
-            
-            Object value = null;
+
+            Object value;
             if (List.class.equals(type)) {
                 value = list;
+            } else if (type.isArray()) {
+                value = list.toArray((Object[]) Array.newInstance(type.getComponentType(), list.size()));
+            } else {
+                throw new IllegalArgumentException("Field type " + type + " not one of supported List<Link> or List[]");
             }
-            else if (type.isArray()) {
-                value = list.toArray((Object[])Array.newInstance(type.getComponentType(), list.size()));
-            }
-            else  {
-                throw new IllegalArgumentException("Field type "  + type + " not one of supported List<Link> or List[]");
-            }
-            
+
             field.set(instance, value);
-            
-            
-            
-            
-        } catch (IllegalArgumentException ex) {
-            Logger.getLogger(InjectLinksFieldDescriptor.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
+
+
+        } catch (IllegalArgumentException | IllegalAccessException ex) {
             Logger.getLogger(InjectLinksFieldDescriptor.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public InjectLinkFieldDescriptor[] getLinksToInject()
-    {
+
+    /**
+     * TODO javadoc.
+     */
+    public InjectLinkFieldDescriptor[] getLinksToInject() {
         final InjectLink[] listOfLinks = link.value();
         InjectLinkFieldDescriptor[] fields = new InjectLinkFieldDescriptor[listOfLinks.length];
-        for (int i =0; i < fields.length; i ++)
-        {
+        for (int i = 0; i < fields.length; i++) {
             fields[i] = new InjectLinkFieldDescriptor(field, listOfLinks[i], Link.class);
         }
-        return  fields;
+        return fields;
     }
 }
