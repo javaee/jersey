@@ -65,6 +65,7 @@ import org.glassfish.jersey.test.ServletDeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.glassfish.jersey.test.spi.TestHelper;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.servlet.WebappContext;
@@ -92,9 +93,10 @@ public class GrizzlyWebTestContainerFactory implements TestContainerFactory {
      * Server.
      */
     private static class GrizzlyWebTestContainer implements TestContainer {
+
         private static final Logger LOGGER = Logger.getLogger(GrizzlyWebTestContainer.class.getName());
 
-        private final URI baseUri;
+        private URI baseUri;
 
         private final ServletDeploymentContext deploymentContext;
 
@@ -106,7 +108,8 @@ public class GrizzlyWebTestContainerFactory implements TestContainerFactory {
                     .path(context.getServletPath())
                     .build();
 
-            LOGGER.info("Creating GrizzlyWebTestContainer configured at the base URI " + this.baseUri);
+            LOGGER.info("Creating GrizzlyWebTestContainer configured at the base URI "
+                    + TestHelper.zeroPortToAvailablePort(baseUri));
 
             this.deploymentContext = context;
             instantiateGrizzlyWebServer();
@@ -130,9 +133,16 @@ public class GrizzlyWebTestContainerFactory implements TestContainerFactory {
             } else {
                 LOGGER.log(Level.FINE, "Starting GrizzlyWebTestContainer...");
                 try {
-                    this.server.start();
-                } catch (IOException e) {
-                    throw new TestContainerException(e);
+                    server.start();
+
+                    if (baseUri.getPort() == 0) {
+                        baseUri = UriBuilder.fromUri(baseUri)
+                                .port(server.getListener("grizzly").getPort())
+                                .build();
+                        LOGGER.log(Level.INFO, "Started GrizzlyWebTestContainer at the base URI " + baseUri);
+                    }
+                } catch (final IOException ioe) {
+                    throw new TestContainerException(ioe);
                 }
             }
         }
@@ -164,13 +174,13 @@ public class GrizzlyWebTestContainerFactory implements TestContainerFactory {
                 servletPathLocal += "/*";
             }
 
-            WebappContext context = new WebappContext("TestContext", contextPathLocal);
+            final WebappContext context = new WebappContext("TestContext", contextPathLocal);
 
             // servlet class and servlet instance can be both null or one of them is specified exclusively.
             final HttpServlet servletInstance = deploymentContext.getServletInstance();
             final Class<? extends HttpServlet> servletClass = deploymentContext.getServletClass();
             if (servletInstance != null || servletClass != null) {
-                ServletRegistration registration;
+                final ServletRegistration registration;
                 if (servletInstance != null) {
                     registration = context.addServlet(servletInstance.getClass().getName(), servletInstance);
                 } else {
@@ -180,20 +190,20 @@ public class GrizzlyWebTestContainerFactory implements TestContainerFactory {
                 registration.addMapping(servletPathLocal);
             }
 
-            for (Class<? extends EventListener> eventListener : deploymentContext.getListeners()) {
+            for (final Class<? extends EventListener> eventListener : deploymentContext.getListeners()) {
                 context.addListener(eventListener);
             }
 
             final Map<String, String> contextParams = deploymentContext.getContextParams();
-            for (String contextParamName : contextParams.keySet()) {
+            for (final String contextParamName : contextParams.keySet()) {
                 context.addContextInitParameter(contextParamName, contextParams.get(contextParamName));
             }
 
             // Filter support
             if (deploymentContext.getFilters() != null) {
-                for (ServletDeploymentContext.FilterDescriptor filterDescriptor : deploymentContext.getFilters()) {
+                for (final ServletDeploymentContext.FilterDescriptor filterDescriptor : deploymentContext.getFilters()) {
 
-                    FilterRegistration filterRegistration =
+                    final FilterRegistration filterRegistration =
                             context.addFilter(filterDescriptor.getFilterName(), filterDescriptor.getFilterClass());
 
                     filterRegistration.setInitParameters(filterDescriptor.getInitParams());
@@ -207,14 +217,14 @@ public class GrizzlyWebTestContainerFactory implements TestContainerFactory {
             try {
                 server = GrizzlyHttpServerFactory.createHttpServer(baseUri, (GrizzlyHttpContainer) null, false, null, false);
                 context.deploy(server);
-            } catch (ProcessingException ex) {
+            } catch (final ProcessingException ex) {
                 throw new TestContainerException(ex);
             }
         }
 
         private EnumSet<DispatcherType> grizzlyDispatcherTypes(final Set<DispatcherType> dispatcherTypes) {
-            Set<DispatcherType> grizzlyDispatcherTypes = new HashSet<>();
-            for (javax.servlet.DispatcherType servletDispatchType : dispatcherTypes) {
+            final Set<DispatcherType> grizzlyDispatcherTypes = new HashSet<>();
+            for (final javax.servlet.DispatcherType servletDispatchType : dispatcherTypes) {
                 grizzlyDispatcherTypes.add(DispatcherType.valueOf(servletDispatchType.name()));
             }
             return EnumSet.copyOf(grizzlyDispatcherTypes);

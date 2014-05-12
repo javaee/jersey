@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,68 +37,74 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.grizzly;
+
+package org.glassfish.jersey.tests.e2e;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.DeploymentContext;
-import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.JerseyTestNg;
 import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
 
 /**
- * Grizzly test container base URI tests.
+ * Base for TestNG parallel tests. Contains one singleton resource with GET method returning incremental sequence of integers.
+ * Extensions has to implement {@link #testValue(Integer)}.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class BaseUriTest extends JerseyTest {
+@Test(threadPoolSize = 5, invocationCount = 13)
+public abstract class AbstractParallelTest extends JerseyTestNg {
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() {
-        return new GrizzlyTestContainerFactory();
-    }
+    @Path("/")
+    @Singleton
+    @Produces("text/plain")
+    public static class Resource {
 
-    @Path("root")
-    public static class TestResource {
+        private AtomicInteger ai = new AtomicInteger(0);
+
         @GET
-        public String get() {
-            return "GET";
-        }
-
-        @Path("sub")
-        @GET
-        public String getSub() {
-            return "sub";
+        public int get() {
+            return ai.getAndIncrement();
         }
     }
 
     @Override
-    protected DeploymentContext configureDeployment() {
-        return DeploymentContext.builder(new ResourceConfig(TestResource.class))
-                .contextPath("context")
-                .build();
+    protected Application configure() {
+        // Find first available port.
+        forceSet(TestProperties.CONTAINER_PORT, "0");
+
+        return new ResourceConfig(Resource.class);
     }
 
-    @Test
-    public void testGet() {
-        WebTarget target = target("root");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("GET", s);
+    public void test1() throws Exception {
+        test();
     }
 
-    @Test
-    public void testGetSub() {
-        WebTarget target = target("root/sub");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("sub", s);
+    public void test2() throws Exception {
+        test();
     }
 
+    public void test3() throws Exception {
+        test();
+    }
+
+    private void test() {
+        final Response response = target().request().get();
+
+        assertEquals(response.getStatus(), 200);
+        testValue(response.readEntity(Integer.class));
+    }
+
+    protected abstract void testValue(final Integer actual);
 }

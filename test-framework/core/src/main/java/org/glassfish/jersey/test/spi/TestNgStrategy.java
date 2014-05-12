@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,68 +37,50 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.grizzly;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
+package org.glassfish.jersey.test.spi;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.DeploymentContext;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-
-import org.junit.Assert;
-import org.junit.Test;
+import javax.ws.rs.client.Client;
 
 /**
- * Grizzly test container base URI tests.
+ * Strategy defining how test containers and clients are stored and passed to TestNG tests.
+ * <p/>
+ * {@link org.glassfish.jersey.test.JerseyTestNg Jersey Test} calls {@link #testContainer(TestContainer)} /
+ * {@link #client(javax.ws.rs.client.Client)} methods before {@link #testContainer()} / {@link #client()}. Strategy is not
+ * supposed to create instances of test container / client. It's purpose is to appropriately store given instances for different
+ * TestNG approaches defined by {@code @BeforeXXX} and {@code @AfterXXX} annotations.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class BaseUriTest extends JerseyTest {
+public interface TestNgStrategy {
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() {
-        return new GrizzlyTestContainerFactory();
-    }
+    /**
+     * Return a test container to run the tests in. This method is called after {@link #testContainer(TestContainer)}.
+     *
+     * @return a test container instance or {@code null} if the test container is not set.
+     */
+    public TestContainer testContainer();
 
-    @Path("root")
-    public static class TestResource {
-        @GET
-        public String get() {
-            return "GET";
-        }
+    /**
+     * Set a new test container instance to run the tests in and return the old, previously stored, instance.
+     *
+     * @param testContainer new container instance.
+     * @return an old container instance or {@code null} if the container is not set.
+     */
+    public TestContainer testContainer(final TestContainer testContainer);
 
-        @Path("sub")
-        @GET
-        public String getSub() {
-            return "sub";
-        }
-    }
+    /**
+     * Return a JAX-RS client. This method is called after {@link #client(javax.ws.rs.client.Client)}.
+     *
+     * @return a client instance or {@code null} if the client is not set.
+     */
+    public Client client();
 
-    @Override
-    protected DeploymentContext configureDeployment() {
-        return DeploymentContext.builder(new ResourceConfig(TestResource.class))
-                .contextPath("context")
-                .build();
-    }
-
-    @Test
-    public void testGet() {
-        WebTarget target = target("root");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("GET", s);
-    }
-
-    @Test
-    public void testGetSub() {
-        WebTarget target = target("root/sub");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("sub", s);
-    }
-
+    /**
+     * Set a new JAX-RS client instance and return the old, previously stored, instance.
+     *
+     * @param client new client.
+     * @return an old client instance or {@code null} if the client is not set.
+     */
+    public Client client(final Client client);
 }

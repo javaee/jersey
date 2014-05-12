@@ -51,8 +51,11 @@ import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.glassfish.jersey.test.spi.TestHelper;
 
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 
 /**
  * Factory for testing {@link org.glassfish.jersey.jetty.JettyHttpContainer}.
@@ -66,7 +69,7 @@ public class JettyTestContainerFactory implements TestContainerFactory {
 
         private static final Logger LOGGER = Logger.getLogger(JettyTestContainer.class.getName());
 
-        private final URI baseUri;
+        private URI baseUri;
         private final Server server;
 
         private JettyTestContainer(final URI baseUri, final DeploymentContext context) {
@@ -81,7 +84,8 @@ public class JettyTestContainerFactory implements TestContainerFactory {
             this.baseUri = base;
 
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Creating JettyTestContainer configured at the base URI " + this.baseUri);
+                LOGGER.info("Creating JettyTestContainer configured at the base URI "
+                        + TestHelper.zeroPortToAvailablePort(baseUri));
             }
 
             this.server = JettyHttpContainerFactory.createServer(this.baseUri, context.getResourceConfig(), false);
@@ -104,7 +108,21 @@ public class JettyTestContainerFactory implements TestContainerFactory {
             } else {
                 LOGGER.log(Level.FINE, "Starting JettyTestContainer...");
                 try {
-                    this.server.start();
+                    server.start();
+
+                    if (baseUri.getPort() == 0) {
+                        int port = 0;
+                        for (final Connector connector : server.getConnectors()) {
+                            if (connector instanceof ServerConnector) {
+                                port = ((ServerConnector) connector).getLocalPort();
+                                break;
+                            }
+                        }
+
+                        baseUri = UriBuilder.fromUri(baseUri).port(port).build();
+
+                        LOGGER.log(Level.INFO, "Started JettyTestContainer at the base URI " + baseUri);
+                    }
                 } catch (Exception e) {
                     throw new TestContainerException(e);
                 }

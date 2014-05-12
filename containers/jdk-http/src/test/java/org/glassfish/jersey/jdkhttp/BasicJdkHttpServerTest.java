@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,68 +37,64 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.grizzly;
+
+package org.glassfish.jersey.jdkhttp;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.DeploymentContext;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.Assert;
+import org.junit.After;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpsServer;
 
 /**
- * Grizzly test container base URI tests.
+ * Jdk Http Server basic tests.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class BaseUriTest extends JerseyTest {
+public class BasicJdkHttpServerTest extends AbstractJdkHttpServerTester {
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() {
-        return new GrizzlyTestContainerFactory();
-    }
+    private HttpServer server;
 
-    @Path("root")
+    @Path("/test")
     public static class TestResource {
+
         @GET
         public String get() {
-            return "GET";
-        }
-
-        @Path("sub")
-        @GET
-        public String getSub() {
-            return "sub";
+            return "test";
         }
     }
 
-    @Override
-    protected DeploymentContext configureDeployment() {
-        return DeploymentContext.builder(new ResourceConfig(TestResource.class))
-                .contextPath("context")
-                .build();
+    @Test
+    public void testCreateHttpServer() throws Exception {
+        server = JdkHttpServerFactory.createHttpServer(
+                UriBuilder.fromUri("http://localhost/").port(getPort()).build(), new ResourceConfig(TestResource.class));
+
+        assertThat(server, instanceOf(HttpServer.class));
+        assertThat(server, not(instanceOf(HttpsServer.class)));
     }
 
     @Test
-    public void testGet() {
-        WebTarget target = target("root");
+    public void testCreateHttpsServer() throws Exception {
+        server = JdkHttpServerFactory.createHttpServer(
+                UriBuilder.fromUri("https://localhost/").port(getPort()).build(), new ResourceConfig(TestResource.class));
 
-        String s = target.request().get(String.class);
-        Assert.assertEquals("GET", s);
+        assertThat(server, instanceOf(HttpsServer.class));
     }
 
-    @Test
-    public void testGetSub() {
-        WebTarget target = target("root/sub");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("sub", s);
+    @After
+    public void tearDown() {
+        if (server != null) {
+            server.stop(3);
+            server = null;
+        }
     }
-
 }

@@ -52,6 +52,7 @@ import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.glassfish.jersey.test.spi.TestHelper;
 
 import org.glassfish.grizzly.http.server.HttpServer;
 
@@ -66,14 +67,16 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
 
         private static final Logger LOGGER = Logger.getLogger(GrizzlyTestContainer.class.getName());
 
-        private final URI baseUri;
+        private URI baseUri;
+
         private final HttpServer server;
 
         private GrizzlyTestContainer(final URI baseUri, final DeploymentContext context) {
             this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
 
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Creating GrizzlyTestContainer configured at the base URI " + this.baseUri);
+                LOGGER.info("Creating GrizzlyTestContainer configured at the base URI "
+                        + TestHelper.zeroPortToAvailablePort(baseUri));
             }
 
             this.server = GrizzlyHttpServerFactory.createHttpServer(this.baseUri, context.getResourceConfig(), false);
@@ -97,9 +100,16 @@ public class GrizzlyTestContainerFactory implements TestContainerFactory {
             } else {
                 LOGGER.log(Level.FINE, "Starting GrizzlyTestContainer...");
                 try {
-                    this.server.start();
-                } catch (IOException e) {
-                    throw new TestContainerException(e);
+                    server.start();
+
+                    if (baseUri.getPort() == 0) {
+                        baseUri = UriBuilder.fromUri(baseUri)
+                                .port(server.getListener("grizzly").getPort())
+                                .build();
+                        LOGGER.log(Level.INFO, "Started GrizzlyTestContainer at the base URI " + baseUri);
+                    }
+                } catch (final IOException ioe) {
+                    throw new TestContainerException(ioe);
                 }
             }
         }

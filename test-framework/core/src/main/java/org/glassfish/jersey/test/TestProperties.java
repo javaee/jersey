@@ -49,43 +49,47 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
  */
 @PropertiesClass
 public final class TestProperties {
+
     /**
      * If set to {@code true} the property enables basic logging of the request and
      * response flow on both - client and server. Note that traffic logging does not
      * dump message entities by default. Please see {@link #DUMP_ENTITY} documentation
      * for instructions how to enable entity content dumping.
-     * <p />
+     * <p/>
      * The default value is {@code false}.
-     * <p />
+     * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String LOG_TRAFFIC = "jersey.config.test.logging.enable";
+
     /**
      * If set to {@code true} the property instructs the test traffic logger to
      * dump message entities as part of the test traffic logging. Message entity
      * dumping is turned off by default for performance reasons. Note that the
      * value of the property will be ignored unless {@link #LOG_TRAFFIC traffic
      * logging} is enabled too.
-     * <p />
+     * <p/>
      * The default value is {@code false}.
-     * <p />
+     * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String DUMP_ENTITY = "jersey.config.test.logging.dumpEntity";
+
     /**
      * Specifies the {@link TestContainerFactory test container factory} implementation
      * class to be used to create a test container instance for the test. The value
      * of the property must be a {@code String} identifying a valid, fully qualified
      * name of a test container factory implementation class, otherwise it will
      * be ignored.
-     * <p />
+     * <p/>
      * The default value is <tt>{@value #DEFAULT_CONTAINER_FACTORY}</tt>.
-     * <p />
+     * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      *
      * @see #CONTAINER_PORT
      */
     public static final String CONTAINER_FACTORY = "jersey.config.test.container.factory";
+
     /**
      * Specifies the default {@link TestContainerFactory test container factory}
      * implementation class to be used to create a test container instance for the
@@ -93,16 +97,17 @@ public final class TestProperties {
      *
      * @see #CONTAINER_FACTORY
      */
-    public static final String DEFAULT_CONTAINER_FACTORY =
-            "org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory";
+    public static final String DEFAULT_CONTAINER_FACTORY = "org.glassfish.jersey.test.grizzly.GrizzlyTestContainerFactory";
 
     /**
      * Specifies the network connection port to be used by an active test container
      * for test application deployment. The value of the property must be a valid
      * positive integer, otherwise it will be ignored.
-     * <p />
+     * <p/>
+     * If the value of the property is {@code 0} then first available port is used.
+     * <p/>
      * The default value is <tt>{@value #DEFAULT_CONTAINER_PORT}</tt>.
-     * <p />
+     * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      *
      * @see #CONTAINER_FACTORY
@@ -121,7 +126,9 @@ public final class TestProperties {
      * If set to a numeric value then this property enables to store log records at {@link java.util.logging.Level log level}
      * value (or higher) defined by the value of this property.
      * Log records can be retrieved in tests using {@link org.glassfish.jersey.test.JerseyTest#getLoggedRecords()}.
-     * <p />
+     * <p/>
+     * This property is not supported for parallel tests.
+     * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String RECORD_LOG_LEVEL = "jersey.config.test.logging.record.level";

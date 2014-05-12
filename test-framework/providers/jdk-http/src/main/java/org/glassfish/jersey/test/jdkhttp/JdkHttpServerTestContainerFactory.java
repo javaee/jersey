@@ -51,6 +51,7 @@ import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.glassfish.jersey.test.spi.TestHelper;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -64,7 +65,7 @@ public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
 
     private static class JdkHttpServerTestContainer implements TestContainer {
 
-        private final URI baseUri;
+        private URI baseUri;
         private final HttpServer server;
         private final AtomicBoolean started = new AtomicBoolean(false);
         private static final Logger LOGGER = Logger.getLogger(JdkHttpServerTestContainer.class.getName());
@@ -73,7 +74,8 @@ public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
             this.baseUri = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
 
             if (LOGGER.isLoggable(Level.INFO)) {
-                LOGGER.info("Creating JdkHttpServerTestContainer configured at the base URI " + this.baseUri);
+                LOGGER.info("Creating JdkHttpServerTestContainer configured at the base URI "
+                        + TestHelper.zeroPortToAvailablePort(baseUri));
             }
 
             this.server = JdkHttpServerFactory.createHttpServer(this.baseUri, context.getResourceConfig(), false);
@@ -94,6 +96,13 @@ public class JdkHttpServerTestContainerFactory implements TestContainerFactory {
             if (started.compareAndSet(false, true)) {
                 LOGGER.log(Level.FINE, "Starting JdkHttpServerTestContainer...");
                 server.start();
+
+                if (baseUri.getPort() == 0) {
+                    baseUri = UriBuilder.fromUri(baseUri)
+                            .port(server.getAddress().getPort())
+                            .build();
+                    LOGGER.log(Level.INFO, "Started JdkHttpServerTestContainer at the base URI " + baseUri);
+                }
             } else {
                 LOGGER.log(Level.WARNING, "Ignoring start request - JdkHttpServerTestContainer is already started.");
             }

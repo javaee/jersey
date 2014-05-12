@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,68 +37,67 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.test.grizzly;
+
+package org.glassfish.jersey.tests.e2e;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+
+import javax.inject.Singleton;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.DeploymentContext;
-import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.glassfish.jersey.test.JerseyTestNg;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
 
 /**
- * Grizzly test container base URI tests.
+ * Tests that container is created only once per class and each test method sends request to the same container.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class BaseUriTest extends JerseyTest {
+public class ContainerPerClassTest extends JerseyTestNg.ContainerPerClassTest {
 
-    @Override
-    protected TestContainerFactory getTestContainerFactory() {
-        return new GrizzlyTestContainerFactory();
-    }
+    @Path("/")
+    @Singleton
+    @Produces("text/plain")
+    public static class Resource {
 
-    @Path("root")
-    public static class TestResource {
+        private int i = 1;
+
         @GET
-        public String get() {
-            return "GET";
-        }
-
-        @Path("sub")
-        @GET
-        public String getSub() {
-            return "sub";
+        public int get() {
+            return i++;
         }
     }
 
     @Override
-    protected DeploymentContext configureDeployment() {
-        return DeploymentContext.builder(new ResourceConfig(TestResource.class))
-                .contextPath("context")
-                .build();
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
     }
 
-    @Test
-    public void testGet() {
-        WebTarget target = target("root");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("GET", s);
+    @Test(priority = 1)
+    public void first() throws Exception {
+        test(1);
     }
 
-    @Test
-    public void testGetSub() {
-        WebTarget target = target("root/sub");
-
-        String s = target.request().get(String.class);
-        Assert.assertEquals("sub", s);
+    @Test(priority = 2)
+    public void second() throws Exception {
+        test(2);
     }
 
+    @Test(priority = 3)
+    public void third() throws Exception {
+        test(3);
+    }
+
+    private void test(final Integer expected) {
+        final Response response = target().request().get();
+
+        assertEquals(response.getStatus(), 200);
+        assertEquals(response.readEntity(Integer.class), expected);
+    }
 }
