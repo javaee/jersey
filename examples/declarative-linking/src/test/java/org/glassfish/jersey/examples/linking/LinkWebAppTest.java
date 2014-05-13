@@ -41,10 +41,9 @@
 package org.glassfish.jersey.examples.linking;
 
 import java.util.List;
-import javax.ws.rs.core.MediaType;
 
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.client.ClientResponse;
 
 import org.glassfish.jersey.examples.linking.resources.ItemsResource;
 import org.glassfish.jersey.linking.DeclarativeLinkingFeature;
@@ -53,8 +52,9 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Naresh (Srinivas.Bhimisetty@Sun.Com)
@@ -65,7 +65,7 @@ public class LinkWebAppTest extends JerseyTest {
     @Override
     protected ResourceConfig configure() {
         enable(TestProperties.LOG_TRAFFIC);
-        ResourceConfig rc = new ResourceConfig(ItemsResource.class);
+        final ResourceConfig rc = new ResourceConfig(ItemsResource.class);
         rc.register(DeclarativeLinkingFeature.class);
         return rc;
     }
@@ -75,16 +75,21 @@ public class LinkWebAppTest extends JerseyTest {
      */
     @Test
     public void testLinks() throws Exception {
-        
-        Response response = target().path("items").queryParam("offset", 10).queryParam("limit", "10").request().accept(MediaType.APPLICATION_XML_TYPE).get(Response.class);
+        final Response response = target().path("items")
+                .queryParam("offset", 10)
+                .queryParam("limit", "10")
+                .request(MediaType.APPLICATION_XML_TYPE)
+                .get(Response.class);
+
         final Response.StatusType statusInfo = response.getStatusInfo();
         assertEquals("Should have succeeded", 200, statusInfo.getStatusCode());
 
-        
-        String content = response.readEntity(String.class);
-        List<Object> linkHeaders = response.getHeaders().get("Link");
+        final String content = response.readEntity(String.class);
+        final List<Object> linkHeaders = response.getHeaders().get("Link");
 
         assertEquals("Should have two link headers", 2, linkHeaders.size());
-        assertTrue("Content should contain next link",content.contains("http://localhost:9998/items?offset=20&amp;limit=10"));
+        assertThat("Content should contain next link",
+                content,
+                containsString("http://localhost:" + getPort() + "/items?offset=20&amp;limit=10"));
     }
 }
