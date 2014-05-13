@@ -702,7 +702,7 @@ resourceConfig.getSingletons().add(
     @Override
     protected void configure() {
         // request scope binding
-        bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+        bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScoped.class);
         // singleton binding
         bind(MyInjectableSingleton.class).in(Singleton.class);
         // singleton instance binding
