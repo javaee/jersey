@@ -380,6 +380,8 @@ public final class ApplicationHandler {
             if (!CommonProperties.getValue(runtimeConfig.getProperties(), RuntimeType.SERVER,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
                 runtimeConfig.configureAutoDiscoverableProviders(locator);
+            } else {
+                runtimeConfig.configureForcedAutoDiscoverableProviders(locator);
             }
 
             // Configure binders and features.

@@ -291,7 +291,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public void configureAutoDiscoverableProviders(final ServiceLocator locator) {
+        public void configureAutoDiscoverableProviders(final ServiceLocator locator, final boolean forcedOnly) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
@@ -788,7 +788,16 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param locator service locator to obtain auto-discoverables from.
      */
     final void configureAutoDiscoverableProviders(final ServiceLocator locator) {
-        state.configureAutoDiscoverableProviders(locator);
+        state.configureAutoDiscoverableProviders(locator, false);
+    }
+
+    /**
+     * Configure forced auto-discoverables.
+     *
+     * @param locator service locator to obtain auto-discoverables from.
+     */
+    final void configureForcedAutoDiscoverableProviders(final ServiceLocator locator) {
+        state.configureAutoDiscoverableProviders(locator, true);
     }
 
     /**

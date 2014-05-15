@@ -240,18 +240,13 @@ public final class ServerProperties {
     /**
      * If {@code true} then disable WADL generation.
      *
-     * By default WADL generation is automatically enabled, if JAXB is
-     * present in the classpath and the auto-discovery feature is enabled or if an appropriate {@link javax.ws.rs.core.Feature
-     * feature} is enabled.
+     * By default WADL generation is automatically enabled, if JAXB is present in the classpath.
      * <p>
      * The default value is {@code false}.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
-     *
-     * @see #FEATURE_AUTO_DISCOVERY_DISABLE
-     * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
      */
     public static final String WADL_FEATURE_DISABLE = "jersey.config.server.wadl.disableWadl";
 
@@ -259,18 +254,13 @@ public final class ServerProperties {
      * If {@code true} then disable Bean Validation support.
      *
      * By default Bean Validation (JSR-349) is automatically enabled, if {@code org.glassfish.jersey.ext::jersey-bean-validation}
-     * Jersey module is present in the classpath and the auto-discovery support is not disabled (see
-     * {@link #FEATURE_AUTO_DISCOVERY_DISABLE}) or &mdash; in case the Jersey auto-discovery support is disabled &mdash; if the
-     * {@code org.glassfish.jersey.server.validation.ValidationFeature} is explicitly registered in a JAX-RS/Jersey application.
+     * Jersey module is present in the classpath.
      * <p>
      * The default value is {@code false}.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
-     *
-     * @see #FEATURE_AUTO_DISCOVERY_DISABLE
-     * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
      */
     public static final String BV_FEATURE_DISABLE = "jersey.config.beanValidation.disable.server";
 
@@ -325,11 +315,11 @@ public final class ServerProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
-     * <p>This constant is an alias for {@link CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE_SERVER}</p>
+     * <p>
+     * This constant is an alias for {@link CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE_SERVER}
+     * </p>
      *
      * @see org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE
-     * @see #BV_FEATURE_DISABLE
-     * @see #WADL_FEATURE_DISABLE
      */
     @PropertyAlias
     public static final String FEATURE_AUTO_DISCOVERY_DISABLE = CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE_SERVER;

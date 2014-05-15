@@ -353,7 +353,11 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         }
 
         public void configureAutoDiscoverableProviders(ServiceLocator locator) {
-            commonConfig.configureAutoDiscoverableProviders(locator);
+            commonConfig.configureAutoDiscoverableProviders(locator, false);
+        }
+
+        public void configureForcedAutoDiscoverableProviders(ServiceLocator locator) {
+            commonConfig.configureAutoDiscoverableProviders(locator, true);
         }
 
         public void configureMetaProviders(ServiceLocator locator) {
@@ -385,6 +389,8 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             if (!CommonProperties.getValue(runtimeCfgState.getProperties(), RuntimeType.CLIENT,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
                 runtimeCfgState.configureAutoDiscoverableProviders(locator);
+            } else {
+                runtimeCfgState.configureForcedAutoDiscoverableProviders(locator);
             }
 
             // Configure binders and features.

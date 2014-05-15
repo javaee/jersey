@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 import org.glassfish.jersey.server.wadl.WadlFeature;
 
 /**
@@ -54,10 +55,10 @@ import org.glassfish.jersey.server.wadl.WadlFeature;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
-public final class WadlAutoDiscoverable implements AutoDiscoverable {
+public final class WadlAutoDiscoverable implements ForcedAutoDiscoverable {
 
     @Override
-    public void configure(FeatureContext context) {
+    public void configure(final FeatureContext context) {
         if (!context.getConfiguration().isRegistered(WadlFeature.class)) {
             context.register(WadlFeature.class);
         }

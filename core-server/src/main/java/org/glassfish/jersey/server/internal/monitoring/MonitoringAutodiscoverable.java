@@ -44,7 +44,7 @@ import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 import org.glassfish.jersey.server.ServerProperties;
 
 /**
@@ -54,14 +54,16 @@ import org.glassfish.jersey.server.ServerProperties;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
-public class MonitoringAutodiscoverable implements AutoDiscoverable {
+public class MonitoringAutodiscoverable implements ForcedAutoDiscoverable {
+
     @Override
-    public void configure(FeatureContext context) {
+    public void configure(final FeatureContext context) {
         if (!context.getConfiguration().isRegistered(MonitoringFeature.class)) {
             final Boolean monitoringEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
                     ServerProperties.MONITORING_STATISTICS_ENABLED, Boolean.FALSE);
             final Boolean mbeansEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
                     ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, Boolean.FALSE);
+
             if (monitoringEnabled || mbeansEnabled) {
                 context.register(MonitoringFeature.class);
             }

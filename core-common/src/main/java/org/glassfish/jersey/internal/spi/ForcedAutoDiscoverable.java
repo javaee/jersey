@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,25 +38,22 @@
  * holder.
  */
 
-package org.glassfish.jersey.jsonp.internal;
-
-import javax.ws.rs.core.FeatureContext;
-
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-import org.glassfish.jersey.jsonp.JsonProcessingFeature;
+package org.glassfish.jersey.internal.spi;
 
 /**
- * {@link AutoDiscoverable} registering {@link JsonProcessingFeature} if this feature is not already registered.
+ * A service provider contract for JAX-RS and Jersey components that need to be automatically discovered and registered in
+ * {@link javax.ws.rs.core.Configuration runtime configurations}.
+ * <p/>
+ * A component implementing this contract becomes auto-discoverable by adding a new entry with fully qualified name of its
+ * implementation class name to a {@code org.glassfish.jersey.internal.spi.AutoDiscoverable} file in the {@code
+ * META-INF/services} directory.
+ * <p/>
+ * Implementations of this contract are always {@link #configure(javax.ws.rs.core.FeatureContext) configured} regardless of
+ * values of properties {@link org.glassfish.jersey.CommonProperties#FEATURE_AUTO_DISCOVERY_DISABLE} and
+ * {@link org.glassfish.jersey.CommonProperties#METAINF_SERVICES_LOOKUP_DISABLE}.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @see org.glassfish.jersey.internal.spi.AutoDiscoverable
  */
-public class JsonProcessingAutoDiscoverable  implements ForcedAutoDiscoverable {
-
-    @Override
-    public void configure(final FeatureContext context) {
-        if (!context.getConfiguration().isRegistered(JsonProcessingFeature.class)) {
-            context.register(JsonProcessingFeature.class);
-        }
-    }
+public interface ForcedAutoDiscoverable extends AutoDiscoverable {
 }

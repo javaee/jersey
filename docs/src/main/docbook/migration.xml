@@ -52,6 +52,28 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.9">
+        <title>Migrating from Jersey 2.8 to 2.9</title>
+
+        <section xml:id="mig-2.9-breaking-changes">
+            <title>Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Some of the feature specific configuration properties (disable WADL, disable BV, disable JSON-Processing,
+                            enable Monitoring), and their server/client counterparts, are no longer affected by a value of properties
+                            <literal>CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE</literal> or
+                            <literal>CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE</literal>. The specific properties have to
+                            be used to change default behaviour of mentioned features (e.g.
+                            <literal>ServerProperties.WADL_FEATURE_DISABLE</literal>).
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
     <section xml:id="mig-2.8">
         <title>Migrating from Jersey 2.7 to 2.8</title>
 
