@@ -161,6 +161,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.glassfish.jersey.containers.glassfish</groupId>
+                <artifactId>jersey-gf-cdi-ban-custom-hk2-binding</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.glassfish.jersey.ext</groupId>
                 <artifactId>jersey-bean-validation</artifactId>
                 <version>${project.version}</version>
@@ -271,11 +276,6 @@
                 <artifactId>jersey-test-framework-provider-bundle</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-                <artifactId>jersey-test-framework-provider-default-client</artifactId>
-                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.test-framework.providers</groupId>
