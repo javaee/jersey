@@ -596,8 +596,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                     final int p2 = o2.getClass().isAnnotationPresent(Priority.class)
                             ? o2.getClass().getAnnotation(Priority.class).value() : Priorities.USER;
 
-                    final int compare = Integer.compare(p1, p2);
-                    return compare == 0 ? -1 : compare;
+                    return (p1 < p2 || p1 == p2) ? -1 : 1;
                 }
             });
 
