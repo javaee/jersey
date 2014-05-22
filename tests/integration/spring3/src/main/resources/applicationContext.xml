@@ -67,5 +67,7 @@
     <bean class="org.glassfish.jersey.server.spring.test.ControllerResource"/>
     
     <bean class="org.glassfish.jersey.server.spring.test.RepositoryResource"/>
+    
+    <bean class="org.glassfish.jersey.server.spring.test.EndpointResource"/>
 
 </beans>
