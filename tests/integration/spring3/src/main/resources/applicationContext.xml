@@ -59,7 +59,13 @@
 
     <bean name="AccountService-prototype-2" class="org.glassfish.jersey.server.spring.test.AccountServiceImpl" scope="prototype"/>
 
-    <!-- Spring managed JAX-RS resource -->
+    <!-- Spring managed JAX-RS resources -->
     <bean class="org.glassfish.jersey.server.spring.test.AccountSpringResource"/>
+    
+    <bean class="org.glassfish.jersey.server.spring.test.ServiceResource"/>
+    
+    <bean class="org.glassfish.jersey.server.spring.test.ControllerResource"/>
+    
+    <bean class="org.glassfish.jersey.server.spring.test.RepositoryResource"/>
 
 </beans>
