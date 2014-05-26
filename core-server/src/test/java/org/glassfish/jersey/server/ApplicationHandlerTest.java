@@ -52,6 +52,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -516,7 +517,8 @@ public class ApplicationHandlerTest {
 
         @Override
         public Response toResponse(final Throwable exception) {
-            if (exception instanceof MessageBodyProviderNotFoundException || exception instanceof WebApplicationException) {
+            if ((exception instanceof InternalServerErrorException && exception.getCause() instanceof
+                    MessageBodyProviderNotFoundException) || (exception instanceof WebApplicationException)) {
                 return Response.ok().entity("bar").build();
             } else if (exception instanceof MappableException || exception instanceof RuntimeException) {
                 return Response.ok().entity(new ResponseErrorEntity("bar")).type("foo/bar").build();

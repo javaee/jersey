@@ -58,6 +58,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.ServiceUnavailableException;
 import javax.ws.rs.WebApplicationException;
@@ -82,6 +83,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.message.internal.HeaderValueException;
+import org.glassfish.jersey.message.internal.MessageBodyProviderNotFoundException;
 import org.glassfish.jersey.message.internal.OutboundJaxrsResponse;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.message.internal.TracingLogger;
@@ -498,6 +500,12 @@ public class ServerRuntime {
                 if (throwable instanceof MappableException) {
                     inMappable = true;
                 } else if (inMappable || throwable instanceof WebApplicationException) {
+                    // in case ServerProperties.PROCESSING_RESPONSE_ERRORS_ENABLED is true, allow
+                    // wrapped MessageBodyProviderNotFoundException to propagate
+                    if (runtime.processResponseErrors && throwable instanceof InternalServerErrorException
+                            && throwable.getCause() instanceof MessageBodyProviderNotFoundException) {
+                        throw throwable;
+                    }
                     Response waeResponse = null;
 
                     if (throwable instanceof WebApplicationException) {
