@@ -174,7 +174,7 @@
                             </execution>
                             <execution>
                                 <id>renameShaddedJar</id>
-                                <phase>verify</phase>
+                                <phase>integration-test</phase>
                                 <goals>
                                     <goal>invoke</goal>
                                 </goals>
