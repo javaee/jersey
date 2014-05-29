@@ -40,6 +40,9 @@
 package org.glassfish.jersey.gf.cdi.internal;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Target;
+import java.lang.annotation.Retention;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -120,6 +123,13 @@ import org.glassfish.jersey.internal.ServiceConfigurationError;
 import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedProvider;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.lang.reflect.Constructor;
 
 /**
  * Jersey CDI integration implementation.
@@ -274,6 +284,30 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @ApplicationScoped
     public static class JaxRsParamProducer {
 
+        @Qualifier
+        @Retention(RUNTIME)
+        @Target({METHOD, FIELD, PARAMETER, TYPE})
+        public static @interface JaxRsParamQualifier {
+        }
+
+        private static final JaxRsParamQualifier JaxRsParamQUALIFIER = new JaxRsParamQualifier() {
+
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return JaxRsParamQualifier.class;
+            }
+        };
+
+        static final Set<Class<? extends Annotation>> JaxRsParamAnnotationTYPES = new HashSet<Class<? extends Annotation>>() {
+            {
+                add(javax.ws.rs.PathParam.class);
+                add(javax.ws.rs.QueryParam.class);
+                add(javax.ws.rs.CookieParam.class);
+                add(javax.ws.rs.HeaderParam.class);
+                add(javax.ws.rs.MatrixParam.class);
+            }
+        };
+
         /**
          * Internal cache to store CDI {@link InjectionPoint} to Jersey {@link Parameter} mapping.
          */
@@ -304,14 +338,15 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         });
 
         /**
-         * Provide a String value for given injection point. If the injection point does not refer
+         * Provide a value for given injection point. If the injection point does not refer
          * to a CDI bean constructor parameter, or the value could not be found, the method will return null.
          *
          * @param injectionPoint actual injection point.
          * @param beanManager    current application bean manager.
-         * @return String value for given injection point.
+         * @return concrete JAX-RS parameter value for given injection point.
          */
         @javax.enterprise.inject.Produces
+        @JaxRsParamQualifier
         public String getParameterValue(final InjectionPoint injectionPoint, final BeanManager beanManager) {
 
             final Parameter parameter = parameterCache.compute(injectionPoint);
@@ -325,7 +360,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 for (final ValueFactoryProvider vfp : providers) {
                     final Factory<?> valueFactory = vfp.getValueFactory(parameter);
                     if (valueFactory != null) {
-                        return (String) valueFactory.provide();
+                        return (String)valueFactory.provide();
                     }
                 }
             }
@@ -405,15 +440,180 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         return component.isAnnotationPresent(ManagedBean.class);
     }
 
+    private static AnnotatedConstructor<?> enrichedConstructor(final AnnotatedConstructor<?> ctor) {
+        return new AnnotatedConstructor(){
+
+            @Override
+            public Constructor getJavaMember() {
+                return ctor.getJavaMember();
+            }
+
+            @Override
+            public List<AnnotatedParameter> getParameters() {
+                final List<AnnotatedParameter> parameters = new ArrayList<AnnotatedParameter>(ctor.getParameters().size());
+
+                for (final AnnotatedParameter<?> ap : ctor.getParameters()) {
+                    parameters.add(new AnnotatedParameter(){
+
+                        @Override
+                        public int getPosition() {
+                            return ap.getPosition();
+                        }
+
+                        @Override
+                        public AnnotatedCallable getDeclaringCallable() {
+                            return ap.getDeclaringCallable();
+                        }
+
+                        @Override
+                        public Type getBaseType() {
+                            return ap.getBaseType();
+                        }
+
+                        @Override
+                        public Set<Type> getTypeClosure() {
+                            return ap.getTypeClosure();
+                        }
+
+                        @Override
+                        public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+                            if (annotationType == JaxRsParamProducer.JaxRsParamQualifier.class) {
+                                return isJaxRsParamAnnotationPresent() ? (T)JaxRsParamProducer.JaxRsParamQUALIFIER : null;
+                            } else {
+                                return ap.getAnnotation(annotationType);
+                            }
+                        }
+
+                        @Override
+                        public Set<Annotation> getAnnotations() {
+                            final Set<Annotation> result = new HashSet<Annotation>();
+                            for (Annotation a : ap.getAnnotations()) {
+                                result.add(a);
+                                final Class<? extends Annotation> annotationType = a.annotationType();
+                                if (JaxRsParamProducer.JaxRsParamAnnotationTYPES.contains(annotationType)) {
+                                    result.add(JaxRsParamProducer.JaxRsParamQUALIFIER);
+                                }
+                            }
+                            return result;
+                        }
+
+                        @Override
+                        public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
+                            return (annotationType == JaxRsParamProducer.JaxRsParamQualifier.class && isJaxRsParamAnnotationPresent())
+                                    || ap.isAnnotationPresent(annotationType);
+                        }
+
+                        private boolean isJaxRsParamAnnotationPresent() {
+                            for (Class<? extends Annotation> a : JaxRsParamProducer.JaxRsParamAnnotationTYPES) {
+                                if(ap.isAnnotationPresent(a)) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                    });
+                }
+                return parameters;
+            }
+
+            @Override
+            public boolean isStatic() {
+                return ctor.isStatic();
+            }
+
+            @Override
+            public AnnotatedType getDeclaringType() {
+                return ctor.getDeclaringType();
+            }
+
+            @Override
+            public Type getBaseType() {
+                return ctor.getBaseType();
+            }
+
+            @Override
+            public Set<Type> getTypeClosure() {
+                return ctor.getTypeClosure();
+            }
+
+            @Override
+            public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+                return ctor.getAnnotation(annotationType);
+            }
+
+            @Override
+            public Set<Annotation> getAnnotations() {
+                return ctor.getAnnotations();
+            }
+
+            @Override
+            public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
+                return ctor.isAnnotationPresent(annotationType);
+            }
+        };
+    }
+
     @SuppressWarnings("unused")
     private void processAnnotatedType(@Observes final ProcessAnnotatedType processAnnotatedType) {
+        final AnnotatedType annotatedType = processAnnotatedType.getAnnotatedType();
         if (customHk2TypesProvider != null) {
-            final Type baseType = processAnnotatedType.getAnnotatedType().getBaseType();
+            final Type baseType = annotatedType.getBaseType();
             if (customHk2TypesProvider.getHk2Types().contains(baseType)) {
                 processAnnotatedType.veto();
                 jerseyVetoedTypes.add(baseType);
             }
         }
+        processAnnotatedType.setAnnotatedType(new AnnotatedType(){
+
+            @Override
+            public Class getJavaClass() {
+                return annotatedType.getJavaClass();
+            }
+
+            @Override
+            public Set<AnnotatedConstructor> getConstructors() {
+                Set<AnnotatedConstructor> result = new HashSet<AnnotatedConstructor>();
+                for (AnnotatedConstructor c : (Set<AnnotatedConstructor>)annotatedType.getConstructors()) {
+                    result.add(enrichedConstructor(c));
+                }
+                return result;
+            }
+
+            @Override
+            public Set getMethods() {
+                return annotatedType.getMethods();
+            }
+
+            @Override
+            public Set getFields() {
+                return annotatedType.getFields();
+            }
+
+            @Override
+            public Type getBaseType() {
+                return annotatedType.getBaseType();
+            }
+
+            @Override
+            public Set<Type> getTypeClosure() {
+                return annotatedType.getTypeClosure();
+            }
+
+            @Override
+            public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+                return annotatedType.getAnnotation(annotationType);
+            }
+
+            @Override
+            public Set<Annotation> getAnnotations() {
+                return annotatedType.getAnnotations();
+            }
+
+            @Override
+            public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
+                return annotatedType.isAnnotationPresent(annotationType);
+            }
+        });
     }
 
     @SuppressWarnings("unused")
