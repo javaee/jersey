@@ -617,16 +617,6 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     @SuppressWarnings("unused")
-    private void processProducerMethod(@Observes final ProcessProducerMethod processProducerMethod) {
-        typesSeenBeforeValidation.addAll(processProducerMethod.getAnnotatedProducerMethod().getTypeClosure());
-    }
-
-    @SuppressWarnings("unused")
-    private void processProducerField(@Observes final ProcessProducerField processProducerField) {
-        typesSeenBeforeValidation.addAll(processProducerField.getAnnotatedProducerField().getTypeClosure());
-    }
-
-    @SuppressWarnings("unused")
     private void afterTypeDiscovery(@Observes final AfterTypeDiscovery afterTypeDiscovery) {
         final List<Class<?>> interceptors = afterTypeDiscovery.getInterceptors();
         interceptors.add(WebApplicationExceptionPreservingInterceptor.class);
@@ -673,11 +663,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     private void processInjectionTarget(@Observes final ProcessInjectionTarget event) {
         final InjectionTarget it = event.getInjectionTarget();
         final Class<?> componentClass = event.getAnnotatedType().getJavaClass();
-        typesSeenBeforeValidation.add(event.getAnnotatedType().getBaseType());
 
-        final Set<InjectionPoint> filteredInjectionPoints = filterHk2InjectionPointsOut(it.getInjectionPoints());
+        final Set<InjectionPoint> cdiInjectionPoints = filterHk2InjectionPointsOut(it.getInjectionPoints());
 
-        for (final InjectionPoint injectionPoint : filteredInjectionPoints) {
+        for (final InjectionPoint injectionPoint : cdiInjectionPoints) {
             final Member member = injectionPoint.getMember();
             if (member instanceof Field) {
                 addInjecteeToSkip(componentClass, fieldsToSkip, (Field) member);
@@ -702,36 +691,35 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 @Override
                 public Set getInjectionPoints() {
                     // Inject CDI beans into JAX-RS resources/providers/application.
-                    return filteredInjectionPoints;
+                    return cdiInjectionPoints;
                 }
             });
         }
     }
 
-    // TODO: refactor the following method
     private Set<InjectionPoint> filterHk2InjectionPointsOut(final Set<InjectionPoint> originalInjectionPoints) {
         final Set<InjectionPoint> filteredInjectionPoints = new HashSet<InjectionPoint>();
         for (InjectionPoint ip : originalInjectionPoints) {
             final Type injectedType = ip.getType();
-            if (injectedType instanceof Class<?>) {
-                if (!isJerseyOrDependencyType((Class<?>)injectedType)
-                        && !(customHk2TypesProvider != null && customHk2TypesProvider.getHk2Types().contains(injectedType))) {
-                    filteredInjectionPoints.add(ip);
-                } else {
-                    //remember the type, we would need to mock it's CDI binding at runtime
-                    hk2ProvidedTypes.add(injectedType);
-                }
+            if (customHk2TypesProvider != null && customHk2TypesProvider.getHk2Types().contains(injectedType)) {
+                //remember the type, we would need to mock it's CDI binding at runtime
+                hk2ProvidedTypes.add(injectedType);
             } else {
-                if (isInjectionProvider(injectedType)) {
-                    if (!isProviderOfJerseyType((ParameterizedType)injectedType)
-                            && !(customHk2TypesProvider != null && customHk2TypesProvider.getHk2Types().contains(injectedType))) {
-                        filteredInjectionPoints.add(ip);
-                    } else {
+                if (injectedType instanceof Class<?>) {
+                    if (isJerseyOrDependencyType((Class<?>)injectedType)) {
                         //remember the type, we would need to mock it's CDI binding at runtime
-                        hk2ProvidedTypes.add(((ParameterizedType)injectedType).getActualTypeArguments()[0]);
+                        hk2ProvidedTypes.add(injectedType);
+                    } else {
+                        filteredInjectionPoints.add(ip);
                     }
-                } else {
-                    filteredInjectionPoints.add(ip);
+                } else { // it is not a class, maybe provider type?:
+                    if (isInjectionProvider(injectedType)
+                        && (isProviderOfJerseyType((ParameterizedType)injectedType))) {
+                            //remember the type, we would need to mock it's CDI binding at runtime
+                            hk2ProvidedTypes.add(((ParameterizedType)injectedType).getActualTypeArguments()[0]);
+                    } else {
+                        filteredInjectionPoints.add(ip);
+                    }
                 }
             }
         }
@@ -739,8 +727,6 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     }
 
     private final Set<Type> hk2ProvidedTypes = Collections.synchronizedSet(new HashSet<Type>());
-    private final Set<Type> potentionalHk2CustomBoundTypes = Collections.synchronizedSet(new HashSet<Type>());
-    private final Set<Type> typesSeenBeforeValidation = Collections.synchronizedSet(new HashSet<Type>());
     private final Set<Type> jerseyVetoedTypes = Collections.synchronizedSet(new HashSet<Type>());
 
     private boolean isInjectionProvider(final Type injectedType) {
@@ -750,7 +736,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     private boolean isProviderOfJerseyType(final ParameterizedType provider) {
         final Type firstArgumentType = provider.getActualTypeArguments()[0];
-        return firstArgumentType instanceof Class && isJerseyOrDependencyType((Class<?>)firstArgumentType);
+        if (firstArgumentType instanceof Class && isJerseyOrDependencyType((Class<?>)firstArgumentType)) {
+            return true;
+        }
+        return (customHk2TypesProvider != null && customHk2TypesProvider.getHk2Types().contains(firstArgumentType));
     }
 
     /**
@@ -763,23 +752,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @SuppressWarnings({ "unused", "unchecked", "rawtypes" })
     private void afterDiscoveryObserver(@Observes AfterBeanDiscovery abd) {
 
-        if (customHk2TypesProvider == null) {
-            potentionalHk2CustomBoundTypes.removeAll(typesSeenBeforeValidation);
-            potentionalHk2CustomBoundTypes.removeAll(_getContracts(typesSeenBeforeValidation));
-            final boolean configLogEnabled = LOGGER.isLoggable(Level.CONFIG);
-            final Set<Type> effectiveHk2CustomBoundTypes = configLogEnabled ? new HashSet<Type>() : null;
-            for (Type t : potentionalHk2CustomBoundTypes) {
-                if (!isNothingWeWantToMessUpWith(t)) { // need to avoid built-in beans conflict
-                    hk2ProvidedTypes.add(t);
-                    if (configLogEnabled) {
-                        effectiveHk2CustomBoundTypes.add(t);
-                    }
-                }
-            }
-            if (configLogEnabled) {
-                LOGGER.config(listTypes(new StringBuilder().append("\n"), effectiveHk2CustomBoundTypes).toString());
-            }
-        } else {
+        if (customHk2TypesProvider != null) {
             hk2ProvidedTypes.addAll(customHk2TypesProvider.getHk2Types());
         }
 
@@ -901,19 +874,12 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
         final String pkgName = pkg.getName();
 
-        final boolean result = pkgName.contains("org.glassfish.hk2")
+        return pkgName.contains("org.glassfish.hk2")
                                 || pkgName.contains("jersey.repackaged")
                                 || pkgName.contains("org.jvnet.hk2")
                                 || (pkgName.startsWith("org.glassfish.jersey")
                                     && !pkgName.startsWith("org.glassfish.jersey.examples")
                                     && !pkgName.startsWith("org.glassfish.jersey.tests"));
-
-        // TODO: refactor this, it needs to get out of this checking method
-        if (!result) {
-            potentionalHk2CustomBoundTypes.add(clazz);
-        }
-
-        return result;
     }
 
     private static BeanManager beanManagerFromJndi() {
