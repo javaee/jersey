@@ -98,6 +98,6 @@ public class RequestSensitiveTest extends CdiTest {
     @Test
     public void testHk2Injection() {
         String s = target().path(resource).path("path").path(straight).request().get(String.class);
-        assertThat(s, equalTo(String.format("/%s/path/%s", resource, straight)));
+        assertThat(s, equalTo(String.format("%s/path/%s", resource, straight)));
     }
 }
