@@ -74,6 +74,7 @@ public class MyApplication extends Application {
         classes.add(StutteringEcho.class);
         classes.add(ReversingEchoResource.class);
         classes.add(CounterResource.class);
+        classes.add(ConstructorInjectedResource.class);
         classes.add(ProducerResource.class);
         return classes;
     }

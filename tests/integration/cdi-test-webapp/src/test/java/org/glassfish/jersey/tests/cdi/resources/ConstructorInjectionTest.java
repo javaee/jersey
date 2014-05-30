@@ -40,40 +40,44 @@
 
 package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.enterprise.inject.Produces;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import org.junit.Test;
 
 /**
- * CDI producer to help us make sure HK2 do not mess up with
- * types backed by CDI producers.
+ * Part of JERSEY-2526 reproducer. Without the fix, the application would
+ * not deploy at all. This is just to make sure the JAX-RS parameter producer
+ * keeps working as expected without regressions.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oralc.com)
  */
-public class CustomCdiProducer {
+public class ConstructorInjectionTest extends CdiTest {
 
-    /**
-     * To cover field producer.
-     */
-    @Produces
-    public static FieldProducedBean<String> field = new FieldProducedBean<String>("field");
+    @Test
+    public void testConstructorInjectedResource() {
 
-    /**
-     * To cover method producer.
-     *
-     * @return bean instance to inject
-     */
-    @Produces
-    public MethodProducedBean<String> produceBean() {
-        return new MethodProducedBean<String>("method");
-    }
+        final WebTarget target = target().path("ctor-injected");
 
-    /**
-     * Part of JERSEY-2526 reproducer. This one is used
-     * to inject constructor of {@link ConstructorInjectedResource}.
-     *
-     * @return fixed string value.
-     */
-    @Produces
-    public String produceString() {
-        return "cdi-produced";
+        final Response pathParamResponse = target.path("pathParam").request().get();
+        assertThat(pathParamResponse.getStatus(), is(200));
+        assertThat(pathParamResponse.readEntity(String.class), is("pathParam"));
+
+        final Response queryParamResponse = target.path("queryParam").queryParam("q", "123").request().get();
+        assertThat(queryParamResponse.getStatus(), is(200));
+        assertThat(queryParamResponse.readEntity(String.class), is("123"));
+
+        final Response matrixParamResponse = target.path("matrixParam").matrixParam("m", "456").request().get();
+        assertThat(matrixParamResponse.getStatus(), is(200));
+        assertThat(matrixParamResponse.readEntity(String.class), is("456"));
+
+        final Response headerParamResponse = target.path("headerParam").request().header("Custom-Header", "789").get();
+        assertThat(headerParamResponse.getStatus(), is(200));
+        assertThat(headerParamResponse.readEntity(String.class), is("789"));
+
+        final Response cdiParamResponse = target.path("cdiParam").request().get();
+        assertThat(cdiParamResponse.getStatus(), is(200));
+        assertThat(cdiParamResponse.readEntity(String.class), is("cdi-produced"));
     }
 }
