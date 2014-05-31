@@ -41,6 +41,7 @@ package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -53,6 +54,7 @@ import java.util.TimeZone;
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Derek P. Moore
  */
 public final class HttpDateFormat {
 
@@ -66,10 +68,33 @@ public final class HttpDateFormat {
      * The date format pattern for RFC 1036.
      */
     private static final String RFC1036_DATE_FORMAT_PATTERN = "EEEE, dd-MMM-yy HH:mm:ss zzz";
+    private static final String RFC1036_DATE_FORMAT_PATTERN_ALT1 = "EEEE, dd MMM yy HH:mm:ss zzz";
+    private static final String RFC1036_DATE_FORMAT_PATTERN_ALT2 = "dd MMM yy HH:mm:ss zzz";
+    private static final String RFC1036_DATE_FORMAT_PATTERN_OLD = "EEEE, dd MMM HH:mm:ss yyyy";
     /**
      * The date format pattern for ANSI C asctime().
      */
     private static final String ANSI_C_ASCTIME_DATE_FORMAT_PATTERN = "EEE MMM d HH:mm:ss yyyy";
+    /**
+     * The date format pattern for RFC 2822 section 3.3 excluding obsolete date and time.
+     */
+    private static final String RFC2822_DATE_FORMAT_PATTERN = "EEE, d MMM yyyy HH:mm:ss Z";
+    private static final String RFC2822_DATE_FORMAT_PATTERN_ALT1 = "d MMM yyyy HH:mm:ss Z";
+    private static final String RFC2822_DATE_FORMAT_PATTERN_ALT2 = "EEE, d MMM yyyy HH:mm Z";
+    private static final String RFC2822_DATE_FORMAT_PATTERN_ALT3 = "d MMM yyyy HH:mm Z";
+    /**
+     * The date format pattern for ECMAScript simplified ISO 8601.
+     */
+    private static final String ECMASCRIPT_ISO_DATE_FORMAT_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    /**
+     * The date format pattern for RFC 3339, JAXB's DatatypeFactory.newXMLGregorianCalendar() and XML Schema Part 2: Datatypes' dateTime.
+     */
+    private static final String RFC3339_DATE_FORMAT_PATTERN_ALT1 = "yyyy-MM-dd'T'HH:mm:ssXXX";
+    private static final String RFC3339_DATE_FORMAT_PATTERN_ALT2 = "yyyy-MM-dd'T'HH:mm:ssXX";
+    private static final String RFC3339_DATE_FORMAT_PATTERN_FULL1 = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+    private static final String RFC3339_DATE_FORMAT_PATTERN_FULL2 = "yyyy-MM-dd'T'HH:mm:ss.SSSXX";
+    private static final String XSD_DATE_FORMAT_PATTERN_MIN1 = "yyyy-MM-dd'T'HH:mm:ss";
+    private static final String XSD_DATE_FORMAT_PATTERN_MIN2 = "yyyy-MM-dd'T'HH:mm:ss.SSS";
     private static final ThreadLocal<List<SimpleDateFormat>> dateFormats = new ThreadLocal<List<SimpleDateFormat>>() {
 
         @Override
@@ -82,13 +107,24 @@ public final class HttpDateFormat {
         final SimpleDateFormat[] formats = new SimpleDateFormat[]{
             new SimpleDateFormat(RFC1123_DATE_FORMAT_PATTERN, Locale.US),
             new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN, Locale.US),
-            new SimpleDateFormat(ANSI_C_ASCTIME_DATE_FORMAT_PATTERN, Locale.US)
+            new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_ALT1, Locale.US),
+            new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_ALT2, Locale.US),
+            new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_OLD, Locale.US),
+            new SimpleDateFormat(ANSI_C_ASCTIME_DATE_FORMAT_PATTERN, Locale.US),
+            new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_ALT1, Locale.US),
+            new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_ALT2, Locale.US),
+            new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_FULL1, Locale.US),
+            new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_FULL2, Locale.US)//,
+            //new SimpleDateFormat(XSD_DATE_FORMAT_PATTERN_MIN1, Locale.US)
         };
 
         final TimeZone tz = TimeZone.getTimeZone("GMT");
-        formats[0].setTimeZone(tz);
-        formats[1].setTimeZone(tz);
-        formats[2].setTimeZone(tz);
+        for (final SimpleDateFormat f : formats)
+            f.setTimeZone(tz);
+        //formats[0].setTimeZone(tz);
+        //formats[1].setTimeZone(tz);
+        //formats[2].setTimeZone(tz);
+        //formats[3].setTimeZone(tz);
 
         return Collections.unmodifiableList(Arrays.asList(formats));
     }
@@ -130,13 +166,26 @@ public final class HttpDateFormat {
      */
     public static Date readDate(final String date) throws ParseException {
         ParseException pe = null;
+        final List<Date> valid = new ArrayList<Date>();
         for (final SimpleDateFormat f : HttpDateFormat.getDateFormats()) {
             try {
-                return f.parse(date);
+                valid.add(f.parse(date));
+                System.out.println(f.toPattern());
             } catch (final ParseException e) {
                 pe = (pe == null) ? e : pe;
             }
         }
+
+        System.out.println("----");
+        Date latest = null;
+        for (final Date d : valid) {
+            if (latest == null)
+                latest = d;
+            if (d.after(latest))
+                latest = d;
+        }
+        if (latest != null)
+            return latest;
 
         throw pe;
     }
