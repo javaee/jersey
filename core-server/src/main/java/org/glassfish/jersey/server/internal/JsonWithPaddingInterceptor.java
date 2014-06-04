@@ -58,6 +58,7 @@ import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import org.glassfish.jersey.JerseyPriorities;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.JSONP;
 
@@ -71,7 +72,9 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @see JSONP
  */
-@Priority(Priorities.HEADER_DECORATOR)
+@Priority(JerseyPriorities.POST_ENTITY_CODER)
+// this interceptor has to run after content encoders (e.g. gzip/deflate), otherwise the added content (padding with the callback
+// method call would not be encoded.
 public class JsonWithPaddingInterceptor implements WriterInterceptor {
 
     private static final Map<String, Set<String>> JAVASCRIPT_TYPES;
