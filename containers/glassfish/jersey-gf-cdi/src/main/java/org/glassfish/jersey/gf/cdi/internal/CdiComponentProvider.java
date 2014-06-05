@@ -43,6 +43,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Target;
 import java.lang.annotation.Retention;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -88,8 +89,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
-import javax.enterprise.inject.spi.ProcessProducerField;
-import javax.enterprise.inject.spi.ProcessProducerMethod;
+import javax.enterprise.inject.spi.InjectionTargetFactory;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
@@ -129,7 +129,6 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.reflect.Constructor;
 
 /**
  * Jersey CDI integration implementation.
@@ -238,7 +237,9 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             } : new InstanceManager<T>() {
 
                 final AnnotatedType<T> annotatedType = beanManager.createAnnotatedType(clazz);
-                final InjectionTarget<T> injectionTarget = beanManager.createInjectionTarget(annotatedType);
+                final InjectionTargetFactory<T> injectionTargetFactory = beanManager.getInjectionTargetFactory(annotatedType);
+                final InjectionTarget<T> injectionTarget = injectionTargetFactory.createInjectionTarget(null);
+
                 final CreationalContext<T> creationalContext = beanManager.createCreationalContext(null);
 
                 @Override
@@ -377,6 +378,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
         }
 
         if (beanManager == null) {
+            return false;
+        }
+
+        if (isJerseyOrDependencyType(clazz)) {
             return false;
         }
 
@@ -859,7 +864,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 Resource.from(clazz) != null;
     }
 
-    private boolean isJerseyOrDependencyType(final Class<?> clazz) {
+    private static boolean isJerseyOrDependencyType(final Class<?> clazz) {
 
         if (clazz.isPrimitive() || clazz.isSynthetic()) {
             return false;

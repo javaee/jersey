@@ -56,6 +56,7 @@
 
     <modules>
         <module>cdi-ejb-test-webapp</module>
+        <module>cdi-multipart-webapp</module>
         <module>cdi-test-webapp</module>
         <module>cdi-with-jersey-injection-webapp</module>
         <module>ejb-test-webapp</module>
@@ -73,6 +74,7 @@
         <module>jersey-1964</module>
         <module>jersey-2031</module>
         <module>jersey-2136</module>
+        <module>jersey-2137</module>
         <module>jersey-2154</module>
         <module>jersey-2160</module>
         <module>jersey-2164</module>
