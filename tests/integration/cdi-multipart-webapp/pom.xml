@@ -48,11 +48,11 @@
         <version>2.10-SNAPSHOT</version>
     </parent>
 
-    <artifactId>jersey-2137</artifactId>
+    <artifactId>cdi-multipart-webapp</artifactId>
     <packaging>war</packaging>
-    <name>jersey-tests-integration-jersey-2137</name>
+    <name>jersey-tests-cdi-multipart-webapp</name>
 
-    <description>Jersey CDI/JTA test web application, JERSEY-2137 reproducer</description>
+    <description>Jersey CDI test web application that uses multipart feature</description>
 
     <dependencies>
         <dependency>
@@ -71,13 +71,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.transaction</groupId>
-            <artifactId>javax.transaction-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>persistence-api</artifactId>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

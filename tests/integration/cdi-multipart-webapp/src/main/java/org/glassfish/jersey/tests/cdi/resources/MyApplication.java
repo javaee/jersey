@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,50 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.jersey2137;
+package org.glassfish.jersey.tests.cdi.resources;
 
-import javax.enterprise.context.RequestScoped;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.transaction.Transactional;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 /**
- * Request scoped transactional CDI bean registered as JAX-RS resource class.
- * Part of JERSEY-2137 reproducer. {@link javax.ws.rs.WebApplicationException}
- * thrown in the resource method below should drive the response as specified
- * in the JAX-RS spec regardless
- * on the {@link javax.transaction.Transactional#dontRollbackOn()} value.
+ * GF-21033 reproducer. This is to make sure Jersey's multipart
+ * feature could work in GF with CDI.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@RequestScoped
-@Transactional(dontRollbackOn=WebApplicationException.class)
-@Path("cdi-transactional-no-rollback")
-public class CdiTransactionalNoRollbackResource {
+@ApplicationPath("/*")
+public class MyApplication extends Application {
 
-    @PersistenceContext(unitName = "Jersey2137PU")
-    private EntityManager entityManager;
+    final static Set<Class<?>> classes = new HashSet<Class<?>>();
 
-    @Path("{a}")
-    @PUT
-    public void putBalance(@PathParam("a") long a, String balance) {
-        final Account account = entityManager.find(Account.class, a);
-        if (account == null) {
-            Account newAccount = new Account();
-            newAccount.setId(a);
-            newAccount.setBalance(Long.decode(balance));
-            entityManager.persist(newAccount);
-            throw new WebApplicationException(Response.ok("New accout created.").build());
-        } else {
-            account.setBalance(Long.decode(balance));
-            entityManager.merge(account);
-            throw new WebApplicationException(Response.ok("Balance updated.").build());
-        }
+    static {
+        classes.add(EchoResource.class);
+        classes.add(MultiPartFeature.class);
+    }
+    @Override
+    public Set<Class<?>> getClasses() {
+        return classes;
     }
 }

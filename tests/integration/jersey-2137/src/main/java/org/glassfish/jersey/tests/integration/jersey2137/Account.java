@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,48 +39,87 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2137;
 
-import javax.enterprise.context.RequestScoped;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.transaction.Transactional;
-
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
+import java.io.Serializable;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
- * Request scoped transactional CDI bean registered as JAX-RS resource class.
- * Part of JERSEY-2137 reproducer. {@link javax.ws.rs.WebApplicationException}
- * thrown in the resource method below should drive the response as specified
- * in the JAX-RS spec regardless
- * on the {@link javax.transaction.Transactional#dontRollbackOn()} value.
+ * Entity bean that maintains information on account balance.
+ * This is to help determine if rollback happens or not, when
+ * entity bean is accessed from a transactional CDI beans.
+ * Entity beans have implicit JTA support, so this will
+ * save us some lines of code.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@RequestScoped
-@Transactional(dontRollbackOn=WebApplicationException.class)
-@Path("cdi-transactional-no-rollback")
-public class CdiTransactionalNoRollbackResource {
+@Entity
+public class Account implements Serializable {
 
-    @PersistenceContext(unitName = "Jersey2137PU")
-    private EntityManager entityManager;
+    private static final long serialVersionUID = 1L;
 
-    @Path("{a}")
-    @PUT
-    public void putBalance(@PathParam("a") long a, String balance) {
-        final Account account = entityManager.find(Account.class, a);
-        if (account == null) {
-            Account newAccount = new Account();
-            newAccount.setId(a);
-            newAccount.setBalance(Long.decode(balance));
-            entityManager.persist(newAccount);
-            throw new WebApplicationException(Response.ok("New accout created.").build());
-        } else {
-            account.setBalance(Long.decode(balance));
-            entityManager.merge(account);
-            throw new WebApplicationException(Response.ok("Balance updated.").build());
+    @Id
+    private Long id;
+
+    /**
+     * Get the account id.
+     *
+     * @return account id.
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * Set the account id.
+     *
+     * @param id account id.
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    private long balance;
+
+    /**
+     * Get the value of balance
+     *
+     * @return the value of balance
+     */
+    public long getBalance() {
+        return balance;
+    }
+
+    /**
+     * Set the value of balance
+     *
+     * @param balance new value of balance
+     */
+    public void setBalance(long balance) {
+        this.balance = balance;
+    }
+
+
+    @Override
+    public int hashCode() {
+        int hash = 0;
+        hash += (id != null ? id.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof Account)) {
+            return false;
         }
+        Account other = (Account) object;
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "org.glassfish.jersey.tests.integration.jersey2137.Account[ id=" + id + " ]";
     }
 }
