@@ -40,13 +40,16 @@
 package org.glassfish.jersey.message.internal;
 
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TimeZone;
 
 /**
@@ -83,16 +86,15 @@ public final class HttpDateFormat {
     private static final String RFC2822_DATE_FORMAT_PATTERN_ALT2 = "EEE, d MMM yyyy HH:mm Z";
     private static final String RFC2822_DATE_FORMAT_PATTERN_ALT3 = "d MMM yyyy HH:mm Z";
     /**
-     * The date format pattern for ECMAScript simplified ISO 8601.
+     * The date format pattern for RFC 3339,
+     * JAXB's DatatypeFactory.newXMLGregorianCalendar(),
+     * ECMAScript simplified ISO 8601, and
+     * XML Schema Part 2: Datatypes' dateTime.
      */
-    private static final String ECMASCRIPT_ISO_DATE_FORMAT_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    /**
-     * The date format pattern for RFC 3339, JAXB's DatatypeFactory.newXMLGregorianCalendar() and XML Schema Part 2: Datatypes' dateTime.
-     */
+    private static final String ECMASCRIPT_ISO_DATE_FORMAT_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+    private static final String RFC3339_DATE_FORMAT_PATTERN_FULL = "yyyy-MM-dd'T'HH:mm:ss.SSSXX";
     private static final String RFC3339_DATE_FORMAT_PATTERN_ALT1 = "yyyy-MM-dd'T'HH:mm:ssXXX";
     private static final String RFC3339_DATE_FORMAT_PATTERN_ALT2 = "yyyy-MM-dd'T'HH:mm:ssXX";
-    private static final String RFC3339_DATE_FORMAT_PATTERN_FULL1 = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
-    private static final String RFC3339_DATE_FORMAT_PATTERN_FULL2 = "yyyy-MM-dd'T'HH:mm:ss.SSSXX";
     private static final String XSD_DATE_FORMAT_PATTERN_MIN1 = "yyyy-MM-dd'T'HH:mm:ss";
     private static final String XSD_DATE_FORMAT_PATTERN_MIN2 = "yyyy-MM-dd'T'HH:mm:ss.SSS";
     private static final ThreadLocal<List<SimpleDateFormat>> dateFormats = new ThreadLocal<List<SimpleDateFormat>>() {
@@ -111,11 +113,11 @@ public final class HttpDateFormat {
             new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_ALT2, Locale.US),
             new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_OLD, Locale.US),
             new SimpleDateFormat(ANSI_C_ASCTIME_DATE_FORMAT_PATTERN, Locale.US),
+            new SimpleDateFormat(ECMASCRIPT_ISO_DATE_FORMAT_PATTERN, Locale.US),
+            new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_FULL, Locale.US),
             new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_ALT1, Locale.US),
             new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_ALT2, Locale.US),
-            new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_FULL1, Locale.US),
-            new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_FULL2, Locale.US)//,
-            //new SimpleDateFormat(XSD_DATE_FORMAT_PATTERN_MIN1, Locale.US)
+            new SimpleDateFormat(XSD_DATE_FORMAT_PATTERN_MIN1, Locale.US)
         };
 
         final TimeZone tz = TimeZone.getTimeZone("GMT");
@@ -165,28 +167,38 @@ public final class HttpDateFormat {
      * @throws java.text.ParseException in case the date string cannot be parsed.
      */
     public static Date readDate(final String date) throws ParseException {
-        ParseException pe = null;
-        final List<Date> valid = new ArrayList<Date>();
+        final Map<Date, Map<SimpleDateFormat, ParsePosition>> valid = new HashMap<Date, Map<SimpleDateFormat, ParsePosition>>();
         for (final SimpleDateFormat f : HttpDateFormat.getDateFormats()) {
-            try {
-                valid.add(f.parse(date));
-                System.out.println(f.toPattern());
-            } catch (final ParseException e) {
-                pe = (pe == null) ? e : pe;
+            final ParsePosition pp = new ParsePosition(0);
+            final Date d = f.parse(date, pp);
+            if (pp.getErrorIndex() == -1) {
+                final Map<SimpleDateFormat, ParsePosition> data = new HashMap<SimpleDateFormat, ParsePosition>();
+                data.put(f, pp);
+                valid.put(d, data);
             }
         }
 
-        System.out.println("----");
+        System.out.println("----\n" + date);
         Date latest = null;
-        for (final Date d : valid) {
+        int last_pos = 0;
+        for (final Entry<Date, Map<SimpleDateFormat, ParsePosition>> e : valid.entrySet()) {
+            final Date d = e.getKey();
+            final Map<SimpleDateFormat, ParsePosition> v = e.getValue();
+            final ParsePosition pp = v.values().iterator().next();
+            System.out.println(v.keySet().iterator().next().format(d));
             if (latest == null)
                 latest = d;
-            if (d.after(latest))
+            if ((d.after(latest) && pp.getIndex() == last_pos)
+                || pp.getIndex() > last_pos) {
                 latest = d;
+                last_pos = pp.getIndex();
+            }
         }
         if (latest != null)
             return latest;
-
-        throw pe;
+        /*
+         * java.text.ParseException: Unparseable date: "0001-01-01T00:00:00"
+         */
+        throw new ParseException("Unparseable date: \"" + date + "\"", -1);
     }
 }

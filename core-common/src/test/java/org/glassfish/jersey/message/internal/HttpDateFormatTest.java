@@ -47,6 +47,10 @@ public class HttpDateFormatTest {
         cal.set(2005, 7, 15, 15, 52, 1);
         date = HttpDateFormat.readDate("Mon, 15 Aug 2005 15:52:01 +0000");
         assertEquals(cal.getTimeInMillis(), date.getTime());
+
+        cal.set(82, 10, 19, 16, 14, 55);
+        date = HttpDateFormat.readDate("Tue, 19 Nov 0082 16:14:55 GMT");
+        assertEquals(cal.getTimeInMillis(), date.getTime());
     }
 
     @Test
@@ -109,9 +113,9 @@ public class HttpDateFormatTest {
     public void testISO8601() throws ParseException
     {
         // http://www.w3.org/TR/xmlschema-2/#dateTime
-        //cal.set(1, 0, 1, 0, 0, 0);
-        //date = HttpDateFormat.readDate("0001-01-01T00:00:00");
-        //assertEquals(cal.getTimeInMillis(), date.getTime());
+        cal.set(1, 0, 1, 0, 0, 0);
+        date = HttpDateFormat.readDate("0001-01-01T00:00:00");
+        assertEquals(cal.getTimeInMillis(), date.getTime());
 
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
         cal.set(2011, 9, 5, 14, 48, 0);
