@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,44 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.message;
+package org.glassfish.jersey;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
-import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
-import javax.ws.rs.core.HttpHeaders;
-
-import org.glassfish.jersey.spi.ContentEncoder;
 
 /**
- * GZIP encoding support. Interceptor that encodes the output or decodes the input if
- * {@link HttpHeaders#CONTENT_ENCODING Content-Encoding header} value equals to {@code gzip} or {@code x-gzip}.
+ * Built-in Jersey-specific priority constants to be used along with {@link javax.ws.rs.Priorities} where finer-grained
+ * categorization is required.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-@Priority(Priorities.ENTITY_CODER)
-public class GZipEncoder extends ContentEncoder {
+public class JerseyPriorities {
+
+    private JerseyPriorities() {
+        // prevents instantiation
+    }
+
     /**
-     * Initialize GZipEncoder.
+     * Priority for components that have to be called AFTER message encoders/decoders filters/interceptors.
+     * The constant has to be higher than {@link javax.ws.rs.Priorities#ENTITY_CODER} in order to force the
+     * processing after the components with {@code Priorities.ENTITY_CODER} are processed.
      */
-    public GZipEncoder() {
-        super("gzip", "x-gzip");
-    }
-
-    @Override
-    public InputStream decode(String contentEncoding, InputStream encodedStream)
-            throws IOException {
-        return new GZIPInputStream(encodedStream);
-    }
-
-    @Override
-    public OutputStream encode(String contentEncoding, OutputStream entityStream)
-            throws IOException {
-        return new GZIPOutputStream(entityStream);
-    }
+    public static final int POST_ENTITY_CODER = Priorities.ENTITY_CODER + 100;
 }
