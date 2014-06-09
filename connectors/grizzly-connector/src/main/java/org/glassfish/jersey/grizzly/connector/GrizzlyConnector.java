@@ -101,10 +101,13 @@ class GrizzlyConnector implements Connector {
     /**
      * Create new connector based on Grizzly asynchronous client library.
      *
-     * @param client Jersey client instance to create the connector for.
-     * @param config Jersey client runtime configuration to be used to configure the connector parameters.
+     * @param client                Jersey client instance to create the connector for.
+     * @param config                Jersey client runtime configuration to be used to configure the connector parameters.
+     * @param asyncClientCustomizer Async HTTP Client configuration builder customizer.
      */
-    GrizzlyConnector(Client client, Configuration config) {
+    GrizzlyConnector(final Client client,
+                     final Configuration config,
+                     final GrizzlyConnectorProvider.AsyncClientCustomizer asyncClientCustomizer) {
         AsyncHttpClientConfig.Builder builder = new AsyncHttpClientConfig.Builder();
 
         ExecutorService executorService;
@@ -159,6 +162,10 @@ class GrizzlyConnector implements Connector {
         }
         if (client.getHostnameVerifier() != null) {
             builder.setHostnameVerifier(client.getHostnameVerifier());
+        }
+
+        if (asyncClientCustomizer != null) {
+            builder = asyncClientCustomizer.customize(client, config, builder);
         }
 
         AsyncHttpClientConfig asyncClientConfig = builder.build();
@@ -401,6 +408,14 @@ class GrizzlyConnector implements Connector {
                 builder.setBody(getEntityWriter(requestContext));
             }
         }
+
+        final GrizzlyConnectorProvider.RequestCustomizer requestCustomizer = requestContext.resolveProperty(
+                GrizzlyConnectorProvider.REQUEST_CUSTOMIZER,
+                GrizzlyConnectorProvider.RequestCustomizer.class);
+        if (requestCustomizer != null) {
+            builder = requestCustomizer.customize(requestContext, builder);
+        }
+
         return builder.build();
     }
 
