@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.tests.e2e.server;
 
+import java.util.logging.Logger;
+
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -54,11 +56,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.parsers.SAXParserFactory;
 
+import org.glassfish.jersey.internal.util.SaxHelper;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.xml.sax.SAXParseException;
 
@@ -68,6 +74,9 @@ import org.xml.sax.SAXParseException;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class EntityExpansionTest extends JerseyTest {
+
+    private static final Logger LOG = Logger.getLogger(EntityExpansionTest.class.getName());
+    private static boolean isXdk = false;
 
     @Override
     protected Application configure() {
@@ -152,6 +161,16 @@ public class EntityExpansionTest extends JerseyTest {
         }
     }
 
+    @BeforeClass
+    public static void setXdkFlag() {
+        // XDK SAXParser does not support this feature, so the test has to be skipped if XDK detected.
+        if (SaxHelper.isXdkParserFactory(SAXParserFactory.newInstance())) {
+            LOG.warning("XDK SAXParser detected, FEATURE_SECURE_PROCESSING is not supported. Tests will be skipped.");
+            isXdk = true;
+        }
+        Assume.assumeTrue(!isXdk);
+    }
+
     @Test
     public void testEntityExpansion() {
         String str = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
@@ -166,7 +185,6 @@ public class EntityExpansionTest extends JerseyTest {
         Assert.assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
         Assert.assertTrue(entity.startsWith("PASSED"));
-        System.out.println(entity);
     }
 
     @Test
@@ -177,7 +195,6 @@ public class EntityExpansionTest extends JerseyTest {
         Assert.assertEquals(200, response.getStatus());
         final String entity = response.readEntity(String.class);
         Assert.assertTrue(entity.startsWith("PASSED"));
-        System.out.println(entity);
     }
 
 }

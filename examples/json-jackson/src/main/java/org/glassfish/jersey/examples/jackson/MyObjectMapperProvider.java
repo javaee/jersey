@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,14 +42,13 @@ package org.glassfish.jersey.examples.jackson;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.AnnotationIntrospector.Pair;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.SerializationConfig.Feature;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 /**
  * TODO javadoc.
@@ -68,7 +67,7 @@ public class MyObjectMapperProvider implements ContextResolver<ObjectMapper> {
     }
 
     @Override
-    public ObjectMapper getContext(Class<?> type) {
+    public ObjectMapper getContext(final Class<?> type) {
 
         if (type == CombinedAnnotationBean.class) {
             return combinedObjectMapper;
@@ -78,30 +77,24 @@ public class MyObjectMapperProvider implements ContextResolver<ObjectMapper> {
     }
 
     private static ObjectMapper createCombinedObjectMapper() {
-
-        Pair combinedIntrospector = createJaxbJacksonAnnotationIntrospector();
-        ObjectMapper result = new ObjectMapper();
-        result.configure(SerializationConfig.Feature.WRAP_ROOT_VALUE, true);
-        result.configure(DeserializationConfig.Feature.UNWRAP_ROOT_VALUE, true);
-        result.setDeserializationConfig(result.getDeserializationConfig().withAnnotationIntrospector(combinedIntrospector));
-        result.setSerializationConfig(result.getSerializationConfig().withAnnotationIntrospector(combinedIntrospector));
-
-        return result;
+        return new ObjectMapper()
+                .configure(SerializationFeature.WRAP_ROOT_VALUE, true)
+                .configure(DeserializationFeature.UNWRAP_ROOT_VALUE, true)
+                .setAnnotationIntrospector(createJaxbJacksonAnnotationIntrospector());
     }
 
     private static ObjectMapper createDefaultMapper() {
-
-        ObjectMapper result = new ObjectMapper();
-        result.configure(Feature.INDENT_OUTPUT, true);
+        final ObjectMapper result = new ObjectMapper();
+        result.enable(SerializationFeature.INDENT_OUTPUT);
 
         return result;
     }
 
-    private static Pair createJaxbJacksonAnnotationIntrospector() {
+    private static AnnotationIntrospector createJaxbJacksonAnnotationIntrospector() {
 
-        AnnotationIntrospector jaxbIntrospector = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector jacksonIntrospector = new JacksonAnnotationIntrospector();
+        final AnnotationIntrospector jaxbIntrospector = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
+        final AnnotationIntrospector jacksonIntrospector = new JacksonAnnotationIntrospector();
 
-        return new AnnotationIntrospector.Pair(jacksonIntrospector, jaxbIntrospector);
+        return AnnotationIntrospector.pair(jacksonIntrospector, jaxbIntrospector);
     }
 }

@@ -70,9 +70,9 @@
             <listitem><para>automated configurable traffic logging</para></listitem>
         </itemizedlist>
 
-        Jersey Test Framework is based on JUnit and works almost out-of-the box. It is easy to integrate it
-        within your Maven-based project. While it is usable on all environments where you can run JUnit, we support primarily the
-        Maven-based setups.
+        Jersey Test Framework is primarily based on JUnit but you can run tests using TestNG as well. It works almost out-of-the
+        box and it is easy to integrate it within your Maven-based project. While it is usable on all environments where you can
+        run JUnit, we support primarily the Maven-based setups.
     </para>
 
     <section>
@@ -209,6 +209,160 @@
         </para>
     </section>
 
+    <section xml:id="testng">
+        <title>Running TestNG Tests</title>
+
+        <para>
+            It is possible to run not only JUnit tests but also tests based on TestNG. In order to do this you need to make sure
+            the following 2 steps are fulfilled:
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        Extend &jersey.test.JerseyTestNg;, or one of it's inner classes &jersey.test.JerseyTestNg.ContainerPerClassTest;
+                        / &jersey.test.JerseyTestNg.ContainerPerMethodTest;, instead of &jersey.test.JerseyTest;.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Add TestNG to your class-patch, i.e.:
+
+                        <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.test-framework&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-test-framework-core&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.testng&lt;/groupId&gt;
+    &lt;artifactId&gt;testng&lt;/artifactId&gt;
+    &lt;version&gt;...&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+        <para>
+            To discuss the former requirement in more depth we need to take a look at the differences between JUnit and TestNG.
+            JUnit creates a new instance of a test class for every test present in that class which, from the point of view of
+            Jersey Test Framework, means that new test container and client is created for each test of a test class. However,
+            TestNG creates only one instance of a test class and the initialization of the test container depends more on
+            setup/teardown methods (driven by <literal>@BeforeXXX</literal> and <literal>@AfterXXX</literal> annotations) than in
+            JUnit. This means that, basically, you can start one instance of test container for all tests present in a test class
+            or separate test container for each and every test. For this reason a separate subclasses of &jersey.test.JerseyTestNg;
+            have been created:
+
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        &jersey.test.JerseyTestNg.ContainerPerClassTest; creates one container to run all the tests in. Setup method
+                        is annotated with <literal>@BeforeClass</literal>, teardown method with <literal>@AfterClass</literal>.
+                    </para>
+                    <para>
+                        For example take a look at <literal>ContainerPerClassTest</literal> test. It contains two test
+                        methods (<literal>first</literal> and <literal>second</literal>), one singleton resource that returns an
+                        increasing sequence of number. Since we spawn only one instance of a test container for the whole class the
+                        value expected in the first test is <literal>1</literal> and in the second it's <literal>2</literal>.
+
+                        <programlisting language="java" linenumbering="numbered">public class ContainerPerClassTest extends JerseyTestNg.ContainerPerClassTest {
+
+    @Path("/")
+    @Singleton
+    @Produces("text/plain")
+    public static class Resource {
+
+        private int i = 1;
+
+        @GET
+        public int get() {
+            return i++;
+        }
+    }
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
+    }
+
+    @Test(priority = 1)
+    public void first() throws Exception {
+        test(1);
+    }
+
+    @Test(priority = 2)
+    public void second() throws Exception {
+        test(2);
+    }
+
+    private void test(final Integer expected) {
+        final Response response = target().request().get();
+
+        assertEquals(response.getStatus(), 200);
+        assertEquals(response.readEntity(Integer.class), expected);
+    }
+}</programlisting>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        &jersey.test.JerseyTestNg.ContainerPerMethodTest; creates separate container for each test. Setup method
+                        is annotated with <literal>@BeforeMethod</literal>, teardown method with <literal>@AfterMethod</literal>.
+                    </para>
+                    <para>
+                        We can create a similar test to the previous one. Take a look at <literal>ContainerPerMethodTest</literal>
+                        test. It looks the same except the expected values and extending class: it contains two test
+                        methods (<literal>first</literal> and <literal>second</literal>), one singleton resource that returns an
+                        increasing sequence of number. In this case we create a separate test container for each test so
+                        value expected in the first test is <literal>1</literal> and in the second it's also <literal>1</literal>.
+
+                        <programlisting language="java" linenumbering="numbered">public class ContainerPerMethodTest extends JerseyTestNg.ContainerPerMethodTest {
+
+    @Path("/")
+    @Singleton
+    @Produces("text/plain")
+    public static class Resource {
+
+        private int i = 1;
+
+        @GET
+        public int get() {
+            return i++;
+        }
+    }
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
+    }
+
+    @Test
+    public void first() throws Exception {
+        test(1);
+    }
+
+    @Test
+    public void second() throws Exception {
+        test(1);
+    }
+
+    private void test(final Integer expected) {
+        final Response response = target().request().get();
+
+        assertEquals(response.getStatus(), 200);
+        assertEquals(response.readEntity(Integer.class), expected);
+    }
+}</programlisting>
+                    </para>
+                </listitem>
+            </itemizedlist>
+        </para>
+
+        <para>
+            If you need more complex setup of your test you can achieve this by directly extending the &jersey.test.JerseyTestNg;
+            class create setup/teardown methods suited to your needs and provide a strategy for storing and handling a test
+            container / client instance (see <literal>JerseyTestNg.configureStrategy(TestNgStrategy)</literal> method).
+        </para>
+    </section>
+
     <section>
         <title>Advanced features</title>
 
@@ -221,7 +375,7 @@
                 and <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#disable(java.lang.String)">disable(...)</link>
                 methods, that give you control over configuring values of the properties defined and described in the
                 &lit.jersey.test.TestProperties; class. A typical code that overrides the default property values is listed
-                bellow:
+                below:
 
                 <programlisting language="java" linenumbering="numbered">public class SimpleTest extends JerseyTest {
     // ...
@@ -290,5 +444,56 @@
                 for more information.
             </para>
         </section>
+    </section>
+
+    <section xml:id="parallel">
+        <title>Parallel Testing with Jersey Test Framework</title>
+
+        <para>
+            For a purpose of running multiple test containers in parallel you need to set the
+            <link xlink:href='&jersey.javadoc.path;/test/TestProperties.CONTAINER_PORT.html'>TestProperties.CONTAINER_PORT</link>
+            to <literal>0</literal> value. This will tell Jersey Test Framework (and the underlying test container) to use the
+            first available port.
+        </para>
+
+        <para>
+            You can set the value as a system property (via command line option) or directly in the test (to not affect ports of
+            other tests):
+
+            <programlisting language="java" linenumbering="numbered">@Override
+    protected Application configure() {
+        // Find first available port.
+        forceSet(TestProperties.CONTAINER_PORT, "0");
+
+        return new ResourceConfig(Resource.class);
+    }</programlisting>
+        </para>
+
+        <para>
+            The easiest way to setup your JUnit or TestNG tests to run in parallel is to configure Maven Surefire plugin. You can
+            do this via configuration options <literal>parallel</literal> and <literal>threadCount</literal>, i.e.:
+
+                            <programlisting language="xml">...
+&lt;configuration&gt;
+    &lt;parallel&gt;methods&lt;/parallel&gt;
+    &lt;threadCount&gt;5&lt;/threadCount&gt;
+    ...
+&lt;/configuration&gt;
+...</programlisting>
+
+            For more information about this topic consult the following Maven Surefire articles:
+
+            <itemizedlist>
+                <listitem>
+                    <para><link xlink:href="http://maven.apache.org/surefire/maven-surefire-plugin/examples/fork-options-and-parallel-execution.html">Fork Options and Parallel Test Execution</link></para>
+                </listitem>
+                <listitem>
+                    <para><link xlink:href="http://maven.apache.org/surefire/maven-surefire-plugin/examples/testng.html#Running_tests_in_parallel">Using TestNG - Running tests in parallel</link></para>
+                </listitem>
+                <listitem>
+                    <para><link xlink:href="http://maven.apache.org/surefire/maven-surefire-plugin/examples/junit.html#Running_tests_in_parallel">Using JUnit - Running tests in parallel</link></para>
+                </listitem>
+            </itemizedlist>
+        </para>
     </section>
 </chapter>

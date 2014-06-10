@@ -180,8 +180,18 @@
     <artifactId>jersey-media-sse</artifactId>
 </dependency>]]></programlisting>
             </example>
-            Then you need register &jersey.sse.SseFeature;. The &lit.jersey.sse.SseFeature; is a feature that can be registered
-            for both, the client and the server.
+            <note>
+                <para>
+                    Prior to Jersey 2.8, you had to manually register &jersey.sse.SseFeature; in your application.
+                    (The &lit.jersey.sse.SseFeature; is a feature that can be registered for both, the client and the server.)
+                    Since Jersey 2.8, the feature gets automatically discovered and registered when Jersey SSE module is
+                    put on the application's classpath. The automatic discovery and registration of SSE feature can be suppressed
+                    by setting &jersey.sse.SseFeature.DISABLE_SSE; property to <literal>true</literal>.
+                    The behavior can also be selectively suppressed in either client or server runtime by setting
+                    &jersey.sse.SseFeature.DISABLE_SSE_CLIENT; or &jersey.sse.SseFeature.DISABLE_SSE_SERVER; property
+                    respectively.
+                </para>
+            </note>
         </para>
         <para>
             &lit.jersey.sse.SseFeature; adds new supported entity (representation) Java types, namely &jersey.sse.OutboundEvent;
@@ -190,7 +200,7 @@
             There is no restriction for a media type used in individual event messages; however the media type used for a SSE
             stream as whole is <emphasis>"text/event-stream"</emphasis> and this media type should be set on messages that
             are used to serve SSE events (for example on the server side using &jaxrs.Produces; on the method that returns an
-            &lit.jersey.sse.EventOutput; - see bellow).
+            &lit.jersey.sse.EventOutput; - see below).
             The &lit.jersey.sse.InboundEvent; and &lit.jersey.sse.OutboundEvent; contain all the fields needed for composing
             and processing individual SSE events. These entities represent the <emphasis>chunks</emphasis> sent or received over
             an open server-to-client connection that is represented by an &jersey.server.ChunkedOutput; on the servers side and

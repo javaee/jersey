@@ -52,6 +52,103 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.9">
+        <title>Migrating from Jersey 2.8 to 2.9</title>
+
+        <section xml:id="mig-2.9-highlights">
+            <title>Release 2.9 Highlights</title>
+
+            <section>
+                <title>Declarative Linking</title>
+
+                <para>
+                    Gerard updated the Declarative Linking extension module which has been ported to Jersey 2 in version 2.6. You
+                    can read more about what Declarative Linking does and what it's capable of in the following blog posts:
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                <link xlink:href='http://kingsfleet.blogspot.co.uk/2014/05/declarative-linking-in-jersey-29.html'>Declarative Linking in Jersey 2.9 and up</link>
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <link xlink:href='http://kingsfleet.blogspot.co.uk/2014/05/reading-and-writing-jax-rs-link-objects.html'>Reading and writing JAX-RS Link objects</link>
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </section>
+            <section>
+                <title>Jackson 2</title>
+
+                <para>
+                    Our media module that supports working with JSON via Jackson library has been updated to use Jackson 2.x (2.3.2).
+                    All samples and tests have been rewritten to use Jackson 2 as well. In order to use Jackson 2 in your application
+                    you need to add jersey-media-json-jackson (+ it's Jackson dependencies) to your class-path and register
+                    <literal>JacksonFeature</literal> in your application.
+                </para>
+            </section>
+            <section>
+                <title>META-INF/services</title>
+
+                <para>
+                    We dropped automatic registration of message body providers (MessageBodyWriter, MessageBodyReader) and exception
+                    mappers via META-INF/services mechanism. This functionality can be restored by adding <literal>jersey-metainf-services</literal>
+                    module to the class-path of your application.
+                </para>
+                <para>
+                    Note: This change may affect 3rd party libraries (e.g. Jackson 2.x) in a way their provider would not be
+                    registered in an JAX-RS app. You need to either register them manually or use mentioned
+                    <literal>jersey-metainf-services</literal> module.
+                </para>
+            </section>
+            <section>
+                <title>Jersey Test Framework</title>
+
+                <para>
+                    Jersey Test Framework now supports TestNG to run the tests (in addition to the JUnit, which is supported by default).
+                    You can now run the tests in parallel using either JUnit or TestNG. See chapters dedicated to TestNG and parallel
+                    testing for more information: <xref linkend="testng"/> and <xref linkend="parallel"/>.
+                </para>
+            </section>
+        </section>
+
+        <section xml:id="mig-2.9-breaking-changes">
+            <title>Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Some of the feature specific configuration properties (disable WADL, disable BV, disable JSON-Processing,
+                            enable Monitoring), and their server/client counterparts, are no longer affected by a value of properties
+                            <literal>CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE</literal> or
+                            <literal>CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE</literal>. The specific properties have to
+                            be used to change default behaviour of mentioned features (e.g.
+                            <literal>ServerProperties.WADL_FEATURE_DISABLE</literal>).
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Automatic registration of <literal>MessageBodyWriter</literal>, <literal>MessageBodyReaders</literal>
+                            and <literal>ExceptionMappers</literal> via <literal>META-INF/services</literal> mechanism has been
+                            removed. Disabling the automatic registration of providers via <literal>META-INF/services</literal>
+                            may affect 3rd party libraries (i.e. Jackson 2.x) that are using this mechanism to register it's
+                            providers. In order to restore this functionality the <literal>org.glassfish.jersey.ext:jersey-metainf-services</literal>
+                            has to be added on the classpath. Otherwise such providers has to be registered manually.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            The Jackson JSON Jersey module has been updated to use Jackson 2.x instead of Jackson 1.x. This means
+                            that all the code that has been using Jackson 1.x for JSON (de)serialization has to be migrated to
+                            Jackson 2.x.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
     <section xml:id="mig-2.8">
         <title>Migrating from Jersey 2.7 to 2.8</title>
 
@@ -70,6 +167,15 @@
                             now correctly handles requests which URI contains empty path segments
                             (e.g. <literal>http://localhost///a/b//c</literal>). These empty path segments are now correctly
                             included in the lists returned by the <literal>UriInfo.getPathSegments</literal> methods.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            &jersey.sse.SseFeature; now gets automatically discovered and enabled if the SSE module is present
+                            on the class path. This behavior can be suppressed by setting &jersey.sse.SseFeature.DISABLE_SSE;
+                            property to <literal>true</literal>. The behavior can also be selectively suppressed in either
+                            client or server runtime by setting the &jersey.sse.SseFeature.DISABLE_SSE_CLIENT; or
+                            &jersey.sse.SseFeature.DISABLE_SSE_SERVER; property respectively.
                         </para>
                     </listitem>
                     <listitem>
@@ -156,6 +262,91 @@
                             has been removed from the public API. Please use the specific &lit.jersey.server.ApplicationHandler;
                             constructor that accepts custom HK2 binders instead.
                         </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Several configuration properties were renamed, especially those having client and server versions
+                            along with the common version in &lit.jersey.common.CommonProperties;. Please see following table
+                            for complete reference:
+                            <table>
+                                <title>List of changed configuration properties:</title>
+                                <tgroup cols="3">
+                                    <thead>
+                                        <row>
+                                            <entry>Constant</entry>
+                                            <entry>Old value (Jersey 2.7 and before)</entry>
+                                            <entry>New value (Jersey 2.8+)</entry>
+                                        </row>
+                                    </thead>
+                                    <tbody>
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableAutoDiscovery.client</literal></entry>
+                                            <entry><literal>jersey.config.client.disableAutoDiscovery</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableAutoDiscovery.server</literal></entry>
+                                            <entry><literal>jersey.config.server.disableAutoDiscovery</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableJsonProcessing.client</literal></entry>
+                                            <entry><literal>jersey.config.client.disableJsonProcessing</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.JSON_PROCESSING_FEATURE_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableJsonProcessing.server</literal></entry>
+                                            <entry><literal>jersey.config.server.disableJsonProcessing</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.METAINF_SERVICES_LOOKUP_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableMetainfServicesLookup.client</literal></entry>
+                                            <entry><literal>jersey.config.client.disableMetainfServicesLookup</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableMetainfServicesLookup.server</literal></entry>
+                                            <entry><literal>jersey.config.server.disableMetainfServicesLookup</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.MOXY_JSON_FEATURE_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableMoxyJson.client</literal></entry>
+                                            <entry><literal>jersey.config.client.disableMoxyJson</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.MOXY_JSON_FEATURE_DISABLE;</entry>
+                                            <entry><literal>jersey.config.disableMoxyJson.server</literal></entry>
+                                            <entry><literal>jersey.config.server.disableMoxyJson</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.client.ClientProperties.OUTBOUND_CONTENT_LENGTH_BUFFER;</entry>
+                                            <entry><literal>jersey.config.contentLength.buffer.client</literal></entry>
+                                            <entry><literal>jersey.config.client.contentLength.buffer</literal></entry>
+                                        </row>
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER;</entry>
+                                            <entry><literal>jersey.config.contentLength.buffer.server</literal></entry>
+                                            <entry><literal>jersey.config.server.contentLength.buffer</literal></entry>
+                                        </row>
+
+                                        <row>
+                                            <entry>&jersey.server.ServerProperties.TRACING;</entry>
+                                            <entry><literal>jersey.config.server.tracing</literal></entry>
+                                            <entry><literal>jersey.config.server.tracing.type</literal></entry>
+                                        </row>
+                                    </tbody>
+                                </tgroup>
+                            </table>
+                            The old names are still working for now, but are deprecated. There is a fallback mechanism
+                            implemented while reading the property and each get, that resolves the value from the old-named
+                            property, will log a <literal>CONFIG</literal> level warning.
+                        </para>
+
                     </listitem>
                 </itemizedlist>
             </para>
@@ -608,7 +799,7 @@ resourceConfig.getSingletons().add(
     @Override
     protected void configure() {
         // request scope binding
-        bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScope.class);
+        bind(MyInjectablePerRequest.class).to(MyInjectablePerRequest.class).in(RequestScoped.class);
         // singleton binding
         bind(MyInjectableSingleton.class).in(Singleton.class);
         // singleton instance binding

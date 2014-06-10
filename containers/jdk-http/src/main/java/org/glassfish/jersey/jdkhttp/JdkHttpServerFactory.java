@@ -53,6 +53,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 
 /**
@@ -100,7 +101,7 @@ public final class JdkHttpServerFactory {
         return createHttpServer(uri, new JdkHttpHandlerContainer(configuration), start);
     }
 
-    private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler, boolean start) {
+    private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler, final boolean start) {
 
         if (uri == null) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_NULL());
@@ -120,79 +121,156 @@ public final class JdkHttpServerFactory {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_PATH_START(uri));
         }
 
-        final int port = (uri.getPort() == -1) ? 80 : uri.getPort();
+        final boolean isHttp = scheme.equalsIgnoreCase("http");
+        final int port = (uri.getPort() == -1)
+                ? (isHttp ? 80 : 143)
+                : uri.getPort();
+
         final HttpServer server;
         try {
-            server = (scheme.equalsIgnoreCase("http"))
+            server = isHttp
                     ? HttpServer.create(new InetSocketAddress(port), 0)
                     : HttpsServer.create(new InetSocketAddress(port), 0);
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             throw new ProcessingException(LocalizationMessages.ERROR_CONTAINER_EXCEPTION_IO(), ioe);
         }
 
         server.setExecutor(Executors.newCachedThreadPool());
         server.createContext(path, handler);
 
-        final HttpServer wrapper = new HttpServer() {
-
-            @Override
-            public void bind(InetSocketAddress inetSocketAddress, int i) throws IOException {
-                server.bind(inetSocketAddress, i);
-            }
-
-            @Override
-            public void start() {
-                server.start();
-                handler.onServerStart();
-            }
-
-            @Override
-            public void setExecutor(Executor executor) {
-                server.setExecutor(executor);
-            }
-
-            @Override
-            public Executor getExecutor() {
-                return server.getExecutor();
-            }
-
-            @Override
-            public void stop(int i) {
-                handler.onServerStop();
-                server.stop(i);
-            }
-
-            @Override
-            public HttpContext createContext(String s, HttpHandler httpHandler) {
-                return server.createContext(s, httpHandler);
-            }
-
-            @Override
-            public HttpContext createContext(String s) {
-                return server.createContext(s);
-            }
-
-            @Override
-            public void removeContext(String s) throws IllegalArgumentException {
-                server.removeContext(s);
-            }
-
-            @Override
-            public void removeContext(HttpContext httpContext) {
-                server.removeContext(httpContext);
-            }
-
-            @Override
-            public InetSocketAddress getAddress() {
-                return server.getAddress();
-            }
-        };
+        final HttpServer wrapper = isHttp
+                ? createHttpServerWrapper(server, handler)
+                : createHttpsServerWrapper((HttpsServer) server, handler);
 
         if (start) {
             wrapper.start();
         }
 
         return wrapper;
+    }
+
+    private static HttpServer createHttpsServerWrapper(final HttpsServer delegate, final JdkHttpHandlerContainer handler) {
+        return new HttpsServer() {
+
+            @Override
+            public void setHttpsConfigurator(final HttpsConfigurator httpsConfigurator) {
+                delegate.setHttpsConfigurator(httpsConfigurator);
+            }
+
+            @Override
+            public HttpsConfigurator getHttpsConfigurator() {
+                return delegate.getHttpsConfigurator();
+            }
+
+            @Override
+            public void bind(final InetSocketAddress inetSocketAddress, final int i) throws IOException {
+                delegate.bind(inetSocketAddress, i);
+            }
+
+            @Override
+            public void start() {
+                delegate.start();
+                handler.onServerStart();
+            }
+
+            @Override
+            public void setExecutor(final Executor executor) {
+                delegate.setExecutor(executor);
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return delegate.getExecutor();
+            }
+
+            @Override
+            public void stop(final int i) {
+                handler.onServerStop();
+                delegate.stop(i);
+            }
+
+            @Override
+            public HttpContext createContext(final String s, final HttpHandler httpHandler) {
+                return delegate.createContext(s, httpHandler);
+            }
+
+            @Override
+            public HttpContext createContext(final String s) {
+                return delegate.createContext(s);
+            }
+
+            @Override
+            public void removeContext(final String s) throws IllegalArgumentException {
+                delegate.removeContext(s);
+            }
+
+            @Override
+            public void removeContext(final HttpContext httpContext) {
+                delegate.removeContext(httpContext);
+            }
+
+            @Override
+            public InetSocketAddress getAddress() {
+                return delegate.getAddress();
+            }
+        };
+    }
+
+    private static HttpServer createHttpServerWrapper(final HttpServer delegate, final JdkHttpHandlerContainer handler) {
+        return new HttpServer() {
+
+            @Override
+            public void bind(final InetSocketAddress inetSocketAddress, final int i) throws IOException {
+                delegate.bind(inetSocketAddress, i);
+            }
+
+            @Override
+            public void start() {
+                delegate.start();
+                handler.onServerStart();
+            }
+
+            @Override
+            public void setExecutor(final Executor executor) {
+                delegate.setExecutor(executor);
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return delegate.getExecutor();
+            }
+
+            @Override
+            public void stop(final int i) {
+                handler.onServerStop();
+                delegate.stop(i);
+            }
+
+            @Override
+            public HttpContext createContext(final String s, final HttpHandler httpHandler) {
+                return delegate.createContext(s, httpHandler);
+            }
+
+            @Override
+            public HttpContext createContext(final String s) {
+                return delegate.createContext(s);
+            }
+
+            @Override
+            public void removeContext(final String s) throws IllegalArgumentException {
+                delegate.removeContext(s);
+            }
+
+            @Override
+            public void removeContext(final HttpContext httpContext) {
+                delegate.removeContext(httpContext);
+            }
+
+            @Override
+            public InetSocketAddress getAddress() {
+                return delegate.getAddress();
+            }
+        };
     }
 
     /**

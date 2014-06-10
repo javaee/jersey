@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response;
 /**
  * Request scoped transactional CDI bean registered as JAX-RS resource class.
  * Part of JERSEY-2137 reproducer. {@link javax.ws.rs.WebApplicationException}
- * thrown in the resource method bellow should drive the response as specified
+ * thrown in the resource method below should drive the response as specified
  * in the JAX-RS spec.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)

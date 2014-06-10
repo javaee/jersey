@@ -71,7 +71,6 @@ import javax.annotation.Priority;
 
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 /**
  * Http Authentication filter that provides basic and digest authentication (based on RFC 2617).
@@ -94,7 +93,6 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
         DIGEST
     }
 
-    private static final Logger LOGGER = Logger.getLogger(HttpAuthenticationFilter.class.getName());
     private final static String REQUEST_PROPERTY_FILTER_REUSED = "org.glassfish.jersey.client.authentication.HttpAuthenticationFilter.reused";
     private final static String REQUEST_PROPERTY_OPERATION = "org.glassfish.jersey.client.authentication.HttpAuthenticationFilter.operation";
 
@@ -165,7 +163,7 @@ class HttpAuthenticationFilter implements ClientRequestFilter, ClientResponseFil
     }
 
     private int getMaximumCacheLimit(Configuration configuration) {
-        int limit = PropertiesHelper.getValue(configuration.getProperties(),
+        int limit = ClientProperties.getValue(configuration.getProperties(),
                 ClientProperties.DIGESTAUTH_URI_CACHE_SIZELIMIT, MAXIMUM_DIGEST_CACHE_SIZE);
         if (limit < 1) {
             limit = MAXIMUM_DIGEST_CACHE_SIZE;

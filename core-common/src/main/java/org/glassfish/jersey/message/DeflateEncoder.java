@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,8 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+import javax.annotation.Priority;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.core.Configuration;
 
 import javax.inject.Inject;
@@ -62,6 +64,7 @@ import org.glassfish.jersey.spi.ContentEncoder;
  *
  * @author Martin Matula (martin.matula at oracle.com)
  */
+@Priority(Priorities.ENTITY_CODER)
 public class DeflateEncoder extends ContentEncoder {
 
     // TODO This provider should be registered and configured via a feature.

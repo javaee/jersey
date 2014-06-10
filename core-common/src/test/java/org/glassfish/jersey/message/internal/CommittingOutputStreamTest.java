@@ -48,6 +48,7 @@ import java.util.Map;
 import javax.ws.rs.RuntimeType;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.model.internal.CommonConfig;
 import org.glassfish.jersey.model.internal.ComponentBag;
 
@@ -268,7 +269,8 @@ public class CommittingOutputStreamTest {
     public void testPropertiesWithMessageContextMissingServerAtAll() throws IOException {
         final int size = 22;
         Map<String, Object> properties = Maps.newHashMap();
-        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".client", size);
+        properties.put(PropertiesHelper.getPropertyNameForRuntime(
+                        CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, RuntimeType.CLIENT), size);
         checkBufferSize(CommittingOutputStream.DEFAULT_BUFFER_SIZE, properties, RuntimeType.SERVER);
         checkBufferSize(size, properties, RuntimeType.CLIENT);
     }
@@ -278,7 +280,8 @@ public class CommittingOutputStreamTest {
         final int size = 22;
         Map<String, Object> properties = Maps.newHashMap();
         properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, size);
-        properties.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER + ".client", size * 2);
+        properties.put(PropertiesHelper.getPropertyNameForRuntime(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER,
+                RuntimeType.CLIENT), size * 2);
 
         checkBufferSize(size * 2, properties, RuntimeType.CLIENT);
         checkBufferSize(size, properties, RuntimeType.SERVER);

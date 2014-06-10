@@ -41,29 +41,36 @@
 package org.glassfish.jersey.internal;
 
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.ext.ExceptionMapper;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.ext.ExceptionMapper;
+import org.glassfish.hk2.api.ActiveDescriptor;
+import org.glassfish.hk2.api.ServiceHandle;
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.internal.inject.CustomAnnotationImpl;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.ClassTypePair;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
-
-import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
  * {@link ExceptionMappers Exception mappers} implementation that aggregates
@@ -73,6 +80,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Paul Sandoz
  * @author Santiago Pericas-Geertsen (Santiago.PericasGeertsen at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class ExceptionMapperFactory implements ExceptionMappers {
     private static final Logger LOGGER = Logger.getLogger(ExceptionMapperFactory.class.getName());
@@ -90,10 +98,10 @@ public class ExceptionMapperFactory implements ExceptionMappers {
 
     private static class ExceptionMapperType {
 
-        ExceptionMapper mapper;
+        ServiceHandle<ExceptionMapper> mapper;
         Class<? extends Throwable> exceptionType;
 
-        public ExceptionMapperType(final ExceptionMapper mapper, final Class<? extends Throwable> exceptionType) {
+        public ExceptionMapperType(final ServiceHandle<ExceptionMapper> mapper, final Class<? extends Throwable> exceptionType) {
             this.mapper = mapper;
             this.exceptionType = exceptionType;
         }
@@ -121,7 +129,7 @@ public class ExceptionMapperFactory implements ExceptionMappers {
         for (final ExceptionMapperType mapperType : exceptionMapperTypes) {
             final int d = distance(type, mapperType.exceptionType);
             if (d >= 0) {
-                orderedMappers.put(d, mapperType.mapper);
+                orderedMappers.put(d, mapperType.mapper.getService());
             }
         }
 
@@ -156,10 +164,44 @@ public class ExceptionMapperFactory implements ExceptionMappers {
      */
     @Inject
     public ExceptionMapperFactory(final ServiceLocator locator) {
-        for (final ExceptionMapper<?> mapper : Providers.getAllProviders(locator, ExceptionMapper.class)) {
-            final Class<? extends Throwable> c = getExceptionType(mapper.getClass());
-            if (c != null) {
-                exceptionMapperTypes.add(new ExceptionMapperType(mapper, c));
+
+        final Collection<ServiceHandle<ExceptionMapper>> mapperHandles =
+                Providers.getAllServiceHandles(locator, ExceptionMapper.class);
+
+        for (ServiceHandle<ExceptionMapper> mapperHandle : mapperHandles) {
+
+            final ExceptionMapper mapper = mapperHandle.getService();
+
+            if (Proxy.isProxyClass(mapper.getClass())) {
+
+                SortedSet<Class<? extends ExceptionMapper>> mapperTypes
+                        = new TreeSet<Class<? extends ExceptionMapper>>(new Comparator<Class<? extends ExceptionMapper>>() {
+
+                            @Override
+                            public int compare(Class<? extends ExceptionMapper> o1, Class<? extends ExceptionMapper> o2) {
+                                return o1.isAssignableFrom(o2) ? -1 : 1;
+                            }
+                        });
+
+                final Set<Type> contracts = mapperHandle.getActiveDescriptor().getContractTypes();
+                for (Type contract : contracts) {
+                    if (contract instanceof Class &&
+                            ExceptionMapper.class.isAssignableFrom((Class<?>)contract) && contract != ExceptionMapper.class) {
+                        mapperTypes.add((Class<? extends ExceptionMapper>) contract);
+                    }
+                }
+
+                if (!mapperTypes.isEmpty()) {
+                    final Class<? extends Throwable> c = getExceptionType(mapperTypes.first());
+                    if (c != null) {
+                        exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c));
+                    }
+                }
+            } else {
+                final Class<? extends Throwable> c = getExceptionType(mapper.getClass());
+                if (c != null) {
+                    exceptionMapperTypes.add(new ExceptionMapperType(mapperHandle, c));
+                }
             }
         }
     }

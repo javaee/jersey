@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,17 @@
  */
 package org.glassfish.jersey.jetty.connector;
 
+import java.util.Map;
+
+import org.glassfish.jersey.internal.util.PropertiesClass;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+
 /**
  * Configuration options specific to the Client API that utilizes {@link JettyConnectorProvider}.
  *
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
+@PropertiesClass
 public final class JettyClientProperties {
 
     /**
@@ -92,5 +98,22 @@ public final class JettyClientProperties {
      */
     public static final String PREEMPTIVE_BASIC_AUTHENTICATION =
             "jersey.config.jetty.client.preemptiveBasicAuthentication";
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the real value type is not compatible with the specified value type, returns {@code null}.
+     *
+     * @param properties  Map of properties to get the property value from.
+     * @param key         Name of the property.
+     * @param type        Type to retrieve the value as.
+     * @param <T>         Type of the property value.
+     * @return Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
+        return PropertiesHelper.getValue(properties, key, type, null);
+    }
 
 }

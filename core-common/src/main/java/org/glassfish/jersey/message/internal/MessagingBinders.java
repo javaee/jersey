@@ -131,11 +131,9 @@ public final class MessagingBinders {
              * TODO: com.sun.jersey.core.impl.provider.entity.EntityHolderReader
              */
 
-            install(new ServiceFinderBinder<MessageBodyReader>(MessageBodyReader.class, applicationProperties, runtimeType));
             // Message body writers
             bind(StreamingOutputProvider.class).to(MessageBodyWriter.class).in(Singleton.class);
             bind(SourceProvider.SourceWriter.class).to(MessageBodyWriter.class).in(Singleton.class);
-            install(new ServiceFinderBinder<MessageBodyWriter>(MessageBodyWriter.class, applicationProperties, runtimeType));
             install(new ServiceFinderBinder<HeaderDelegateProvider>(HeaderDelegateProvider.class, applicationProperties, runtimeType));
 
             // XML factory injection points

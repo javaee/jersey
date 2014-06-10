@@ -127,7 +127,7 @@ public abstract class AbstractWebAppTest {
      */
     public List<Option> genericOsgiOptions() {
 
-        // uncomment for debugging using felix console (lookup gogo string in the commnented lines bellow)
+        // uncomment for debugging using felix console (lookup gogo string in the commnented lines below)
         String gogoVersion = "0.8.0";
 
         @SuppressWarnings("RedundantStringToString")
@@ -173,8 +173,8 @@ public abstract class AbstractWebAppTest {
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-locator").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2").artifactId("hk2-utils").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("javax.inject").versionAsInProject(),
-                mavenBundle().groupId("org.glassfish.hk2.external").artifactId("asm-all-repackaged").versionAsInProject(),
                 mavenBundle().groupId("org.glassfish.hk2.external").artifactId("aopalliance-repackaged").versionAsInProject(),
+                mavenBundle().groupId("org.ow2.asm").artifactId("asm-debug-all").versionAsInProject(),
                 mavenBundle().groupId("org.javassist").artifactId("javassist").versionAsInProject(),
                 // JAX-RS API
                 mavenBundle().groupId("javax.ws.rs").artifactId("javax.ws.rs-api").versionAsInProject(),
@@ -369,7 +369,7 @@ public abstract class AbstractWebAppTest {
             try {
                 return Integer.parseInt(varValue);
             } catch (NumberFormatException e) {
-                // will return default value bellow
+                // will return default value below
             }
         }
         return defaultValue;

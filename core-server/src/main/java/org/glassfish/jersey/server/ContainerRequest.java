@@ -108,6 +108,8 @@ public class ContainerRequest extends InboundMessageContext
 
     // Request-scoped properties delegate
     private final PropertiesDelegate propertiesDelegate;
+    // Routing context and UriInfo implementation
+    private final UriRoutingContext uriRoutingContext;
     // Absolute application root URI (base URI)
     private URI baseUri;
     // Absolute request URI
@@ -126,8 +128,6 @@ public class ContainerRequest extends InboundMessageContext
     private Response abortResponse;
     // Vary header value to be set in the response
     private String varyValue;
-    // UriInfo reference
-    private UriRoutingContext uriRoutingContext;
     // Processing providers
     private ProcessingProviders processingProviders;
     // Custom Jersey container request scoped initializer
@@ -176,6 +176,7 @@ public class ContainerRequest extends InboundMessageContext
         this.httpMethod = httpMethod;
         this.securityContext = securityContext;
         this.propertiesDelegate = new TracingAwarePropertiesDelegate(propertiesDelegate);
+        this.uriRoutingContext = new UriRoutingContext(this);
     }
 
     /**
@@ -301,15 +302,6 @@ public class ContainerRequest extends InboundMessageContext
     @Override
     public ExtendedUriInfo getUriInfo() {
         return uriRoutingContext;
-    }
-
-    /**
-     * Set the request scoped {@link UriRoutingContext} instance.
-     *
-     * @param uriRoutingContext request scoped {@code UriRoutingContext} instance.
-     */
-    void setUriRoutingContext(UriRoutingContext uriRoutingContext) {
-        this.uriRoutingContext = uriRoutingContext;
     }
 
     void setProcessingProviders(final ProcessingProviders providers) {

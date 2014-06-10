@@ -43,6 +43,7 @@ package org.glassfish.jersey.linking;
 import org.glassfish.jersey.linking.InjectLink.Style;
 import java.util.HashMap;
 import java.util.Map;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
  * Utility class for working with {@link LinkHeader} annotations
@@ -67,8 +68,8 @@ class LinkHeaderDescriptor implements InjectLinkDescriptor {
         return linkHeader;
     }
 
-    public String getLinkTemplate() {
-        return InjectLinkFieldDescriptor.getLinkTemplate(linkHeader);
+    public String getLinkTemplate(ResourceMappingContext rmc) {
+        return InjectLinkFieldDescriptor.getLinkTemplate(rmc, linkHeader);
     }
 
     public Style getLinkStyle() {

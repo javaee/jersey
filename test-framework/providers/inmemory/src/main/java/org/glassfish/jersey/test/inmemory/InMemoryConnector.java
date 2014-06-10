@@ -67,7 +67,6 @@ import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.PropertiesDelegate;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.message.internal.OutboundMessageContext;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -247,7 +246,7 @@ class InMemoryConnector implements Connector {
         containerRequest.setEntityStream(new ByteArrayInputStream(clientOutput.toByteArray()));
 
 
-        boolean followRedirects = PropertiesHelper.getValue(clientRequest.getConfiguration().getProperties(),
+        boolean followRedirects = ClientProperties.getValue(clientRequest.getConfiguration().getProperties(),
                 ClientProperties.FOLLOW_REDIRECTS, true);
 
         final InMemoryResponseWriter inMemoryResponseWriter = new InMemoryResponseWriter();

@@ -39,8 +39,13 @@
  */
 package org.glassfish.jersey.server.internal.process;
 
+import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.internal.util.collection.Refs;
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.server.CloseableService;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.monitoring.RequestEventBuilder;
@@ -68,16 +73,20 @@ public final class RequestProcessingContext implements RespondingContext {
     private final ContainerRequest request;
     private final UriRoutingContext routingContext;
     private final RespondingContext respondingContext;
+    private final CloseableService closeableService;
 
     private final RequestEventBuilder monitoringEventBuilder;
     private final RequestEventListener monitoringEventListener;
 
+    private final Ref<Value<AsyncContext>> asyncContextValueRef;
+
     /**
      * Create new request processing context.
-     * @param serviceLocator service locator / injector.
-     * @param request container request.
-     * @param routingContext routing context.
-     * @param monitoringEventBuilder request monitoring event builder.
+     *
+     * @param serviceLocator          service locator / injector.
+     * @param request                 container request.
+     * @param routingContext          routing context.
+     * @param monitoringEventBuilder  request monitoring event builder.
      * @param monitoringEventListener registered request monitoring event listener.
      */
     public RequestProcessingContext(
@@ -91,9 +100,12 @@ public final class RequestProcessingContext implements RespondingContext {
         this.request = request;
         this.routingContext = routingContext;
         this.respondingContext = new DefaultRespondingContext();
+        this.closeableService = new DefaultCloseableService();
 
         this.monitoringEventBuilder = monitoringEventBuilder;
         this.monitoringEventListener = monitoringEventListener;
+
+        this.asyncContextValueRef = Refs.threadSafe(Values.<AsyncContext>empty());
     }
 
     /**
@@ -106,7 +118,7 @@ public final class RequestProcessingContext implements RespondingContext {
     }
 
     /**
-     * Get routing context for the processed container request.
+     * Get the routing context for the processed container request.
      *
      * @return request routing context.
      */
@@ -115,12 +127,72 @@ public final class RequestProcessingContext implements RespondingContext {
     }
 
     /**
-     * Get response processing stage chain.
+     * Get the underlying {@link UriRoutingContext} instance for the processed
+     * container request.
+     * <p>
+     * This instance is used  by {@link ServerProcessingBinder} to satisfy injection of multiple types, namely:
+     * <ul>
+     * <li>{@link javax.ws.rs.core.UriInfo}<li>
+     * </li>{@link org.glassfish.jersey.server.ExtendedUriInfo}<li>
+     * </li>{@link javax.ws.rs.container.ResourceInfo}</li>
+     * </ul>
+     * </p>
      *
-     * @return response processing stage chain.
+     * @return request routing context.
      */
-    public RespondingContext respondingContext() {
-        return respondingContext;
+    UriRoutingContext uriRoutingContext() {
+        return routingContext;
+    }
+
+    /**
+     * Get closeable service associated with the request.
+     *
+     * @return closeable service associated with the request.
+     */
+    public CloseableService closeableService() {
+        return closeableService;
+    }
+
+
+    /**
+     * Lazily initialize {@link org.glassfish.jersey.server.internal.process.AsyncContext} for this
+     * request processing context.
+     * <p>
+     * The {@code lazyContextValue} will be only invoked once during the first call to {@link #asyncContext()}.
+     * As such, the asynchronous context for this request can be initialized lazily, on demand.
+     * </p>
+     *
+     * @param lazyContextValue lazily initialized {@code AsyncContext} instance bound to this request processing context.
+     */
+    // TODO figure out how to make this package-private.
+    public void initAsyncContext(Value<AsyncContext> lazyContextValue) {
+        asyncContextValueRef.set(Values.lazy(lazyContextValue));
+    }
+
+    /**
+     * Get the asynchronous context associated with this request processing context.
+     *
+     * May return {@code null} if no asynchronous context has been initialized in this request processing context yet.
+     *
+     * @return asynchronous context associated with this request processing context, or {@code null} if the
+     * asynchronous context has not been initialized yet
+     * (see {@link #initAsyncContext(org.glassfish.jersey.internal.util.collection.Value)}).
+     */
+    public AsyncContext asyncContext() {
+        return asyncContextValueRef.get().get();
+    }
+
+    /**
+     * Get a {@link Value} instance holding the asynchronous context associated with this request processing context.
+     *
+     * May return an empty value if no asynchronous context has been initialized in this request processing context yet.
+     *
+     * @return value instance holding the asynchronous context associated with this request processing context.
+     * The returned value may be empty, if no asynchronous context has been initialized yet
+     * (see {@link #initAsyncContext(org.glassfish.jersey.internal.util.collection.Value)}).
+     */
+    public Value<AsyncContext> asyncContextValue() {
+        return asyncContextValueRef.get();
     }
 
     /**
@@ -143,6 +215,7 @@ public final class RequestProcessingContext implements RespondingContext {
     public RequestEventBuilder monitoringEventBuilder() {
         return monitoringEventBuilder;
     }
+
     /**
      * Trigger a new monitoring event for the currently processed request.
      *

@@ -49,10 +49,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.ws.rs.core.Link;
-
 import javax.ws.rs.core.UriInfo;
 
-import org.glassfish.jersey.linking.LinkMessages;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import org.glassfish.jersey.server.ExtendedUriInfo;
 
 /**
  * Utility class that can inject links into {@link com.sun.jersey.server.linking.Link} annotated fields in
@@ -76,10 +76,10 @@ class FieldProcessor<T> {
      * @param entity the entity object returned by the resource method
      * @param uriInfo the uriInfo for the request
      */
-    public void processLinks(T entity, UriInfo uriInfo) {
+    public void processLinks(T entity, UriInfo uriInfo, ResourceMappingContext rmc) {
         Set<Object> processed = new HashSet<Object>();
         Object resource = uriInfo.getMatchedResources().get(0);
-        processLinks(entity, resource, entity, processed, uriInfo);
+        processLinks(entity, resource, entity, processed, uriInfo, rmc);
     }
 
     /**
@@ -91,7 +91,8 @@ class FieldProcessor<T> {
      * @param uriInfo
      */
     private void processLinks(Object entity, Object resource, Object instance,
-                              Set<Object> processed, UriInfo uriInfo) {
+                              Set<Object> processed, UriInfo uriInfo,
+                              ResourceMappingContext rmc) {
 
         try {
             if (instance == null || processed.contains(instance))
@@ -110,7 +111,7 @@ class FieldProcessor<T> {
             {
                 InjectLinkFieldDescriptor linkField = (InjectLinkFieldDescriptor) field;
                 if (ELLinkBuilder.evaluateCondition(linkField.getCondition(), entity, resource, instance)) {
-                    URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo);
+                    URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo, rmc);
                     linkField.setPropertyValue(instance, uri);
                 }
             } else if (field instanceof InjectLinksFieldDescriptor) {
@@ -120,7 +121,7 @@ class FieldProcessor<T> {
                 for (InjectLinkFieldDescriptor linkField : linksField.getLinksToInject())
                 {
                     if (ELLinkBuilder.evaluateCondition(linkField.getCondition(), entity, resource, instance)) {
-                       URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo);
+                       URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo, rmc);
                        Link link = linkField.getLink(uri);
                        list.add(link);
                     }   
@@ -137,26 +138,27 @@ class FieldProcessor<T> {
         if (instanceClass.isArray() && Object[].class.isAssignableFrom(instanceClass)) {
             Object array[] = (Object[]) instance;
             for (Object member : array) {
-                processMember(entity, resource, member, processed, uriInfo);
+                processMember(entity, resource, member, processed, uriInfo,rmc);
             }
         } else if (instance instanceof Collection) {
             Collection collection = (Collection) instance;
             for (Object member : collection) {
-                processMember(entity, resource, member, processed, uriInfo);
+                processMember(entity, resource, member, processed, uriInfo,rmc);
             }
         }
 
         // Recursively process all member fields
         for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
-            processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo);
+            processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo,rmc);
         }
 
     }
 
-    private void processMember(Object entity, Object resource, Object member, Set<Object> processed, UriInfo uriInfo) {
+    private void processMember(Object entity, Object resource, Object member, Set<Object> processed, UriInfo uriInfo,
+      ResourceMappingContext rmc) {
         if (member != null) {
             FieldProcessor proc = new FieldProcessor(member.getClass());
-            proc.processLinks(entity, resource, member, processed, uriInfo);
+            proc.processLinks(entity, resource, member, processed, uriInfo, rmc);
         }
     }
 

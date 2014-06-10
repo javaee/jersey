@@ -253,8 +253,8 @@ public class ReflectionHelper {
                     try {
                         return (Class<T>) Class.forName(name, false, cl);
                     } catch (ClassNotFoundException ex) {
-                        if (LOGGER.isLoggable(Level.FINE)) {
-                            LOGGER.log(Level.FINE,
+                        if (LOGGER.isLoggable(Level.FINER)) {
+                            LOGGER.log(Level.FINER,
                                     "Unable to load class " + name + " using the supplied class loader "
                                             + cl.getClass().getName() + ".", ex);
                         }
@@ -263,8 +263,8 @@ public class ReflectionHelper {
                 try {
                     return (Class<T>) Class.forName(name);
                 } catch (ClassNotFoundException ex) {
-                    if (LOGGER.isLoggable(Level.FINE)) {
-                        LOGGER.log(Level.FINE, "Unable to load class " + name + " using the current class loader.", ex);
+                    if (LOGGER.isLoggable(Level.FINER)) {
+                        LOGGER.log(Level.FINER, "Unable to load class " + name + " using the current class loader.", ex);
                     }
                 }
 

@@ -45,6 +45,8 @@ import java.util.Properties;
 
 import javax.ws.rs.ext.ContextResolver;
 
+import org.glassfish.jersey.internal.util.PropertiesClass;
+
 /**
  * Injectable JavaBean containing the configuration parameters for
  * {@code jersey-multipart} as used in this particular application.
@@ -53,6 +55,7 @@ import javax.ws.rs.ext.ContextResolver;
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@PropertiesClass
 public class MultiPartProperties {
 
     /**

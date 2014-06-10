@@ -53,6 +53,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.JSONP;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
@@ -63,6 +64,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -198,7 +200,11 @@ public class JsonWithPaddingTest extends JerseyTest {
         final Response response = target("jsonp").path("PureJson").request("application/x-javascript").get();
 
         // Method is invoked but we do not have a MBW for application/x-javascript.
-        assertThat(response.getStatus(), equalTo(500));
+        if (jsonTestProvider.getFeature().getClass() == JacksonFeature.class) {
+            assertThat(response.getStatus(), equalTo(200));
+        } else {
+            assertThat(response.getStatus(), equalTo(500));
+        }
     }
 
     @Test

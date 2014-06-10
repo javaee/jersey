@@ -45,6 +45,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,7 +65,6 @@ import org.glassfish.jersey.client.RequestEntityProcessing;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.ByteBufferInputStream;
 import org.glassfish.jersey.internal.util.collection.NonBlockingInputStream;
 import org.glassfish.jersey.message.internal.HeaderUtils;
@@ -79,10 +79,12 @@ import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
+import com.ning.http.client.ProxyServerSelector;
 import com.ning.http.client.Request;
 import com.ning.http.client.RequestBuilder;
 import com.ning.http.client.providers.grizzly.FeedableBodyGenerator;
 import com.ning.http.client.providers.grizzly.GrizzlyAsyncHttpProvider;
+import com.ning.http.util.ProxyUtils;
 
 import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 
@@ -117,11 +119,35 @@ class GrizzlyConnector implements Connector {
 
             builder = builder.setExecutorService(executorService);
 
-            builder.setConnectionTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
+            builder.setConnectionTimeoutInMs(ClientProperties.getValue(config.getProperties(),
                     ClientProperties.CONNECT_TIMEOUT, 0));
 
-            builder.setRequestTimeoutInMs(PropertiesHelper.getValue(config.getProperties(),
+            builder.setRequestTimeoutInMs(ClientProperties.getValue(config.getProperties(),
                     ClientProperties.READ_TIMEOUT, 0));
+
+            Object proxyUri;
+            proxyUri = config.getProperty(ClientProperties.PROXY_URI);
+            if (proxyUri != null) {
+                final URI u = getProxyUri(proxyUri);
+                final Properties proxyProperties = new Properties();
+                proxyProperties.setProperty(ProxyUtils.PROXY_PROTOCOL, u.getScheme());
+                proxyProperties.setProperty(ProxyUtils.PROXY_HOST, u.getHost());
+                proxyProperties.setProperty(ProxyUtils.PROXY_PORT, String.valueOf(u.getPort()));
+
+                final String userName = ClientProperties.getValue(
+                        config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
+                if (userName != null) {
+                    proxyProperties.setProperty(ProxyUtils.PROXY_USER, userName);
+
+                    final String password = ClientProperties.getValue(
+                            config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
+                    if (password != null) {
+                        proxyProperties.setProperty(ProxyUtils.PROXY_PASSWORD, password);
+                    }
+                }
+                ProxyServerSelector proxyServerSelector = ProxyUtils.createProxyServerSelector(proxyProperties);
+                builder.setProxyServerSelector(proxyServerSelector);
+            }
         } else {
             executorService = Executors.newCachedThreadPool();
             builder.setExecutorService(executorService);
@@ -134,9 +160,21 @@ class GrizzlyConnector implements Connector {
         if (client.getHostnameVerifier() != null) {
             builder.setHostnameVerifier(client.getHostnameVerifier());
         }
+
         AsyncHttpClientConfig asyncClientConfig = builder.build();
 
         this.grizzlyClient = new AsyncHttpClient(new GrizzlyAsyncHttpProvider(asyncClientConfig), asyncClientConfig);
+    }
+
+    @SuppressWarnings("ChainOfInstanceofChecks")
+    private static URI getProxyUri(final Object proxy) {
+        if (proxy instanceof URI) {
+            return (URI) proxy;
+        } else if (proxy instanceof String) {
+            return URI.create((String) proxy);
+        } else {
+            throw new ProcessingException(LocalizationMessages.WRONG_PROXY_URI_TYPE(ClientProperties.PROXY_URI));
+        }
     }
 
     /**
@@ -340,7 +378,7 @@ class GrizzlyConnector implements Connector {
                 builder = builder.setBody(entityBytes);
             } else if (entityProcessing == RequestEntityProcessing.CHUNKED) {
                 final FeedableBodyGenerator bodyGenerator = new FeedableBodyGenerator();
-                final Integer chunkSize = requestContext.resolveProperty(ClientProperties.CHUNKED_ENCODING_SIZE, Integer.valueOf(0));
+                final Integer chunkSize = requestContext.resolveProperty(ClientProperties.CHUNKED_ENCODING_SIZE, 0);
                 if (chunkSize > 0) {
                     bodyGenerator.setMaxPendingBytes(chunkSize);
                 }

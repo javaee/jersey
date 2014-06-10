@@ -41,6 +41,7 @@
 package org.glassfish.jersey.linking;
 
 import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 
 /**
  * Utility for working with @Ref annotations
@@ -60,7 +61,7 @@ interface InjectLinkDescriptor {
      * @Path of the class referenced in resource()
      * @return the link template
      */
-    String getLinkTemplate();
+    String getLinkTemplate(ResourceMappingContext rmc);
 
     /**
      * Get the binding as an EL expression for a particular URI template parameter

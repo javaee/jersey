@@ -66,7 +66,7 @@
             Jersey JSON support comes as a set of extension modules where each of these modules contains an implementation of
             a &jaxrs.core.Feature; that needs to be registered into your &jaxrs.core.Configurable; instance (client/server).
             There are multiple frameworks that provide support for JSON processing and/or JSON-to-Java binding.
-            The modules listed bellow provide support for JSON representations by integrating the individual JSON frameworks into
+            The modules listed below provide support for JSON representations by integrating the individual JSON frameworks into
             Jersey. At present, Jersey integrates with the following modules to provide JSON support:
 
             <itemizedlist>
@@ -434,7 +434,7 @@ public class JsonMoxyConfigurationContextResolver implements ContextResolver&lt;
                     <title>Building client with MOXy JSON feature enabled.</title>
 
                     <programlisting language="java">final Client client = ClientBuilder.newBuilder()
-        // The line bellow that registers MOXy feature can be
+        // The line below that registers MOXy feature can be
         // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is
         // not disabled.
         .register(MoxyJsonFeature.class)
@@ -448,7 +448,7 @@ public class JsonMoxyConfigurationContextResolver implements ContextResolver&lt;
                     <programlisting language="java">// Create JAX-RS application.
 final Application application = new ResourceConfig()
         .packages("org.glassfish.jersey.examples.jsonmoxy")
-        // The line bellow that registers MOXy feature can be
+        // The line below that registers MOXy feature can be
         // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is
         // not disabled.
         .register(MoxyJsonFeature.class)
@@ -531,7 +531,7 @@ final Application application = new ResourceConfig()
                     <title>Building client with JSON-Processing JSON feature enabled.</title>
 
                     <programlisting language="java">ClientBuilder.newClient(new ClientConfig()
-        // The line bellow that registers JSON-Processing feature can be
+        // The line below that registers JSON-Processing feature can be
         // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is not disabled.
         .register(JsonProcessingFeature.class)
         .property(JsonGenerator.PRETTY_PRINTING, true)
@@ -543,7 +543,7 @@ final Application application = new ResourceConfig()
 
                     <programlisting language="java">// Create JAX-RS application.
 final Application application = new ResourceConfig()
-        // The line bellow that registers JSON-Processing feature can be
+        // The line below that registers JSON-Processing feature can be
         // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is not disabled.
         .register(JsonProcessingFeature.class)
         .packages("org.glassfish.jersey.examples.jsonp")
@@ -586,7 +586,7 @@ final Application application = new ResourceConfig()
                     instance.
                     This could be handy if you need to redefine the default Jackson behaviour and to fine-tune how your JSON data
                     structures look like. Detailed description of all Jackson features is out of scope of this guide. The example
-                    bellow gives you a hint on how to wire your &lit.jersey.media.ObjectMapper; instance into your Jersey
+                    below gives you a hint on how to wire your &lit.jersey.media.ObjectMapper; instance into your Jersey
                     application.
                 </para>
 
@@ -709,7 +709,7 @@ final Application application = new ResourceConfig()
                 </para>
 
                 <para>
-                    Individual notations and their further configuration options are described bellow. Rather then explaining
+                    Individual notations and their further configuration options are described below. Rather then explaining
                     rules for mapping XML constructs into JSON, the notations will be described using a simple example. Following
                     are JAXB beans, which will be used.
 
@@ -766,7 +766,7 @@ Contact contact = new Contact(2, "Bob", Arrays.asList(addresses));</programlisti
                 </para>
 
                 <para>
-                    All bellow described configuration options are documented also in api-docs at &jersey.media.JettisonConfig;.
+                    All below described configuration options are documented also in api-docs at &jersey.media.JettisonConfig;.
                 </para>
 
                 <section>
@@ -795,7 +795,7 @@ context = new JettisonJaxbContext(
     types);</programlisting>
                         </example>
 
-                        Resulting JSON will look like in the example bellow.
+                        Resulting JSON will look like in the example below.
 
                         <example>
                             <title>JSON expression with XML namespaces mapped into JSON</title>
@@ -830,7 +830,7 @@ context = new JettisonJaxbContext(
     types);</programlisting>
                         </example>
 
-                        Resulting JSON will look like in the example bellow, unimportant lines removed for sanity.
+                        Resulting JSON will look like in the example below, unimportant lines removed for sanity.
 
                         <example>
                             <title>JSON expression with JSON arrays explicitly configured via Jersey</title>

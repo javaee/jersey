@@ -39,6 +39,11 @@
  */
 package org.glassfish.jersey.apache.connector;
 
+import java.util.Map;
+
+import org.glassfish.jersey.internal.util.PropertiesClass;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+
 /**
  * Configuration options specific to the Client API that utilizes {@link ApacheConnectorProvider}.
  *
@@ -47,6 +52,7 @@ package org.glassfish.jersey.apache.connector;
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */
+@PropertiesClass
 public final class ApacheClientProperties {
 
     /**
@@ -131,5 +137,23 @@ public final class ApacheClientProperties {
 
     private ApacheClientProperties() {
         // prevents instantiation
+    }
+
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the actual property value type is not compatible with the specified type, the method will
+     * return {@code null}.
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param key           Name of the property.
+     * @param type          Type to retrieve the value as.
+     * @param <T>           Type of the property value.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
+    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
+        return PropertiesHelper.getValue(properties, key, type, null);
     }
 }

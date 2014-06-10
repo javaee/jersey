@@ -505,6 +505,7 @@ public class RequestScope implements Context<RequestScoped> {
          *
          * @param descriptor key for the value to be removed.
          */
+        @SuppressWarnings("unchecked")
         <T> void remove(ActiveDescriptor<T> descriptor) {
             final T removed = (T) store.remove(descriptor);
             if (removed != null) {

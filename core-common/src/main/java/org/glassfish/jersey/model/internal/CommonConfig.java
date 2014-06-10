@@ -43,26 +43,33 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
+import javax.annotation.Priority;
+
 import org.glassfish.jersey.ExtendedConfig;
 import org.glassfish.jersey.internal.LocalizationMessages;
+import org.glassfish.jersey.internal.ServiceFinder;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
+import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.process.Inflector;
@@ -88,7 +95,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     private static final Logger LOGGER = Logger.getLogger(CommonConfig.class.getName());
     private static final Function<Object, Binder> CAST_TO_BINDER = new Function<Object, Binder>() {
         @Override
-        public Binder apply(Object input) {
+        public Binder apply(final Object input) {
             return Binder.class.cast(input);
         }
     };
@@ -171,7 +178,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             if (!(obj instanceof FeatureRegistration)) {
                 return false;
             }
-            FeatureRegistration other = (FeatureRegistration) obj;
+            final FeatureRegistration other = (FeatureRegistration) obj;
 
             return (featureClass == other.featureClass)
                     || (feature != null && (feature == other.feature || feature.equals(other.feature)));
@@ -206,7 +213,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      *                             or not should the component class registration continue
      *                             towards a successful completion.
      */
-    public CommonConfig(RuntimeType type, Predicate<ContractProvider> registrationStrategy) {
+    public CommonConfig(final RuntimeType type, final Predicate<ContractProvider> registrationStrategy) {
         this.type = type;
 
         this.properties = new HashMap<String, Object>();
@@ -291,7 +298,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     @Override
-    public boolean isProperty(String name) {
+    public boolean isProperty(final String name) {
         return PropertiesHelper.isProperty(getProperty(name));
     }
 
@@ -311,17 +318,17 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     @Override
-    public boolean isRegistered(Object component) {
+    public boolean isRegistered(final Object component) {
         return componentBag.getInstances().contains(component);
     }
 
     @Override
-    public boolean isRegistered(Class<?> componentClass) {
+    public boolean isRegistered(final Class<?> componentClass) {
         return componentBag.getRegistrations().contains(componentClass);
     }
 
     @Override
-    public Map<Class<?>, Integer> getContracts(Class<?> componentClass) {
+    public Map<Class<?>, Integer> getContracts(final Class<?> componentClass) {
         final ContractProvider model = componentBag.getModel(componentClass);
         return (model == null) ? Collections.<Class<?>, Integer>emptyMap() : model.getContractMap();
     }
@@ -439,7 +446,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     @Override
-    public CommonConfig register(final Class<?> componentClass, Map<Class<?>, Integer> contracts) {
+    public CommonConfig register(final Class<?> componentClass, final Map<Class<?>, Integer> contracts) {
         checkComponentClassNotNull(componentClass);
         if (componentBag.register(componentClass, contracts, getModelEnhancer(componentClass))) {
             processFeatureRegistration(null, componentClass);
@@ -487,7 +494,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     @Override
-    public CommonConfig register(final Object component, Map<Class<?>, Integer> contracts) {
+    public CommonConfig register(final Object component, final Map<Class<?>, Integer> contracts) {
         checkProviderNotNull(component);
         final Class<?> componentClass = component.getClass();
         if (componentBag.register(component, contracts, getModelEnhancer(componentClass))) {
@@ -497,8 +504,8 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         return this;
     }
 
-    private void processFeatureRegistration(Object component, Class<?> componentClass) {
-        ContractProvider model = componentBag.getModel(componentClass);
+    private void processFeatureRegistration(final Object component, final Class<?> componentClass) {
+        final ContractProvider model = componentBag.getModel(componentClass);
         if (model.getContracts().contains(Feature.class)) {
             @SuppressWarnings("unchecked")
             final FeatureRegistration registration = (component != null) ?
@@ -518,7 +525,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      * @param config external configuration state to replace the configuration of this configurable instance.
      * @return the updated common configuration instance.
      */
-    public CommonConfig loadFrom(Configuration config) {
+    public CommonConfig loadFrom(final Configuration config) {
         if (config instanceof CommonConfig) {
             // If loading from CommonConfig then simply copy properties and check whether given config has been initialized.
             final CommonConfig commonConfig = (CommonConfig) config;
@@ -554,19 +561,19 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
         return this;
     }
 
-    private Set<Class<?>> asNewIdentitySet(Class<?>... contracts) {
-        Set<Class<?>> result = Sets.newIdentityHashSet();
+    private Set<Class<?>> asNewIdentitySet(final Class<?>... contracts) {
+        final Set<Class<?>> result = Sets.newIdentityHashSet();
         result.addAll(Arrays.asList(contracts));
         return result;
     }
 
-    private void checkProviderNotNull(Object provider) {
+    private void checkProviderNotNull(final Object provider) {
         if (provider == null) {
             throw new IllegalArgumentException(LocalizationMessages.COMPONENT_CANNOT_BE_NULL());
         }
     }
 
-    private void checkComponentClassNotNull(Class<?> componentClass) {
+    private void checkComponentClassNotNull(final Class<?> componentClass) {
         if (componentClass == null) {
             throw new IllegalArgumentException(LocalizationMessages.COMPONENT_CLASS_CANNOT_BE_NULL());
         }
@@ -576,17 +583,39 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
      * Configure {@link AutoDiscoverable auto-discoverables} in the HK2 service locator.
      *
      * @param locator locator in which the auto-discoverables should be configured.
+     * @param forcedOnly defines whether all or only forced auto-discoverables should be configured.
      */
-    public void configureAutoDiscoverableProviders(final ServiceLocator locator) {
+    public void configureAutoDiscoverableProviders(final ServiceLocator locator, final boolean forcedOnly) {
         // Check whether meta providers have been initialized for a config this config has been loaded from.
         if (!disableMetaProviderConfiguration) {
-            for (final AutoDiscoverable autoDiscoverable : Providers.getProviders(locator, AutoDiscoverable.class)) {
+            final Set<AutoDiscoverable> providers = new TreeSet<AutoDiscoverable>(new Comparator<AutoDiscoverable>() {
+                @Override
+                public int compare(final AutoDiscoverable o1, final AutoDiscoverable o2) {
+                    final int p1 = o1.getClass().isAnnotationPresent(Priority.class)
+                            ? o1.getClass().getAnnotation(Priority.class).value() : Priorities.USER;
+                    final int p2 = o2.getClass().isAnnotationPresent(Priority.class)
+                            ? o2.getClass().getAnnotation(Priority.class).value() : Priorities.USER;
+
+                    return (p1 < p2 || p1 == p2) ? -1 : 1;
+                }
+            });
+
+            // Forced (always invoked).
+            providers.addAll(Arrays.asList(
+                    ServiceFinder.find(ForcedAutoDiscoverable.class, true).toArray()));
+
+            // Regular.
+            if (!forcedOnly) {
+                providers.addAll(Providers.getProviders(locator, AutoDiscoverable.class));
+            }
+
+            for (final AutoDiscoverable autoDiscoverable : providers) {
                 final ConstrainedTo constrainedTo = autoDiscoverable.getClass().getAnnotation(ConstrainedTo.class);
 
                 if (constrainedTo == null || type.equals(constrainedTo.value())) {
                     try {
                         autoDiscoverable.configure(this);
-                    } catch (Exception e) {
+                    } catch (final Exception e) {
                         LOGGER.log(Level.FINE,
                                 LocalizationMessages.AUTODISCOVERABLE_CONFIGURATION_FAILED(autoDiscoverable.getClass()), e);
                     }
@@ -618,14 +647,14 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     private Set<Binder> configureBinders(final ServiceLocator locator, final Set<Binder> configured) {
-        Set<Binder> allConfigured = Sets.newIdentityHashSet();
+        final Set<Binder> allConfigured = Sets.newIdentityHashSet();
         allConfigured.addAll(configured);
 
         final Collection<Binder> binders = getBinders(configured);
         if (!binders.isEmpty()) {
             final DynamicConfiguration dc = Injections.getConfiguration(locator);
 
-            for (Binder binder : binders) {
+            for (final Binder binder : binders) {
                 binder.bind(dc);
                 allConfigured.add(binder);
             }
@@ -640,7 +669,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                 Collections2.transform(componentBag.getInstances(ComponentBag.BINDERS_ONLY), CAST_TO_BINDER),
                 new Predicate<Binder>() {
                     @Override
-                    public boolean apply(Binder binder) {
+                    public boolean apply(final Binder binder) {
                         return !configured.contains(binder);
                     }
                 });
@@ -651,7 +680,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                                    final List<FeatureRegistration> unprocessed) {
 
         FeatureContextWrapper featureContextWrapper = null;
-        for (FeatureRegistration registration : unprocessed) {
+        for (final FeatureRegistration registration : unprocessed) {
             if (processed.contains(registration)) {
                 LOGGER.config(LocalizationMessages.FEATURE_HAS_ALREADY_BEEN_PROCESSED(registration.getFeatureClass()));
                 continue;
@@ -677,7 +706,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
                 // init lazily
                 featureContextWrapper = new FeatureContextWrapper(this, locator);
             }
-            boolean success = feature.configure(featureContextWrapper);
+            final boolean success = feature.configure(featureContextWrapper);
 
             if (success) {
                 processed.add(registration);
@@ -691,13 +720,13 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
     }
 
     private List<FeatureRegistration> resetRegistrations() {
-        List<FeatureRegistration> result = new ArrayList<FeatureRegistration>(newFeatureRegistrations);
+        final List<FeatureRegistration> result = new ArrayList<FeatureRegistration>(newFeatureRegistrations);
         newFeatureRegistrations.clear();
         return result;
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -705,7 +734,7 @@ public class CommonConfig implements FeatureContext, ExtendedConfig {
             return false;
         }
 
-        CommonConfig that = (CommonConfig) o;
+        final CommonConfig that = (CommonConfig) o;
 
         if (type != that.type) {
             return false;

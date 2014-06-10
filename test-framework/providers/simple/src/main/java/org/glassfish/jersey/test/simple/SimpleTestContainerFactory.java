@@ -50,6 +50,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.simple.SimpleContainerFactory;
+import org.glassfish.jersey.simple.SimpleServer;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.spi.TestContainer;
 import org.glassfish.jersey.test.spi.TestContainerException;
@@ -65,10 +66,12 @@ public class SimpleTestContainerFactory implements TestContainerFactory {
 
     private static class SimpleTestContainer implements TestContainer {
 
-        private final URI baseUri;
-        private final DeploymentContext deploymentContext;
-        private Closeable server;
         private static final Logger LOGGER = Logger.getLogger(SimpleTestContainer.class.getName());
+
+        private final DeploymentContext deploymentContext;
+
+        private URI baseUri;
+        private SimpleServer server;
 
         private SimpleTestContainer(final URI baseUri, final DeploymentContext context) {
             final URI base = UriBuilder.fromUri(baseUri).path(context.getContextPath()).build();
@@ -102,7 +105,15 @@ public class SimpleTestContainerFactory implements TestContainerFactory {
             LOGGER.log(Level.FINE, "Starting SimpleTestContainer...");
 
             try {
-                this.server = SimpleContainerFactory.create(baseUri, deploymentContext.getResourceConfig());
+                server = SimpleContainerFactory.create(baseUri, deploymentContext.getResourceConfig());
+
+                if (baseUri.getPort() == 0) {
+                    baseUri = UriBuilder.fromUri(baseUri)
+                            .port(server.getPort())
+                            .build();
+
+                    LOGGER.log(Level.INFO, "Started SimpleTestContainer at the base URI " + baseUri);
+                }
             } catch (ProcessingException e) {
                 throw new TestContainerException(e);
             }

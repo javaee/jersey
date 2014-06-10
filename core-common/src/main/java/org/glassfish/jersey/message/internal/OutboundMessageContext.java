@@ -72,7 +72,6 @@ import javax.ws.rs.ext.RuntimeDelegate;
 
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.LocalizationMessages;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 
 import jersey.repackaged.com.google.common.base.Function;
@@ -779,7 +778,7 @@ public class OutboundMessageContext {
      * @param configuration runtime configuration.
      */
     public void enableBuffering(Configuration configuration) {
-        final Integer bufferSize = PropertiesHelper.getValue(configuration.getProperties(),
+        final Integer bufferSize = CommonProperties.getValue(configuration.getProperties(),
                 configuration.getRuntimeType(), CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER, Integer.class);
         if (bufferSize != null) {
             committingOutputStream.enableBuffering(bufferSize);

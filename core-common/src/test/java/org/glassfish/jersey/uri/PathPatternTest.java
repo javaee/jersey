@@ -51,6 +51,7 @@ import static org.junit.Assert.assertNull;
  * Tests {@link PathTemplate}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class PathPatternTest {
 
@@ -123,6 +124,21 @@ public class PathPatternTest {
                 "We just injected the value, why it is different?",
                 tmpl,
                 pattern.getTemplate()
+        );
+    }
+
+    @Test
+    public void testLastElementOfMatchIsRestOfPath() throws Exception {
+        PathPattern path = new PathPattern("{a: (\\d)(\\d*)}-{b: (\\d)(\\d*)}-{c: (\\d)(\\d*)}");
+
+
+        MatchResult m = path.match("/123-456-789/d");
+        String value = m.group(m.groupCount());
+
+        assertEquals(
+                "Last value should match all of the trailing part",
+                "/d",
+                value
         );
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,12 +39,15 @@
  */
 package org.glassfish.jersey.jettison;
 
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.InternalProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.jettison.internal.entity.JettisonArrayProvider;
 import org.glassfish.jersey.jettison.internal.entity.JettisonJaxbElementProvider;
 import org.glassfish.jersey.jettison.internal.entity.JettisonListElementProvider;
@@ -57,6 +60,8 @@ import org.glassfish.jersey.jettison.internal.entity.JettisonRootElementProvider
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class JettisonFeature implements Feature {
+
+    private final static String JSON_FEATURE = JettisonFeature.class.getSimpleName();
 
     private static Class[] PROVIDERS = new Class[]{
             JettisonArrayProvider.App.class,
@@ -77,11 +82,20 @@ public class JettisonFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
-        final String disableMoxy = CommonProperties.MOXY_JSON_FEATURE_DISABLE + '.'
-                + context.getConfiguration().getRuntimeType().name().toLowerCase();
-        context.property(disableMoxy, true);
+        final Configuration config = context.getConfiguration();
 
-        for (Class<?> provider : PROVIDERS) {
+        final String jsonFeature = CommonProperties.getValue(config.getProperties(), config.getRuntimeType(),
+                InternalProperties.JSON_FEATURE, JSON_FEATURE, String.class);
+        // Other JSON providers registered.
+        if (!JSON_FEATURE.equalsIgnoreCase(jsonFeature)) {
+            return false;
+        }
+
+        // Disable other JSON providers.
+        context.property(PropertiesHelper.getPropertyNameForRuntime(InternalProperties.JSON_FEATURE, config.getRuntimeType()),
+                JSON_FEATURE);
+
+        for (final Class<?> provider : PROVIDERS) {
             context.register(provider, MessageBodyReader.class, MessageBodyWriter.class);
         }
 

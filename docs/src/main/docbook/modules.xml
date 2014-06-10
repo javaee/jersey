@@ -238,7 +238,7 @@
     jersey-media-json-jackson
 </link>
 </entry>
-<entry>Jersey JSON Jackson entity providers support module.</entry>
+<entry>Jersey JSON Jackson (2.x) entity providers support module.</entry>
 </row>
 <row>
 <entry>
@@ -317,6 +317,14 @@
 </link>
 </entry>
 <entry>Jersey extension module providing support for Entity Data Filtering.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-metainf-services/dependencies.html">
+    jersey-metainf-services
+</link>
+</entry>
+<entry>Jersey extension module enabling automatic registration of JAX-RS providers (MBW/MBR/EM) via META-INF/services mechanism.</entry>
 </row>
 <row>
 <entry>
@@ -435,14 +443,6 @@
 </link>
 </entry>
 <entry>Jersey Test Framework Providers Bundle</entry>
-</row>
-<row>
-<entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-default-client/dependencies.html">
-    jersey-test-framework-provider-default-client
-</link>
-</entry>
-<entry>Jersey Test Framework Default Client Provider</entry>
 </row>
 <row>
 <entry>

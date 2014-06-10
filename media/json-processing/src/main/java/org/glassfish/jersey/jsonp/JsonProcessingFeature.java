@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,7 +45,6 @@ import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.glassfish.json.jaxrs.JsonStructureBodyReader;
 import org.glassfish.json.jaxrs.JsonStructureBodyWriter;
@@ -59,7 +58,7 @@ public class JsonProcessingFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
-        if (PropertiesHelper.getValue(context.getConfiguration().getProperties(), context.getConfiguration().getRuntimeType(),
+        if (CommonProperties.getValue(context.getConfiguration().getProperties(), context.getConfiguration().getRuntimeType(),
                 CommonProperties.JSON_PROCESSING_FEATURE_DISABLE, Boolean.FALSE, Boolean.class)) {
             return false;
         }

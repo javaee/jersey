@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,11 +64,11 @@ public final class PathPattern extends PatternWithGroups {
      * Path pattern matching the end of a URI path. Can be either empty {@code ""}
      * or contain a trailing slash {@code "/"}.
      */
-    public  static final PathPattern END_OF_PATH_PATTERN = new PathPattern("", PathPattern.RightHandPath.capturingZeroSegments);
+    public static final PathPattern END_OF_PATH_PATTERN = new PathPattern("", PathPattern.RightHandPath.capturingZeroSegments);
     /**
      * Path pattern matching the any URI path.
      */
-    public  static final PathPattern OPEN_ROOT_PATH_PATTERN = new PathPattern("", RightHandPath.capturingZeroOrMoreSegments);
+    public static final PathPattern OPEN_ROOT_PATH_PATTERN = new PathPattern("", RightHandPath.capturingZeroOrMoreSegments);
     /**
      * Path pattern comparator that defers to {@link UriTemplate#COMPARATOR comparing
      * the templates} associated with the patterns.
@@ -119,6 +119,7 @@ public final class PathPattern extends PatternWithGroups {
     public static PathPattern asClosed(PathPattern pattern) {
         return new PathPattern(pattern.getTemplate().getTemplate(), RightHandPath.capturingZeroSegments);
     }
+
     //
     private final UriTemplate template;
 
@@ -132,7 +133,6 @@ public final class PathPattern extends PatternWithGroups {
      * {@link RightHandPath#capturingZeroOrMoreSegments}.
      *
      * @param template the path template.
-     *
      * @see #PathPattern(String, PathPattern.RightHandPath)
      */
     public PathPattern(String template) {
@@ -144,12 +144,11 @@ public final class PathPattern extends PatternWithGroups {
      * {@link RightHandPath#capturingZeroOrMoreSegments}.
      *
      * @param template the path template
-     *
      * @see #PathPattern(PathTemplate, PathPattern.RightHandPath)
      */
     public PathPattern(PathTemplate template) {
         super(postfixWithCapturingGroup(template.getPattern().getRegex()),
-                addIndexForRightHandPathCapturingGroup(template.getPattern().getGroupIndexes()));
+                addIndexForRightHandPathCapturingGroup(template.getNumberOfRegexGroups(), template.getPattern().getGroupIndexes()));
 
         this.template = template;
     }
@@ -158,7 +157,7 @@ public final class PathPattern extends PatternWithGroups {
      * Create a path pattern and post fix with a right hand path pattern.
      *
      * @param template the path template.
-     * @param rhpp the right hand path pattern postfix.
+     * @param rhpp     the right hand path pattern postfix.
      */
     public PathPattern(String template, RightHandPath rhpp) {
         this(new PathTemplate(template), rhpp);
@@ -168,11 +167,11 @@ public final class PathPattern extends PatternWithGroups {
      * Create a path pattern and post fix with a right hand path pattern.
      *
      * @param template the path template.
-     * @param rhpp the right hand path pattern postfix.
+     * @param rhpp     the right hand path pattern postfix.
      */
     public PathPattern(PathTemplate template, RightHandPath rhpp) {
         super(postfixWithCapturingGroup(template.getPattern().getRegex(), rhpp),
-                addIndexForRightHandPathCapturingGroup(template.getPattern().getGroupIndexes()));
+                addIndexForRightHandPathCapturingGroup(template.getNumberOfRegexGroups(), template.getPattern().getGroupIndexes()));
 
         this.template = template;
     }
@@ -193,7 +192,7 @@ public final class PathPattern extends PatternWithGroups {
         return regex + rhpp.getRegex();
     }
 
-    private static int[] addIndexForRightHandPathCapturingGroup(int[] indexes) {
+    private static int[] addIndexForRightHandPathCapturingGroup(int numberOfGroups, int[] indexes) {
         if (indexes.length == 0) {
             return indexes;
         }
@@ -201,7 +200,7 @@ public final class PathPattern extends PatternWithGroups {
         int[] cgIndexes = new int[indexes.length + 1];
         System.arraycopy(indexes, 0, cgIndexes, 0, indexes.length);
 
-        cgIndexes[indexes.length] = cgIndexes[indexes.length - 1] + 1;
+        cgIndexes[indexes.length] = numberOfGroups + 1;
         return cgIndexes;
     }
 }

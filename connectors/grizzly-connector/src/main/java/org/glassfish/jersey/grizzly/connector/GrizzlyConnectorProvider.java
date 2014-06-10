@@ -50,12 +50,37 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
 import com.ning.http.client.AsyncHttpClient;
 
 /**
- * Connector provider for Grizzly asynchronous HTTP client-based connectors.
+ * Connector provider for Jersey {@link Connector connectors} that utilize
+ * Grizzly Asynchronous HTTP Client to send and receive HTTP request and responses.
  * <p>
- * Connectors created by this provider use {@link org.glassfish.jersey.client.RequestEntityProcessing#CHUNKED
- * chunked encoding} as a default setting. This can be overridden by setting the
- * {@link org.glassfish.jersey.client.ClientProperties#REQUEST_ENTITY_PROCESSING} property.
+ * The following connector configuration properties are supported:
+ * <ul>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#CONNECT_TIMEOUT}</li>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#READ_TIMEOUT}</li>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#REQUEST_ENTITY_PROCESSING}
+ * - default value is {@link org.glassfish.jersey.client.RequestEntityProcessing#CHUNKED}</li>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_URI}</li>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_USERNAME}</li>
+ * <li>{@link org.glassfish.jersey.client.ClientProperties#PROXY_PASSWORD}</li>
+ * </ul>
  * </p>
+ * <p>
+ * Connector instances created via this connector provider use
+ * {@link org.glassfish.jersey.client.RequestEntityProcessing#CHUNKED chunked encoding} as a default setting.
+ * This can be overridden by the {@link org.glassfish.jersey.client.ClientProperties#REQUEST_ENTITY_PROCESSING}.
+ * </p>
+ * <p>
+ * If a {@link org.glassfish.jersey.client.ClientResponse} is obtained and an entity is not read from the response then
+ * {@link org.glassfish.jersey.client.ClientResponse#close()} MUST be called after processing the response to release
+ * connection-based resources.
+ * </p>
+ * <p>
+ * If a response entity is obtained that is an instance of {@link java.io.Closeable}  then the instance MUST
+ * be closed after processing the entity to release connection-based resources.
+ * <p/>
+ * <p>
+ * The following methods are currently supported: HEAD, GET, POST, PUT, DELETE, OPTIONS, PATCH and TRACE.
+ * <p/>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @since 2.5

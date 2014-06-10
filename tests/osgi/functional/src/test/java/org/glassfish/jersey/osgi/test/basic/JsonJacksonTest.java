@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,8 +47,8 @@ import javax.ws.rs.core.Feature;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.osgi.test.util.Helper;
 
-import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.Configuration;
+import org.ops4j.pax.exam.Option;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 /**
@@ -58,17 +58,21 @@ public class JsonJacksonTest extends AbstractJsonOsgiIntegrationTest {
 
     @Configuration
     public static Option[] configuration() {
-        List<Option> options = new ArrayList<Option>();
+        final List<Option> options = new ArrayList<>();
 
         options.addAll(Helper.getCommonOsgiOptions());
         options.addAll(Helper.expandedList(
+                // vmOption("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"),
+
                 mavenBundle().groupId("org.glassfish.jersey.media").artifactId("jersey-media-json-jackson").versionAsInProject(),
 
                 // jersey-json dependencies
-                mavenBundle().groupId("org.codehaus.jackson").artifactId("jackson-core-asl").versionAsInProject(),
-                mavenBundle().groupId("org.codehaus.jackson").artifactId("jackson-mapper-asl").versionAsInProject(),
-                mavenBundle().groupId("org.codehaus.jackson").artifactId("jackson-jaxrs").versionAsInProject(),
-                mavenBundle().groupId("org.codehaus.jackson").artifactId("jackson-xc").versionAsInProject()
+                mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-core").versionAsInProject(),
+                mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-databind").versionAsInProject(),
+                mavenBundle().groupId("com.fasterxml.jackson.core").artifactId("jackson-annotations").versionAsInProject(),
+                mavenBundle().groupId("com.fasterxml.jackson.jaxrs").artifactId("jackson-jaxrs-base").versionAsInProject(),
+                mavenBundle().groupId("com.fasterxml.jackson.jaxrs").artifactId("jackson-jaxrs-json-provider").versionAsInProject(),
+                mavenBundle().groupId("com.fasterxml.jackson.module").artifactId("jackson-module-jaxb-annotations").versionAsInProject()
         ));
 
         return Helper.asArray(options);

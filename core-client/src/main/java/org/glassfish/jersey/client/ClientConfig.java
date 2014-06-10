@@ -56,7 +56,6 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.JerseyClassAnalyzer;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.internal.util.collection.LazyValue;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
@@ -354,7 +353,11 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         }
 
         public void configureAutoDiscoverableProviders(ServiceLocator locator) {
-            commonConfig.configureAutoDiscoverableProviders(locator);
+            commonConfig.configureAutoDiscoverableProviders(locator, false);
+        }
+
+        public void configureForcedAutoDiscoverableProviders(ServiceLocator locator) {
+            commonConfig.configureAutoDiscoverableProviders(locator, true);
         }
 
         public void configureMetaProviders(ServiceLocator locator) {
@@ -383,9 +386,11 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             locator.setDefaultClassAnalyzerName(JerseyClassAnalyzer.NAME);
 
             // AutoDiscoverable.
-            if (!PropertiesHelper.getValue(runtimeCfgState.getProperties(), RuntimeType.CLIENT,
+            if (!CommonProperties.getValue(runtimeCfgState.getProperties(), RuntimeType.CLIENT,
                     CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.FALSE, Boolean.class)) {
                 runtimeCfgState.configureAutoDiscoverableProviders(locator);
+            } else {
+                runtimeCfgState.configureForcedAutoDiscoverableProviders(locator);
             }
 
             // Configure binders and features.

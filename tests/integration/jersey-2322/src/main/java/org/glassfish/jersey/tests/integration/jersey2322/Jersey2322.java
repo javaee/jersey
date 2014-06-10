@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2322;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
@@ -50,6 +51,7 @@ public class Jersey2322 extends ResourceConfig {
 
     public Jersey2322() {
         register(Issue2322Resource.class);
+        register(JacksonFeature.class);
         register(MyObjectMapperProvider.class);
     }
 }

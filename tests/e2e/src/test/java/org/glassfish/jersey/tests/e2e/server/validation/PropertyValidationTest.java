@@ -104,7 +104,8 @@ public class PropertyValidationTest {
 
     @Test
     public void testDefaultValidationNoDiscoveryNoFeature() throws Exception {
-        _test(204, null, true, false);
+        // Even though properties are disabled BV is registered.
+        _test(500, null, true, false);
     }
 
     @Test
@@ -134,7 +135,8 @@ public class PropertyValidationTest {
 
     @Test
     public void testValidationNoDiscoveryNoFeature() throws Exception {
-        _test(204, false, true, false);
+        // Even though properties are disabled BV is registered.
+        _test(500, false, true, false);
     }
 
     @Test

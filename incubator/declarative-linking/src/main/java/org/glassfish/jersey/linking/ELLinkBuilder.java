@@ -40,43 +40,62 @@
 
 package org.glassfish.jersey.linking;
 
-import org.glassfish.jersey.linking.InjectLink;
-import org.glassfish.jersey.linking.InjectLinkDescriptor;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.el.ExpressionFactory;
-import javax.el.ValueExpression;
+
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+
+import javax.el.ExpressionFactory;
+import javax.el.ValueExpression;
+
+import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.uri.internal.UriTemplateParser;
 
 /**
- * A helper class to build links from EL expressions
- * 
+ * A helper class to build links from EL expressions.
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-class ELLinkBuilder {
+final class ELLinkBuilder {
 
-    private static ExpressionFactory expressionFactory =
-            ExpressionFactory.newInstance();
-
-    public static boolean evaluateCondition(String condition, Object entity,
-            Object resource, Object instance) {
-        if (condition==null || condition.length()==0)
-            return true;
-        LinkELContext context = new LinkELContext(entity, resource, instance);
-        ValueExpression expr = expressionFactory.createValueExpression(context,
-                condition, boolean.class);
-        Object result = expr.getValue(context).toString();
-        return result.equals("true");
+    private ELLinkBuilder() {
     }
 
-    public static URI buildURI(InjectLinkDescriptor link, Object entity, Object resource, Object instance,
-            UriInfo uriInfo) {
-        String template = link.getLinkTemplate();
+    private static final ExpressionFactory expressionFactory =
+            ExpressionFactory.newInstance();
+
+    /**
+     * TODO javadoc.
+     */
+    static boolean evaluateCondition(String condition,
+                                     Object entity,
+                                     Object resource,
+                                     Object instance) {
+
+        if (condition == null || condition.isEmpty())
+            return true;
+        LinkELContext context = new LinkELContext(entity, resource, instance);
+        ValueExpression expr = expressionFactory.createValueExpression(context, condition, boolean.class);
+
+        Object result = expr.getValue(context).toString();
+        return "true".equals(result);
+    }
+
+    /**
+     * TODO javadoc.
+     */
+    static URI buildURI(InjectLinkDescriptor link,
+                        Object entity,
+                        Object resource,
+                        Object instance,
+                        UriInfo uriInfo,
+                        ResourceMappingContext rmc) {
+
+        String template = link.getLinkTemplate(rmc);
 
         // first process any embedded EL expressions
         LinkELContext context = new LinkELContext(entity, resource, instance);
@@ -85,16 +104,15 @@ class ELLinkBuilder {
         template = expr.getValue(context).toString();
 
         // now process any embedded URI template parameters
-        UriBuilder ub=applyLinkStyle(template, link.getLinkStyle(), uriInfo);
+        UriBuilder ub = applyLinkStyle(template, link.getLinkStyle(), uriInfo);
         UriTemplateParser parser = new UriTemplateParser(template);
         List<String> parameterNames = parser.getNames();
         Map<String, Object> valueMap = getParameterValues(parameterNames, link, context);
-        URI uri = ub.buildFromMap(valueMap);
-        return uri;
+        return ub.buildFromMap(valueMap);
     }
 
     private static UriBuilder applyLinkStyle(String template, InjectLink.Style style, UriInfo uriInfo) {
-        UriBuilder ub=null;
+        UriBuilder ub = null;
         switch (style) {
             case ABSOLUTE:
                 ub = uriInfo.getBaseUriBuilder().path(template);
@@ -111,28 +129,23 @@ class ELLinkBuilder {
     }
 
     private static Map<String, Object> getParameterValues(List<String> parameterNames, InjectLinkDescriptor linkField, LinkELContext context) {
-        Map<String, Object> values = new HashMap<String, Object>();
-        for (String name: parameterNames) {
+        Map<String, Object> values = new HashMap<>();
+        for (String name : parameterNames) {
             String elExpression = getEL(name, linkField);
             ValueExpression expr = expressionFactory.createValueExpression(context,
                     elExpression, String.class);
+
             Object value = expr.getValue(context);
-            values.put(name, value);
+            values.put(name, value != null ? value.toString() : null);
         }
         return values;
     }
 
     private static String getEL(String name, InjectLinkDescriptor linkField) {
         String binding = linkField.getBinding(name);
-        if (binding != null)
+        if (binding != null) {
             return binding;
-        StringBuilder builder = new StringBuilder();
-        builder.append("${");
-        builder.append(ResponseContextResolver.INSTANCE_OBJECT);
-        builder.append(".");
-        builder.append(name);
-        builder.append("}");
-        return builder.toString();
+        }
+        return "${" + ResponseContextResolver.INSTANCE_OBJECT + "." + name + "}";
     }
-
 }

@@ -51,8 +51,12 @@ import java.util.logging.Logger;
 import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.internal.util.PropertiesClass;
+import org.glassfish.jersey.internal.util.Property;
+import org.glassfish.jersey.internal.util.PropertyAlias;
 import org.glassfish.jersey.jetty.connector.JettyClientProperties;
 import org.glassfish.jersey.media.multipart.MultiPartProperties;
+import org.glassfish.jersey.media.sse.SseFeature;
 import org.glassfish.jersey.message.MessageProperties;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.InternalServerProperties;
@@ -60,42 +64,48 @@ import org.glassfish.jersey.server.oauth1.OAuth1ServerProperties;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.glassfish.jersey.test.TestProperties;
 
-import org.junit.Ignore;
 import org.junit.Test;
-
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test, that there are no properties with overlapping names in known Jersey *Properties.java files.
- *
- * <p>For technical reasons, we do not want the property names to "overlap".
- * In other words, no property should have be in a "namespace", that is already used for a property name.
- * such as <pre>a.b</pre> and <pre>a.b.c</pre></p>
- *
- * <p>Additionally, test also reports all the duplicates property names found throughout the checked files.</p>
- *
- * <p>NOTE: the list of files is hardcoded directly in this test in the static array (to avoid the necessity of writing custom
- * classloader for this test). If a java class containing properties should by included in the check,
- * it has to be added here.</p>
+ * Test, that there are no properties with overlapping names in known Jersey {@code *Properties} and {@code *Feature}
+ * classes.
+ * <p>
+ * For technical reasons, we do not want the property names to <i>overlap</i>.
+ * In other words, no property should contain a <i>namespace prefix</i>, that is already used as a concrete property name,
+ * such as {@code a.b} and {@code a.b.c}.
+ * </p>
+ * <p>
+ * Additionally, the test also reports all the duplicates property names found throughout the checked files.
+ * </p>
+ * <p>
+ * Note that the list of files is hardcoded directly in this test in a static array
+ * (to avoid the necessity of writing custom class loader for this test).
+ * If a java class containing properties should by included in the check, it has to be added here.
+ * Also note that the test is relying on {@link Property}, {@link PropertiesClass} and {@link PropertyAlias} annotations
+ * to recognize individual properties.
+ * </p>
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class PropertyOverlappingCheckTest {
 
     private static final Logger log = Logger.getLogger(PropertyOverlappingCheckTest.class.getName());
 
-    private static final Class<?>[] classes = new Class[] {
-                JettyClientProperties.class,
-                ApacheClientProperties.class,
-                OAuth1ServerProperties.class,
-                ServletProperties.class,
-                CommonProperties.class,
-                MessageProperties.class,
-                ServerProperties.class,
-                InternalServerProperties.class,
-                ClientProperties.class,
-                MultiPartProperties.class,
-                TestProperties.class
+    private static final Class<?>[] classes = new Class[]{
+            JettyClientProperties.class,
+            ApacheClientProperties.class,
+            OAuth1ServerProperties.class,
+            ServletProperties.class,
+            CommonProperties.class,
+            MessageProperties.class,
+            ServerProperties.class,
+            InternalServerProperties.class,
+            ClientProperties.class,
+            MultiPartProperties.class,
+            TestProperties.class,
+            SseFeature.class
     };
 
     private static class ProblemReport {
@@ -138,7 +148,6 @@ public class PropertyOverlappingCheckTest {
         }
     }
 
-    @Ignore("Has to be ignored until naming conflicts resolved.")
     @Test
     public void test() throws IllegalAccessException {
         List<String> allPropertyNames = new ArrayList<>();
@@ -147,8 +156,17 @@ public class PropertyOverlappingCheckTest {
 
         // iterate over all the string fields of above declared classes
         for (Class<?> clazz : classes) {
+            final boolean checkFieldPropertyAnnotation = clazz.getAnnotation(PropertiesClass.class) == null;
             Field[] fields = clazz.getFields();
             for (Field field : fields) {
+                if (checkFieldPropertyAnnotation && field.getAnnotation(Property.class) == null) {
+                    // skip fields not annotated with @Property in classes not annotated with @PropertiesClass
+                    continue;
+                }
+                if (field.getAnnotation(PropertyAlias.class) != null) {
+                    // skip property aliases
+                    continue;
+                }
                 if (field.getType().isAssignableFrom(String.class)) {
                     String propertyValue = (String) field.get(null);
                     allPropertyNames.add(propertyValue);
@@ -156,7 +174,11 @@ public class PropertyOverlappingCheckTest {
                     // property-to-class relationship into the map for later use
                     String propertyMapEntry = propertyToClassMap.get(propertyValue);
                     if (propertyToClassMap.get(propertyValue) != null) {
-                        problems.add(new ProblemReport(propertyValue, propertyValue, propertyMapEntry, clazz.getName(), true));
+//                        log.info("Duplicate property found: " + propertyValue + " in " + propertyMapEntry + " and "
+//                                + clazz.getName() + ". Test won't fail because of this, as the check is currently disabled.");
+                        // this cannot cause the test to fail, as there are aliases in ClientProperties and ServerProperties,
+                        // which are by definition equal to those defined in CommonProperties
+                        problems.add(new ProblemReport(propertyValue, propertyMapEntry, propertyValue, clazz.getName(), true));
                     } else {
                         propertyToClassMap.put(propertyValue, clazz.getName());
                     }
@@ -173,7 +195,7 @@ public class PropertyOverlappingCheckTest {
             // do not consider overlapping such as foo.bar vs foo.barbar, just foo.bar vs foo.bar.bar
             if (property.startsWith(previousProperty + ".")) {
                 problems.add(new ProblemReport(previousProperty, propertyToClassMap.get(previousProperty),
-                                                property, propertyToClassMap.get(property)));
+                        property, propertyToClassMap.get(property)));
             } else {
                 // the "pointer" is moved only if there was no overlapping detected in this iteration
                 // as this would potentially hide the 2nd (or n-th) property overlapping with the same one

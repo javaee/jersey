@@ -52,7 +52,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import org.glassfish.jersey.examples.linking.model.ItemsModel;
 
 /**
  * JAXB representation of an item
@@ -67,15 +69,15 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
     @InjectLink(
             resource = ItemResource.class,
             style = Style.ABSOLUTE,
-            condition = "${resource.next}",
-            bindings = @Binding(name = "id", value = "${resource.nextId}"),
+            condition = "${instance.next}",
+            bindings = @Binding(name = "id", value = "${instance.nextId}"),
             rel = "next"
     ),
     @InjectLink(
             resource = ItemResource.class,
             style = Style.ABSOLUTE,
-            condition = "${resource.prev}",
-            bindings = @Binding(name = "id", value = "${resource.prevId}"),
+            condition = "${instance.prev}",
+            bindings = @Binding(name = "id", value = "${instance.prevId}"),
             rel = "prev"
     )
 })
@@ -84,10 +86,16 @@ public class ItemRepresentation {
     @XmlElement
     private String name;
 
+    @XmlTransient
+    private String id;
+    @XmlTransient
+    private ItemsModel itemsModel;
+    
+
     @InjectLink(
             resource = ItemResource.class,
             style = Style.ABSOLUTE,
-            bindings = @Binding(name = "id", value = "${resource.id}"),
+            bindings = @Binding(name = "id", value = "${instance.id}"),
             rel = "self"
     )
     @XmlJavaTypeAdapter(Link.JaxbAdapter.class)
@@ -98,28 +106,56 @@ public class ItemRepresentation {
         @InjectLink(
                 resource = ItemResource.class,
                 style = Style.ABSOLUTE,
-                condition = "${resource.next}",
-                bindings = @Binding(name = "id", value = "${resource.nextId}"),
+                condition = "${instance.next}",
+                bindings = @Binding(name = "id", value = "${instance.nextId}"),
                 rel = "next"
         ),
         @InjectLink(
                 resource = ItemResource.class,
                 style = Style.ABSOLUTE,
-                condition = "${resource.prev}",
-                bindings = @Binding(name = "id", value = "${resource.prevId}"),
+                condition = "${instance.prev}",
+                bindings = @Binding(name = "id", value = "${instance.prevId}"),
                 rel = "prev"
         )})
     @XmlElement(name="link")
     @XmlElementWrapper(name = "links")
     @XmlJavaTypeAdapter(Link.JaxbAdapter.class)
     List<Link> links;
+    
 
-    public ItemRepresentation() {
-        this.name = "";
+    public ItemRepresentation()
+    {
+        
     }
-
-    public ItemRepresentation(String name) {
+    
+    public ItemRepresentation(ItemsModel itemsModel, String id, String name) {
+        this.itemsModel = itemsModel;
         this.name = name;
+        this.id = id;
     }
+    
+    
+    
+    public String getId() {
+        return id;
+    }
+    
+    
+    public boolean isNext() {
+        return itemsModel.hasNext(id);
+    }
+
+    public boolean isPrev() {
+        return itemsModel.hasPrev(id);
+    }
+
+    public String getNextId() {
+        return itemsModel.getNextId(id);
+    }
+
+    public String getPrevId() {
+        return itemsModel.getPrevId(id);
+    }
+    
 
 }

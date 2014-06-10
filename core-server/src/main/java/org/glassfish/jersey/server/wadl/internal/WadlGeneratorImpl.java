@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -204,9 +204,12 @@ public class WadlGeneratorImpl implements WadlGenerator {
     public List<Response> createResponses(org.glassfish.jersey.server.model.Resource r, ResourceMethod m) {
         final Response response = new Response();
 
-        for (MediaType mediaType : m.getProducedTypes()) {
-            if (!MediaType.WILDCARD_TYPE.equals(mediaType)
-                    || !hasEmptyProducibleMediaTypeSet(m)) {
+        // add mediaType="*/*" in case that no mediaType was specified
+        if (hasEmptyProducibleMediaTypeSet(m)) {
+            Representation wadlRepresentation = createResponseRepresentation(r, m, MediaType.WILDCARD_TYPE);
+            response.getRepresentation().add(wadlRepresentation);
+        } else {
+            for (MediaType mediaType : m.getProducedTypes()) {
                 Representation wadlRepresentation = createResponseRepresentation(r, m, mediaType);
                 response.getRepresentation().add(wadlRepresentation);
             }

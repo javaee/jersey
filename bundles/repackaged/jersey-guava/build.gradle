@@ -89,3 +89,29 @@ task generateProGuardConfig << {
         conf << ("-keepclassmembers public class ${it} { *; }${ln}")
     }
 }
+
+task copyShadedJar(type: Copy) {
+    def version = project.hasProperty('jerseyVersion') ? jerseyVersion : ''
+    from ('target') {
+        include 'jersey-guava-' + version + '-shaded-sources.jar'
+    }
+    into 'target'
+
+    rename {
+        String fileName -> fileName.replace('shaded-sources', 'sources')
+    }
+}
+
+task deleteShadedJar(type: Delete) {
+    def version = project.hasProperty('jerseyVersion') ? jerseyVersion : ''
+    delete ('target/jersey-guava-' + version + '-shaded-sources.jar')
+}
+
+task renameShadedJar(dependsOn: ['copyShadedJar', 'deleteShadedJar'])
+deleteShadedJar.mustRunAfter copyShadedJar
+
+copyShadedJar.onlyIf {project.hasProperty('jerseyVersion')}
+deleteShadedJar.onlyIf {project.hasProperty('jerseyVersion')}
+renameShadedJar.onlyIf {project.hasProperty('jerseyVersion')}
+generateProGuardConfig.onlyIf {!project.hasProperty('jerseyVersion')}
+

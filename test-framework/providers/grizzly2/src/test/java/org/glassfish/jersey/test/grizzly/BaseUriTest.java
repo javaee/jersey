@@ -80,7 +80,6 @@ public class BaseUriTest extends JerseyTest {
 
     @Override
     protected DeploymentContext configureDeployment() {
-        set(TestProperties.CONTAINER_PORT, 9998);
         return DeploymentContext.builder(new ResourceConfig(TestResource.class))
                 .contextPath("context")
                 .build();

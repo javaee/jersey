@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -51,17 +52,26 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.message.internal.AbstractMessageReaderWriterProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Assert;
 
@@ -103,9 +113,15 @@ public abstract class AbstractDisableMetainfServicesLookupTest extends JerseyTes
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class);
+        final ResourceConfig config = new ResourceConfig(Resource.class);
+        config.register(new MetainfServicesBinder(config));
+        return config;
     }
 
+    @Override
+    protected void configureClient(final ClientConfig config) {
+        config.register(new MetainfServicesBinder(config));
+    }
 
     @Path("/")
     @Produces("text/plain")
@@ -207,4 +223,23 @@ public abstract class AbstractDisableMetainfServicesLookupTest extends JerseyTes
         }
     } // class UselessMessage
 
+    private static class MetainfServicesBinder extends AbstractBinder {
+
+        private final Map<String, Object> properties;
+        private final RuntimeType runtimeType;
+
+        public MetainfServicesBinder(final Configuration config) {
+            this.properties = config.getProperties();
+            this.runtimeType = config.getRuntimeType();
+        }
+
+        @Override
+        protected void configure() {
+            // Message Body providers.
+            install(new ServiceFinderBinder<>(MessageBodyReader.class, properties, runtimeType));
+            install(new ServiceFinderBinder<>(MessageBodyWriter.class, properties, runtimeType));
+            // Exception Mappers.
+            install(new ServiceFinderBinder<>(ExceptionMapper.class, properties, runtimeType));
+        }
+    }
 }

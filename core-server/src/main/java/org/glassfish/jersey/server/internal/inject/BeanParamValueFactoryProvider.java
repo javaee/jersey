@@ -96,7 +96,7 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
                 return fromHk2;
             }
 
-            // bellow we make sure HK2 behaves as if injection happens into a request scoped type
+            // below we make sure HK2 behaves as if injection happens into a request scoped type
             // this is to avoid having proxies injected (see JERSEY-2386)
             final AbstractActiveDescriptor<Object> descriptor = BuilderHelper.activeLink(rawType).in(RequestScoped.class).build();
             final ActiveDescriptor<?> reifiedDescriptor = locator.reifyDescriptor(descriptor);

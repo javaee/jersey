@@ -118,7 +118,7 @@
     &lt;version&gt;&version;&lt;/version&gt;
     &lt;scope&gt;provided&lt;/scope&gt;
 &lt;/dependency&gt;
-&lt;!-- if you are using Jersey client specific features --&gt;
+&lt;!-- if you are using Jersey client specific features without the server side --&gt;
 &lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.core&lt;/groupId&gt;
     &lt;artifactId&gt;jersey-client&lt;/artifactId&gt;
