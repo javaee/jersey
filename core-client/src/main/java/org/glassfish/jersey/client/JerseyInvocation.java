@@ -44,6 +44,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
@@ -708,12 +709,18 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
-                responseFuture.set(new InboundJaxrsResponse(response, scope));
+                if (!responseFuture.isCancelled()) {
+                    responseFuture.set(new InboundJaxrsResponse(response, scope));
+                } else {
+                    response.close();
+                }
             }
 
             @Override
             public void failed(ProcessingException error) {
-                responseFuture.setException(error);
+                if (!responseFuture.isCancelled()) {
+                    responseFuture.setException(error);
+                }
             }
         });
 
@@ -730,6 +737,10 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
+                if (responseFuture.isCancelled()) {
+                    response.close();
+                    return;
+                }
                 try {
                     responseFuture.set(translate(response, scope, responseType));
                 } catch (ProcessingException ex) {
@@ -739,6 +750,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             @Override
             public void failed(ProcessingException error) {
+                if (responseFuture.isCancelled()) {
+                    return;
+                }
                 if (error.getCause() instanceof WebApplicationException) {
                     responseFuture.setException(error.getCause());
                 } else {
@@ -781,6 +795,11 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             @Override
             public void completed(ClientResponse response, RequestScope scope) {
+                if (responseFuture.isCancelled()) {
+                    response.close();
+                    return;
+                }
+
                 try {
                     responseFuture.set(translate(response, scope, responseType));
                 } catch (ProcessingException ex) {
@@ -790,6 +809,9 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
             @Override
             public void failed(ProcessingException error) {
+                if (responseFuture.isCancelled()) {
+                    return;
+                }
                 if (error.getCause() instanceof WebApplicationException) {
                     responseFuture.setException(error.getCause());
                 } else {
@@ -838,6 +860,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
                 @Override
                 public void completed(ClientResponse response, RequestScope scope) {
+                    if (responseFuture.isCancelled()) {
+                        response.close();
+                        failed(new ProcessingException(new CancellationException(LocalizationMessages.ERROR_REQUEST_CANCELLED())));
+                        return;
+                    }
+
                     final T result;
                     if (callbackParamClass == Response.class) {
                         result = callbackParamClass.cast(new InboundJaxrsResponse(response, scope));
@@ -857,11 +885,11 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                     try {
                         if (error.getCause() instanceof WebApplicationException) {
                             responseFuture.setException(error.getCause());
-                        } else {
+                        } else if (!responseFuture.isCancelled()) {
                             responseFuture.setException(error);
                         }
                     } finally {
-                        callback.failed(error);
+                        callback.failed(error.getCause() instanceof CancellationException ? error.getCause() : error);
                     }
                 }
             };
