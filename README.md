@@ -1,7 +1,7 @@
 ### About Jersey
 
 Jersey is a REST framework that provides JAX-RS Reference Implementation and more.
-Jersey provides it's own [APIs][jersey-api] that extend the JAX-RS toolkit with
+Jersey provides its own [APIs][jersey-api] that extend the JAX-RS toolkit with
 additional features and utilities to further simplify RESTful service and client
 development. Jersey also exposes numerous extension SPIs so that developers may
 extend Jersey to best suit their needs.
