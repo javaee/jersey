@@ -152,8 +152,11 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         // Invocable
         private Class<?> handlerClass;
         private Object handlerInstance;
+
+        // method (can be also interface method). Specific method to execute is defined by handlingMethod
         private Method definitionMethod;
 
+        // this can be either equal to definitionMethod or child of definitionMethod
         private Method handlingMethod;
         private boolean encodedParams;
         private Type routingResponseType;
