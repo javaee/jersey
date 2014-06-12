@@ -67,6 +67,7 @@ public final class HttpDateFormat {
      * The date format pattern for RFC 1123, RFC 1036 and RFC 2822.
      */
     private static final String RFC1123_DATE_FORMAT_PATTERN = "EEE, dd MMM yy HH:mm:ss Z";
+    private static final String PREFERRED_DATE_FORMAT_PATTERN = "EEE, dd MMM yyyy HH:mm:ss zzz";
     /**
      * The date format pattern for RFC 1036 and RFC 2822 alternatives.
      */
@@ -101,6 +102,15 @@ public final class HttpDateFormat {
         @Override
         protected synchronized List<SimpleDateFormat> initialValue() {
             return createDateFormats();
+        }
+    };
+    private static final ThreadLocal<SimpleDateFormat> preferredFormat = new ThreadLocal<SimpleDateFormat>() {
+
+        @Override
+        protected synchronized SimpleDateFormat initialValue() {
+            SimpleDateFormat format = new SimpleDateFormat(PREFERRED_DATE_FORMAT_PATTERN, Locale.US);
+            format.setTimeZone(TimeZone.getTimeZone("GMT"));
+            return format;
         }
     };
 
@@ -152,7 +162,7 @@ public final class HttpDateFormat {
      * @return the preferred of data format.
      */
     public static SimpleDateFormat getPreferredDateFormat() {
-        return dateFormats.get().get(0);
+        return preferredFormat.get();
     }
 
     /**
