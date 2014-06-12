@@ -357,27 +357,17 @@ final MoxyJsonConfig configuration = new MoxyJsonConfig()
                     &lit.jaxrs.ext.ContextResolver; in your client/server code.
 
                     <example>
-                        <title><literal>ContextResolver&lt;MoxyJsonConfig&gt;</literal></title>
+                        <title>Creating <literal>ContextResolver&lt;MoxyJsonConfig&gt;</literal></title>
 
-                        <programlisting language="java">@Provider
-public class JsonMoxyConfigurationContextResolver implements ContextResolver&lt;MoxyJsonConfig&gt; {
+                        <programlisting language="java">final Map&lt;String, String&gt; namespacePrefixMapper = new HashMap&lt;String, String&gt;();
+namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
 
-    private final MoxyJsonConfig config;
-
-    public JsonMoxyConfigurationContextResolver() {
-        final Map&lt;String, String&gt; namespacePrefixMapper = new HashMap&lt;String, String&gt;();
-        namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
-
-        config = MoxyJsonConfig()
+final MoxyJsonConfig moxyJsonConfig = MoxyJsonConfig()
             .setNamespacePrefixMapper(namespacePrefixMapper)
             .setNamespaceSeparator(':');
-    }
 
-    @Override
-    public MoxyJsonConfig getContext(Class&lt;?&gt; objectType) {
-        return config;
-    }
-}</programlisting>
+final ContextResolver&lt;MoxyJsonConfig&gt; jsonConfigResolver = moxyJsonConfig.resolver();
+</programlisting>
                     </example>
                 </para>
 
@@ -438,7 +428,7 @@ public class JsonMoxyConfigurationContextResolver implements ContextResolver&lt;
         // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is
         // not disabled.
         .register(MoxyJsonFeature.class)
-        .register(JsonMoxyConfigurationContextResolver.class)
+        .register(jsonConfigResolver)
         .build();</programlisting>
                 </example>
 
@@ -452,7 +442,7 @@ final Application application = new ResourceConfig()
         // omitted if FEATURE_AUTO_DISCOVERY_DISABLE is
         // not disabled.
         .register(MoxyJsonFeature.class)
-        .register(JsonMoxyConfigurationContextResolver.class);</programlisting>
+        .register(jsonConfigResolver);</programlisting>
                 </example>
             </section>
 
