@@ -489,6 +489,21 @@ public final class ServerProperties {
     public static final String MONITORING_STATISTICS_MBEANS_ENABLED = "jersey.config.server.monitoring.statistics.mbeans.enabled";
 
     /**
+     * Interval (in {@code ms}) indicating how often will be monitoring statistics refreshed and
+     * {@link org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener#onStatistics(org.glassfish.jersey.server.monitoring.MonitoringStatistics) onStatistics}
+     * method called.
+     * <p/>
+     * The default value is {@code 500}.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * <p/>
+     *
+     * @since 2.10
+     */
+    public static final String MONITORING_STATISTICS_REFRESH_INTERVAL =
+            "jersey.config.server.monitoring.statistics.refresh.interval";
+
+    /**
      * {@link String} property that defines the application name.
      *
      * The name is an arbitrary user defined name

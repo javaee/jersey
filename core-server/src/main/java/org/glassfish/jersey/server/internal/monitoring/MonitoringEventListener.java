@@ -42,6 +42,8 @@ package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.List;
 import java.util.Queue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 
@@ -51,6 +53,8 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
+import org.glassfish.jersey.server.monitoring.ExtendedMonitoringStatisticsListener;
+import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -72,10 +76,14 @@ import jersey.repackaged.com.google.common.collect.Queues;
  * This event listener must be registered as a standard provider when monitoring statistics are required
  * in the runtime.
  * </p>
- * @see MonitoringStatisticsProcessor
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @see MonitoringStatisticsProcessor
  */
-public class MonitoringEventListener implements ApplicationEventListener {
+public final class MonitoringEventListener implements ApplicationEventListener {
+
+    private static final Logger LOGGER = Logger.getLogger(MonitoringEventListener.class.getName());
+
     @Inject
     private ServiceLocator serviceLocator;
 
@@ -86,21 +94,22 @@ public class MonitoringEventListener implements ApplicationEventListener {
     private volatile long applicationStartTime;
     private volatile MonitoringStatisticsProcessor monitoringStatisticsProcessor;
 
-
     /**
      * Time statistics.
      */
     static class TimeStats {
+
         private final long duration;
         private final long startTime;
 
-        private TimeStats(long startTime, long requestDuration) {
+        private TimeStats(final long startTime, final long requestDuration) {
             this.duration = requestDuration;
             this.startTime = startTime;
         }
 
         /**
          * Get duration.
+         *
          * @return Duration in milliseconds.
          */
         long getDuration() {
@@ -109,6 +118,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
 
         /**
          * Get start time.
+         *
          * @return Start time (Unix timestamp format).
          */
         long getStartTime() {
@@ -120,15 +130,17 @@ public class MonitoringEventListener implements ApplicationEventListener {
      * Method statistics
      */
     static class MethodStats extends TimeStats {
+
         private final ResourceMethod method;
 
-        private MethodStats(ResourceMethod method, long startTime, long requestDuration) {
+        private MethodStats(final ResourceMethod method, final long startTime, final long requestDuration) {
             super(startTime, requestDuration);
             this.method = method;
         }
 
         /**
          * Get the resource method executed.
+         *
          * @return resource method.
          */
         ResourceMethod getMethod() {
@@ -140,11 +152,12 @@ public class MonitoringEventListener implements ApplicationEventListener {
      * Request statistics.
      */
     class RequestStats {
+
         private final TimeStats requestStats;
         private final MethodStats methodStats; // might be null if a method was not executed during a request
         private final String requestUri;
 
-        private RequestStats(TimeStats requestStats, MethodStats methodStats, String requestUri) {
+        private RequestStats(final TimeStats requestStats, final MethodStats methodStats, final String requestUri) {
             this.requestStats = requestStats;
             this.methodStats = methodStats;
             this.requestUri = requestUri;
@@ -152,6 +165,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
 
         /**
          * Get request statistics.
+         *
          * @return request statistics.
          */
         TimeStats getRequestStats() {
@@ -160,6 +174,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
 
         /**
          * Get method statistics.
+         *
          * @return method statistics.
          */
         MethodStats getMethodStats() {
@@ -168,6 +183,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
 
         /**
          * Get the request uri.
+         *
          * @return request uri.
          */
         String getRequestUri() {
@@ -176,7 +192,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
     }
 
     @Override
-    public ReqEventListener onRequest(RequestEvent requestEvent) {
+    public ReqEventListener onRequest(final RequestEvent requestEvent) {
         switch (requestEvent.getType()) {
             case START:
                 return new ReqEventListener();
@@ -186,7 +202,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
     }
 
     @Override
-    public void onEvent(ApplicationEvent event) {
+    public void onEvent(final ApplicationEvent event) {
         final long now = System.currentTimeMillis();
         final ApplicationEvent.Type type = event.getType();
         switch (type) {
@@ -204,17 +220,34 @@ public class MonitoringEventListener implements ApplicationEventListener {
                 if (monitoringStatisticsProcessor != null) {
                     try {
                         monitoringStatisticsProcessor.shutDown();
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         Thread.currentThread().interrupt();
                         throw new ProcessingException(LocalizationMessages.ERROR_MONITORING_SHUTDOWN_INTERRUPTED(), e);
                     }
                 }
+
+                // onDestroy
+                final List<MonitoringStatisticsListener> listeners = serviceLocator
+                        .getAllServices(MonitoringStatisticsListener.class);
+
+                for (final MonitoringStatisticsListener listener : listeners) {
+                    try {
+                        if (listener instanceof ExtendedMonitoringStatisticsListener) {
+                            ((ExtendedMonitoringStatisticsListener) listener).onDestroy();
+                        }
+                    } catch (final Exception e) {
+                        LOGGER.log(Level.WARNING,
+                                LocalizationMessages.ERROR_MONITORING_STATISTICS_LISTENER_DESTROY(listener.getClass()), e);
+                    }
+                }
+
                 break;
 
         }
     }
 
     private class ReqEventListener implements RequestEventListener {
+
         private volatile long requestTimeStart;
         private volatile long methodTimeStart;
         private volatile MethodStats methodStats;
@@ -224,8 +257,9 @@ public class MonitoringEventListener implements ApplicationEventListener {
         }
 
         @Override
-        public void onEvent(RequestEvent event) {
+        public void onEvent(final RequestEvent event) {
             final long now = System.currentTimeMillis();
+
             switch (event.getType()) {
                 case RESOURCE_METHOD_START:
                     this.methodTimeStart = now;
@@ -241,10 +275,10 @@ public class MonitoringEventListener implements ApplicationEventListener {
                     if (event.isResponseWritten()) {
                         responseStatuses.add(event.getContainerResponse().getStatus());
                     }
-                    StringBuilder sb = new StringBuilder();
-                    List<UriTemplate> orderedTemplates = Lists.reverse(event.getUriInfo().getMatchedTemplates());
+                    final StringBuilder sb = new StringBuilder();
+                    final List<UriTemplate> orderedTemplates = Lists.reverse(event.getUriInfo().getMatchedTemplates());
 
-                    for (UriTemplate uriTemplate : orderedTemplates) {
+                    for (final UriTemplate uriTemplate : orderedTemplates) {
                         sb.append(uriTemplate.getTemplate());
                         if (!uriTemplate.endsWithSlash()) {
                             sb.append("/");
@@ -258,9 +292,9 @@ public class MonitoringEventListener implements ApplicationEventListener {
         }
     }
 
-
     /**
      * Get the time of application start (when initialization is finished).
+     *
      * @return time in Unix timestamp format.
      */
     long getApplicationStartTime() {
@@ -269,6 +303,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
 
     /**
      * Get the queue of application events.
+     *
      * @return Application event queue.
      */
     public Queue<ApplicationEvent> getApplicationEvents() {
@@ -277,6 +312,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
 
     /**
      * Get the exception mapper event queue.
+     *
      * @return Exception mapper event queue.
      */
     Queue<RequestEvent> getExceptionMapperEvents() {
@@ -285,6 +321,7 @@ public class MonitoringEventListener implements ApplicationEventListener {
 
     /**
      * Get the request event queue.
+     *
      * @return Request event queue.
      */
     Queue<RequestStats> getRequestQueuedItems() {
@@ -293,11 +330,10 @@ public class MonitoringEventListener implements ApplicationEventListener {
 
     /**
      * Get the queue with response status codes.
+     *
      * @return response status queue.
      */
     Queue<Integer> getResponseStatuses() {
         return responseStatuses;
     }
-
-
 }

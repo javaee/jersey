@@ -382,6 +382,7 @@
 <!ENTITY jersey.server.ServerProperties.WADL_GENERATOR_CONFIG "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#WADL_GENERATOR_CONFIG'>ServerProperties.WADL_GENERATOR_CONFIG</link>" >
 <!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MONITORING_STATISTICS_ENABLED'>ServerProperties.MONITORING_STATISTICS_ENABLED</link>" >
 <!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MONITORING_STATISTICS_MBEANS_ENABLED'>ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED</link>" >
+<!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#MONITORING_STATISTICS_REFRESH_INTERVAL'>ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL</link>" >
 <!ENTITY jersey.server.ServerProperties.APPLICATION_NAME "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#APPLICATION_NAME'>ServerProperties.APPLICATION_NAME</link>" >
 <!ENTITY jersey.server.ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#RESPONSE_SET_STATUS_OVER_SEND_ERROR'>ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR</link>" >
 <!ENTITY jersey.server.ServerProperties.TRACING "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#TRACING'>ServerProperties.TRACING</link>" >

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,36 +37,53 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.tests.performance.monitoring;
 
-package org.glassfish.jersey.server.internal.monitoring;
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.FeatureContext;
-
-import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.model.*;
+import org.glassfish.jersey.server.model.Resource;
 
 /**
- * Autodiscoverable feature that registers {@link MonitoringFeature}
- * based on configuration properties.
- *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * Application class to start performance test web service at http://localhost:8080/ if the base URI
+ * is not passed via the first command line argument.
  */
-@ConstrainedTo(RuntimeType.SERVER)
-public final class MonitoringAutodiscoverable implements ForcedAutoDiscoverable {
+public class JerseyApp {
 
-    @Override
-    public void configure(final FeatureContext context) {
-        if (!context.getConfiguration().isRegistered(MonitoringFeature.class)) {
-            final Boolean monitoringEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
-                    ServerProperties.MONITORING_STATISTICS_ENABLED, Boolean.FALSE);
-            final Boolean mbeansEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
-                    ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, Boolean.FALSE);
+    private static final URI BASE_URI = URI.create("http://localhost:8080/");
+    public static final String ROOT_PATH = "text";
 
-            if (monitoringEnabled || mbeansEnabled) {
-                context.register(MonitoringFeature.class);
+    public static void main(final String[] args) throws Exception {
+            System.out.println("Jersey performance test web service application");
+
+            final URI baseUri = args.length > 0 ? URI.create(args[0]) : BASE_URI;
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, createResourceConfig());
+
+            System.out.println(String.format("Application started.\nTry out %s%s\nHit Ctrl-C to stop it...",
+                    baseUri, ROOT_PATH));
+
+            while (server.isStarted()) {
+                Thread.sleep(600000);
             }
+    }
+
+    private static ResourceConfig createResourceConfig() {
+        final Set<Resource> resources = new HashSet<>();
+        for (int i = 0; i < 10; i++) {
+            resources.add(Resource.builder(org.glassfish.jersey.tests.performance.monitoring.Resource.class)
+                    .path("" + i)
+                    .build());
         }
+
+        return new ResourceConfig()
+                .property(ServerProperties.MONITORING_STATISTICS_ENABLED, true)
+                .property(ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, true)
+                .registerResources(resources);
     }
 }
