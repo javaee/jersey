@@ -169,7 +169,14 @@ public final class HttpDateFormat {
             final ParsePosition pp = new ParsePosition(0);
             final Date d = f.parse(date, pp);
             if (pp.getErrorIndex() == -1) {
-                valid.put(d, pp);
+                if (valid.containsKey(d)) {
+                    final ParsePosition prior = valid.get(d);
+                    if (pp.getIndex() > prior.getIndex()) {
+                        valid.put(d, pp);
+                    }
+                } else {
+                    valid.put(d, pp);
+                }
             }
         }
 
