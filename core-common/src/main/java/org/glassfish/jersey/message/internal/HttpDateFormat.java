@@ -188,7 +188,7 @@ public final class HttpDateFormat {
             System.out.println(v.keySet().iterator().next().format(d));
             if (latest == null)
                 latest = d;
-            if ((d.after(latest) && pp.getIndex() == last_pos)
+            if ((d.after(latest) && pp.getIndex() >= last_pos)
                 || pp.getIndex() > last_pos) {
                 latest = d;
                 last_pos = pp.getIndex();
