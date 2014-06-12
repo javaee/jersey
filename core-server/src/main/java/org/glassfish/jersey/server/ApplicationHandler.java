@@ -929,7 +929,9 @@ public final class ApplicationHandler {
         final FutureResponseWriter responseFuture =
                 new FutureResponseWriter(request.getMethod(), outputStream, runtime.getBackgroundScheduler());
 
-        request.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
+        if (request.getSecurityContext() == null) {
+            request.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
+        }
         request.setWriter(responseFuture);
 
         handle(request);
