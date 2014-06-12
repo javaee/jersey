@@ -121,12 +121,9 @@ public final class HttpDateFormat {
         };
 
         final TimeZone tz = TimeZone.getTimeZone("GMT");
-        for (final SimpleDateFormat f : formats)
+        for (final SimpleDateFormat f : formats) {
             f.setTimeZone(tz);
-        //formats[0].setTimeZone(tz);
-        //formats[1].setTimeZone(tz);
-        //formats[2].setTimeZone(tz);
-        //formats[3].setTimeZone(tz);
+        }
 
         return Collections.unmodifiableList(Arrays.asList(formats));
     }
@@ -196,9 +193,7 @@ public final class HttpDateFormat {
         }
         if (latest != null)
             return latest;
-        /*
-         * java.text.ParseException: Unparseable date: "0001-01-01T00:00:00"
-         */
+
         throw new ParseException("Unparseable date: \"" + date + "\"", -1);
     }
 }
