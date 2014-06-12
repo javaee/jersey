@@ -164,25 +164,20 @@ public final class HttpDateFormat {
      * @throws java.text.ParseException in case the date string cannot be parsed.
      */
     public static Date readDate(final String date) throws ParseException {
-        final Map<Date, Map<SimpleDateFormat, ParsePosition>> valid = new HashMap<Date, Map<SimpleDateFormat, ParsePosition>>();
+        final Map<Date, ParsePosition> valid = new HashMap<Date, ParsePosition>();
         for (final SimpleDateFormat f : HttpDateFormat.getDateFormats()) {
             final ParsePosition pp = new ParsePosition(0);
             final Date d = f.parse(date, pp);
             if (pp.getErrorIndex() == -1) {
-                final Map<SimpleDateFormat, ParsePosition> data = new HashMap<SimpleDateFormat, ParsePosition>();
-                data.put(f, pp);
-                valid.put(d, data);
+                valid.put(d, pp);
             }
         }
 
-        System.out.println("----\n" + date);
         Date latest = null;
         int last_pos = 0;
-        for (final Entry<Date, Map<SimpleDateFormat, ParsePosition>> e : valid.entrySet()) {
+        for (final Entry<Date, ParsePosition> e : valid.entrySet()) {
             final Date d = e.getKey();
-            final Map<SimpleDateFormat, ParsePosition> v = e.getValue();
-            final ParsePosition pp = v.values().iterator().next();
-            System.out.println(v.keySet().iterator().next().format(d));
+            final ParsePosition pp = e.getValue();
             if (latest == null)
                 latest = d;
             if ((d.after(latest) && pp.getIndex() >= last_pos)
