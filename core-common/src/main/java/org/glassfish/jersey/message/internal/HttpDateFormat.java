@@ -64,27 +64,26 @@ public final class HttpDateFormat {
     private HttpDateFormat() {
     }
     /**
-     * The date format pattern for RFC 1123.
+     * The date format pattern for RFC 1123, RFC 1036 and RFC 2822.
      */
-    private static final String RFC1123_DATE_FORMAT_PATTERN = "EEE, dd MMM yyyy HH:mm:ss zzz";
+    private static final String RFC1123_DATE_FORMAT_PATTERN = "EEE, dd MMM yy HH:mm:ss Z";
     /**
-     * The date format pattern for RFC 1036.
+     * The date format pattern for RFC 1036 and RFC 2822 alternatives.
      */
-    private static final String RFC1036_DATE_FORMAT_PATTERN = "EEEE, dd-MMM-yy HH:mm:ss zzz";
-    private static final String RFC1036_DATE_FORMAT_PATTERN_ALT1 = "EEEE, dd MMM yy HH:mm:ss zzz";
-    private static final String RFC1036_DATE_FORMAT_PATTERN_ALT2 = "dd MMM yy HH:mm:ss zzz";
-    private static final String RFC1036_DATE_FORMAT_PATTERN_OLD = "EEEE, dd MMM HH:mm:ss yyyy";
+    private static final String RFC1036_DATE_FORMAT_PATTERN_ALT = "dd MMM yy HH:mm:ss Z";
+    /**
+     * The date format pattern for RFC 850.
+     */
+    private static final String RFC850_DATE_FORMAT_PATTERN = "EEEE, dd-MMM-yy HH:mm:ss Z";
     /**
      * The date format pattern for ANSI C asctime().
      */
     private static final String ANSI_C_ASCTIME_DATE_FORMAT_PATTERN = "EEE MMM d HH:mm:ss yyyy";
     /**
-     * The date format pattern for RFC 2822 section 3.3 excluding obsolete date and time.
+     * The date format pattern for RFC 2822 section 3.3 alternatives.
      */
-    private static final String RFC2822_DATE_FORMAT_PATTERN = "EEE, d MMM yyyy HH:mm:ss Z";
-    private static final String RFC2822_DATE_FORMAT_PATTERN_ALT1 = "d MMM yyyy HH:mm:ss Z";
-    private static final String RFC2822_DATE_FORMAT_PATTERN_ALT2 = "EEE, d MMM yyyy HH:mm Z";
-    private static final String RFC2822_DATE_FORMAT_PATTERN_ALT3 = "d MMM yyyy HH:mm Z";
+    private static final String RFC2822_DATE_FORMAT_PATTERN_ALT1 = "EEE, d MMM yyyy HH:mm Z";
+    private static final String RFC2822_DATE_FORMAT_PATTERN_ALT2 = "d MMM yyyy HH:mm Z";
     /**
      * The date format pattern for RFC 3339,
      * JAXB's DatatypeFactory.newXMLGregorianCalendar(),
@@ -108,16 +107,17 @@ public final class HttpDateFormat {
     private static List<SimpleDateFormat> createDateFormats() {
         final SimpleDateFormat[] formats = new SimpleDateFormat[]{
             new SimpleDateFormat(RFC1123_DATE_FORMAT_PATTERN, Locale.US),
-            new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN, Locale.US),
-            new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_ALT1, Locale.US),
-            new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_ALT2, Locale.US),
-            new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_OLD, Locale.US),
+            new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN_ALT, Locale.US),
+            new SimpleDateFormat(RFC850_DATE_FORMAT_PATTERN, Locale.US),
+            new SimpleDateFormat(RFC2822_DATE_FORMAT_PATTERN_ALT1, Locale.US),
+            new SimpleDateFormat(RFC2822_DATE_FORMAT_PATTERN_ALT2, Locale.US),
             new SimpleDateFormat(ANSI_C_ASCTIME_DATE_FORMAT_PATTERN, Locale.US),
             new SimpleDateFormat(ECMASCRIPT_ISO_DATE_FORMAT_PATTERN, Locale.US),
             new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_FULL, Locale.US),
             new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_ALT1, Locale.US),
             new SimpleDateFormat(RFC3339_DATE_FORMAT_PATTERN_ALT2, Locale.US),
-            new SimpleDateFormat(XSD_DATE_FORMAT_PATTERN_MIN1, Locale.US)
+            new SimpleDateFormat(XSD_DATE_FORMAT_PATTERN_MIN1, Locale.US),
+            new SimpleDateFormat(XSD_DATE_FORMAT_PATTERN_MIN2, Locale.US)
         };
 
         final TimeZone tz = TimeZone.getTimeZone("GMT");
