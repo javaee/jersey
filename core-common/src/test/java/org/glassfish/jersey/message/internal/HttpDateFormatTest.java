@@ -3,6 +3,7 @@ package org.glassfish.jersey.message.internal;
 import static org.junit.Assert.assertEquals;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -23,6 +24,45 @@ public class HttpDateFormatTest {
     public HttpDateFormatTest()
     {
         cal.clear(Calendar.MILLISECOND);
+    }
+
+    @Test
+    public void testPreferredFormatForParsingWithReferencePattern() throws ParseException
+    {
+        final SimpleDateFormat tester = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
+        tester.setTimeZone(TimeZone.getTimeZone("GMT"));
+        SimpleDateFormat preferred = HttpDateFormat.getPreferredDateFormat();
+        date = new Date();
+        final String today = tester.format(date);
+        assertEquals(tester.parse(today), preferred.parse(today));
+    }
+
+    @Test
+    public void testPreferredFormatForParsingWithReferenceString() throws ParseException
+    {
+        SimpleDateFormat preferred = HttpDateFormat.getPreferredDateFormat();
+        date = preferred.parse("Sun, 06 Nov 1994 08:49:37 GMT");
+        cal.set(1994, 10, 6, 8, 49, 37);
+        assertEquals(cal.getTimeInMillis(), date.getTime());
+    }
+
+    @Test
+    public void testPreferredFormatForFormattingWithReferencePattern()
+    {
+        final SimpleDateFormat tester = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
+        tester.setTimeZone(TimeZone.getTimeZone("GMT"));
+        final SimpleDateFormat preferred = HttpDateFormat.getPreferredDateFormat();
+        date = new Date();
+        assertEquals(tester.format(date), preferred.format(date));
+    }
+
+    @Test
+    public void testPreferredFormatForFormattingWithReferenceString()
+    {
+        final SimpleDateFormat preferred = HttpDateFormat.getPreferredDateFormat();
+        cal.set(1994, 10, 6, 8, 49, 37);
+        date = new Date(cal.getTimeInMillis());
+        assertEquals("Sun, 06 Nov 1994 08:49:37 GMT", preferred.format(date));
     }
 
     @Test
