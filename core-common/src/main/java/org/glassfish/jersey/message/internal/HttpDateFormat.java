@@ -53,7 +53,7 @@ import java.util.Map.Entry;
 import java.util.TimeZone;
 
 /**
- * Helper class for HTTP specified date formats.
+ * Helper class for HTTP specified and other RFC standardized date formats.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -108,7 +108,7 @@ public final class HttpDateFormat {
 
         @Override
         protected synchronized SimpleDateFormat initialValue() {
-            SimpleDateFormat format = new SimpleDateFormat(PREFERRED_DATE_FORMAT_PATTERN, Locale.US);
+            final SimpleDateFormat format = new SimpleDateFormat(PREFERRED_DATE_FORMAT_PATTERN, Locale.US);
             format.setTimeZone(TimeZone.getTimeZone("GMT"));
             return format;
         }
@@ -195,16 +195,18 @@ public final class HttpDateFormat {
         for (final Entry<Date, ParsePosition> e : valid.entrySet()) {
             final Date d = e.getKey();
             final ParsePosition pp = e.getValue();
-            if (latest == null)
+            if (latest == null) {
                 latest = d;
+            }
             if ((d.after(latest) && pp.getIndex() >= last_pos)
                 || pp.getIndex() > last_pos) {
                 latest = d;
                 last_pos = pp.getIndex();
             }
         }
-        if (latest != null)
+        if (latest != null) {
             return latest;
+        }
 
         throw new ParseException("Unparseable date: \"" + date + "\"", -1);
     }
