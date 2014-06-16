@@ -984,13 +984,14 @@ public final class ApplicationHandler {
                     // need to also strip the object entity as it was stripped when writing to output
                     current.setEntity(null);
                 }
-
+                requestTimeoutHandler.close();
                 super.set(current);
             }
         }
 
         @Override
         public void failure(final Throwable error) {
+            requestTimeoutHandler.close();
             super.setException(error);
         }
 
