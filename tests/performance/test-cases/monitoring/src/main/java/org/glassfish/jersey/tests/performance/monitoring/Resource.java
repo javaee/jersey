@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,67 +37,70 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.monitoring;
 
-import java.util.Map;
+package org.glassfish.jersey.tests.performance.monitoring;
 
-import org.glassfish.jersey.server.monitoring.ResponseStatistics;
-
-import jersey.repackaged.com.google.common.collect.Maps;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 /**
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-final class ResponseStatisticsImpl implements ResponseStatistics {
+@Path("/")
+@Produces("text/plain")
+public class Resource {
 
-    private final Map<Integer, Long> responseCodes;
-    private final Integer lastResponseCode;
-
-    static class Builder {
-
-        private final Map<Integer, Long> responseCodes = Maps.newHashMap();
-        private Integer lastResponseCode = null;
-
-        private ResponseStatisticsImpl cached = null;
-
-        void addResponseCode(final int responseCode) {
-            cached = null;
-
-            lastResponseCode = responseCode;
-            Long currentValue = responseCodes.get(responseCode);
-            if (currentValue == null) {
-                currentValue = 0l;
-            }
-            responseCodes.put(responseCode, currentValue + 1);
-        }
-
-        ResponseStatisticsImpl build() {
-            if (cached == null) {
-                cached = new ResponseStatisticsImpl(lastResponseCode, responseCodes);
-            }
-            return cached;
-        }
-
+    @GET
+    public String get() {
+        return "get";
     }
 
-    private ResponseStatisticsImpl(final Integer lastResponseCode, final Map<Integer, Long> responseCodes) {
-        this.lastResponseCode = lastResponseCode;
-        this.responseCodes = responseCodes;
+    @GET
+    @Path("sub")
+    public String subget() {
+        return "sub-get";
     }
 
-    @Override
-    public Integer getLastResponseCode() {
-        return lastResponseCode;
+    @POST
+    public String post(final String post) {
+        return post;
     }
 
-    @Override
-    public Map<Integer, Long> getResponseCodes() {
-        return responseCodes;
+    @POST
+    @Path("sub")
+    public String subpost(final String post) {
+        return post;
     }
 
-    @Override
-    public ResponseStatistics snapshot() {
-        // snapshot functionality not yet implemented
-        return this;
+    @PUT
+    public String put(final String put) {
+        return put;
+    }
+
+    @PUT
+    @Path("sub")
+    public String subput(final String put) {
+        return put;
+    }
+
+    @DELETE
+    @Path("{id}")
+    public String delete(final String delete) {
+        return delete;
+    }
+
+    @DELETE
+    @Path("sub/{id}")
+    public String subdelete(final String delete) {
+        return delete;
+    }
+
+    @Path("locator")
+    public Class<SubResourceLocator> locator() {
+        return SubResourceLocator.class;
     }
 }

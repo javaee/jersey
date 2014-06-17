@@ -40,7 +40,9 @@
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -55,26 +57,30 @@ import jersey.repackaged.com.google.common.collect.Maps;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class ResourceStatisticsImpl implements ResourceStatistics {
-
+final class ResourceStatisticsImpl implements ResourceStatistics {
 
     /**
      * Builder of resource statistics instances.
      */
     static class Builder {
-        private final ExecutionStatisticsImpl.Builder resourceExecutionStatisticsBuilder;
-        private final ExecutionStatisticsImpl.Builder requestExecutionStatisticsBuilder;
-        private final Map<ResourceMethod, ResourceMethodStatisticsImpl.Builder> methodsBuilders = Maps.newHashMap();
-        private final Map<String, ResourceMethodStatisticsImpl.Builder> stringToMethodsBuilders = Maps.newHashMap();
+
+        private final Set<ResourceMethodStatisticsImpl.Builder> methodsBuilders = new HashSet<>();
+        private final ResourceMethodStatisticsImpl.Factory methodFactory;
+
+        private ExecutionStatisticsImpl.Builder resourceExecutionStatisticsBuilder;
+        private ExecutionStatisticsImpl.Builder requestExecutionStatisticsBuilder;
+
+        private ResourceStatisticsImpl cached;
 
         /**
          * Create a new builder.
          *
          * @param resource Resource for which the instance is created.
          */
-        Builder(Resource resource) {
-            this();
-            for (ResourceMethod method : resource.getResourceMethods()) {
+        Builder(final Resource resource, final ResourceMethodStatisticsImpl.Factory methodFactory) {
+            this(methodFactory);
+
+            for (final ResourceMethod method : resource.getResourceMethods()) {
                 getOrCreate(method);
             }
         }
@@ -82,25 +88,39 @@ class ResourceStatisticsImpl implements ResourceStatistics {
         /**
          * Create a new builder.
          */
-        Builder() {
-            this.resourceExecutionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
-            this.requestExecutionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
+        Builder(final ResourceMethodStatisticsImpl.Factory methodFactory) {
+            this.methodFactory = methodFactory;
         }
 
         /**
          * Build a new instance of {@link ResourceStatisticsImpl}.
+         *
          * @return New instance of resource statistics.
          */
         ResourceStatisticsImpl build() {
-            final Map<ResourceMethod, ResourceMethodStatistics> resourceMethods = Maps.newHashMap();
-            for (Map.Entry<ResourceMethod, ResourceMethodStatisticsImpl.Builder> methodEntry : methodsBuilders.entrySet()) {
-                resourceMethods.put(methodEntry.getKey(), methodEntry.getValue().build());
+            if (cached != null) {
+                return cached;
             }
 
-            return new ResourceStatisticsImpl(
-                    Collections.unmodifiableMap(resourceMethods),
-                    resourceExecutionStatisticsBuilder.build(),
-                    requestExecutionStatisticsBuilder.build());
+            final Map<ResourceMethod, ResourceMethodStatistics> resourceMethods = Maps.newHashMap();
+            for (final ResourceMethodStatisticsImpl.Builder builder : methodsBuilders) {
+                final ResourceMethodStatisticsImpl stats = builder.build();
+                resourceMethods.put(stats.getResourceMethod(), stats);
+            }
+
+            final ExecutionStatistics resourceStats = resourceExecutionStatisticsBuilder == null ?
+                    ExecutionStatisticsImpl.EMPTY : resourceExecutionStatisticsBuilder.build();
+            final ExecutionStatistics requestStats = requestExecutionStatisticsBuilder == null ?
+                    ExecutionStatisticsImpl.EMPTY : requestExecutionStatisticsBuilder.build();
+
+            final ResourceStatisticsImpl stats = new ResourceStatisticsImpl(Collections.unmodifiableMap(resourceMethods),
+                    resourceStats, requestStats);
+
+            if (MonitoringUtils.isCacheable(requestStats)) {
+                cached = stats;
+            }
+
+            return stats;
         }
 
         /**
@@ -110,17 +130,24 @@ class ResourceStatisticsImpl implements ResourceStatistics {
          * @param methodStartTime Time of execution of the resource method.
          * @param methodDuration Time spent on execution of resource method itself.
          * @param requestStartTime Time when the request matching to the executed resource method has been received
-         *                         by Jersey.
+         * by Jersey.
          * @param requestDuration Time of whole request processing (from receiving the request until writing the response).
          */
-        void addExecution(ResourceMethod resourceMethod, long methodStartTime, long methodDuration,
-                          long requestStartTime, long requestDuration) {
+        void addExecution(final ResourceMethod resourceMethod, final long methodStartTime, final long methodDuration,
+                          final long requestStartTime, final long requestDuration) {
+            cached = null;
+
+            if (resourceExecutionStatisticsBuilder == null) {
+                resourceExecutionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
+            }
             resourceExecutionStatisticsBuilder.addExecution(methodStartTime, methodDuration);
+
+            if (requestExecutionStatisticsBuilder == null) {
+                requestExecutionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
+            }
             requestExecutionStatisticsBuilder.addExecution(requestStartTime, requestDuration);
 
-
-            final ResourceMethodStatisticsImpl.Builder builder = getOrCreate(resourceMethod);
-            builder.addResourceMethodExecution(methodStartTime, methodDuration, requestStartTime, requestDuration);
+            addMethod(resourceMethod);
         }
 
         /**
@@ -128,23 +155,18 @@ class ResourceStatisticsImpl implements ResourceStatistics {
          *
          * @param resourceMethod Resource method.
          */
-        void addMethod(ResourceMethod resourceMethod) {
+        void addMethod(final ResourceMethod resourceMethod) {
             getOrCreate(resourceMethod);
-
         }
 
-        private ResourceMethodStatisticsImpl.Builder getOrCreate(ResourceMethod resourceMethod) {
-            final String methodUniqueId = MonitoringUtils.getMethodUniqueId(resourceMethod);
-            ResourceMethodStatisticsImpl.Builder methodBuilder = stringToMethodsBuilders.get(methodUniqueId);
+        private ResourceMethodStatisticsImpl.Builder getOrCreate(final ResourceMethod resourceMethod) {
+            final ResourceMethodStatisticsImpl.Builder methodStats = methodFactory.getOrCreate(resourceMethod);
 
-            if (methodBuilder == null) {
-                methodBuilder = new ResourceMethodStatisticsImpl.Builder(resourceMethod);
-                methodsBuilders.put(resourceMethod, methodBuilder);
-                stringToMethodsBuilders.put(methodUniqueId, methodBuilder);
+            if (!methodsBuilders.contains(methodStats)) {
+                methodsBuilders.add(methodStats);
             }
-            return methodBuilder;
+            return methodStats;
         }
-
 
     }
 
@@ -152,9 +174,9 @@ class ResourceStatisticsImpl implements ResourceStatistics {
     private final ExecutionStatistics resourceExecutionStatistics;
     private final ExecutionStatistics requestExecutionStatistics;
 
-
-    private ResourceStatisticsImpl(Map<ResourceMethod, ResourceMethodStatistics> resourceMethods,
-                                   ExecutionStatistics resourceExecutionStatistics, ExecutionStatistics requestExecutionStatistics) {
+    private ResourceStatisticsImpl(final Map<ResourceMethod, ResourceMethodStatistics> resourceMethods,
+                                   final ExecutionStatistics resourceExecutionStatistics,
+                                   final ExecutionStatistics requestExecutionStatistics) {
         this.resourceMethods = resourceMethods;
         this.resourceExecutionStatistics = resourceExecutionStatistics;
         this.requestExecutionStatistics = requestExecutionStatistics;

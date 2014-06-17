@@ -56,11 +56,13 @@ import jersey.repackaged.com.google.common.collect.Maps;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class ExecutionStatisticsImpl implements ExecutionStatistics {
+final class ExecutionStatisticsImpl implements ExecutionStatistics {
+
     /**
      * Builder of execution statistics.
      */
     static class Builder {
+
         private long lastStartTime;
         private final Map<Long, TimeWindowStatisticsImpl.Builder> intervalStatistics;
 
@@ -68,7 +70,7 @@ class ExecutionStatisticsImpl implements ExecutionStatistics {
          * Create a new builder.
          */
         public Builder() {
-            this.intervalStatistics = new HashMap<Long, TimeWindowStatisticsImpl.Builder>(4);
+            this.intervalStatistics = new HashMap<>(6);
             addInterval(0, TimeUnit.MILLISECONDS);
             addInterval(1, TimeUnit.SECONDS);
             addInterval(15, TimeUnit.SECONDS);
@@ -77,20 +79,20 @@ class ExecutionStatisticsImpl implements ExecutionStatistics {
             addInterval(1, TimeUnit.HOURS);
         }
 
-        private void addInterval(long interval, TimeUnit timeUnit) {
+        private void addInterval(final long interval, final TimeUnit timeUnit) {
             final long intervalInMillis = timeUnit.toMillis(interval);
-            intervalStatistics.put(intervalInMillis,
-                    new TimeWindowStatisticsImpl.Builder(intervalInMillis, TimeUnit.MILLISECONDS));
+            intervalStatistics.put(intervalInMillis, new TimeWindowStatisticsImpl.Builder(intervalInMillis,
+                    TimeUnit.MILLISECONDS));
         }
-
 
         /**
          * Add execution of a target.
+         *
          * @param startTime (Unix timestamp format)
          * @param duration Duration of target execution in milliseconds.
          */
-        void addExecution(long startTime, long duration) {
-            for (TimeWindowStatisticsImpl.Builder statBuilder : intervalStatistics.values()) {
+        void addExecution(final long startTime, final long duration) {
+            for (final TimeWindowStatisticsImpl.Builder statBuilder : intervalStatistics.values()) {
                 statBuilder.addRequest(startTime, duration);
             }
 
@@ -99,22 +101,25 @@ class ExecutionStatisticsImpl implements ExecutionStatistics {
 
         /**
          * Build a new instance of execution statistics.
+         *
          * @return new instance of execution statistics.
          */
         public ExecutionStatisticsImpl build() {
-            Map<Long, TimeWindowStatistics> newIntervalStatistics = Maps.newHashMap();
-            for (Map.Entry<Long, TimeWindowStatisticsImpl.Builder> builderEntry : intervalStatistics.entrySet()) {
+            final Map<Long, TimeWindowStatistics> newIntervalStatistics = Maps.newHashMap();
+            for (final Map.Entry<Long, TimeWindowStatisticsImpl.Builder> builderEntry : intervalStatistics.entrySet()) {
                 newIntervalStatistics.put(builderEntry.getKey(), builderEntry.getValue().build());
             }
+
+            // cache when request rate is 0
 
             return new ExecutionStatisticsImpl(lastStartTime, Collections.unmodifiableMap(newIntervalStatistics));
         }
     }
 
+    static final ExecutionStatistics EMPTY = new Builder().build();
 
     private final Date lastStartTime;
     private final Map<Long, TimeWindowStatistics> timeWindowStatistics;
-
 
     @Override
     public Date getLastStartTime() {
@@ -132,7 +137,7 @@ class ExecutionStatisticsImpl implements ExecutionStatistics {
         return this;
     }
 
-    private ExecutionStatisticsImpl(long lastStartTime, Map<Long, TimeWindowStatistics> timeWindowStatistics) {
+    private ExecutionStatisticsImpl(final long lastStartTime, final Map<Long, TimeWindowStatistics> timeWindowStatistics) {
         this.lastStartTime = new Date(lastStartTime);
         this.timeWindowStatistics = timeWindowStatistics;
     }
