@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,32 +86,35 @@ public class MessageBodyWriterTest extends JerseyTest {
 
         @Override
         public boolean isWriteable(
-                Class<?> type,
-                Type genericType,
-                Annotation[] annotations,
-                MediaType mediaType) {
+                final Class<?> type,
+                final Type genericType,
+                final Annotation[] annotations,
+                final MediaType mediaType) {
             return type == String.class;
         }
 
         @Override
         public long getSize(
-                String t,
-                Class<?> type,
-                Type genericType,
-                Annotation[] annotations,
-                MediaType mediaType) {
+                final String t,
+                final Class<?> type,
+                final Type genericType,
+                final Annotation[] annotations,
+                final MediaType mediaType) {
             return -1;
         }
 
         @Override
         public void writeTo(
-                String t,
-                Class<?> type,
-                Type genericType,
-                Annotation[] annotations,
-                MediaType mediaType,
-                MultivaluedMap<String, Object> httpHeaders,
-                OutputStream entityStream) throws IOException, WebApplicationException {
+                final String t,
+                final Class<?> type,
+                final Type genericType,
+                final Annotation[] annotations,
+                final MediaType mediaType,
+                final MultivaluedMap<String, Object> httpHeaders,
+                final OutputStream entityStream) throws IOException, WebApplicationException {
+            // Underlying stream should not be closed and Jersey is preventing from closing it.
+            entityStream.close();
+
             httpHeaders.putSingle(HEADER_NAME, HEADER_VALUE_SERVER);
             entityStream.write(t.getBytes());
         }
