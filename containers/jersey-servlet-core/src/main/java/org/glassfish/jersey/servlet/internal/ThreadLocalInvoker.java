@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,9 +51,9 @@ import java.lang.reflect.Method;
  */
 public class ThreadLocalInvoker<T> implements InvocationHandler {
 
-    private ThreadLocal<T> threadLocalInstance = new ThreadLocal<T>();
+    private ThreadLocal<T> threadLocalInstance = new ThreadLocal<>();
 
-    public void set(T threadLocalInstance) {
+    public void set(final T threadLocalInstance) {
         this.threadLocalInstance.set(threadLocalInstance);
     }
 
@@ -62,16 +62,16 @@ public class ThreadLocalInvoker<T> implements InvocationHandler {
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         if (threadLocalInstance.get() == null) {
             throw new IllegalStateException(LocalizationMessages.PERSISTENCE_UNIT_NOT_CONFIGURED(proxy.getClass()));
         }
 
         try {
             return method.invoke(threadLocalInstance.get(), args);
-        } catch (IllegalAccessException ex) {
+        } catch (final IllegalAccessException ex) {
             throw new IllegalStateException(ex);
-        } catch (InvocationTargetException ex) {
+        } catch (final InvocationTargetException ex) {
             throw ex.getTargetException();
         }
     }

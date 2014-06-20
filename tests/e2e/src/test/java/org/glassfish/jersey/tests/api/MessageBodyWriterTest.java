@@ -48,15 +48,19 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
@@ -64,7 +68,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Test of {@link MessageBodyWriter}.
+ * Test that it's possible to override default {@link MessageBodyWriter}s.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
@@ -77,12 +81,20 @@ public class MessageBodyWriterTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(Resource.class, StringWriter.class);
+        return new ResourceConfig(Resource.class, StringProvider.class);
+    }
+
+    @Override
+    protected void configureClient(final ClientConfig config) {
+        config.register(StringProvider.class);
     }
 
     @Provider
     @Produces("text/plain")
-    public static class StringWriter implements MessageBodyWriter<String> {
+    public static class StringProvider implements MessageBodyWriter<String> {
+
+        @Context
+        private Configuration config;
 
         @Override
         public boolean isWriteable(
@@ -115,7 +127,9 @@ public class MessageBodyWriterTest extends JerseyTest {
             // Underlying stream should not be closed and Jersey is preventing from closing it.
             entityStream.close();
 
-            httpHeaders.putSingle(HEADER_NAME, HEADER_VALUE_SERVER);
+            httpHeaders.putSingle(HEADER_NAME,
+                    config.getRuntimeType().equals(RuntimeType.SERVER) ? HEADER_VALUE_SERVER : HEADER_VALUE_CLIENT);
+
             entityStream.write(t.getBytes());
         }
     }
@@ -124,22 +138,17 @@ public class MessageBodyWriterTest extends JerseyTest {
     public static class Resource {
 
         @POST
-        public String post(@HeaderParam(HEADER_NAME) final String header,
-                           final String post) {
+        public String post(@HeaderParam(HEADER_NAME) final String header, final String post) {
             assertEquals(HEADER_VALUE_CLIENT, header);
             return post;
-
         }
-
     }
 
     @Test
-    public void testHeaders() throws Exception {
-        final Response response = target().path("/").request("text/plain").
-                header(HEADER_NAME, HEADER_VALUE_CLIENT).post(Entity.entity("content", "text/plain"));
+    public void testOverride() throws Exception {
+        final Response response = target().path("/").request("text/plain").post(Entity.text("content"));
 
         assertEquals("content", response.readEntity(String.class));
         assertEquals(HEADER_VALUE_SERVER, response.getHeaderString(HEADER_NAME));
     }
-
 }

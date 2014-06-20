@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,62 +37,43 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jetty;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.message.GZipEncoder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
+package org.glassfish.jersey.tests.e2e.container;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Application;
 
-import static org.junit.Assert.assertEquals;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class GZIPContentEncodingTest extends AbstractJettyServerTester {
+public class QueryParamTest extends JerseyContainerTest {
 
     @Path("/")
     public static class Resource {
         @GET
-        public String get() {
-            return "GET";
-        }
-
-        @POST
-        public String post(String content) {
-            return content;
+        public String get(@QueryParam("x") final String x, @QueryParam("y") final String y) {
+            return y;
         }
     }
 
-    @Test
-    public void testGet() {
-        ResourceConfig rc = new ResourceConfig(Resource.class);
-        rc.register(GZipEncoder.class);
-        startServer(rc);
-
-        Client client = ClientBuilder.newClient(new ClientConfig(GZipEncoder.class));
-        WebTarget r = client.target(getUri().build());
-
-        assertEquals("GET", r.request().get(String.class));
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
     }
 
     @Test
-    public void testPost() {
-        ResourceConfig rc = new ResourceConfig(Resource.class);
-        rc.register(GZipEncoder.class);
-        startServer(rc);
-
-        Client client = ClientBuilder.newClient(new ClientConfig(GZipEncoder.class));
-        WebTarget r = client.target(getUri().build());
-
-        assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
+    public void testQueryParam() {
+        assertThat(target().queryParam("y", "1 %2B 2").request().get(String.class), is("1 + 2"));
+        assertThat(target().queryParam("x", "1").queryParam("y", "1 + 2").request().get(String.class), is("1 + 2"));
+        assertThat(target().queryParam("x", "1").queryParam("y", "1 %26 2").request().get(String.class), is("1 & 2"));
+        assertThat(target().queryParam("x", "1").queryParam("y", "1 %7C%7C 2").request().get(String.class), is("1 || 2"));
     }
 }

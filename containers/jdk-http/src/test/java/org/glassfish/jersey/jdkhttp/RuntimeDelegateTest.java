@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,57 +37,65 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jetty;
 
-import org.junit.Test;
+package org.glassfish.jersey.jdkhttp;
+
+import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
+import javax.ws.rs.ext.RuntimeDelegate;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class QueryParamTest extends AbstractJettyServerTester {
-    @Path("/test")
-    public static class QueryParamResource {
+public class RuntimeDelegateTest {
+
+    @Path("/")
+    public static class Resource {
+
         @GET
-        public String get(@QueryParam("x") String x, @QueryParam("y") String y) {
-            return y;
+        public String get() {
+            return "get";
         }
     }
 
     @Test
-    public void testQueryParam() {
-        startServer(QueryParamResource.class);
+    public void testFetch() throws Exception {
+        final HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
+        final HttpHandler handler = RuntimeDelegate.getInstance().createEndpoint(new Application() {
 
-        Client client = ClientBuilder.newClient();
-        WebTarget r = client.target(getUri().path("test").build());
+            @Override
+            public Set<Class<?>> getClasses() {
+                return Collections.<Class<?>>singleton(Resource.class);
+            }
+        }, HttpHandler.class);
 
-        URI u = UriBuilder.fromPath("").
-                queryParam("y", "1 %2B 2").build();
-        assertEquals("1 + 2", r.queryParam("y", "1 %2B 2").request().get(String.class));
+        try {
+            server.createContext("/", handler);
+            server.start();
 
-        u = UriBuilder.fromPath("").
-                queryParam("x", "1").
-                queryParam("y", "1 + 2").build();
-        assertEquals("1 + 2", r.queryParam("x", "1").queryParam("y", "1 + 2").request().get(String.class));
+            final Response response = ClientBuilder.newClient()
+                    .target(UriBuilder.fromUri("http://localhost/").port(server.getAddress().getPort()).build())
+                    .request()
+                    .get();
 
-        u = UriBuilder.fromPath("").
-                queryParam("x", "1").
-                queryParam("y", "1 %26 2").build();
-        assertEquals("1 & 2", r.queryParam("x", "1").queryParam("y", "1 %26 2").request().get(String.class));
-
-        u = UriBuilder.fromPath("").
-                queryParam("x", "1").
-                queryParam("y", "1 %7C%7C 2").build();
-        assertEquals("1 || 2", r.queryParam("x", "1").queryParam("y", "1 %7C%7C 2").request().get(String.class));
+            assertThat(response.readEntity(String.class), is("get"));
+        } finally {
+            server.stop(0);
+        }
     }
 }

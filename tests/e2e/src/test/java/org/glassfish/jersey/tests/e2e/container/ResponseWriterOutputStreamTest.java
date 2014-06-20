@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,62 +37,85 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.simple;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.message.GZipEncoder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
+package org.glassfish.jersey.tests.e2e.container;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * This is really weird approach and test.
+ *
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class GZIPContentEncodingTest extends AbstractSimpleServerTester {
+public class ResponseWriterOutputStreamTest extends JerseyContainerTest {
 
     @Path("/")
     public static class Resource {
+
         @GET
-        public String get() {
-            return "GET";
+        @Produces("text/plain")
+        public void get(final ContainerRequest context) throws IOException {
+            assertThat(context.getMethod(), is("GET"));
+
+            final ContainerResponse response = new ContainerResponse(context, Response.ok().build());
+            final OutputStream os = context.getResponseWriter()
+                    .writeResponseStatusAndHeaders("RESOURCE".getBytes().length, response);
+            os.write("RESOURCE".getBytes());
+            os.close();
         }
 
         @POST
-        public String post(String content) {
-            return content;
+        @Produces("text/plain")
+        public void post(final ContainerRequest context) throws IOException {
+            assertThat(context.getMethod(), is("POST"));
+
+            final String s = context.readEntity(String.class);
+            assertEquals("RESOURCE", s);
+
+            final ContainerResponse response = new ContainerResponse(context, Response.ok().build());
+            final OutputStream os = context.getResponseWriter()
+                    .writeResponseStatusAndHeaders("RESOURCE".getBytes().length, response);
+            os.write("RESOURCE".getBytes());
+            os.close();
         }
+    }
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
     }
 
     @Test
     public void testGet() {
-        ResourceConfig rc = new ResourceConfig(Resource.class);
-        rc.register(GZipEncoder.class);
-        startServer(rc);
-
-        Client client = ClientBuilder.newClient(new ClientConfig(GZipEncoder.class));
-        WebTarget r = client.target(getUri().build());
-
-        assertEquals("GET", r.request().get(String.class));
+        assertThat(target().request().get(String.class), is("RESOURCE"));
     }
 
     @Test
     public void testPost() {
-        ResourceConfig rc = new ResourceConfig(Resource.class);
-        rc.register(GZipEncoder.class);
-        startServer(rc);
+        assertThat(target().request().post(Entity.text("RESOURCE"), String.class), is("RESOURCE"));
+    }
 
-        Client client = ClientBuilder.newClient(new ClientConfig(GZipEncoder.class));
-        WebTarget r = client.target(getUri().build());
-
-        assertEquals("POST", r.request().post(Entity.text("POST"), String.class));
+    @Test
+    public void testAll() {
+        testGet();
+        testPost();
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,56 +37,61 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.simple;
+package org.glassfish.jersey.test.grizzly.web;
+
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.glassfish.jersey.test.DeploymentContext;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.ServletDeploymentContext;
+import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Test;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
-
-import static org.junit.Assert.assertEquals;
-
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class QueryParamTest extends AbstractSimpleServerTester {
-    @Path("/test")
-    public static class QueryParamResource {
-        @GET
-        public String get(@QueryParam("x") String x, @QueryParam("y") String y) {
-            return y;
+public class GrizzlyWebFixedRequestSizeTest extends JerseyTest {
+
+    @Override
+    protected TestContainerFactory getTestContainerFactory() {
+        return new GrizzlyWebTestContainerFactory();
+    }
+
+    @Path("/")
+    public static class Resource {
+
+        @POST
+        public byte[] post(@HeaderParam("Content-Length") final Integer size, final byte[] in) {
+            assertThat(size, is(4));
+
+            return in;
         }
     }
 
+
+    @Override
+    protected DeploymentContext configureDeployment() {
+        return ServletDeploymentContext.forServlet(new ServletContainer(new ResourceConfig(Resource.class))).build();
+    }
+
     @Test
-    public void testQueryParam() {
-        startServer(QueryParamResource.class);
+    public void testRequest() {
+        final Response response = target().request("application/octet-stream").post(Entity.text("POST"));
 
-        WebTarget r = ClientBuilder.newClient().target(getUri().path("test").build());
-
-        URI u = UriBuilder.fromPath("").
-                queryParam("y", "1 %2B 2").build();
-        assertEquals("1 + 2", r.queryParam("y", "1 %2B 2").request().get(String.class));
-
-        u = UriBuilder.fromPath("").
-                queryParam("x", "1").
-                queryParam("y", "1 + 2").build();
-        assertEquals("1 + 2", r.queryParam("x", "1").queryParam("y", "1 + 2").request().get(String.class));
-
-        u = UriBuilder.fromPath("").
-                queryParam("x", "1").
-                queryParam("y", "1 %26 2").build();
-        assertEquals("1 & 2", r.queryParam("x", "1").queryParam("y", "1 %26 2").request().get(String.class));
-
-        u = UriBuilder.fromPath("").
-                queryParam("x", "1").
-                queryParam("y", "1 %7C%7C 2").build();
-        assertEquals("1 || 2", r.queryParam("x", "1").queryParam("y", "1 %7C%7C 2").request().get(String.class));
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.getHeaderString("Content-Length"), is("4"));
+        assertThat(response.getMediaType(), is(MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        assertThat(response.hasEntity(), is(true));
     }
 }

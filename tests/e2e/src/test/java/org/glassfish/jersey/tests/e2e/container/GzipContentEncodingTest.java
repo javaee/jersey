@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,80 +37,82 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.simple;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+package org.glassfish.jersey.tests.e2e.container;
+
+import java.io.IOException;
+import java.util.zip.GZIPInputStream;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ReaderInterceptor;
+import javax.ws.rs.ext.ReaderInterceptorContext;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.message.GZipEncoder;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.filter.EncodingFilter;
 
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class HeadTest extends AbstractSimpleServerTester {
+public class GzipContentEncodingTest extends JerseyContainerTest {
 
     @Path("/")
     public static class Resource {
-        @Path("string")
+
         @GET
-        public String getString() {
+        public String get() {
             return "GET";
         }
 
-        @Path("byte")
-        @GET
-        public byte[] getByte() {
-            return "GET".getBytes();
-        }
-
-        @Path("ByteArrayInputStream")
-        @GET
-        public InputStream getInputStream() {
-            return new ByteArrayInputStream("GET".getBytes());
+        @POST
+        public String post(final String content) {
+            return content;
         }
     }
 
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class, EncodingFilter.class, GZipEncoder.class);
+    }
+
+    @Override
+    protected void configureClient(final ClientConfig config) {
+        config.register(new ReaderInterceptor() {
+            @Override
+            public Object aroundReadFrom(final ReaderInterceptorContext context) throws IOException, WebApplicationException {
+                context.setInputStream(new GZIPInputStream(context.getInputStream()));
+                return context.proceed();
+            }
+        });
+    }
+
     @Test
-    public void testHead() throws Exception {
-        startServer(Resource.class);
+    public void testGet() {
+        final Response response = target().request()
+                .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
+                .get();
 
-        Client client = ClientBuilder.newClient();
-        WebTarget r = client.target(getUri().path("/").build());
+        assertThat(response.readEntity(String.class), is("GET"));
+    }
 
-        Response cr = r.path("string").request("text/plain").head();
-        assertEquals(200, cr.getStatus());
-        String lengthStr = cr.getHeaderString(HttpHeaders.CONTENT_LENGTH);
-        assertNotNull(lengthStr);
-        assertEquals(3, Integer.parseInt(lengthStr));
-        assertEquals(MediaType.TEXT_PLAIN_TYPE, cr.getMediaType());
-        assertFalse(cr.hasEntity());
+    @Test
+    public void testPost() {
+        final Response response = target().request()
+                .header(HttpHeaders.ACCEPT_ENCODING, "gzip")
+                .post(Entity.text("POST"));
 
-        cr = r.path("byte").request("application/octet-stream").head();
-        assertEquals(200, cr.getStatus());
-        int length = cr.getLength();
-        assertNotNull(length);
-        assertEquals(3, length);
-        assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, cr.getMediaType());
-        assertFalse(cr.hasEntity());
-
-        cr = r.path("ByteArrayInputStream").request("application/octet-stream").head();
-        assertEquals(200, cr.getStatus());
-        length = cr.getLength();
-        assertNotNull(length);
-        assertEquals(3, length);
-        assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, cr.getMediaType());
-        assertFalse(cr.hasEntity());
+        assertThat(response.readEntity(String.class), is("POST"));
     }
 }

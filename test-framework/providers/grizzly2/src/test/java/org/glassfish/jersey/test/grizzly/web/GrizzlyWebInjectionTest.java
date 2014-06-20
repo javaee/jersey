@@ -41,11 +41,13 @@ package org.glassfish.jersey.test.grizzly.web;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 
+import javax.inject.Singleton;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -55,8 +57,9 @@ import org.glassfish.jersey.test.ServletDeploymentContext;
 import org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import org.junit.Assert;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test injection support in the {@link org.glassfish.jersey.test.grizzly.GrizzlyWebTestContainerFactory}.
@@ -66,22 +69,80 @@ import org.junit.Test;
  */
 public class GrizzlyWebInjectionTest extends JerseyTest {
 
-    @Path("GrizzlyWebInjectionTest")
-    public static class TestResource {
+    @Path("fields")
+    public static class FieldsResource {
 
         @Context
-        ServletConfig servletConfig;
+        private HttpServletRequest request;
         @Context
-        ServletContext servletContext;
+        private HttpServletResponse response;
+
+        @Context
+        private ServletConfig config;
+        @Context
+        private ServletContext context;
 
         @GET
         public String get() {
-            if (servletConfig != null && servletContext != null &&
-                    servletConfig.getInitParameter(ServerProperties.PROVIDER_PACKAGES)
-                            .equals(this.getClass().getPackage().getName()))
-                return "SUCCESS";
-            else
-                return "FAIL";
+            return testInjections(request, response, config, context);
+        }
+    }
+
+    @Path("singleton/fields")
+    @Singleton
+    public static class SingletonFieldsResource {
+
+        @Context
+        private HttpServletRequest request;
+        @Context
+        private HttpServletResponse response;
+
+        @Context
+        private ServletConfig config;
+        @Context
+        private ServletContext context;
+
+        @GET
+        public String get() {
+            return testInjections(request, response, config, context);
+        }
+    }
+
+    @Path("/constructor")
+    public static class ConstructorResource {
+
+        private HttpServletRequest request;
+        private HttpServletResponse response;
+
+        private ServletConfig config;
+        private ServletContext context;
+
+        public ConstructorResource(
+                @Context HttpServletRequest req,
+                @Context HttpServletResponse res,
+                @Context ServletConfig sconf,
+                @Context ServletContext scont) {
+            this.request = req;
+            this.response = res;
+            this.config = sconf;
+            this.context = scont;
+        }
+
+        @GET
+        public String get() {
+            return testInjections(request, response, config, context);
+        }
+    }
+
+    private static String testInjections(final HttpServletRequest request, final HttpServletResponse response,
+                                  final ServletConfig config, final ServletContext context) {
+        if (config != null && context != null
+                && request != null && response != null
+                && config.getInitParameter(ServerProperties.PROVIDER_PACKAGES)
+                         .equals(GrizzlyWebInjectionTest.class.getPackage().getName())) {
+            return "SUCCESS";
+        } else {
+            return "FAIL";
         }
     }
 
@@ -98,10 +159,22 @@ public class GrizzlyWebInjectionTest extends JerseyTest {
     }
 
     @Test
-    public void testGet() {
-        WebTarget target = target("GrizzlyWebInjectionTest");
+    public void testFields() {
+        _test("fields");
+    }
 
-        String s = target.request().get(String.class);
-        Assert.assertEquals("SUCCESS", s);
+    @Test
+    public void testSingletonFields() {
+        _test("singleton/fields");
+    }
+
+    @Test
+    public void testConstructor() {
+        _test("constructor");
+    }
+
+
+    private void _test(final String path) {
+        assertThat(target(path).request().get().readEntity(String.class), is("SUCCESS"));
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,73 +37,54 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.simple;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
+package org.glassfish.jersey.tests.e2e.container;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.MessageBodyWriter;
-import javax.ws.rs.ext.Provider;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.glassfish.jersey.server.ResourceConfig;
 
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ResponseWriterMetadataTest extends AbstractSimpleServerTester {
-    @Provider
-    @Produces("text/plain")
-    public static class StringWriter implements MessageBodyWriter<String> {
-
-        public boolean isWriteable(Class<?> c, Type t, Annotation[] as, MediaType mediaType) {
-            return String.class == c;
-        }
-
-        public long getSize(String s, Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
-            return -1;
-        }
-
-        public void writeTo(String s, Class<?> c, Type t, Annotation[] as,
-                            MediaType mt, MultivaluedMap<String, Object> headers, OutputStream out)
-                throws IOException, WebApplicationException {
-            headers.add("X-BEFORE-WRITE", "x");
-            out.write(s.getBytes());
-            headers.add("X-AFTER-WRITE", "x");
-        }
-    }
+public class TrailingSlashTest extends JerseyContainerTest {
 
     @Path("/")
     public static class Resource {
+
         @GET
+        @Path("get")
         public String get() {
-            return "one";
+            return "get";
         }
     }
 
-    @Test
-    public void testResponse() {
-        ResourceConfig rc = new ResourceConfig(Resource.class,
-                StringWriter.class);
-        startServer(rc);
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
+    }
 
-        WebTarget r = ClientBuilder.newClient().target(getUri().path("/").build());
-        Response cr = r.request("text/plain").get(Response.class);
-        assertEquals("x", cr.getHeaderString("X-BEFORE-WRITE"));
-        assertNull(cr.getHeaderString("X-AFTER-WRITE"));
+    @Test
+    public void testSlash() throws Exception {
+        _test("get/");
+    }
+
+    @Test
+    public void testNoSlash() throws Exception {
+        _test("get");
+    }
+
+    private void _test(final String path) {
+        final Response response = target(path).request().get();
+
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.readEntity(String.class), is("get"));
     }
 }

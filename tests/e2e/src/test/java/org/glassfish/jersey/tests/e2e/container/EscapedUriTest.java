@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,45 +37,74 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.simple;
 
-import org.junit.Test;
+package org.glassfish.jersey.tests.e2e.container;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.MatrixParam;
 import javax.ws.rs.Path;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assert.assertThat;
 
 /**
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class MatrixParamTest extends AbstractSimpleServerTester {
-    @Path("/test")
-    public static class MatrixParamResource {
+public class EscapedUriTest extends JerseyContainerTest {
+
+    private static final String RESPONSE = "CONTENT";
+
+    @Path("x%20y")
+    public static class EscapedUriResource {
+
+        private final String context;
+
+        @SuppressWarnings("UnusedDeclaration")
+        public EscapedUriResource() {
+            this("");
+        }
+
+        public EscapedUriResource(final String context) {
+            this.context = context;
+        }
+
         @GET
-        public String get(@MatrixParam("x") String x, @MatrixParam("y") String y) {
-            return y;
+        public String get(@Context final UriInfo info) {
+            assertEquals(context + "/x%20y", info.getAbsolutePath().getRawPath());
+            assertEquals("/", info.getBaseUri().getRawPath());
+            assertEquals(context + "/x y", "/" + info.getPath());
+            assertEquals(context + "/x%20y", "/" + info.getPath(false));
+
+            return RESPONSE;
         }
     }
 
+    @Path("non/x y")
+    public static class NonEscapedUriResource extends EscapedUriResource {
+
+        public NonEscapedUriResource() {
+            super("/non");
+        }
+    }
+
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(EscapedUriResource.class, NonEscapedUriResource.class);
+    }
+
     @Test
-    public void testMatrixParam() {
-        startServer(MatrixParamResource.class);
+    public void testEscaped() {
+        assertThat(target("x%20y").request().get(String.class), is(RESPONSE));
+    }
 
-        UriBuilder base = getUri().path("test");
-        WebTarget r = ClientBuilder.newClient().target(base.clone()).matrixParam("y", "1");
-
-        assertEquals("1", r.request().get(String.class));
-        r = ClientBuilder.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%2B%202");
-        assertEquals("1 + 2", r.request().get(String.class));
-        r = ClientBuilder.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%26%202");
-        assertEquals("1 & 2", r.request().get(String.class));
-        r = ClientBuilder.newClient().target(base.clone()).matrixParam("x", "1").matrixParam("y", "1%20%7C%7C%202");
-        assertEquals("1 || 2", r.request().get(String.class));
+    @Test
+    public void testNonEscaped() {
+        assertThat(target("non/x y").request().get(String.class), is(RESPONSE));
     }
 }
