@@ -51,6 +51,7 @@ import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
@@ -1106,6 +1107,28 @@ public class JerseyUriBuilderTest {
         ub = UriBuilder.fromUri("http://localhost:8080/base").
                 path(get).path(locator).build("foo", "bar");
         Assert.assertEquals(URI.create("http://localhost:8080/base/method/foo/locator/bar"), ub);
+    }
+
+    interface GenericInterface<T, U> {
+        T find (U u);
+    }
+
+    @Path("resource/")
+    class ResourceWithGenericInterface implements GenericInterface<Object, String> {
+
+        @GET
+        @Path("{id}")
+        @Override
+        public Object find(@PathParam("id") String s) {
+            return null;
+        }
+    }
+
+    @Test
+    public void testResourceWithGenericInterfaceAppendPath() {
+        URI ub = UriBuilder.fromUri("http://localhost:8080/base")
+                .path(ResourceWithGenericInterface.class, "find").build("foo");
+        Assert.assertEquals(URI.create("http://localhost:8080/base/foo"), ub);
     }
 
     @Test
