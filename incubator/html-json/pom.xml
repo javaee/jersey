@@ -126,5 +126,12 @@
             <version>0.7.1</version>
             <scope>runtime</scope>
         </dependency>
+        <!-- Overwrite Grizzly dependency defined in ko-ws-tyrus -->
+        <dependency>
+            <groupId>org.glassfish.grizzly</groupId>
+            <artifactId>grizzly-framework</artifactId>
+            <version>${grizzly2.version}</version>
+            <scope>runtime</scope>
+        </dependency>
     </dependencies>
 </project>
