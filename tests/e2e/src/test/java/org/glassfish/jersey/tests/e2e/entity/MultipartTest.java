@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -58,19 +60,46 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public class MultipartTest extends JerseyTest {
+
+    @SuppressWarnings("UnusedDeclaration")
+    public static class MyObject {
+
+        private String value;
+
+        public MyObject() {
+        }
+
+        public MyObject(final String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(final String value) {
+            this.value = value;
+        }
+    }
 
     @Path("/")
     public static class MultipartResource {
@@ -79,7 +108,7 @@ public class MultipartTest extends JerseyTest {
         @Path("filename")
         @Consumes(MediaType.MULTIPART_FORM_DATA)
         @Produces(MediaType.TEXT_PLAIN)
-        public String filename(FormDataMultiPart entity) {
+        public String filename(final FormDataMultiPart entity) {
             return entity.getField("text").getValue() + entity.getField("file").getContentDisposition().getFileName();
         }
 
@@ -91,6 +120,20 @@ public class MultipartTest extends JerseyTest {
             entity.getField("text").getValueAs(MultipartResource.class);
 
             return Response.ok("ko").build();
+        }
+
+        @POST
+        @Path("listAsParameter")
+        @Consumes(MediaType.MULTIPART_FORM_DATA)
+        public String process(@FormDataParam(value="object") final MyObject object,
+                              @FormDataParam(value="list") final List<MyObject> list) {
+            String value = object.value;
+
+            for (final MyObject obj : list) {
+                value += "_" + obj.value;
+            }
+
+            return value;
         }
     }
 
@@ -134,7 +177,15 @@ public class MultipartTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        return new ResourceConfig(MultipartResource.class, MessageBodyProvider.class).register(new MultiPartFeature());
+        return new ResourceConfig(MultipartResource.class, MessageBodyProvider.class)
+                .register(MultiPartFeature.class)
+                .register(JacksonFeature.class);
+    }
+
+    @Override
+    protected void configureClient(final ClientConfig config) {
+        config.register(MultiPartFeature.class);
+        config.register(JacksonFeature.class);
     }
 
     @Test
@@ -166,5 +217,25 @@ public class MultipartTest extends JerseyTest {
                 .post(Entity.entity(entity, "multipart/form-data; boundary=---------------------------7dc941520888"));
 
         assertThat(response.getStatus(), equalTo(500));
+    }
+
+    /**
+     * Test that injection of a list (specific type) works.
+     */
+    @Test
+    public void testSpecificListAsParameter() throws Exception {
+        final MyObject object = new MyObject("object");
+        final List<MyObject> list = Arrays.asList(new MyObject("list1"), new MyObject("list2"));
+
+        final FormDataMultiPart mp = new FormDataMultiPart();
+        mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("object").fileName("object").build(),
+                object, MediaType.APPLICATION_JSON_TYPE));
+        mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("list").fileName("list").build(),
+                list, MediaType.APPLICATION_JSON_TYPE));
+
+        final Response response = target("listAsParameter")
+                .request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+
+        assertThat(response.readEntity(String.class), is("object_list1_list2"));
     }
 }
