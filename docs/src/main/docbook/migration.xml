@@ -52,6 +52,23 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.11">
+        <title>Migrating from Jersey 2.10 to 2.11</title>
+
+        <section xml:id="mig-2.11-highlights">
+            <title>Release 2.11 Highlights</title>
+
+            <section>
+                <title>Not closing provided streams in message body providers</title>
+
+                <para>
+                    Jersey is now preventing message body providers (MBR, MBW) from closing given input/output stream. With this
+                    change Jersey is enforcing the JavaDoc statements present in message body providers.
+                </para>
+            </section>
+        </section>
+    </section>
+
     <section xml:id="mig-2.10">
         <title>Migrating from Jersey 2.9 to 2.10</title>
 
