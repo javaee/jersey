@@ -135,7 +135,7 @@ public class JerseyRequestTimeoutHandler {
                 throw new IllegalStateException(LocalizationMessages.SUSPEND_NOT_SUSPENDED());
             }
 
-            close();
+            close(true);
 
             if (timeOut <= AsyncResponse.NO_TIMEOUT) {
                 return;
@@ -152,9 +152,13 @@ public class JerseyRequestTimeoutHandler {
     /**
      * Cancel the suspended task.
      */
-    public synchronized void close() {
+    public void close() {
+        close(false);
+    }
+
+    private synchronized void close(final boolean interruptIfRunning) {
         if (timeoutTask != null) {
-            timeoutTask.cancel(true);
+            timeoutTask.cancel(interruptIfRunning);
             timeoutTask = null;
         }
     }
