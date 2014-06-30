@@ -568,57 +568,74 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 jerseyVetoedTypes.add(baseType);
             }
         }
-        processAnnotatedType.setAnnotatedType(new AnnotatedType(){
 
-            @Override
-            public Class getJavaClass() {
-                return annotatedType.getJavaClass();
-            }
+        if (containsJaxRsParameterizedCtor(annotatedType)) {
 
-            @Override
-            public Set<AnnotatedConstructor> getConstructors() {
-                Set<AnnotatedConstructor> result = new HashSet<AnnotatedConstructor>();
-                for (AnnotatedConstructor c : (Set<AnnotatedConstructor>)annotatedType.getConstructors()) {
-                    result.add(enrichedConstructor(c));
+            processAnnotatedType.setAnnotatedType(new AnnotatedType() {
+
+                @Override
+                public Class getJavaClass() {
+                    return annotatedType.getJavaClass();
                 }
-                return result;
-            }
 
-            @Override
-            public Set getMethods() {
-                return annotatedType.getMethods();
-            }
+                @Override
+                public Set<AnnotatedConstructor> getConstructors() {
+                    Set<AnnotatedConstructor> result = new HashSet<AnnotatedConstructor>();
+                    for (AnnotatedConstructor c : (Set<AnnotatedConstructor>) annotatedType.getConstructors()) {
+                        result.add(enrichedConstructor(c));
+                    }
+                    return result;
+                }
 
-            @Override
-            public Set getFields() {
-                return annotatedType.getFields();
-            }
+                @Override
+                public Set getMethods() {
+                    return annotatedType.getMethods();
+                }
 
-            @Override
-            public Type getBaseType() {
-                return annotatedType.getBaseType();
-            }
+                @Override
+                public Set getFields() {
+                    return annotatedType.getFields();
+                }
 
-            @Override
-            public Set<Type> getTypeClosure() {
-                return annotatedType.getTypeClosure();
-            }
+                @Override
+                public Type getBaseType() {
+                    return annotatedType.getBaseType();
+                }
 
-            @Override
-            public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
-                return annotatedType.getAnnotation(annotationType);
-            }
+                @Override
+                public Set<Type> getTypeClosure() {
+                    return annotatedType.getTypeClosure();
+                }
 
-            @Override
-            public Set<Annotation> getAnnotations() {
-                return annotatedType.getAnnotations();
-            }
+                @Override
+                public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+                    return annotatedType.getAnnotation(annotationType);
+                }
 
-            @Override
-            public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
-                return annotatedType.isAnnotationPresent(annotationType);
+                @Override
+                public Set<Annotation> getAnnotations() {
+                    return annotatedType.getAnnotations();
+                }
+
+                @Override
+                public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
+                    return annotatedType.isAnnotationPresent(annotationType);
+                }
+            });
+        }
+    }
+
+    private boolean containsJaxRsParameterizedCtor(AnnotatedType annotatedType) {
+        for (AnnotatedConstructor<?> c : (Set<AnnotatedConstructor>) annotatedType.getConstructors()) {
+            for (AnnotatedParameter<?> p : c.getParameters()) {
+                for (Class<? extends Annotation> a : JaxRsParamProducer.JaxRsParamAnnotationTYPES) {
+                    if(p.isAnnotationPresent(a)) {
+                        return true;
+                    }
+                }
             }
-        });
+        }
+        return false;
     }
 
     @SuppressWarnings("unused")
