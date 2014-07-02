@@ -331,7 +331,7 @@ public class Resource {
         </para>
 
         <para>
-            Jersey OAuth is currently currently supported for the following use cases and OAuth versions:
+            Jersey OAuth is currently supported for the following use cases and OAuth versions:
 
             <itemizedlist>
                 <listitem>
