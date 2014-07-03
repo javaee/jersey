@@ -43,12 +43,15 @@ import java.util.LinkedList;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+
+import org.glassfish.hk2.api.ServiceLocator;
 
 import jersey.repackaged.com.google.common.collect.Iterables;
 
@@ -75,37 +78,29 @@ public final class ConfigHelper {
      */
     public static ContainerLifecycleListener getContainerLifecycleListener(final ApplicationHandler applicationHandler) {
 
-        final ContainerLifecycleListener appPreDestroyInvoker = new AbstractContainerLifecycleListener() {
-
-            @Override
-            public void onShutdown(Container container) {
-                applicationHandler.getServiceLocator().preDestroy(getWrappedApplication(applicationHandler.getConfiguration()));
-            }
-        };
-
         final Iterable<ContainerLifecycleListener> listeners = Iterables.concat(
                 Providers.getAllProviders(applicationHandler.getServiceLocator(), ContainerLifecycleListener.class),
-                new LinkedList<ContainerLifecycleListener>(){{add(appPreDestroyInvoker);}});
+                new LinkedList<ContainerLifecycleListener>(){{add(new ServiceLocatorShutdownListener());}});
 
         return new ContainerLifecycleListener() {
 
             @Override
-            public void onStartup(Container container) {
-                for (ContainerLifecycleListener listener : listeners) {
+            public void onStartup(final Container container) {
+                for (final ContainerLifecycleListener listener : listeners) {
                     listener.onStartup(container);
                 }
             }
 
             @Override
-            public void onReload(Container container) {
-                for (ContainerLifecycleListener listener : listeners) {
+            public void onReload(final Container container) {
+                for (final ContainerLifecycleListener listener : listeners) {
                     listener.onReload(container);
                 }
             }
 
             @Override
-            public void onShutdown(Container container) {
-                for (ContainerLifecycleListener listener : listeners) {
+            public void onShutdown(final Container container) {
+                for (final ContainerLifecycleListener listener : listeners) {
                     listener.onShutdown(container);
                 }
             }
@@ -128,5 +123,19 @@ public final class ConfigHelper {
             app = wrappedApplication;
         }
         return app;
+    }
+
+    private static class ServiceLocatorShutdownListener extends AbstractContainerLifecycleListener {
+
+        @Override
+        public void onShutdown(final Container container) {
+            final ApplicationHandler handler = container.getApplicationHandler();
+            final ServiceLocator locator = handler.getServiceLocator();
+
+            // Call @PreDestroy method on Application.
+            locator.preDestroy(getWrappedApplication(handler.getConfiguration()));
+            // Shutdown ServiceLocator.
+            Injections.shutdownLocator(locator);
+        }
     }
 }

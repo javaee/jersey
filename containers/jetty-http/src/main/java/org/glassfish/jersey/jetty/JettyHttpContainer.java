@@ -61,7 +61,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.http.HttpURI;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.inject.ReferencingFactory;
 import org.glassfish.jersey.internal.util.ExtendedLogger;
@@ -399,7 +398,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         appHandler = new ApplicationHandler(configuration.register(new JettyBinder()));
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
         containerListener.onReload(this);
-        containerListener.onShutdown(this);
+        containerListener.onStartup(this);
         cacheConfigSetStatusOverSendError();
     }
 
