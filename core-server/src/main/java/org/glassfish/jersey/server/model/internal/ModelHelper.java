@@ -46,6 +46,7 @@ import javax.ws.rs.Path;
  * Common model helper methods.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Constantino Cronemberger (cocr at gft.com)
  */
 public final class ModelHelper {
 
@@ -58,15 +59,20 @@ public final class ModelHelper {
      *         annotation.
      */
     public static Class<?> getAnnotatedResourceClass(Class<?> resourceClass) {
-        if (resourceClass.isAnnotationPresent(Path.class)) {
-            return resourceClass;
-        }
 
-        for (Class<?> i : resourceClass.getInterfaces()) {
-            if (i.isAnnotationPresent(Path.class)) {
-                return i;
+        // traverse the class hierarchy to find the annotation
+        Class<?> cls = resourceClass;
+        do {
+            if (cls.isAnnotationPresent(Path.class)) {
+                return cls;
             }
-        }
+
+            for (Class<?> i : cls.getInterfaces()) {
+                if (i.isAnnotationPresent(Path.class)) {
+                    return i;
+                }
+            }
+        } while ((cls = cls.getSuperclass()) != null);
 
         return resourceClass;
     }
