@@ -94,7 +94,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
     private final ClientRequest requestContext;
 
-    private JerseyInvocation(Builder builder) {
+    private JerseyInvocation(final Builder builder) {
         validateHttpMethodAndEntity(builder.requestContext);
         this.requestContext = new ClientRequest(builder.requestContext);
     }
@@ -108,7 +108,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     private static Map<String, EntityPresence> METHODS = initializeMap();
 
     private static Map<String, EntityPresence> initializeMap() {
-        Map<String, EntityPresence> map = new HashMap<String, EntityPresence>();
+        final Map<String, EntityPresence> map = new HashMap<String, EntityPresence>();
 
         map.put("DELETE", EntityPresence.MUST_BE_NULL);
         map.put("GET", EntityPresence.MUST_BE_NULL);
@@ -120,7 +120,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return map;
     }
 
-    private void validateHttpMethodAndEntity(ClientRequest request) {
+    private void validateHttpMethodAndEntity(final ClientRequest request) {
         boolean suppressExceptions;
         suppressExceptions = PropertiesHelper.isProperty(
                 request.getConfiguration().getProperty(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION));
@@ -162,7 +162,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
          * @param uri           invoked request URI.
          * @param configuration Jersey client configuration.
          */
-        protected Builder(URI uri, ClientConfig configuration) {
+        protected Builder(final URI uri, final ClientConfig configuration) {
             this.requestContext = new ClientRequest(uri, configuration, new MapPropertiesDelegate());
         }
 
@@ -175,7 +175,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             return requestContext;
         }
 
-        private void storeEntity(Entity<?> entity) {
+        private void storeEntity(final Entity<?> entity) {
             if (entity != null) {
                 requestContext.variant(entity.getVariant());
                 requestContext.setEntity(entity.getEntity());
@@ -184,13 +184,13 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public JerseyInvocation build(String method) {
+        public JerseyInvocation build(final String method) {
             requestContext.setMethod(method);
             return new JerseyInvocation(this);
         }
 
         @Override
-        public JerseyInvocation build(String method, Entity<?> entity) {
+        public JerseyInvocation build(final String method, final Entity<?> entity) {
             requestContext.setMethod(method);
             storeEntity(entity);
             return new JerseyInvocation(this);
@@ -209,14 +209,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public JerseyInvocation buildPost(Entity<?> entity) {
+        public JerseyInvocation buildPost(final Entity<?> entity) {
             requestContext.setMethod("POST");
             storeEntity(entity);
             return new JerseyInvocation(this);
         }
 
         @Override
-        public JerseyInvocation buildPut(Entity<?> entity) {
+        public JerseyInvocation buildPut(final Entity<?> entity) {
             requestContext.setMethod("PUT");
             storeEntity(entity);
             return new JerseyInvocation(this);
@@ -228,61 +228,72 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Builder accept(String... mediaTypes) {
+        public Builder accept(final String... mediaTypes) {
             requestContext.accept(mediaTypes);
             return this;
         }
 
         @Override
-        public Builder accept(MediaType... mediaTypes) {
+        public Builder accept(final MediaType... mediaTypes) {
             requestContext.accept(mediaTypes);
             return this;
         }
 
         @Override
-        public Invocation.Builder acceptEncoding(String... encodings) {
+        public Invocation.Builder acceptEncoding(final String... encodings) {
             requestContext.getHeaders().addAll(HttpHeaders.ACCEPT_ENCODING, (Object[]) encodings);
             return this;
         }
 
         @Override
-        public Builder acceptLanguage(Locale... locales) {
+        public Builder acceptLanguage(final Locale... locales) {
             requestContext.acceptLanguage(locales);
             return this;
         }
 
         @Override
-        public Builder acceptLanguage(String... locales) {
+        public Builder acceptLanguage(final String... locales) {
             requestContext.acceptLanguage(locales);
             return this;
         }
 
         @Override
-        public Builder cookie(Cookie cookie) {
+        public Builder cookie(final Cookie cookie) {
             requestContext.cookie(cookie);
             return this;
         }
 
         @Override
-        public Builder cookie(String name, String value) {
+        public Builder cookie(final String name, final String value) {
             requestContext.cookie(new Cookie(name, value));
             return this;
         }
 
         @Override
-        public Builder cacheControl(CacheControl cacheControl) {
+        public Builder cacheControl(final CacheControl cacheControl) {
             requestContext.cacheControl(cacheControl);
             return this;
         }
 
         @Override
-        public Builder header(String name, Object value) {
-            requestContext.getHeaders().add(name, value);
+        public Builder header(final String name, final Object value) {
+            final MultivaluedMap<String, Object> headers = requestContext.getHeaders();
+
+            if (value == null) {
+                headers.remove(name);
+            } else {
+                headers.add(name, value);
+            }
+
+            if (HttpHeaders.USER_AGENT.equalsIgnoreCase(name)) {
+                requestContext.ignoreUserAgent(value == null);
+            }
+
             return this;
         }
 
         @Override
-        public Builder headers(MultivaluedMap<String, Object> headers) {
+        public Builder headers(final MultivaluedMap<String, Object> headers) {
             requestContext.replaceHeaders(headers);
             return this;
         }
@@ -293,42 +304,42 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T get(Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T get(final Class<T> responseType) throws ProcessingException, WebApplicationException {
             return method("GET", responseType);
         }
 
         @Override
-        public <T> T get(GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T get(final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
             return method("GET", responseType);
         }
 
         @Override
-        public Response put(Entity<?> entity) throws ProcessingException {
+        public Response put(final Entity<?> entity) throws ProcessingException {
             return method("PUT", entity);
         }
 
         @Override
-        public <T> T put(Entity<?> entity, Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T put(final Entity<?> entity, final Class<T> responseType) throws ProcessingException, WebApplicationException {
             return method("PUT", entity, responseType);
         }
 
         @Override
-        public <T> T put(Entity<?> entity, GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T put(final Entity<?> entity, final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
             return method("PUT", entity, responseType);
         }
 
         @Override
-        public Response post(Entity<?> entity) throws ProcessingException {
+        public Response post(final Entity<?> entity) throws ProcessingException {
             return method("POST", entity);
         }
 
         @Override
-        public <T> T post(Entity<?> entity, Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T post(final Entity<?> entity, final Class<T> responseType) throws ProcessingException, WebApplicationException {
             return method("POST", entity, responseType);
         }
 
         @Override
-        public <T> T post(Entity<?> entity, GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T post(final Entity<?> entity, final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
             return method("POST", entity, responseType);
         }
 
@@ -338,12 +349,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T delete(Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T delete(final Class<T> responseType) throws ProcessingException, WebApplicationException {
             return method("DELETE", responseType);
         }
 
         @Override
-        public <T> T delete(GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T delete(final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
             return method("DELETE", responseType);
         }
 
@@ -358,12 +369,12 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T options(Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T options(final Class<T> responseType) throws ProcessingException, WebApplicationException {
             return method("OPTIONS", responseType);
         }
 
         @Override
-        public <T> T options(GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T options(final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
             return method("OPTIONS", responseType);
         }
 
@@ -373,23 +384,23 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T trace(Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T trace(final Class<T> responseType) throws ProcessingException, WebApplicationException {
             return method("TRACE", responseType);
         }
 
         @Override
-        public <T> T trace(GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T trace(final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
             return method("TRACE", responseType);
         }
 
         @Override
-        public Response method(String name) throws ProcessingException {
+        public Response method(final String name) throws ProcessingException {
             requestContext.setMethod(name);
             return new JerseyInvocation(this).invoke();
         }
 
         @Override
-        public <T> T method(String name, Class<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T method(final String name, final Class<T> responseType) throws ProcessingException, WebApplicationException {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
             }
@@ -398,7 +409,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T method(String name, GenericType<T> responseType) throws ProcessingException, WebApplicationException {
+        public <T> T method(final String name, final GenericType<T> responseType) throws ProcessingException, WebApplicationException {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
             }
@@ -407,14 +418,14 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Response method(String name, Entity<?> entity) throws ProcessingException {
+        public Response method(final String name, final Entity<?> entity) throws ProcessingException {
             requestContext.setMethod(name);
             storeEntity(entity);
             return new JerseyInvocation(this).invoke();
         }
 
         @Override
-        public <T> T method(String name, Entity<?> entity, Class<T> responseType)
+        public <T> T method(final String name, final Entity<?> entity, final Class<T> responseType)
                 throws ProcessingException, WebApplicationException {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
@@ -425,7 +436,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> T method(String name, Entity<?> entity, GenericType<T> responseType)
+        public <T> T method(final String name, final Entity<?> entity, final GenericType<T> responseType)
                 throws ProcessingException, WebApplicationException {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
@@ -436,7 +447,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Builder property(String name, Object value) {
+        public Builder property(final String name, final Object value) {
             requestContext.setProperty(name, value);
             return this;
         }
@@ -446,7 +457,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         private final JerseyInvocation.Builder builder;
 
-        private AsyncInvoker(JerseyInvocation.Builder request) {
+        private AsyncInvoker(final JerseyInvocation.Builder request) {
             this.builder = request;
             this.builder.requestContext.setAsynchronous(true);
         }
@@ -457,57 +468,57 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> Future<T> get(Class<T> responseType) {
+        public <T> Future<T> get(final Class<T> responseType) {
             return method("GET", responseType);
         }
 
         @Override
-        public <T> Future<T> get(GenericType<T> responseType) {
+        public <T> Future<T> get(final GenericType<T> responseType) {
             return method("GET", responseType);
         }
 
         @Override
-        public <T> Future<T> get(InvocationCallback<T> callback) {
+        public <T> Future<T> get(final InvocationCallback<T> callback) {
             return method("GET", callback);
         }
 
         @Override
-        public Future<Response> put(Entity<?> entity) {
+        public Future<Response> put(final Entity<?> entity) {
             return method("PUT", entity);
         }
 
         @Override
-        public <T> Future<T> put(Entity<?> entity, Class<T> responseType) {
+        public <T> Future<T> put(final Entity<?> entity, final Class<T> responseType) {
             return method("PUT", entity, responseType);
         }
 
         @Override
-        public <T> Future<T> put(Entity<?> entity, GenericType<T> responseType) {
+        public <T> Future<T> put(final Entity<?> entity, final GenericType<T> responseType) {
             return method("PUT", entity, responseType);
         }
 
         @Override
-        public <T> Future<T> put(Entity<?> entity, InvocationCallback<T> callback) {
+        public <T> Future<T> put(final Entity<?> entity, final InvocationCallback<T> callback) {
             return method("PUT", entity, callback);
         }
 
         @Override
-        public Future<Response> post(Entity<?> entity) {
+        public Future<Response> post(final Entity<?> entity) {
             return method("POST", entity);
         }
 
         @Override
-        public <T> Future<T> post(Entity<?> entity, Class<T> responseType) {
+        public <T> Future<T> post(final Entity<?> entity, final Class<T> responseType) {
             return method("POST", entity, responseType);
         }
 
         @Override
-        public <T> Future<T> post(Entity<?> entity, GenericType<T> responseType) {
+        public <T> Future<T> post(final Entity<?> entity, final GenericType<T> responseType) {
             return method("POST", entity, responseType);
         }
 
         @Override
-        public <T> Future<T> post(Entity<?> entity, InvocationCallback<T> callback) {
+        public <T> Future<T> post(final Entity<?> entity, final InvocationCallback<T> callback) {
             return method("POST", entity, callback);
         }
 
@@ -517,17 +528,17 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> Future<T> delete(Class<T> responseType) {
+        public <T> Future<T> delete(final Class<T> responseType) {
             return method("DELETE", responseType);
         }
 
         @Override
-        public <T> Future<T> delete(GenericType<T> responseType) {
+        public <T> Future<T> delete(final GenericType<T> responseType) {
             return method("DELETE", responseType);
         }
 
         @Override
-        public <T> Future<T> delete(InvocationCallback<T> callback) {
+        public <T> Future<T> delete(final InvocationCallback<T> callback) {
             return method("DELETE", callback);
         }
 
@@ -537,7 +548,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public Future<Response> head(InvocationCallback<Response> callback) {
+        public Future<Response> head(final InvocationCallback<Response> callback) {
             return method("HEAD", callback);
         }
 
@@ -547,17 +558,17 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> Future<T> options(Class<T> responseType) {
+        public <T> Future<T> options(final Class<T> responseType) {
             return method("OPTIONS", responseType);
         }
 
         @Override
-        public <T> Future<T> options(GenericType<T> responseType) {
+        public <T> Future<T> options(final GenericType<T> responseType) {
             return method("OPTIONS", responseType);
         }
 
         @Override
-        public <T> Future<T> options(InvocationCallback<T> callback) {
+        public <T> Future<T> options(final InvocationCallback<T> callback) {
             return method("OPTIONS", callback);
         }
 
@@ -567,28 +578,28 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> Future<T> trace(Class<T> responseType) {
+        public <T> Future<T> trace(final Class<T> responseType) {
             return method("TRACE", responseType);
         }
 
         @Override
-        public <T> Future<T> trace(GenericType<T> responseType) {
+        public <T> Future<T> trace(final GenericType<T> responseType) {
             return method("TRACE", responseType);
         }
 
         @Override
-        public <T> Future<T> trace(InvocationCallback<T> callback) {
+        public <T> Future<T> trace(final InvocationCallback<T> callback) {
             return method("TRACE", callback);
         }
 
         @Override
-        public Future<Response> method(String name) {
+        public Future<Response> method(final String name) {
             builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit();
         }
 
         @Override
-        public <T> Future<T> method(String name, Class<T> responseType) {
+        public <T> Future<T> method(final String name, final Class<T> responseType) {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
             }
@@ -597,7 +608,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> Future<T> method(String name, GenericType<T> responseType) {
+        public <T> Future<T> method(final String name, final GenericType<T> responseType) {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
             }
@@ -606,20 +617,20 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> Future<T> method(String name, InvocationCallback<T> callback) {
+        public <T> Future<T> method(final String name, final InvocationCallback<T> callback) {
             builder.requestContext.setMethod(name);
             return new JerseyInvocation(builder).submit(callback);
         }
 
         @Override
-        public Future<Response> method(String name, Entity<?> entity) {
+        public Future<Response> method(final String name, final Entity<?> entity) {
             builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit();
         }
 
         @Override
-        public <T> Future<T> method(String name, Entity<?> entity, Class<T> responseType) {
+        public <T> Future<T> method(final String name, final Entity<?> entity, final Class<T> responseType) {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
             }
@@ -629,7 +640,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> Future<T> method(String name, Entity<?> entity, GenericType<T> responseType) {
+        public <T> Future<T> method(final String name, final Entity<?> entity, final GenericType<T> responseType) {
             if (responseType == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESPONSE_TYPE_IS_NULL());
             }
@@ -639,7 +650,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         }
 
         @Override
-        public <T> Future<T> method(String name, Entity<?> entity, InvocationCallback<T> callback) {
+        public <T> Future<T> method(final String name, final Entity<?> entity, final InvocationCallback<T> callback) {
             builder.requestContext.setMethod(name);
             builder.storeEntity(entity);
             return new JerseyInvocation(builder).submit(callback);
@@ -670,7 +681,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             public T call() throws ProcessingException {
                 try {
                     return translate(runtime.invoke(requestContext), requestScope, responseType);
-                } catch (ProcessingException ex) {
+                } catch (final ProcessingException ex) {
                     if (ex.getCause() instanceof WebApplicationException) {
                         throw (WebApplicationException) ex.getCause();
                     }
@@ -692,7 +703,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             public T call() throws ProcessingException {
                 try {
                     return translate(runtime.invoke(requestContext), requestScope, responseType);
-                } catch (ProcessingException ex) {
+                } catch (final ProcessingException ex) {
                     if (ex.getCause() instanceof WebApplicationException) {
                         throw (WebApplicationException) ex.getCause();
                     }
@@ -708,7 +719,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         request().getClientRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
-            public void completed(ClientResponse response, RequestScope scope) {
+            public void completed(final ClientResponse response, final RequestScope scope) {
                 if (!responseFuture.isCancelled()) {
                     responseFuture.set(new InboundJaxrsResponse(response, scope));
                 } else {
@@ -717,7 +728,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             }
 
             @Override
-            public void failed(ProcessingException error) {
+            public void failed(final ProcessingException error) {
                 if (!responseFuture.isCancelled()) {
                     responseFuture.setException(error);
                 }
@@ -736,20 +747,20 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         request().getClientRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
-            public void completed(ClientResponse response, RequestScope scope) {
+            public void completed(final ClientResponse response, final RequestScope scope) {
                 if (responseFuture.isCancelled()) {
                     response.close();
                     return;
                 }
                 try {
                     responseFuture.set(translate(response, scope, responseType));
-                } catch (ProcessingException ex) {
+                } catch (final ProcessingException ex) {
                     failed(ex);
                 }
             }
 
             @Override
-            public void failed(ProcessingException error) {
+            public void failed(final ProcessingException error) {
                 if (responseFuture.isCancelled()) {
                     return;
                 }
@@ -764,7 +775,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return responseFuture;
     }
 
-    private <T> T translate(ClientResponse response, RequestScope scope, Class<T> responseType)
+    private <T> T translate(final ClientResponse response, final RequestScope scope, final Class<T> responseType)
             throws ProcessingException {
         if (responseType == Response.class) {
             return responseType.cast(new InboundJaxrsResponse(response, scope));
@@ -773,11 +784,11 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
             try {
                 return response.readEntity(responseType);
-            } catch (ProcessingException ex) {
+            } catch (final ProcessingException ex) {
                 throw ex;
-            } catch (WebApplicationException ex) {
+            } catch (final WebApplicationException ex) {
                 throw new ProcessingException(ex);
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 throw new ProcessingException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
             }
         } else {
@@ -794,7 +805,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         request().getClientRuntime().submit(requestContext, new ResponseCallback() {
 
             @Override
-            public void completed(ClientResponse response, RequestScope scope) {
+            public void completed(final ClientResponse response, final RequestScope scope) {
                 if (responseFuture.isCancelled()) {
                     response.close();
                     return;
@@ -802,13 +813,13 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
                 try {
                     responseFuture.set(translate(response, scope, responseType));
-                } catch (ProcessingException ex) {
+                } catch (final ProcessingException ex) {
                     failed(ex);
                 }
             }
 
             @Override
-            public void failed(ProcessingException error) {
+            public void failed(final ProcessingException error) {
                 if (responseFuture.isCancelled()) {
                     return;
                 }
@@ -823,7 +834,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         return responseFuture;
     }
 
-    private <T> T translate(ClientResponse response, RequestScope scope, GenericType<T> responseType)
+    private <T> T translate(final ClientResponse response, final RequestScope scope, final GenericType<T> responseType)
             throws ProcessingException {
         if (responseType.getRawType() == Response.class) {
             //noinspection unchecked
@@ -833,11 +844,11 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
             try {
                 return response.readEntity(responseType);
-            } catch (ProcessingException ex) {
+            } catch (final ProcessingException ex) {
                 throw ex;
-            } catch (WebApplicationException ex) {
+            } catch (final WebApplicationException ex) {
                 throw new ProcessingException(ex);
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 throw new ProcessingException(LocalizationMessages.UNEXPECTED_ERROR_RESPONSE_PROCESSING(), ex);
             }
         } else {
@@ -851,7 +862,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
 
         try {
 
-            ReflectionHelper.DeclaringClassInterfacePair pair =
+            final ReflectionHelper.DeclaringClassInterfacePair pair =
                     ReflectionHelper.getClass(callback.getClass(), InvocationCallback.class);
             final Type callbackParamType = ReflectionHelper.getParameterizedTypeArguments(pair)[0];
             final Class<T> callbackParamClass = ReflectionHelper.erasure(callbackParamType);
@@ -859,7 +870,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             final ResponseCallback responseCallback = new ResponseCallback() {
 
                 @Override
-                public void completed(ClientResponse response, RequestScope scope) {
+                public void completed(final ClientResponse response, final RequestScope scope) {
                     if (responseFuture.isCancelled()) {
                         response.close();
                         failed(new ProcessingException(new CancellationException(LocalizationMessages.ERROR_REQUEST_CANCELLED())));
@@ -881,7 +892,7 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 }
 
                 @Override
-                public void failed(ProcessingException error) {
+                public void failed(final ProcessingException error) {
                     try {
                         if (error.getCause() instanceof WebApplicationException) {
                             responseFuture.setException(error.getCause());
@@ -894,8 +905,8 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
                 }
             };
             request().getClientRuntime().submit(requestContext, responseCallback);
-        } catch (Throwable error) {
-            ProcessingException ce;
+        } catch (final Throwable error) {
+            final ProcessingException ce;
             if (error instanceof ProcessingException) {
                 ce = (ProcessingException) error;
                 responseFuture.setException(ce);
@@ -913,18 +924,18 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
     }
 
     @Override
-    public JerseyInvocation property(String name, Object value) {
+    public JerseyInvocation property(final String name, final Object value) {
         requestContext.setProperty(name, value);
         return this;
     }
 
-    private ProcessingException convertToException(Response response) {
+    private ProcessingException convertToException(final Response response) {
         try {
             // Buffer and close entity input stream (if any) to prevent
             // leaking connections (see JERSEY-2157).
             response.bufferEntity();
 
-            WebApplicationException webAppException;
+            final WebApplicationException webAppException;
             final int statusCode = response.getStatus();
             final Response.Status status = Response.Status.fromStatusCode(statusCode);
 
@@ -965,13 +976,13 @@ public class JerseyInvocation implements javax.ws.rs.client.Invocation {
             }
 
             return new ProcessingException(webAppException);
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             return new ProcessingException(LocalizationMessages.RESPONSE_TO_EXCEPTION_CONVERSION_FAILED(), t);
         }
     }
 
-    private WebApplicationException createExceptionForFamily(Response response, Response.Status.Family statusFamily) {
-        WebApplicationException webAppException;
+    private WebApplicationException createExceptionForFamily(final Response response, final Response.Status.Family statusFamily) {
+        final WebApplicationException webAppException;
         switch (statusFamily) {
             case REDIRECTION:
                 webAppException = new RedirectionException(response);
