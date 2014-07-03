@@ -133,6 +133,24 @@ public final class TestProperties {
      */
     public static final String RECORD_LOG_LEVEL = "jersey.config.test.logging.record.level";
 
+    /**
+     * Specifies the multiplier which will be applied to timeouts for asynchronous tests. This property is useful to be
+     * defined if there are problems with environment in which tests run and tests fail for timeout due to slow
+     * processing.
+     * <p>
+     * For example if the timeout for asynchronous test is 5 seconds and this property is defined to 3
+     * then the timeout final will be 15.
+     * </p>
+     *
+     * <p/>
+     * The property must be an integer value greater than 1.
+     * <p/>
+     * The default value is <tt>1</tt>.
+     * <p/>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String ASYNC_TIMEOUT_MULTIPLIER = "jersey.config.test.async.timeout.multiplier";
+
     private TestProperties() {
         // prevents instantiation
     }

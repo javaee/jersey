@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -161,9 +161,9 @@ public class EventSourceWithNamedEventsTest extends JerseyTest {
         };
         eventSource.register(listener, "message-to-client");
         eventSource.open();
-        final boolean sent = latch.await(5, TimeUnit.SECONDS);
+        final boolean sent = latch.await(5 * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS);
         Assert.assertTrue("Awaiting for SSE message has timeout. Not all message were sent.", sent);
-        final boolean handled = count.await(5, TimeUnit.SECONDS);
+        final boolean handled = count.await(5 * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS);
         Assert.assertTrue("Awaiting for SSE message has timeout. Not all message were handled by the listener.", handled);
     }
 }

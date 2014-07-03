@@ -112,7 +112,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
         final String expectedResponse = AsyncServletResource.HELLO_ASYNC_WORLD;
 
         final int MAX_MESSAGES = 50;
-        final int LATCH_WAIT_TIMEOUT = 10;
+        final int LATCH_WAIT_TIMEOUT = 10 * getAsyncTimeoutMultiplier();
         final boolean debugMode = false;
         final boolean sequentialGet = false;
         final Object sequentialGetLock = new Object();
@@ -197,7 +197,7 @@ public class AsyncServletResourceITCase extends JerseyTest {
         resourceTarget.register(new LoggingFilter());
 
         final int MAX_MESSAGES = 10;
-        final int LATCH_WAIT_TIMEOUT = 10;
+        final int LATCH_WAIT_TIMEOUT = 10 * getAsyncTimeoutMultiplier();
         final boolean debugMode = false;
         final boolean sequentialGet = false;
         final boolean sequentialPost = false;

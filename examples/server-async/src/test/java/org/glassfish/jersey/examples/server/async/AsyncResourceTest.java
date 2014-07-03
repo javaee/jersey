@@ -91,7 +91,7 @@ public class AsyncResourceTest extends JerseyTest {
 
     private void executeChatTest(final WebTarget resourceTarget, final String expectedPostResponse) throws InterruptedException {
         final int MAX_MESSAGES = 100;
-        final int LATCH_WAIT_TIMEOUT = 10;
+        final int LATCH_WAIT_TIMEOUT = 10 * getAsyncTimeoutMultiplier();
         final boolean debugMode = false;
         final boolean sequentialGet = false;
         final boolean sequentialPost = false;
@@ -246,7 +246,7 @@ public class AsyncResourceTest extends JerseyTest {
         final String expectedResponse = SimpleLongRunningResource.NOTIFICATION_RESPONSE;
 
         final int MAX_MESSAGES = 100;
-        final int LATCH_WAIT_TIMEOUT = 25;
+        final int LATCH_WAIT_TIMEOUT = 25 * getAsyncTimeoutMultiplier();
         final boolean debugMode = false;
         final boolean sequentialGet = false;
         final Object sequentialGetLock = new Object();

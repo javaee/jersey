@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -81,11 +81,15 @@ import static org.junit.Assert.fail;
  */
 public class AsyncResponseTest extends JerseyTest {
 
-    public static CountDownLatch callbackCalledSignal1 = new AsyncCallbackTest.TestLatch(3, "cancel() return value1");
-    public static CountDownLatch callbackCalledSignal2 = new AsyncCallbackTest.TestLatch(3, "cancel() return value2");
+    public static CountDownLatch callbackCalledSignal1;
+    public static CountDownLatch callbackCalledSignal2;
 
     @Override
     protected Application configure() {
+        callbackCalledSignal1 = new AsyncCallbackTest.TestLatch(3, "cancel() return value1", getAsyncTimeoutMultiplier());
+        callbackCalledSignal2 = new AsyncCallbackTest.TestLatch(3, "cancel() return value2", getAsyncTimeoutMultiplier());
+
+
         set(TestProperties.RECORD_LOG_LEVEL, Level.FINE.intValue());
 
         return new ResourceConfig(Resource.class, ErrorResource.class, MappedExceptionMapper.class,
