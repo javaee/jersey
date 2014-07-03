@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -175,7 +175,8 @@ public class ItemStoreResourceITCase extends JerseyTest {
             }
 
             assertTrue("Waiting to receive all events has timed out.",
-                    latch.await(1000 + MAX_LISTENERS * EventSource.RECONNECT_DEFAULT, TimeUnit.MILLISECONDS));
+                    latch.await((1000 + MAX_LISTENERS * EventSource.RECONNECT_DEFAULT) * getAsyncTimeoutMultiplier(),
+                            TimeUnit.MILLISECONDS));
 
             // need to force disconnect on server in order for EventSource.close(...) to succeed with HttpUrlConnection
             sendCommand(itemsTarget, "disconnect");
@@ -265,7 +266,7 @@ public class ItemStoreResourceITCase extends JerseyTest {
             sendCommand(itemsTarget, "reconnect now");
 
             assertTrue("Waiting to receive all events has timed out.",
-                    latch.await(1 + MAX_LISTENERS * (MAX_ITEMS + 1) * reconnectDelay, TimeUnit.SECONDS));
+                    latch.await((1 + MAX_LISTENERS * (MAX_ITEMS + 1) * reconnectDelay) * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS));
 
             // need to force disconnect on server in order for EventSource.close(...) to succeed with HttpUrlConnection
             sendCommand(itemsTarget, "disconnect");

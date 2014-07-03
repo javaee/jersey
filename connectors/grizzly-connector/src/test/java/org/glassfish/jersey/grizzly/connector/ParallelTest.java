@@ -143,7 +143,8 @@ public class ParallelTest extends JerseyTest {
 
             startBarrier.await(1, TimeUnit.SECONDS);
 
-            assertTrue("Waiting for clients to finish has timed out.", doneLatch.await(5, TimeUnit.SECONDS));
+            assertTrue("Waiting for clients to finish has timed out.", doneLatch.await(5 * getAsyncTimeoutMultiplier(),
+                    TimeUnit.SECONDS));
 
             assertEquals("Resource counter", PARALLEL_CLIENTS, resourceCounter.get());
 

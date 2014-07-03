@@ -868,6 +868,24 @@ public abstract class JerseyTest {
     }
 
     /**
+     * Returns {@link TestProperties#ASYNC_TIMEOUT_MULTIPLIER} or {@code 1} if the property is not defined.
+     *
+     * @return Multiplier of the async timeout for async test.
+     */
+    protected int getAsyncTimeoutMultiplier() {
+        final String property = getProperty(TestProperties.ASYNC_TIMEOUT_MULTIPLIER);
+        Integer multi = 1;
+        if (property != null) {
+            multi = Integer.valueOf(property);
+            if (multi <= 0) {
+                throw new NumberFormatException("Property " + TestProperties.ASYNC_TIMEOUT_MULTIPLIER + " must be a number greater than 0.");
+            }
+        }
+        return multi;
+
+    }
+
+    /**
      * Utility method that safely closes a response without throwing an exception.
      *
      * @param responses responses to close. Each response may be {@code null}.

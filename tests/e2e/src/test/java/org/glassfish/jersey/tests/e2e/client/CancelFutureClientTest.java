@@ -102,7 +102,7 @@ public class CancelFutureClientTest extends JerseyTest {
         }
 
         // prevent the test container to stop the method execution before the callbacks can be reached.
-        if (!countDownLatch.await(MAX_WAITING_SECONDS, TimeUnit.SECONDS)) {
+        if (!countDownLatch.await(MAX_WAITING_SECONDS * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS)) {
             throw new TimeoutException("Callback was not triggered within the time limit." + countDownLatch.getCount());
         }
     }

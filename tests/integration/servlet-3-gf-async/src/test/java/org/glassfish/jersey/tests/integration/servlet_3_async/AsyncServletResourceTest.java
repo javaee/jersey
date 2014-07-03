@@ -165,8 +165,8 @@ public class AsyncServletResourceTest extends JerseyTest {
             if (debugMode) {
                 getRequestLatch.await();
             } else {
-                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT,
-                        TimeUnit.SECONDS));
+                assertTrue("Waiting for all GET requests to complete has timed out.",
+                        getRequestLatch.await(LATCH_WAIT_TIMEOUT * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS));
             }
         } finally {
             executor.shutdownNow();
@@ -274,8 +274,9 @@ public class AsyncServletResourceTest extends JerseyTest {
                 getRequestLatch.await();
             } else {
                 assertTrue("Waiting for all POST requests to complete has timed out.",
-                        postRequestLatch.await(LATCH_WAIT_TIMEOUT, TimeUnit.SECONDS));
-                assertTrue("Waiting for all GET requests to complete has timed out.", getRequestLatch.await(LATCH_WAIT_TIMEOUT,
+                        postRequestLatch.await(LATCH_WAIT_TIMEOUT * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS));
+                assertTrue("Waiting for all GET requests to complete has timed out.",
+                        getRequestLatch.await(LATCH_WAIT_TIMEOUT * getAsyncTimeoutMultiplier(),
                         TimeUnit.SECONDS));
             }
         } finally {
