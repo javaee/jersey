@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,13 +39,13 @@
  */
 package org.glassfish.jersey.server.spring.test;
 
-import org.junit.Test;
+import java.math.BigDecimal;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
-import java.math.BigDecimal;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -58,27 +58,27 @@ public abstract class AccountResourceTestBase extends ResourceTestBase {
     // test singleton scoped Spring bean injection using @Inject + @Autowired
     @Test
     public void testSingletonScopedSpringService() {
-        BigDecimal newBalance = new BigDecimal(Math.random());
-        WebTarget t = target(getResourceFullPath());
+        final BigDecimal newBalance = new BigDecimal(Math.random());
+        final WebTarget t = target(getResourceFullPath());
 
         t.path("/singleton/xyz123").request().put(Entity.entity(newBalance.toString(), MediaType.TEXT_PLAIN_TYPE));
-        BigDecimal balance = t.path("/singleton/autowired/xyz123").request().get(BigDecimal.class);
+        final BigDecimal balance = t.path("/singleton/autowired/xyz123").request().get(BigDecimal.class);
         assertEquals(newBalance, balance);
     }
 
     @Test
     public void testRequestScopedSpringService() {
-        BigDecimal newBalance = new BigDecimal(Math.random());
-        WebTarget t = target(getResourceFullPath());
-        BigDecimal balance = t.path("request/abc456").request().put(Entity.text(newBalance), BigDecimal.class);
+        final BigDecimal newBalance = new BigDecimal(Math.random());
+        final WebTarget t = target(getResourceFullPath());
+        final BigDecimal balance = t.path("request/abc456").request().put(Entity.text(newBalance), BigDecimal.class);
         assertEquals(newBalance, balance);
     }
 
     @Test
     public void testPrototypeScopedSpringService() {
-        BigDecimal newBalance = new BigDecimal(Math.random());
-        WebTarget t = target(getResourceFullPath());
-        BigDecimal balance = t.path("prototype/abc456").request().put(Entity.text(newBalance), BigDecimal.class);
+        final BigDecimal newBalance = new BigDecimal(Math.random());
+        final WebTarget t = target(getResourceFullPath());
+        final BigDecimal balance = t.path("prototype/abc456").request().put(Entity.text(newBalance), BigDecimal.class);
         assertEquals(new BigDecimal("987.65"), balance);
     }
 }

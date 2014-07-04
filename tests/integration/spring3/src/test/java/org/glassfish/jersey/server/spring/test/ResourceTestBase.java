@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,16 +39,16 @@
  */
 package org.glassfish.jersey.server.spring.test;
 
+import javax.ws.rs.core.Application;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.spring.SpringLifecycleListener;
 import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import javax.ws.rs.core.Application;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
-
 
 /**
  * Base class for JAX-RS resource tests.
@@ -56,21 +56,21 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
  * @author Marko Asplund (marko.asplund at yahoo.com)
  */
 public abstract class ResourceTestBase extends JerseyTest {
+
     private static final String TEST_WEBAPP_CONTEXT_PATH = "jersey.spring.test.contextPath";
-    private static final String TEST_CONTAINER_FACTORY_EXTERNAL = "org.glassfish.jersey.test.external.ExternalTestContainerFactory";
+    private static final String TEST_CONTAINER_FACTORY_EXTERNAL = "org.glassfish.jersey.test.external" +
+            ".ExternalTestContainerFactory";
 
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new ExternalTestContainerFactory();
     }
 
-
     @Override
     protected Application configure() {
-        ResourceConfig rc = new ResourceConfig()
+        final ResourceConfig rc = new ResourceConfig()
                 .register(SpringLifecycleListener.class)
-                .register(RequestContextFilter.class)
-                ;
+                .register(RequestContextFilter.class);
         TestUtil.registerHK2Services(rc);
         rc.property("contextConfigLocation", "classpath:applicationContext.xml");
         return configure(rc);
@@ -81,8 +81,8 @@ public abstract class ResourceTestBase extends JerseyTest {
     protected abstract String getResourcePath();
 
     protected String getResourceFullPath() {
-        String containerFactory = System.getProperty(TestProperties.CONTAINER_FACTORY);
-        if(TEST_CONTAINER_FACTORY_EXTERNAL.equals(containerFactory)) {
+        final String containerFactory = System.getProperty(TestProperties.CONTAINER_FACTORY);
+        if (TEST_CONTAINER_FACTORY_EXTERNAL.equals(containerFactory)) {
             return System.getProperty(TEST_WEBAPP_CONTEXT_PATH) + getResourcePath();
         }
         return getResourcePath();

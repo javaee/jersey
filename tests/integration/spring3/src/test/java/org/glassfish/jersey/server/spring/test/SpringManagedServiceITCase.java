@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,14 +39,12 @@
  */
 package org.glassfish.jersey.server.spring.test;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Test;
-
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 
-import java.util.logging.Logger;
+import org.glassfish.jersey.server.ResourceConfig;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -55,10 +53,9 @@ import static org.junit.Assert.assertEquals;
  * @author Konrad Garus (konrad.garus at gmail.com)
  */
 public class SpringManagedServiceITCase extends ResourceTestBase {
-    private static final Logger LOGGER = Logger.getLogger(SpringManagedServiceITCase.class.getName());
 
     @Override
-    protected ResourceConfig configure(ResourceConfig rc) {
+    protected ResourceConfig configure(final ResourceConfig rc) {
         return rc.register(ServiceResource.class);
     }
 
@@ -69,11 +66,11 @@ public class SpringManagedServiceITCase extends ResourceTestBase {
 
     @Test
     public void testResourceScope() {
-        WebTarget t = target(getResourceFullPath());
-        String message = "hello, world";
-        String echo = t.path("message").request().put(Entity.text(message), String.class);
+        final WebTarget t = target(getResourceFullPath());
+        final String message = "hello, world";
+        final String echo = t.path("message").request().put(Entity.text(message), String.class);
         assertEquals(message, echo);
-        String msg = t.path("message").request().get(String.class);
+        final String msg = t.path("message").request().get(String.class);
         assertEquals(message, msg);
     }
 }
