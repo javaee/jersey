@@ -59,6 +59,7 @@ import org.jvnet.hk2.spring.bridge.api.SpringIntoHK2Bridge;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -122,7 +123,7 @@ public class SpringComponentProvider implements ComponentProvider {
             return false;
         }
 
-        if(component.isAnnotationPresent(Component.class)) {
+        if(AnnotationUtils.findAnnotation(component, Component.class) != null) {
             DynamicConfiguration c = Injections.getConfiguration(locator);
             String[] beanNames = ctx.getBeanNamesForType(component);
             if(beanNames == null || beanNames.length != 1) {

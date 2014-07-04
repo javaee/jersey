@@ -39,46 +39,32 @@
  */
 package org.glassfish.jersey.server.spring.test;
 
-import org.junit.Test;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
-import java.math.BigDecimal;
-
-import static org.junit.Assert.assertEquals;
+import org.springframework.stereotype.Service;
 
 /**
- * Base class for JAX-RS resource tests.
- *
- * @author Marko Asplund (marko.asplund at yahoo.com)
+ * @author Konrad Garus (konrad.garus at gmail.com)
  */
-public abstract class AccountResourceTestBase extends ResourceTestBase {
-
-    // test singleton scoped Spring bean injection using @Inject + @Autowired
-    @Test
-    public void testSingletonScopedSpringService() {
-        BigDecimal newBalance = new BigDecimal(Math.random());
-        WebTarget t = target(getResourceFullPath());
-
-        t.path("/singleton/xyz123").request().put(Entity.entity(newBalance.toString(), MediaType.TEXT_PLAIN_TYPE));
-        BigDecimal balance = t.path("/singleton/autowired/xyz123").request().get(BigDecimal.class);
-        assertEquals(newBalance, balance);
+@Service
+@Path("/spring/service")
+public class ServiceResource {
+    private String message;
+    
+    @PUT
+    @Path("message")
+    @Consumes(MediaType.TEXT_PLAIN)
+    public String setMessage(String message) {
+        this.message = message;
+        return message;
     }
-
-    @Test
-    public void testRequestScopedSpringService() {
-        BigDecimal newBalance = new BigDecimal(Math.random());
-        WebTarget t = target(getResourceFullPath());
-        BigDecimal balance = t.path("request/abc456").request().put(Entity.text(newBalance), BigDecimal.class);
-        assertEquals(newBalance, balance);
-    }
-
-    @Test
-    public void testPrototypeScopedSpringService() {
-        BigDecimal newBalance = new BigDecimal(Math.random());
-        WebTarget t = target(getResourceFullPath());
-        BigDecimal balance = t.path("prototype/abc456").request().put(Entity.text(newBalance), BigDecimal.class);
-        assertEquals(new BigDecimal("987.65"), balance);
+    
+    @GET
+    @Path("message")
+    public String getMessage() {
+        return message;
     }
 }
