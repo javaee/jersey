@@ -77,8 +77,8 @@ public class Injections {
      * @param locator HK2 service locator.
      * @return dynamic configuration for a given service locator.
      */
-    public static DynamicConfiguration getConfiguration(ServiceLocator locator) {
-        DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+    public static DynamicConfiguration getConfiguration(final ServiceLocator locator) {
+        final DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
         return dcs.createDynamicConfiguration();
     }
 
@@ -95,7 +95,7 @@ public class Injections {
      * @param binders custom the HK2 {@link Binder binders}.
      * @return a service locator with all the bindings.
      */
-    public static ServiceLocator createLocator(String name, ServiceLocator parent, Binder... binders) {
+    public static ServiceLocator createLocator(final String name, final ServiceLocator parent, final Binder... binders) {
         return _createLocator(name, parent, binders);
     }
 
@@ -109,7 +109,7 @@ public class Injections {
      * @param binders custom the HK2 {@link Binder binders}.
      * @return a service locator with all the bindings.
      */
-    public static ServiceLocator createLocator(String name, Binder... binders) {
+    public static ServiceLocator createLocator(final String name, final Binder... binders) {
         return _createLocator(name, null, binders);
     }
 
@@ -123,7 +123,7 @@ public class Injections {
      * @param binders custom the HK2 {@link Binder binders}.
      * @return a service locator with all the bindings.
      */
-    public static ServiceLocator createLocator(ServiceLocator parent, Binder... binders) {
+    public static ServiceLocator createLocator(final ServiceLocator parent, final Binder... binders) {
         return _createLocator(null, parent, binders);
     }
 
@@ -133,25 +133,25 @@ public class Injections {
      * @param binders custom the HK2 {@link Binder binders}.
      * @return a service locator with all the bindings.
      */
-    public static ServiceLocator createLocator(Binder... binders) {
+    public static ServiceLocator createLocator(final Binder... binders) {
         return _createLocator(null, null, binders);
     }
 
-    private static ServiceLocator _createLocator(String name, ServiceLocator parent, Binder... binders) {
+    private static ServiceLocator _createLocator(final String name, final ServiceLocator parent, final Binder... binders) {
         final ServiceLocator result = factory.create(name, parent, generator, ServiceLocatorFactory.CreatePolicy.DESTROY);
 
         result.setNeutralContextClassLoader(false);
         ServiceLocatorUtilities.enablePerThreadScope(result);
 
-        for (Binder binder : binders) {
+        for (final Binder binder : binders) {
             bind(result, binder);
         }
         return result;
     }
 
-    private static void bind(ServiceLocator locator, Binder binder) {
-        DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
-        DynamicConfiguration dc = dcs.createDynamicConfiguration();
+    private static void bind(final ServiceLocator locator, final Binder binder) {
+        final DynamicConfigurationService dcs = locator.getService(DynamicConfigurationService.class);
+        final DynamicConfiguration dc = dcs.createDynamicConfiguration();
 
         locator.inject(binder);
         binder.bind(dc);
@@ -167,11 +167,11 @@ public class Injections {
      * @param clazz          class of the instance to be provider.
      * @return instance of the class either provided as a service or created and injected  by HK2.
      */
-    public static <T> T getOrCreate(ServiceLocator serviceLocator, Class<T> clazz) {
+    public static <T> T getOrCreate(final ServiceLocator serviceLocator, final Class<T> clazz) {
         try {
-            T component = serviceLocator.getService(clazz);
+            final T component = serviceLocator.getService(clazz);
             return component == null ? serviceLocator.createAndInitialize(clazz) : component;
-        } catch (MultiException e) {
+        } catch (final MultiException e) {
 
             // Look for WebApplicationException and return it if found. MultiException is thrown when *Param field is
             // annotated and value cannot be provided (for example fromString(String) method can throw unchecked
@@ -179,7 +179,7 @@ public class Injections {
             //
             // see InvalidParamTest
             // see JERSEY-1117
-            for(Throwable t: e.getErrors()) {
+            for(final Throwable t: e.getErrors()) {
                 if(WebApplicationException.class.isAssignableFrom(t.getClass())) {
                     throw (WebApplicationException)t;
                 }
@@ -195,7 +195,7 @@ public class Injections {
      * @param builder       binding builder.
      * @param configuration HK2 dynamic configuration.
      */
-    public static void addBinding(BindingBuilder<?> builder, DynamicConfiguration configuration) {
+    public static void addBinding(final BindingBuilder<?> builder, final DynamicConfiguration configuration) {
         BindingBuilderFactory.addBinding(builder, configuration);
     }
 
@@ -207,7 +207,7 @@ public class Injections {
      * @param defaultLoader default HK2 service loader that should be used to load the service class
      *                      in case a custom loader has not been set.
      */
-    public static void addBinding(BindingBuilder<?> builder, DynamicConfiguration configuration, HK2Loader defaultLoader) {
+    public static void addBinding(final BindingBuilder<?> builder, final DynamicConfiguration configuration, final HK2Loader defaultLoader) {
         BindingBuilderFactory.addBinding(builder, configuration, defaultLoader);
     }
 
@@ -220,7 +220,7 @@ public class Injections {
      * @return initialized binding builder.
      */
     public static <T> ServiceBindingBuilder<T> newFactoryBinder(
-            Class<? extends Factory<T>> factoryType, Class<? extends Annotation> factoryScope) {
+            final Class<? extends Factory<T>> factoryType, final Class<? extends Annotation> factoryScope) {
         return BindingBuilderFactory.newFactoryBinder(factoryType, factoryScope);
     }
 
@@ -233,7 +233,7 @@ public class Injections {
      * @param factoryType service factory class.
      * @return initialized binding builder.
      */
-    public static <T> ServiceBindingBuilder<T> newFactoryBinder(Class<? extends Factory<T>> factoryType) {
+    public static <T> ServiceBindingBuilder<T> newFactoryBinder(final Class<? extends Factory<T>> factoryType) {
         return BindingBuilderFactory.newFactoryBinder(factoryType);
     }
 
@@ -244,7 +244,7 @@ public class Injections {
      * @param factory service instance.
      * @return initialized binding builder.
      */
-    public static <T> ServiceBindingBuilder<T> newFactoryBinder(Factory<T> factory) {
+    public static <T> ServiceBindingBuilder<T> newFactoryBinder(final Factory<T> factory) {
         return BindingBuilderFactory.newFactoryBinder(factory);
     }
 
@@ -257,7 +257,7 @@ public class Injections {
      * @param serviceType service class.
      * @return initialized binding builder.
      */
-    public static <T> ServiceBindingBuilder<T> newBinder(Class<T> serviceType) {
+    public static <T> ServiceBindingBuilder<T> newBinder(final Class<T> serviceType) {
         return BindingBuilderFactory.newBinder(serviceType);
     }
 
@@ -271,7 +271,21 @@ public class Injections {
      * @param service service instance.
      * @return initialized binding builder.
      */
-    public static <T> ScopedBindingBuilder<T> newBinder(T service) {
+    public static <T> ScopedBindingBuilder<T> newBinder(final T service) {
         return BindingBuilderFactory.newBinder(service);
+    }
+
+    /**
+     * Shutdown {@link org.glassfish.hk2.api.ServiceLocator} - either via service locator factory (if possible) or directly by
+     * calling shutdown method.
+     *
+     * @param locator locator to be shut down.
+     */
+    public static void shutdownLocator(final ServiceLocator locator) {
+        if (factory.find(locator.getName()) != null) {
+            factory.destroy(locator.getName());
+        } else {
+            locator.shutdown();
+        }
     }
 }
