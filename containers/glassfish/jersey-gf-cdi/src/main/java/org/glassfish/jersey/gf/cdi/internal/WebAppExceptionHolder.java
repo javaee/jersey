@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,59 +37,27 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.gf.cdi.internal;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.inject.Inject;
-import javax.inject.Provider;
+import java.io.Serializable;
 
-import javax.transaction.TransactionalException;
-
+import javax.enterprise.context.RequestScoped;
+import javax.transaction.Transactional;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-
-import org.glassfish.jersey.spi.ExceptionMappers;
-import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 
 /**
- * Helper class to handle exceptions thrown by JTA layer. If this mapper was not
- * registered, no {@link WebApplicationException} thrown from a transactional
- * CDI bean would get properly mapped to corresponding response.
+ * CDI bean to help store any {@link WebApplicationException}
+ * thrown in a {@link Transactional} CDI bean.
  *
- * @author Jakub Podlesak (jakub.podlesak at oracle.com)
+ * @author Jakub.Podlesak (jakub.podlesak at oracle.com)
  */
-@ApplicationScoped
-public class TransactionalExceptionMapper implements ExtendedExceptionMapper<TransactionalException> {
+@RequestScoped
+public class WebAppExceptionHolder implements Serializable {
 
-    @Inject
-    WebAppExceptionHolder waeHolder;
+    private static final long serialVersionUID = 31415926535879L;
 
-    @Inject BeanManager beanManager;
+    /* package */
+    WebApplicationException exception;
 
-    @Inject
-    Provider<ExceptionMappers> mappers;
-
-    @Override
-    public Response toResponse(TransactionalException exception) {
-        final ExceptionMapper mapper = mappers.get().findMapping(exception);
-
-        if (mapper != null && !TransactionalExceptionMapper.class.isAssignableFrom(mapper.getClass())) {
-            return mapper.toResponse(exception);
-        } else {
-            if (waeHolder != null) {
-                final WebApplicationException wae = waeHolder.exception;
-                if (wae != null) {
-                    return wae.getResponse();
-                }
-            }
-            throw exception;
-        }
-    }
-
-    @Override
-    public boolean isMappable(TransactionalException exception) {
-        return true;
-    }
 }
