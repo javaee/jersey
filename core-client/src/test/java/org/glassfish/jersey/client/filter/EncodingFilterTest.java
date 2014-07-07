@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,8 +46,10 @@ import java.util.concurrent.Future;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Configuration;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT_ENCODING;
@@ -63,6 +65,7 @@ import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.message.DeflateEncoder;
 import org.glassfish.jersey.message.GZipEncoder;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -97,7 +100,7 @@ public class EncodingFilterTest {
                 DeflateEncoder.class
         ).property(ClientProperties.USE_ENCODING, "gzip").connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
-        Response r = invBuilder.get();
+        Response r = invBuilder.post(Entity.entity(new String("Hello world"), MediaType.TEXT_PLAIN_TYPE));
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(ACCEPT_ENCODING));
         assertEquals("gzip", r.getHeaderString(CONTENT_ENCODING));
     }
@@ -108,9 +111,22 @@ public class EncodingFilterTest {
                 .connectorProvider(new TestConnector())
                 .register(new EncodingFeature("gzip", GZipEncoder.class, DeflateEncoder.class)));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
-        Response r = invBuilder.get();
+        Response r = invBuilder.post(Entity.entity(new String("Hello world"), MediaType.TEXT_PLAIN_TYPE));
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(ACCEPT_ENCODING));
         assertEquals("gzip", r.getHeaderString(CONTENT_ENCODING));
+    }
+
+    @Test
+    public void testContentEncodingSkippedForNoEntity() {
+        Client client = ClientBuilder.newClient(new ClientConfig(
+                EncodingFilter.class,
+                GZipEncoder.class,
+                DeflateEncoder.class
+        ).property(ClientProperties.USE_ENCODING, "gzip").connectorProvider(new TestConnector()));
+        Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
+        Response r = invBuilder.get();
+        assertEquals("deflate,gzip,x-gzip", r.getHeaderString(ACCEPT_ENCODING));
+        assertNull(r.getHeaderString(CONTENT_ENCODING));
     }
 
     @Test
