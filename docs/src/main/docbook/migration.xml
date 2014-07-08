@@ -1189,5 +1189,188 @@ Client client = Client.create(dcc);</programlisting>
                 </para>
             </section>
         </section>
+
+        <section xml:id="mig-1-x-json">
+            <title>JSON support changes</title>
+            <para>JSON Support has undergone certain changes in Jersey&nbsp;2.x. The most visible
+                difference for the developer is in the initialization and configuration.</para>
+            <para>
+                In Jersey&nbsp;1.x, the JAXB/JSON Support was implemented as a set of <literal>MessageBodyReaders</literal> and
+                <literal>MessageWriters</literal> in the <literal>jersey-json</literal> module.
+                Internally, there were several implementations of JSON to Object mapping ranging from Jersey's own custom
+                solution to third party providers, such as <literal>Jackson</literal> or <literal>Jettison</literal>.
+                The configuration of the JSON support was centralized in the <literal>JSONConfiguration</literal> and
+                <literal>JSONJAXBContext</literal> classes.
+            </para>
+            <section xml:id="mig-1-x-json-init">
+                <title>Initialization</title>
+                <para>
+                    There are three main JSON-mapping handling approaches, which are preserved in Jersey&nbsp;2:
+                    <link linkend="json-jaxb">JAXB-based</link>,
+                    <link linkend="json-pojo">POJO mapping</link> and
+                    <link linkend="json-lowlevel">Low-level parsing</link>
+
+                    The following table shows how to enable each of them in both Jersey&nbsp;2 compared to Jersey&nbsp;1:
+                    <table>
+                        <title>JSON approaches and usage in Jersey&nbsp;1 vs Jersey&nbsp;2</title>
+                        <tgroup cols="3">
+                            <thead>
+                                <row>
+                                    <entry>Approach</entry>
+                                    <entry>Jersey&nbsp;1</entry>
+                                    <entry>Jersey&nbsp;2</entry>
+                                </row>
+                            </thead>
+                            <tbody>
+                                <row>
+                                    <entry>POJO</entry>
+                                    <entry>register <literal>POJOMappingFeature</literal>, use
+                                        &jersey.media.ObjectMapper1; for configuration
+                                    </entry>
+                                    <entry>
+                                        use <literal>Jackson</literal> provider:
+                                        (add <literal>jersey-media-json-jackson</literal> dependency
+                                        and <link linkend="jackson-registration">register</link>
+                                        the <literal>JacksonFeature</literal>), configure with custom
+                                        &jersey.media.ObjectMapper; instance.
+                                    </entry>
+                                </row>
+                                <row>
+                                    <entry>JAXB</entry>
+                                    <entry>Default; use <literal>JSONConfiguration</literal>/<literal>JSONJAXBContext</literal>
+                                        for configuration
+                                    </entry>
+                                    <entry>use <literal>MOXy</literal> (add the <literal>jersey-media-moxy</literal>
+                                        dependency; the feature will be registered
+                                        <link linkend="deployment.autodiscoverable">automatically</link>), configure
+                                        using <literal>MoxyJsonConfig</literal>
+                                    </entry>
+                                </row>
+                                <row>
+                                    <entry>Low-level</entry>
+                                    <entry>Direct usage of <literal>JSONObject</literal> and/or
+                                        <literal>JSONArray</literal> classes</entry>
+                                    <entry>use JSON-P (standard) or Jettison (non-standard) APIs (add the relevant dependency)</entry>
+                                </row>
+                            </tbody>
+                        </tgroup>
+                    </table>
+                    <example>
+                        <title>Initializing JAXB-based support with MOXy</title>
+                            <programlisting language="xml" linenumbering="unnumbered">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+  &lt;artifactId&gt;jersey-media-moxy&lt;/artifactId&gt;
+  &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                    </example>
+                    <note>
+                        <para>
+                            For JAXB-based support, MOXy is the default way in Jersey&nbsp;2. However, other providers
+                            (<literal>Jackson</literal>, <literal>Jettison</literal>) can be used as well.
+                            The relevant feature has to be registered (and dependency added) and custom implementation
+                            of <literal>ContextResolver</literal> has to be provided. See the code snippets
+                            in the <link linkend="json.jackson">related chapter</link>.
+                        </para>
+                        <para>
+                            For more on particular <literal>Feature</literal> registration, see also:
+                            <link linkend="jackson-registration">Jackson&nbsp;registration</link>,
+                            <link linkend="jettison-registration">Jettison&nbsp;registration</link>,
+                            <link linkend="moxy-registration">MOXy&nbsp;registration</link>,
+                            <link linkend="jsonp-registration">JSON-P&nbsp;registration</link>.
+                        </para>
+                        <para>
+                            It is important to point out, that the <literal>Feature</literal> registration has to be done
+                            separately for client and server.
+                        </para>
+                    </note>
+                    <note>
+                        <para>
+                            With Jersey 2.9, <literal>Jackson</literal> has been updated to version&nbsp;2.3.2. The feature is
+                            still configured via mentioned <literal>ObjectMapper</literal> class, but the package has changed.
+                            <itemizedlist>
+                                <listitem>For <literal>jackson&nbsp;1.x</literal>,
+                                    use <literal>org.codehaus.jackson.map.ObjectMapper</literal>
+                                </listitem>
+                                <listitem>For <literal>jackson&nbsp;2.x</literal>, use
+                                    <literal>com.fasterxml.jackson.core.ObjectMapper</literal>
+                                </listitem>
+                            </itemizedlist>
+                        </para>
+                    </note>
+                </para>
+            </section>
+            <section xml:id="mig-1-x-json-notation">
+                <title>JSON Notation</title>
+                <para>
+                    Jersey&nbsp;1 was selecting the provider automatically based on the desired JSON Notation. This concept was
+                    replaced in Jersey&nbsp;2 by direct choice of provider (as shown above). To provide some guide how to achieve the
+                    same results as in the previous Jersey version, see the following list:
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                <literal>MAPPED</literal>
+                                not supported
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <literal>NATURAL</literal>
+                                default MOXy output
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <literal>JETTISON_MAPPED</literal>
+                                supported by Jettison
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                <literal>BADGERFISH</literal>
+                                supported by Jettison
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+                </para>
+            </section>
+            <section xml:id="mig-1-x-json-config">
+                <title>Configuration</title>
+                <para>
+                    As mentioned, the centralized configuration of Jersey&nbsp;1's <literal>JSONConfiguration</literal> does not have
+                    a direct equivalent in Jersey&nbsp;2. Each provider has it's own way to be configured. Detailed description of
+                    each
+                    method and property is out of scope of this migration guide and can be found in the documentation and APIs of
+                    the relevant providers and/or the relevant Jersey module API.
+                    Bellow are several basic examples how to configure certain options when using MOXy with Jersey's
+                    <literal>MoxyJsonConfig</literal> class.
+
+                    <itemizedlist>
+                        <listitem>
+                            <para><emphasis>Formated output</emphasis></para>
+                            <para>Jersey&nbsp;1: <literal>JSONConfiguration.createJSONConfigurationWithFormatted()</literal></para>
+                            <para>Jersey&nbsp;2/MOXy: <literal>MoxyJsonConfig.setFormattedOutput()</literal></para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis>Namespaces mapping</emphasis></para>
+                            <para>Jersey&nbsp;1: <literal>JSONConfiguration.natural().xml2JsonNs()</literal></para>
+                            <para>Jersey&nbsp;2/MOXy: <literal>MoxyJsonConfig.setNamespacePrefixMapper()</literal></para>
+                        </listitem>
+                        <listitem>
+                            <para><emphasis>Namespace separator</emphasis></para>
+                            <para>Jersey&nbsp;1: <literal>JSONConfiguration.natural().nsSeparator()</literal></para>
+                            <para>Jersey&nbsp;2/MOXy: <literal>MoxyJsonConfig.setNamespaceSeparator()</literal></para>
+                        </listitem>
+                    </itemizedlist>
+
+                    Properties can be also passed directly to <literal>Marshaller</literal> and/or <literal>Unmarshaller</literal>
+                    using: <literal>MoxyJsonConfig</literal>'s <literal>property()</literal>,
+                    <literal>marshallerProperty() </literal> and <literal>unmarshallerProperty()</literal> methods.
+                </para>
+            </section>
+            <para>
+                More on the JSON Support topic can be found in <xref linkend="json" />.
+            </para>
+        </section>
     </section>
 </chapter>

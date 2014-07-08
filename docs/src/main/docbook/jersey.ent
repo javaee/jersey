@@ -50,6 +50,11 @@
 <!ENTITY jax-rs.version "$jax-rs-version">
 <!ENTITY jax-rs-api-jar.version "$jax-rs-api-jar-version">
 <!ENTITY jackson.javadoc.version "$jackson-version">
+<!-- temporary hardcoded javadoc version - the correct one is missing at the provider's web -->
+<!ENTITY jackson.javadoc.temp.version "2.3.0">
+
+<!-- Special characters -->
+<!ENTITY nbsp "&#160;">
 
 <!-- Version & External Link Base Entities -->
 <!ENTITY experimentalrepository "snapshots">
@@ -342,7 +347,10 @@
 <!ENTITY jersey.media.MoxyJsonConfig.marshallerProperty "<link xlink:href='&jersey.javadoc.path;/moxy/json/MoxyJsonConfig.html#marshallerProperty(java.lang.String, java.lang.Object)'>MoxyJsonConfig#marshallerProperty(java.lang.String, java.lang.Object)</link>" >
 <!ENTITY jersey.media.MoxyJsonConfig.unmarshallerProperty "<link xlink:href='&jersey.javadoc.path;/moxy/json/MoxyJsonConfig.html#unmarshallerProperty(java.lang.String, java.lang.Object)'>MoxyJsonConfig#unmarshallerProperty(java.lang.String, java.lang.Object)</link>" >
 <!ENTITY jersey.media.MoxyJsonFeature "<link xlink:href='&jersey.javadoc.path;/moxy/json/MoxyJsonFeature.html'>MoxyJsonFeature</link>">
-<!ENTITY jersey.media.ObjectMapper "<link xlink:href='http://jackson.codehaus.org/&jackson.javadoc.version;/javadoc/org/codehaus/jackson/map/ObjectMapper.html'>ObjectMapper</link>" >
+<!ENTITY jersey.media.ObjectMapper1
+        "<link xlink:href='http://jackson.codehaus.org/1.9.9/javadoc/org/codehaus/jackson/map/ObjectMapper.html'>ObjectMapper</link>" > <!-- old jackson version -->
+<!ENTITY jersey.media.ObjectMapper
+        "<link xlink:href='http://fasterxml.github.io/jackson-databind/javadoc/&jackson.javadoc.temp.version;/com/fasterxml/jackson/databind/ObjectMapper.html'>ObjectMapper</link>" >
 <!ENTITY jersey.media.multipart "<link xlink:href='&jersey.javadoc.path;/media/multipart/package-summary.html'>Multi Part</link>">
 <!ENTITY jersey.media.multipart.BodyPart "<link xlink:href='&jersey.javadoc.path;/media/multipart/BodyPart.html'>BodyPart</link>" >
 <!ENTITY jersey.media.multipart.FileDataBodyPart "<link xlink:href='&jersey.javadoc.path;/media/multipart/file/FileDataBodyPart.html'>FileDataBodyPart</link>" >
