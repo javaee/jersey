@@ -89,6 +89,7 @@
         <module>jaxrs-types-injection</module>
         <module>jersey-ejb</module>
         <module>json-jackson</module>
+        <module>json-jackson1</module>
         <module>json-jettison</module>
         <module>json-moxy</module>
         <module>json-processing-webapp</module>

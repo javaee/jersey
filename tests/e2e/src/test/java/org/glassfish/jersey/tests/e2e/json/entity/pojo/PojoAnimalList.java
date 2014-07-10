@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,15 +52,15 @@ public class PojoAnimalList {
     public List<PojoAnimal> animals;
 
     public static Object createTestInstance() {
-        PojoAnimalList aList = new PojoAnimalList();
-        aList.animals = new LinkedList<PojoAnimal>();
+        final PojoAnimalList aList = new PojoAnimalList();
+        aList.animals = new LinkedList<>();
         aList.animals.add(new PojoDog("Fifi"));
         aList.animals.add(new PojoCat("Daisy"));
         return aList;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == null) {
             return false;
         }

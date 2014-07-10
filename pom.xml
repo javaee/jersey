@@ -1215,6 +1215,30 @@
             </dependency>
 
             <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+                <version>${jackson1.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+                <version>${jackson1.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+                <version>${jackson1.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+                <version>${jackson1.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>xerces</groupId>
                 <artifactId>xercesImpl</artifactId>
                 <version>${xerces.version}</version>
@@ -1435,6 +1459,7 @@
         <asm.version>5.0.2</asm.version>
         <httpclient.version>4.3.1</httpclient.version>
         <jackson.version>2.3.2</jackson.version>
+        <jackson1.version>1.9.11</jackson1.version>
         <javassist.version>3.18.1-GA</javassist.version>
         <javax.annotation.version>1.2</javax.annotation.version>
         <javax.annotation.bundle.version>1.2</javax.annotation.bundle.version>
