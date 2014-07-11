@@ -368,6 +368,7 @@
 <!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.path;/server/model/ModelProcessor.html'>ModelProcessor</link>">
 <!ENTITY jersey.server.ResourceConfig "<link xlink:href='&jersey.javadoc.path;/server/ResourceConfig.html'>ResourceConfig</link>">
 <!ENTITY jersey.server.RolesAllowedDynamicFeature "<link xlink:href='&jersey.javadoc.path;/server/filter/RolesAllowedDynamicFeature.html'>RolesAllowedDynamicFeature</link>">
+<!ENTITY jersey.server.ResponseErrorMapper "<link xlink:href='&jersey.javadoc.path;/server/spi/ResponseErrorMapper.html'>ResponseErrorMapper</link>">
 <!ENTITY jersey.server.ServerProperties "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html'>ServerProperties</link>">
 <!ENTITY jersey.server.ServerProperties.BV_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#BV_FEATURE_DISABLE'>ServerProperties.BV_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.server.ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK'>ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK</link>" >
@@ -765,6 +766,7 @@
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
 <!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
 <!ENTITY lit.jersey.server.RolesAllowedDynamicFeature "<literal>RolesAllowedDynamicFeature</literal>">
+<!ENTITY lit.jersey.server.ResponseErrorMapper "<literal>ResponseErrorMapper</literal>">
 <!ENTITY lit.jersey.server.Uri "<literal>Uri</literal>">
 <!ENTITY lit.jersey.server.WadlGenerator "<literal>WadlGenerator</literal>">
 <!ENTITY lit.jersey.server.WadlGeneratorConfig "<literal>WadlGeneratorConfig</literal>">
