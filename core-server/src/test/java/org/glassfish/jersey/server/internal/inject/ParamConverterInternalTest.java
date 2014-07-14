@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,7 +76,7 @@ public class ParamConverterInternalTest extends AbstractTest {
     @Path("/")
     public static class BadDateResource {
         @GET
-        public String doGet(@QueryParam("d") Date d) {
+        public String doGet(@QueryParam("d") final Date d) {
             return "DATE";
         }
     }
@@ -101,7 +101,7 @@ public class ParamConverterInternalTest extends AbstractTest {
         ;
 
         @GET
-        public String doGet(@QueryParam("d") ABC d) {
+        public String doGet(@QueryParam("d") final ABC d) {
             return "ENUM";
         }
     }
@@ -118,16 +118,16 @@ public class ParamConverterInternalTest extends AbstractTest {
 
     public static class URIStringReaderProvider implements ParamConverterProvider {
         @Override
-        public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
             if (rawType != URI.class) return null;
 
             return (ParamConverter<T>) new ParamConverter<URI>() {
-                public URI fromString(String value) {
+                public URI fromString(final String value) {
                     return URI.create(value);
                 }
 
                 @Override
-                public String toString(URI value) throws IllegalArgumentException {
+                public String toString(final URI value) throws IllegalArgumentException {
                     return value.toString();
                 }
             };
@@ -137,7 +137,7 @@ public class ParamConverterInternalTest extends AbstractTest {
     @Path("/")
     public static class BadURIResource {
         @GET
-        public String doGet(@QueryParam("d") URI d) {
+        public String doGet(@QueryParam("d") final URI d) {
             return "URI";
         }
     }
@@ -154,11 +154,11 @@ public class ParamConverterInternalTest extends AbstractTest {
 
 
         @Override
-        public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
             if (rawType != List.class) return null;
 
             if (genericType instanceof ParameterizedType) {
-                ParameterizedType parameterizedType = (ParameterizedType) genericType;
+                final ParameterizedType parameterizedType = (ParameterizedType) genericType;
                 if (parameterizedType.getActualTypeArguments().length != 1) return null;
 
                 if (parameterizedType.getActualTypeArguments()[0] != String.class) return null;
@@ -168,12 +168,12 @@ public class ParamConverterInternalTest extends AbstractTest {
 
             return (ParamConverter<T>) new ParamConverter<List<String>>() {
                 @Override
-                public List<String> fromString(String value) {
+                public List<String> fromString(final String value) {
                     return Arrays.asList(value.split(","));
                 }
 
                 @Override
-                public String toString(List<String> value) throws IllegalArgumentException {
+                public String toString(final List<String> value) throws IllegalArgumentException {
                     return value.toString();
                 }
             };
@@ -184,7 +184,7 @@ public class ParamConverterInternalTest extends AbstractTest {
     @Path("/")
     public static class ListOfStringResource {
         @GET
-        public String doGet(@QueryParam("l") List<List<String>> l) {
+        public String doGet(@QueryParam("l") final List<List<String>> l) {
             return l.toString();
         }
     }
@@ -195,7 +195,7 @@ public class ParamConverterInternalTest extends AbstractTest {
         final ContainerResponse responseContext = getResponseContext(UriBuilder.fromPath("/").queryParam("l", "1,2," +
                 "3").build().toString());
 
-        String s = (String) responseContext.getEntity();
+        final String s = (String) responseContext.getEntity();
 
         assertEquals(Collections.singletonList(Arrays.asList("1", "2", "3")).toString(), s);
     }
@@ -205,15 +205,15 @@ public class ParamConverterInternalTest extends AbstractTest {
         try {
             new ApplicationHandler(new ResourceConfig(MyEagerParamProvider.class, Resource.class));
             fail("ExtractorException expected.");
-        } catch (ExtractorException expected) {
+        } catch (final ExtractorException expected) {
             // ok
         }
     }
 
     @Test
     public void testLazyConverter() throws Exception {
-        ApplicationHandler application = new ApplicationHandler(new ResourceConfig(MyLazyParamProvider.class, Resource.class));
-        ContainerResponse response = application.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
+        final ApplicationHandler application = new ApplicationHandler(new ResourceConfig(MyLazyParamProvider.class, Resource.class));
+        final ContainerResponse response = application.apply(RequestContextBuilder.from("/resource", "GET").build()).get();
         assertEquals(400, response.getStatus());
     }
 
@@ -234,7 +234,7 @@ public class ParamConverterInternalTest extends AbstractTest {
     @Path("resource")
     public static class Resource {
         @GET
-        public String wrongDefaultValue(@HeaderParam("header") @DefaultValue("fail") MyBean header) {
+        public String wrongDefaultValue(@HeaderParam("header") @DefaultValue("fail") final MyBean header) {
             return "a";
         }
     }
@@ -242,7 +242,7 @@ public class ParamConverterInternalTest extends AbstractTest {
     public static class MyEagerParamProvider implements ParamConverterProvider {
 
         @Override
-        public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
             if (rawType != MyBean.class) {
                 return null;
             }
@@ -253,7 +253,7 @@ public class ParamConverterInternalTest extends AbstractTest {
 
     public static class MyLazyParamProvider implements ParamConverterProvider {
         @Override
-        public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
             if (rawType != MyBean.class) {
                 return null;
             }
@@ -264,7 +264,7 @@ public class ParamConverterInternalTest extends AbstractTest {
 
     public static class MyAbstractParamConverter implements ParamConverter<MyBean> {
         @Override
-        public MyBean fromString(String value) throws IllegalArgumentException {
+        public MyBean fromString(final String value) throws IllegalArgumentException {
             if ("fail".equals(value)) {
                 throw new RuntimeException("fail");
             }
@@ -274,7 +274,7 @@ public class ParamConverterInternalTest extends AbstractTest {
         }
 
         @Override
-        public String toString(MyBean bean) throws IllegalArgumentException {
+        public String toString(final MyBean bean) throws IllegalArgumentException {
             return "*:" + bean.getValue() + ":*";
         }
     }
@@ -293,7 +293,7 @@ public class ParamConverterInternalTest extends AbstractTest {
         public MyBean() {
         }
 
-        public void setValue(String value) {
+        public void setValue(final String value) {
             this.value = value;
         }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -154,7 +154,7 @@ public abstract class WadlGeneratorConfig {
     public WadlGeneratorConfig() {
     }
 
-    public abstract List<WadlGeneratorDescription> configure();
+    public abstract List configure();
 
     /**
      * Create a new instance of {@link org.glassfish.jersey.server.wadl.WadlGenerator}, based on the {@link WadlGeneratorDescription}s
@@ -162,20 +162,20 @@ public abstract class WadlGeneratorConfig {
      *
      * @return the initialized {@link org.glassfish.jersey.server.wadl.WadlGenerator}
      */
-    public WadlGenerator createWadlGenerator(ServiceLocator locator) {
-        WadlGenerator wadlGenerator;
-        List<WadlGeneratorDescription> wadlGeneratorDescriptions;
+    public WadlGenerator createWadlGenerator(final ServiceLocator locator) {
+        final WadlGenerator wadlGenerator;
+        final List<WadlGeneratorDescription> wadlGeneratorDescriptions;
         try {
             wadlGeneratorDescriptions = configure();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIGURE(), e);
         }
-        for (WadlGeneratorDescription desc : wadlGeneratorDescriptions) {
+        for (final WadlGeneratorDescription desc : wadlGeneratorDescriptions) {
             desc.setConfiguratorClass(this.getClass());
         }
         try {
             wadlGenerator = WadlGeneratorLoader.loadWadlGeneratorDescriptions(locator, wadlGeneratorDescriptions);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_LOAD(), e);
 
         }
@@ -195,7 +195,7 @@ public abstract class WadlGeneratorConfig {
      * @param generatorClass the class of the wadl generator to configure
      * @return an instance of {@link WadlGeneratorConfigDescriptionBuilder}.
      */
-    public static WadlGeneratorConfigDescriptionBuilder generator(Class<? extends WadlGenerator> generatorClass) {
+    public static WadlGeneratorConfigDescriptionBuilder generator(final Class<? extends WadlGenerator> generatorClass) {
         return new WadlGeneratorConfigDescriptionBuilder().generator(generatorClass);
     }
 
@@ -205,10 +205,10 @@ public abstract class WadlGeneratorConfig {
         private WadlGeneratorDescription _description;
 
         public WadlGeneratorConfigDescriptionBuilder() {
-            _descriptions = new ArrayList<WadlGeneratorDescription>();
+            _descriptions = new ArrayList<>();
         }
 
-        public WadlGeneratorConfigDescriptionBuilder generator(Class<? extends WadlGenerator> generatorClass) {
+        public WadlGeneratorConfigDescriptionBuilder generator(final Class<? extends WadlGenerator> generatorClass) {
             if (_description != null) {
                 _descriptions.add(_description);
             }
@@ -262,7 +262,7 @@ public abstract class WadlGeneratorConfig {
          * @param propValue the stringified property value
          * @return this builder instance
          */
-        public WadlGeneratorConfigDescriptionBuilder prop(String propName, Object propValue) {
+        public WadlGeneratorConfigDescriptionBuilder prop(final String propName, final Object propValue) {
             if (_description.getProperties() == null) {
                 _description.setProperties(new Properties());
             }
@@ -291,7 +291,7 @@ public abstract class WadlGeneratorConfig {
         public List<WadlGeneratorDescription> _descriptions;
 
         public WadlGeneratorConfigImpl(
-                List<WadlGeneratorDescription> descriptions) {
+                final List<WadlGeneratorDescription> descriptions) {
             _descriptions = descriptions;
         }
 

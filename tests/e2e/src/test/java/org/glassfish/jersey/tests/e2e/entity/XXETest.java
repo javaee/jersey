@@ -66,7 +66,6 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -85,7 +84,7 @@ public class XXETest extends JerseyTest {
 
     private String getListDocument() {
         final URL u = this.getClass().getResource("xxe.txt");
-        return String.format(DOCTYPE, u.toString()) + "<jAXBBeans>" + XML + XML + XML + "</jAXBBeans>";
+        return String.format(DOCTYPE, u.toString()) + "<jaxbBeans>" + XML + XML + XML + "</jaxbBeans>";
     }
 
     @Path("/")
@@ -94,19 +93,19 @@ public class XXETest extends JerseyTest {
     public static class EntityHolderResource {
         @Path("jaxb")
         @POST
-        public String post(final JAXBBean s) {
+        public String post(final JaxbBean s) {
             return s.value;
         }
 
         @Path("jaxbelement")
         @POST
-        public String post(final JAXBElement<JAXBBeanType> s) {
+        public String post(final JAXBElement<JaxbBeanType> s) {
             return s.getValue().value;
         }
 
         @Path("jaxb/list")
         @POST
-        public String post(final List<JAXBBean> s) {
+        public String post(final List<JaxbBean> s) {
             return s.get(0).value;
         }
 
@@ -201,8 +200,8 @@ public class XXETest extends JerseyTest {
 
     @Test
     public void testSAXSecure() {
-        final JAXBBean b = target().path("sax").request("application/xml").post(Entity.entity(getDocument(),
-                MediaType.APPLICATION_XML_TYPE), JAXBBean.class);
+        final JaxbBean b = target().path("sax").request("application/xml").post(Entity.entity(getDocument(),
+                MediaType.APPLICATION_XML_TYPE), JaxbBean.class);
         assertEquals("", b.value);
     }
 
@@ -215,8 +214,8 @@ public class XXETest extends JerseyTest {
 
     @Test
     public void testStreamSecure() {
-        final JAXBBean b = target().path("stream").request("application/xml").post(Entity.entity(getDocument(),
-                MediaType.APPLICATION_XML_TYPE), JAXBBean.class);
+        final JaxbBean b = target().path("stream").request("application/xml").post(Entity.entity(getDocument(),
+                MediaType.APPLICATION_XML_TYPE), JaxbBean.class);
         assertEquals("", b.value);
     }
 

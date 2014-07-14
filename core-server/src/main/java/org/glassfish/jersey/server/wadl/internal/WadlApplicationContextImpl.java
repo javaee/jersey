@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package org.glassfish.jersey.server.wadl.internal;
 
 import java.net.URI;
 import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -79,12 +78,12 @@ import com.sun.research.ws.wadl.Resources;
  *
  * @author Paul Sandoz (paul.sandoz at oracle.com)
  */
-public class WadlApplicationContextImpl implements WadlApplicationContext {
+public final class WadlApplicationContextImpl implements WadlApplicationContext {
 
     private static final Logger LOGGER = Logger.getLogger(WadlApplicationContextImpl.class.getName());
 
     static final String WADL_JERSEY_NAMESPACE = "http://jersey.java.net/";
-    public static final JAXBElement extendedElement = new JAXBElement<String>(
+    public static final JAXBElement extendedElement = new JAXBElement<>(
             new QName(WADL_JERSEY_NAMESPACE, "extended", "jersey"), String.class, "true");
 
     @Context
@@ -99,7 +98,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
 
     private final JAXBContext jaxbContext;
 
-    public WadlApplicationContextImpl(@Context Configuration configuration, @Context ServiceLocator serviceLocator) {
+    public WadlApplicationContextImpl(@Context final Configuration configuration, @Context final ServiceLocator serviceLocator) {
         this.serviceLocator = serviceLocator;
         this.wadlGeneratorConfig = WadlGeneratorConfigLoader.loadWadlGeneratorsFromConfig(configuration.getProperties());
 
@@ -124,12 +123,12 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
 
             jaxbContextCandidate = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath(), jerseyModuleClassLoader);
 
-        } catch (JAXBException ex) {
+        } catch (final JAXBException ex) {
             try {
                 // fallback for glassfish
                 LOGGER.log(Level.FINE, LocalizationMessages.WADL_JAXB_CONTEXT_FALLBACK(), ex);
                 jaxbContextCandidate = JAXBContext.newInstance(wadlGenerator.getRequiredJaxbContextPath());
-            } catch (JAXBException innerEx) {
+            } catch (final JAXBException innerEx) {
                 throw new ProcessingException(LocalizationMessages.ERROR_WADL_JAXB_CONTEXT(), ex);
             }
         } finally {
@@ -140,11 +139,11 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
     }
 
     @Override
-    public ApplicationDescription getApplication(UriInfo uriInfo, boolean detailedWadl) {
-        ApplicationDescription applicationDescription = getWadlBuilder(detailedWadl, uriInfo)
+    public ApplicationDescription getApplication(final UriInfo uriInfo, final boolean detailedWadl) {
+        final ApplicationDescription applicationDescription = getWadlBuilder(detailedWadl, uriInfo)
                 .generate(resourceContext.getResourceModel().getRootResources());
         final Application application = applicationDescription.getApplication();
-        for (Resources resources : application.getResources()) {
+        for (final Resources resources : application.getResources()) {
             if (resources.getBase() == null) {
                 resources.setBase(uriInfo.getBaseUri().toString());
             }
@@ -154,21 +153,21 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
     }
 
     @Override
-    public Application getApplication(UriInfo info,
-                                      org.glassfish.jersey.server.model.Resource resource, boolean detailedWadl) {
+    public Application getApplication(final UriInfo info,
+                                      final org.glassfish.jersey.server.model.Resource resource, final boolean detailedWadl) {
 
         // Get the root application description
         //
 
-        ApplicationDescription description = getApplication(info, detailedWadl);
+        final ApplicationDescription description = getApplication(info, detailedWadl);
 
-        WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
-        Application application = new WadlBuilder(wadlGenerator, detailedWadl, info).generate(description, resource);
+        final WadlGenerator wadlGenerator = wadlGeneratorConfig.createWadlGenerator(serviceLocator);
+        final Application application = new WadlBuilder(wadlGenerator, detailedWadl, info).generate(description, resource);
         if (application == null) {
             return null;
         }
 
-        for (Resources resources : application.getResources()) {
+        for (final Resources resources : application.getResources()) {
             resources.setBase(info.getBaseUri().toString());
         }
 
@@ -177,7 +176,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         attachExternalGrammar(application, description,
                 info.getRequestUri());
 
-        for (Resources resources : application.getResources()) {
+        for (final Resources resources : application.getResources()) {
             final Resource r = resources.getResource().get(0);
             r.setPath(info.getBaseUri().relativize(info.getAbsolutePath()).toString());
 
@@ -194,13 +193,13 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
         return jaxbContext;
     }
 
-    private WadlBuilder getWadlBuilder(boolean detailedWadl, UriInfo uriInfo) {
+    private WadlBuilder getWadlBuilder(final boolean detailedWadl, final UriInfo uriInfo) {
         return (this.wadlGenerationEnabled ? new WadlBuilder(wadlGeneratorConfig.createWadlGenerator(serviceLocator),
                 detailedWadl, uriInfo) : null);
     }
 
     @Override
-    public void setWadlGenerationEnabled(boolean wadlGenerationEnabled) {
+    public void setWadlGenerationEnabled(final boolean wadlGenerationEnabled) {
         this.wadlGenerationEnabled = wadlGenerationEnabled;
     }
 
@@ -210,11 +209,11 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
     }
 
     /**
-     * Update the application object to include the generated grammar objects
+     * Update the application object to include the generated grammar objects.
      */
     private void attachExternalGrammar(
-            Application application,
-            ApplicationDescription applicationDescription,
+            final Application application,
+            final ApplicationDescription applicationDescription,
             URI requestURI) {
 
         // Massage the application.wadl URI slightly to get the right effect
@@ -232,17 +231,16 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
             }
 
 
-            String root = application.getResources().get(0).getBase();
-            UriBuilder extendedPath = root != null ?
-                    UriBuilder.fromPath(root).path("/application.wadl/")
-                    : UriBuilder.fromPath("./application.wadl/");
-            URI rootURI = root != null ? UriBuilder.fromPath(root).build() : null;
+            final String root = application.getResources().get(0).getBase();
+            final UriBuilder extendedPath = root != null
+                    ? UriBuilder.fromPath(root).path("/application.wadl/") : UriBuilder.fromPath("./application.wadl/");
+            final URI rootURI = root != null ? UriBuilder.fromPath(root).build() : null;
 
 
             // Add a reference to this grammar
             //
 
-            Grammars grammars;
+            final Grammars grammars;
             if (application.getGrammars() != null) {
                 LOGGER.info(LocalizationMessages.ERROR_WADL_GRAMMAR_ALREADY_CONTAINS());
                 grammars = application.getGrammars();
@@ -254,17 +252,13 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
             // Create a reference back to the root WADL
             //
 
-            for (String path : applicationDescription.getExternalMetadataKeys()) {
-                URI schemaURI =
-                        extendedPath.clone().path(path).build();
+            for (final String path : applicationDescription.getExternalMetadataKeys()) {
+                final URI schemaURI = extendedPath.clone().path(path).build();
+                final String schemaPath = rootURI != null ? requestURI.relativize(schemaURI).toString() : schemaURI.toString();
 
-                String schemaPath = rootURI != null ?
-                        requestURI.relativize(schemaURI).toString()
-                        : schemaURI.toString();
-
-                Include include = new Include();
+                final Include include = new Include();
                 include.setHref(schemaPath);
-                Doc doc = new Doc();
+                final Doc doc = new Doc();
                 doc.setLang("en");
                 doc.setTitle("Generated");
                 include.getDoc().add(doc);
@@ -272,7 +266,7 @@ public class WadlApplicationContextImpl implements WadlApplicationContext {
                 // Finally add to list
                 grammars.getInclude().add(include);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new ProcessingException(LocalizationMessages.ERROR_WADL_EXTERNAL_GRAMMAR(), e);
         }
     }

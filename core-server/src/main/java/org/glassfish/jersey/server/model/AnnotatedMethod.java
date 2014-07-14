@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -95,8 +95,8 @@ public final class AnnotatedMethod implements AnnotatedElement {
             FormParam.class);
 
     @SafeVarargs
-    private static Set<Class<? extends Annotation>> getSet(Class<? extends Annotation>... cs) {
-        Set<Class<? extends Annotation>> s = new HashSet<Class<? extends Annotation>>();
+    private static Set<Class<? extends Annotation>> getSet(final Class<? extends Annotation>... cs) {
+        final Set<Class<? extends Annotation>> s = new HashSet<>();
         s.addAll(Arrays.asList(cs));
         return s;
     }
@@ -111,7 +111,7 @@ public final class AnnotatedMethod implements AnnotatedElement {
      *
      * @param method Java method.
      */
-    public AnnotatedMethod(Method method) {
+    public AnnotatedMethod(final Method method) {
         this.m = method;
         this.am = findAnnotatedMethod(method);
 
@@ -169,6 +169,7 @@ public final class AnnotatedMethod implements AnnotatedElement {
      *
      * @return method type parameters.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public TypeVariable<Method>[] getTypeParameters() {
         return am.getTypeParameters();
     }
@@ -194,9 +195,9 @@ public final class AnnotatedMethod implements AnnotatedElement {
      *         annotations.
      */
     public <T extends Annotation> List<T> getMetaMethodAnnotations(
-            Class<T> annotation) {
-        List<T> ma = new ArrayList<T>();
-        for (Annotation a : methodAnnotations) {
+            final Class<T> annotation) {
+        final List<T> ma = new ArrayList<>();
+        for (final Annotation a : methodAnnotations) {
             final T metaAnnotation = a.annotationType().getAnnotation(annotation);
             if (metaAnnotation != null) {
                 ma.add(metaAnnotation);
@@ -213,8 +214,8 @@ public final class AnnotatedMethod implements AnnotatedElement {
 
     // AnnotatedElement
     @Override
-    public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
-        for (Annotation ma : methodAnnotations) {
+    public boolean isAnnotationPresent(final Class<? extends Annotation> annotationType) {
+        for (final Annotation ma : methodAnnotations) {
             if (ma.annotationType() == annotationType) {
                 return true;
             }
@@ -223,8 +224,8 @@ public final class AnnotatedMethod implements AnnotatedElement {
     }
 
     @Override
-    public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
-        for (Annotation ma : methodAnnotations) {
+    public <T extends Annotation> T getAnnotation(final Class<T> annotationType) {
+        for (final Annotation ma : methodAnnotations) {
             if (ma.annotationType() == annotationType) {
                 return annotationType.cast(ma);
             }
@@ -242,9 +243,9 @@ public final class AnnotatedMethod implements AnnotatedElement {
         return getAnnotations();
     }
 
-    private static Annotation[] mergeMethodAnnotations(Method m, Method am) {
-        List<Annotation> al = asList(m.getAnnotations());
-        for (Annotation a : am.getAnnotations()) {
+    private static Annotation[] mergeMethodAnnotations(final Method m, final Method am) {
+        final List<Annotation> al = asList(m.getAnnotations());
+        for (final Annotation a : am.getAnnotations()) {
             if (!m.isAnnotationPresent(a.getClass())) {
                 al.add(a);
             }
@@ -253,14 +254,14 @@ public final class AnnotatedMethod implements AnnotatedElement {
         return al.toArray(new Annotation[al.size()]);
     }
 
-    private static Annotation[][] mergeParameterAnnotations(Method m, Method am) {
-        Annotation[][] methodParamAnnotations = m.getParameterAnnotations();
-        Annotation[][] annotatedMethodParamAnnotations = am.getParameterAnnotations();
+    private static Annotation[][] mergeParameterAnnotations(final Method m, final Method am) {
+        final Annotation[][] methodParamAnnotations = m.getParameterAnnotations();
+        final Annotation[][] annotatedMethodParamAnnotations = am.getParameterAnnotations();
 
-        List<List<Annotation>> methodParamAnnotationsList = new ArrayList<List<Annotation>>();
+        final List<List<Annotation>> methodParamAnnotationsList = new ArrayList<>();
         for (int i = 0; i < methodParamAnnotations.length; i++) {
-            List<Annotation> al = asList(methodParamAnnotations[i]);
-            for (Annotation a : annotatedMethodParamAnnotations[i]) {
+            final List<Annotation> al = asList(methodParamAnnotations[i]);
+            for (final Annotation a : annotatedMethodParamAnnotations[i]) {
                 if (annotationNotInList(a.getClass(), al)) {
                     al.add(a);
                 }
@@ -268,17 +269,17 @@ public final class AnnotatedMethod implements AnnotatedElement {
             methodParamAnnotationsList.add(al);
         }
 
-        Annotation[][] mergedAnnotations = new Annotation[methodParamAnnotations.length][];
+        final Annotation[][] mergedAnnotations = new Annotation[methodParamAnnotations.length][];
         for (int i = 0; i < methodParamAnnotations.length; i++) {
-            List<Annotation> paramAnnotations = methodParamAnnotationsList.get(i);
+            final List<Annotation> paramAnnotations = methodParamAnnotationsList.get(i);
             mergedAnnotations[i] = paramAnnotations.toArray(new Annotation[paramAnnotations.size()]);
         }
 
         return mergedAnnotations;
     }
 
-    private static boolean annotationNotInList(Class<? extends Annotation> ca, List<Annotation> la) {
-        for (Annotation a : la) {
+    private static boolean annotationNotInList(final Class<? extends Annotation> ca, final List<Annotation> la) {
+        for (final Annotation a : la) {
             if (ca == a.getClass()) {
                 return false;
             }
@@ -286,12 +287,12 @@ public final class AnnotatedMethod implements AnnotatedElement {
         return true;
     }
 
-    private static Method findAnnotatedMethod(Method m) {
-        Method am = findAnnotatedMethod(m.getDeclaringClass(), m);
+    private static Method findAnnotatedMethod(final Method m) {
+        final Method am = findAnnotatedMethod(m.getDeclaringClass(), m);
         return (am != null) ? am : m;
     }
 
-    private static Method findAnnotatedMethod(Class<?> c, Method m) {
+    private static Method findAnnotatedMethod(final Class<?> c, Method m) {
         if (c == Object.class) {
             return null;
         }
@@ -306,16 +307,16 @@ public final class AnnotatedMethod implements AnnotatedElement {
         }
 
         // Super classes take precedence over interfaces
-        Class<?> sc = c.getSuperclass();
+        final Class<?> sc = c.getSuperclass();
         if (sc != null && sc != Object.class) {
-            Method sm = findAnnotatedMethod(sc, m);
+            final Method sm = findAnnotatedMethod(sc, m);
             if (sm != null) {
                 return sm;
             }
         }
 
-        for (Class<?> ic : c.getInterfaces()) {
-            Method im = findAnnotatedMethod(ic, m);
+        for (final Class<?> ic : c.getInterfaces()) {
+            final Method im = findAnnotatedMethod(ic, m);
             if (im != null) {
                 return im;
             }
@@ -324,15 +325,15 @@ public final class AnnotatedMethod implements AnnotatedElement {
         return null;
     }
 
-    private static boolean hasAnnotations(Method m) {
+    private static boolean hasAnnotations(final Method m) {
         return hasMetaMethodAnnotations(m)
                 || hasMethodAnnotations(m)
                 || hasParameterAnnotations(m);
     }
 
-    private static boolean hasMetaMethodAnnotations(Method m) {
-        for (Class<? extends Annotation> ac : METHOD_META_ANNOTATIONS) {
-            for (Annotation a : m.getAnnotations()) {
+    private static boolean hasMetaMethodAnnotations(final Method m) {
+        for (final Class<? extends Annotation> ac : METHOD_META_ANNOTATIONS) {
+            for (final Annotation a : m.getAnnotations()) {
                 if (a.annotationType().getAnnotation(ac) != null) {
                     return true;
                 }
@@ -342,8 +343,8 @@ public final class AnnotatedMethod implements AnnotatedElement {
         return false;
     }
 
-    private static boolean hasMethodAnnotations(Method m) {
-        for (Class<? extends Annotation> ac : METHOD_ANNOTATIONS) {
+    private static boolean hasMethodAnnotations(final Method m) {
+        for (final Class<? extends Annotation> ac : METHOD_ANNOTATIONS) {
             if (m.isAnnotationPresent(ac)) {
                 return true;
             }
@@ -352,9 +353,9 @@ public final class AnnotatedMethod implements AnnotatedElement {
         return false;
     }
 
-    private static boolean hasParameterAnnotations(Method m) {
-        for (Annotation[] as : m.getParameterAnnotations()) {
-            for (Annotation a : as) {
+    private static boolean hasParameterAnnotations(final Method m) {
+        for (final Annotation[] as : m.getParameterAnnotations()) {
+            for (final Annotation a : as) {
                 if (PARAMETER_ANNOTATIONS.contains(a.annotationType())) {
                     return true;
                 }
@@ -365,8 +366,8 @@ public final class AnnotatedMethod implements AnnotatedElement {
     }
 
     @SafeVarargs
-    private static <T> List<T> asList(T... ts) {
-        List<T> l = new ArrayList<T>();
+    private static <T> List<T> asList(final T... ts) {
+        final List<T> l = new ArrayList<>();
         l.addAll(Arrays.asList(ts));
         return l;
     }

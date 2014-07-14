@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -68,14 +68,14 @@ public class WadlGeneratorConfigLoader {
      * <p>
      * The type of this property must be a subclass or an instance of a subclass of
      * {@link WadlGeneratorConfig}.<br/>
-     * If it's not set, the default {@link org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator} will be used.
+     * If it's not set, the default {@link org.glassfish.jersey.server.wadl.internal.generators.WadlGeneratorJAXBGrammarGenerator}
+     * will be used.
      * </p>
-     *
      *
      * @param properties configuration properties of deployed Jersey application.
      * @return a configure {@link WadlGeneratorConfig}.
      */
-    public static WadlGeneratorConfig loadWadlGeneratorsFromConfig(Map<String, Object> properties) {
+    public static WadlGeneratorConfig loadWadlGeneratorsFromConfig(final Map<String, Object> properties) {
         final Object wadlGeneratorConfigProperty = properties.get(
                 ServerProperties.WADL_GENERATOR_CONFIG);
         if (wadlGeneratorConfigProperty == null) {
@@ -98,8 +98,9 @@ public class WadlGeneratorConfigLoader {
                     configClazz = ((Class<?>) wadlGeneratorConfigProperty).
                             asSubclass(WadlGeneratorConfig.class);
                 } else if (wadlGeneratorConfigProperty instanceof String) {
-                    configClazz = AccessController.doPrivileged(ReflectionHelper.classForNameWithExceptionPEA((String) wadlGeneratorConfigProperty)).
-                            asSubclass(WadlGeneratorConfig.class);
+                    configClazz = AccessController.doPrivileged(ReflectionHelper
+                            .classForNameWithExceptionPEA((String) wadlGeneratorConfigProperty))
+                            .asSubclass(WadlGeneratorConfig.class);
                 } else {
                     throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER_PROPERTY(
                             ServerProperties.WADL_GENERATOR_CONFIG,
@@ -107,10 +108,10 @@ public class WadlGeneratorConfigLoader {
                 }
                 return configClazz.newInstance();
 
-            } catch (PrivilegedActionException pae) {
+            } catch (final PrivilegedActionException pae) {
                 throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER(
                         ServerProperties.WADL_GENERATOR_CONFIG), pae.getCause());
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 throw new ProcessingException(LocalizationMessages.ERROR_WADL_GENERATOR_CONFIG_LOADER(
                         ServerProperties.WADL_GENERATOR_CONFIG), e);
             }
