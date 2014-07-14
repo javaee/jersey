@@ -39,14 +39,24 @@
  */
 package org.glassfish.jersey.tests.e2e.client;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
-import javax.ws.rs.GET;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -54,9 +64,23 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Provider;
+import javax.xml.namespace.QName;
+import javax.xml.soap.MessageFactory;
+import javax.xml.soap.SOAPBody;
+import javax.xml.soap.SOAPConstants;
+import javax.xml.soap.SOAPEnvelope;
+import javax.xml.soap.SOAPException;
+import javax.xml.soap.SOAPMessage;
+import javax.xml.soap.SOAPPart;
+import javax.xml.transform.stream.StreamSource;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -66,30 +90,83 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Test Client to Server with DigestAuthentication.
+ * Test Client to Server with DigestAuthentication and SOAPMessage Provider
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Stefan Katerkamp <stefan at katerkamp.de>
  */
-public class HttpDigestAuthFilterTest extends JerseyTest {
+public class HttpDigestAuthFilterSoapTest extends JerseyTest {
 
 	private static final String DIGEST_TEST_LOGIN = "user";
 	private static final String DIGEST_TEST_PASS = "password";
-	private static final String DIGEST_TEST_INVALIDPASS = "nopass";
-
 	private static final String DIGEST_TEST_NONCE = "eDePFNeJBAA=a874814ec55647862b66a747632603e5825acd39";
 	private static final String DIGEST_TEST_REALM = "test";
 	private static final String DIGEST_TEST_DOMAIN = "/auth-digest/";
 	private static int ncExpected = 1;
-
-	private static final String MESSAGE_BODY = "The quick brown fox jumps over the lazy dog.";
 	private static String messageBody = "";
+
+	@Provider
+	@Consumes("application/soap+xml")
+	@Produces("application/soap+xml")
+	public static class SOAP12Provider
+			implements MessageBodyWriter<SOAPMessage>, MessageBodyReader<SOAPMessage> {
+
+		@Override
+		public boolean isWriteable(Class<?> aClass, Type type,
+				Annotation[] annotations, MediaType mediaType) {
+			return SOAPMessage.class.isAssignableFrom(aClass);
+		}
+
+		@Override
+		public SOAPMessage readFrom(Class<SOAPMessage> soapEnvelopeClass, Type type,
+				Annotation[] annotations, MediaType mediaType,
+				MultivaluedMap<String, String> stringStringMultivaluedMap,
+				InputStream inputStream) throws IOException, WebApplicationException {
+			try {
+				MessageFactory messageFactory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
+				StreamSource messageSource = new StreamSource(inputStream);
+				SOAPMessage message = messageFactory.createMessage();
+				SOAPPart soapPart = message.getSOAPPart();
+				soapPart.setContent(messageSource);
+				return message;
+			} catch (SOAPException e) {
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				throw new IOException("SOAP Error. " + e.getMessage() + "\n" + sw.toString());
+			}
+		}
+
+		@Override
+		public long getSize(SOAPMessage soapMessage, Class<?> aClass, Type type,
+				Annotation[] annotations, MediaType mediaType) {
+			return -1;
+		}
+
+		@Override
+		public void writeTo(SOAPMessage soapMessage, Class<?> aClass, Type type,
+				Annotation[] annotations, MediaType mediaType,
+				MultivaluedMap<String, Object> stringObjectMultivaluedMap,
+				OutputStream outputStream) throws IOException, WebApplicationException {
+			try {
+				soapMessage.writeTo(outputStream);
+			} catch (SOAPException e) {
+				StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				throw new IOException("SOAP Error. " + e.getMessage() + "\n" + sw.toString());
+			}
+		}
+
+		@Override
+		public boolean isReadable(Class<?> aClass, Type type,
+				Annotation[] annotations, MediaType mediaType) {
+			return aClass.isAssignableFrom(SOAPMessage.class);
+		}
+	}
 
 	@Override
 	protected Application configure() {
 		enable(TestProperties.LOG_TRAFFIC);
 		enable(TestProperties.DUMP_ENTITY);
-		return new ResourceConfig(Resource.class);
+		return new ResourceConfig(Resource.class, SOAP12Provider.class);
 	}
 
 	@Path("/auth-digest")
@@ -100,34 +177,13 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 		@Context
 		private UriInfo uriInfo;
 
-		@GET
-		public Response get1() {
-			return verify("GET", false);
-		}
-
-		@GET
-		@Path("int")
-		public Response getIntegrity() {
-			return verify("GET", true);
-		}
-
 		@POST
 		@Path("int")
-		public Response postIntegrity() {
-			return verify("POST", true);
+		public Response postInt() {
+			return verifyIntegrity();
 		}
 
-		@GET
-		@Path("ěščřžýáíé")
-		public Response getEncoding() {
-			return verify("GET", false);
-		}
-
-		// The normal flow is a POST or GET request, no auth related headers.
-		// A 401 Unauthorized comes back, with a WWW-Authenticate header.
-		// A new POST or GET request is created with a Authorization header.
-		// HTTP 200 OK should come back.
-		private Response verify(String method, boolean isIntegrity) {
+		private Response verifyIntegrity() {
 			if (httpHeaders.getRequestHeader(HttpHeaders.AUTHORIZATION) == null) {
 				// the first request has no authorization header, tell filter its 401
 				// and send filter back seed for the new to be built header
@@ -136,8 +192,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 						"Digest realm=\"" + DIGEST_TEST_REALM + "\", "
 						+ "nonce=\"" + DIGEST_TEST_NONCE + "\", "
 						+ "algorithm=MD5, "
-						+ "domain=\"" + DIGEST_TEST_DOMAIN + "\", qop=\""
-						+ (isIntegrity ? "auth-int" : "auth") + "\"");
+						+ "domain=\"" + DIGEST_TEST_DOMAIN + "\", qop=\"auth-int\"");
 				return responseBuilder.build();
 			} else {
 				// the filter takes the seed and adds the header
@@ -148,12 +203,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 				final String authHeader = authList.get(0);
 
 				final String ha1 = md5(DIGEST_TEST_LOGIN, DIGEST_TEST_REALM, DIGEST_TEST_PASS);
-				String ha2;
-				if (isIntegrity) {
-					ha2 = md5(method, uriInfo.getRequestUri().getRawPath(), md5(messageBody));
-				} else {
-					ha2 = md5(method, uriInfo.getRequestUri().getRawPath());
-				}
+				final String ha2 = md5("POST", uriInfo.getRequestUri().getRawPath(), md5(messageBody));
 				final String response = md5(
 						ha1,
 						DIGEST_TEST_NONCE,
@@ -173,7 +223,7 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 			}
 		}
 
-		private static final Charset CHARACTER_SET = Charset.forName("utf-8");
+		private static final Charset CHARACTER_SET = Charset.forName("UTF-8");
 
 		/**
 		 * Colon separated value MD5 hash. Call md5 method of the filter.
@@ -249,86 +299,38 @@ public class HttpDigestAuthFilterTest extends JerseyTest {
 	}
 
 	@Test
-	public void testHttpDigestAuthFilter() {
-		final String path = "auth-digest";
-		testRequest("GET", path);
-	}
-
-	@Test
-	public void testHttpDigestAuthFilterWithEncodedUri() {
-		final String path = "auth-digest/ěščřžýáíé";
-		testRequest("GET", path);
-	}
-
-	@Test
-	public void testHttpDigestAuthFilterIntegrityGet() {
+	public void testHttpDigestAuthFilterIntegrity() throws SOAPException, IOException {
 		final String path = "auth-digest/int";
-		testRequest("GET", path);
-	}
-
-	@Test
-	public void testHttpDigestAuthFilterIntegrityPost() {
-		final String path = "auth-digest/int";
-		testRequest("POST", path);
-	}
-
-	private void testRequest(String method, final String path) {
 		final ClientConfig jerseyConfig = new ClientConfig();
 
-		Client client = ClientBuilder.newClient(jerseyConfig);
+		ClientBuilder builder = ClientBuilder.newBuilder();
+		builder = builder.withConfig(jerseyConfig);
+		builder = builder.register(SOAP12Provider.class);
+		Client client = builder.build();
+
 		client = client.register(HttpAuthenticationFeature.digest(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
 
 		final WebTarget resource = client.target(getBaseUri()).path(path);
 
 		ncExpected = 1;
-		messageBody = "";
-		if (method.equals("GET")) {
-			final Response r1 = resource.request().get();
-			Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.OK);
-		}
-		if (method.equals("POST")) {
-			Entity<String> estm = Entity.entity(MESSAGE_BODY, "text/plain");
-			messageBody = MESSAGE_BODY;
-			final Response response = resource.request("text/plain").post(estm);
 
-			Assert.assertEquals(Response.Status.fromStatusCode(response.getStatus()), Response.Status.OK);
-		}
+		MessageFactory messageFactory = MessageFactory .newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
+		SOAPMessage message = messageFactory.createMessage();
+		SOAPPart soapPart = message.getSOAPPart();
+		SOAPEnvelope envelope = soapPart.getEnvelope();
+		SOAPBody body = envelope.getBody();
+		body.addBodyElement(QName.valueOf("atest"));
+		message.setProperty(SOAPMessage.WRITE_XML_DECLARATION, "true");
+		message.saveChanges();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		message.writeTo(baos);
+		baos.close();
+		messageBody = baos.toString();
+
+		Entity<SOAPMessage> esm = Entity.entity(message, "application/soap+xml");
+		final Response response = resource.request("application/soap+xml").post(esm);
+		SOAPMessage sm = response.readEntity(SOAPMessage.class);
+		Assert.assertEquals(Response.Status.fromStatusCode(response.getStatus()), Response.Status.OK);
 	}
 
-	@Test
-	public void testPreemptive() {
-		final ClientConfig jerseyConfig = new ClientConfig();
-
-		Client client = ClientBuilder.newClient(jerseyConfig);
-		client = client.register(HttpAuthenticationFeature.digest(DIGEST_TEST_LOGIN, DIGEST_TEST_PASS));
-
-		final WebTarget resource = client.target(getBaseUri()).path("auth-digest");
-
-		ncExpected = 1;
-		final Response r1 = resource.request().get();
-		Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.OK);
-
-		ncExpected = 2;
-		final Response r2 = resource.request().get();
-		Assert.assertEquals(Response.Status.fromStatusCode(r2.getStatus()), Response.Status.OK);
-
-		ncExpected = 3;
-		final Response r3 = resource.request().get();
-		Assert.assertEquals(Response.Status.fromStatusCode(r3.getStatus()), Response.Status.OK);
-
-	}
-
-	@Test
-	public void testAuthentication() {
-		final ClientConfig jerseyConfig = new ClientConfig();
-
-		Client client = ClientBuilder.newClient(jerseyConfig);
-		client = client.register(HttpAuthenticationFeature.digest(DIGEST_TEST_LOGIN, DIGEST_TEST_INVALIDPASS));
-
-		final WebTarget resource = client.target(getBaseUri()).path("auth-digest");
-
-		ncExpected = 1;
-		final Response r1 = resource.request().get();
-		Assert.assertEquals(Response.Status.fromStatusCode(r1.getStatus()), Response.Status.UNAUTHORIZED);
-	}
 }

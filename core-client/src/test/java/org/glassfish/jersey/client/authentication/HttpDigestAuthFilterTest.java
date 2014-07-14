@@ -125,14 +125,96 @@ public class HttpDigestAuthFilterTest {
         final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
         method.setAccessible(true);
         final DigestScheme ds = (DigestScheme) method.invoke(f,
-                Arrays.asList(new String[]{
-                        "    digest realm =   \"tata\"  ,  opaque =bar ,nonce=\"foo, bar\",   algorithm=md5"
+				   Arrays.asList(new String[]{
+                        " digest realm = \"tata\" , opaque=\"bar\" ,nonce=\"foo, bar\""
                 }));
 
         Assert.assertNotNull(ds);
         Assert.assertEquals("tata", ds.getRealm());
         Assert.assertEquals("foo, bar", ds.getNonce());
         Assert.assertEquals("bar", ds.getOpaque());
-        Assert.assertEquals("MD5", ds.getAlgorithm().name());
     }
+
+	@Test
+	public void testParseQop() throws Exception {
+
+        final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        final DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+					"Digest realm=\"foo.example.com\",nonce=\"NTJmYTJlZGa6BrjFJ5lAv/PFt8f4HGbJAA==\""
+							+ ",stale=false,algorithm=MD5,qop=\"auth-int\", Basic realm=\"foo.example.com\""
+                }));
+
+        Assert.assertNotNull(ds);
+        Assert.assertEquals("foo.example.com", ds.getRealm());
+        Assert.assertEquals("NTJmYTJlZGa6BrjFJ5lAv/PFt8f4HGbJAA==", ds.getNonce());
+        Assert.assertEquals(false, ds.isStale());
+        Assert.assertEquals("MD5", ds.getAlgorithm().name());
+		Assert.assertEquals("AUTHINT", ds.getQop().name());
+	}
+
+	@Test
+	public void testParseQop2() throws Exception {
+
+        final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        final DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+					"Basic realm=\"foo.example.com\", "
+					+ "Digest realm=\"foo.example.com\",nonce=\"NTJmYTJlZGa6BrjFJ5lAv/PFt8f4HGbJAA==\""
+							+ ",stale=false,algorithm=MD5,qop=\"auth,auth-int\""
+                }));
+
+        Assert.assertNotNull(ds);
+        Assert.assertEquals("foo.example.com", ds.getRealm());
+        Assert.assertEquals("NTJmYTJlZGa6BrjFJ5lAv/PFt8f4HGbJAA==", ds.getNonce());
+        Assert.assertEquals(false, ds.isStale());
+        Assert.assertEquals("MD5", ds.getAlgorithm().name());
+		Assert.assertEquals("AUTH", ds.getQop().name());
+	}
+
+	@Test
+	public void testParseQop3() throws Exception {
+
+        final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        final DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+					"Basic realm=\"foo.example.com\", "
+					+ "Digest realm=\"foo.example.com\",nonce=\"NTJmYTJlZGa6BrjFJ5lAv/PFt8f4HGbJAA==\""
+							+ ",stale=false,algorithm=MD5,qop=\"\""
+                }));
+
+        Assert.assertNotNull(ds);
+        Assert.assertEquals("foo.example.com", ds.getRealm());
+        Assert.assertEquals("NTJmYTJlZGa6BrjFJ5lAv/PFt8f4HGbJAA==", ds.getNonce());
+        Assert.assertEquals(false, ds.isStale());
+        Assert.assertEquals("MD5", ds.getAlgorithm().name());
+		Assert.assertEquals("UNSPECIFIED", ds.getQop().name());
+	}
+
+	@Test
+	public void testParseQop4() throws Exception {
+
+        final DigestAuthenticator f = new DigestAuthenticator(new HttpAuthenticationFilter.Credentials("foo", "bar"), 10000);
+        final Method method = DigestAuthenticator.class.getDeclaredMethod("parseAuthHeaders", List.class);
+        method.setAccessible(true);
+        final DigestScheme ds = (DigestScheme) method.invoke(f,
+                Arrays.asList(new String[]{
+					"Basic realm=\"foo.example.com\", "
+					+ "Digest realm=\"foo.example.com\",nonce=\"NTJmYTJlZGa6BrjFJ5lAv/PFt8f4HGbJAA==\""
+							+ ",stale=false,algorithm=MD5"
+                }));
+
+        Assert.assertNotNull(ds);
+        Assert.assertEquals("foo.example.com", ds.getRealm());
+        Assert.assertEquals("NTJmYTJlZGa6BrjFJ5lAv/PFt8f4HGbJAA==", ds.getNonce());
+        Assert.assertEquals(false, ds.isStale());
+        Assert.assertEquals("MD5", ds.getAlgorithm().name());
+		Assert.assertEquals("UNSPECIFIED", ds.getQop().name());
+	}
 }
