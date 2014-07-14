@@ -1,29 +1,7 @@
 TODO - FIRST:
 
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/ParameterTypeArgumentOrderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/XXETest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/errors/MissingDependenciesTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/errors/NonPublicNonStaticTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/CacheControlImplTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/ConsumeProduceTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/ContentDispositionTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/CookieImplTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/FormDataContentDispositionTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/HttpHeaderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/LinkTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/AcceptMediaTypeProviderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/BeanTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/EntityTagProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/LocaleProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/MediaTypeProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/QualitySourceMediaTypeProviderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/ToStringHeaderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/InBoundHeadersTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/InfectorTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/inject/AllInjectablesTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/inject/AnnotationInjectableTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/inject/ContextResolverTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/inject/InjectAnnotationInjectableTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/inject/InjectParamAnnotationInjectableTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/inject/IoCComponentProcessorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/inject/JAXBContextResolverTest.java
@@ -41,11 +19,7 @@ jersey-tests/src/test/java/com/sun/jersey/impl/json/JacksonNullStringTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/json/JSONFromJAXBInheritanceTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/json/ListOfJAXBBeanTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/json/NestedArrayTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/CloseableTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/InstantiatedWithDestroyTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/MultipleScopeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/PerRequestLifecycleTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/PostConstructPreDestroyTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/ProviderLifecycleTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/ResourceLifecycleTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/SingletonLifecycleTest.java
@@ -349,3 +323,13 @@ jersey-tests/src/test/java/com/sun/jersey/api/core/AbstractResourceConfigOrderTe
 jersey-tests/src/test/java/com/sun/jersey/api/core/ClassNamesResourceConfigTest.java
 jersey-tests/src/test/java/com/sun/jersey/api/core/DefaultResourceConfigTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/application/WebApplicationTest.java
+
+jersey-tests/src/test/java/com/sun/jersey/impl/errors/MissingDependenciesTest.java (missing dependencies in j2 do not log warn)
+jersey-tests/src/test/java/com/sun/jersey/impl/InBoundHeadersTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/InfectorTest.java (the class Inflector has different purpose in J2)
+jersey-tests/src/test/java/com/sun/jersey/impl/inject/AnnotationInjectableTest.java (different injection/hk2)
+jersey-tests/src/test/java/com/sun/jersey/impl/inject/ContextResolverTest.java (ContextResolver not injectable any more)
+jersey-tests/src/test/java/com/sun/jersey/impl/inject/InjectAnnotationInjectableTest.java (Injectable is N/A in J2/hk2)
+jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/MultipleScopeTest.java (different injection /hk2)
+jersey-tests/src/test/java/com/sun/jersey/impl/http/header/LinkTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/PostConstructPreDestroyTest.java (redundant)
