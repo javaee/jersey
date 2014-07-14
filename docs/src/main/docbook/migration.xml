@@ -59,6 +59,29 @@
             <title>Release 2.11 Highlights</title>
 
             <section>
+                <title>Promoted Public Beta APIs</title>
+
+                <para>
+                    Several experimental Jersey APIs have matured enough and as such we have decided to promote them
+                    from &jersey.common.Beta; status, namely:
+
+                    <itemizedlist>
+                        <listitem>
+                            <para>
+                                Jersey client-side &jersey.client.ConnectorProvider; SPI.
+                            </para>
+                        </listitem>
+                        <listitem>
+                            <para>
+                                Jersey server-side &jersey.server.ResponseErrorMapper; SPI.
+                            </para>
+                        </listitem>
+                    </itemizedlist>
+
+                    These APIs are now part of the official public Jersey 2.x API.
+                </para>
+            </section>
+            <section>
                 <title>Not closing provided streams in message body providers</title>
 
                 <para>
@@ -1056,7 +1079,7 @@ resourceConfig.addSingletons(reloader);
                             <entry>For the static factory methods and constructors.</entry>
                         </row>
                         <row>
-                            <entry></entry>
+                            <entry/>
                             <entry>
                                 &jaxrs.client.Client;
                             </entry>
@@ -1069,7 +1092,7 @@ resourceConfig.addSingletons(reloader);
                             <entry>
                                 &jaxrs.client.WebTarget;
                             </entry>
-                            <entry></entry>
+                            <entry/>
                         </row>
                         <row>
                             <entry>
