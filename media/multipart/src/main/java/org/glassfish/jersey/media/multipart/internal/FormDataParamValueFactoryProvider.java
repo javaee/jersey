@@ -135,8 +135,9 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             final FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
 
             final List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(name);
-            if (formDataBodyParts == null)
+            if (formDataBodyParts == null) {
                 return null;
+            }
 
             final List<FormDataContentDisposition> list = new ArrayList<>(formDataBodyParts.size());
             for (final FormDataBodyPart formDataBodyPart : formDataBodyParts) {
@@ -237,7 +238,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                             request.getHeaders(),
                             in);
                 } catch (final IOException e) {
-                    throw new FormDataParamException(e, extractor.getName(), extractor.getDefaultValueString());
+                    throw new FormDataParamException(e, parameter.getSourceName(), parameter.getDefaultValue());
                 }
             } else if (extractor != null) {
                 final MultivaluedMap<String, String> map = new MultivaluedStringMap();
@@ -273,7 +274,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
     }
 
-    private static final Set<Class<?>> types = initializeTypes();
+    private static final Set<Class<?>> TYPES = initializeTypes();
 
     private static Set<Class<?>> initializeTypes() {
         final Set<Class<?>> newSet = new HashSet<>();
@@ -297,7 +298,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
     }
 
     private static boolean isPrimitiveType(final Class<?> type) {
-        return types.contains(type);
+        return TYPES.contains(type);
     }
 
     private final class FormDataMultiPartValueFactory extends AbstractContainerRequestValueFactory<Object> {
