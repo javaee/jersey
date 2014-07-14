@@ -81,8 +81,8 @@ public class WadlGeneratorConfigLoader {
         if (wadlGeneratorConfigProperty == null) {
             return new WadlGeneratorConfig() {
                 @Override
-                public List configure() {
-                    return Collections.EMPTY_LIST;
+                public List<WadlGeneratorDescription> configure() {
+                    return Collections.emptyList();
                 }
             };
         } else {

@@ -166,7 +166,7 @@ public abstract class ParamInjectionResolver<A extends Annotation> implements In
         }
 
         // check class which contains injectee
-        Class clazz = injectee.getInjecteeClass();
+        Class<?> clazz = injectee.getInjecteeClass();
         return clazz.isAnnotationPresent(Encoded.class);
     }
 

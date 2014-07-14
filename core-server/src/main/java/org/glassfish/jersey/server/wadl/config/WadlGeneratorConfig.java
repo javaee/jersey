@@ -154,7 +154,7 @@ public abstract class WadlGeneratorConfig {
     public WadlGeneratorConfig() {
     }
 
-    public abstract List configure();
+    public abstract List<WadlGeneratorDescription> configure();
 
     /**
      * Create a new instance of {@link org.glassfish.jersey.server.wadl.WadlGenerator}, based on the {@link WadlGeneratorDescription}s

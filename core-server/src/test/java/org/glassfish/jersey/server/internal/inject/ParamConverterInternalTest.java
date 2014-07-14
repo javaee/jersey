@@ -275,7 +275,7 @@ public class ParamConverterInternalTest extends AbstractTest {
 
         @Override
         public String toString(MyBean bean) throws IllegalArgumentException {
-            return "*:" + bean.getValue().toString() + ":*";
+            return "*:" + bean.getValue() + ":*";
         }
     }
 
