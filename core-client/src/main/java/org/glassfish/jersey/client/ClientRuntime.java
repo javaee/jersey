@@ -43,14 +43,19 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -66,7 +71,10 @@ import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientRuntime {
+class ClientRuntime implements JerseyClient.ShutdownHook {
+
+    private static final Logger LOG = Logger.getLogger(ClientRuntime.class.getName());
+
     private final Stage<ClientRequest> requestProcessingRoot;
     private final Stage<ClientResponse> responseProcessingRoot;
 
@@ -77,6 +85,8 @@ class ClientRuntime {
     private final ClientAsyncExecutorFactory asyncExecutorsFactory;
 
     private final ServiceLocator locator;
+    private final Iterable<ClientLifecycleListener> lifecycleListeners;
+
 
     /**
      * Create new client request processing runtime.
@@ -106,6 +116,16 @@ class ClientRuntime {
         this.asyncExecutorsFactory = new ClientAsyncExecutorFactory(locator, asyncThreadPoolSize);
 
         this.locator = locator;
+
+        this.lifecycleListeners = Providers.getAllProviders(locator, ClientLifecycleListener.class);
+
+        for (final ClientLifecycleListener listener : lifecycleListeners) {
+            try {
+                listener.onInit();
+            } catch (final Throwable t) {
+                LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_INIT(listener.getClass().getName()), t);
+            }
+        }
     }
 
     /**
@@ -216,6 +236,7 @@ class ClientRuntime {
      *
      * @param request client request to be invoked.
      * @return client response.
+     *
      * @throws javax.ws.rs.ProcessingException in case of an invocation failure.
      */
     public ClientResponse invoke(final ClientRequest request) {
@@ -253,14 +274,26 @@ class ClientRuntime {
         return config;
     }
 
-    /**
-     * Close the client runtime and release the underlying transport connector.
-     */
-    public void close() {
+    @Override
+    public void onShutdown() {
         try {
-            connector.close();
+            for (final ClientLifecycleListener listener : lifecycleListeners) {
+                try {
+                    listener.onClose();
+                } catch (final Throwable t) {
+                    LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_CLOSE(listener.getClass().getName()), t);
+                }
+            }
         } finally {
-            asyncExecutorsFactory.close();
+            try {
+                connector.close();
+            } finally {
+                try {
+                    asyncExecutorsFactory.close();
+                } finally {
+                    Injections.shutdownLocator(locator);
+                }
+            }
         }
     }
 

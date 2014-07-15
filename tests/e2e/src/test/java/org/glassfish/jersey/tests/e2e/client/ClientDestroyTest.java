@@ -58,12 +58,17 @@ import javax.ws.rs.ext.ReaderInterceptorContext;
 
 import javax.annotation.PreDestroy;
 
+import org.glassfish.jersey.client.ClientLifecycleListener;
+import org.glassfish.jersey.client.JerseyClient;
+import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -73,7 +78,7 @@ import static org.junit.Assert.assertThat;
  */
 public class ClientDestroyTest extends JerseyTest {
 
-    private final static Map<String, Boolean> destroyed = new HashMap<>();
+    private static final Map<String, Boolean> destroyed = new HashMap<>();
 
     @Override
     @Before
@@ -121,13 +126,8 @@ public class ClientDestroyTest extends JerseyTest {
         }
     }
 
-    @Override
-    protected Application configure() {
-        return new ResourceConfig(Resource.class);
-    }
-
     @Test
-    public void testClientDestroy() throws Exception {
+    public void testClientInvokePreDestroyMethodOnProviderClass() throws Exception {
         final Client client = ClientBuilder.newClient()
                 .register(MyFilter.class)
                 .register(MyReader.class);
@@ -139,10 +139,103 @@ public class ClientDestroyTest extends JerseyTest {
         checkDestroyed(true);
     }
 
+    @Override
+    protected Application configure() {
+        return new ResourceConfig(Resource.class);
+    }
+
     private void checkDestroyed(final boolean shouldBeDestroyed) {
         for (final Map.Entry<String, Boolean> entry : destroyed.entrySet()) {
             assertThat(entry.getKey() +  " should" + (shouldBeDestroyed ? "" : " not") + " be destroyed",
                     entry.getValue(), is(shouldBeDestroyed));
         }
     }
+
+    public static class FooListener implements ClientRequestFilter, ClientLifecycleListener {
+        public static boolean INITIALIZED = false;
+        public static boolean CLOSED = false;
+
+        @Override
+        public void filter(final ClientRequestContext requestContext) throws IOException { /* do nothing */ }
+
+        @Override
+        public void onClose() {
+            CLOSED = true;
+        }
+
+        @Override
+        public void onInit() {
+            INITIALIZED = true;
+        }
+
+        // to check if closing works also for class-registered providers
+        public static boolean isClosed() {
+            return CLOSED;
+        }
+
+        public static boolean isInitialized() {
+            return INITIALIZED;
+        }
+    }
+
+    public static class BarListener implements ClientRequestFilter, ClientLifecycleListener {
+        protected boolean closed = false;
+        protected boolean initialized = false;
+
+        @Override
+        public void filter(final ClientRequestContext requestContext) throws IOException { /* do nothing */ }
+
+        @Override
+        public void onInit() {
+            this.initialized = true;
+        }
+
+        @Override
+        public synchronized void onClose() {
+            this.closed = true;
+        }
+
+        public boolean isClosed() {
+            return closed;
+        }
+
+        public boolean isInitialized() {
+            return initialized;
+        }
+    }
+
+    // another type needed, as multiple registrations of the same type are not allowed
+    public static class BarListener2 extends BarListener {
+    }
+
+    @Test
+    public void testLifecycleListenerProvider() {
+        final JerseyClientBuilder builder = new JerseyClientBuilder();
+        final JerseyClient client = builder.build();
+
+        final BarListener filter = new BarListener();
+        final BarListener filter2 = new BarListener2();
+
+        // ClientRuntime initializes lazily, so it is forced by invoking a (dummy) request
+        client.register(filter2);                                                   // instance registered into client
+        client.target(getBaseUri()).register(filter).request().get(String.class);   // instance registration into target
+
+        assertTrue("Filter was expected to be already initialized.", filter.isInitialized());
+        assertTrue("Filter2 was expected to be already initialized.", filter2.isInitialized());
+
+        client.target(getBaseUri()).register(FooListener.class).request().get(String.class); // class registration into target
+
+        assertTrue("Class-registered filter was expected to be already initialized", FooListener.isInitialized());
+
+        assertFalse("Class-registered filter was expected to be still open.", FooListener.isClosed());
+        assertFalse("Filter was expected to be still open.", filter.isClosed());
+        assertFalse("Filter2 was expected to be still open.", filter2.isClosed());
+
+        client.close();
+
+        assertTrue("Class-registered filter was expected to be closed.", FooListener.isClosed());
+        assertTrue("Filter was expected to be closed.", filter.isClosed());
+        assertTrue("Filter2 was expected to be closed.", filter2.isClosed());
+    }
+
 }

@@ -412,29 +412,29 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             final ClientConfig configuration = new ClientConfig(runtimeCfgState);
             final Connector connector = connectorProvider.getConnector(client, configuration);
             final ClientRuntime crt = new ClientRuntime(configuration, connector, locator);
-            client.addListener(new JerseyClient.LifecycleListener() {
-                @Override
-                public void onClose() {
-                    try {
-                        crt.close();
-                    } finally {
-                        Injections.shutdownLocator(locator);
-                    }
-                }
-            });
+
+            client.registerShutdownHook(crt);
 
             return crt;
         }
 
         @Override
         public boolean equals(final Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             final State state = (State) o;
 
-            if (client != null ? !client.equals(state.client) : state.client != null) return false;
-            if (!commonConfig.equals(state.commonConfig)) return false;
+            if (client != null ? !client.equals(state.client) : state.client != null) {
+                return false;
+            }
+            if (!commonConfig.equals(state.commonConfig)) {
+                return false;
+            }
             return connectorProvider == null ? state.connectorProvider == null
                     : connectorProvider.equals(state.connectorProvider);
         }

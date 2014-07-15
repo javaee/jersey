@@ -99,6 +99,18 @@
                     or client).
                 </para>
             </section>
+            <section>
+                <title>ClientLifecycleListener</title>
+                <para>
+                    Client-side providers (such as<literal>ClientRequestFilter</literal>s) implementing the new
+                    <literal>org.glassfish.jersey.client.ClientLifecycleListener</literal> interface will be notified when
+                    various lifecycle events occur. Currently client runtime initialization triggers the
+                    <literal>onInit()</literal> method and client closing triggers <literal>onClose()</literal> method.
+                    Such providers implementing the <literal>ClientLifecycleListener</literal> can be registered in a common
+                    way, e.g. into a <literal>JerseyClient</literal> or <literal>JerseyWebTarget</literal> instance, or into a
+                    (potentially) auto discoverable feature context.
+                </para>
+            </section>
         </section>
     </section>
 
