@@ -50,15 +50,12 @@ import org.glassfish.hk2.api.HK2Loader;
 import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.ServiceLocatorFactory;
-import org.glassfish.hk2.extension.ServiceLocatorGenerator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
 import org.glassfish.hk2.utilities.binding.BindingBuilder;
 import org.glassfish.hk2.utilities.binding.BindingBuilderFactory;
 import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 import org.glassfish.hk2.utilities.binding.ServiceBindingBuilder;
-
-import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
 
 /**
  * HK2 injection binding utility methods.
@@ -68,7 +65,6 @@ import org.jvnet.hk2.external.generator.ServiceLocatorGeneratorImpl;
  */
 public class Injections {
 
-    private final static ServiceLocatorGenerator generator = new ServiceLocatorGeneratorImpl();
     private final static ServiceLocatorFactory factory = ServiceLocatorFactory.getInstance();
 
     /**
@@ -138,7 +134,8 @@ public class Injections {
     }
 
     private static ServiceLocator _createLocator(final String name, final ServiceLocator parent, final Binder... binders) {
-        final ServiceLocator result = factory.create(name, parent, generator, ServiceLocatorFactory.CreatePolicy.DESTROY);
+        // Passing null as service locator generator would force HK2 to find appropriate one.
+        final ServiceLocator result = factory.create(name, parent, null, ServiceLocatorFactory.CreatePolicy.DESTROY);
 
         result.setNeutralContextClassLoader(false);
         ServiceLocatorUtilities.enablePerThreadScope(result);
