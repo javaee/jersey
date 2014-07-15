@@ -57,7 +57,7 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
 @PropertiesClass
 public final class CommonProperties {
 
-    public static Map<String, String> LEGACY_FALLBACK_MAP = new HashMap<String, String>();
+    private static final Map<String, String> LEGACY_FALLBACK_MAP = new HashMap<String, String>();
 
     static {
         LEGACY_FALLBACK_MAP.put(CommonProperties.OUTBOUND_CONTENT_LENGTH_BUFFER_CLIENT,
@@ -145,7 +145,7 @@ public final class CommonProperties {
     /**
      * If {@code true} then disable META-INF/services lookup globally on client/server.
      * <p>
-     * By default Jersey lookups SPI implementations described by META-INF/services/* files.
+     * By default Jersey looks up SPI implementations described by META-INF/services/* files.
      * Then you can register appropriate provider classes by {@link javax.ws.rs.core.Application}.
      * </p>
      * <p>
@@ -246,6 +246,19 @@ public final class CommonProperties {
     private CommonProperties() {
     }
 
+    /**
+     * Get the value of the specified property.
+     *
+     * If the property is not set or the actual property value type is not compatible with the specified type, the method will
+     * return {@code null}.
+     *
+     * @param properties    Map of properties to get the property value from.
+     * @param propertyName  Name of the property.
+     * @param type          Type to retrieve the value as.
+     * @return              Value of the property or {@code null}.
+     *
+     * @since 2.8
+     */
     public static Object getValue(Map<String, ?> properties, String propertyName, Class<?> type) {
         return PropertiesHelper.getValue(properties, propertyName, type, CommonProperties.LEGACY_FALLBACK_MAP);
     }
