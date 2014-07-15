@@ -84,6 +84,7 @@
         <module>jersey-2255</module>
         <module>jersey-2322</module>
         <module>jersey-2335</module>
+        <module>jersey-2551</module>
         <module>j-59-ejb-lib</module>
         <module>j-59-cdi-war</module>
         <module>j-59-ear</module>
