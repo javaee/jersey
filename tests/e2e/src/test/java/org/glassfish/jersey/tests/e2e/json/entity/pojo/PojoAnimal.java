@@ -39,19 +39,24 @@
  */
 package org.glassfish.jersey.tests.e2e.json.entity.pojo;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = PojoCat.class),
-        @JsonSubTypes.Type(value = PojoDog.class) })
+// Jackson 1
+@org.codehaus.jackson.annotate.JsonTypeInfo(
+        use = org.codehaus.jackson.annotate.JsonTypeInfo.Id.NAME,
+        include = org.codehaus.jackson.annotate.JsonTypeInfo.As.PROPERTY)
+@org.codehaus.jackson.annotate.JsonSubTypes({
+        @org.codehaus.jackson.annotate.JsonSubTypes.Type(value = PojoCat.class),
+        @org.codehaus.jackson.annotate.JsonSubTypes.Type(value = PojoDog.class) })
+// Jackson 2
+@com.fasterxml.jackson.annotation.JsonTypeInfo(
+        use = com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME,
+        include = com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY)
+@com.fasterxml.jackson.annotation.JsonSubTypes({
+        @com.fasterxml.jackson.annotation.JsonSubTypes.Type(value = PojoCat.class),
+        @com.fasterxml.jackson.annotation.JsonSubTypes.Type(value = PojoDog.class) })
 @SuppressWarnings("RedundantIfStatement")
 public class PojoAnimal {
 
@@ -60,12 +65,12 @@ public class PojoAnimal {
     public PojoAnimal() {
     }
 
-    public PojoAnimal(String name) {
+    public PojoAnimal(final String name) {
         this.name = name;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == null) {
             return false;
         }

@@ -89,6 +89,16 @@
                     change Jersey is enforcing the JavaDoc statements present in message body providers.
                 </para>
             </section>
+            <section>
+                <title>Jackson 1</title>
+
+                <para>
+                    We have reintroduced support for JSON processing via Jackson 1.x JSON provider (1.9.11). In order to use
+                    Jackson 1 in your application you need to add <literal>jersey-media-json-jackson1</literal>  module (+ it's
+                    dependencies) to your class-path and register <literal>Jackson1Feature</literal> in your application (server
+                    or client).
+                </para>
+            </section>
         </section>
     </section>
 

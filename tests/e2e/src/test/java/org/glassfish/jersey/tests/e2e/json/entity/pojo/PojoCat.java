@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,16 +51,16 @@ public class PojoCat extends PojoAnimal {
     public PojoCat() {
     }
 
-    public PojoCat(String name) {
+    public PojoCat(final String name) {
         super(name);
     }
 
-    public PojoCat(String name, String nickName) {
+    public PojoCat(final String name, final String nickName) {
         super(name);
         this.nickName = nickName;
     }
 
-    public void setNickName(String nickName) {
+    public void setNickName(final String nickName) {
         this.nickName = nickName;
     }
 

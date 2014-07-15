@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.tests.e2e.json;
 
-import java.util.logging.Logger;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -59,7 +57,6 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -71,7 +68,6 @@ import static org.junit.Assert.assertTrue;
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
 public class JsonWithPaddingEncodingFilterTest extends JerseyTest {
-    private static final Logger LOGGER = Logger.getLogger(JsonWithPaddingEncodingFilterTest.class.getName());
 
     @Override
     protected ResourceConfig configure() {
@@ -89,11 +85,11 @@ public class JsonWithPaddingEncodingFilterTest extends JerseyTest {
         @Path("jsonp")
         @JSONP(queryParam = JSONP.DEFAULT_QUERY)
         @Produces("application/x-javascript")
-        public Message getHelloJsonP(@Context HttpHeaders headers) {
-            MultivaluedMap<String, String> headerParams = headers.getRequestHeaders();
-            for (String key : headerParams.keySet()) {
+        public Message getHelloJsonP(@Context final HttpHeaders headers) {
+            final MultivaluedMap<String, String> headerParams = headers.getRequestHeaders();
+            for (final String key : headerParams.keySet()) {
                 System.out.println(key + ": ");
-                for (String value : headerParams.get(key)) {
+                for (final String value : headerParams.get(key)) {
                     System.out.print(value + ", ");
                 }
                 System.out.println("\b\b");
@@ -106,7 +102,7 @@ public class JsonWithPaddingEncodingFilterTest extends JerseyTest {
         private String greeting;
         private String language;
 
-        public Message(String greeting, String language) {
+        public Message(final String greeting, final String language) {
             this.greeting = greeting;
             this.language = language;
         }
@@ -126,7 +122,7 @@ public class JsonWithPaddingEncodingFilterTest extends JerseyTest {
                 .register(GZipEncoder.class).request("application/x-javascript")
                 .header("Accept-Encoding", "gzip").get();
 
-        String result = response.readEntity(String.class);
+        final String result = response.readEntity(String.class);
         assertEquals("gzip", response.getHeaders().getFirst("Content-Encoding"));
 
         assertTrue(result.startsWith("dialog("));
@@ -140,7 +136,7 @@ public class JsonWithPaddingEncodingFilterTest extends JerseyTest {
                 .register(DeflateEncoder.class).request("application/x-javascript")
                 .header("Accept-Encoding", "deflate").get();
 
-        String result = response.readEntity(String.class);
+        final String result = response.readEntity(String.class);
         assertEquals("deflate", response.getHeaders().getFirst("Content-Encoding"));
 
         assertTrue(result.startsWith("dialog("));

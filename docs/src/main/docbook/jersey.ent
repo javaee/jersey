@@ -339,6 +339,7 @@
 <!ENTITY jersey.ext.ValidationError "<link xlink:href='&jersey.javadoc.path;/server/validation/ValidationError.html'>ValidationError</link>">
 
 <!ENTITY jersey.media.JacksonFeature "<link xlink:href='&jersey.javadoc.path;/jackson/JacksonFeature.html'>JacksonFeature</link>" >
+<!ENTITY jersey.media.Jackson1Feature "<link xlink:href='&jersey.javadoc.path;/jackson1/Jackson1Feature.html'>Jackson1Feature</link>" >
 <!ENTITY jersey.media.JettisonFeature "<link xlink:href='&jersey.javadoc.path;/jettison/JettisonFeature.html'>JettisonFeature</link>" >
 <!ENTITY jersey.media.JettisonConfig "<link xlink:href='&jersey.javadoc.path;/jettison/JettisonConfig.html'>JettisonConfig</link>" >
 <!ENTITY jersey.media.JettisonJaxbContext "<link xlink:href='&jersey.javadoc.path;/jettison/JettisonJaxbContext.html'>JettisonJaxbContext</link>" >
@@ -517,6 +518,7 @@
 <!ENTITY jersey-media-json-processing "<link xlink:href='&jersey.site.path;/jersey-media-json-processing/dependencies.html'>jersey-media-json-processing</link>" >
 <!ENTITY jersey-media-json-jettison "<link xlink:href='&jersey.site.path;/jersey-media-json-jettison/dependencies.html'>jersey-media-json-jettison</link>" >
 <!ENTITY jersey-media-json-jackson "<link xlink:href='&jersey.site.path;/jersey-media-json-jackson/dependencies.html'>jersey-media-json-jackson</link>" >
+<!ENTITY jersey-media-json-jackson1 "<link xlink:href='&jersey.site.path;/jersey-media-json-jackson1/dependencies.html'>jersey-media-json-jackson1</link>" >
 <!ENTITY jersey-media-moxy "<link xlink:href='&jersey.site.path;/jersey-media-moxy/dependencies.html'>jersey-media-moxy</link>" >
 <!ENTITY jersey-media-multipart "<link xlink:href='&jersey.site.path;/jersey-media-multipart/dependencies.html'>jersey-media-multipart</link>" >
 <!ENTITY jersey-mvc "<link xlink:href='&jersey.site.path;/jersey-mvc/dependencies.html'>jersey-mvc</link>" >
@@ -531,7 +533,8 @@
 <!ENTITY jersey.github.ef.example.path "<link xlink:href='&jersey.github.examples.path;/entity-filtering'>Entity Filtering example</link>">
 <!ENTITY jersey.github.ef.security.example.path "<link xlink:href='&jersey.github.examples.path;/entity-filtering-security'>Entity Filtering example (with security annotations)</link>">
 <!ENTITY jersey.github.helloworld.example.path "<link xlink:href='&jersey.github.examples.path;/helloworld'>helloworld example</link>">
-<!ENTITY jersey.github.jackson.example.path "<link xlink:href='&jersey.github.examples.path;/json-jackson'>JSON Jackson example</link>">
+<!ENTITY jersey.github.jackson.example.path "<link xlink:href='&jersey.github.examples.path;/json-jackson'>JSON Jackson (2.x) example</link>">
+<!ENTITY jersey.github.jackson1.example.path "<link xlink:href='&jersey.github.examples.path;/json-jackson1'>JSON Jackson (1.x) example</link>">
 <!ENTITY jersey.github.jaxb.example.path "<link xlink:href='&jersey.github.examples.path;/jaxb'>JAXB example</link>">
 <!ENTITY jersey.github.jettison.example.path "<link xlink:href='&jersey.github.examples.path;/json-jettison'>JSON Jettison example</link>">
 <!ENTITY jersey.github.json.processing.example.path "<link xlink:href='&jersey.github.examples.path;/json-processing-webapp'>JSON Processing example</link>">
@@ -904,6 +907,7 @@
 <!ENTITY lit.jersey-media-json-processing "<literal>jersey-media-json-processing</literal>" >
 <!ENTITY lit.jersey-media-json-jettison "<literal>jersey-media-json-jettison</literal>" >
 <!ENTITY lit.jersey-media-json-jackson "<literal>jersey-media-json-jackson</literal>" >
+<!ENTITY lit.jersey-media-json-jackson1 "<literal>jersey-media-json-jackson1</literal>" >
 <!ENTITY lit.jersey-media-moxy "<literal>jersey-media-moxy</literal>" >
 <!ENTITY lit.jersey-media-multipart "<literal>jersey-media-multipart</literal>" >
 

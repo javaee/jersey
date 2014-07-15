@@ -129,7 +129,7 @@ public abstract class AbstractJsonTest extends JerseyTest {
 
         public JAXBContextResolver(final JettisonConfig jsonConfiguration, final Class<?>[] classes,
                                    final boolean forMoxyProvider) throws Exception {
-            this.types = new HashSet<Class<?>>(Arrays.asList(classes));
+            this.types = new HashSet<>(Arrays.asList(classes));
 
             if (jsonConfiguration != null) {
                 this.context = new JettisonJaxbContext(jsonConfiguration, classes);
@@ -140,7 +140,7 @@ public abstract class AbstractJsonTest extends JerseyTest {
         }
 
         @Override
-        public JAXBContext getContext(Class<?> objectType) {
+        public JAXBContext getContext(final Class<?> objectType) {
             return (types.contains(objectType)) ? context : null;
         }
     }
@@ -161,12 +161,8 @@ public abstract class AbstractJsonTest extends JerseyTest {
         final String providerName = getProviderPathPart(jsonTestSetup);
         final String testName = getEntityPathPart(jsonTestSetup);
 
-        StringBuilder path = new StringBuilder();
-        path.append("/").append(providerName);
-        path.append("/").append(testName);
-
         resourceBuilder.
-                path(path.toString()).
+                path("/" + providerName + "/" + testName).
                 addMethod("POST").
                 consumes(MediaType.APPLICATION_JSON_TYPE).
                 produces(MediaType.APPLICATION_JSON_TYPE).
@@ -198,7 +194,7 @@ public abstract class AbstractJsonTest extends JerseyTest {
                             }
 
                             assertEquals(json, retrievedJson);
-                        } catch (IOException e) {
+                        } catch (final IOException e) {
                             fail("Cannot find original JSON file.");
                         }
 
@@ -224,7 +220,7 @@ public abstract class AbstractJsonTest extends JerseyTest {
     private static JAXBContextResolver getJaxbContextResolver(final JsonTestSetup jsonTestSetup) {
         try {
             return createJaxbContextResolver(jsonTestSetup.getJsonProvider(), jsonTestSetup.getTestClasses());
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -316,14 +312,14 @@ public abstract class AbstractJsonTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         config.register(getJsonTestSetup().getJsonProvider().getFeature());
 
         config.register(getJaxbContextResolver(jsonTestSetup));
 
         // Register additional providers.
         if (getJsonTestSetup().getProviders() != null) {
-            for (Object provider : getJsonTestSetup().getProviders()) {
+            for (final Object provider : getJsonTestSetup().getProviders()) {
                 config.register(provider);
             }
         }
