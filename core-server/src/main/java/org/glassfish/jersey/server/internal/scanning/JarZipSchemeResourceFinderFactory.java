@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012,2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,7 @@ import org.glassfish.jersey.server.ResourceFinder;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
- * A "jar" and "zip" scheme URI scanner that recursively jar files.
+ *  A "jar", "zip" and "wsjar" scheme URI scanner that recursively jar files.
  * Jar entries are reported to a {@link ResourceProcessor}.
  *
  * @author Paul Sandoz
@@ -65,11 +65,11 @@ class JarZipSchemeResourceFinderFactory implements UriSchemeResourceFinderFactor
 
     @Override
     public Set<String> getSchemes() {
-        return new HashSet<String>(Arrays.asList("jar", "zip"));
+        return new HashSet<String>(Arrays.asList("jar", "zip", "wsjar"));
     }
 
     /**
-     * Create new "jar" and "zip" scheme URI scanner factory.
+     * Create new "jar", "zip" and "wsjar" scheme URI scanner factory.
      */
     JarZipSchemeResourceFinderFactory() {
     }
