@@ -49,6 +49,7 @@ import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.grizzly.http.server.HttpHandlerRegistration;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
@@ -230,7 +231,15 @@ public final class GrizzlyHttpServerFactory {
         // Map the path to the processor.
         final ServerConfiguration config = server.getServerConfiguration();
         if (handler != null) {
-            config.addHttpHandler(handler, uri.getPath());
+            final String path = uri.getPath().replaceAll("/{2,}", "/");
+            
+            config.addHttpHandler(handler,
+                    HttpHandlerRegistration.bulder()
+                    .contextPath(path.endsWith("/")
+                            ? path.substring(0, path.length() - 1)
+                            : path)
+                    .build()
+            );
         }
 
         config.setPassTraceRequest(true);
