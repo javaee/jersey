@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,11 +42,15 @@ package org.glassfish.jersey.client;
 
 import java.io.IOException;
 
+import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.core.Response;
 
@@ -58,6 +62,8 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Note: Auto-discoverables from this test "affects" all other tests in suit.
@@ -94,6 +100,46 @@ public class AutoDiscoverableClientTest {
         @Override
         public void filter(final ClientRequestContext requestContext) throws IOException {
             requestContext.abortWith(Response.status(400).entity("AbortFilter").build());
+        }
+    }
+
+    public static class FooLifecycleListener implements ContainerRequestFilter, ClientLifecycleListener {
+        private static boolean CLOSED = false;
+        private static boolean INITIALIZED = false;
+
+        @Override
+        public void onInit() {
+            INITIALIZED = true;
+        }
+
+        @Override
+        public void onClose() {
+            CLOSED = true;
+        }
+
+        @Override
+        public void filter(final ContainerRequestContext requestContext) throws IOException {
+            // do nothing
+        }
+
+        public static boolean isClosed() {
+            return CLOSED;
+        }
+
+        public static boolean isInitialized() {
+            return INITIALIZED;
+        }
+    }
+
+    @ConstrainedTo(RuntimeType.CLIENT)
+    public static class LifecycleListenerAutoDiscoverable implements AutoDiscoverable {
+        @Override
+        public void configure(final FeatureContext context) {
+            // Return if PROPERTY is not true - applicable for other tests.
+            if (!PropertiesHelper.isProperty(context.getConfiguration().getProperty(PROPERTY))) {
+                return;
+            }
+            context.register(new FooLifecycleListener(), 1);
         }
     }
 
@@ -140,6 +186,28 @@ public class AutoDiscoverableClientTest {
     @Test
     public void testAutoDiscoverableGlobalEnabledServerDisabled() throws Exception {
         _test("AbortFilter", false, true);
+    }
+
+    /**
+     * Tests, that {@link org.glassfish.jersey.client.ClientLifecycleListener} registered via
+     * {@link org.glassfish.jersey.internal.spi.AutoDiscoverable}
+     * {@link javax.ws.rs.core.Feature} will be notified when {@link javax.ws.rs.client.Client#close()} is invoked.
+     */
+    @Test
+    public void testAutoDiscoverableClosing() {
+        final ClientConfig config = new ClientConfig();
+        config.property(PROPERTY, true);
+        final JerseyClient client = (JerseyClient) ClientBuilder.newClient(config);
+
+        assertFalse(FooLifecycleListener.isClosed());
+
+        client.getConfiguration().getRuntime(); // force runtime init
+        assertTrue("FooLifecycleListener was expected to be already initialized.", FooLifecycleListener.isInitialized());
+        assertFalse("FooLifecycleListener was not expected to be closed yet.", FooLifecycleListener.isClosed());
+
+        client.close();
+
+        assertTrue("FooLifecycleListener should have been closed.", FooLifecycleListener.isClosed());
     }
 
     private void _test(final String response, final Boolean globalDisable, final Boolean clientDisable) throws Exception {
