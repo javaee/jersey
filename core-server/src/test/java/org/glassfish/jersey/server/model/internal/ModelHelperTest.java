@@ -37,49 +37,52 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.model.internal;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import javax.ws.rs.Path;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 /**
- * Common model helper methods.
- *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @author Constantino Cronemberger (ccronemberger at yahoo.com.br)
  */
-public final class ModelHelper {
+public class ModelHelperTest {
 
-    /**
-     * Get the class in the provided resource class ancestor hierarchy that
-     * is actually annotated with the {@link javax.ws.rs.Path &#64;Path} annotation.
-     *
-     * @param resourceClass resource class.
-     * @return resource class or it's ancestor that is annotated with the {@link javax.ws.rs.Path &#64;Path}
-     *         annotation.
-     */
-    public static Class<?> getAnnotatedResourceClass(Class<?> resourceClass) {
-
-        // traverse the class hierarchy to find the annotation
-        Class<?> cls = resourceClass;
-        do {
-            if (cls.isAnnotationPresent(Path.class)) {
-                return cls;
-            }
-
-            for (Class<?> i : cls.getInterfaces()) {
-                if (i.isAnnotationPresent(Path.class)) {
-                    return i;
-                }
-            }
-        } while ((cls = cls.getSuperclass()) != null);
-
-        return resourceClass;
+    @Test
+    public void testClass() {
+        Class cls = ModelHelper.getAnnotatedResourceClass(MyAnnotatedClass.class);
+        Assert.assertSame(MyAnnotatedClass.class, cls);
     }
 
-    /**
-     * Prevent instantiation.
-     */
-    private ModelHelper() {
+    @Test
+    public void testSubClass() {
+        // Spring with CGLIB proxies creates sub-classes
+        Object obj = new MyAnnotatedClass() {};
+        Assert.assertNotSame(MyAnnotatedClass.class,obj.getClass());
+        Class cls = ModelHelper.getAnnotatedResourceClass(obj.getClass());
+        Assert.assertSame(MyAnnotatedClass.class, cls);
     }
+
+    @Test
+    public void testProxyClass() throws Exception {
+        // Spring can also create proxies for beans
+        Object obj = Proxy.newProxyInstance(getClass().getClassLoader(), new Class[] {MyServiceInterface.class}, new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                return null;
+            }
+        });
+        Class cls = ModelHelper.getAnnotatedResourceClass(obj.getClass());
+        Assert.assertSame(MyServiceInterface.class, cls);
+    }
+
+    @Path("test")
+    public static interface MyServiceInterface {}
+
+    @Path("test")
+    public static class MyAnnotatedClass implements MyServiceInterface {}
 }
