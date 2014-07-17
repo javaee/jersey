@@ -603,7 +603,7 @@ final class MethodSelectingRouter implements Router {
 
         for (final MediaType acceptableMediaType : acceptableMediaTypes) {
             // Use writers suitable for entity class to determine the media type.
-            for (final MessageBodyWriter writer : workers.getMessageBodyWritersForType(responseEntityClass)) {
+            for (final MessageBodyWriter<?> writer : workers.getMessageBodyWritersForType(responseEntityClass)) {
                 for (final MediaType writerProduces : MediaTypes.createFrom(writer.getClass().getAnnotation(Produces.class))) {
 
                     if (writerProduces.isCompatible(acceptableMediaType)) {
@@ -663,7 +663,7 @@ final class MethodSelectingRouter implements Router {
         final Type genericReturnType = genericType instanceof GenericType ?
                 ((GenericType) genericType).getType() : genericType;
 
-        for (final MessageBodyWriter writer : workers.getMessageBodyWritersForType(responseType)) {
+        for (final MessageBodyWriter<?> writer : workers.getMessageBodyWritersForType(responseType)) {
             if (writer.isWriteable(responseType, genericReturnType,
                     invocable.getHandlingMethod().getDeclaredAnnotations(),
                     candidate.produces.getCombinedMediaType())) {
@@ -684,7 +684,7 @@ final class MethodSelectingRouter implements Router {
         } else {
             final Class<?> entityType = entityParam.getRawType();
 
-            for (final MessageBodyReader reader : workers.getMessageBodyReadersForType(entityType)) {
+            for (final MessageBodyReader<?> reader : workers.getMessageBodyReadersForType(entityType)) {
                 if (reader.isReadable(entityType, entityParam.getType(),
                         handlingMethod.getDeclaredAnnotations
                                 (), candidate.consumes.getCombinedMediaType())) {

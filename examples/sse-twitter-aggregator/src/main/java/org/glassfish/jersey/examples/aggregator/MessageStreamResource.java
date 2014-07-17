@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,12 +64,12 @@ import org.glassfish.jersey.server.ChunkedOutput;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 @Path("message/stream")
-public class MessageStreamResource {
+public final class MessageStreamResource {
     private static final Logger LOGGER = Logger.getLogger(MessageStreamResource.class.getName());
 
     private static SseBroadcaster broadcaster = new SseBroadcaster() {
         @Override
-        public void onException(ChunkedOutput<OutboundEvent> chunkedOutput, Exception exception) {
+        public void onException(final ChunkedOutput<OutboundEvent> chunkedOutput, final Exception exception) {
             LOGGER.log(Level.SEVERE, "Error broadcasting message.", exception);
         }
     };
@@ -84,10 +84,10 @@ public class MessageStreamResource {
      */
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
-    public void putMessage(Message message) {
+    public void putMessage(final Message message) {
         LOGGER.info("--> Message received.");
 
-        OutboundEvent event = new OutboundEvent.Builder()
+        final OutboundEvent event = new OutboundEvent.Builder()
                 .id(String.valueOf(nextMessageId.getAndIncrement()))
                 .mediaType(MediaType.APPLICATION_JSON_TYPE)
                 .data(Message.class, message)

@@ -134,7 +134,7 @@ public class HelloWorldTest extends JerseyTest {
                 }
             });
         }
-        latch.await(10, TimeUnit.SECONDS);
+        latch.await(10 * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS);
         final long toc = System.currentTimeMillis();
         Logger.getLogger(HelloWorldTest.class.getName()).info("Executed in: " + (toc - tic));
     }

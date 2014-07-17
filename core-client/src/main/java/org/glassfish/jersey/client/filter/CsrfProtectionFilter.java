@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,11 +50,10 @@ import javax.ws.rs.client.ClientRequestFilter;
 /**
  * Simple client-side filter that adds X-Requested-By headers to all state-changing
  * request (i.e. request for methods other than GET, HEAD and OPTIONS).
- * This is to satisfy the requirements of the {@link org.glassfish.jersey.server.filter.CsrfProtectionFilter}
+ * This is to satisfy the requirements of the {@code org.glassfish.jersey.server.filter.CsrfProtectionFilter}
  * on the server side.
  *
  * @author Martin Matula (martin.matula at oracle.com)
- * @see org.glassfish.jersey.server.filter.CsrfProtectionFilter
  */
 public class CsrfProtectionFilter implements ClientRequestFilter {
 

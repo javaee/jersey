@@ -1,1 +1,2 @@
 org.glassfish.jersey.client.AutoDiscoverableClientTest$CommonAutoDiscoverable
+org.glassfish.jersey.client.AutoDiscoverableClientTest$LifecycleListenerAutoDiscoverable

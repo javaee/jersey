@@ -101,7 +101,7 @@
                             client on the same initial connection. Client processes the messages sent back from the server
                             individually without closing the connection after processing each message.
                             So, SSE typically reuses one connection for more messages (called events). SSE also defines a
-                            dedicated media type that describes a simple format of individual evnets sent from the server to the
+                            dedicated media type that describes a simple format of individual events sent from the server to the
                             client. SSE also offers standard javascript client API implemented most modern browsers. For more
                             information about SSE, see the &sse.spec.link;.
                         </para>
@@ -219,7 +219,7 @@
             group, and exposes methods for broadcasting new events to all the client connections grouped in the broadcaster.
             The &lit.jersey.sse.SseBroadcaster; inherits from &jersey.server.Broadcaster; which is the generic broadcaster
             implementation of the Jersey chunked message processing facility.
-            On the he client side, the Jersey SSE API contains additional &jersey.sse.EventSource; and &jersey.sse.EventListener;
+            On the client side, the Jersey SSE API contains additional &jersey.sse.EventSource; and &jersey.sse.EventListener;
             classes that further improve convenience of processing new inbound SSE events.
         </para>
     </section>
@@ -335,7 +335,7 @@ public static class SseResource {
                 is serialized by internal &lit.jersey.sse.OutboundEventWriter; which uses an appropriate
                 &lit.jaxrs.ext.MessageBodyWriter; to serialize the <literal>"Hello world " + i + "!"</literal> string. You can
                 send as many messages as you like. At the end of the thread execution the response is closed which also closes
-                the connection to the client. After that, no more messages can be send to the client on this connection. If the
+                the connection to the client. After that, no more messages can be sent to the client on this connection. If the
                 client would like to receive more messages, it would have to send a new request to the server to initiate a
                 new SSE streaming connection.
             </para>
@@ -683,7 +683,7 @@ eventSource.close();</programlisting>
                 <para>
                     By default, when a connection the the SSE endpoint is lost, the event source will use a default delay
                     before attempting to reconnect to the SSE endpoint. The SSE endpoint can however control the client-side
-                    retry delay by including a special <literal>retry</literal> field value in the any send event.
+                    retry delay by including a special <literal>retry</literal> field value in any event sent to the client.
                     Jersey &lit.jersey.sse.EventSource; implementation automatically tracks any received SSE event
                     <literal>retry</literal> field values set by the endpoint and adjusts the reconnect delay accordingly,
                     using the last received <literal>retry</literal> field value as the new reconnect delay.

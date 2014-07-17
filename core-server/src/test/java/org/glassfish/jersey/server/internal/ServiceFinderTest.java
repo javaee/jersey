@@ -65,7 +65,7 @@ public class ServiceFinderTest {
 
     @Test
     public void testJarTopLevel() throws Exception {
-        final Map<String, String> map = new HashMap<String, String>();
+        final Map<String, String> map = new HashMap<>();
         map.put("org/glassfish/jersey/server/config/jaxrs-components", "META-INF/services/jaxrs-components");
         map.put("org/glassfish/jersey/server/config/toplevel/PublicRootResourceClass.class",
                 "org/glassfish/jersey/server/config/toplevel/PublicRootResourceClass.class");
@@ -75,7 +75,7 @@ public class ServiceFinderTest {
 
         final ServiceFinder<?> finder = createServiceFinder(classLoader, "jaxrs-components");
 
-        final Set<Class<?>> s = new HashSet<Class<?>>();
+        final Set<Class<?>> s = new HashSet<>();
         Collections.addAll(s, finder.toClassArray());
 
         assertTrue(s.contains(classLoader.loadClass("org.glassfish.jersey.server.config.toplevel.PublicRootResourceClass")));
@@ -86,7 +86,7 @@ public class ServiceFinderTest {
         final ClassLoader ocl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(cl);
         try {
-            final Class prc = cl.loadClass("org.glassfish.jersey.internal.ServiceFinder");
+            final Class<?> prc = cl.loadClass("org.glassfish.jersey.internal.ServiceFinder");
             final Method m = prc.getMethod("find", String.class);
 
             return (ServiceFinder<?>) m.invoke(null, serviceName);

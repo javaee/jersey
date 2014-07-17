@@ -43,14 +43,19 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
+import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.client.spi.AsyncConnectorCallback;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.internal.Version;
+import org.glassfish.jersey.internal.inject.Injections;
+import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.RequestScope;
@@ -66,7 +71,10 @@ import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class ClientRuntime {
+class ClientRuntime implements JerseyClient.ShutdownHook {
+
+    private static final Logger LOG = Logger.getLogger(ClientRuntime.class.getName());
+
     private final Stage<ClientRequest> requestProcessingRoot;
     private final Stage<ClientResponse> responseProcessingRoot;
 
@@ -77,6 +85,8 @@ class ClientRuntime {
     private final ClientAsyncExecutorFactory asyncExecutorsFactory;
 
     private final ServiceLocator locator;
+    private final Iterable<ClientLifecycleListener> lifecycleListeners;
+
 
     /**
      * Create new client request processing runtime.
@@ -106,6 +116,16 @@ class ClientRuntime {
         this.asyncExecutorsFactory = new ClientAsyncExecutorFactory(locator, asyncThreadPoolSize);
 
         this.locator = locator;
+
+        this.lifecycleListeners = Providers.getAllProviders(locator, ClientLifecycleListener.class);
+
+        for (final ClientLifecycleListener listener : lifecycleListeners) {
+            try {
+                listener.onInit();
+            } catch (final Throwable t) {
+                LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_INIT(listener.getClass().getName()), t);
+            }
+        }
     }
 
     /**
@@ -127,7 +147,7 @@ class ClientRuntime {
                 try {
                     processedRequest = Stages.process(request, requestProcessingRoot);
                     processedRequest = addUserAgent(processedRequest, connector.getName());
-                } catch (AbortException aborted) {
+                } catch (final AbortException aborted) {
                     processResponse(aborted.getAbortResponse(), callback);
                     return;
                 }
@@ -142,16 +162,16 @@ class ClientRuntime {
                         }
 
                         @Override
-                        public void failure(Throwable failure) {
+                        public void failure(final Throwable failure) {
                             responseFuture.setException(failure);
                         }
                     };
                     connector.apply(processedRequest, connectorCallback);
 
                     processResponse(responseFuture.get(), callback);
-                } catch (ExecutionException e) {
+                } catch (final ExecutionException e) {
                     processFailure(e.getCause(), callback);
-                } catch (Throwable throwable) {
+                } catch (final Throwable throwable) {
                     processFailure(throwable, callback);
                 }
             }
@@ -162,14 +182,14 @@ class ClientRuntime {
         final ClientResponse processedResponse;
         try {
             processedResponse = Stages.process(response, responseProcessingRoot);
-        } catch (Throwable throwable) {
+        } catch (final Throwable throwable) {
             processFailure(throwable, callback);
             return;
         }
         callback.completed(processedResponse, requestScope);
     }
 
-    private void processFailure(Throwable failure, final ResponseCallback callback) {
+    private void processFailure(final Throwable failure, final ResponseCallback callback) {
         callback.failed(failure instanceof ProcessingException ?
                 (ProcessingException) failure : new ProcessingException(failure));
     }
@@ -183,14 +203,15 @@ class ClientRuntime {
         });
     }
 
-    private ClientRequest addUserAgent(ClientRequest clientRequest, String connectorName) {
+    private ClientRequest addUserAgent(final ClientRequest clientRequest, final String connectorName) {
         final MultivaluedMap<String, Object> headers = clientRequest.getHeaders();
+
         if (headers.containsKey(HttpHeaders.USER_AGENT)) {
             // Check for explicitly set null value and if set, then remove the header - see JERSEY-2189
             if (clientRequest.getHeaderString(HttpHeaders.USER_AGENT) == null) {
                 headers.remove(HttpHeaders.USER_AGENT);
             }
-        } else {
+        } else if (!clientRequest.ignoreUserAgent()) {
             if (connectorName != null && !connectorName.isEmpty()) {
                 headers.put(HttpHeaders.USER_AGENT,
                         Arrays.<Object>asList(String.format("Jersey/%s (%s)", Version.getVersion(), connectorName)));
@@ -215,6 +236,7 @@ class ClientRuntime {
      *
      * @param request client request to be invoked.
      * @return client response.
+     *
      * @throws javax.ws.rs.ProcessingException in case of an invocation failure.
      */
     public ClientResponse invoke(final ClientRequest request) {
@@ -222,14 +244,14 @@ class ClientRuntime {
         try {
             try {
                 response = connector.apply(addUserAgent(Stages.process(request, requestProcessingRoot), connector.getName()));
-            } catch (AbortException aborted) {
+            } catch (final AbortException aborted) {
                 response = aborted.getAbortResponse();
             }
 
             return Stages.process(response, responseProcessingRoot);
-        } catch (ProcessingException ex) {
+        } catch (final ProcessingException ex) {
             throw ex;
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             throw new ProcessingException(t.getMessage(), t);
         }
     }
@@ -252,14 +274,26 @@ class ClientRuntime {
         return config;
     }
 
-    /**
-     * Close the client runtime and release the underlying transport connector.
-     */
-    public void close() {
+    @Override
+    public void onShutdown() {
         try {
-            connector.close();
+            for (final ClientLifecycleListener listener : lifecycleListeners) {
+                try {
+                    listener.onClose();
+                } catch (final Throwable t) {
+                    LOG.log(Level.WARNING, LocalizationMessages.ERROR_LISTENER_CLOSE(listener.getClass().getName()), t);
+                }
+            }
         } finally {
-            asyncExecutorsFactory.close();
+            try {
+                connector.close();
+            } finally {
+                try {
+                    asyncExecutorsFactory.close();
+                } finally {
+                    Injections.shutdownLocator(locator);
+                }
+            }
         }
     }
 

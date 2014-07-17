@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,8 +42,10 @@ package org.glassfish.jersey.tests.e2e.json;
 
 import java.io.StringReader;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
@@ -55,13 +57,16 @@ import javax.json.JsonObject;
 import javax.json.JsonStructure;
 
 import org.glassfish.jersey.jsonp.JsonProcessingFeature;
+import org.glassfish.jersey.server.JSONP;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -95,6 +100,14 @@ public class JsonProcessingTest extends JerseyTest {
         @Path("jsonArray")
         public JsonArray postJsonArray(final JsonArray jsonArray) {
             return jsonArray;
+        }
+
+        @GET
+        @JSONP
+        @Path("jsonObjectWithPadding")
+        @Produces("application/javascript")
+        public JsonObject getJsonObjectWithPadding() {
+            return JSON_OBJECT;
         }
     }
 
@@ -268,5 +281,13 @@ public class JsonProcessingTest extends JerseyTest {
         final Response response = target("jsonStructure").request(MediaType.APPLICATION_JSON).post(Entity.json(JSON_OBJECT));
 
         assertEquals(JSON_OBJECT, response.readEntity(JsonStructure.class));
+    }
+
+    @Test
+    public void testJsonObjectWithPadding() throws Exception {
+        final Response response = target("jsonObjectWithPadding").request("application/javascript").get();
+
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.readEntity(String.class), is(JSONP.DEFAULT_CALLBACK + "(" + JSON_OBJECT_STR + ")"));
     }
 }

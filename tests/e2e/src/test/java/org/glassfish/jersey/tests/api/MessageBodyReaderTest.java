@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,7 +67,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
@@ -85,7 +85,7 @@ public class MessageBodyReaderTest extends JerseyTest {
 
         @POST
         @Path("plain")
-        public String plain(EntityForReader entity) {
+        public String plain(final EntityForReader entity) {
             return entity.getValue() + ";" + headers.getHeaderString(HttpHeaders.CONTENT_TYPE);
         }
     }
@@ -95,17 +95,21 @@ public class MessageBodyReaderTest extends JerseyTest {
     public static class AppOctetReader implements MessageBodyReader<EntityForReader> {
 
         @Override
-        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                                  final MediaType mediaType) {
             return MediaType.APPLICATION_OCTET_STREAM_TYPE.equals(mediaType);
         }
 
         @Override
-        public EntityForReader readFrom(Class<EntityForReader> type,
-                                        Type genericType,
-                                        Annotation[] annotations,
-                                        MediaType mediaType,
-                                        MultivaluedMap<String, String> httpHeaders,
-                                        InputStream entityStream) throws IOException, WebApplicationException {
+        public EntityForReader readFrom(final Class<EntityForReader> type,
+                                        final Type genericType,
+                                        final Annotation[] annotations,
+                                        final MediaType mediaType,
+                                        final MultivaluedMap<String, String> httpHeaders,
+                                        final InputStream entityStream) throws IOException, WebApplicationException {
+            // Underlying stream should not be closed and Jersey is preventing from closing it.
+            entityStream.close();
+
             return new EntityForReader(ReaderWriter.readFromAsString(entityStream, mediaType));
         }
     }
@@ -114,7 +118,7 @@ public class MessageBodyReaderTest extends JerseyTest {
 
         private String value;
 
-        public EntityForReader(String value) {
+        public EntityForReader(final String value) {
             this.value = value;
         }
 
@@ -138,7 +142,7 @@ public class MessageBodyReaderTest extends JerseyTest {
         httpPost.setEntity(new ByteArrayEntity("value".getBytes()));
         httpPost.removeHeaders("Content-Type");
 
-        final HttpClient httpClient = new DefaultHttpClient();
+        final HttpClient httpClient = HttpClientBuilder.create().build();
         final HttpResponse response = httpClient.execute(httpPost);
 
         assertEquals(200, response.getStatusLine().getStatusCode());

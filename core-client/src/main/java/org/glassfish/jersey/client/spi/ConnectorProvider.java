@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,8 +42,6 @@ package org.glassfish.jersey.client.spi;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
 
-import org.glassfish.jersey.Beta;
-
 /**
  * Jersey client connector provider contract.
  *
@@ -58,15 +56,11 @@ import org.glassfish.jersey.Beta;
  * {@link org.glassfish.jersey.client.ClientConfig#connectorProvider(ConnectorProvider)}
  * initializer method.
  * </p>
- * <p>
- * NOTE: This API is in {@link org.glassfish.jersey.Beta beta} state and is likely to further evolve.
- * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @since 2.5
  */
 // Must not be annotated with @Contract
-@Beta
 public interface ConnectorProvider {
 
     /**

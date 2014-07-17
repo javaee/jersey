@@ -49,6 +49,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,7 +63,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -91,19 +91,14 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
 import javax.enterprise.inject.spi.InjectionTargetFactory;
 import javax.enterprise.util.AnnotationLiteral;
-import javax.inject.Inject;
+
 import javax.inject.Qualifier;
-import javax.inject.Singleton;
-import javax.interceptor.AroundInvoke;
-import javax.interceptor.Interceptor;
-import javax.interceptor.InvocationContext;
+
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.transaction.Transactional;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.Providers;
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.spi.ComponentProvider;
@@ -422,7 +417,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     private void bindWaeRestoringExceptionMapper() {
         final DynamicConfiguration dc = Injections.getConfiguration(locator);
-        Injections.addBinding(Injections.newBinder(TransactionalExceptionMapper.class).to(ExceptionMapper.class).in(Singleton.class), dc);
+        final ServiceBindingBuilder bindingBuilder =
+                Injections.newFactoryBinder(new CdiFactory(TransactionalExceptionMapper.class, locator, beanManager, true));
+        bindingBuilder.to(ExceptionMapper.class);
+        Injections.addBinding(bindingBuilder, dc);
         dc.commit();
     }
 
@@ -568,63 +566,80 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 jerseyVetoedTypes.add(baseType);
             }
         }
-        processAnnotatedType.setAnnotatedType(new AnnotatedType(){
 
-            @Override
-            public Class getJavaClass() {
-                return annotatedType.getJavaClass();
-            }
+        if (containsJaxRsParameterizedCtor(annotatedType)) {
 
-            @Override
-            public Set<AnnotatedConstructor> getConstructors() {
-                Set<AnnotatedConstructor> result = new HashSet<AnnotatedConstructor>();
-                for (AnnotatedConstructor c : (Set<AnnotatedConstructor>)annotatedType.getConstructors()) {
-                    result.add(enrichedConstructor(c));
+            processAnnotatedType.setAnnotatedType(new AnnotatedType() {
+
+                @Override
+                public Class getJavaClass() {
+                    return annotatedType.getJavaClass();
                 }
-                return result;
-            }
 
-            @Override
-            public Set getMethods() {
-                return annotatedType.getMethods();
-            }
+                @Override
+                public Set<AnnotatedConstructor> getConstructors() {
+                    Set<AnnotatedConstructor> result = new HashSet<AnnotatedConstructor>();
+                    for (AnnotatedConstructor c : (Set<AnnotatedConstructor>) annotatedType.getConstructors()) {
+                        result.add(enrichedConstructor(c));
+                    }
+                    return result;
+                }
 
-            @Override
-            public Set getFields() {
-                return annotatedType.getFields();
-            }
+                @Override
+                public Set getMethods() {
+                    return annotatedType.getMethods();
+                }
 
-            @Override
-            public Type getBaseType() {
-                return annotatedType.getBaseType();
-            }
+                @Override
+                public Set getFields() {
+                    return annotatedType.getFields();
+                }
 
-            @Override
-            public Set<Type> getTypeClosure() {
-                return annotatedType.getTypeClosure();
-            }
+                @Override
+                public Type getBaseType() {
+                    return annotatedType.getBaseType();
+                }
 
-            @Override
-            public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
-                return annotatedType.getAnnotation(annotationType);
-            }
+                @Override
+                public Set<Type> getTypeClosure() {
+                    return annotatedType.getTypeClosure();
+                }
 
-            @Override
-            public Set<Annotation> getAnnotations() {
-                return annotatedType.getAnnotations();
-            }
+                @Override
+                public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+                    return annotatedType.getAnnotation(annotationType);
+                }
 
-            @Override
-            public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
-                return annotatedType.isAnnotationPresent(annotationType);
+                @Override
+                public Set<Annotation> getAnnotations() {
+                    return annotatedType.getAnnotations();
+                }
+
+                @Override
+                public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
+                    return annotatedType.isAnnotationPresent(annotationType);
+                }
+            });
+        }
+    }
+
+    private boolean containsJaxRsParameterizedCtor(AnnotatedType annotatedType) {
+        for (AnnotatedConstructor<?> c : (Set<AnnotatedConstructor>) annotatedType.getConstructors()) {
+            for (AnnotatedParameter<?> p : c.getParameters()) {
+                for (Class<? extends Annotation> a : JaxRsParamProducer.JaxRsParamAnnotationTYPES) {
+                    if(p.isAnnotationPresent(a)) {
+                        return true;
+                    }
+                }
             }
-        });
+        }
+        return false;
     }
 
     @SuppressWarnings("unused")
     private void afterTypeDiscovery(@Observes final AfterTypeDiscovery afterTypeDiscovery) {
         final List<Class<?>> interceptors = afterTypeDiscovery.getInterceptors();
-        interceptors.add(WebApplicationExceptionPreservingInterceptor.class);
+        interceptors.add(WebAppExceptionInterceptor.class);
         if (LOGGER.isLoggable(Level.CONFIG) && !jerseyVetoedTypes.isEmpty()) {
             LOGGER.config(LocalizationMessages.CDI_TYPE_VETOED(customHk2TypesProvider,
                     listTypes(new StringBuilder().append("\n"), jerseyVetoedTypes).toString()));
@@ -634,35 +649,11 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
     @SuppressWarnings("unused")
     private void beforeBeanDiscovery(@Observes final BeforeBeanDiscovery beforeBeanDiscovery, final BeanManager beanManager) {
         beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(JaxRsParamProducer.class));
-        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(WebApplicationExceptionPreservingInterceptor.class));
+        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(WebAppExceptionHolder.class));
+        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(WebAppExceptionInterceptor.class));
+        beforeBeanDiscovery.addAnnotatedType(beanManager.createAnnotatedType(TransactionalExceptionMapper.class));
     }
 
-    /**
-     * Transactional interceptor to help retain {@link WebApplicationException}
-     * thrown by transactional beans.
-     */
-    @Priority(Interceptor.Priority.PLATFORM_BEFORE + 199)
-    @Interceptor
-    @Transactional
-    public static final class WebApplicationExceptionPreservingInterceptor {
-
-        @Inject
-        BeanManager beanManager;
-
-        @AroundInvoke
-        public Object intercept(final InvocationContext ic) throws Exception {
-            try {
-                return ic.proceed();
-            } catch (final WebApplicationException wae) {
-                final CdiComponentProvider extension = beanManager.getExtension(CdiComponentProvider.class);
-                final ContainerRequest jerseyRequest = extension.locator.getService(ContainerRequest.class);
-                if (jerseyRequest != null) {
-                    jerseyRequest.setProperty(TRANSACTIONAL_WAE, wae);
-                }
-                throw wae;
-            }
-        }
-    }
 
     @SuppressWarnings("unused")
     private void processInjectionTarget(@Observes final ProcessInjectionTarget event) {
@@ -711,7 +702,8 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 hk2ProvidedTypes.add(injectedType);
             } else {
                 if (injectedType instanceof Class<?>) {
-                    if (isJerseyOrDependencyType((Class<?>)injectedType)) {
+                    final Class<?> injectedClass = (Class<?>)injectedType;
+                    if (injectedClass != WebAppExceptionHolder.class && isJerseyOrDependencyType(injectedClass)) {
                         //remember the type, we would need to mock it's CDI binding at runtime
                         hk2ProvidedTypes.add(injectedType);
                     } else {
@@ -804,44 +796,6 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
             final Type superclass = c.getGenericSuperclass();
             _addDerivedContracts(superclass, result);
         }
-    }
-
-    private boolean isNothingWeWantToMessUpWith(final Type t) {
-        if (!(t instanceof Class)) {
-            return false;
-        }
-
-        final Class<?> clazz = (Class<?>)t;
-
-        if (clazz.isPrimitive() || clazz.isSynthetic()) {
-            return true;
-        }
-
-        final Package pkg = clazz.getPackage();
-
-        if (pkg == null) {
-            return true; // we do not want to mess-up with these cases
-        }
-
-        final String pkgName = pkg.getName();
-
-        if (pkgName.startsWith("java.") || pkgName.startsWith("javax.")) {
-            return true;
-        }
-
-        // rule out everyting implementing types from the "javax.enterprise.inject.spi" package
-        final Set<Type> contracts = _getContracts(new HashSet<Type>(){{add(t);}});
-        for (Type ct : contracts) {
-            final Class<?> cc = (Class<?>)ct;
-            if (!cc.isPrimitive() && !cc.isSynthetic()) {
-                final Package cp = cc.getPackage();
-                if (cp != null && cp.getName().startsWith("javax.enterprise.inject.spi")) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     private <T> void addInjecteeToSkip(final Class<?> componentClass, final Map<Class<?>, Set<T>> toSkip, final T member) {

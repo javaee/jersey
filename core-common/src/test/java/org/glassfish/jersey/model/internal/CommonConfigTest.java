@@ -60,6 +60,7 @@ import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.inject.Injections;
 import org.glassfish.jersey.internal.inject.ProviderBinder;
@@ -71,16 +72,17 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Before;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Test cases for {@link javax.ws.rs.core.Configuration}.
@@ -101,7 +103,7 @@ public class CommonConfigTest {
         try {
             config.getConfiguration().getProperties().put("foo", "bar");
             fail("Returned properties collection should be immutable.");
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // OK.
         }
     }
@@ -187,7 +189,7 @@ public class CommonConfigTest {
         config.register(emptyFeature);
         config.register(ComplexEmptyProvider.class, ExceptionMapper.class);
 
-        CommonConfig other = new CommonConfig(null, ComponentBag.INCLUDE_ALL);
+        final CommonConfig other = new CommonConfig(null, ComponentBag.INCLUDE_ALL);
         other.property("foo", "baz");
         other.register(UnconfigurableFeature.class);
         other.register(ComplexEmptyProvider.class, ReaderInterceptor.class, ContainerRequestFilter.class);
@@ -278,9 +280,10 @@ public class CommonConfigTest {
     public void testRegisterClass() throws Exception {
         try {
             final Class clazz = null;
+            //noinspection ConstantConditions
             config.register(clazz);
             fail("Cannot register null.");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             // OK.
         }
 
@@ -305,11 +308,11 @@ public class CommonConfigTest {
         try {
             config.register(null);
             fail("Cannot register null.");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             // OK.
         }
 
-        ComplexEmptyProvider[] ceps = new ComplexEmptyProvider[2];
+        final ComplexEmptyProvider[] ceps = new ComplexEmptyProvider[2];
         for (int i = 0; i < 2; i++) {
             ceps[i] = new ComplexEmptyProvider();
             config.register(ceps[i]);
@@ -354,13 +357,14 @@ public class CommonConfigTest {
     public void testRegisterClassBingingPriority() throws Exception {
         try {
             final Class clazz = null;
+            //noinspection ConstantConditions
             config.register(clazz, Priorities.USER);
             fail("Cannot register null.");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             // OK.
         }
 
-        for (int priority : new int[]{Priorities.USER, Priorities.AUTHENTICATION}) {
+        for (final int priority : new int[]{Priorities.USER, Priorities.AUTHENTICATION}) {
             config.register(ComplexEmptyProvider.class, priority);
 
             final ContractProvider contractProvider =
@@ -384,16 +388,16 @@ public class CommonConfigTest {
         try {
             config.register(null, Priorities.USER);
             fail("Cannot register null.");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             // OK.
         }
 
         final Class<ComplexEmptyProvider> providerClass = ComplexEmptyProvider.class;
 
-        for (int priority : new int[]{Priorities.USER, Priorities.AUTHENTICATION}) {
+        for (final int priority : new int[]{Priorities.USER, Priorities.AUTHENTICATION}) {
             config.register(providerClass, priority);
 
-            final CommonConfig commonConfig = (CommonConfig) config;
+            final CommonConfig commonConfig = config;
             final ContractProvider contractProvider =
                     commonConfig.getComponentBag().getModel(providerClass);
             final Set<Class<?>> contracts = contractProvider.getContracts();
@@ -442,9 +446,10 @@ public class CommonConfigTest {
     public void testRegisterClassContracts() throws Exception {
         try {
             final Class clazz = null;
+            //noinspection ConstantConditions
             config.register(clazz, ReaderInterceptor.class);
             fail("Cannot register null.");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             // OK.
         }
 
@@ -467,11 +472,10 @@ public class CommonConfigTest {
         try {
             config.register(null, ReaderInterceptor.class);
             fail("Cannot register null.");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             // OK.
         }
 
-        final Set<Class<?>> registeredContracts = Sets.newIdentityHashSet();
         final ComplexEmptyProvider complexEmptyProvider = new ComplexEmptyProvider();
         config.register(complexEmptyProvider,
                 ReaderInterceptor.class, ContainerRequestFilter.class, WriterInterceptor.class);
@@ -650,7 +654,7 @@ public class CommonConfigTest {
     @Test
     @SuppressWarnings("unchecked")
     public void testProviderOrderDifForContracts() throws Exception {
-        Map<Class<?>, Integer> contracts = new IdentityHashMap<Class<?>, Integer>();
+        final Map<Class<?>, Integer> contracts = new IdentityHashMap<Class<?>, Integer>();
 
         contracts.put(WriterInterceptor.class, ContractProvider.NO_PRIORITY);
         contracts.put(ReaderInterceptor.class, 2000);
@@ -701,7 +705,7 @@ public class CommonConfigTest {
         try {
             collection.add(element);
             fail(testName + " - returned collection should be immutable.");
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // OK.
         }
     }
@@ -894,7 +898,7 @@ public class CommonConfigTest {
     public static class ContractBinderFeature implements Feature {
 
         @Override
-        public boolean configure(FeatureContext context) {
+        public boolean configure(final FeatureContext context) {
             context.register(new ContractBinder());
             return true;
         }
@@ -913,6 +917,50 @@ public class CommonConfigTest {
         final Contract service = locator.getService(Contract.class);
         assertNotNull(service);
         assertSame(Service.class, service.getClass());
+    }
 
+    public static class InjectMe {
+    }
+
+    public static class InjectIntoFeatureInstance implements Feature {
+
+        @Inject
+        private InjectMe injectMe;
+
+        @Override
+        public boolean configure(final FeatureContext context) {
+            context.property("instance-injected", injectMe != null);
+            return true;
+        }
+    }
+
+    public static class InjectIntoFeatureClass implements Feature {
+
+        @Inject
+        private InjectMe injectMe;
+
+        @Override
+        public boolean configure(final FeatureContext context) {
+            context.property("class-injected", injectMe != null);
+            return true;
+        }
+    }
+
+    @Test
+    public void testFeatureInjections() throws Exception {
+        config.register(InjectIntoFeatureClass.class)
+                .register(new InjectIntoFeatureInstance())
+                .register(new AbstractBinder() {
+                    @Override
+                    protected void configure() {
+                        bind(new InjectMe());
+                    }
+                });
+
+        final ServiceLocator locator = Injections.createLocator();
+        config.configureMetaProviders(locator);
+
+        assertThat("Feature instance not injected", config.getProperty("instance-injected").toString(), is("true"));
+        assertThat("Feature class not injected", config.getProperty("class-injected").toString(), is("true"));
     }
 }

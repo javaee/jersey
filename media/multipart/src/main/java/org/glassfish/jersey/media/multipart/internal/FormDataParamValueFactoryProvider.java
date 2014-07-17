@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -87,7 +87,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
     private static final class FormDataParamException extends ParamException {
 
-        protected FormDataParamException(Throwable cause, String name, String defaultStringValue) {
+        protected FormDataParamException(final Throwable cause, final String name, final String defaultStringValue) {
             super(cause, Response.Status.BAD_REQUEST, FormDataParam.class, name, defaultStringValue);
         }
     }
@@ -110,7 +110,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
         private final String name;
 
-        public ListFormDataBodyPartValueFactory(String name) {
+        public ListFormDataBodyPartValueFactory(final String name) {
             this.name = name;
         }
 
@@ -126,20 +126,21 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
         private final String name;
 
-        public ListFormDataContentDispositionValueFactory(String name) {
+        public ListFormDataContentDispositionValueFactory(final String name) {
             this.name = name;
         }
 
         @Override
         public List<FormDataContentDisposition> provide() {
-            FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
+            final FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
 
-            List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(name);
-            if (formDataBodyParts == null)
+            final List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(name);
+            if (formDataBodyParts == null) {
                 return null;
+            }
 
-            List<FormDataContentDisposition> list = new ArrayList<FormDataContentDisposition>(formDataBodyParts.size());
-            for (FormDataBodyPart formDataBodyPart : formDataBodyParts) {
+            final List<FormDataContentDisposition> list = new ArrayList<>(formDataBodyParts.size());
+            for (final FormDataBodyPart formDataBodyPart : formDataBodyParts) {
                 list.add(formDataBodyPart.getFormDataContentDisposition());
             }
 
@@ -152,7 +153,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
         private final String name;
 
-        public FormDataBodyPartValueFactory(String name) {
+        public FormDataBodyPartValueFactory(final String name) {
             this.name = name;
         }
 
@@ -167,15 +168,15 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
         private final String name;
 
-        public FormDataContentDispositionMultiPartInjectable(String name) {
+        public FormDataContentDispositionMultiPartInjectable(final String name) {
             this.name = name;
         }
 
         @Override
         public FormDataContentDisposition provide() {
-            FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
+            final FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
 
-            FormDataBodyPart formDataBodyPart = formDataMultiPart.getField(name);
+            final FormDataBodyPart formDataBodyPart = formDataMultiPart.getField(name);
             if (formDataBodyPart == null) {
                 return null;
             }
@@ -200,12 +201,12 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             final ContainerRequest request = getContainerRequest();
             final FormDataMultiPart formDataMultiPart = getEntity(request);
 
-            List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(parameter.getSourceName());
-            FormDataBodyPart formDataBodyPart = (formDataBodyParts != null) ? formDataBodyParts.get(0) : null;
+            final List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(parameter.getSourceName());
+            final FormDataBodyPart formDataBodyPart = (formDataBodyParts != null) ? formDataBodyParts.get(0) : null;
 
             MediaType mediaType = (formDataBodyPart != null) ? formDataBodyPart.getMediaType() : MediaType.TEXT_PLAIN_TYPE;
 
-            MessageBodyWorkers messageBodyWorkers = request.getWorkers();
+            final MessageBodyWorkers messageBodyWorkers = request.getWorkers();
 
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(
                     parameter.getRawType(),
@@ -214,7 +215,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                     mediaType);
 
             if (reader != null && !isPrimitiveType(parameter.getRawType())) {
-                InputStream in;
+                final InputStream in;
                 if (formDataBodyPart == null) {
                     if (parameter.getDefaultValue() != null) {
                         // Convert default value to bytes.
@@ -236,14 +237,14 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                             mediaType,
                             request.getHeaders(),
                             in);
-                } catch (IOException e) {
-                    throw new FormDataParamException(e, extractor.getName(), extractor.getDefaultValueString());
+                } catch (final IOException e) {
+                    throw new FormDataParamException(e, parameter.getSourceName(), parameter.getDefaultValue());
                 }
             } else if (extractor != null) {
-                MultivaluedMap<String, String> map = new MultivaluedStringMap();
+                final MultivaluedMap<String, String> map = new MultivaluedStringMap();
                 try {
                     if (formDataBodyPart != null) {
-                        for (FormDataBodyPart p : formDataBodyParts) {
+                        for (final FormDataBodyPart p : formDataBodyParts) {
                             mediaType = p.getMediaType();
 
                             reader = messageBodyWorkers.getMessageBodyReader(
@@ -252,7 +253,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                                     parameter.getAnnotations(),
                                     mediaType);
 
-                            @SuppressWarnings("unchecked") String value = (String) reader.readFrom(
+                            @SuppressWarnings("unchecked") final String value = (String) reader.readFrom(
                                     String.class,
                                     String.class,
                                     parameter.getAnnotations(),
@@ -264,9 +265,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                         }
                     }
                     return extractor.extract(map);
-                } catch (IOException ex) {
-                    throw new FormDataParamException(ex, extractor.getName(), extractor.getDefaultValueString());
-                } catch (ExtractorException ex) {
+                } catch (final IOException | ExtractorException ex) {
                     throw new FormDataParamException(ex, extractor.getName(), extractor.getDefaultValueString());
                 }
             }
@@ -275,10 +274,10 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
     }
 
-    private static final Set<Class<?>> types = initializeTypes();
+    private static final Set<Class<?>> TYPES = initializeTypes();
 
     private static Set<Class<?>> initializeTypes() {
-        Set<Class<?>> newSet = new HashSet<Class<?>>();
+        final Set<Class<?>> newSet = new HashSet<>();
         newSet.add(Byte.class);
         newSet.add(byte.class);
         newSet.add(Short.class);
@@ -298,8 +297,8 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         return newSet;
     }
 
-    private static boolean isPrimitiveType(Class<?> type) {
-        return types.contains(type);
+    private static boolean isPrimitiveType(final Class<?> type) {
+        return TYPES.contains(type);
     }
 
     private final class FormDataMultiPartValueFactory extends AbstractContainerRequestValueFactory<Object> {
@@ -324,8 +323,9 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
     }
 
     @Override
-    protected Factory<?> createValueFactory(Parameter parameter) {
-        Class<?> parameterRawType = parameter.getRawType();
+    protected Factory<?> createValueFactory(final Parameter parameter) {
+        final Class<?> parameterRawType = parameter.getRawType();
+
         if (Parameter.Source.ENTITY == parameter.getSource()) {
             if (FormDataMultiPart.class.isAssignableFrom(parameterRawType)) {
                 return new FormDataMultiPartValueFactory();
@@ -333,18 +333,24 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                 return null;
             }
         } else if (parameter.getSourceAnnotation().annotationType() == FormDataParam.class) {
-            String parameterName = parameter.getSourceName();
+            final String parameterName = parameter.getSourceName();
             if (parameterName == null || parameterName.length() == 0) {
                 // Invalid query parameter name
                 return null;
             }
 
             if (Collection.class == parameterRawType || List.class == parameterRawType) {
-                Class c = ReflectionHelper.getGenericTypeArgumentClasses(parameter.getType()).get(0);
-                if (FormDataBodyPart.class == c) {
+                final Class clazz = ReflectionHelper.getGenericTypeArgumentClasses(parameter.getType()).get(0);
+
+                if (FormDataBodyPart.class == clazz) {
+                    // Return a collection of form data body part.
                     return new ListFormDataBodyPartValueFactory(parameter.getSourceName());
-                } else if (FormDataContentDisposition.class == c) {
+                } else if (FormDataContentDisposition.class == clazz) {
+                    // Return a collection of form data content disposition.
                     return new ListFormDataContentDispositionValueFactory(parameter.getSourceName());
+                } else {
+                    // Return a collection of specific type.
+                    return new FormDataParamValueFactory(parameter, get(parameter));
                 }
             } else if (FormDataBodyPart.class == parameterRawType) {
                 return new FormDataBodyPartValueFactory(parameter.getSourceName());
@@ -366,7 +372,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
      */
     private FormDataMultiPart getEntity(final ContainerRequest request) {
         if (request.getProperty(FormDataMultiPart.class.getName()) == null) {
-            FormDataMultiPart formDataMultiPart = request.readEntity(FormDataMultiPart.class);
+            final FormDataMultiPart formDataMultiPart = request.readEntity(FormDataMultiPart.class);
             request.setProperty(FormDataMultiPart.class.getName(), formDataMultiPart);
         }
 

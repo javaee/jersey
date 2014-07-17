@@ -116,14 +116,14 @@
                 JSON data format.
             </para>
 
-            <section>
+            <section xml:id="json-pojo">
                 <title>POJO support</title>
 
                 <para>POJO support represents the easiest way to convert your Java Objects to JSON and back.</para>
                 <para>Media modules that support this approach are &link.moxy; and &link.jackson;</para>
             </section>
 
-            <section>
+            <section xml:id="json-jaxb">
                 <title>JAXB based JSON support</title>
 
                 <para>
@@ -202,7 +202,7 @@ public class MyJaxbBean {
                 <para>Media modules that support this approach are &link.moxy;, &link.jackson;, &link.jettison;</para>
             </section>
 
-            <section>
+            <section xml:id="json-lowlevel">
                 <title>Low-level based JSON support</title>
 
                 <para>
@@ -285,7 +285,7 @@ try {
                     If you're not using Maven make sure to have all needed dependencies (see &jersey-media-moxy;) on the classpath.
                 </para>
             </section>
-            <section>
+            <section xml:id="moxy-registration">
                 <title>Configure and register</title>
 
                 <para>
@@ -420,7 +420,7 @@ final ContextResolver&lt;MoxyJsonConfig&gt; jsonConfigResolver = moxyJsonConfig.
                     </table>
                 </para>
 
-                <example>
+                <example xml:id="ex-moxy-client">
                     <title>Building client with MOXy JSON feature enabled.</title>
 
                     <programlisting language="java">final Client client = ClientBuilder.newBuilder()
@@ -432,7 +432,7 @@ final ContextResolver&lt;MoxyJsonConfig&gt; jsonConfigResolver = moxyJsonConfig.
         .build();</programlisting>
                 </example>
 
-                <example>
+                <example xml:id="ex-moxy-server">
                     <title>Creating JAX-RS application with MOXy JSON feature enabled.</title>
 
                     <programlisting language="java">// Create JAX-RS application.
@@ -475,7 +475,7 @@ final Application application = new ResourceConfig()
                     on the class-path.
                 </para>
             </section>
-            <section>
+            <section xml:id="jsonp-registration">
                 <title>Configure and register</title>
 
                 <para>
@@ -549,13 +549,13 @@ final Application application = new ResourceConfig()
             </section>
         </section>
         <section xml:id="json.jackson">
-            <title>Jackson</title>
+            <title>Jackson (1.x and 2.x)</title>
 
             <section>
                 <title>Dependency</title>
 
                 <para>
-                    To use Jackson as your JSON provider you need to add &lit.jersey-media-json-jackson; module to your
+                    To use Jackson 2.x as your JSON provider you need to add &lit.jersey-media-json-jackson; module to your
                     &lit.pom.xml; file:
 
                     <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
@@ -564,26 +564,41 @@ final Application application = new ResourceConfig()
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-json-jackson;) on
-                    the classpath.
+                    To use Jackson 1.x it'll look like:
+
+                    <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-media-json-jackson1&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-json-jackson; or
+                    &jersey-media-json-jackson;) on the classpath.
                 </para>
             </section>
-            <section>
+            <section xml:id="jackson-registration">
                 <title>Configure and register</title>
 
+                <note>
+                    <para>
+                        Note that there is a difference in namespaces between Jackson 1.x (<literal>org.codehaus.jackson</literal>)
+                        and Jackson 2.x (<literal>com.fasterxml.jackson</literal>).
+                    </para>
+                </note>
+
                 <para>
-                    Jackson JSON processor could be controlled via providing a custom Jackson &jersey.media.ObjectMapper;
-                    instance.
+                    Jackson JSON processor could be controlled via providing a custom Jackson 2 &jersey.media.ObjectMapper; (or
+                    &jersey.media.ObjectMapper1; for Jackson 1) instance.
                     This could be handy if you need to redefine the default Jackson behaviour and to fine-tune how your JSON data
                     structures look like. Detailed description of all Jackson features is out of scope of this guide. The example
-                    below gives you a hint on how to wire your &lit.jersey.media.ObjectMapper; instance into your Jersey
-                    application.
+                    below gives you a hint on how to wire your &lit.jersey.media.ObjectMapper; (&jersey.media.ObjectMapper1;)
+                    instance into your Jersey application.
                 </para>
 
                 <para>
                     In order to use Jackson as your JSON (JAXB/POJO) provider you need to register &jersey.media.JacksonFeature;
-                    and a &lit.jaxrs.ext.ContextResolver; for &lit.jersey.media.ObjectMapper; (if needed) in your
-                    &jaxrs.core.Configurable; (client/server).
+                    (&jersey.media.Jackson1Feature;) and a &lit.jaxrs.ext.ContextResolver; for &lit.jersey.media.ObjectMapper;,
+                    if needed, in your &jaxrs.core.Configurable; (client/server).
 
                     <example>
                         <title><literal>ContextResolver&lt;ObjectMapper&gt;</literal></title>
@@ -644,7 +659,8 @@ final Application application = new ResourceConfig()
                 <title>Examples</title>
 
                 <para>
-                    Jersey provides an &jersey.github.jackson.example.path; on how to use Jackson to consume/produce JSON.
+                    Jersey provides &jersey.github.jackson.example.path; and &jersey.github.jackson1.example.path; showing how to
+                    use Jackson to consume/produce JSON.
                 </para>
             </section>
         </section>
@@ -879,7 +895,7 @@ context = new JettisonJaxbContext(
                 </section>
             </section>
 
-            <section>
+            <section xml:id="jettison-registration">
                 <title>Configure and register</title>
 
                 <para>

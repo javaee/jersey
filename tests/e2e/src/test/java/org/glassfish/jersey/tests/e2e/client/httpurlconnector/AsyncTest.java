@@ -285,6 +285,6 @@ public class AsyncTest extends JerseyTest {
             thread.start();
         }
 
-        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        assertTrue(latch.await(5 * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS));
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -73,7 +73,7 @@ public class UriComponent {
     public enum Type {
 
         /**
-         * ALPHA / DIGIT / "-" / "." / "_" / "~" characters
+         * ALPHA / DIGIT / "-" / "." / "_" / "~" characters.
          */
         UNRESERVED,
         /**
@@ -136,9 +136,9 @@ public class UriComponent {
      * @param s the encoded string.
      * @param t the URI component type identifying the legal characters.
      * @throws IllegalArgumentException if the encoded string contains illegal
-     *                                  characters.
+     * characters.
      */
-    public static void validate(String s, Type t) {
+    public static void validate(final String s, final Type t) {
         validate(s, t, false);
     }
 
@@ -146,17 +146,16 @@ public class UriComponent {
      * Validates the legal characters of a percent-encoded string that
      * represents a URI component type.
      *
-     * @param s        the encoded string.
-     * @param t        the URI component type identifying the legal characters.
+     * @param s the encoded string.
+     * @param t the URI component type identifying the legal characters.
      * @param template true if the encoded string contains URI template variables
      * @throws IllegalArgumentException if the encoded string contains illegal
-     *                                  characters.
+     * characters.
      */
-    public static void validate(String s, Type t, boolean template) {
-        int i = _valid(s, t, template);
+    public static void validate(final String s, final Type t, final boolean template) {
+        final int i = _valid(s, t, template);
         if (i > -1) {
-            throw new IllegalArgumentException(
-                    LocalizationMessages.URI_COMPONENT_INVALID_CHARACTER(s, t, s.charAt(i), i));
+            throw new IllegalArgumentException(LocalizationMessages.URI_COMPONENT_INVALID_CHARACTER(s, t, s.charAt(i), i));
         }
     }
 
@@ -168,7 +167,7 @@ public class UriComponent {
      * @param t the URI component type identifying the legal characters.
      * @return true if the encoded string is valid, otherwise false.
      */
-    public static boolean valid(String s, Type t) {
+    public static boolean valid(final String s, final Type t) {
         return valid(s, t, false);
     }
 
@@ -176,17 +175,17 @@ public class UriComponent {
      * Validates the legal characters of a percent-encoded string that
      * represents a URI component type.
      *
-     * @param s        the encoded string.
-     * @param t        the URI component type identifying the legal characters.
+     * @param s the encoded string.
+     * @param t the URI component type identifying the legal characters.
      * @param template true if the encoded string contains URI template variables
      * @return true if the encoded string is valid, otherwise false.
      */
-    public static boolean valid(String s, Type t, boolean template) {
+    public static boolean valid(final String s, final Type t, final boolean template) {
         return _valid(s, t, template) == -1;
     }
 
-    private static int _valid(String s, Type t, boolean template) {
-        boolean[] table = ENCODING_TABLES[t.ordinal()];
+    private static int _valid(final String s, final Type t, final boolean template) {
+        final boolean[] table = ENCODING_TABLES[t.ordinal()];
 
         for (int i = 0; i < s.length(); i++) {
             final char c = s.charAt(i);
@@ -207,10 +206,10 @@ public class UriComponent {
      *
      * @param s the string to be encoded.
      * @param t the URI component type identifying the ASCII characters that
-     *          must be percent-encoded.
+     * must be percent-encoded.
      * @return the encoded string.
      */
-    public static String contextualEncode(String s, Type t) {
+    public static String contextualEncode(final String s, final Type t) {
         return _encode(s, t, false, true);
     }
 
@@ -220,13 +219,13 @@ public class UriComponent {
      * UTF-8 encoding. Percent-encoded characters will be recognized and not
      * double encoded.
      *
-     * @param s        the string to be encoded.
-     * @param t        the URI component type identifying the ASCII characters that
-     *                 must be percent-encoded.
+     * @param s the string to be encoded.
+     * @param t the URI component type identifying the ASCII characters that
+     * must be percent-encoded.
      * @param template true if the encoded string contains URI template variables
      * @return the encoded string.
      */
-    public static String contextualEncode(String s, Type t, boolean template) {
+    public static String contextualEncode(final String s, final Type t, final boolean template) {
         return _encode(s, t, template, true);
     }
 
@@ -237,10 +236,10 @@ public class UriComponent {
      *
      * @param s the string to be encoded.
      * @param t the URI component type identifying the ASCII characters that
-     *          must be percent-encoded.
+     * must be percent-encoded.
      * @return the encoded string.
      */
-    public static String encode(String s, Type t) {
+    public static String encode(final String s, final Type t) {
         return _encode(s, t, false, false);
     }
 
@@ -249,13 +248,13 @@ public class UriComponent {
      * or are ASCII characters that must be percent-encoded using the
      * UTF-8 encoding.
      *
-     * @param s        the string to be encoded.
-     * @param t        the URI component type identifying the ASCII characters that
-     *                 must be percent-encoded.
+     * @param s the string to be encoded.
+     * @param t the URI component type identifying the ASCII characters that
+     * must be percent-encoded.
      * @param template true if the encoded string contains URI template variables
      * @return the encoded string.
      */
-    public static String encode(String s, Type t, boolean template) {
+    public static String encode(final String s, final Type t, final boolean template) {
         return _encode(s, t, template, false);
     }
 
@@ -279,7 +278,7 @@ public class UriComponent {
         return s;
     }
 
-    private static String _encode(String s, Type t, boolean template, boolean contextualEncode) {
+    private static String _encode(final String s, final Type t, final boolean template, final boolean contextualEncode) {
         final boolean[] table = ENCODING_TABLES[t.ordinal()];
         boolean insideTemplateParam = false;
 
@@ -309,8 +308,7 @@ public class UriComponent {
 
                 if (contextualEncode) {
                     if (c == '%' && i + 2 < s.length()) {
-                        if (isHexCharacter(s.charAt(i + 1))
-                                && isHexCharacter(s.charAt(i + 2))) {
+                        if (isHexCharacter(s.charAt(i + 1)) && isHexCharacter(s.charAt(i + 2))) {
                             if (sb != null) {
                                 sb.append('%').append(s.charAt(i + 1)).append(s.charAt(i + 2));
                             }
@@ -341,17 +339,16 @@ public class UriComponent {
     }
 
     private final static char[] HEX_DIGITS = {
-            '0', '1', '2', '3', '4', '5', '6', '7',
-            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
     };
 
-    private static void appendPercentEncodedOctet(StringBuilder sb, int b) {
+    private static void appendPercentEncodedOctet(final StringBuilder sb, final int b) {
         sb.append('%');
         sb.append(HEX_DIGITS[b >> 4]);
         sb.append(HEX_DIGITS[b & 0x0F]);
     }
 
-    private static void appendUTF8EncodedCharacter(StringBuilder sb, char c) {
+    private static void appendUTF8EncodedCharacter(final StringBuilder sb, final char c) {
         final ByteBuffer bb = UTF_8_CHARSET.encode("" + c);
 
         while (bb.hasRemaining()) {
@@ -365,9 +362,9 @@ public class UriComponent {
     private static final boolean[][] ENCODING_TABLES = initEncodingTables();
 
     private static boolean[][] initEncodingTables() {
-        boolean[][] tables = new boolean[Type.values().length][];
+        final boolean[][] tables = new boolean[Type.values().length][];
 
-        List<String> l = new ArrayList<String>();
+        final List<String> l = new ArrayList<String>();
         l.addAll(Arrays.asList(SCHEME));
         tables[Type.SCHEME.ordinal()] = initEncodingTable(l);
 
@@ -416,9 +413,9 @@ public class UriComponent {
         return tables;
     }
 
-    private static boolean[] initEncodingTable(List<String> allowed) {
-        boolean[] table = new boolean[0x80];
-        for (String range : allowed) {
+    private static boolean[] initEncodingTable(final List<String> allowed) {
+        final boolean[] table = new boolean[0x80];
+        for (final String range : allowed) {
             if (range.length() == 1) {
                 table[range.charAt(0)] = true;
             } else if (range.length() == 3 && range.charAt(1) == '-') {
@@ -436,25 +433,25 @@ public class UriComponent {
     /**
      * Decodes characters of a string that are percent-encoded octets using
      * UTF-8 decoding (if needed).
-     * <p>
+     * <p/>
      * It is assumed that the string is valid according to an (unspecified) URI
      * component type. If a sequence of contiguous percent-encoded octets is
      * not a valid UTF-8 character then the octets are replaced with '\uFFFD'.
-     * <p>
+     * <p/>
      * If the URI component is of type HOST then any "%" found between "[]" is
      * left alone. It is an IPv6 literal with a scope_id.
-     * <p>
+     * <p/>
      * If the URI component is of type QUERY_PARAM then any "+" is decoded as
      * as ' '.
-     * <p>
+     * <p/>
      *
      * @param s the string to be decoded.
      * @param t the URI component type, may be null.
      * @return the decoded string.
      * @throws IllegalArgumentException if a malformed percent-encoded octet is
-     *                                  detected
+     * detected
      */
-    public static String decode(String s, Type t) {
+    public static String decode(final String s, final Type t) {
         if (s == null) {
             throw new IllegalArgumentException();
         }
@@ -507,12 +504,12 @@ public class UriComponent {
      * values can be controlled using the {@code decode} parameter flag.
      * </p>
      *
-     * @param u      the URI.
+     * @param u the URI.
      * @param decode {@code true} if the returned query parameter values of the query component
-     *               should be in decoded form.
+     * should be in decoded form.
      * @return the multivalued map of query parameters.
      */
-    public static MultivaluedMap<String, String> decodeQuery(URI u, boolean decode) {
+    public static MultivaluedMap<String, String> decodeQuery(final URI u, final boolean decode) {
         return decodeQuery(u.getRawQuery(), decode);
     }
 
@@ -523,12 +520,12 @@ public class UriComponent {
      * values can be controlled using the {@code decode} parameter flag.
      * </p>
      *
-     * @param q      the query component in encoded form.
+     * @param q the query component in encoded form.
      * @param decode {@code true} if the returned query parameter values of the query component
-     *               should be in decoded form.
+     * should be in decoded form.
      * @return the multivalued map of query parameters.
      */
-    public static MultivaluedMap<String, String> decodeQuery(String q, boolean decode) {
+    public static MultivaluedMap<String, String> decodeQuery(final String q, final boolean decode) {
         return decodeQuery(q, true, decode);
     }
 
@@ -539,15 +536,16 @@ public class UriComponent {
      * and {@code decodeValues} parameter flags.
      * </p>
      *
-     * @param q            the query component in encoded form.
-     * @param decodeNames  {@code true} if the returned query parameter names of the query component
-     *                     should be in decoded form.
+     * @param q the query component in encoded form.
+     * @param decodeNames {@code true} if the returned query parameter names of the query component
+     * should be in decoded form.
      * @param decodeValues {@code true} if the returned query parameter values of the query component
-     *                     should be in decoded form.
+     * should be in decoded form.
      * @return the multivalued map of query parameters.
      */
-    public static MultivaluedMap<String, String> decodeQuery(String q, boolean decodeNames, boolean decodeValues) {
-        MultivaluedMap<String, String> queryParameters = new MultivaluedStringMap();
+    public static MultivaluedMap<String, String> decodeQuery(final String q, final boolean decodeNames,
+                                                             final boolean decodeValues) {
+        final MultivaluedMap<String, String> queryParameters = new MultivaluedStringMap();
 
         if (q == null || q.length() == 0) {
             return queryParameters;
@@ -555,7 +553,7 @@ public class UriComponent {
 
         int s = 0;
         do {
-            int e = q.indexOf('&', s);
+            final int e = q.indexOf('&', s);
 
             if (e == -1) {
                 decodeQueryParam(queryParameters, q.substring(s), decodeNames, decodeValues);
@@ -569,22 +567,19 @@ public class UriComponent {
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
-    private static void decodeQueryParam(MultivaluedMap<String, String> params,
-                                         String param, boolean decodeNames, boolean decodeValues) {
+    private static void decodeQueryParam(final MultivaluedMap<String, String> params, final String param,
+                                         final boolean decodeNames, final boolean decodeValues) {
         try {
-            int equals = param.indexOf('=');
+            final int equals = param.indexOf('=');
             if (equals > 0) {
-                params.add(
-                        (decodeNames) ? URLDecoder.decode(param.substring(0, equals), "UTF-8") : param.substring(0, equals),
+                params.add((decodeNames) ? URLDecoder.decode(param.substring(0, equals), "UTF-8") : param.substring(0, equals),
                         (decodeValues) ? URLDecoder.decode(param.substring(equals + 1), "UTF-8") : param.substring(equals + 1));
             } else if (equals == 0) {
                 // no key declared, ignore
             } else if (param.length() > 0) {
-                params.add(
-                        URLDecoder.decode(param, "UTF-8"),
-                        "");
+                params.add(URLDecoder.decode(param, "UTF-8"), "");
             }
-        } catch (UnsupportedEncodingException ex) {
+        } catch (final UnsupportedEncodingException ex) {
             // This should never occur
             throw new IllegalArgumentException(ex);
         }
@@ -596,11 +591,11 @@ public class UriComponent {
         private final String path;
         private final MultivaluedMap<String, String> matrixParameters;
 
-        PathSegmentImpl(String path, boolean decode) {
+        PathSegmentImpl(final String path, final boolean decode) {
             this(path, decode, new MultivaluedStringMap());
         }
 
-        PathSegmentImpl(String path, boolean decode, MultivaluedMap<String, String> matrixParameters) {
+        PathSegmentImpl(final String path, final boolean decode, final MultivaluedMap<String, String> matrixParameters) {
             this.path = (decode) ? UriComponent.decode(path, UriComponent.Type.PATH_SEGMENT) : path;
             this.matrixParameters = matrixParameters;
         }
@@ -624,14 +619,14 @@ public class UriComponent {
     /**
      * Decode the path component of a URI as path segments.
      *
-     * @param u      the URI. If the path component is an absolute path component
-     *               then the leading '/' is ignored and is not considered a delimiator
-     *               of a path segment.
+     * @param u the URI. If the path component is an absolute path component
+     * then the leading '/' is ignored and is not considered a delimiator
+     * of a path segment.
      * @param decode true if the path segments of the path component
-     *               should be in decoded form.
+     * should be in decoded form.
      * @return the list of path segments.
      */
-    public static List<PathSegment> decodePath(URI u, boolean decode) {
+    public static List<PathSegment> decodePath(final URI u, final boolean decode) {
         String rawPath = u.getRawPath();
         if (rawPath != null && rawPath.length() > 0 && rawPath.charAt(0) == '/') {
             rawPath = rawPath.substring(1);
@@ -650,13 +645,13 @@ public class UriComponent {
      * segments in order: "", "a" and "".
      * </p>
      *
-     * @param path   the path component in encoded form.
+     * @param path the path component in encoded form.
      * @param decode true if the path segments of the path component
-     *               should be in decoded form.
+     * should be in decoded form.
      * @return the list of path segments.
      */
-    public static List<PathSegment> decodePath(String path, boolean decode) {
-        List<PathSegment> segments = new LinkedList<PathSegment>();
+    public static List<PathSegment> decodePath(final String path, final boolean decode) {
+        final List<PathSegment> segments = new LinkedList<PathSegment>();
 
         if (path == null) {
             return segments;
@@ -686,20 +681,16 @@ public class UriComponent {
      * Decode the path segment and add it to the list of path segments.
      *
      * @param segments mutable list of path segments.
-     * @param segment  path segment to be decoded.
-     * @param decode   {@code true} if the path segment should be in a decoded form.
+     * @param segment path segment to be decoded.
+     * @param decode {@code true} if the path segment should be in a decoded form.
      */
-    public static void decodePathSegment(List<PathSegment> segments, String segment, boolean decode) {
-        int colon = segment.indexOf(';');
+    public static void decodePathSegment(final List<PathSegment> segments, final String segment, final boolean decode) {
+        final int colon = segment.indexOf(';');
         if (colon != -1) {
-            segments.add(new PathSegmentImpl(
-                    (colon == 0) ? "" : segment.substring(0, colon),
-                    decode,
-                    decodeMatrix(segment, decode)));
+            segments.add(new PathSegmentImpl((colon == 0) ? "" : segment.substring(0, colon), decode, decodeMatrix(segment,
+                    decode)));
         } else {
-            segments.add(new PathSegmentImpl(
-                    segment,
-                    decode));
+            segments.add(new PathSegmentImpl(segment, decode));
         }
     }
 
@@ -707,12 +698,12 @@ public class UriComponent {
      * Decode the matrix component of a URI path segment.
      *
      * @param pathSegment the path segment component in encoded form.
-     * @param decode      true if the matrix parameters of the path segment component
-     *                    should be in decoded form.
+     * @param decode true if the matrix parameters of the path segment component
+     * should be in decoded form.
      * @return the multivalued map of matrix parameters.
      */
-    public static MultivaluedMap<String, String> decodeMatrix(String pathSegment, boolean decode) {
-        MultivaluedMap<String, String> matrixMap = new MultivaluedStringMap();
+    public static MultivaluedMap<String, String> decodeMatrix(final String pathSegment, final boolean decode) {
+        final MultivaluedMap<String, String> matrixMap = new MultivaluedStringMap();
 
         // Skip over path segment
         int s = pathSegment.indexOf(';') + 1;
@@ -721,7 +712,7 @@ public class UriComponent {
         }
 
         do {
-            int e = pathSegment.indexOf(';', s);
+            final int e = pathSegment.indexOf(';', s);
 
             if (e == -1) {
                 decodeMatrixParam(matrixMap, pathSegment.substring(s), decode);
@@ -735,24 +726,20 @@ public class UriComponent {
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
-    private static void decodeMatrixParam(MultivaluedMap<String, String> params,
-                                          String param, boolean decode) {
-        int equals = param.indexOf('=');
+    private static void decodeMatrixParam(final MultivaluedMap<String, String> params, final String param, final boolean decode) {
+        final int equals = param.indexOf('=');
         if (equals > 0) {
-            params.add(
-                    UriComponent.decode(param.substring(0, equals), UriComponent.Type.MATRIX_PARAM),
+            params.add(UriComponent.decode(param.substring(0, equals), UriComponent.Type.MATRIX_PARAM),
                     (decode) ? UriComponent.decode(param.substring(equals + 1), UriComponent.Type.MATRIX_PARAM) : param
                             .substring(equals + 1));
         } else if (equals == 0) {
             // no key declared, ignore
         } else if (param.length() > 0) {
-            params.add(
-                    UriComponent.decode(param, UriComponent.Type.MATRIX_PARAM),
-                    "");
+            params.add(UriComponent.decode(param, UriComponent.Type.MATRIX_PARAM), "");
         }
     }
 
-    private static String decode(String s, int n) {
+    private static String decode(final String s, final int n) {
         final StringBuilder sb = new StringBuilder(n);
         ByteBuffer bb = null;
 
@@ -769,7 +756,7 @@ public class UriComponent {
         return sb.toString();
     }
 
-    private static String decodeQueryParam(String s, int n) {
+    private static String decodeQueryParam(final String s, final int n) {
         final StringBuilder sb = new StringBuilder(n);
         ByteBuffer bb = null;
 
@@ -790,7 +777,7 @@ public class UriComponent {
         return sb.toString();
     }
 
-    private static String decodeHost(String s, int n) {
+    private static String decodeHost(final String s, final int n) {
         final StringBuilder sb = new StringBuilder(n);
         ByteBuffer bb = null;
 
@@ -816,11 +803,11 @@ public class UriComponent {
 
     /**
      * Decode a continuous sequence of percent encoded octets.
-     * <p>
+     * <p/>
      * Assumes the index, i, starts that the first hex digit of the first
      * percent-encoded octet.
      */
-    private static ByteBuffer decodePercentEncodedOctets(String s, int i, ByteBuffer bb) {
+    private static ByteBuffer decodePercentEncodedOctets(final String s, int i, ByteBuffer bb) {
         if (bb == null) {
             bb = ByteBuffer.allocate(1);
         } else {
@@ -846,7 +833,7 @@ public class UriComponent {
                 bb.flip();
                 // Create a new byte buffer with the maximum number of possible
                 // octets, hence resize should only occur once
-                ByteBuffer bb_new = ByteBuffer.allocate(s.length() / 3);
+                final ByteBuffer bb_new = ByteBuffer.allocate(s.length() / 3);
                 bb_new.put(bb);
                 bb = bb_new;
             }
@@ -862,7 +849,7 @@ public class UriComponent {
      *
      * @return the index to the next unchecked character in the string to decode
      */
-    private static int decodeOctets(int i, ByteBuffer bb, StringBuilder sb) {
+    private static int decodeOctets(final int i, final ByteBuffer bb, final StringBuilder sb) {
         // If there is only one octet and is an ASCII character
         if (bb.limit() == 1 && (bb.get(0) & 0xFF) < 0x80) {
             // Octet can be appended directly
@@ -870,17 +857,16 @@ public class UriComponent {
             return i + 2;
         } else {
             //
-            CharBuffer cb = UTF_8_CHARSET.decode(bb);
+            final CharBuffer cb = UTF_8_CHARSET.decode(bb);
             sb.append(cb.toString());
             return i + bb.limit() * 3 - 1;
         }
     }
 
-    private static int decodeHex(String s, int i) {
+    private static int decodeHex(final String s, final int i) {
         final int v = decodeHex(s.charAt(i));
         if (v == -1) {
-            throw new IllegalArgumentException(
-                    LocalizationMessages.URI_COMPONENT_ENCODED_OCTET_INVALID_DIGIT(i, s.charAt(i)));
+            throw new IllegalArgumentException(LocalizationMessages.URI_COMPONENT_ENCODED_OCTET_INVALID_DIGIT(i, s.charAt(i)));
         }
         return v;
     }
@@ -888,7 +874,7 @@ public class UriComponent {
     private static final int[] HEX_TABLE = initHexTable();
 
     private static int[] initHexTable() {
-        int[] table = new int[0x80];
+        final int[] table = new int[0x80];
         Arrays.fill(table, -1);
 
         for (char c = '0'; c <= '9'; c++) {
@@ -903,8 +889,7 @@ public class UriComponent {
         return table;
     }
 
-
-    private static int decodeHex(char c) {
+    private static int decodeHex(final char c) {
         return (c < 128) ? HEX_TABLE[c] : -1;
     }
 
@@ -914,7 +899,24 @@ public class UriComponent {
      * @param c Any character
      * @return The is {@code c} is a hexadecimal character (e.g. 0, 5, a, A, f, ...)
      */
-    public static boolean isHexCharacter(char c) {
+    public static boolean isHexCharacter(final char c) {
         return c < 128 && HEX_TABLE[c] != -1;
+    }
+
+    /**
+     * Return the {@code Request-Uri} representation as defined by HTTP spec. For example:
+     * <pre>&lt;Method> &lt;Request-URI> HTTP/&lt;Version> (e.g. GET /auth;foo=bar/hello?foo=bar HTTP/1.1)</pre>
+     *
+     * @param uri uri to obtain {@code Request-Uri} from.
+     * @return {@code Request-Uri} representation or {@code null} if {@code uri} is not provided.
+     */
+    public static String fullRelativeUri(final URI uri) {
+        if (uri == null) {
+            return null;
+        }
+
+        final String query = uri.getRawQuery();
+
+        return uri.getRawPath() + (query != null && query.length() > 0 ? "?" + query : "");
     }
 }

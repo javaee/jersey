@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import javax.ws.rs.Path;
  * Common model helper methods.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Constantino Cronemberger (ccronemberger at yahoo.com.br)
  */
 public final class ModelHelper {
 
@@ -58,15 +59,20 @@ public final class ModelHelper {
      *         annotation.
      */
     public static Class<?> getAnnotatedResourceClass(Class<?> resourceClass) {
-        if (resourceClass.isAnnotationPresent(Path.class)) {
-            return resourceClass;
-        }
 
-        for (Class<?> i : resourceClass.getInterfaces()) {
-            if (i.isAnnotationPresent(Path.class)) {
-                return i;
+        // traverse the class hierarchy to find the annotation
+        Class<?> cls = resourceClass;
+        do {
+            if (cls.isAnnotationPresent(Path.class)) {
+                return cls;
             }
-        }
+
+            for (Class<?> i : cls.getInterfaces()) {
+                if (i.isAnnotationPresent(Path.class)) {
+                    return i;
+                }
+            }
+        } while ((cls = cls.getSuperclass()) != null);
 
         return resourceClass;
     }

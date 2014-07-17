@@ -320,7 +320,8 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          * @param nameBindings name binding annotation types.
          * @return updated builder object.
          */
-        public Builder nameBindings(final Class<? extends Annotation>... nameBindings) {
+        @SafeVarargs
+        public final Builder nameBindings(final Class<? extends Annotation>... nameBindings) {
             return nameBindings(Arrays.asList(nameBindings));
         }
 

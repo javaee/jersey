@@ -112,11 +112,16 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
      *                           reader will be translated into a {@link javax.ws.rs.BadRequestException} as required by
      * @param serviceLocator Service locator.
      */
-    public ReaderInterceptorExecutor(Class<?> rawType, Type type, Annotation[] annotations, MediaType mediaType,
-                                     MultivaluedMap<String, String> headers, PropertiesDelegate propertiesDelegate,
-                                     InputStream inputStream, MessageBodyWorkers workers,
-                                     Iterable<ReaderInterceptor> readerInterceptors,
-                                     boolean translateNce, ServiceLocator serviceLocator) {
+    public ReaderInterceptorExecutor(final Class<?> rawType, final Type type,
+                                     final Annotation[] annotations,
+                                     final MediaType mediaType,
+                                     final MultivaluedMap<String, String> headers,
+                                     final PropertiesDelegate propertiesDelegate,
+                                     final InputStream inputStream,
+                                     final MessageBodyWorkers workers,
+                                     final Iterable<ReaderInterceptor> readerInterceptors,
+                                     final boolean translateNce,
+                                     final ServiceLocator serviceLocator) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.headers = headers;
@@ -159,7 +164,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
     }
 
     @Override
-    public void setInputStream(InputStream is) {
+    public void setInputStream(final InputStream is) {
         this.inputStream = is;
 
     }
@@ -193,7 +198,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
 
         @Override
         @SuppressWarnings("unchecked")
-        public Object aroundReadFrom(ReaderInterceptorContext context) throws IOException, WebApplicationException {
+        public Object aroundReadFrom(final ReaderInterceptorContext context) throws IOException, WebApplicationException {
             processedCount--; //this is not regular interceptor -> count down
 
             traceBefore(null, MsgTraceEvent.RI_BEFORE);
@@ -239,27 +244,91 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
         }
 
         @SuppressWarnings("unchecked")
-        private Object invokeReadFrom(ReaderInterceptorContext context, MessageBodyReader bodyReader, EntityInputStream input)
-                throws WebApplicationException, IOException {
+        private Object invokeReadFrom(final ReaderInterceptorContext context, final MessageBodyReader reader,
+                                      final EntityInputStream input) throws WebApplicationException, IOException {
 
             final TracingLogger tracingLogger = getTracingLogger();
             final long timestamp = tracingLogger.timestamp(MsgTraceEvent.MBR_READ_FROM);
+            final UnCloseableInputStream stream = new UnCloseableInputStream(input, reader);
+
             try {
-                Object entity;
+                final Object entity;
                 if (translateNce) {
                     try {
-                        entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
-                                context.getMediaType(), context.getHeaders(), input);
-                    } catch (NoContentException ex) {
+                        entity = reader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
+                                context.getMediaType(), context.getHeaders(), stream);
+                    } catch (final NoContentException ex) {
                         throw new BadRequestException(ex);
                     }
                 } else {
-                    entity = bodyReader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
-                            context.getMediaType(), context.getHeaders(), input);
+                    entity = reader.readFrom(context.getType(), context.getGenericType(), context.getAnnotations(),
+                            context.getMediaType(), context.getHeaders(), stream);
                 }
                 return entity;
             } finally {
-                tracingLogger.logDuration(MsgTraceEvent.MBR_READ_FROM, timestamp, bodyReader);
+                tracingLogger.logDuration(MsgTraceEvent.MBR_READ_FROM, timestamp, reader);
+            }
+        }
+    }
+
+    /**
+     * {@link javax.ws.rs.ext.MessageBodyReader}s should not close the given {@link java.io.InputStream stream}. This input
+     * stream makes sure that the stream is not closed even if MBR tries to do it.
+     */
+    private static class UnCloseableInputStream extends InputStream {
+
+        private final InputStream original;
+        private final MessageBodyReader reader;
+
+        private UnCloseableInputStream(final InputStream original, final MessageBodyReader reader) {
+            this.original = original;
+            this.reader = reader;
+        }
+
+        @Override
+        public int read() throws IOException {
+            return original.read();
+        }
+
+        @Override
+        public int read(final byte[] b) throws IOException {
+            return original.read(b);
+        }
+
+        @Override
+        public int read(final byte[] b, final int off, final int len) throws IOException {
+            return original.read(b, off, len);
+        }
+
+        @Override
+        public long skip(final long l) throws IOException {
+            return original.skip(l);
+        }
+
+        @Override
+        public int available() throws IOException {
+            return original.available();
+        }
+
+        @Override
+        public synchronized void mark(final int i) {
+            original.mark(i);
+        }
+
+        @Override
+        public synchronized void reset() throws IOException {
+            original.reset();
+        }
+
+        @Override
+        public boolean markSupported() {
+            return original.markSupported();
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, LocalizationMessages.MBR_TRYING_TO_CLOSE_STREAM(reader.getClass()));
             }
         }
     }

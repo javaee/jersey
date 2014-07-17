@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -233,14 +233,18 @@ public class AsyncTest extends JerseyTest {
             }
         });
 
-        assertTrue("Waiting for results has timed out.", latch.await(5, TimeUnit.SECONDS));
+        assertTrue("Waiting for results has timed out.", latch.await(5 * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS));
         final long toc = System.currentTimeMillis();
 
         assertEquals("DONE-1", r1.get());
         assertEquals("DONE-2", r2.get());
         assertEquals("DONE-3", r3.get());
 
-        assertThat("Async processing took too long.", toc - tic, Matchers.lessThan(3 * AsyncResource.OPERATION_DURATION));
+        final int asyncTimeoutMultiplier = getAsyncTimeoutMultiplier();
+        LOGGER.info("Using async timeout multiplier: " + asyncTimeoutMultiplier);
+        assertThat("Async processing took too long.", toc - tic, Matchers.lessThan(3 * AsyncResource.OPERATION_DURATION
+                * asyncTimeoutMultiplier));
+
     }
 
     /**

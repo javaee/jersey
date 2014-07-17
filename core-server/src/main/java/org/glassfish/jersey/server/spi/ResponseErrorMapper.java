@@ -44,7 +44,6 @@ import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.Beta;
 import org.glassfish.jersey.spi.Contract;
 
 /**
@@ -66,7 +65,6 @@ import org.glassfish.jersey.spi.Contract;
  */
 @Contract
 @ConstrainedTo(RuntimeType.SERVER)
-@Beta
 public interface ResponseErrorMapper {
 
     public Response toResponse(Throwable throwable);

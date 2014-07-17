@@ -50,6 +50,11 @@
 <!ENTITY jax-rs.version "$jax-rs-version">
 <!ENTITY jax-rs-api-jar.version "$jax-rs-api-jar-version">
 <!ENTITY jackson.javadoc.version "$jackson-version">
+<!-- temporary hardcoded javadoc version - the correct one is missing at the provider's web -->
+<!ENTITY jackson.javadoc.temp.version "2.3.0">
+
+<!-- Special characters -->
+<!ENTITY nbsp "&#160;">
 
 <!-- Version & External Link Base Entities -->
 <!ENTITY experimentalrepository "snapshots">
@@ -334,6 +339,7 @@
 <!ENTITY jersey.ext.ValidationError "<link xlink:href='&jersey.javadoc.path;/server/validation/ValidationError.html'>ValidationError</link>">
 
 <!ENTITY jersey.media.JacksonFeature "<link xlink:href='&jersey.javadoc.path;/jackson/JacksonFeature.html'>JacksonFeature</link>" >
+<!ENTITY jersey.media.Jackson1Feature "<link xlink:href='&jersey.javadoc.path;/jackson1/Jackson1Feature.html'>Jackson1Feature</link>" >
 <!ENTITY jersey.media.JettisonFeature "<link xlink:href='&jersey.javadoc.path;/jettison/JettisonFeature.html'>JettisonFeature</link>" >
 <!ENTITY jersey.media.JettisonConfig "<link xlink:href='&jersey.javadoc.path;/jettison/JettisonConfig.html'>JettisonConfig</link>" >
 <!ENTITY jersey.media.JettisonJaxbContext "<link xlink:href='&jersey.javadoc.path;/jettison/JettisonJaxbContext.html'>JettisonJaxbContext</link>" >
@@ -342,7 +348,10 @@
 <!ENTITY jersey.media.MoxyJsonConfig.marshallerProperty "<link xlink:href='&jersey.javadoc.path;/moxy/json/MoxyJsonConfig.html#marshallerProperty(java.lang.String, java.lang.Object)'>MoxyJsonConfig#marshallerProperty(java.lang.String, java.lang.Object)</link>" >
 <!ENTITY jersey.media.MoxyJsonConfig.unmarshallerProperty "<link xlink:href='&jersey.javadoc.path;/moxy/json/MoxyJsonConfig.html#unmarshallerProperty(java.lang.String, java.lang.Object)'>MoxyJsonConfig#unmarshallerProperty(java.lang.String, java.lang.Object)</link>" >
 <!ENTITY jersey.media.MoxyJsonFeature "<link xlink:href='&jersey.javadoc.path;/moxy/json/MoxyJsonFeature.html'>MoxyJsonFeature</link>">
-<!ENTITY jersey.media.ObjectMapper "<link xlink:href='http://jackson.codehaus.org/&jackson.javadoc.version;/javadoc/org/codehaus/jackson/map/ObjectMapper.html'>ObjectMapper</link>" >
+<!ENTITY jersey.media.ObjectMapper1
+        "<link xlink:href='http://jackson.codehaus.org/1.9.9/javadoc/org/codehaus/jackson/map/ObjectMapper.html'>ObjectMapper</link>" > <!-- old jackson version -->
+<!ENTITY jersey.media.ObjectMapper
+        "<link xlink:href='http://fasterxml.github.io/jackson-databind/javadoc/&jackson.javadoc.temp.version;/com/fasterxml/jackson/databind/ObjectMapper.html'>ObjectMapper</link>" >
 <!ENTITY jersey.media.multipart "<link xlink:href='&jersey.javadoc.path;/media/multipart/package-summary.html'>Multi Part</link>">
 <!ENTITY jersey.media.multipart.BodyPart "<link xlink:href='&jersey.javadoc.path;/media/multipart/BodyPart.html'>BodyPart</link>" >
 <!ENTITY jersey.media.multipart.FileDataBodyPart "<link xlink:href='&jersey.javadoc.path;/media/multipart/file/FileDataBodyPart.html'>FileDataBodyPart</link>" >
@@ -360,6 +369,7 @@
 <!ENTITY jersey.server.ModelProcessor "<link xlink:href='&jersey.javadoc.path;/server/model/ModelProcessor.html'>ModelProcessor</link>">
 <!ENTITY jersey.server.ResourceConfig "<link xlink:href='&jersey.javadoc.path;/server/ResourceConfig.html'>ResourceConfig</link>">
 <!ENTITY jersey.server.RolesAllowedDynamicFeature "<link xlink:href='&jersey.javadoc.path;/server/filter/RolesAllowedDynamicFeature.html'>RolesAllowedDynamicFeature</link>">
+<!ENTITY jersey.server.ResponseErrorMapper "<link xlink:href='&jersey.javadoc.path;/server/spi/ResponseErrorMapper.html'>ResponseErrorMapper</link>">
 <!ENTITY jersey.server.ServerProperties "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html'>ServerProperties</link>">
 <!ENTITY jersey.server.ServerProperties.BV_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#BV_FEATURE_DISABLE'>ServerProperties.BV_FEATURE_DISABLE</link>" >
 <!ENTITY jersey.server.ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK "<link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK'>ServerProperties.BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK</link>" >
@@ -508,6 +518,7 @@
 <!ENTITY jersey-media-json-processing "<link xlink:href='&jersey.site.path;/jersey-media-json-processing/dependencies.html'>jersey-media-json-processing</link>" >
 <!ENTITY jersey-media-json-jettison "<link xlink:href='&jersey.site.path;/jersey-media-json-jettison/dependencies.html'>jersey-media-json-jettison</link>" >
 <!ENTITY jersey-media-json-jackson "<link xlink:href='&jersey.site.path;/jersey-media-json-jackson/dependencies.html'>jersey-media-json-jackson</link>" >
+<!ENTITY jersey-media-json-jackson1 "<link xlink:href='&jersey.site.path;/jersey-media-json-jackson1/dependencies.html'>jersey-media-json-jackson1</link>" >
 <!ENTITY jersey-media-moxy "<link xlink:href='&jersey.site.path;/jersey-media-moxy/dependencies.html'>jersey-media-moxy</link>" >
 <!ENTITY jersey-media-multipart "<link xlink:href='&jersey.site.path;/jersey-media-multipart/dependencies.html'>jersey-media-multipart</link>" >
 <!ENTITY jersey-mvc "<link xlink:href='&jersey.site.path;/jersey-mvc/dependencies.html'>jersey-mvc</link>" >
@@ -522,7 +533,8 @@
 <!ENTITY jersey.github.ef.example.path "<link xlink:href='&jersey.github.examples.path;/entity-filtering'>Entity Filtering example</link>">
 <!ENTITY jersey.github.ef.security.example.path "<link xlink:href='&jersey.github.examples.path;/entity-filtering-security'>Entity Filtering example (with security annotations)</link>">
 <!ENTITY jersey.github.helloworld.example.path "<link xlink:href='&jersey.github.examples.path;/helloworld'>helloworld example</link>">
-<!ENTITY jersey.github.jackson.example.path "<link xlink:href='&jersey.github.examples.path;/json-jackson'>JSON Jackson example</link>">
+<!ENTITY jersey.github.jackson.example.path "<link xlink:href='&jersey.github.examples.path;/json-jackson'>JSON Jackson (2.x) example</link>">
+<!ENTITY jersey.github.jackson1.example.path "<link xlink:href='&jersey.github.examples.path;/json-jackson1'>JSON Jackson (1.x) example</link>">
 <!ENTITY jersey.github.jaxb.example.path "<link xlink:href='&jersey.github.examples.path;/jaxb'>JAXB example</link>">
 <!ENTITY jersey.github.jettison.example.path "<link xlink:href='&jersey.github.examples.path;/json-jettison'>JSON Jettison example</link>">
 <!ENTITY jersey.github.json.processing.example.path "<link xlink:href='&jersey.github.examples.path;/json-processing-webapp'>JSON Processing example</link>">
@@ -757,6 +769,7 @@
 <!ENTITY lit.jersey.server.ModelProcessor "<literal>ModelProcessor</literal>">
 <!ENTITY lit.jersey.server.ResourceConfig "<literal>ResourceConfig</literal>">
 <!ENTITY lit.jersey.server.RolesAllowedDynamicFeature "<literal>RolesAllowedDynamicFeature</literal>">
+<!ENTITY lit.jersey.server.ResponseErrorMapper "<literal>ResponseErrorMapper</literal>">
 <!ENTITY lit.jersey.server.Uri "<literal>Uri</literal>">
 <!ENTITY lit.jersey.server.WadlGenerator "<literal>WadlGenerator</literal>">
 <!ENTITY lit.jersey.server.WadlGeneratorConfig "<literal>WadlGeneratorConfig</literal>">
@@ -894,6 +907,7 @@
 <!ENTITY lit.jersey-media-json-processing "<literal>jersey-media-json-processing</literal>" >
 <!ENTITY lit.jersey-media-json-jettison "<literal>jersey-media-json-jettison</literal>" >
 <!ENTITY lit.jersey-media-json-jackson "<literal>jersey-media-json-jackson</literal>" >
+<!ENTITY lit.jersey-media-json-jackson1 "<literal>jersey-media-json-jackson1</literal>" >
 <!ENTITY lit.jersey-media-moxy "<literal>jersey-media-moxy</literal>" >
 <!ENTITY lit.jersey-media-multipart "<literal>jersey-media-multipart</literal>" >
 

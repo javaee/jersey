@@ -350,7 +350,7 @@ public final class ApplicationHandler {
      * Assumes the configuration field is initialized with a valid ResourceConfig.
      */
     private void initialize() {
-        LOGGER.info(LocalizationMessages.INIT_MSG(Version.getBuildId()));
+        LOGGER.config(LocalizationMessages.INIT_MSG(Version.getBuildId()));
 
         // Lock original ResourceConfig.
         if (application instanceof ResourceConfig) {

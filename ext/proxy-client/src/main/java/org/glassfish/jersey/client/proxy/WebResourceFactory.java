@@ -86,6 +86,7 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
  * @author Martin Matula (martin.matula at oracle.com)
  */
 public final class WebResourceFactory implements InvocationHandler {
+
     private final WebTarget target;
     private final MultivaluedMap<String, Object> headers;
     private final List<Cookie> cookies;
@@ -97,7 +98,7 @@ public final class WebResourceFactory implements InvocationHandler {
     /**
      * Creates a new client-side representation of a resource described by
      * the interface passed in the first argument.
-     *
+     * <p/>
      * Calling this method has the same effect as calling {@code WebResourceFactory.newResource(resourceInterface, rootTarget,
      *false)}.
      *
@@ -107,9 +108,8 @@ public final class WebResourceFactory implements InvocationHandler {
      * @return Instance of a class implementing the resource interface that can
      * be used for making requests to the server.
      */
-    public static <C> C newResource(Class<C> resourceInterface, WebTarget target) {
-        return newResource(resourceInterface, target, false, EMPTY_HEADERS,
-                Collections.<Cookie>emptyList(), EMPTY_FORM);
+    public static <C> C newResource(final Class<C> resourceInterface, final WebTarget target) {
+        return newResource(resourceInterface, target, false, EMPTY_HEADERS, Collections.<Cookie>emptyList(), EMPTY_FORM);
     }
 
     /**
@@ -120,7 +120,7 @@ public final class WebResourceFactory implements InvocationHandler {
      * @param resourceInterface Interface describing the resource to be created.
      * @param target WebTarget pointing to the resource or the parent of the resource.
      * @param ignoreResourcePath If set to true, ignores path annotation on the resource interface (this is used when creating
-     *                           sub-resources)
+     * sub-resources)
      * @param headers Header params collected from parent resources (used when creating a sub-resource)
      * @param cookies Cookie params collected from parent resources (used when creating a sub-resource)
      * @param form Form params collected from parent resources (used when creating a sub-resource)
@@ -128,16 +128,21 @@ public final class WebResourceFactory implements InvocationHandler {
      * be used for making requests to the server.
      */
     @SuppressWarnings("unchecked")
-    public static <C> C newResource(Class<C> resourceInterface, WebTarget target, boolean ignoreResourcePath,
-                                    MultivaluedMap<String, Object> headers, List<Cookie> cookies, Form form) {
+    public static <C> C newResource(final Class<C> resourceInterface,
+                                    final WebTarget target,
+                                    final boolean ignoreResourcePath,
+                                    final MultivaluedMap<String, Object> headers,
+                                    final List<Cookie> cookies,
+                                    final Form form) {
+
         return (C) Proxy.newProxyInstance(AccessController.doPrivileged(ReflectionHelper.getClassLoaderPA(resourceInterface)),
                 new Class[]{resourceInterface},
                 new WebResourceFactory(ignoreResourcePath ? target : addPathFromAnnotation(resourceInterface, target),
                         headers, cookies, form));
     }
 
-    private WebResourceFactory(WebTarget target, MultivaluedMap<String, Object> headers, List<Cookie> cookies,
-                               Form form) {
+    private WebResourceFactory(final WebTarget target, final MultivaluedMap<String, Object> headers,
+                               final List<Cookie> cookies, final Form form) {
         this.target = target;
         this.headers = headers;
         this.cookies = cookies;
@@ -146,17 +151,17 @@ public final class WebResourceFactory implements InvocationHandler {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
         // get the interface describing the resource
-        Class<?> proxyIfc = proxy.getClass().getInterfaces()[0];
+        final Class<?> proxyIfc = proxy.getClass().getInterfaces()[0];
 
         // response type
-        Class<?> responseType = method.getReturnType();
+        final Class<?> responseType = method.getReturnType();
 
         // determine method name
         String httpMethod = getHttpMethodName(method);
         if (httpMethod == null) {
-            for (Annotation ann : method.getAnnotations()) {
+            for (final Annotation ann : method.getAnnotations()) {
                 httpMethod = getHttpMethodName(ann.annotationType());
                 if (httpMethod != null) {
                     break;
@@ -180,16 +185,16 @@ public final class WebResourceFactory implements InvocationHandler {
 
         // process method params (build maps of (Path|Form|Cookie|Matrix|Header..)Params
         // and extract entity type
-        MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<String, Object>(this.headers);
-        LinkedList<Cookie> cookies = new LinkedList<Cookie>(this.cookies);
-        Form form = new Form();
+        final MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<String, Object>(this.headers);
+        final LinkedList<Cookie> cookies = new LinkedList<Cookie>(this.cookies);
+        final Form form = new Form();
         form.asMap().putAll(this.form.asMap());
-        Annotation[][] paramAnns = method.getParameterAnnotations();
+        final Annotation[][] paramAnns = method.getParameterAnnotations();
         Object entity = null;
         Type entityType = null;
         for (int i = 0; i < paramAnns.length; i++) {
-            Map<Class, Annotation> anns = new HashMap<Class, Annotation>();
-            for (Annotation ann : paramAnns[i]) {
+            final Map<Class, Annotation> anns = new HashMap<Class, Annotation>();
+            for (final Annotation ann : paramAnns[i]) {
                 anns.put(ann.annotationType(), ann);
             }
             Annotation ann;
@@ -219,10 +224,10 @@ public final class WebResourceFactory implements InvocationHandler {
                         }
 
                     } else if ((ann = anns.get((CookieParam.class))) != null) {
-                        String name = ((CookieParam) ann).value();
+                        final String name = ((CookieParam) ann).value();
                         Cookie c;
                         if (value instanceof Collection) {
-                            for (Object v : ((Collection) value)) {
+                            for (final Object v : ((Collection) value)) {
                                 if (!(v instanceof Cookie)) {
                                     c = new Cookie(name, v.toString());
                                 } else {
@@ -241,8 +246,7 @@ public final class WebResourceFactory implements InvocationHandler {
                                 c = (Cookie) value;
                                 if (!name.equals(((Cookie) value).getName())) {
                                     // is this the right thing to do? or should I fail? or ignore the difference?
-                                    cookies.add(new Cookie(name, c.getValue(), c.getPath(), c.getDomain(),
-                                            c.getVersion()));
+                                    cookies.add(new Cookie(name, c.getValue(), c.getPath(), c.getDomain(), c.getVersion()));
                                 }
                             }
                         }
@@ -254,7 +258,7 @@ public final class WebResourceFactory implements InvocationHandler {
                         }
                     } else if ((ann = anns.get((FormParam.class))) != null) {
                         if (value instanceof Collection) {
-                            for (Object v : ((Collection) value)) {
+                            for (final Object v : ((Collection) value)) {
                                 form.param(((FormParam) ann).value(), v.toString());
                             }
                         } else {
@@ -275,7 +279,7 @@ public final class WebResourceFactory implements InvocationHandler {
         if (produces == null) {
             produces = proxyIfc.getAnnotation(Produces.class);
         }
-        String[] accepts = produces == null ? null : produces.value();
+        final String[] accepts = produces == null ? null : produces.value();
 
         // determine content type
         String contentType = null;
@@ -300,11 +304,11 @@ public final class WebResourceFactory implements InvocationHandler {
         // apply header params and cookies
         builder.headers(headers);
 
-        for (Cookie c : cookies) {
+        for (final Cookie c : cookies) {
             builder = builder.cookie(c);
         }
 
-        Object result;
+        final Object result;
 
         if (entity == null && !form.asMap().isEmpty()) {
             entity = form;
@@ -322,7 +326,7 @@ public final class WebResourceFactory implements InvocationHandler {
             }
         }
 
-        GenericType responseGenericType = new GenericType(method.getGenericReturnType());
+        final GenericType responseGenericType = new GenericType(method.getGenericReturnType());
         if (entity != null) {
             if (entityType instanceof ParameterizedType) {
                 entity = new GenericEntity(entity, entityType);
@@ -335,20 +339,20 @@ public final class WebResourceFactory implements InvocationHandler {
         return result;
     }
 
-    private Object[] convert(Collection value) {
+    private Object[] convert(final Collection value) {
         return value.toArray();
     }
 
-    private static WebTarget addPathFromAnnotation(AnnotatedElement ae, WebTarget target) {
-        Path p = ae.getAnnotation(Path.class);
+    private static WebTarget addPathFromAnnotation(final AnnotatedElement ae, WebTarget target) {
+        final Path p = ae.getAnnotation(Path.class);
         if (p != null) {
             target = target.path(p.value());
         }
         return target;
     }
 
-    private static String getHttpMethodName(AnnotatedElement ae) {
-        HttpMethod a = ae.getAnnotation(HttpMethod.class);
+    private static String getHttpMethodName(final AnnotatedElement ae) {
+        final HttpMethod a = ae.getAnnotation(HttpMethod.class);
         return a == null ? null : a.value();
     }
 }
