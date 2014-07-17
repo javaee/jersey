@@ -376,9 +376,9 @@ public class JerseyUriBuilder extends UriBuilder {
         Method found = null;
         for (Method m : methods) {
             if (methodName.equals(m.getName())) {
-                if (found == null) {
+                if (found == null || found.isSynthetic()) {
                     found = m;
-                } else {
+                } else if (!m.isSynthetic()) {
                     throw new IllegalArgumentException();
                 }
             }
