@@ -659,7 +659,7 @@ webTarget.request().post(Entity.entity(f, MediaType.TEXT_PLAIN_TYPE));
                         <listitem>&lit.http.header.Transfer-Encoding;</listitem>
                         <listitem>&lit.http.header.Upgrade;</listitem>
                         <listitem>&lit.http.header.Via;</listitem>
-                        <listitem>all the headers starting with &lit.http.header.Sec-prefix;</listitem>
+                        <listitem>all the headers starting with &lit.http.header.Sec.prefix;</listitem>
                     </itemizedlist>
                     The underlying connection can be configured to permit all headers to be sent,
                     however this behaviour can be changed only by setting the system property

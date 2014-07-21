@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -619,7 +619,7 @@ public class CompressionDynamicBinding implements DynamicFeature {
             The example contains one <literal>HelloWorldResource</literal> which is known from the previous name binding example.
             The difference is in the <literal>getVeryLongString</literal> method, which now does not define
             the <literal>@Compress</literal> name binding annotations. The binding is done
-            using the provider which implements &jaxrs.server.DynamicFeature; interface. The interface defines
+            using the provider which implements &jaxrs.container.DynamicFeature; interface. The interface defines
             one <literal>configure</literal>
             method with two arguments, <literal>ResourceInfo</literal> and <literal>FeatureContext</literal>.
             <literal>ResourceInfo</literal> contains information about the resource and method to which the binding can be done.
