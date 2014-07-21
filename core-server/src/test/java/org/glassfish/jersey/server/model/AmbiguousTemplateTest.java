@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,8 @@
 
 package org.glassfish.jersey.server.model;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.ws.rs.GET;
@@ -57,6 +59,9 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Assert;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Test matching of resources with ambiguous templates.
@@ -278,7 +283,11 @@ public class AmbiguousTemplateTest {
         final ContainerResponse containerResponse = app.apply(RequestContextBuilder.from("/aaa", "OPTIONS")
                 .accept(MediaType.TEXT_PLAIN).build()).get();
         Assert.assertEquals(200, containerResponse.getStatus());
-        Assert.assertEquals("POST, GET, OPTIONS, HEAD", containerResponse.getEntity());
+
+        final List<String> methods = Arrays.asList(containerResponse.getEntity().toString().split(", "));
+        assertThat(methods, hasItems("POST", "GET", "OPTIONS", "HEAD"));
+        assertThat(methods.size(), is(4));
+
     }
 
     @Test
@@ -299,7 +308,11 @@ public class AmbiguousTemplateTest {
         final ContainerResponse containerResponse = app.apply(RequestContextBuilder.from("/resq/c", "OPTIONS")
                 .accept(MediaType.TEXT_PLAIN).build()).get();
         Assert.assertEquals(200, containerResponse.getStatus());
-        Assert.assertEquals("GET, OPTIONS, HEAD, PUT", containerResponse.getEntity());
+
+        final List<String> methods = Arrays.asList(containerResponse.getEntity().toString().split(", "));
+        assertThat(methods, hasItems("PUT", "GET", "OPTIONS", "HEAD"));
+        assertThat(methods.size(), is(4));
+
     }
 
     @Test

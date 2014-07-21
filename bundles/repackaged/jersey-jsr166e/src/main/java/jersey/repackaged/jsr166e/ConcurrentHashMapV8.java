@@ -4507,7 +4507,7 @@ public class ConcurrentHashMapV8<K,V> extends AbstractMap<K,V>
                      (containsAll(c) && c.containsAll(this))));
         }
 
-        public ConcurrentHashMapSpliterator<K> spliterator() {
+        public ConcurrentHashMapSpliterator<K> spliteratorV8() {
             Node<K,V>[] t;
             ConcurrentHashMapV8<K,V> m = map;
             long n = m.sumCount();
@@ -4565,7 +4565,7 @@ public class ConcurrentHashMapV8<K,V> extends AbstractMap<K,V>
             throw new UnsupportedOperationException();
         }
 
-        public ConcurrentHashMapSpliterator<V> spliterator() {
+        public ConcurrentHashMapSpliterator<V> spliteratorV8() {
             Node<K,V>[] t;
             ConcurrentHashMapV8<K,V> m = map;
             long n = m.sumCount();
@@ -4653,7 +4653,7 @@ public class ConcurrentHashMapV8<K,V> extends AbstractMap<K,V>
                      (containsAll(c) && c.containsAll(this))));
         }
 
-        public ConcurrentHashMapSpliterator<Map.Entry<K,V>> spliterator() {
+        public ConcurrentHashMapSpliterator<Map.Entry<K,V>> spliteratorV8() {
             Node<K,V>[] t;
             ConcurrentHashMapV8<K,V> m = map;
             long n = m.sumCount();

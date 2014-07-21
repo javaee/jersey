@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,59 +40,32 @@
 
 package org.glassfish.jersey.tests.e2e.entity.filtering;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Application;
+import java.util.HashSet;
 
-import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.glassfish.jersey.tests.e2e.entity.filtering.domain.ComplexEntity;
 
-import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import jersey.repackaged.com.google.common.collect.Sets;
+
 /**
+ * Common parent class for Entity Filtering tests.
+ *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class EntityFilteringScopesTest extends EntityFilteringTest {
-
-    @Override
-    protected Application configure() {
-        enable(TestProperties.DUMP_ENTITY);
-        enable(TestProperties.LOG_TRAFFIC);
-
-        return new ResourceConfig()
-                // Resources.
-                .register(Resource.class)
-                // Providers.
-                .register(EntityFilteringFeature.class)
-                .register(FilteringMessageBodyProvider.class);
-    }
-
-    @Path("/")
-    @Consumes("entity/filtering")
-    @Produces("entity/filtering")
-    public static class Resource {
-
-        @GET
-        @PrimaryDetailedView
-        public ComplexEntity get() {
-            return new ComplexEntity();
-        }
-    }
+abstract class EntityFilteringTest extends JerseyTest {
 
     /**
-     * Primary -> Default -> Primary.
+     * Test that (filtered) fields of given strings are equal (fields are separated by commas).
+     *
+     * @param actual actual fields from response received from server.
+     * @param expected expected fields.
      */
-    @Test
-    public void testEntityFilteringScopes() throws Exception {
-        final String fields = target().request().get(String.class);
+    static void assertSameFields(final String actual, final String expected) {
+        final HashSet<String> actualSet = Sets.newHashSet(actual.split(","));
+        final HashSet<String> expectedSet = Sets.newHashSet(expected.split(","));
 
-        assertSameFields(fields, "accessor,property,field.field,field.accessor,field.property.accessor,field.property.property");
+        assertThat(actualSet, equalTo(expectedSet));
     }
 }

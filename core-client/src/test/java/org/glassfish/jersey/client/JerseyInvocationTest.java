@@ -40,6 +40,7 @@
 package org.glassfish.jersey.client;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ProtocolException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -63,6 +64,7 @@ import javax.ws.rs.core.Response;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -134,7 +136,8 @@ public class JerseyInvocationTest {
             c1.target("http://localhost:8080/myPath").request().method("DELETE", Entity.text("body"));
             fail("ProcessingException expected.");
         } catch (final ProcessingException ex) {
-            assertEquals(ProtocolException.class, ex.getCause().getClass());
+            assertThat(ex.getCause().getClass(), anyOf(CoreMatchers.<Class<?>>equalTo(ProtocolException.class),
+                            CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
         }
 
         final Client c2 = ClientBuilder.newClient();
@@ -143,7 +146,8 @@ public class JerseyInvocationTest {
                     true).method("DELETE", Entity.text("body"));
             fail("ProcessingException expected.");
         } catch (final ProcessingException ex) {
-            assertEquals(ProtocolException.class, ex.getCause().getClass());
+            assertThat(ex.getCause().getClass(), anyOf(CoreMatchers.<Class<?>>equalTo(ProtocolException.class),
+                    CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
         }
 
         final Client c3 = ClientBuilder.newClient().property(ClientProperties.SUPPRESS_HTTP_COMPLIANCE_VALIDATION, false);
@@ -152,7 +156,8 @@ public class JerseyInvocationTest {
                     true).method("DELETE", Entity.text("body"));
             fail("ProcessingException expected.");
         } catch (final ProcessingException ex) {
-            assertEquals(ProtocolException.class, ex.getCause().getClass());
+            assertThat(ex.getCause().getClass(), anyOf(CoreMatchers.<Class<?>>equalTo(ProtocolException.class),
+                    CoreMatchers.<Class<?>>equalTo(ConnectException.class)));
         }
     }
 

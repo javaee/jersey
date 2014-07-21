@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,8 +61,12 @@ import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.tests.e2e.server.mvc.provider.TestViewProcessor;
 
-import org.junit.Assert;
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests that {@link Template} annotated methods are selected by the routing algorithms as if they
@@ -93,12 +97,12 @@ public class TemplateMethodSelectionTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         config.register(MoxyJsonFeature.class);
     }
 
     public static MyBean getMyBean() {
-        MyBean myBean = new MyBean();
+        final MyBean myBean = new MyBean();
         myBean.setName("hello");
         return myBean;
     }
@@ -111,7 +115,7 @@ public class TemplateMethodSelectionTest extends JerseyTest {
             return name;
         }
 
-        public void setName(String name) {
+        public void setName(final String name) {
             this.name = name;
         }
     }
@@ -206,66 +210,68 @@ public class TemplateMethodSelectionTest extends JerseyTest {
      */
     @Test
     public void testAnnotatedMethodByTemplateHtml() {
-        Response response = target().path("annotatedMethod").request("text/html;q=0.8", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
-        Assert.assertTrue(response.readEntity(String.class).contains("model={b=world, a=hello}"));
+        final Response response = target().path("annotatedMethod").request("text/html;q=0.8", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        assertThat(response.readEntity(String.class),
+                anyOf(containsString("{b=world, a=hello}"), containsString("{a=hello, b=world}")));
     }
 
     @Test
     public void testAnnotatedMethodByTemplateJson() {
-        Response response = target().path("annotatedMethod").request("text/html;q=0.6", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
-        Assert.assertEquals("hello", response.readEntity(MyBean.class).getName());
+        final Response response = target().path("annotatedMethod").request("text/html;q=0.6", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertEquals("hello", response.readEntity(MyBean.class).getName());
     }
 
     @Test
     public void testAnnotatedClassByTemplateHtml() {
-        Response response = target().path("annotatedClass").request("text/html;q=0.8", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
-        Assert.assertTrue(response.readEntity(String.class).contains("model=This toString() method will be used to get model."));
+        final Response response = target().path("annotatedClass").request("text/html;q=0.8", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        assertTrue(response.readEntity(String.class).contains("model=This toString() method will be used to get model."));
     }
 
     @Test
     public void testAnnotatedClassByTemplateJson() {
-        Response response = target().path("annotatedClass").request("text/html;q=0.6", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
-        Assert.assertEquals("hello", response.readEntity(MyBean.class).getName());
+        final Response response = target().path("annotatedClass").request("text/html;q=0.6", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertEquals("hello", response.readEntity(MyBean.class).getName());
     }
 
     @Test
     public void testBasicHtml() {
-        Response response = target().path("basic").request("text/html;q=0.8", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
-        Assert.assertTrue(response.readEntity(String.class).contains("Hello World"));
+        final Response response = target().path("basic").request("text/html;q=0.8", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        assertTrue(response.readEntity(String.class).contains("Hello World"));
     }
 
     @Test
     public void testBasicJson() {
-        Response response = target().path("basic").request("text/html;q=0.6", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
-        Assert.assertEquals("hello", response.readEntity(MyBean.class).getName());
+        final Response response = target().path("basic").request("text/html;q=0.6", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertEquals("hello", response.readEntity(MyBean.class).getName());
     }
 
     @Test
     public void testAsViewableHtml() {
-        Response response = target().path("viewable").request("text/html;q=0.8", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
-        Assert.assertTrue(response.readEntity(String.class).contains("{b=world, a=hello}"));
+        final Response response = target().path("viewable").request("text/html;q=0.8", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.TEXT_HTML_TYPE, response.getMediaType());
+        assertThat(response.readEntity(String.class),
+                anyOf(containsString("{b=world, a=hello}"), containsString("{a=hello, b=world}")));
     }
 
     @Test
     public void testAsViewableJson() {
-        Response response = target().path("viewable").request("text/html;q=0.6", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
-        Assert.assertEquals("hello", response.readEntity(MyBean.class).getName());
+        final Response response = target().path("viewable").request("text/html;q=0.6", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertEquals("hello", response.readEntity(MyBean.class).getName());
     }
 
     /**
@@ -275,18 +281,18 @@ public class TemplateMethodSelectionTest extends JerseyTest {
      */
     @Test
     public void testNoTemplateHtml() {
-        Response response = target().path("noTemplate").request("text/html;q=0.9", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
-        Assert.assertEquals("hello", response.readEntity(MyBean.class).getName());
+        final Response response = target().path("noTemplate").request("text/html;q=0.9", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertEquals("hello", response.readEntity(MyBean.class).getName());
     }
 
     @Test
     public void testNoTemplateJson() {
-        Response response = target().path("noTemplate").request("text/html;q=0.6", "application/json;q=0.7").get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
-        Assert.assertEquals("hello", response.readEntity(MyBean.class).getName());
+        final Response response = target().path("noTemplate").request("text/html;q=0.6", "application/json;q=0.7").get();
+        assertEquals(200, response.getStatus());
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+        assertEquals("hello", response.readEntity(MyBean.class).getName());
     }
 
 

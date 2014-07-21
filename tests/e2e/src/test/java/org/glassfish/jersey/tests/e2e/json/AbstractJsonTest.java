@@ -176,7 +176,7 @@ public abstract class AbstractJsonTest extends JerseyTest {
                         containerRequest.bufferEntity();
                         try {
                             String json = JsonTestHelper.getResourceAsString(PKG_NAME,
-                                    providerName + "_" + testName + (isMoxyJaxbProvider() || isRunningOnJdk7() ? "_MOXy" : "") + ".json");
+                                    providerName + "_" + testName + (moxyJaxbProvider() || runningOnJdk7AndLater() ? "_MOXy" : "") + ".json");
 
                             final InputStream entityStream = containerRequest.getEntityStream();
                             String retrievedJson = JsonTestHelper.getEntityAsString(entityStream);
@@ -225,11 +225,14 @@ public abstract class AbstractJsonTest extends JerseyTest {
         }
     }
 
-    private static boolean isRunningOnJdk7() {
-        return AccessController.doPrivileged(PropertiesHelper.getSystemProperty("java.version")).startsWith("1.7");
+    private static boolean runningOnJdk7AndLater() {
+        final String javaVersion = AccessController.doPrivileged(PropertiesHelper.getSystemProperty("java.version"));
+        final int version = Integer.valueOf(javaVersion.split("\\.")[1]);
+
+        return version >= 7;
     }
 
-    private static boolean isMoxyJaxbProvider() {
+    private static boolean moxyJaxbProvider() {
         return "org.eclipse.persistence.jaxb.JAXBContextFactory".equals(
                 AccessController.doPrivileged(PropertiesHelper.getSystemProperty("javax.xml.bind.JAXBContext")));
     }

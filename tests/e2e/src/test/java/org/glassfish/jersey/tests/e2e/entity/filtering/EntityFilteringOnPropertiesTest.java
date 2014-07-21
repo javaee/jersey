@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,21 +52,18 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.tests.e2e.entity.filtering.domain.ManyFilteringsOnPropertiesEntity;
 import org.glassfish.jersey.tests.e2e.entity.filtering.domain.OneFilteringOnPropertiesEntity;
 
 import org.junit.Test;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Use-cases with entity-filtering annotations on properties.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class EntityFilteringOnPropertiesTest extends JerseyTest {
+public class EntityFilteringOnPropertiesTest extends EntityFilteringTest {
 
     @Override
     protected Application configure() {
@@ -144,53 +141,53 @@ public class EntityFilteringOnPropertiesTest extends JerseyTest {
     public void testOneEntityFilteringOnProperties() throws Exception {
         final String fields = target("OneFilteringEntity").request().get(String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1," +
-                "subEntities.field1,defaultEntities.field,defaultEntities.property"));
+        assertSameFields(fields, "field,accessor,property,subEntities.field2,subEntities.property2,subEntities.property1," +
+                "subEntities.field1,defaultEntities.field,defaultEntities.property");
     }
 
     @Test
     public void testOneEntityFilteringOnPropertiesDefaultViewResponse() throws Exception {
         final String fields = target("OneFilteringEntityDefaultViewResponse").request().get(String.class);
 
-        assertThat(fields, equalTo("field"));
+        assertSameFields(fields, "field");
     }
 
     @Test
     public void testOneEntityFilteringOnPropertiesDefaultView() throws Exception {
         final String fields = target("OneFilteringEntityDefaultView").request().get(String.class);
 
-        assertThat(fields, equalTo("field"));
+        assertSameFields(fields, "field");
     }
 
     @Test
     public void testManyFilteringsEntityPrimaryView() throws Exception {
         final String fields = target("ManyFilteringsEntityPrimaryView").request().get(String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,oneEntities.field2,oneEntities.property2,oneEntities.property1," +
-                "oneEntities.field1,defaultEntities.field,defaultEntities.property"));
+        assertSameFields(fields, "field,accessor,property,oneEntities.field2,oneEntities.property2,oneEntities.property1," +
+                "oneEntities.field1,defaultEntities.field,defaultEntities.property");
     }
 
     @Test
     public void testManyFilteringsEntitySecondaryView() throws Exception {
         final String fields = target("ManyFilteringsEntitySecondaryView").request().get(String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.field1," +
-                "oneEntities.property2,oneEntities.field1"));
+        assertSameFields(fields, "field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.field1," +
+                "oneEntities.property2,oneEntities.field1");
     }
 
     @Test
     public void testManyFilteringsEntityDefaultView() throws Exception {
         final String fields = target("ManyFilteringsEntityDefaultView").request().get(String.class);
 
-        assertThat(fields, equalTo("field,accessor"));
+        assertSameFields(fields, "field,accessor");
     }
 
     @Test
     public void testManyFilteringsEntityManyViews() throws Exception {
         final String fields = target("ManyFilteringsEntityManyViews").request().get(String.class);
 
-        assertThat(fields, equalTo("field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.property1," +
+        assertSameFields(fields, "field,accessor,property,manyEntities.field2,manyEntities.property2,manyEntities.property1," +
                 "manyEntities.field1,oneEntities.field2,oneEntities.property2,oneEntities.property1,oneEntities.field1," +
-                "defaultEntities.field,defaultEntities.property"));
+                "defaultEntities.field,defaultEntities.property");
     }
 }

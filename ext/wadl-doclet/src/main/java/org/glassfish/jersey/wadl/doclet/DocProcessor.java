@@ -87,7 +87,7 @@ public interface DocProcessor {
     void processClassDoc(ClassDoc classDoc, ClassDocType classDocType);
 
     /**
-     * Process the provided methodDoc and add your custom information to the methodDocType.<br/>
+     * Process the provided methodDoc and add your custom information to the methodDocType.<br>
      * Use e.g. {@link MethodDocType#getAny()} to store custom elements.
      * @param methodDoc the {@link MethodDoc} representing the docs of your method.
      * @param methodDocType the related {@link MethodDocType} that will later be processed by the

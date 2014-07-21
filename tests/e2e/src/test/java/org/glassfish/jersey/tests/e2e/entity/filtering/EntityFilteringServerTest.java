@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,15 +50,12 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.glassfish.jersey.tests.e2e.entity.filtering.domain.ManyFilteringsOnClassEntity;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -140,7 +137,7 @@ public class EntityFilteringServerTest {
         }
     }
 
-    public static class ConfigurationServerTest extends JerseyTest {
+    public static class ConfigurationServerTest extends EntityFilteringTest {
 
         @Override
         protected Application configure() {
@@ -156,20 +153,21 @@ public class EntityFilteringServerTest {
         public void testConfiguration() throws Exception {
             final String fields = target("configuration").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities" +
+                    ".property");
         }
 
         @Test
         public void testConfigurationOverResource() throws Exception {
             final String fields = target("configurationOverResource").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
         }
     }
 
-    public static class ConfigurationDefaultViewServerTest extends JerseyTest {
+    public static class ConfigurationDefaultViewServerTest extends EntityFilteringTest {
 
         @Override
         protected Application configure() {
@@ -183,11 +181,11 @@ public class EntityFilteringServerTest {
         public void testConfiguration() throws Exception {
             final String fields = target("configuration").request().get(String.class);
 
-            assertThat(fields, equalTo(""));
+            assertSameFields(fields, "");
         }
     }
 
-    public static class AnnotationsServerTest extends JerseyTest {
+    public static class AnnotationsServerTest extends EntityFilteringTest {
 
         @Override
         protected Application configure() {
@@ -201,20 +199,20 @@ public class EntityFilteringServerTest {
         public void testAnnotations() throws Exception {
             final String fields = target("annotations").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
         }
 
         @Test
         public void testAnnotationsOverResource() throws Exception {
             final String fields = target("annotationsOverResource").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
         }
     }
 
-    public static class AnnotationsOverConfigurationServerTest extends JerseyTest {
+    public static class AnnotationsOverConfigurationServerTest extends EntityFilteringTest {
 
         @Override
         protected Application configure() {
@@ -230,16 +228,16 @@ public class EntityFilteringServerTest {
         public void testAnnotationsOverConfiguration() throws Exception {
             final String fields = target("annotationsOverConfiguration").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
         }
 
         @Test
         public void testAnnotationsOverConfigurationOverResource() throws Exception {
             final String fields = target("annotationsOverConfigurationOverResource").request().get(String.class);
 
-            assertThat(fields, equalTo("field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
-                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property"));
+            assertSameFields(fields, "field,accessor,property,manyEntities.property1,manyEntities.field1,oneEntities.field2," +
+                    "oneEntities.property2,oneEntities.property1,oneEntities.field1,defaultEntities.field,defaultEntities.property");
         }
     }
 }
