@@ -48,6 +48,9 @@ import org.glassfish.hk2.api.ActiveDescriptor;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.AbstractActiveDescriptor;
 import org.glassfish.hk2.utilities.BuilderHelper;
+import org.glassfish.hk2.utilities.ServiceLocatorUtilities;
+import org.glassfish.hk2.utilities.cache.Cache;
+import org.glassfish.hk2.utilities.cache.Computable;
 
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.model.Parameter;
@@ -81,6 +84,20 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
         private final Parameter parameter;
         private final ServiceLocator locator;
 
+        private final Cache<Class<?>, ActiveDescriptor<?>> descriptorCache
+                = new Cache<>(new Computable<Class<?>, ActiveDescriptor<?>>() {
+
+                    @Override
+                    public ActiveDescriptor<?> compute(Class<?> key) {
+                        // below we make sure HK2 behaves as if injection happens into a request scoped type
+                        // this is to avoid having proxies injected (see JERSEY-2386)
+                        final AbstractActiveDescriptor<Object> descriptor =
+                                BuilderHelper.activeLink(key).in(RequestScoped.class).build();
+
+                        return ServiceLocatorUtilities.addOneDescriptor(locator, descriptor, false);
+                    }
+                });
+
         private BeanParamValueFactory(ServiceLocator locator, Parameter parameter) {
             this.locator = locator;
             this.parameter = parameter;
@@ -95,12 +112,8 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
             if (fromHk2 != null) { // the bean parameter type is already bound in HK2, let's just take it from there
                 return fromHk2;
             }
-
-            // below we make sure HK2 behaves as if injection happens into a request scoped type
-            // this is to avoid having proxies injected (see JERSEY-2386)
-            final AbstractActiveDescriptor<Object> descriptor = BuilderHelper.activeLink(rawType).in(RequestScoped.class).build();
-            final ActiveDescriptor<?> reifiedDescriptor = locator.reifyDescriptor(descriptor);
-            return reifiedDescriptor.create(locator.getServiceHandle(reifiedDescriptor));
+            ActiveDescriptor<?> reifiedDescriptor = descriptorCache.compute(rawType);
+            return locator.getServiceHandle(reifiedDescriptor).getService();
         }
     }
 
