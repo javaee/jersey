@@ -411,8 +411,10 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     @Override
     public void done() {
-        bindHk2ClassAnalyzer();
-        bindWaeRestoringExceptionMapper();
+        if (beanManager != null) {
+            bindHk2ClassAnalyzer();
+            bindWaeRestoringExceptionMapper();
+        }
     }
 
     private void bindWaeRestoringExceptionMapper() {
