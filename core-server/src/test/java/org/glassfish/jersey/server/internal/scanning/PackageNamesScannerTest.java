@@ -58,7 +58,7 @@ import org.junit.Test;
  */
 public class PackageNamesScannerTest {
 
-	private String jaxRsApiFilePath;
+	private String jaxRsApiPath;
 	private String[] packages = {"javax.ws.rs-api"};
 	
 	@Before
@@ -69,29 +69,30 @@ public class PackageNamesScannerTest {
 
 		for (final String entry : entries) {
 			if (entry.contains("javax.ws.rs-api")) {
-				jaxRsApiFilePath = "file:/" + entry;
+				jaxRsApiPath = entry;
 				break;
 			}
 		}
 
-		if (jaxRsApiFilePath == null) {
+		if (jaxRsApiPath == null) {
 			fail("Could not find javax.ws.rs-api.");
 		}
 	}
 
 	@Test
 	public void testWsJarScheme() {
-		new PackageNamesScanner(createTestClassLoader("wsjar", createTestURLStreamHandler("wsjar"), jaxRsApiFilePath), packages, false);
+		new PackageNamesScanner(createTestClassLoader("wsjar", createTestURLStreamHandler("wsjar"), jaxRsApiPath), packages, false);
 	}
 
 	@Test
 	public void testJarScheme() {
-		new PackageNamesScanner(createTestClassLoader("jar", null, jaxRsApiFilePath), packages, false);
+		// Uses default class loader
+		new PackageNamesScanner(packages, false);
 	}
 
 	@Test
 	public void testZipScheme() {
-		new PackageNamesScanner(createTestClassLoader("zip", createTestURLStreamHandler("zip"), jaxRsApiFilePath), packages, false);
+		new PackageNamesScanner(createTestClassLoader("zip", createTestURLStreamHandler("zip"), jaxRsApiPath), packages, false);
 	}
 	
 	@Test
@@ -102,7 +103,7 @@ public class PackageNamesScannerTest {
 	
 	@Test(expected=ResourceFinderException.class)
 	public void testInvalidScheme() {
-		new PackageNamesScanner(createTestClassLoader("bad", createTestURLStreamHandler("bad"), jaxRsApiFilePath), packages, false);
+		new PackageNamesScanner(createTestClassLoader("bad", createTestURLStreamHandler("bad"), jaxRsApiPath), packages, false);
 	}
 	
 	private ClassLoader createTestClassLoader(final String scheme, final URLStreamHandler urlStreamHandler, final String resourceFilePath) {
