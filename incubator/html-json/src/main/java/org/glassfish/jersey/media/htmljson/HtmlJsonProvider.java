@@ -41,11 +41,12 @@ package org.glassfish.jersey.media.htmljson;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
-import java.util.logging.Level;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
@@ -113,6 +114,13 @@ implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
         if (!mt.isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
             return false;
         }
+        for (;;) {
+            if (type.isArray()) {
+                type = type.getComponentType();
+                continue;
+            }
+            break;
+        }
         return Models.isModel(type);
     }
 
@@ -123,8 +131,23 @@ implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
 
     @Override
     public void writeTo(Object t, Class type, Type type1, Annotation[] antns, MediaType mt, MultivaluedMap mm, OutputStream out)
-            throws IOException, WebApplicationException {
-        out.write(t.toString().getBytes("UTF-8"));
+    throws IOException, WebApplicationException {
+        dump(t, out);
+    }
+    private void dump(Object t, OutputStream out) throws IOException {
+        if (t instanceof Object[]) {
+            Object[] arr = (Object[])t;
+            out.write('[');
+            for (int i = 0; i < arr.length; i++) {
+                if (i > 0) {
+                    out.write(',');
+                }
+                dump(arr[i], out);
+            }
+            out.write(']');
+        } else {
+            out.write(t.toString().getBytes("UTF-8"));
+        }
     }
 
     @Override
@@ -138,6 +161,13 @@ implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
                            MultivaluedMap<String, String> mm,
                            InputStream in) throws IOException, WebApplicationException {
         BrwsrCtx def = BrwsrCtx.findDefault(HtmlJsonProvider.class);
+        if (type.isArray()) {
+            List<Object> res = new ArrayList<Object>();
+            final Class<?> cmp = type.getComponentType();
+            Models.parse(def, cmp, in, res);
+            Object[] arr = (Object[]) Array.newInstance(cmp, res.size());
+            return res.toArray(arr);
+        }
         return Models.parse(def, type, in);
     }
 }
