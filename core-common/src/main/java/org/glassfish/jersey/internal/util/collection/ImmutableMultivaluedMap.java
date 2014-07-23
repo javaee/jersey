@@ -172,4 +172,9 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
     public Set<Entry<K, List<V>>> entrySet() {
         return Collections.unmodifiableSet(delegate.entrySet());
     }
+	
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
 }
