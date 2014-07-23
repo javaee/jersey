@@ -155,7 +155,7 @@
                             <includes>index.xml</includes>
                             <chunkedOutput>true</chunkedOutput>
                             <chunkSectionDepth>0</chunkSectionDepth>
-                            <targetDirectory>${project.build.directory}/docbook</targetDirectory>
+                            <targetDirectory>${project.build.directory}/docbook/index</targetDirectory>
                             <useIdAsFilename>true</useIdAsFilename>
                         </configuration>
                         <phase>package</phase>
