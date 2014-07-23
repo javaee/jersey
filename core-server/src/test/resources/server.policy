@@ -61,6 +61,8 @@ grant codebase "file:${project.build.directory}/test-classes/-" {
   permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
   permission java.io.FilePermission "<<ALL FILES>>", "read,write,delete";
   permission java.util.PropertyPermission "*", "read";
+  permission java.net.NetPermission "specifyStreamHandler";
+  permission java.net.SocketPermission "home", "connect,resolve";
 };
 
 grant codebase "file:${project.build.directory}/classes/-" {
@@ -70,4 +72,6 @@ grant codebase "file:${project.build.directory}/classes/-" {
   permission java.lang.RuntimePermission "getClassLoader";
   permission java.util.PropertyPermission "*", "read";
   permission java.io.FilePermission "<<ALL FILES>>", "read,write";
+  permission java.net.NetPermission "specifyStreamHandler";
+  permission java.net.SocketPermission "home", "connect,resolve";
 };
