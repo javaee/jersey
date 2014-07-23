@@ -44,6 +44,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -110,18 +111,23 @@ implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
     private static final Logger LOG = Logger.getLogger(HtmlJsonProvider.class.getName());
 
     @Override
-    public boolean isWriteable(Class type, Type type1, Annotation[] antns, MediaType mt) {
+    public boolean isWriteable(Class clazz, Type type, Annotation[] antns, MediaType mt) {
         if (!mt.isCompatible(MediaType.APPLICATION_JSON_TYPE)) {
             return false;
         }
-        for (;;) {
-            if (type.isArray()) {
-                type = type.getComponentType();
-                continue;
-            }
-            break;
+        if (clazz.isArray()) {
+            return Models.isModel(clazz.getComponentType());
         }
-        return Models.isModel(type);
+        if (java.util.List.class.isAssignableFrom(clazz)) {
+            if (type instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) type;
+                Type[] args = pt.getActualTypeArguments();
+                if (args.length == 1 && args[0] instanceof Class) {
+                    return Models.isModel((Class<?>) args[0]);
+                }
+            }
+        }
+        return Models.isModel(clazz);
     }
 
     @Override
@@ -156,18 +162,29 @@ implements MessageBodyWriter<Object>, MessageBodyReader<Object> {
     }
 
     @Override
-    public Object readFrom(Class<Object> type,
-                           Type type1, Annotation[] antns, MediaType mt,
+    public Object readFrom(Class<Object> clazz,
+                           Type type, Annotation[] antns, MediaType mt,
                            MultivaluedMap<String, String> mm,
                            InputStream in) throws IOException, WebApplicationException {
         BrwsrCtx def = BrwsrCtx.findDefault(HtmlJsonProvider.class);
-        if (type.isArray()) {
+        if (clazz.isArray()) {
             List<Object> res = new ArrayList<Object>();
-            final Class<?> cmp = type.getComponentType();
+            final Class<?> cmp = clazz.getComponentType();
             Models.parse(def, cmp, in, res);
             Object[] arr = (Object[]) Array.newInstance(cmp, res.size());
             return res.toArray(arr);
         }
-        return Models.parse(def, type, in);
+        if (
+            clazz.isAssignableFrom(java.util.List.class) &&
+            type instanceof ParameterizedType &&
+            ((ParameterizedType)type).getActualTypeArguments().length == 1 &&
+            ((ParameterizedType)type).getActualTypeArguments()[0] instanceof Class
+        ) {
+            List<Object> res = new ArrayList<Object>();
+            final Class<?> cmp = (Class<?>) ((ParameterizedType)type).getActualTypeArguments()[0];
+            Models.parse(def, cmp, in, res);
+            return res;
+        }
+        return Models.parse(def, clazz, in);
     }
 }
