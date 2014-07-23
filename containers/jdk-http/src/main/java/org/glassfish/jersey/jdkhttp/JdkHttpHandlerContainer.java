@@ -291,12 +291,12 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
 
         @Override
         public boolean suspend(long timeOut, TimeUnit timeUnit, TimeoutHandler timeoutHandler) {
-            throw new UnsupportedOperationException("Method suspend is not support by the container.");
+            throw new UnsupportedOperationException("Method suspend is not supported by the container.");
         }
 
         @Override
         public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
-            throw new UnsupportedOperationException("Method suspend is not support by the container.");
+            throw new UnsupportedOperationException("Method setSuspendTimeout is not supported by the container.");
         }
 
         @Override

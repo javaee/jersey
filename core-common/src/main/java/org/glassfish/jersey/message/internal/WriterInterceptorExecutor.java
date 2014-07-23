@@ -111,16 +111,16 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
      * @param writerInterceptors Writer interceptor that are to be used to intercept the writing of an entity. The interceptors
      * @param serviceLocator Service locator.
      */
-    public WriterInterceptorExecutor(Object entity, Class<?> rawType,
-                                     Type type,
-                                     Annotation[] annotations,
-                                     MediaType mediaType,
-                                     MultivaluedMap<String, Object> headers,
-                                     PropertiesDelegate propertiesDelegate,
-                                     OutputStream entityStream,
-                                     MessageBodyWorkers workers,
-                                     Iterable<WriterInterceptor> writerInterceptors,
-                                     ServiceLocator serviceLocator) {
+    public WriterInterceptorExecutor(final Object entity, final Class<?> rawType,
+                                     final Type type,
+                                     final Annotation[] annotations,
+                                     final MediaType mediaType,
+                                     final MultivaluedMap<String, Object> headers,
+                                     final PropertiesDelegate propertiesDelegate,
+                                     final OutputStream entityStream,
+                                     final MessageBodyWorkers workers,
+                                     final Iterable<WriterInterceptor> writerInterceptors,
+                                     final ServiceLocator serviceLocator) {
 
         super(rawType, type, annotations, mediaType, propertiesDelegate);
         this.entity = entity;
@@ -153,7 +153,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
     @Override
     @SuppressWarnings("unchecked")
     public void proceed() throws IOException {
-        WriterInterceptor nextInterceptor = getNextInterceptor();
+        final WriterInterceptor nextInterceptor = getNextInterceptor();
         if (nextInterceptor == null) {
             throw new ProcessingException(LocalizationMessages.ERROR_INTERCEPTOR_WRITER_PROCEED());
         }
@@ -172,7 +172,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
     }
 
     @Override
-    public void setEntity(Object entity) {
+    public void setEntity(final Object entity) {
         this.entity = entity;
     }
 
@@ -182,7 +182,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
     }
 
     @Override
-    public void setOutputStream(OutputStream os) {
+    public void setOutputStream(final OutputStream os) {
         this.outputStream = os;
 
     }
@@ -217,14 +217,14 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
     private class TerminalWriterInterceptor implements WriterInterceptor {
         private final MessageBodyWorkers workers;
 
-        public TerminalWriterInterceptor(MessageBodyWorkers workers) {
+        public TerminalWriterInterceptor(final MessageBodyWorkers workers) {
             super();
             this.workers = workers;
         }
 
         @Override
         @SuppressWarnings("unchecked")
-        public void aroundWriteTo(WriterInterceptorContext context) throws WebApplicationException, IOException {
+        public void aroundWriteTo(final WriterInterceptorContext context) throws WebApplicationException, IOException {
             processedCount--; //this is not regular interceptor -> count down
 
             traceBefore(null, MsgTraceEvent.WI_BEFORE);
@@ -255,15 +255,59 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
         }
 
         @SuppressWarnings("unchecked")
-        private void invokeWriteTo(WriterInterceptorContext context, MessageBodyWriter writer)
+        private void invokeWriteTo(final WriterInterceptorContext context, final MessageBodyWriter writer)
                 throws WebApplicationException, IOException {
             final TracingLogger tracingLogger = getTracingLogger();
             final long timestamp = tracingLogger.timestamp(MsgTraceEvent.MBW_WRITE_TO);
+            final UnCloseableOutputStream entityStream = new UnCloseableOutputStream(context.getOutputStream(), writer);
+
             try {
                 writer.writeTo(context.getEntity(), context.getType(), context.getGenericType(), context.getAnnotations(),
-                        context.getMediaType(), context.getHeaders(), context.getOutputStream());
+                        context.getMediaType(), context.getHeaders(), entityStream);
             } finally {
                 tracingLogger.logDuration(MsgTraceEvent.MBW_WRITE_TO, timestamp, writer);
+            }
+        }
+    }
+
+    /**
+     * {@link javax.ws.rs.ext.MessageBodyWriter}s should not close the given {@link java.io.OutputStream stream}. This output
+     * stream makes sure that the stream is not closed even if MBW tries to do it.
+     */
+    private static class UnCloseableOutputStream extends OutputStream {
+
+        private final OutputStream original;
+        private final MessageBodyWriter writer;
+
+        private UnCloseableOutputStream(final OutputStream original, final MessageBodyWriter writer) {
+            this.original = original;
+            this.writer = writer;
+        }
+
+        @Override
+        public void write(final int i) throws IOException {
+            original.write(i);
+        }
+
+        @Override
+        public void write(final byte[] b) throws IOException {
+            original.write(b);
+        }
+
+        @Override
+        public void write(final byte[] b, final int off, final int len) throws IOException {
+            original.write(b, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            original.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, LocalizationMessages.MBW_TRYING_TO_CLOSE_STREAM(writer.getClass()));
             }
         }
     }

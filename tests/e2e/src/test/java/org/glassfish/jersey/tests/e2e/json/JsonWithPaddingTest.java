@@ -64,7 +64,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import static org.hamcrest.CoreMatchers.allOf;
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.endsWith;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
@@ -142,11 +141,11 @@ public class JsonWithPaddingTest extends JerseyTest {
         }
     }
 
-    @Parameterized.Parameters()
+    @Parameterized.Parameters(name = "{0}")
     public static Collection<JsonTestProvider[]> getJsonProviders() throws Exception {
         final List<JsonTestProvider[]> testProviders = new LinkedList<JsonTestProvider[]>();
 
-        for (JsonTestProvider jsonProvider : JsonTestProvider.JAXB_PROVIDERS) {
+        for (final JsonTestProvider jsonProvider : JsonTestProvider.JAXB_PROVIDERS) {
             testProviders.add(new JsonTestProvider[]{jsonProvider});
         }
 
@@ -167,7 +166,7 @@ public class JsonWithPaddingTest extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         config.register(jsonTestProvider.getFeature());
     }
 

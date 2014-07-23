@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,44 +40,82 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Map;
+
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
 import org.glassfish.jersey.server.monitoring.ResourceMethodStatistics;
+
+import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
  * Resource method statistics.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class ResourceMethodStatisticsImpl implements ResourceMethodStatistics {
+final class ResourceMethodStatisticsImpl implements ResourceMethodStatistics {
+
+    /**
+     * Factory for creating and storing resource method statistics. One instance per resource method.
+     */
+    static class Factory {
+
+        private final Map<String, Builder> stringToMethodsBuilders = Maps.newHashMap();
+
+        ResourceMethodStatisticsImpl.Builder getOrCreate(final ResourceMethod resourceMethod) {
+            final String methodUniqueId = MonitoringUtils.getMethodUniqueId(resourceMethod);
+
+            if (!stringToMethodsBuilders.containsKey(methodUniqueId)) {
+                stringToMethodsBuilders.put(methodUniqueId, new ResourceMethodStatisticsImpl.Builder(resourceMethod));
+            }
+            return stringToMethodsBuilders.get(methodUniqueId);
+        }
+    }
+
     /**
      * Builder of resource method statistics.
      */
     static class Builder {
-        private final ExecutionStatisticsImpl.Builder resourceMethodExecutionStatisticsBuilder;
-        private final ExecutionStatisticsImpl.Builder requestExecutionStatisticsBuilder;
+
         private final ResourceMethod resourceMethod;
 
+        private ExecutionStatisticsImpl.Builder resourceMethodExecutionStatisticsBuilder;
+        private ExecutionStatisticsImpl.Builder requestExecutionStatisticsBuilder;
+
+        private ResourceMethodStatisticsImpl cached;
 
         /**
          * Create a new builder instance.
+         *
          * @param resourceMethod Resource method for which statistics are evaluated.
          */
-        Builder(ResourceMethod resourceMethod) {
+        Builder(final ResourceMethod resourceMethod) {
             this.resourceMethod = resourceMethod;
-            this.resourceMethodExecutionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
-            this.requestExecutionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
         }
 
         /**
          * Build an instance of resource method statistics.
+         *
          * @return New instance of resource method statistics.
          */
         ResourceMethodStatisticsImpl build() {
-            return new ResourceMethodStatisticsImpl(resourceMethod, resourceMethodExecutionStatisticsBuilder.build(),
-                    requestExecutionStatisticsBuilder.build());
-        }
+            if (cached != null) {
+                return cached;
+            }
 
+            final ExecutionStatistics methodStats = resourceMethodExecutionStatisticsBuilder == null ?
+                    ExecutionStatisticsImpl.EMPTY : resourceMethodExecutionStatisticsBuilder.build();
+            final ExecutionStatistics requestStats = requestExecutionStatisticsBuilder == null ?
+                    ExecutionStatisticsImpl.EMPTY : requestExecutionStatisticsBuilder.build();
+
+            final ResourceMethodStatisticsImpl stats = new ResourceMethodStatisticsImpl(resourceMethod, methodStats, requestStats);
+
+            if (MonitoringUtils.isCacheable(methodStats)) {
+                cached = stats;
+            }
+
+            return stats;
+        }
 
         /**
          * Add execution of the resource method to the statistics.
@@ -85,37 +123,47 @@ class ResourceMethodStatisticsImpl implements ResourceMethodStatistics {
          * @param methodStartTime Time spent on execution of resource method itself (Unix timestamp format).
          * @param methodDuration Time of execution of the resource method.
          * @param requestStartTime Time of whole request processing (from receiving the request
-         *                         until writing the response). (Unix timestamp format)
+         * until writing the response). (Unix timestamp format)
          * @param requestDuration Time when the request matching to the executed resource method has been received
-         *                         by Jersey.
+         * by Jersey.
          */
-        void addResourceMethodExecution(long methodStartTime, long methodDuration,
-                                        long requestStartTime, long requestDuration) {
+        void addResourceMethodExecution(final long methodStartTime, final long methodDuration, final long requestStartTime,
+                                        final long requestDuration) {
+            cached = null;
+
+            if (resourceMethodExecutionStatisticsBuilder == null) {
+                resourceMethodExecutionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
+            }
             resourceMethodExecutionStatisticsBuilder.addExecution(methodStartTime, methodDuration);
+
+            if (requestExecutionStatisticsBuilder == null) {
+                requestExecutionStatisticsBuilder = new ExecutionStatisticsImpl.Builder();
+            }
             requestExecutionStatisticsBuilder.addExecution(requestStartTime, requestDuration);
         }
     }
 
-    private final ExecutionStatisticsImpl resourceMethodExecutionStatisticsImpl;
-    private final ExecutionStatisticsImpl requestExecutionStatisticsImpl;
+    private final ExecutionStatistics resourceMethodExecutionStatistics;
+    private final ExecutionStatistics requestExecutionStatistics;
     private final ResourceMethod resourceMethod;
 
-
-    private ResourceMethodStatisticsImpl(ResourceMethod resourceMethod, ExecutionStatisticsImpl resourceMethodExecutionStatisticsImpl,
-                                         ExecutionStatisticsImpl requestExecutionStatisticsImpl) {
-        this.resourceMethodExecutionStatisticsImpl = resourceMethodExecutionStatisticsImpl;
+    private ResourceMethodStatisticsImpl(final ResourceMethod resourceMethod,
+                                         final ExecutionStatistics resourceMethodExecutionStatistics,
+                                         final ExecutionStatistics requestExecutionStatistics) {
         this.resourceMethod = resourceMethod;
-        this.requestExecutionStatisticsImpl = requestExecutionStatisticsImpl;
+
+        this.resourceMethodExecutionStatistics = resourceMethodExecutionStatistics;
+        this.requestExecutionStatistics = requestExecutionStatistics;
     }
 
     @Override
     public ExecutionStatistics getRequestStatistics() {
-        return requestExecutionStatisticsImpl;
+        return requestExecutionStatistics;
     }
 
     @Override
     public ExecutionStatistics getMethodStatistics() {
-        return resourceMethodExecutionStatisticsImpl;
+        return resourceMethodExecutionStatistics;
     }
 
     public ResourceMethod getResourceMethod() {

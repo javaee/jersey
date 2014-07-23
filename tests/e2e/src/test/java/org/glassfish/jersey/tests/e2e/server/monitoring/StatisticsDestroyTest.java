@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,6 +50,7 @@ import javax.management.ObjectName;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.server.monitoring.ExtendedMonitoringStatisticsListener;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
@@ -68,6 +69,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -95,7 +97,10 @@ public class StatisticsDestroyTest {
         @After
         public void tearDown() throws Exception {
             super.tearDown();
-            Assert.assertTrue(StatisticsListener.ON_SHUTDOWN_CALLED);
+            assertTrue(StatisticsListener.ON_SHUTDOWN_CALLED);
+            assertTrue(StatisticsListener.ON_DESTROY_CALLED);
+            assertTrue(StatisticsListener.ON_STATISTICS_CALLED);
+
             final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
             final ObjectName name = new ObjectName("org.glassfish.jersey:type=myApplication,subType=Global,global=Configuration");
             boolean registered = mBeanServer.isRegistered(name);
@@ -137,7 +142,7 @@ public class StatisticsDestroyTest {
                 registered = mBeanServer.isRegistered(name);
             }
 
-            Assert.assertTrue("MBean should be already registered!", mBeanServer.isRegistered(name));
+            assertTrue("MBean should be already registered!", mBeanServer.isRegistered(name));
             final String str = (String) mBeanServer.getAttribute(name, "ApplicationName");
             Assert.assertEquals("myApplication", str);
         }
@@ -179,17 +184,21 @@ public class StatisticsDestroyTest {
     }
 
     public static class StatisticsListener extends AbstractContainerLifecycleListener
-            implements MonitoringStatisticsListener {
+            implements ExtendedMonitoringStatisticsListener {
 
         public static boolean ON_SHUTDOWN_CALLED = false;
+        public static boolean ON_STATISTICS_CALLED = false;
+        public static boolean ON_DESTROY_CALLED = false;
 
         public static void reset() {
             ON_SHUTDOWN_CALLED = false;
+            ON_STATISTICS_CALLED = false;
+            ON_DESTROY_CALLED = false;
         }
 
         @Override
         public void onStatistics(MonitoringStatistics statistics) {
-            // do nothing
+            StatisticsListener.ON_STATISTICS_CALLED = true;
         }
 
         @Override
@@ -197,5 +206,9 @@ public class StatisticsDestroyTest {
             StatisticsListener.ON_SHUTDOWN_CALLED = true;
         }
 
+        @Override
+        public void onDestroy() {
+            StatisticsListener.ON_DESTROY_CALLED = true;
+        }
     }
 }

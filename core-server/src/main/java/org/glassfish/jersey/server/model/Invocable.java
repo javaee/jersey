@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.server.model;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -206,13 +207,30 @@ public final class Invocable implements Parameterized, ResourceModelComponent {
                 .findOverridingMethodOnClass(handler.getHandlerClass(), definitionMethod) : handlingMethod;
 
         final Class<?> handlerClass = handler.getHandlerClass();
-        final ClassTypePair ctPair = ReflectionHelper.resolveGenericType(
-                handlerClass,
-                this.handlingMethod.getDeclaringClass(),
-                this.handlingMethod.getReturnType(),
-                this.handlingMethod.getGenericReturnType());
-        this.rawResponseType = ctPair.rawClass();
-        this.responseType = ctPair.type();
+        final Class<?> definitionClass = definitionMethod.getDeclaringClass();
+        final ClassTypePair handlingCtPair = ReflectionHelper.resolveGenericType(
+                    handlerClass,
+                    this.handlingMethod.getDeclaringClass(),
+                    this.handlingMethod.getReturnType(),
+                    this.handlingMethod.getGenericReturnType());
+
+        // here we need to find types also for definition method. Definition method is in most
+        // cases used for parent methods (for example for interface method of resource class). But here we
+        // consider also situation when resource is a proxy (for example proxy of EJB) and definition
+        // method is the original method and handling method is method on proxy. So, we try to find generic
+        // type in the original class using definition method.
+        final ClassTypePair definitionCtPair = ReflectionHelper.resolveGenericType(
+                    definitionClass,
+                    this.definitionMethod.getDeclaringClass(),
+                    this.definitionMethod.getReturnType(),
+                    this.definitionMethod.getGenericReturnType());
+        this.rawResponseType = handlingCtPair.rawClass();
+        final boolean handlerReturnTypeIsParameterized = handlingCtPair.type() instanceof ParameterizedType;
+        final boolean definitionReturnTypeIsParameterized = definitionCtPair.type() instanceof ParameterizedType;
+        this.responseType =
+                (handlingCtPair.rawClass() == definitionCtPair.rawClass()
+                         && definitionReturnTypeIsParameterized && !handlerReturnTypeIsParameterized)
+                ? definitionCtPair.type() : handlingCtPair.type();
         if (routingResponseType == null) {
             this.routingResponseType = responseType;
             this.rawRoutingResponseType = rawResponseType;

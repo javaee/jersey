@@ -92,8 +92,10 @@ public final class EncodingFilter implements ClientRequestFilter {
                 Logger.getLogger(getClass().getName()).warning(LocalizationMessages.USE_ENCODING_IGNORED(
                         ClientProperties.USE_ENCODING, useEncoding, getSupportedEncodings()));
             } else {
-                if (request.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING) == null) {
-                    request.getHeaders().putSingle(HttpHeaders.CONTENT_ENCODING, useEncoding);
+                if (request.hasEntity()) {   // don't add Content-Encoding header for requests with no entity
+                    if (request.getHeaders().getFirst(HttpHeaders.CONTENT_ENCODING) == null) {
+                        request.getHeaders().putSingle(HttpHeaders.CONTENT_ENCODING, useEncoding);
+                    }
                 }
             }
         }

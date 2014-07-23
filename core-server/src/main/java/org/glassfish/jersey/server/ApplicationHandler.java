@@ -350,7 +350,7 @@ public final class ApplicationHandler {
      * Assumes the configuration field is initialized with a valid ResourceConfig.
      */
     private void initialize() {
-        LOGGER.info(LocalizationMessages.INIT_MSG(Version.getBuildId()));
+        LOGGER.config(LocalizationMessages.INIT_MSG(Version.getBuildId()));
 
         // Lock original ResourceConfig.
         if (application instanceof ResourceConfig) {
@@ -929,7 +929,9 @@ public final class ApplicationHandler {
         final FutureResponseWriter responseFuture =
                 new FutureResponseWriter(request.getMethod(), outputStream, runtime.getBackgroundScheduler());
 
-        request.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
+        if (request.getSecurityContext() == null) {
+            request.setSecurityContext(DEFAULT_SECURITY_CONTEXT);
+        }
         request.setWriter(responseFuture);
 
         handle(request);
@@ -982,13 +984,14 @@ public final class ApplicationHandler {
                     // need to also strip the object entity as it was stripped when writing to output
                     current.setEntity(null);
                 }
-
+                requestTimeoutHandler.close();
                 super.set(current);
             }
         }
 
         @Override
         public void failure(final Throwable error) {
+            requestTimeoutHandler.close();
             super.setException(error);
         }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@
  * The API enables utilization of the server-side JAX-RS annotations
  * to describe the server-side resources and dynamically generate client-side
  * proxy objects for them.
- * </p>
  * <p>
  * Consider a server which exposes a resource at http://localhost:8080. The resource
  * can be described by the following interface:
@@ -74,8 +73,9 @@
  * </p>
  *
  * <pre>
- * Client c = ClientBuilder.newClient();
- * MyResourceIfc resource = WebResourceFactory.newWebResource(MyResourceIfc.class, c, "http://localhost:8080/");
+ * Client client = ClientBuilder.newClient();
+ * WebTarget target = client.target("http://localhost:8080/");
+ * MyResourceIfc resource = WebResourceFactory.newResource(MyResourceIfc.class, target);
  *
  * String responseFromGet = resource.get();
  * MyBean responseFromPost = resource.postEcho(myBeanInstance);

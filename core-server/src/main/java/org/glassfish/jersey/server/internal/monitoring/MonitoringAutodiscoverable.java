@@ -54,7 +54,7 @@ import org.glassfish.jersey.server.ServerProperties;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
-public class MonitoringAutodiscoverable implements ForcedAutoDiscoverable {
+public final class MonitoringAutodiscoverable implements ForcedAutoDiscoverable {
 
     @Override
     public void configure(final FeatureContext context) {

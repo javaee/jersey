@@ -74,6 +74,7 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -164,8 +165,12 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         final Response response = Response.getResponse(httpServletResponse);
         final ResponseWriter responseWriter = new ResponseWriter(request, response, configSetStatusOverSendError);
         final URI baseUri = getBaseUri(request);
-        final URI requestUri = baseUri.resolve(request.getUri().toString());
 
+        final String originalQuery = request.getUri().getQuery();
+        final String encodedQuery = ContainerUtils.encodeUnsafeCharacters(originalQuery);
+        final String uriString = (originalQuery == null || originalQuery.isEmpty() || originalQuery.equals(encodedQuery)) ?
+                request.getUri().toString() : request.getUri().toString().replace(originalQuery, encodedQuery);
+        final URI requestUri = baseUri.resolve(uriString);
         try {
             final ContainerRequest requestContext = new ContainerRequest(
                     baseUri,
@@ -393,7 +398,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         appHandler = new ApplicationHandler(configuration.register(new JettyBinder()));
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
         containerListener.onReload(this);
-        containerListener.onShutdown(this);
+        containerListener.onStartup(this);
         cacheConfigSetStatusOverSendError();
     }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,7 +75,8 @@ public class MultiPartReaderServerSide extends MultiPartReaderClientSide {
     private final Provider<CloseableService> closeableServiceProvider;
 
     @Inject
-    public MultiPartReaderServerSide(@Context Providers providers, final Provider<CloseableService> closeableServiceProvider) {
+    public MultiPartReaderServerSide(@Context final Providers providers,
+                                     final Provider<CloseableService> closeableServiceProvider) {
         super(providers);
         this.closeableServiceProvider = closeableServiceProvider;
     }
@@ -86,7 +87,7 @@ public class MultiPartReaderServerSide extends MultiPartReaderClientSide {
                                       final MediaType mediaType,
                                       final MultivaluedMap<String, String> headers,
                                       final InputStream stream) throws IOException, MIMEParsingException {
-        MultiPart multiPart = super.readMultiPart(type, genericType, annotations, mediaType, headers, stream);
+        final MultiPart multiPart = super.readMultiPart(type, genericType, annotations, mediaType, headers, stream);
         closeableServiceProvider.get().add(multiPart);
         return multiPart;
     }

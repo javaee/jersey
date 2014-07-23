@@ -152,8 +152,11 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
         // Invocable
         private Class<?> handlerClass;
         private Object handlerInstance;
+
+        // method (can be also interface method). Specific method to execute is defined by handlingMethod
         private Method definitionMethod;
 
+        // this can be either equal to definitionMethod or child of definitionMethod
         private Method handlingMethod;
         private boolean encodedParams;
         private Type routingResponseType;
@@ -317,7 +320,8 @@ public final class ResourceMethod implements ResourceModelComponent, Producing, 
          * @param nameBindings name binding annotation types.
          * @return updated builder object.
          */
-        public Builder nameBindings(final Class<? extends Annotation>... nameBindings) {
+        @SafeVarargs
+        public final Builder nameBindings(final Class<? extends Annotation>... nameBindings) {
             return nameBindings(Arrays.asList(nameBindings));
         }
 

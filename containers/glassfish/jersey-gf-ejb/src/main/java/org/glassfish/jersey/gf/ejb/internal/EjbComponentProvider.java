@@ -191,7 +191,7 @@ public final class EjbComponentProvider implements ComponentProvider, ResourceMe
                                 });
                             } catch (PrivilegedActionException pae) {
                                 final Throwable cause = pae.getCause();
-                                LOGGER.log(Level.WARNING, cause.getMessage(), cause);
+                                LOGGER.log(Level.WARNING, LocalizationMessages.EJB_INTERCEPTOR_BINDING_WARNING(ejb.getEjbClassName()), cause);
                             }
                         }
                     }

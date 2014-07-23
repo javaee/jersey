@@ -68,6 +68,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -232,7 +233,7 @@ public final class SimpleContainer implements org.simpleframework.http.core.Cont
     public void handle(final Request request, final Response response) {
         final Writer responseWriter = new Writer(response);
         final URI baseUri = getBaseUri(request);
-        final URI requestUri = baseUri.resolve(request.getTarget());
+        final URI requestUri = baseUri.resolve(ContainerUtils.encodeUnsafeCharacters(request.getTarget()));
 
         try {
             final ContainerRequest requestContext = new ContainerRequest(

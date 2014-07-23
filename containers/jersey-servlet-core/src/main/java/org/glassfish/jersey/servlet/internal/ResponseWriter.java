@@ -206,6 +206,7 @@ public class ResponseWriter implements ContainerResponseWriter {
                 }
             }
         } finally {
+            requestTimeoutHandler.close();
             asyncExt.complete();
         }
     }
@@ -233,6 +234,7 @@ public class ResponseWriter implements ContainerResponseWriter {
                 }
             }
         } finally {
+            requestTimeoutHandler.close();
             rethrow(error);
         }
     }

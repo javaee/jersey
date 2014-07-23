@@ -99,7 +99,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
         final String expectedResponse = SimpleJerseyExecutorManagedLongRunningResource.NOTIFICATION_RESPONSE;
 
         final int MAX_MESSAGES = 100;
-        final int LATCH_WAIT_TIMEOUT = 10;
+        final int LATCH_WAIT_TIMEOUT = 10 * getAsyncTimeoutMultiplier();
         final boolean debugMode = false;
         final boolean sequentialGet = false;
         final Object sequentialGetLock = new Object();
@@ -186,7 +186,7 @@ public class ManagedAsyncResourceTest extends JerseyTest {
     public void testChatResource() throws InterruptedException {
         final WebTarget resourceTarget = target().path("chat");
         final int MAX_MESSAGES = 100;
-        final int LATCH_WAIT_TIMEOUT = 10;
+        final int LATCH_WAIT_TIMEOUT = 10 * getAsyncTimeoutMultiplier();
         final boolean debugMode = false;
         final boolean sequentialGet = false;
         final boolean sequentialPost = false;

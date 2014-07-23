@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -50,8 +51,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.internal.util.PropertiesHelper;
 import org.glassfish.jersey.server.ExtendedResourceContext;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.model.ResourceMethod;
@@ -71,28 +75,34 @@ import org.glassfish.hk2.api.ServiceLocator;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class MonitoringStatisticsProcessor {
+final class MonitoringStatisticsProcessor {
 
     private static final Logger LOGGER = Logger.getLogger(MonitoringStatisticsProcessor.class.getName());
-    public static final int SHUTDOWN_TIMEOUT = 10;
+
+    private static final int DEFAULT_INTERVAL = 500;
+    private static final int SHUTDOWN_TIMEOUT = 10;
+
     private final MonitoringEventListener monitoringEventListener;
     private final MonitoringStatisticsImpl.Builder statisticsBuilder;
     private final List<MonitoringStatisticsListener> statisticsCallbackList;
     private final ScheduledExecutorService scheduler;
 
+    private final int interval;
 
     /**
      * Creates a new instance of processor.
      * @param serviceLocator Service locator.
      * @param monitoringEventListener Monitoring event listener.
      */
-    MonitoringStatisticsProcessor(ServiceLocator serviceLocator, MonitoringEventListener monitoringEventListener) {
+    MonitoringStatisticsProcessor(final ServiceLocator serviceLocator, final MonitoringEventListener monitoringEventListener) {
         this.monitoringEventListener = monitoringEventListener;
         final ResourceModel resourceModel = serviceLocator.getService(ExtendedResourceContext.class).getResourceModel();
         this.statisticsBuilder = new MonitoringStatisticsImpl.Builder(resourceModel);
         this.statisticsCallbackList = serviceLocator.getAllServices(MonitoringStatisticsListener.class);
         this.scheduler = serviceLocator.getService(ScheduledExecutorService.class,
                 new RuntimeExecutorsBinder.BackgroundSchedulerLiteral());
+        this.interval = PropertiesHelper.getValue(serviceLocator.getService(Configuration.class).getProperties(),
+                ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL, DEFAULT_INTERVAL, Collections.<String, String>emptyMap());
     }
 
     /**
@@ -108,26 +118,28 @@ class MonitoringStatisticsProcessor {
                     processRequestItems();
                     processResponseCodeEvents();
                     processExceptionMapperEvents();
-                } catch (Throwable t) {
+                } catch (final Throwable t) {
                     LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_MONITORING_STATISTICS_GENERATION(), t);
                     // rethrowing exception stops further task execution
                     throw new ProcessingException(LocalizationMessages.ERROR_MONITORING_STATISTICS_GENERATION(), t);
                 }
 
                 final MonitoringStatisticsImpl immutableStats = statisticsBuilder.build();
+
                 final Iterator<MonitoringStatisticsListener> iterator = statisticsCallbackList.iterator();
                 while (iterator.hasNext() && !Thread.currentThread().isInterrupted()) {
-                    MonitoringStatisticsListener monitoringStatisticsListener = iterator.next();
+                    final MonitoringStatisticsListener listener = iterator.next();
                     try {
-                        monitoringStatisticsListener.onStatistics(immutableStats);
-                    } catch (Throwable t) {
-                        LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_MONITORING_STATISTICS_LISTENER(
-                                monitoringStatisticsListener.getClass()), t);
+                        listener.onStatistics(immutableStats);
+                    } catch (final Throwable t) {
+                        LOGGER.log(Level.SEVERE,
+                                LocalizationMessages.ERROR_MONITORING_STATISTICS_LISTENER(listener.getClass()), t);
+
                         iterator.remove();
                     }
                 }
             }
-        }, 0, 500, TimeUnit.MILLISECONDS);
+        }, 0, interval, TimeUnit.MILLISECONDS);
     }
 
     private void processApplicationEvents() {
@@ -142,7 +154,6 @@ class MonitoringStatisticsProcessor {
                     statisticsBuilder.setApplicationStatisticsImpl(initStatistics);
                     break;
             }
-
 
         }
     }
@@ -165,12 +176,12 @@ class MonitoringStatisticsProcessor {
         final Queue<MonitoringEventListener.RequestStats> requestQueuedItems = monitoringEventListener.getRequestQueuedItems();
 
         while (!requestQueuedItems.isEmpty()) {
-            MonitoringEventListener.RequestStats event = requestQueuedItems.remove();
-            final MonitoringEventListener.TimeStats requestStats = event.getRequestStats();
-            statisticsBuilder.getRequestStatisticsBuilder().addExecution(requestStats.getStartTime(),
-                    requestStats.getDuration());
-            final MonitoringEventListener.MethodStats methodStat = event.getMethodStats();
+            final MonitoringEventListener.RequestStats event = requestQueuedItems.remove();
 
+            final MonitoringEventListener.TimeStats requestStats = event.getRequestStats();
+            statisticsBuilder.addRequestExecution(requestStats.getStartTime(), requestStats.getDuration());
+
+            final MonitoringEventListener.MethodStats methodStat = event.getMethodStats();
             if (methodStat != null) {
                 final ResourceMethod method = methodStat.getMethod();
                 statisticsBuilder.addExecution(event.getRequestUri(), method,
@@ -200,7 +211,8 @@ class MonitoringStatisticsProcessor {
      */
     void shutDown() throws InterruptedException {
         scheduler.shutdown();
-        boolean success = scheduler.awaitTermination(SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
+
+        final boolean success = scheduler.awaitTermination(SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
         if (!success) {
             LOGGER.warning(LocalizationMessages.ERROR_MONITORING_SCHEDULER_DESTROY_TIMEOUT());
         }

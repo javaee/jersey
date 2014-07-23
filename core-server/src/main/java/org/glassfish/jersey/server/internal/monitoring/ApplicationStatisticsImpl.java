@@ -50,7 +50,8 @@ import org.glassfish.jersey.server.monitoring.ApplicationStatistics;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class ApplicationStatisticsImpl implements ApplicationStatistics {
+final class ApplicationStatisticsImpl implements ApplicationStatistics {
+
     private final ResourceConfig resourceConfig;
     private final Date startTime;
     private final Set<Class<?>> registeredClasses;
@@ -59,15 +60,15 @@ class ApplicationStatisticsImpl implements ApplicationStatistics {
 
     /**
      * Create a new application statistics instance.
+     *
      * @param resourceConfig Resource config of the application being monitored.
      * @param startTime Start time of the application (when initialization was finished).
      * @param registeredClasses Registered resource classes.
      * @param registeredInstances Registered resource instances.
      * @param providers Registered providers.
      */
-    ApplicationStatisticsImpl(ResourceConfig resourceConfig, Date startTime,
-                              Set<Class<?>> registeredClasses,
-                              Set<Object> registeredInstances, Set<Class<?>> providers) {
+    ApplicationStatisticsImpl(final ResourceConfig resourceConfig, final Date startTime, final Set<Class<?>> registeredClasses,
+                              final Set<Object> registeredInstances, final Set<Class<?>> providers) {
         this.resourceConfig = resourceConfig;
         this.startTime = startTime;
 

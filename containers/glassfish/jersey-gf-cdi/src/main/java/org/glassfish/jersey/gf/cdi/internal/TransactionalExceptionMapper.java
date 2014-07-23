@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.gf.cdi.internal;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
@@ -48,9 +50,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
-import org.glassfish.hk2.api.ServiceLocator;
-
-import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.spi.ExceptionMappers;
 import org.glassfish.jersey.spi.ExtendedExceptionMapper;
 
@@ -61,36 +60,26 @@ import org.glassfish.jersey.spi.ExtendedExceptionMapper;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
+@ApplicationScoped
 public class TransactionalExceptionMapper implements ExtendedExceptionMapper<TransactionalException> {
 
-    private final Provider<ExceptionMappers> mappers;
-    private ServiceLocator locator;
-
-    /**
-     * Create new transactional exception mapper.
-     *
-     * @param mappers utility to find mapper delegate.
-     * @param locator HK2 locator to get access to the original
-     * {@link WebApplicationException} instance.
-     */
     @Inject
-    public TransactionalExceptionMapper(Provider<ExceptionMappers> mappers, ServiceLocator locator) {
-        this.mappers = mappers;
-        this.locator = locator;
-    }
+    WebAppExceptionHolder waeHolder;
+
+    @Inject BeanManager beanManager;
+
+    @Inject
+    Provider<ExceptionMappers> mappers;
 
     @Override
     public Response toResponse(TransactionalException exception) {
         final ExceptionMapper mapper = mappers.get().findMapping(exception);
 
-        if (mapper != null && mapper != this) {
+        if (mapper != null && !TransactionalExceptionMapper.class.isAssignableFrom(mapper.getClass())) {
             return mapper.toResponse(exception);
         } else {
-            final ContainerRequest jerseyRequest = locator.getService(ContainerRequest.class);
-            if (jerseyRequest != null) {
-                final WebApplicationException wae =
-                        (WebApplicationException) jerseyRequest.getProperty(
-                            CdiComponentProvider.TRANSACTIONAL_WAE);
+            if (waeHolder != null) {
+                final WebApplicationException wae = waeHolder.exception;
                 if (wae != null) {
                     return wae.getResponse();
                 }

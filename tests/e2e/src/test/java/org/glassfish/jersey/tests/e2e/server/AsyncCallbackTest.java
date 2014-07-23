@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,8 +71,9 @@ import org.junit.Test;
 public class AsyncCallbackTest extends JerseyTest {
     public static final AtomicBoolean onDisconnectCalled = new AtomicBoolean(false);
 
-    public static CountDownLatch streamClosedSignal = new TestLatch(1, "streamClosedSignal");
-    public static CountDownLatch callbackCalledSignal = new TestLatch(1, "callbackCalledSignal");
+    public static CountDownLatch streamClosedSignal;
+    public static CountDownLatch callbackCalledSignal;
+
 
     @Path("resource")
     public static class Resource {
@@ -108,10 +109,12 @@ public class AsyncCallbackTest extends JerseyTest {
 
     public static class TestLatch extends CountDownLatch {
         private final String name;
+        private final int multiplier;
 
-        public TestLatch(int count, String name) {
+        public TestLatch(int count, String name, int multiplier) {
             super(count);
             this.name = name;
+            this.multiplier = multiplier;
         }
 
         @Override
@@ -121,7 +124,7 @@ public class AsyncCallbackTest extends JerseyTest {
 
         @Override
         public void await() throws InterruptedException {
-            final boolean success = super.await(10, TimeUnit.SECONDS);
+            final boolean success = super.await(10 * multiplier, TimeUnit.SECONDS);
             Assert.assertTrue(
                     Thread.currentThread().getName() + ": Latch [" + name + "] awaiting -> timeout!!!",
                     success);
@@ -131,8 +134,8 @@ public class AsyncCallbackTest extends JerseyTest {
     @Before
     public void setup() {
         onDisconnectCalled.set(false);
-        streamClosedSignal = new TestLatch(1, "streamClosedSignal");
-        callbackCalledSignal = new TestLatch(1, "callbackCalledSignal");
+        streamClosedSignal = new TestLatch(1, "streamClosedSignal", getAsyncTimeoutMultiplier());
+        callbackCalledSignal = new TestLatch(1, "callbackCalledSignal", getAsyncTimeoutMultiplier());
 
     }
 

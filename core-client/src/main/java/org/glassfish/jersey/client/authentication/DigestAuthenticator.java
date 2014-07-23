@@ -48,7 +48,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,6 +58,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.uri.UriComponent;
 
 /**
  * Implementation of Digest Http Authentication method (RFC 2617).
@@ -68,7 +68,6 @@ import org.glassfish.jersey.client.internal.LocalizationMessages;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 final class DigestAuthenticator {
-    private static final Logger logger = Logger.getLogger(DigestAuthenticator.class.getName());
 
     private static final char[] HEX_ARRAY = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     private static final Pattern KEY_VALUE_PAIR_PATTERN = Pattern.compile("(\\w+)\\s*=\\s*(\"([^\"]+)\"|(\\w+))\\s*,?\\s*");
@@ -79,31 +78,29 @@ final class DigestAuthenticator {
 
     private final Map<URI, DigestScheme> digestCache;
 
-
     /**
      * Create a new instance initialized from credentials and configuration.
      *
      * @param credentials Credentials. Can be {@code null} if there are no default credentials.
      * @param limit Maximum number of URIs that should be kept in the cache containing URIs and their
-     *              {@link org.glassfish.jersey.client.authentication.DigestAuthenticator.DigestScheme}.
+     * {@link org.glassfish.jersey.client.authentication.DigestAuthenticator.DigestScheme}.
      */
-    DigestAuthenticator(HttpAuthenticationFilter.Credentials credentials, final int limit) {
+    DigestAuthenticator(final HttpAuthenticationFilter.Credentials credentials, final int limit) {
         this.credentials = credentials;
 
-        digestCache = Collections.synchronizedMap(
-                new LinkedHashMap<URI, DigestScheme>(limit) {
+        digestCache = Collections.synchronizedMap(new LinkedHashMap<URI, DigestScheme>(limit) {
                     // use id as it is an anonymous inner class with changed behaviour
                     private static final long serialVersionUID = 2546245625L;
 
                     @Override
-                    protected boolean removeEldestEntry(Map.Entry eldest) {
+                    protected boolean removeEldestEntry(final Map.Entry eldest) {
                         return size() > limit;
                     }
                 });
 
         try {
             randomGenerator = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             throw new ProcessingException(LocalizationMessages.ERROR_DIGEST_FILTER_GENERATOR(), e);
         }
     }
@@ -115,10 +112,10 @@ final class DigestAuthenticator {
      * @return {@code true} if authentication information was added.
      * @throws IOException When error with encryption occurs.
      */
-    boolean filterRequest(ClientRequestContext request) throws IOException {
-        DigestScheme digestScheme = digestCache.get(request.getUri());
+    boolean filterRequest(final ClientRequestContext request) throws IOException {
+        final DigestScheme digestScheme = digestCache.get(request.getUri());
         if (digestScheme != null) {
-            HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
+            final HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
                     this.credentials, HttpAuthenticationFilter.Type.DIGEST);
             if (cred != null) {
                 request.getHeaders().add(HttpHeaders.AUTHORIZATION, createNextAuthToken(digestScheme, request, cred));
@@ -128,7 +125,6 @@ final class DigestAuthenticator {
         return false;
     }
 
-
     /**
      * Process response and repeat the request if digest authentication is requested. When request is repeated
      * the response will be modified to contain new response information.
@@ -136,29 +132,27 @@ final class DigestAuthenticator {
      * @param request Request context.
      * @param response Response context (will be updated with newest response data if the request was repeated).
      * @return {@code true} if response does not require authentication or if authentication is required,
-     *                  new request was done with digest authentication information and authentication was successful.
-     *
+     * new request was done with digest authentication information and authentication was successful.
      * @throws IOException When error with encryption occurs.
      */
-    public boolean filterResponse(ClientRequestContext request, ClientResponseContext response) throws IOException {
+    public boolean filterResponse(final ClientRequestContext request, final ClientResponseContext response) throws IOException {
 
         if (Response.Status.fromStatusCode(response.getStatus()) == Response.Status.UNAUTHORIZED) {
 
-
-            DigestScheme digestScheme = parseAuthHeaders(response.getHeaders().get(HttpHeaders.WWW_AUTHENTICATE));
+            final DigestScheme digestScheme = parseAuthHeaders(response.getHeaders().get(HttpHeaders.WWW_AUTHENTICATE));
             if (digestScheme == null) {
                 return false;
             }
 
             // assemble authentication request and resend it
-            HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
+            final HttpAuthenticationFilter.Credentials cred = HttpAuthenticationFilter.getCredentials(request,
                     this.credentials, HttpAuthenticationFilter.Type.DIGEST);
             if (cred == null) {
                 throw new RuntimeException(LocalizationMessages.AUTHENTICATION_CREDENTIALS_MISSING_DIGEST());
             }
 
-            boolean success = HttpAuthenticationFilter.repeatRequest(request, response,
-                    createNextAuthToken(digestScheme, request, cred));
+            final boolean success = HttpAuthenticationFilter.repeatRequest(request, response, createNextAuthToken(digestScheme,
+                    request, cred));
             if (success) {
                 digestCache.put(request.getUri(), digestScheme);
             } else {
@@ -169,25 +163,24 @@ final class DigestAuthenticator {
         return true;
     }
 
-
     /**
      * Parse digest header.
      *
      * @param headers List of header strings
      * @return DigestScheme or {@code null} if no digest header exists.
      */
-    private DigestScheme parseAuthHeaders(List<?> headers) throws IOException {
+    private DigestScheme parseAuthHeaders(final List<?> headers) throws IOException {
 
         if (headers == null) {
             return null;
         }
-        for (Object lineObject : headers) {
+        for (final Object lineObject : headers) {
 
             if (!(lineObject instanceof String)) {
                 continue;
             }
-            String line = (String) lineObject;
-            String[] parts = line.trim().split("\\s+", 2);
+            final String line = (String) lineObject;
+            final String[] parts = line.trim().split("\\s+", 2);
 
             if (parts.length != 2) {
                 continue;
@@ -203,17 +196,17 @@ final class DigestAuthenticator {
             Algorithm algorithm = Algorithm.UNSPECIFIED;
             boolean stale = false;
 
-            Matcher match = KEY_VALUE_PAIR_PATTERN.matcher(parts[1]);
+            final Matcher match = KEY_VALUE_PAIR_PATTERN.matcher(parts[1]);
             while (match.find()) {
                 // expect 4 groups (key)=("(val)" | (val))
-                int nbGroups = match.groupCount();
+                final int nbGroups = match.groupCount();
                 if (nbGroups != 4) {
                     continue;
                 }
-                String key = match.group(1);
-                String valNoQuotes = match.group(3);
-                String valQuotes = match.group(4);
-                String val = (valNoQuotes == null) ? valQuotes : valNoQuotes;
+                final String key = match.group(1);
+                final String valNoQuotes = match.group(3);
+                final String valQuotes = match.group(4);
+                final String val = (valNoQuotes == null) ? valQuotes : valNoQuotes;
                 if (key.equals("qop")) {
                     qop = QOP.parse(val);
                 } else if (key.equals("realm")) {
@@ -241,9 +234,9 @@ final class DigestAuthenticator {
      * @return digest authentication token string
      * @throws IOException
      */
-    private String createNextAuthToken(DigestScheme ds, ClientRequestContext requestContext,
-                                       HttpAuthenticationFilter.Credentials credentials) throws IOException {
-        StringBuilder sb = new StringBuilder(100);
+    private String createNextAuthToken(final DigestScheme ds, final ClientRequestContext requestContext,
+                                       final HttpAuthenticationFilter.Credentials credentials) throws IOException {
+        final StringBuilder sb = new StringBuilder(100);
         sb.append("Digest ");
         append(sb, "username", credentials.getUsername());
         append(sb, "realm", ds.getRealm());
@@ -252,25 +245,25 @@ final class DigestAuthenticator {
         append(sb, "algorithm", ds.getAlgorithm().toString(), false);
         append(sb, "qop", ds.getQop().toString(), false);
 
-        String uri = requestContext.getUri().getRawPath();
+        final String uri = UriComponent.fullRelativeUri(requestContext.getUri());
         append(sb, "uri", uri);
 
-        String ha1;
+        final String ha1;
         if (ds.getAlgorithm().equals(Algorithm.MD5_SESS)) {
             ha1 = md5(md5(credentials.getUsername(), ds.getRealm(), new String(credentials.getPassword())));
         } else {
             ha1 = md5(credentials.getUsername(), ds.getRealm(), new String(credentials.getPassword()));
         }
 
-        String ha2 = md5(requestContext.getMethod(), uri);
+        final String ha2 = md5(requestContext.getMethod(), uri);
 
-        String response;
+        final String response;
         if (ds.getQop().equals(QOP.UNSPECIFIED)) {
             response = md5(ha1, ds.getNonce(), ha2);
         } else {
-            String cnonce = randomBytes(CLIENT_NONCE_BYTE_COUNT); // client nonce
+            final String cnonce = randomBytes(CLIENT_NONCE_BYTE_COUNT); // client nonce
             append(sb, "cnonce", cnonce);
-            String nc = String.format("%08x", ds.incrementCounter()); // counter
+            final String nc = String.format("%08x", ds.incrementCounter()); // counter
             append(sb, "nc", nc, false);
             response = md5(ha1, ds.getNonce(), nc, cnonce, ds.getQop().toString(), ha2);
         }
@@ -287,7 +280,7 @@ final class DigestAuthenticator {
      * @param value value string
      * @param useQuote true if value needs to be enclosed in quotes
      */
-    static private void append(StringBuilder sb, String key, String value, boolean useQuote) {
+    static private void append(final StringBuilder sb, final String key, final String value, final boolean useQuote) {
 
         if (value == null) {
             return;
@@ -316,7 +309,7 @@ final class DigestAuthenticator {
      * @param key key string
      * @param value value string
      */
-    static private void append(StringBuilder sb, String key, String value) {
+    static private void append(final StringBuilder sb, final String key, final String value) {
         append(sb, key, value, true);
     }
 
@@ -326,8 +319,8 @@ final class DigestAuthenticator {
      * @param bytes array of bytes
      * @return hex string
      */
-    private static String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
+    private static String bytesToHex(final byte[] bytes) {
+        final char[] hexChars = new char[bytes.length * 2];
         int v;
         for (int j = 0; j < bytes.length; j++) {
             v = bytes[j] & 0xFF;
@@ -337,7 +330,6 @@ final class DigestAuthenticator {
         return new String(hexChars);
     }
 
-
     /**
      * Colon separated value MD5 hash.
      *
@@ -345,23 +337,23 @@ final class DigestAuthenticator {
      * @return M5 hash string
      * @throws IOException
      */
-    private static String md5(String... tokens) throws IOException {
-        StringBuilder sb = new StringBuilder(100);
-        for (String token : tokens) {
+    private static String md5(final String... tokens) throws IOException {
+        final StringBuilder sb = new StringBuilder(100);
+        for (final String token : tokens) {
             if (sb.length() > 0) {
                 sb.append(':');
             }
             sb.append(token);
         }
 
-        MessageDigest md;
+        final MessageDigest md;
         try {
             md = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException ex) {
+        } catch (final NoSuchAlgorithmException ex) {
             throw new IOException(ex.getMessage());
         }
         md.update(sb.toString().getBytes(HttpAuthenticationFilter.CHARACTER_SET), 0, sb.length());
-        byte[] md5hash = md.digest();
+        final byte[] md5hash = md.digest();
         return bytesToHex(md5hash);
     }
 
@@ -371,12 +363,11 @@ final class DigestAuthenticator {
      * @param nbBytes number of bytes to generate
      * @return hex string
      */
-    private String randomBytes(int nbBytes) {
-        byte[] bytes = new byte[nbBytes];
+    private String randomBytes(final int nbBytes) {
+        final byte[] bytes = new byte[nbBytes];
         randomGenerator.nextBytes(bytes);
         return bytesToHex(bytes);
     }
-
 
     private enum QOP {
 
@@ -385,7 +376,7 @@ final class DigestAuthenticator {
 
         private final String qop;
 
-        QOP(String qop) {
+        QOP(final String qop) {
             this.qop = qop;
         }
 
@@ -394,7 +385,7 @@ final class DigestAuthenticator {
             return qop;
         }
 
-        public static QOP parse(String val) {
+        public static QOP parse(final String val) {
             if (val == null || val.isEmpty()) {
                 return QOP.UNSPECIFIED;
             }
@@ -412,7 +403,7 @@ final class DigestAuthenticator {
         MD5_SESS("MD5-sess");
         private final String md;
 
-        Algorithm(String md) {
+        Algorithm(final String md) {
             this.md = md;
         }
 
@@ -446,13 +437,8 @@ final class DigestAuthenticator {
         private final boolean stale;
         private volatile int nc;
 
-
-        DigestScheme(String realm,
-                            String nonce,
-                            String opaque,
-                            QOP qop,
-                            Algorithm algorithm,
-                            boolean stale) {
+        DigestScheme(final String realm, final String nonce, final String opaque, final QOP qop, final Algorithm algorithm,
+                     final boolean stale) {
             this.realm = realm;
             this.nonce = nonce;
             this.opaque = opaque;

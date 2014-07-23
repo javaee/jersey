@@ -71,6 +71,7 @@ import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
@@ -453,7 +454,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
         String queryString = grizzlyRequest.getQueryString();
         if (queryString != null) {
-            originalUri = originalUri + "?" + queryString;
+            originalUri = originalUri + "?" + ContainerUtils.encodeUnsafeCharacters(queryString);
         }
 
         return baseUri.resolve(originalUri);

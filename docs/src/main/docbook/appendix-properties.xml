@@ -280,6 +280,16 @@
                         </entry>
                     </row>
                     <row>
+                        <entry>&jersey.server.ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL; (Jersey 2.10 or later)</entry>
+                        <entry><literal>jersey.config.server.monitoring.statistics.refresh.interval</literal></entry>
+                        <entry>
+                            <para>
+                                Interval (in <literal>ms</literal>}) indicating how often will be monitoring statistics refreshed
+                                (<literal>onStatistics</literal> method called). Default value is <literal>500</literal>.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
                         <entry>&jersey.server.ServerProperties.OUTBOUND_CONTENT_LENGTH_BUFFER;
                             (Jersey 2.2 or later)</entry>
                         <entry><literal>jersey.config.contentLength.server.buffer</literal></entry>

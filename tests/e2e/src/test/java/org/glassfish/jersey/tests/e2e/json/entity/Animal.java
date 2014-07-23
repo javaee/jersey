@@ -41,21 +41,27 @@ package org.glassfish.jersey.tests.e2e.json.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 /**
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+// Jackson 1
+@org.codehaus.jackson.annotate.JsonTypeInfo(
+        use = org.codehaus.jackson.annotate.JsonTypeInfo.Id.NAME,
+        include = org.codehaus.jackson.annotate.JsonTypeInfo.As.PROPERTY)
+@org.codehaus.jackson.annotate.JsonSubTypes({
+        @org.codehaus.jackson.annotate.JsonSubTypes.Type(value = Cat.class),
+        @org.codehaus.jackson.annotate.JsonSubTypes.Type(value = Dog.class) })
+// Jackson 2
+@com.fasterxml.jackson.annotation.JsonTypeInfo(
+        use = com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME,
+        include = com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY)
+@com.fasterxml.jackson.annotation.JsonSubTypes({
+        @com.fasterxml.jackson.annotation.JsonSubTypes.Type(value = Cat.class),
+        @com.fasterxml.jackson.annotation.JsonSubTypes.Type(value = Dog.class) })
+//
 @SuppressWarnings("RedundantIfStatement")
 @XmlRootElement(name = "animal")
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = Cat.class),
-        @JsonSubTypes.Type(value = Dog.class) })
 public class Animal {
 
     public String name;
@@ -63,12 +69,12 @@ public class Animal {
     public Animal() {
     }
 
-    public Animal(String name) {
+    public Animal(final String name) {
         this.name = name;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == null) {
             return false;
         }

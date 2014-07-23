@@ -64,7 +64,6 @@ import org.glassfish.jersey.model.internal.ComponentBag;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.ServiceLocator;
-import org.glassfish.hk2.api.ServiceLocatorFactory;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
@@ -142,7 +141,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
          *
          * @param client bound parent Jersey client.
          */
-        State(JerseyClient client) {
+        State(final JerseyClient client) {
             this.strategy = IDENTITY;
             this.commonConfig = new CommonConfig(RuntimeType.CLIENT, ComponentBag.EXCLUDE_EMPTY);
             this.client = client;
@@ -156,7 +155,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
          * @param client   new Jersey client parent for the state.
          * @param original configuration strategy to be copied.
          */
-        private State(JerseyClient client, State original) {
+        private State(final JerseyClient client, final State original) {
             this.strategy = IDENTITY;
             this.client = client;
             this.commonConfig = new CommonConfig(original.commonConfig);
@@ -180,7 +179,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
          * @param client parent Jersey client instance.
          * @return configuration state copy.
          */
-        State copy(JerseyClient client) {
+        State copy(final JerseyClient client) {
             return new State(client, this);
         }
 
@@ -203,7 +202,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return state;
         }
 
-        public State loadFrom(Configuration config) {
+        public State loadFrom(final Configuration config) {
             final State state = strategy.onChange(this);
             state.commonConfig.loadFrom(config);
             return state;
@@ -265,7 +264,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return state;
         }
 
-        State connectorProvider(ConnectorProvider provider) {
+        State connectorProvider(final ConnectorProvider provider) {
             if (provider == null) {
                 throw new NullPointerException(LocalizationMessages.NULL_CONNECTOR_PROVIDER());
             }
@@ -303,7 +302,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         }
 
         @Override
-        public Object getProperty(String name) {
+        public Object getProperty(final String name) {
             return commonConfig.getConfiguration().getProperty(name);
         }
 
@@ -313,32 +312,32 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
         }
 
         @Override
-        public boolean isProperty(String name) {
+        public boolean isProperty(final String name) {
             return commonConfig.getConfiguration().isProperty(name);
         }
 
         @Override
-        public boolean isEnabled(Feature feature) {
+        public boolean isEnabled(final Feature feature) {
             return commonConfig.getConfiguration().isEnabled(feature);
         }
 
         @Override
-        public boolean isEnabled(Class<? extends Feature> featureClass) {
+        public boolean isEnabled(final Class<? extends Feature> featureClass) {
             return commonConfig.getConfiguration().isEnabled(featureClass);
         }
 
         @Override
-        public boolean isRegistered(Object component) {
+        public boolean isRegistered(final Object component) {
             return commonConfig.getConfiguration().isRegistered(component);
         }
 
         @Override
-        public boolean isRegistered(Class<?> componentClass) {
+        public boolean isRegistered(final Class<?> componentClass) {
             return commonConfig.getConfiguration().isRegistered(componentClass);
         }
 
         @Override
-        public Map<Class<?>, Integer> getContracts(Class<?> componentClass) {
+        public Map<Class<?>, Integer> getContracts(final Class<?> componentClass) {
             return commonConfig.getConfiguration().getContracts(componentClass);
         }
 
@@ -352,15 +351,15 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             return commonConfig.getConfiguration().getInstances();
         }
 
-        public void configureAutoDiscoverableProviders(ServiceLocator locator) {
+        public void configureAutoDiscoverableProviders(final ServiceLocator locator) {
             commonConfig.configureAutoDiscoverableProviders(locator, false);
         }
 
-        public void configureForcedAutoDiscoverableProviders(ServiceLocator locator) {
+        public void configureForcedAutoDiscoverableProviders(final ServiceLocator locator) {
             commonConfig.configureAutoDiscoverableProviders(locator, true);
         }
 
-        public void configureMetaProviders(ServiceLocator locator) {
+        public void configureMetaProviders(final ServiceLocator locator) {
             commonConfig.configureMetaProviders(locator);
         }
 
@@ -413,29 +412,29 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
             final ClientConfig configuration = new ClientConfig(runtimeCfgState);
             final Connector connector = connectorProvider.getConnector(client, configuration);
             final ClientRuntime crt = new ClientRuntime(configuration, connector, locator);
-            client.addListener(new JerseyClient.LifecycleListener() {
-                @Override
-                public void onClose() {
-                    try {
-                        crt.close();
-                    } finally {
-                        ServiceLocatorFactory.getInstance().destroy(locator.getName());
-                    }
-                }
-            });
+
+            client.registerShutdownHook(crt);
 
             return crt;
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
-            State state = (State) o;
+            final State state = (State) o;
 
-            if (client != null ? !client.equals(state.client) : state.client != null) return false;
-            if (!commonConfig.equals(state.commonConfig)) return false;
+            if (client != null ? !client.equals(state.client) : state.client != null) {
+                return false;
+            }
+            if (!commonConfig.equals(state.commonConfig)) {
+                return false;
+            }
             return connectorProvider == null ? state.connectorProvider == null
                     : connectorProvider.equals(state.connectorProvider);
         }
@@ -462,9 +461,9 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
      *
      * @param providerClasses provider classes to be registered with this client configuration.
      */
-    public ClientConfig(Class<?>... providerClasses) {
+    public ClientConfig(final Class<?>... providerClasses) {
         this();
-        for (Class<?> providerClass : providerClasses) {
+        for (final Class<?> providerClass : providerClasses) {
             state.register(providerClass);
         }
     }
@@ -474,9 +473,9 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
      *
      * @param providers provider instances to be registered with this client configuration.
      */
-    public ClientConfig(Object... providers) {
+    public ClientConfig(final Object... providers) {
         this();
-        for (Object provider : providers) {
+        for (final Object provider : providers) {
             state.register(provider);
         }
     }
@@ -487,7 +486,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
      *
      * @param parent parent Jersey client instance.
      */
-    ClientConfig(JerseyClient parent) {
+    ClientConfig(final JerseyClient parent) {
         this.state = new State(parent);
     }
 
@@ -498,7 +497,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
      * @param parent parent Jersey client instance.
      * @param that   original {@link javax.ws.rs.core.Configuration}.
      */
-    ClientConfig(JerseyClient parent, Configuration that) {
+    ClientConfig(final JerseyClient parent, final Configuration that) {
         if (that instanceof ClientConfig) {
             state = ((ClientConfig) that).state.copy(parent);
         } else {
@@ -541,7 +540,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
      *               instance.
      * @return the updated client configuration instance.
      */
-    public ClientConfig loadFrom(Configuration config) {
+    public ClientConfig loadFrom(final Configuration config) {
         if (config instanceof ClientConfig) {
             state = ((ClientConfig) config).state.copy();
         } else {
@@ -563,37 +562,37 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
     }
 
     @Override
-    public ClientConfig register(Class<?> providerClass, int bindingPriority) {
+    public ClientConfig register(final Class<?> providerClass, final int bindingPriority) {
         state = state.register(providerClass, bindingPriority);
         return this;
     }
 
     @Override
-    public ClientConfig register(Class<?> providerClass, Class<?>... contracts) {
+    public ClientConfig register(final Class<?> providerClass, final Class<?>... contracts) {
         state = state.register(providerClass, contracts);
         return this;
     }
 
     @Override
-    public ClientConfig register(Class<?> providerClass, Map<Class<?>, Integer> contracts) {
+    public ClientConfig register(final Class<?> providerClass, final Map<Class<?>, Integer> contracts) {
         state = state.register(providerClass, contracts);
         return this;
     }
 
     @Override
-    public ClientConfig register(Object provider, int bindingPriority) {
+    public ClientConfig register(final Object provider, final int bindingPriority) {
         state = state.register(provider, bindingPriority);
         return this;
     }
 
     @Override
-    public ClientConfig register(Object provider, Class<?>... contracts) {
+    public ClientConfig register(final Object provider, final Class<?>... contracts) {
         state = state.register(provider, contracts);
         return this;
     }
 
     @Override
-    public ClientConfig register(Object provider, Map<Class<?>, Integer> contracts) {
+    public ClientConfig register(final Object provider, final Map<Class<?>, Integer> contracts) {
         state = state.register(provider, contracts);
         return this;
     }
@@ -620,7 +619,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
     }
 
     @Override
-    public Object getProperty(String name) {
+    public Object getProperty(final String name) {
         return state.getProperty(name);
     }
 
@@ -630,32 +629,32 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
     }
 
     @Override
-    public boolean isProperty(String name) {
+    public boolean isProperty(final String name) {
         return state.isProperty(name);
     }
 
     @Override
-    public boolean isEnabled(Feature feature) {
+    public boolean isEnabled(final Feature feature) {
         return state.isEnabled(feature);
     }
 
     @Override
-    public boolean isEnabled(Class<? extends Feature> featureClass) {
+    public boolean isEnabled(final Class<? extends Feature> featureClass) {
         return state.isEnabled(featureClass);
     }
 
     @Override
-    public boolean isRegistered(Object component) {
+    public boolean isRegistered(final Object component) {
         return state.isRegistered(component);
     }
 
     @Override
-    public Map<Class<?>, Integer> getContracts(Class<?> componentClass) {
+    public Map<Class<?>, Integer> getContracts(final Class<?> componentClass) {
         return state.getContracts(componentClass);
     }
 
     @Override
-    public boolean isRegistered(Class<?> componentClass) {
+    public boolean isRegistered(final Class<?> componentClass) {
         return state.isRegistered(componentClass);
     }
 
@@ -683,7 +682,7 @@ public class ClientConfig implements Configurable<ClientConfig>, ExtendedConfig 
      * @throws java.lang.NullPointerException in case the {@code connectorProvider} is {@code null}.
      * @since 2.5
      */
-    public ClientConfig connectorProvider(ConnectorProvider connectorProvider) {
+    public ClientConfig connectorProvider(final ConnectorProvider connectorProvider) {
         state = state.connectorProvider(connectorProvider);
         return this;
     }

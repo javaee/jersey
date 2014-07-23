@@ -405,7 +405,8 @@ public class EventListenerTest extends JerseyTest {
         assertEquals("[" + i++ + "]", response.getHeaderString("R.RESOURCE_METHOD_START.order"));
         assertEquals("[" + i++ + "]", response.getHeaderString("R.RESP_FILTERS_START.order"));
         assertEquals("[" + i + "]", response.getHeaderString("R.RESP_FILTERS_FINISHED.order"));
-        final boolean success = applicationEventListener.finishedCalled.await(3, TimeUnit.SECONDS);
+        final boolean success = applicationEventListener.finishedCalled.await(3 * getAsyncTimeoutMultiplier(),
+                TimeUnit.SECONDS);
         Assert.assertTrue(success);
     }
 
@@ -423,7 +424,8 @@ public class EventListenerTest extends JerseyTest {
         assertEquals("[" + i++ + "]", response.getHeaderString("R.RESP_FILTERS_START.order"));
         assertEquals("[" + i + "]", response.getHeaderString("R.RESP_FILTERS_FINISHED.order"));
 
-        final boolean success = applicationEventListener.finishedCalled.await(3, TimeUnit.SECONDS);
+        final boolean success = applicationEventListener.finishedCalled.await(3 * getAsyncTimeoutMultiplier(),
+                TimeUnit.SECONDS);
         Assert.assertTrue(success);
     }
 }

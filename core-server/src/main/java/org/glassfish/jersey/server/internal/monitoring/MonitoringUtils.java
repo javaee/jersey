@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,8 @@
 package org.glassfish.jersey.server.internal.monitoring;
 
 import org.glassfish.jersey.server.model.ResourceMethod;
+import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
+import org.glassfish.jersey.server.monitoring.TimeWindowStatistics;
 
 /**
  * Monitoring helper class that contains utility methods used in
@@ -48,7 +50,12 @@ import org.glassfish.jersey.server.model.ResourceMethod;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class MonitoringUtils {
+public final class MonitoringUtils {
+
+    /**
+     * Request rate limit (per second) below which statistics can be considered as cacheable.
+     */
+    private final static double CACHEABLE_REQUEST_RATE_LIMIT = 0.001;
 
     /**
      * Get the method unique string ID. The ID is constructed from method attributes separated
@@ -61,13 +68,36 @@ public class MonitoringUtils {
      * @param method Resource method.
      * @return String constructed from resource method parameters.
      */
-    public static String getMethodUniqueId(ResourceMethod method) {
+    public static String getMethodUniqueId(final ResourceMethod method) {
         final String path = method.getParent().getParent() != null ? method.getParent().getPath() : "null";
-        return (new StringBuilder().append(method.getProducedTypes().toString()).append("|")
-                .append(method.getConsumedTypes().toString()).append("|").append(method.getHttpMethod())
-                .append("|").append(path).append("|")
-                .append(method.getInvocable().getHandlingMethod().getName()).toString());
+
+        return method.getProducedTypes().toString() + "|"
+                + method.getConsumedTypes().toString() + "|"
+                + method.getHttpMethod() + "|"
+                + path + "|"
+                + method.getInvocable().getHandlingMethod().getName();
 
     }
 
+    /**
+     * Indicates whether the global, resource, resource method statistics containing the give execution statistics can
+     * be cached.
+     *
+     * @param stats execution statistics to be examined.
+     * @return {@code true} if the statistics can be cached, {@code false} otherwise.
+     */
+    static boolean isCacheable(final ExecutionStatistics stats) {
+        for (final TimeWindowStatistics window : stats.getTimeWindowStatistics().values()) {
+            if (window.getRequestsPerSecond() >= CACHEABLE_REQUEST_RATE_LIMIT) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Prevent instantiation.
+     */
+    private MonitoringUtils() {
+    }
 }

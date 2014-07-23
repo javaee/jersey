@@ -84,7 +84,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @see org.glassfish.jersey.server.ServerProperties#MONITORING_STATISTICS_ENABLED for more details.
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class MonitoringFeature implements Feature {
+public final class MonitoringFeature implements Feature {
     private boolean monitoringEnabled = true;
     private boolean mBeansEnabled; // monitoring mbeans are enabled only if monitoring is enabled
     private static final Logger LOGGER = Logger.getLogger(MonitoringFeature.class.getName());

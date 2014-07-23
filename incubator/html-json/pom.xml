@@ -46,7 +46,7 @@
     <parent>
         <groupId>org.glassfish.jersey.incubator</groupId>
         <artifactId>project</artifactId>
-        <version>2.10-SNAPSHOT</version>
+        <version>2.12-SNAPSHOT</version>
     </parent>
 
     <groupId>org.glassfish.jersey.media</groupId>
@@ -124,6 +124,13 @@
             <groupId>org.netbeans.html</groupId>
             <artifactId>ko-ws-tyrus</artifactId>
             <version>0.7.1</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Overwrite Grizzly dependency defined in ko-ws-tyrus -->
+        <dependency>
+            <groupId>org.glassfish.grizzly</groupId>
+            <artifactId>grizzly-framework</artifactId>
+            <version>${grizzly2.version}</version>
             <scope>runtime</scope>
         </dependency>
     </dependencies>

@@ -1,86 +1,7 @@
 TODO - FIRST:
 
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/CanonicalizationFeatureTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/EscapedURITest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/GZIPContentEncodingTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/HeadTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/HttpMethodTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/MatrixParamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/OutputStreamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/PackagesResourceConfigReloadTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/QueryParamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/ResourcesContextPathTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/ResponseWriterMetadataTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ApplicationReloadResourceTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ApplicationTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/CanonicalizationFeatureTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/EscapedURITest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/FixedRequestSizeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/GrizzlyWebProviderLifecycleTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/GZIPContentEncodingTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/HeadTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/HttpMethodTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/HttpMethodWithClientFilterTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/InjectionTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/LoggingFilterTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/MatrixParamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/OutputStreamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/QueryParamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/RedirectionTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ReloadResourceTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ReloadTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ResponseWriterMetadataTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ServletRequestParametersTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/StatusCodeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/TraceTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ViewableTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/AcceptableXMLorJSONTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/ApplicationConfigTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/CanonicalizationFeatureTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/EscapedURITest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/GZIPContentEncodingTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/HandlerContextTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/HeadTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/HttpMethodTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/HttpServerAdaptorTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/MatrixParamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/OutputStreamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/QueryParamTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/ReloadTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/ResponseWriterMetadataTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/VoidPostTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/ResourceConfiguratorTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/container/servlet/ThreadLocalInvokerTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/EntityHolderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/NoRequestContentTypeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/OverrideProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/ParameterizedTypeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/ParameterizedTypeVariableTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/ParameterTypeArgumentOrderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/RenderedImageTypeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/entity/XXETest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/errors/MissingDependenciesTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/errors/NonPublicNonStaticTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/CacheControlImplTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/ConsumeProduceTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/ContentDispositionTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/CookieImplTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/FormDataContentDispositionTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/HttpHeaderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/LinkTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/AcceptMediaTypeProviderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/BeanTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/EntityTagProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/LocaleProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/MediaTypeProviderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/QualitySourceMediaTypeProviderTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/http/header/provider/ToStringHeaderTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/InBoundHeadersTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/InfectorTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/inject/AllInjectablesTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/inject/AnnotationInjectableTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/inject/ContextResolverTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/inject/InjectAnnotationInjectableTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/inject/InjectParamAnnotationInjectableTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/inject/IoCComponentProcessorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/inject/JAXBContextResolverTest.java
@@ -98,11 +19,7 @@ jersey-tests/src/test/java/com/sun/jersey/impl/json/JacksonNullStringTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/json/JSONFromJAXBInheritanceTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/json/ListOfJAXBBeanTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/json/NestedArrayTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/CloseableTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/InstantiatedWithDestroyTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/MultipleScopeTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/PerRequestLifecycleTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/PostConstructPreDestroyTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/ProviderLifecycleTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/ResourceLifecycleTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/SingletonLifecycleTest.java
@@ -166,7 +83,6 @@ jersey-tests/src/test/java/com/sun/jersey/impl/template/ResolvingClassViewProces
 jersey-tests/src/test/java/com/sun/jersey/impl/template/TemplateProcessorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/template/ViewAndTemplateProcessorTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/template/ViewProcessorTest.java
-jersey-tests/src/test/java/com/sun/jersey/impl/trace/TraceTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/rules/AutomataMatchingTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/rules/LinearMatchingTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/uri/UriPathHttpRequestTest.java
@@ -180,7 +96,6 @@ osgi/functional-tests/src/test/java/com/sun/jersey/impl/entity/EntityTypesTest.j
 osgi/functional-tests/src/test/java/com/sun/jersey/osgifunctionaltests/PackageScanningTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/ApplicationReloadResourceTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/ApplicationTest.java
-osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/CanonicalizationFeatureTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/ContextRedirectionTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/EscapedURITest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/ExceptionTest.java
@@ -188,7 +103,6 @@ osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/FixedReque
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/GrizzlyWebProviderLifecycleTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/GZIPContentEncodingTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/HeadTest.java
-osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/HttpMethodTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/HttpMethodWithClientFilterTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/InjectionTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/LoggingFilterTest.java
@@ -204,14 +118,12 @@ osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/StatusCode
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/TraceTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/ApplicationReloadResourceTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/ApplicationTest.java
-osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/CanonicalizationFeatureTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/EscapedURITest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/ExceptionTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/FixedRequestSizeTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/GrizzlyWebProviderLifecycleTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/GZIPContentEncodingTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/HeadTest.java
-osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/HttpMethodTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/HttpMethodWithClientFilterTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/InjectionTest.java
 osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/LoggingFilterTest.java
@@ -262,21 +174,10 @@ tests/grizzly2/src/test/java/com/sun/jersey/impl/client/HttpHeadersTest.java
 tests/grizzly2/src/test/java/com/sun/jersey/impl/client/HttpMethodWorkaroundTest.java
 tests/grizzly2/src/test/java/com/sun/jersey/impl/client/InjectableProviderTest.java
 tests/grizzly2/src/test/java/com/sun/jersey/impl/client/UriBuildingTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/CanonicalizationFeatureTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/EscapedURITest.java
 tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/ExceptionTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/GZIPContentEncodingTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/HeadTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/HttpMethodTest.java
 tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/HttpMethodWorkaroundTest.java
 tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/InjectionTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/MatrixParamTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/OutputStreamTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/PackagesResourceConfigReloadTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/QueryParamTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/ReloadTest.java
 tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/ResourcesContextPathTest.java
-tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/ResponseWriterMetadataTest.java
 
 TODO - LATER:
 
@@ -347,6 +248,18 @@ samples/storage-service/src/test/java/com/sun/jersey/samples/storageservice/Main
 
 TODO - FEATURE NOT SUPPORTED YET:
 
+- JERSEY-171
+jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/CanonicalizationFeatureTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/CanonicalizationFeatureTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/RedirectionTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/CanonicalizationFeatureTest.java
+osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/grizzly/CanonicalizationFeatureTest.java
+osgi/functional-tests/src/test/java/com/sun/jersey/osgi/tests/jetty/CanonicalizationFeatureTest.java
+tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/CanonicalizationFeatureTest.java
+
+- JERSEY-169 - @PreDestroy doesn't work.
+jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/GrizzlyWebProviderLifecycleTest.java
+
 contribs/jersey-atom-abdera/src/test/java/com/sun/jersey/atom/abdera/ContentHelperTest.java
 contribs/jersey-atom-abdera/src/test/java/com/sun/jersey/atom/abdera/impl/provider/entity/ProvidersTest.java
 
@@ -388,6 +301,14 @@ TODO - FEATURE NOT SUPPORTED, TESTS SHOULD BE DROPPED
 
 # Client - ContainerListener, OnStartConnectionListener
 jersey-tests/src/test/java/com/sun/jersey/impl/client/filter/ConnectionListenerTest.java
+# Client - No EntityHolder
+jersey-tests/src/test/java/com/sun/jersey/impl/entity/EntityHolderTest.java
+# Server - ContainerNotifier
+tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/PackagesResourceConfigReloadTest.java
+tests/grizzly2/src/test/java/com/sun/jersey/impl/container/grizzly2/ReloadTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/PackagesResourceConfigReloadTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/container/grizzly/web/ApplicationReloadResourceTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/container/httpserver/ReloadTest.java
 
 TODO - SUGGEST TO SKIP THOSE TESTS:
 -- test framework/Grizzly2
@@ -402,3 +323,13 @@ jersey-tests/src/test/java/com/sun/jersey/api/core/AbstractResourceConfigOrderTe
 jersey-tests/src/test/java/com/sun/jersey/api/core/ClassNamesResourceConfigTest.java
 jersey-tests/src/test/java/com/sun/jersey/api/core/DefaultResourceConfigTest.java
 jersey-tests/src/test/java/com/sun/jersey/impl/application/WebApplicationTest.java
+
+jersey-tests/src/test/java/com/sun/jersey/impl/errors/MissingDependenciesTest.java (missing dependencies in j2 do not log warn)
+jersey-tests/src/test/java/com/sun/jersey/impl/InBoundHeadersTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/InfectorTest.java (the class Inflector has different purpose in J2)
+jersey-tests/src/test/java/com/sun/jersey/impl/inject/AnnotationInjectableTest.java (different injection/hk2)
+jersey-tests/src/test/java/com/sun/jersey/impl/inject/ContextResolverTest.java (ContextResolver not injectable any more)
+jersey-tests/src/test/java/com/sun/jersey/impl/inject/InjectAnnotationInjectableTest.java (Injectable is N/A in J2/hk2)
+jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/MultipleScopeTest.java (different injection /hk2)
+jersey-tests/src/test/java/com/sun/jersey/impl/http/header/LinkTest.java
+jersey-tests/src/test/java/com/sun/jersey/impl/lifecycle/PostConstructPreDestroyTest.java (redundant)

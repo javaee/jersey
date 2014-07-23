@@ -69,9 +69,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -101,7 +103,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Paul Sandoz (paul.sandoz at oracle.com)
@@ -1147,5 +1152,22 @@ public class EntityTypesTest extends AbstractTypeTester {
 //        assertEquals(a.toString(), b.toString());
 //        JSONArray c = r.post(JSONArray.class, b);
 //        assertEquals(a.toString(), c.toString());
+    }
+
+    @Path("/NoContentTypeJAXBResource")
+    public static class NoContentTypeJAXBResource {
+
+        @POST
+        public JaxbBean post(@Context final HttpHeaders headers, final JaxbBean bean) {
+            assertThat(headers.getMediaType(), is(MediaType.APPLICATION_XML_TYPE));
+            return bean;
+        }
+    }
+
+    @Test
+    public void testNoContentTypeJaxbEntity() throws IOException {
+        assertThat(target("NoContentTypeJAXBResource").request("application/xml").post(Entity.xml(new JaxbBean("foo")))
+                        .getMediaType(),
+                is(MediaType.APPLICATION_XML_TYPE));
     }
 }

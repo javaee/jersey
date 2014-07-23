@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -63,7 +63,7 @@ import static org.junit.Assert.fail;
  *
  * To test the app, mvn clean package and asadmin deploy target/jersey-ejb
  * and then run the tests using extenrnal test container factory:
- * mvn -DskipTests=false test
+ * mvn -Prun-external-tests test
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
@@ -77,6 +77,18 @@ public class MessageBoardTest extends JerseyTest {
     @Override
     protected URI getBaseUri() {
         return UriBuilder.fromUri(super.getBaseUri()).path("jersey-ejb").build();
+    }
+
+    /**
+     * Regression test for JERSEY-2541.
+     */
+    @Test
+    public void testListMessages() {
+        Response response = target().path("app/messages").request(MediaType.TEXT_HTML).get();
+
+        assertEquals(
+                String.format("Response status should be 200. Current value is %d.", response.getStatus()),
+            200, response.getStatus());
     }
 
     @Test

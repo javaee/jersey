@@ -69,6 +69,7 @@ import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.ConfigHelper;
+import org.glassfish.jersey.server.internal.ContainerUtils;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.servlet.internal.LocalizationMessages;
@@ -320,10 +321,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
         final URI baseUri;
         final URI requestUri;
         try {
-            baseUri = absoluteUriBuilder.replacePath(encodedBasePath).
-                    build();
-
-            String queryParameters = request.getQueryString();
+            baseUri = absoluteUriBuilder.replacePath(encodedBasePath).build();
+            String queryParameters = ContainerUtils.encodeUnsafeCharacters(request.getQueryString());
             if (queryParameters == null) {
                 queryParameters = "";
             }

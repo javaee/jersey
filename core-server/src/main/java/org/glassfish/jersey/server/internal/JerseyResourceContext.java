@@ -150,8 +150,8 @@ public class JerseyResourceContext implements ExtendedResourceContext {
      *                 annotated with {@link javax.inject.Singleton Singleton annotation} it
      *                 will be ignored by this method.
      */
-    public void bindResourceIfSingleton(Object resource) {
-        final Class resourceClass = resource.getClass();
+    public <T> void bindResourceIfSingleton(T resource) {
+        final Class<?> resourceClass = resource.getClass();
         if (bindingCache.contains(resourceClass)) {
             return;
         }
@@ -163,7 +163,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
             if (getScope(resourceClass) == Singleton.class) {
                 final DynamicConfiguration dc = Injections.getConfiguration(locator);
                 //noinspection unchecked
-                Injections.addBinding(Injections.newBinder(resource).to(resourceClass), dc);
+                Injections.addBinding(Injections.newBinder(resource).to((Class<T>) resourceClass), dc);
                 dc.commit();
             }
 
@@ -190,7 +190,7 @@ public class JerseyResourceContext implements ExtendedResourceContext {
             final Object resource,
             final org.glassfish.jersey.model.ContractProvider providerModel,
             final DynamicConfiguration dc) {
-        final Class resourceClass = resource.getClass();
+        final Class<?> resourceClass = resource.getClass();
         if (providerModel != null) {
             final Class<? extends Annotation> scope = providerModel.getScope();
             final ActiveDescriptor<?> descriptor =

@@ -50,6 +50,7 @@ import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.jackson1.Jackson1Feature;
 import org.glassfish.jersey.jettison.JettisonConfig;
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
@@ -64,6 +65,7 @@ public abstract class JsonTestProvider {
 
     public static final Collection<JsonTestProvider> JAXB_PROVIDERS = new LinkedHashSet<JsonTestProvider>() {{
         add(new JacksonJsonTestProvider());
+        add(new Jackson1JsonTestProvider());
         add(new JettisonMappedJsonTestProvider());
         add(new JettisonBadgerfishJsonTestProvider());
         add(new MoxyJsonTestProvider());
@@ -72,6 +74,7 @@ public abstract class JsonTestProvider {
     //  TODO add MoxyJsonTestProvider once MOXy supports POJO
     public static final Collection<JsonTestProvider> POJO_PROVIDERS = new LinkedHashSet<JsonTestProvider>() {{
         add(new JacksonJsonTestProvider());
+        add(new Jackson1JsonTestProvider());
     }};
 
     private Feature feature;
@@ -118,10 +121,10 @@ public abstract class JsonTestProvider {
     protected final static class MoxyJsonConfigurationContextResolver implements ContextResolver<MoxyJsonConfig> {
 
         @Override
-        public MoxyJsonConfig getContext(Class<?> objectType) {
+        public MoxyJsonConfig getContext(final Class<?> objectType) {
             final MoxyJsonConfig configuration = new MoxyJsonConfig();
 
-            Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
+            final Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
             namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
             namespacePrefixMapper.put("http://example.com", "example");
             namespacePrefixMapper.put("http://test.jaxb.com", "jaxb");
@@ -137,6 +140,14 @@ public abstract class JsonTestProvider {
 
         public JacksonJsonTestProvider() {
             setFeature(new JacksonFeature());
+        }
+
+    }
+
+    public static class Jackson1JsonTestProvider extends JsonTestProvider {
+
+        public Jackson1JsonTestProvider() {
+            setFeature(new Jackson1Feature());
         }
 
     }

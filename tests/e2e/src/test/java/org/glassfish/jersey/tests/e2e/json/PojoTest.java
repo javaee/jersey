@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,12 +57,12 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class PojoTest extends AbstractJsonTest {
 
-    @Parameterized.Parameters()
+    @Parameterized.Parameters(name = "{0}")
     public static Collection<JsonTestSetup[]> generateTestCases() throws Exception {
-        final List<JsonTestSetup[]> jsonTestSetups = new LinkedList<JsonTestSetup[]>();
+        final List<JsonTestSetup[]> jsonTestSetups = new LinkedList<>();
         final Class<?>[] classes = {PojoAnimalList.class, PojoAnimal.class, PojoDog.class, PojoCat.class};
 
-        for (JsonTestProvider jsonProvider : JsonTestProvider.POJO_PROVIDERS) {
+        for (final JsonTestProvider jsonProvider : JsonTestProvider.POJO_PROVIDERS) {
             jsonTestSetups.add(new JsonTestSetup[]{
                     new JsonTestSetup(classes, jsonProvider)
             });

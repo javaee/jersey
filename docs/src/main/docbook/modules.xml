@@ -242,6 +242,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-json-jackson1/dependencies.html">
+    jersey-media-json-jackson1
+</link>
+</entry>
+<entry>Jersey JSON Jackson (1.x) entity providers support module.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-json-jettison/dependencies.html">
     jersey-media-json-jettison
 </link>
@@ -839,6 +847,14 @@
 </link>
 </entry>
 <entry>Jersey JSON with Jackson example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/json-jackson1/dependencies.html">
+    json-jackson1
+</link>
+</entry>
+<entry>Jersey JSON with Jackson 1.x example.</entry>
 </row>
 <row>
 <entry>
