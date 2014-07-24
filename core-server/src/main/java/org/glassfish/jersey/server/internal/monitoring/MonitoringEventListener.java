@@ -53,8 +53,7 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
-import org.glassfish.jersey.server.monitoring.ExtendedMonitoringStatisticsListener;
-import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
+import org.glassfish.jersey.server.monitoring.DestroyListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.uri.UriTemplate;
@@ -227,14 +226,12 @@ public final class MonitoringEventListener implements ApplicationEventListener {
                 }
 
                 // onDestroy
-                final List<MonitoringStatisticsListener> listeners = serviceLocator
-                        .getAllServices(MonitoringStatisticsListener.class);
+                final List<DestroyListener> listeners =
+                        serviceLocator.getAllServices(DestroyListener.class);
 
-                for (final MonitoringStatisticsListener listener : listeners) {
+                for (final DestroyListener listener : listeners) {
                     try {
-                        if (listener instanceof ExtendedMonitoringStatisticsListener) {
-                            ((ExtendedMonitoringStatisticsListener) listener).onDestroy();
-                        }
+                        listener.onDestroy();
                     } catch (final Exception e) {
                         LOGGER.log(Level.WARNING,
                                 LocalizationMessages.ERROR_MONITORING_STATISTICS_LISTENER_DESTROY(listener.getClass()), e);

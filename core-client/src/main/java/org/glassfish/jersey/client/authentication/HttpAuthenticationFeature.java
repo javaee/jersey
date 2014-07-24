@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,7 +42,6 @@ package org.glassfish.jersey.client.authentication;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.Beta;
 
 /**
  * Features that provides Http Basic and Digest client authentication (based on RFC 2617).
@@ -141,9 +140,8 @@ import org.glassfish.jersey.Beta;
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  *
- * @since 2.5 (beta)
+ * @since 2.5
  */
-@Beta
 public class HttpAuthenticationFeature implements Feature {
 
     /**

@@ -52,6 +52,33 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.12">
+        <title>Migrating from Jersey 2.11 to 2.12</title>
+        <section xml:id="mig-2.12-highlights">
+            <title>Release 2.12 Highlights</title>
+            Following experimental APIs have been promoted to become part of public Jersey API:
+            <itemizedlist>
+                <listitem>
+                    <para>
+                        Jersey client-side &jersey.client.HttpAuthenticationFeature; API.
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
+                        Jersey server-side &jersey.server.monitoring.DestroyListener; (formerly
+                        <literal>ExtendedMonitoringStatisticsListener</literal>), which has been slightly refactored and
+                        is now a separate interface (e.g. not extending <literal>MonitoringStatisticsListener</literal>),
+                        hence providing better compatibility with lambdas.
+                    </para>
+                </listitem>
+            </itemizedlist>
+
+            These APIs are now part of the official public Jersey 2.x API.
+        </section>
+    </section>
+
+
+
     <section xml:id="mig-2.11">
         <title>Migrating from Jersey 2.10 to 2.11</title>
 
