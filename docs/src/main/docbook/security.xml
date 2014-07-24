@@ -40,7 +40,12 @@
     holder.
 
 -->
-<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents;
+    <!ENTITY jersey.github.oauth1.twitter.client.example.link "<link xlink:href='&jersey.github.examples.uri;/oauth-client-twitter'>OAuth 1 Twitter Client Example</link>">
+    <!ENTITY jersey.github.oauth2.google.client.example.link "<link xlink:href='&jersey.github.examples.uri;/oauth2-client-google-webapp'>OAuth 2 Google Client Web Application Example</link>">
+    <!ENTITY oauth1.spec.link "<link xlink:href='http://tools.ietf.org/html/rfc5849'>OAuth 1.0 specification</link>">
+    <!ENTITY oauth2.spec.link "<link xlink:href='http://tools.ietf.org/html/rfc6749'>OAuth 2.0 specification</link>">
+]>
 <chapter xmlns="http://docbook.org/ns/docbook"
          version="5.0"
          xml:lang="en"
@@ -529,7 +534,7 @@ public class Resource {
                     </itemizedlist>
 
                     An example of how Jersey OAuth 1 client API is used can be found in
-                    the &jersey.github.oauth1.twitter.client;. The following code snippets are extracted from the
+                    the &jersey.github.oauth1.twitter.client.example.link;. The following code snippets are extracted from the
                     example and explain how to use the Jersey OAuth client API.
                 </para>
                 <para>
@@ -590,7 +595,7 @@ AccessToken accessToken = authFlow.finish(verifier);]]></programlisting>
                     Then the user gets a verifier and enters it back to the console. However, if our application would be a
                     web application, we would need to return a redirection response to the user in order to redirect the user
                     automatically to the <literal>authorizationUri</literal>. For more information about server deployment,
-                    check our &jersey.github.oauth2.google.client; OAuth 2 example, where the client is part of the
+                    check our &jersey.github.oauth2.google.client.example.link;, where the client is part of the
                     web application (the client API for OAuth 2 is similar to OAuth 1).
                 </para>
 
@@ -809,7 +814,7 @@ $ openssl rsa -in private.key -pubout]]></programlisting>
 
                 <para>
                     The principle of performing the authorization flow with Jersey is similar to OAuth 1.
-                    Check the example &jersey.github.oauth1.twitter.client; which utilizes Jersey client
+                    Check the &jersey.github.oauth1.twitter.client.example.link; which utilizes Jersey client
                     support for OAuth 2 to get Google Tasks of the user. The application is a web application
                     that uses redirection to forward the user to the authorization URI.
                 </para>
@@ -859,8 +864,8 @@ System.out.println("Access Token: " + result.get);]]></programlisting>
                     Between the calls to <literal>flow.start()</literal> and <literal>flow.finish()</literal>, a user
                     must be redirected to the authorization URI. This means that the code will not be executed in
                     a single method and the finish part will be invoked as a handler of redirect request back to our web from
-                    authorization URI. Check the example &jersey.github.oauth2.google.client; for more details on this
-                    approach.
+                    authorization URI. Check the &jersey.github.oauth2.google.client.example.link; for more details on
+                    this approach.
                 </para>
             </section>
         </section>

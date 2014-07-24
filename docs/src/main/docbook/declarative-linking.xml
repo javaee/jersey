@@ -76,7 +76,7 @@
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-            If you're not using Maven make sure to have all needed dependencies (see &jersey-declarative-linking;) on
+            If you're not using Maven make sure to have all needed dependencies (see &jersey.ext.declarative-linking.deps.link;) on
             the classpath.
         </para>
     </section>

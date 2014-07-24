@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,7 @@
         <para>
             This is user guide for Jersey &version;. We are trying to keep it up to date as we add new features.
             When reading the user guide, please consult also our
-            <link xlink:href="&jersey.javadoc.root.path;/index.html">Jersey API documentation</link> as an additional source
+            <link xlink:href="&jersey.javadoc.root.uri;/index.html">Jersey API documentation</link> as an additional source
             of information about Jersey features and API.
         </para>
         <para>
@@ -77,7 +77,7 @@
             <para>
                 First mention of any Jersey and JAX-RS API component in a section links to the API documentation of the
                 referenced component. Any sub-sequent mentions of the component in the same chapter are rendered using a
-                <literal>monospace</literal>
+                <literal>monospaced</literal>
                 font.
             </para>
             <para>
@@ -124,7 +124,7 @@ This line fits the page width.
     <xi:include href="filters.xml" />
     <xi:include href="async.xml" />
     <xi:include href="uris-and-links.xml" />
-    <xi:include href="declarative-linking.xml" />    
+    <xi:include href="declarative-linking.xml" />
     <xi:include href="resource-builder.xml" />
     <xi:include href="sse.xml" />
     <xi:include href="security.xml" />

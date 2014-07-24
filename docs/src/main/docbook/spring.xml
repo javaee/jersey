@@ -2,7 +2,7 @@
 <!--
 DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
 
 The contents of this file are subject to the terms of either the GNU
 General Public License Version 2 only ("GPL") or the Common Development
@@ -76,7 +76,7 @@ holder.
 
         <para>
             If you want to use Jersey Spring DI support
-            you will need to add the &jersey-spring3; module into the list of your dependencies:
+            you will need to add the &jersey.ext.spring3.deps.link; module into the list of your dependencies:
 
             <programlisting language="xml">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
@@ -105,6 +105,7 @@ holder.
     <section>
         <title>Example</title>
 
-        <para>To see an example of Spring DI support in Jersey refer to the &jersey.github.spring.example.path;.</para>
+        <para>To see an example of Spring DI support in Jersey refer to the
+            <link xlink:href='&jersey.github.examples.uri;/helloworld-spring-webapp'>Spring DI Example</link>.</para>
     </section>
 </chapter>

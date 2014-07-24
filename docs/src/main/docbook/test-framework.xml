@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -124,11 +124,11 @@
 
         <para>
             A test container is selected based on various inputs.
-            <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#getTestContainerFactory()">JerseyTest#getTestContainerFactory()</link>
+            <link xlink:href="&jersey.javadoc.uri.prefix;/test/JerseyTest.html#getTestContainerFactory()">JerseyTest#getTestContainerFactory()</link>
             is always executed, so if you override it and provide your own version of
             &jersey.test.spi.TestContainerFactory;, nothing else will be considered.
             Setting a system variable
-            <link xlink:href="&jersey.javadoc.path;/test/TestProperties.html#CONTAINER_FACTORY">TestProperties#CONTAINER_FACTORY</link>
+            <link xlink:href="&jersey.javadoc.uri.prefix;/test/TestProperties.html#CONTAINER_FACTORY">TestProperties#CONTAINER_FACTORY</link>
             has similar effect. This way you may defer the decision on which containers you want to run your tests
             from the compile time to the test execution time.
             Default implementation of &lit.jersey.test.spi.TestContainerFactory; looks for container factories on classpath.
@@ -370,9 +370,9 @@
             <title>&lit.jersey.test.JerseyTest; Features</title>
 
             <para>&lit.jersey.test.JerseyTest; provide
-                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#enable(java.lang.String)">enable(...)</link>,
-                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#forceEnable(java.lang.String)">forceEnable(...)</link>
-                and <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#disable(java.lang.String)">disable(...)</link>
+                <link xlink:href="&jersey.javadoc.uri.prefix;/test/JerseyTest.html#enable(java.lang.String)">enable(...)</link>,
+                <link xlink:href="&jersey.javadoc.uri.prefix;/test/JerseyTest.html#forceEnable(java.lang.String)">forceEnable(...)</link>
+                and <link xlink:href="&jersey.javadoc.uri.prefix;/test/JerseyTest.html#disable(java.lang.String)">disable(...)</link>
                 methods, that give you control over configuring values of the properties defined and described in the
                 &lit.jersey.test.TestProperties; class. A typical code that overrides the default property values is listed
                 below:
@@ -424,7 +424,7 @@
 
             <para>
                 Tests might require some advanced client configuration. This is possible by overriding
-                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#configureClient(org.glassfish.jersey.client.ClientConfig)">configureClient(ClientConfig clientConfig)</link>
+                <link xlink:href="&jersey.javadoc.uri.prefix;/test/JerseyTest.html#configureClient(org.glassfish.jersey.client.ClientConfig)">configureClient(ClientConfig clientConfig)</link>
                 method. Typical use case for this is registering more providers, such as &jaxrs.ext.MessageBodyReader;s or
                 &jaxrs.ext.MessageBodyWriter;s, or enabling additional features.
             </para>
@@ -436,11 +436,11 @@
             <para>
                 Sometimes you might need to check a logged message as part of your test assertions. For this purpose Jersey Test
                 Framework provides convenient access to the logged records via
-                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#getLastLoggedRecord()">JerseyTest#getLastLoggedRecord()</link>
+                <link xlink:href="&jersey.javadoc.uri.prefix;/test/JerseyTest.html#getLastLoggedRecord()">JerseyTest#getLastLoggedRecord()</link>
                 and
-                <link xlink:href="&jersey.javadoc.path;/test/JerseyTest.html#getLoggedRecords()">JerseyTest#getLoggedRecords()</link>
+                <link xlink:href="&jersey.javadoc.uri.prefix;/test/JerseyTest.html#getLoggedRecords()">JerseyTest#getLoggedRecords()</link>
                 methods. Note that this feature is not enabled by default, see
-                <link xlink:href="&jersey.javadoc.path;/test/TestProperties.html#RECORD_LOG_LEVEL">TestProperties#RECORD_LOG_LEVEL</link>
+                <link xlink:href="&jersey.javadoc.uri.prefix;/test/TestProperties.html#RECORD_LOG_LEVEL">TestProperties#RECORD_LOG_LEVEL</link>
                 for more information.
             </para>
         </section>
@@ -451,7 +451,7 @@
 
         <para>
             For a purpose of running multiple test containers in parallel you need to set the
-            <link xlink:href='&jersey.javadoc.path;/test/TestProperties.CONTAINER_PORT.html'>TestProperties.CONTAINER_PORT</link>
+            <link xlink:href='&jersey.javadoc.uri.prefix;/test/TestProperties.CONTAINER_PORT.html'>TestProperties.CONTAINER_PORT</link>
             to <literal>0</literal> value. This will tell Jersey Test Framework (and the underlying test container) to use the
             first available port.
         </para>

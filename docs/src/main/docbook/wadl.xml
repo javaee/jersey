@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,8 @@
     <section>
         <title>WADL introduction</title>
         <para>
-            Jersey contains support for Web Application Description Language (&wadl.project.link;). WADL is
+            Jersey contains support for
+            <link xlink:href='http://wadl.java.net/'>Web Application Description Language (WADL)</link>. WADL is
             a XML description of a deployed RESTful web application. It contains model of the deployed resources, their
             structure, supported media types, HTTP methods and so on. In a sense, WADL is a similar to the WSDL
             (Web Service Description Language) which describes SOAP web services. WADL is however specifically designed

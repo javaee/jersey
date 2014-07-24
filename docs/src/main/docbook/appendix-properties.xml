@@ -164,7 +164,7 @@
                         </entry>
                     </row>
                     <row>
-                        <entry><link xlink:href='&jersey.javadoc.path;/server/ServerProperties.html#BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK'>ServerProperties
+                        <entry><link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK'>ServerProperties
                             .BV_DISABLE_VALIDATE_ON_EXECUTABLE_OVERRIDE_CHECK</link></entry>
                         <entry><literal>jersey.config.beanValidation
                             .disable.validateOnExecutableCheck.server</literal></entry>

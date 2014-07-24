@@ -734,7 +734,7 @@ Client client = ClientBuilder.newClient(clientConfig);</programlisting>
                 <member>&jersey.client.CsrfProtectionFilter;: Cross-site request forgery protection filter (adds
                     <literal>X-Requested-By</literal> to each state changing request).</member>
                 <member>&jersey.client.EncodingFeature;: Feature that registers encoding filter which use registered
-                    &jersey.client.ContentEncoder;s to encode and decode the communication. The encoding/decoding is performed
+                    &jersey.common.spi.ContentEncoder;s to encode and decode the communication. The encoding/decoding is performed
                     in interceptor (you don't need to register this interceptor). Check the javadoc of the
                     &jersey.client.EncodingFeature; in order to use it.</member>
                 <member>&jersey.client.HttpAuthenticationFeature;: HTTP Authentication Feature

@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -397,7 +397,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
         <title>Creating a Web Application that can be deployed on Heroku</title>
         <para>
             To create a Web Application that can be either packaged as WAR and deployed in a Servlet container or that can be
-            pushed and deployed on &heroku; the process is very similar to the one described in <xref linkend="new-webapp" />.
+            pushed and deployed on &heroku.link; the process is very similar to the one described in <xref linkend="new-webapp" />.
             To create the new web application skeleton project, execute the following Maven command in the directory
             where the new project should reside:
 
@@ -517,7 +517,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
         <section xml:id="deploy-it-on-heroku">
             <title>Deploy it on Heroku</title>
             <para>
-                We won't go into details how to create an account on &heroku; and setup the <literal>Heroku</literal> tools
+                We won't go into details how to create an account on &heroku.link; and setup the <literal>Heroku</literal> tools
                 on your machine. You can find a lot of information in this article: <link xlink:href='https://devcenter.heroku.com/articles/getting-started-with-java'>Getting Started with Java on Heroku</link>.
                 Instead, we'll take a look at the steps needed after your environment is ready.
             </para>
@@ -527,7 +527,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
     Initialized empty Git repository in /.../simple-heroku-webapp/.git/</screen>
             </para>
             <para>
-                Then, create a &heroku; instance and add a remote reference to your Git repository:
+                Then, create a &heroku.link; instance and add a remote reference to your Git repository:
                 <screen linenumbering="unnumbered">    $ heroku create
     Creating simple-heroku-webapp... done, stack is cedar
     http://simple-heroku-webapp.herokuapp.com/ | git@heroku.com:simple-heroku-webapp.git
@@ -667,7 +667,7 @@ Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
         <para>
             Jersey codebase contains a number of useful examples on how to use various JAX-RS and Jersey features.
             Feel free to browse through the code of individual
-            <link xlink:href="&jersey.github.examples.path;">Jersey Examples</link> in the Jersey source repository.
+            <link xlink:href="&jersey.github.examples.uri;">Jersey Examples</link> in the Jersey source repository.
             For off-line browsing, you can also download a bundle with all the examples from
             <link xlink:href="https://maven.java.net/content/repositories/&repository;/org/glassfish/jersey/bundles/jersey-examples/&version;/">here</link>.
         </para>
