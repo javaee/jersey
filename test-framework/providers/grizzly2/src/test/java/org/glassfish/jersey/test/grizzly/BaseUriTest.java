@@ -81,23 +81,23 @@ public class BaseUriTest extends JerseyTest {
     @Override
     protected DeploymentContext configureDeployment() {
         return DeploymentContext.builder(new ResourceConfig(TestResource.class))
-                .contextPath("context")
+                .contextPath("context1/context2")
                 .build();
     }
 
     @Test
     public void testGet() {
-        WebTarget target = target("root");
+        final WebTarget target = target("root");
 
-        String s = target.request().get(String.class);
+        final String s = target.request().get(String.class);
         Assert.assertEquals("GET", s);
     }
 
     @Test
     public void testGetSub() {
-        WebTarget target = target("root/sub");
+        final WebTarget target = target("root/sub");
 
-        String s = target.request().get(String.class);
+        final String s = target.request().get(String.class);
         Assert.assertEquals("sub", s);
     }
 
