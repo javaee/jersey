@@ -49,6 +49,7 @@ import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.ConfigHelper;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpHandler;
@@ -123,7 +124,7 @@ public final class JdkHttpServerFactory {
 
         final boolean isHttp = scheme.equalsIgnoreCase("http");
         final int port = (uri.getPort() == -1)
-                ? (isHttp ? 80 : 143)
+                ? (isHttp ? ConfigHelper.DEFAULT_HTTP_PORT : ConfigHelper.DEFAULT_HTTPS_PORT)
                 : uri.getPort();
 
         final HttpServer server;
