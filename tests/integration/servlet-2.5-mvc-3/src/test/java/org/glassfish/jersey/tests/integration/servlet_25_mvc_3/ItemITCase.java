@@ -45,6 +45,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.tests.integration.servlet_25_mvc_3.resource.Book;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -59,9 +60,11 @@ public class ItemITCase extends TestSupport {
     }
 
     @Test
+    @Ignore("This test is ignored in 2.6.x branch as it fails when server side is running on JDK 6")
     public void testResourceAsHtmlUtf8() throws Exception {
         final Response response = item1resource().path("utf").request().get();
-        final String html = response.readEntity(String.class);
+        final byte[] bytes = response.readEntity(byte[].class);
+        final String html = new String(bytes, "UTF-8");
 
         assertItemHtmlResponse(html);
         assertResponseContains(html, "Ha\u0161ek");

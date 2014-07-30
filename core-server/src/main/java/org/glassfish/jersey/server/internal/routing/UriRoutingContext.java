@@ -85,9 +85,9 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private final LinkedList<Object> matchedResources = Lists.newLinkedList();
     private final LinkedList<UriTemplate> templates = Lists.newLinkedList();
 
-    private final MultivaluedHashMap<String, String> encodedTemplateValues = new MultivaluedHashMap<>();
+    private final MultivaluedHashMap<String, String> encodedTemplateValues = new MultivaluedHashMap<String, String>();
     private final ImmutableMultivaluedMap<String, String> encodedTemplateValuesView =
-            new ImmutableMultivaluedMap<>(encodedTemplateValues);
+            new ImmutableMultivaluedMap<String, String>(encodedTemplateValues);
 
     private MultivaluedHashMap<String, String> decodedTemplateValues;
     private ImmutableMultivaluedMap<String, String> decodedTemplateValuesView;
@@ -319,12 +319,12 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             if (decodedTemplateValuesView != null) {
                 return decodedTemplateValuesView;
             } else if (decodedTemplateValues == null) {
-                decodedTemplateValues = new MultivaluedHashMap<>();
+                decodedTemplateValues = new MultivaluedHashMap<String, String>();
                 for (Map.Entry<String, List<String>> e : encodedTemplateValues.entrySet()) {
                     decodedTemplateValues.put(
                             UriComponent.decode(e.getKey(), UriComponent.Type.PATH_SEGMENT),
                             // we need to keep the ability to add new entries
-                            new LinkedList<>(Lists.transform(e.getValue(), new Function<String, String>() {
+                            new LinkedList<String>(Lists.transform(e.getValue(), new Function<String, String>() {
 
                                 @Override
                                 public String apply(String input) {
@@ -333,7 +333,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
                             })));
                 }
             }
-            decodedTemplateValuesView = new ImmutableMultivaluedMap<>(decodedTemplateValues);
+            decodedTemplateValuesView = new ImmutableMultivaluedMap<String, String>(decodedTemplateValues);
 
             return decodedTemplateValuesView;
         } else {
@@ -365,7 +365,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             }
 
             decodedQueryParamsView =
-                    new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(getRequestUri(), true));
+                    new ImmutableMultivaluedMap<String, String>(UriComponent.decodeQuery(getRequestUri(), true));
 
             return decodedQueryParamsView;
         } else {
@@ -374,7 +374,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
             }
 
             encodedQueryParamsView =
-                    new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(getRequestUri(), false));
+                    new ImmutableMultivaluedMap<String, String>(UriComponent.decodeQuery(getRequestUri(), false));
 
             return encodedQueryParamsView;
 

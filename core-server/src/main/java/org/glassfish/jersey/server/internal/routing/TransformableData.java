@@ -65,7 +65,7 @@ public final class TransformableData<DATA, RESULT> {
      */
     public static <REQUEST, RESPONSE> TransformableData<REQUEST, RESPONSE> of(
             final REQUEST data, final Inflector<REQUEST, RESPONSE> inflector) {
-        return new TransformableData<>(data, inflector);
+        return new TransformableData<REQUEST, RESPONSE>(data, inflector);
     }
 
     /**
@@ -77,7 +77,7 @@ public final class TransformableData<DATA, RESULT> {
      * @return new transformable data with {@code null} inflector instance.
      */
     public static <REQUEST, RESPONSE> TransformableData<REQUEST, RESPONSE> of(final REQUEST data) {
-        return new TransformableData<>(data, null);
+        return new TransformableData<REQUEST, RESPONSE>(data, null);
     }
 
     private TransformableData(final DATA data, final Inflector<DATA, RESULT> inflector) {

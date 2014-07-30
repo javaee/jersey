@@ -136,7 +136,7 @@ final class MethodSelectingRouter implements Router {
     MethodSelectingRouter(MessageBodyWorkers workers, List<MethodAcceptorPair> methodAcceptorPairs) {
         this.workers = workers;
 
-        this.consumesProducesAcceptors = new HashMap<>();
+        this.consumesProducesAcceptors = new HashMap<String, List<ConsumesProducesAcceptor>>();
 
         final Set<String> httpMethods = Sets.newHashSet();
         for (final MethodAcceptorPair methodAcceptorPair : methodAcceptorPairs) {
@@ -145,7 +145,7 @@ final class MethodSelectingRouter implements Router {
 
             List<ConsumesProducesAcceptor> httpMethodBoundAcceptors = consumesProducesAcceptors.get(httpMethod);
             if (httpMethodBoundAcceptors == null) {
-                httpMethodBoundAcceptors = new LinkedList<>();
+                httpMethodBoundAcceptors = new LinkedList<ConsumesProducesAcceptor>();
                 consumesProducesAcceptors.put(httpMethod, httpMethodBoundAcceptors);
             }
 
@@ -397,7 +397,7 @@ final class MethodSelectingRouter implements Router {
 
         List<RequestSpecificConsumesProducesAcceptor> getSameFitnessList() {
             if (sameFitnessAcceptors == null) {
-                sameFitnessAcceptors = new LinkedList<>();
+                sameFitnessAcceptors = new LinkedList<RequestSpecificConsumesProducesAcceptor>();
             }
             return sameFitnessAcceptors;
         }
@@ -423,11 +423,11 @@ final class MethodSelectingRouter implements Router {
                                                     final MethodAcceptorPair methodAcceptorPair) {
         final ResourceMethod resourceMethod = methodAcceptorPair.model;
 
-        final Set<MediaType> effectiveInputTypes = new LinkedHashSet<>();
+        final Set<MediaType> effectiveInputTypes = new LinkedHashSet<MediaType>();
         boolean consumesFromWorkers = fillMediaTypes(effectiveInputTypes, resourceMethod,
                 resourceMethod.getConsumedTypes(), true);
 
-        final Set<MediaType> effectiveOutputTypes = new LinkedHashSet<>();
+        final Set<MediaType> effectiveOutputTypes = new LinkedHashSet<MediaType>();
         boolean producesFromWorkers = fillMediaTypes(effectiveOutputTypes, resourceMethod,
                 resourceMethod.getProducedTypes(), false);
 
@@ -514,7 +514,7 @@ final class MethodSelectingRouter implements Router {
                     Response.status(Status.METHOD_NOT_ALLOWED).allow(consumesProducesAcceptors.keySet()).build());
         }
 
-        final List<ConsumesProducesAcceptor> satisfyingAcceptors = new LinkedList<>();
+        final List<ConsumesProducesAcceptor> satisfyingAcceptors = new LinkedList<ConsumesProducesAcceptor>();
         final Set<ResourceMethod> differentInvokableMethods = Sets.newIdentityHashSet();
         for (ConsumesProducesAcceptor cpi : acceptors) {
             if (cpi.isConsumable(request)) {

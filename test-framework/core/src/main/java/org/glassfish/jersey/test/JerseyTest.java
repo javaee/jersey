@@ -161,7 +161,7 @@ public abstract class JerseyTest {
      * The test container on which the tests would be run.
      */
     private final TestContainer testContainer;
-    private final AtomicReference<Client> client = new AtomicReference<>(null);
+    private final AtomicReference<Client> client = new AtomicReference<Client>(null);
     /**
      * JerseyTest property bag that can be used to configure the test behavior.
      * These properties can be overridden with a system property.

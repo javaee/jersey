@@ -106,9 +106,9 @@ class ServerBinder extends AbstractBinder {
                 new ProcessingProviders.Binder(),
                 new ResourceModelBinder(),
                 new RuntimeExecutorsBinder(),
-                new ServiceFinderBinder<>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
+                new ServiceFinderBinder<ContainerProvider>(ContainerProvider.class, applicationProperties, RuntimeType.SERVER),
                 new JerseyResourceContext.Binder(),
-                new ServiceFinderBinder<>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
+                new ServiceFinderBinder<AutoDiscoverable>(AutoDiscoverable.class, applicationProperties, RuntimeType.SERVER),
                 new MappableExceptionWrapperInterceptor.Binder(),
                 new MonitoringContainerListener.Binder());
 

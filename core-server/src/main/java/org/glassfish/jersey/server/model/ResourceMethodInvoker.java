@@ -201,28 +201,28 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
             if (contracts.contains(WriterInterceptor.class)) {
                 _writerInterceptors.add(
-                        new RankedProvider<>(
+                        new RankedProvider<WriterInterceptor>(
                                 (WriterInterceptor) provider,
                                 model.getPriority(WriterInterceptor.class)));
             }
 
             if (contracts.contains(ReaderInterceptor.class)) {
                 _readerInterceptors.add(
-                        new RankedProvider<>(
+                        new RankedProvider<ReaderInterceptor>(
                                 (ReaderInterceptor) provider,
                                 model.getPriority(ReaderInterceptor.class)));
             }
 
             if (contracts.contains(ContainerRequestFilter.class)) {
                 _requestFilters.add(
-                        new RankedProvider<>(
+                        new RankedProvider<ContainerRequestFilter>(
                                 (ContainerRequestFilter) provider,
                                 model.getPriority(ContainerRequestFilter.class)));
             }
 
             if (contracts.contains(ContainerResponseFilter.class)) {
                 _responseFilters.add(
-                        new RankedProvider<>(
+                        new RankedProvider<ContainerResponseFilter>(
                                 (ContainerResponseFilter) provider,
                                 model.getPriority(ContainerResponseFilter.class)));
             }
@@ -252,7 +252,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             final MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> nameBoundProviders,
             final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> nameBoundProvidersInverse) {
 
-        final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> foundBindingsMap = new MultivaluedHashMap<>();
+        final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> foundBindingsMap =
+                new MultivaluedHashMap<RankedProvider<T>, Class<? extends Annotation>>();
         for (final Class<? extends Annotation> nameBinding : nameBound.getNameBindings()) {
             final Iterable<RankedProvider<T>> providers = nameBoundProviders.get(nameBinding);
             if (providers != null) {
@@ -332,7 +333,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
     }
 
-    private static final Cache<Method, Annotation[]> methodAnnotationCache = new Cache<>(new Computable<Method, Annotation[]>() {
+    private static final Cache<Method, Annotation[]> methodAnnotationCache =
+            new Cache<Method, Annotation[]>(new Computable<Method, Annotation[]>() {
 
         @Override
         public Annotation[] compute(final Method m) {

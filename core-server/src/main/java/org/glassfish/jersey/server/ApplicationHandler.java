@@ -420,7 +420,7 @@ public final class ApplicationHandler {
             runtimeConfig.lock();
 
             // Registering Injection Bindings
-            componentProviders = new LinkedList<>();
+            componentProviders = new LinkedList<ComponentProvider>();
 
             // Registering Injection Bindings
             for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
@@ -631,13 +631,13 @@ public final class ApplicationHandler {
     }
 
     private Iterable<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
-        final List<RankedProvider<ComponentProvider>> result = new LinkedList<>();
+        final List<RankedProvider<ComponentProvider>> result = new LinkedList<RankedProvider<ComponentProvider>>();
 
         final boolean enableMetainfServicesLookup = !CommonProperties.getValue(application.getProperties(), RuntimeType.SERVER,
                 CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
         if (enableMetainfServicesLookup) {
             for (final ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-                result.add(new RankedProvider<>(provider));
+                result.add(new RankedProvider<ComponentProvider>(provider));
             }
             Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
         }
@@ -656,13 +656,13 @@ public final class ApplicationHandler {
                 ContainerResponseFilter.class);
 
         final MultivaluedMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>> nameBoundResponseFiltersInverse =
-                new MultivaluedHashMap<>();
+                new MultivaluedHashMap<RankedProvider<ContainerResponseFilter>, Class<? extends Annotation>>();
         final MultivaluedMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>> nameBoundRequestFiltersInverse =
-                new MultivaluedHashMap<>();
+                new MultivaluedHashMap<RankedProvider<ContainerRequestFilter>, Class<? extends Annotation>>();
         final MultivaluedMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>> nameBoundReaderInterceptorsInverse =
-                new MultivaluedHashMap<>();
+                new MultivaluedHashMap<RankedProvider<ReaderInterceptor>, Class<? extends Annotation>>();
         final MultivaluedMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>> nameBoundWriterInterceptorsInverse =
-                new MultivaluedHashMap<>();
+                new MultivaluedHashMap<RankedProvider<WriterInterceptor>, Class<? extends Annotation>>();
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<ContainerResponseFilter>> nameBoundResponseFilters
                 = filterNameBound(responseFilters, null, componentBag, applicationNameBindings, nameBoundResponseFiltersInverse);
@@ -759,7 +759,7 @@ public final class ApplicationHandler {
             final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> inverseNameBoundMap) {
 
         final MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> result
-                = new MultivaluedHashMap<>();
+                = new MultivaluedHashMap<Class<? extends Annotation>, RankedProvider<T>>();
 
         for (final Iterator<RankedProvider<T>> it = all.iterator(); it.hasNext(); ) {
             final RankedProvider<T> provider = it.next();
@@ -773,7 +773,7 @@ public final class ApplicationHandler {
 
             if (preMatching != null && providerClass.getAnnotation(PreMatching.class) != null) {
                 it.remove();
-                preMatching.add(new RankedProvider<>((ContainerRequestFilter) provider.getProvider(),
+                preMatching.add(new RankedProvider<ContainerRequestFilter>((ContainerRequestFilter) provider.getProvider(),
                         model.getPriority(ContainerRequestFilter.class)));
             }
 

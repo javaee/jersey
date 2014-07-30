@@ -269,7 +269,9 @@ public class ResponseWriter implements ContainerResponseWriter {
     private ContainerResponse getResponseContext() {
         try {
             return responseContext.get();
-        } catch (InterruptedException | ExecutionException ex) {
+        } catch (InterruptedException ex) {
+            throw new ContainerException(ex);
+        } catch (ExecutionException ex) {
             throw new ContainerException(ex);
         }
     }

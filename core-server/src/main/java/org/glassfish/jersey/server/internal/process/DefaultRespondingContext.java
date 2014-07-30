@@ -59,8 +59,8 @@ class DefaultRespondingContext implements RespondingContext {
     @Override
     public void push(Function<ContainerResponse, ContainerResponse> responseTransformation) {
         rootStage = (rootStage == null)
-                ? new Stages.LinkedStage<>(responseTransformation)
-                : new Stages.LinkedStage<>(responseTransformation, rootStage);
+                ? new Stages.LinkedStage<ContainerResponse>(responseTransformation)
+                : new Stages.LinkedStage<ContainerResponse>(responseTransformation, rootStage);
     }
 
     @Override

@@ -921,7 +921,7 @@ public class ServerRuntime {
                 Preconditions.checkNotNull(additionalCallback, LocalizationMessages.CALLBACK_ARRAY_ELEMENT_NULL());
             }
 
-            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<>();
+            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<Class<?>, Collection<Class<?>>>();
 
             results.put(callback, register(callback));
 
@@ -936,7 +936,7 @@ public class ServerRuntime {
         public Collection<Class<?>> register(Object callback) {
             Preconditions.checkNotNull(callback, LocalizationMessages.PARAM_NULL("callback"));
 
-            Collection<Class<?>> result = new LinkedList<>();
+            Collection<Class<?>> result = new LinkedList<Class<?>>();
             for (AbstractCallbackRunner<?> runner : callbackRunners) {
                 if (runner.supports(callback.getClass())) {
                     if (runner.register(callback)) {
@@ -956,7 +956,7 @@ public class ServerRuntime {
                 Preconditions.checkNotNull(additionalCallback, LocalizationMessages.CALLBACK_ARRAY_ELEMENT_NULL());
             }
 
-            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<>();
+            final Map<Class<?>, Collection<Class<?>>> results = new HashMap<Class<?>, Collection<Class<?>>>();
 
             results.put(callback.getClass(), register(callback));
 
@@ -977,7 +977,7 @@ public class ServerRuntime {
      * @param <T> callback type
      */
     static abstract class AbstractCallbackRunner<T> {
-        private final Queue<T> callbacks = new ConcurrentLinkedQueue<>();
+        private final Queue<T> callbacks = new ConcurrentLinkedQueue<T>();
         private final Logger logger;
 
         /**

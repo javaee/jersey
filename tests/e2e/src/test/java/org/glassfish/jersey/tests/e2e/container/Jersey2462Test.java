@@ -76,8 +76,10 @@ import static org.junit.Assert.assertEquals;
  * @author Marek Potociar (marek.potociar at oralce.com)
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({Jersey2462Test.GrizzlyContainerTest.class,
-        Jersey2462Test.JettyContainerTest.class,
+@Suite.SuiteClasses({
+        Jersey2462Test.GrizzlyContainerTest.class,
+// Jetty tests commented out in 2.6.x branch - Jetty does not run on JDK 6
+//        Jersey2462Test.JettyContainerTest.class,
         Jersey2462Test.SimpleContainerTest.class})
 public class Jersey2462Test {
     private static final String REQUEST_NUMBER = "request-number";

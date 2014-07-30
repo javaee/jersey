@@ -299,7 +299,7 @@ public class ServletDeploymentContext extends DeploymentContext {
          */
         public Builder initParam(String name, String value) {
             if (this.initParams == null) {
-                this.initParams = new HashMap<>();
+                this.initParams = new HashMap<String, String>();
             }
             this.initParams.put(name, value);
 
@@ -316,7 +316,7 @@ public class ServletDeploymentContext extends DeploymentContext {
          */
         public Builder initParams(Map<String, String> initParams) {
             if (this.initParams == null) {
-                this.initParams = new HashMap<>();
+                this.initParams = new HashMap<String, String>();
             }
             this.initParams.putAll(initParams);
 
@@ -332,7 +332,7 @@ public class ServletDeploymentContext extends DeploymentContext {
          */
         public Builder contextParam(String name, String value) {
             if (this.contextParams == null) {
-                this.contextParams = new HashMap<>();
+                this.contextParams = new HashMap<String, String>();
             }
             this.contextParams.put(name, value);
 
@@ -349,7 +349,7 @@ public class ServletDeploymentContext extends DeploymentContext {
          */
         public Builder contextParams(Map<String, String> contextParams) {
             if (this.contextParams == null) {
-                this.contextParams = new HashMap<>();
+                this.contextParams = new HashMap<String, String>();
             }
             this.contextParams.putAll(contextParams);
 
@@ -523,11 +523,11 @@ public class ServletDeploymentContext extends DeploymentContext {
                                  Map<String, String> initParams,
                                  Set<DispatcherType> dispatcherTypes) {
             if (this.filters == null) {
-                this.filters = new ArrayList<>();
+                this.filters = new ArrayList<FilterDescriptor>();
             }
 
-            final LinkedList<String> nulls = new LinkedList<>();
-            final LinkedList<String> empties = new LinkedList<>();
+            final LinkedList<String> nulls = new LinkedList<String>();
+            final LinkedList<String> empties = new LinkedList<String>();
             if (filterClass == null) {
                 nulls.add("filter class");
             }
@@ -617,7 +617,7 @@ public class ServletDeploymentContext extends DeploymentContext {
             }
 
             if (this.listeners == null) {
-                this.listeners = new ArrayList<>();
+                this.listeners = new ArrayList<Class<? extends EventListener>>();
             }
 
             this.listeners.add(listenerClass);

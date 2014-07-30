@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,7 +60,9 @@ import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -75,7 +77,7 @@ public class ClientBufferingDisabledTest extends JerseyTest {
 
     private static final long LENGTH = 200000000l;
     private static final int CHUNK = 2048;
-    private static CountDownLatch postLatch = new CountDownLatch(1);
+    private static volatile CountDownLatch receiveLatch = new CountDownLatch(1);
 
     @Override
     protected Application configure() {
@@ -93,7 +95,10 @@ public class ClientBufferingDisabledTest extends JerseyTest {
             while ((b = is.read()) != -1) {
                 if (firstByte) {
                     firstByte = false;
-                    postLatch.countDown();
+                    if (receiveLatch.getCount() != 1) {
+                        throw new IllegalStateException("Unexpected receive latch count: " + receiveLatch.getCount());
+                    }
+                    receiveLatch.countDown();
                 }
 
                 count++;
@@ -102,6 +107,15 @@ public class ClientBufferingDisabledTest extends JerseyTest {
         }
     }
 
+    @Before
+    public void before() {
+        receiveLatch = new CountDownLatch(1);
+    }
+
+    @After
+    public void after() {
+        receiveLatch = null;
+    }
 
     /**
      * Test that buffering can be disabled with {@link HttpURLConnection}. By default, the
@@ -113,23 +127,25 @@ public class ClientBufferingDisabledTest extends JerseyTest {
      */
     @Test
     public void testDisableBufferingWithFixedLengthViaProperty() {
-        postLatch = new CountDownLatch(1);
-
         // This IS sends out 10 chunks and waits whether they were received on the server. This tests
         // whether the buffering is disabled.
-        InputStream is = getInputStream();
+        InputStream is = getInputStream(receiveLatch);
 
         final HttpUrlConnectorProvider connectorProvider = new HttpUrlConnectorProvider();
         ClientConfig clientConfig = new ClientConfig().connectorProvider(connectorProvider);
         clientConfig.property(HttpUrlConnectorProvider.USE_FIXED_LENGTH_STREAMING, true);
         Client client = ClientBuilder.newClient(clientConfig);
-        final Response response
-                = client.target(getBaseUri()).path("resource")
-                .request().header(HttpHeaders.CONTENT_LENGTH, LENGTH).post(
-                        Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
-        Assert.assertEquals(200, response.getStatus());
-        final long count = response.readEntity(long.class);
-        Assert.assertEquals("Unexpected content length received.", LENGTH, count);
+        try {
+            final Response response = client.target(getBaseUri()).path("resource").request()
+                    .header(HttpHeaders.CONTENT_LENGTH, LENGTH)
+                    .header("Connection", "close")
+                    .post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
+            Assert.assertEquals(200, response.getStatus());
+            final long count = response.readEntity(long.class);
+            Assert.assertEquals("Unexpected content length received.", LENGTH, count);
+        } finally {
+            client.close();
+        }
     }
 
     /**
@@ -142,23 +158,25 @@ public class ClientBufferingDisabledTest extends JerseyTest {
      */
     @Test
     public void testDisableBufferingWithFixedLengthViaMethod() {
-        postLatch = new CountDownLatch(1);
-
         // This IS sends out 10 chunks and waits whether they were received on the server. This tests
         // whether the buffering is disabled.
-        InputStream is = getInputStream();
+        InputStream is = getInputStream(receiveLatch);
 
         final HttpUrlConnectorProvider connectorProvider = new HttpUrlConnectorProvider()
                 .useFixedLengthStreaming();
         ClientConfig clientConfig = new ClientConfig().connectorProvider(connectorProvider);
         Client client = ClientBuilder.newClient(clientConfig);
-        final Response response
-                = client.target(getBaseUri()).path("resource")
-                .request().header(HttpHeaders.CONTENT_LENGTH, LENGTH).post(
-                        Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
-        Assert.assertEquals(200, response.getStatus());
-        final long count = response.readEntity(long.class);
-        Assert.assertEquals("Unexpected content length received.", LENGTH, count);
+        try {
+            final Response response = client.target(getBaseUri()).path("resource").request()
+                    .header(HttpHeaders.CONTENT_LENGTH, LENGTH)
+                    .header("Connection", "close")
+                    .post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
+            Assert.assertEquals(200, response.getStatus());
+            final long count = response.readEntity(long.class);
+            Assert.assertEquals("Unexpected content length received.", LENGTH, count);
+        } finally {
+            client.close();
+        }
     }
 
     /**
@@ -174,39 +192,42 @@ public class ClientBufferingDisabledTest extends JerseyTest {
     @Test
     @Ignore("fails unpredictable (see javadoc)")
     public void testDisableBufferingWithChunkEncoding() {
-        postLatch = new CountDownLatch(1);
-
         // This IS sends out 10 chunks and waits whether they were received on the server. This tests
         // whether the buffering is disabled.
-        InputStream is = getInputStream();
+        InputStream is = getInputStream(receiveLatch);
 
         final HttpUrlConnectorProvider connectorProvider = new HttpUrlConnectorProvider()
                 .chunkSize(CHUNK);
-        ClientConfig clientConfig = new ClientConfig()
-                .connectorProvider(connectorProvider);
+        ClientConfig clientConfig = new ClientConfig().connectorProvider(connectorProvider);
         Client client = ClientBuilder.newClient(clientConfig);
-        final Response response
-                = client.target(getBaseUri()).path("resource")
-                .request().post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
+        final Response response = client.target(getBaseUri()).path("resource").request()
+                .header("Connection", "close")
+                .post(Entity.entity(is, MediaType.APPLICATION_OCTET_STREAM));
         Assert.assertEquals(200, response.getStatus());
         final long count = response.readEntity(long.class);
         Assert.assertEquals("Unexpected content length received.", LENGTH, count);
     }
 
-    private InputStream getInputStream() {
+    private InputStream getInputStream(final CountDownLatch received) {
         return new InputStream() {
             private int cnt = 0;
+            private boolean confirmed = false;
 
             @Override
             public int read() throws IOException {
                 cnt++;
-                if (cnt > CHUNK * 10) {
+                if (cnt > CHUNK * 10 && !confirmed) {
                     try {
-                        postLatch.await(3, TimeUnit.SECONDS);
-                        Assert.assertEquals("waiting for chunk on the server side time-outed", 0, postLatch.getCount());
+                        received.await(3, TimeUnit.SECONDS);
                     } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
+                    Assert.assertEquals(
+                            "Waiting for a confirmation that a chunk has been received on the server side has timed out.",
+                            0,
+                            received.getCount());
+
+                    confirmed = true;
                 }
                 if (cnt <= LENGTH) {
                     return 'a';

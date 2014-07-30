@@ -227,7 +227,11 @@ class SubResourceLocatorRouter implements Router {
 
                     return handlingMethod.invoke(resource, parameterValues);
 
-                } catch (IllegalAccessException | IllegalArgumentException | UndeclaredThrowableException ex) {
+                } catch (IllegalAccessException ex) {
+                    throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+                } catch (IllegalArgumentException ex) {
+                    throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
+                } catch (UndeclaredThrowableException ex) {
                     throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
                 } catch (InvocationTargetException ex) {
                     final Throwable cause = ex.getCause();

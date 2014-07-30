@@ -150,9 +150,9 @@ public class PropertyOverlappingCheckTest {
 
     @Test
     public void test() throws IllegalAccessException {
-        List<String> allPropertyNames = new ArrayList<>();
-        Map<String, String> propertyToClassMap = new HashMap<>();
-        List<ProblemReport> problems = new ArrayList<>();
+        List<String> allPropertyNames = new ArrayList<String>();
+        Map<String, String> propertyToClassMap = new HashMap<String, String>();
+        List<ProblemReport> problems = new ArrayList<ProblemReport>();
 
         // iterate over all the string fields of above declared classes
         for (Class<?> clazz : classes) {

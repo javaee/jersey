@@ -148,7 +148,7 @@ public final class Routers {
         @Override
         public Router.Builder child(Router child) {
             if (children == null) {
-                children = new LinkedList<>();
+                children = new LinkedList<Router>();
             }
             children.add(child);
 

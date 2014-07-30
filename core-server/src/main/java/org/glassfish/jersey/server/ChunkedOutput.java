@@ -71,7 +71,7 @@ import org.glassfish.jersey.server.internal.process.MappableException;
 public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
     private static final byte[] ZERO_LENGTH_DELIMITER = new byte[0];
 
-    private final BlockingDeque<T> queue = new LinkedBlockingDeque<>();
+    private final BlockingDeque<T> queue = new LinkedBlockingDeque<T>();
     private final byte[] chunkDelimiter;
 
     private volatile boolean closed = false;

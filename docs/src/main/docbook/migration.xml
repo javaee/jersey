@@ -52,10 +52,15 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
-    <section xml:id="mig-2.8">
-        <title>Migrating from Jersey 2.6 to 2.7</title>
+    <section xml:id="mig-2.6.1">
+        <title>Migrating from Jersey 2.6 to 2.6.1</title>
 
-        <section xml:id="mig-2.8-breaking-changes">
+        Jersey 2.6.1 contains a larger number of selected changes introduced in later Jersey releases. These changes have
+        been cherry-picked and back-ported on top of Jersey 2.6 code so that the code can still compile and run with
+        Java SE 6. As such, the migration path between 2.6 and 2.6.1 is less straightforward as one would typically expect
+        for a "dot-dot" release upgrade.
+
+        <section xml:id="mig-2.6.1-breaking-changes">
             <title>Changes</title>
             <para>
                 <itemizedlist>
@@ -99,7 +104,7 @@
                     </listitem>
                     <listitem>
                         <para>
-                            In Jersey 2.7 and earlier it was (under certain conditions) possible to supply custom
+                            In Jersey 2.7 and earlier (except for 2.6.x) it was (under certain conditions) possible to supply custom
                             &jersey.test.spi.TestContainerFactory; as part of the tested JAX-RS / Jersey application.
                             This factory would be picked and used by &jersey.test.JerseyTest; to instantiate
                             &jersey.test.spi.TestContainer; that will host the tested application. This feature was
@@ -177,8 +182,8 @@
                                     <thead>
                                         <row>
                                             <entry>Constant</entry>
-                                            <entry>Old value (Jersey 2.7 and before)</entry>
-                                            <entry>New value (Jersey 2.8+)</entry>
+                                            <entry>Old value (Jersey 2.7 and before, except for 2.6.x)</entry>
+                                            <entry>New value (Jersey 2.6.x and 2.8 or later)</entry>
                                         </row>
                                     </thead>
                                     <tbody>
@@ -249,19 +254,7 @@
                             implemented while reading the property and each get, that resolves the value from the old-named
                             property, will log a <literal>CONFIG</literal> level warning.
                         </para>
-
                     </listitem>
-                </itemizedlist>
-            </para>
-        </section>
-    </section>
-    <section xml:id="mig-2.7">
-        <title>Migrating from Jersey 2.6 to 2.7</title>
-
-        <section xml:id="mig-2.7-breaking-changes">
-            <title>Changes</title>
-            <para>
-                <itemizedlist>
                     <listitem>
                         <para>
                             MVC support: method <literal>writeTo</literal> of &jersey.server.mvc.TemplateProcessor;

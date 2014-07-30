@@ -213,7 +213,7 @@ public class GrizzlyWebTestContainerFactory implements TestContainerFactory {
         }
 
         private EnumSet<DispatcherType> grizzlyDispatcherTypes(final Set<DispatcherType> dispatcherTypes) {
-            Set<DispatcherType> grizzlyDispatcherTypes = new HashSet<>();
+            Set<DispatcherType> grizzlyDispatcherTypes = new HashSet<DispatcherType>();
             for (javax.servlet.DispatcherType servletDispatchType : dispatcherTypes) {
                 grizzlyDispatcherTypes.add(DispatcherType.valueOf(servletDispatchType.name()));
             }
