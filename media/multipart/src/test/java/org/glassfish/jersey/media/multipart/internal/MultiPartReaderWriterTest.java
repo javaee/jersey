@@ -69,16 +69,19 @@ import static org.junit.Assert.fail;
 public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
 
     private static File TMP_DIRECTORY;
+    private static String ORIGINAL_TMP_DIRECTORY;
 
     @BeforeClass
     public static void beforeClass() {
         TMP_DIRECTORY = Files.createTempDir();
+        ORIGINAL_TMP_DIRECTORY = System.getProperty("java.io.tmpdir");
         System.setProperty("java.io.tmpdir", TMP_DIRECTORY.getAbsolutePath());
     }
 
     @AfterClass
     public static void afterClass() {
        TMP_DIRECTORY.delete();
+       System.setProperty("java.io.tmpdir", ORIGINAL_TMP_DIRECTORY);
     }
 
     @Override
