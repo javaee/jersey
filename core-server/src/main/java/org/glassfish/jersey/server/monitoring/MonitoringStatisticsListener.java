@@ -61,6 +61,7 @@ import org.glassfish.jersey.spi.Contract;
  * <p/>
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @see DestroyListener
  */
 @Contract
 @ConstrainedTo(RuntimeType.SERVER)

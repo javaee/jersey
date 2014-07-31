@@ -431,6 +431,7 @@
 <!ENTITY jersey.server.monitoring.MonitoringStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/MonitoringStatistics.html'>MonitoringStatistics</link>">
 <!ENTITY jersey.server.monitoring.MonitoringStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/MonitoringStatistics.html'>MonitoringStatistics</link>">
 <!ENTITY jersey.server.monitoring.MonitoringStatisticsListener "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/MonitoringStatisticsListener.html'>MonitoringStatisticsListener</link>">
+<!ENTITY jersey.server.monitoring.DestroyListener "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/DestroyListener.html'>DestroyListener</link>">
 <!ENTITY jersey.server.monitoring.RequestEvent "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/RequestEvent.html'>RequestEvent</link>">
 <!ENTITY jersey.server.monitoring.RequestEventListener "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/RequestEventListener.html'>RequestEventListener</link>">
 <!ENTITY jersey.server.monitoring.ResourceMXBean "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ResourceMXBean.html'>ResourceMXBean</link>">
@@ -757,6 +758,7 @@
 <!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.MonitoringStatisticsListener "<literal>MonitoringStatisticsListener</literal>">
+<!ENTITY lit.jersey.server.monitoring.DestroyListener "<literal>DestroyListener</literal>">
 <!ENTITY lit.jersey.server.monitoring.RequestEvent "<literal>RequestEvent</literal>">
 <!ENTITY lit.jersey.server.monitoring.RequestEventListener "<literal>RequestEventListener</literal>">
 <!ENTITY lit.jersey.server.monitoring.ResourceMXBean "<literal>ResourceMXBean</literal>">
