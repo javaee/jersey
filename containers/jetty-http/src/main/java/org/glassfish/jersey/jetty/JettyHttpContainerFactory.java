@@ -43,9 +43,10 @@ import java.net.URI;
 
 import javax.ws.rs.ProcessingException;
 
-import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.jetty.internal.LocalizationMessages;
 import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.internal.ConfigHelper;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -76,8 +77,8 @@ public final class JettyHttpContainerFactory {
     /**
      * Creates a {@link Server} instance that registers an {@link org.eclipse.jetty.server.Handler}.
      *
-     * @param uri uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used as
-     *            context path, the rest will be ignored.
+     * @param uri uri on which the {@link org.glassfish.jersey.server.ApplicationHandler} will be deployed. Only first path
+     *            segment will be used as context path, the rest will be ignored.
      * @return newly created {@link Server}.
      *
      * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
@@ -90,8 +91,8 @@ public final class JettyHttpContainerFactory {
     /**
      * Creates a {@link Server} instance that registers an {@link org.eclipse.jetty.server.Handler}.
      *
-     * @param uri   uri on which the {@link ApplicationHandler} will be deployed. Only first path segment will be used
-     *              as context path, the rest will be ignored.
+     * @param uri   uri on which the {@link org.glassfish.jersey.server.ApplicationHandler} will be deployed. Only first path
+     *              segment will be used as context path, the rest will be ignored.
      * @param start if set to false, server will not get started, which allows to configure the underlying transport
      *              layer, see above for details.
      * @return newly created {@link Server}.
@@ -148,7 +149,8 @@ public final class JettyHttpContainerFactory {
      * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
      * @throws IllegalArgumentException if {@code uri} is {@code null}.
      */
-    public static Server createServer(final URI uri, final ResourceConfig configuration, final boolean start) throws ProcessingException {
+    public static Server createServer(final URI uri, final ResourceConfig configuration, final boolean start)
+            throws ProcessingException {
         return createServer(uri, null, ContainerFactory.createContainer(JettyHttpContainer.class, configuration), start);
     }
 
@@ -163,8 +165,9 @@ public final class JettyHttpContainerFactory {
      * for creating an Container that manages the root resources.
      *
      * @param uri               the URI to create the http server. The URI scheme must be
-     *                          equal to "https". The URI user information and host
-     *                          are ignored If the URI port is not present then port 143 will be
+     *                          equal to {@code https}. The URI user information and host
+     *                          are ignored. If the URI port is not present then port
+     *                          {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
      *                          used. The URI path, query and fragment components are ignored.
      * @param sslContextFactory this is the SSL context factory used to configure SSL connector
      * @param config            the resource configuration.
@@ -185,8 +188,9 @@ public final class JettyHttpContainerFactory {
      * classes referenced in the java classpath.
      *
      * @param uri               the URI to create the http server. The URI scheme must be
-     *                          equal to "https". The URI user information and host
-     *                          are ignored If the URI port is not present then port 143 will be
+     *                          equal to {@code https}. The URI user information and host
+     *                          are ignored. If the URI port is not present then port
+     *                          {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
      *                          used. The URI path, query and fragment components are ignored.
      * @param sslContextFactory this is the SSL context factory used to configure SSL connector
      * @param handler           the container that handles all HTTP requests
@@ -203,38 +207,38 @@ public final class JettyHttpContainerFactory {
                                       final JettyHttpContainer handler,
                                       final boolean start) {
         if (uri == null) {
-            throw new IllegalArgumentException("The URI must not be null");
+            throw new IllegalArgumentException(LocalizationMessages.URI_CANNOT_BE_NULL());
         }
-        String scheme = uri.getScheme();
-        int defaultPort = 80;
+        final String scheme = uri.getScheme();
+        int defaultPort = ConfigHelper.DEFAULT_HTTP_PORT;
 
         if (sslContextFactory == null) {
             if (!scheme.equalsIgnoreCase("http")) {
-                throw new IllegalArgumentException("The URI scheme should be 'http' when not using SSL");
+                throw new IllegalArgumentException(LocalizationMessages.WRONG_SCHEME_WHEN_USING_HTTP());
             }
         } else {
             if (!scheme.equalsIgnoreCase("https")) {
-                throw new IllegalArgumentException("The URI scheme should be 'https' when using SSL");
+                throw new IllegalArgumentException(LocalizationMessages.WRONG_SCHEME_WHEN_USING_HTTPS());
             }
-            defaultPort = 143; // default HTTPS port
+            defaultPort = ConfigHelper.DEFAULT_HTTPS_PORT;
         }
         final int port = (uri.getPort() == -1) ? defaultPort : uri.getPort();
 
-        Server server = new Server();
-        HttpConfiguration config = new HttpConfiguration();
+        final Server server = new Server();
+        final HttpConfiguration config = new HttpConfiguration();
         if (sslContextFactory != null) {
             config.setSecureScheme("https");
             config.setSecurePort(port);
             config.addCustomizer(new SecureRequestCustomizer());
 
-            ServerConnector https = new ServerConnector(server,
+            final ServerConnector https = new ServerConnector(server,
                     new SslConnectionFactory(sslContextFactory, "http/1.1"),
                     new HttpConnectionFactory(config));
             https.setPort(port);
             server.setConnectors(new Connector[]{https});
 
         } else {
-            ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(config));
+            final ServerConnector http = new ServerConnector(server, new HttpConnectionFactory(config));
             http.setPort(port);
             server.setConnectors(new Connector[]{http});
         }
@@ -246,8 +250,8 @@ public final class JettyHttpContainerFactory {
             try {
                 // Start the server.
                 server.start();
-            } catch (Exception e) {
-                throw new ProcessingException("Exception thrown when trying to create jetty server", e);
+            } catch (final Exception e) {
+                throw new ProcessingException(LocalizationMessages.ERROR_WHEN_CREATING_SERVER(), e);
             }
         }
         return server;

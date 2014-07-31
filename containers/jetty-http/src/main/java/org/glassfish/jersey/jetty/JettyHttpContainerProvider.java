@@ -52,10 +52,10 @@ import org.eclipse.jetty.server.Handler;
  * @author Arul Dhesiaseelan (aruld@acm.org)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class JettyHttpContainerProvider implements ContainerProvider {
+public final class JettyHttpContainerProvider implements ContainerProvider {
 
     @Override
-    public <T> T createContainer(Class<T> type, Application application) throws ProcessingException {
+    public <T> T createContainer(final Class<T> type, final Application application) throws ProcessingException {
         if (Handler.class == type || JettyHttpContainer.class == type) {
             return type.cast(new JettyHttpContainer(application));
         }

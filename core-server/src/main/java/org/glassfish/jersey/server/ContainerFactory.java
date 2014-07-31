@@ -77,8 +77,8 @@ public final class ContainerFactory {
      */
     @SuppressWarnings("unchecked")
     public static <T> T createContainer(final Class<T> type, final Application application) {
-        for (ContainerProvider containerProvider : ServiceFinder.find(ContainerProvider.class)) {
-            T container = containerProvider.createContainer(type, application);
+        for (final ContainerProvider containerProvider : ServiceFinder.find(ContainerProvider.class)) {
+            final T container = containerProvider.createContainer(type, application);
             if (container != null) {
                 return container;
             }

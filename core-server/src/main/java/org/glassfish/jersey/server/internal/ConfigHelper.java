@@ -56,11 +56,22 @@ import org.glassfish.hk2.api.ServiceLocator;
 import jersey.repackaged.com.google.common.collect.Iterables;
 
 /**
- * Helper class to provide some common functionality related to {@link org.glassfish.jersey.server.ResourceConfig application configuration}.
+ * Helper class to provide some common functionality related to
+ * {@link org.glassfish.jersey.server.ResourceConfig application configuration}.
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class ConfigHelper {
+
+    /**
+     * Default port number for HTTP protocol.
+     */
+    public static final int DEFAULT_HTTP_PORT = 80;
+
+    /**
+     * Default port number for HTTPS protocol.
+     */
+    public static final int DEFAULT_HTTPS_PORT = 443;
 
     /**
      * Prevents instantiation.
@@ -80,7 +91,7 @@ public final class ConfigHelper {
 
         final Iterable<ContainerLifecycleListener> listeners = Iterables.concat(
                 Providers.getAllProviders(applicationHandler.getServiceLocator(), ContainerLifecycleListener.class),
-                new LinkedList<ContainerLifecycleListener>(){{add(new ServiceLocatorShutdownListener());}});
+                new LinkedList<ContainerLifecycleListener>() {{ add(new ServiceLocatorShutdownListener()); }});
 
         return new ContainerLifecycleListener() {
 
@@ -108,9 +119,9 @@ public final class ConfigHelper {
     }
 
     /**
-     * Gets the most internal wrapped {@link Application application} class. This method is similar to {@link ResourceConfig#getApplication()}
-     * except if provided application was created by wrapping multiple {@link ResourceConfig} instances this method returns the original application
-     * and not a resource config wrapper.
+     * Gets the most internal wrapped {@link Application application} class. This method is similar to
+     * {@link ResourceConfig#getApplication()} except if provided application was created by wrapping multiple
+     * {@link ResourceConfig} instances this method returns the original application and not a resource config wrapper.
      *
      * @return the original {@link Application} subclass.
      */
