@@ -116,7 +116,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      */
     private static class GrizzlyRequestReferencingFactory extends ReferencingFactory<Request> {
         @Inject
-        public GrizzlyRequestReferencingFactory(Provider<Ref<Request>> referenceFactory) {
+        public GrizzlyRequestReferencingFactory(final Provider<Ref<Request>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -126,7 +126,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
      */
     private static class GrizzlyResponseReferencingFactory extends ReferencingFactory<Response> {
         @Inject
-        public GrizzlyResponseReferencingFactory(Provider<Ref<Response>> referenceFactory) {
+        public GrizzlyResponseReferencingFactory(final Provider<Ref<Response>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -163,22 +163,22 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
 
         @Override
-        public void failed(Throwable throwable) {
+        public void failed(final Throwable throwable) {
             // no-op
         }
 
         @Override
-        public void completed(Response result) {
+        public void completed(final Response result) {
             // no-op
         }
 
         @Override
-        public void updated(Response result) {
+        public void updated(final Response result) {
             // no-op
         }
     };
 
-    private final static class ResponseWriter implements ContainerResponseWriter {
+    private static final class ResponseWriter implements ContainerResponseWriter {
 
         private final String name;
         private final Response grizzlyResponse;
@@ -219,7 +219,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                         new org.glassfish.grizzly.http.server.TimeoutHandler() {
 
                             @Override
-                            public boolean onTimeout(Response response) {
+                            public boolean onTimeout(final Response response) {
                                 if (timeoutHandler != null) {
                                     timeoutHandler.onTimeout(ResponseWriter.this);
                                 }
@@ -231,7 +231,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                         }
                 );
                 return true;
-            } catch (IllegalStateException ex) {
+            } catch (final IllegalStateException ex) {
                 return false;
             } finally {
                 logger.debugLog("{0} - suspend(...) called", name);
@@ -239,7 +239,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
 
         @Override
-        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+        public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException {
             try {
                 grizzlyResponse.getSuspendContext().setTimeout(timeOut, timeUnit);
             } finally {
@@ -275,7 +275,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
 
         @Override
         @SuppressWarnings("MagicNumber")
-        public void failure(Throwable error) {
+        public void failure(final Throwable error) {
             try {
                 if (!grizzlyResponse.isCommitted()) {
                     try {
@@ -285,10 +285,10 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
                         } else {
                             grizzlyResponse.sendError(500, "Request failed.");
                         }
-                    } catch (IllegalStateException ex) {
+                    } catch (final IllegalStateException ex) {
                         // a race condition externally committing the response can still occur...
                         logger.log(Level.FINER, "Unable to reset failed response.", ex);
-                    } catch (IOException ex) {
+                    } catch (final IOException ex) {
                         throw new ContainerException(
                                 LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(500, "Request failed."),
                                 ex);
@@ -310,7 +310,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
          *
          * @param error throwable to be re-thrown
          */
-        private void rethrow(Throwable error) {
+        private void rethrow(final Throwable error) {
             if (error instanceof RuntimeException) {
                 throw (RuntimeException) error;
             } else {
@@ -333,6 +333,19 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         cacheConfigSetStatusOverSendError();
     }
 
+    /**
+     * Create a new Grizzly HTTP container.
+     *
+     * @param application   JAX-RS / Jersey application to be deployed on Grizzly HTTP container.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to becaome a parent of the locator used
+     *                      in {@link org.glassfish.jersey.server.ApplicationHandler}
+     */
+    GrizzlyHttpContainer(final Application application, final ServiceLocator parentLocator) {
+        this.appHandler = new ApplicationHandler(application, new GrizzlyBinder(), parentLocator);
+        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
+        cacheConfigSetStatusOverSendError();
+    }
+
     @Override
     public void start() {
         super.start();
@@ -344,12 +357,12 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         final ResponseWriter responseWriter = new ResponseWriter(response, configSetStatusOverSendError);
         try {
             logger.debugLog("GrizzlyHttpContainer.service(...) started");
-            URI baseUri = getBaseUri(request);
-            ContainerRequest requestContext = new ContainerRequest(baseUri,
+            final URI baseUri = getBaseUri(request);
+            final ContainerRequest requestContext = new ContainerRequest(baseUri,
                     getRequestUri(baseUri, request), request.getMethod().getMethodString(),
                     getSecurityContext(request), new GrizzlyRequestPropertiesDelegate(request));
             requestContext.setEntityStream(request.getInputStream());
-            for (String headerName : request.getHeaderNames()) {
+            for (final String headerName : request.getHeaderNames()) {
                 requestContext.headers(headerName, request.getHeaders(headerName));
             }
             requestContext.setWriter(responseWriter);
@@ -357,7 +370,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
 
                 @Override
-                public void initialize(ServiceLocator locator) {
+                public void initialize(final ServiceLocator locator) {
                     locator.<Ref<Request>>getService(RequestTYPE).set(request);
                     locator.<Ref<Response>>getService(ResponseTYPE).set(response);
                 }
@@ -379,7 +392,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     }
 
     @Override
-    public void reload(ResourceConfig configuration) {
+    public void reload(final ResourceConfig configuration) {
         this.containerListener.onShutdown(this);
         appHandler = new ApplicationHandler(configuration, new GrizzlyBinder());
         this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
@@ -404,7 +417,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         return new SecurityContext() {
 
             @Override
-            public boolean isUserInRole(String role) {
+            public boolean isUserInRole(final String role) {
                 return false;
             }
 
@@ -446,13 +459,13 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
         }
     }
 
-    private URI getRequestUri(URI baseUri, Request grizzlyRequest) {
+    private URI getRequestUri(final URI baseUri, final Request grizzlyRequest) {
         // TODO: this is terrible, there must be a way to obtain the original request URI!
         String originalUri = UriBuilder.fromPath(
                 grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC().toString(Charsets.DEFAULT_CHARSET)
         ).build().toString();
 
-        String queryString = grizzlyRequest.getQueryString();
+        final String queryString = grizzlyRequest.getQueryString();
         if (queryString != null) {
             originalUri = originalUri + "?" + ContainerUtils.encodeUnsafeCharacters(queryString);
         }

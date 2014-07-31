@@ -54,6 +54,8 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 import org.glassfish.jersey.simple.internal.LocalizationMessages;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 import org.simpleframework.http.core.Container;
 import org.simpleframework.http.core.ContainerServer;
 import org.simpleframework.transport.Server;
@@ -184,6 +186,35 @@ public final class SimpleContainerFactory {
                 return new ContainerServer(container);
             }
         });
+    }
+
+    /**
+     * Create a {@link Closeable} that registers an {@link Container} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
+     *
+     * @param address the URI to create the http server. The URI scheme must be
+     *                equal to {@code https}. The URI user information and host
+     *                are ignored. If the URI port is not present then port
+     *                {@value org.glassfish.jersey.server.internal.ConfigHelper#DEFAULT_HTTPS_PORT} will be
+     *                used. The URI path, query and fragment components are ignored.
+     * @param context this is the SSL context used for SSL connections.
+     * @param config  the resource configuration.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param count   this is the number of threads to be used.
+     * @param select  this is the number of selector threads to use.
+     * @return the closeable connection, with the endpoint started.
+     * @throws ProcessingException      thrown when problems during server creation.
+     * @throws IllegalArgumentException if {@code address} is {@code null}.
+     * @see org.glassfish.hk2.api.ServiceLocator
+     *
+     * @since 2.12
+     */
+    public static SimpleServer create(final URI address, final SSLContext context,
+                                      final ResourceConfig config, final ServiceLocator parentLocator, final int count,
+                                      final int select) {
+        return create(address, context, new SimpleContainer(config, parentLocator), count, select);
     }
 
     /**

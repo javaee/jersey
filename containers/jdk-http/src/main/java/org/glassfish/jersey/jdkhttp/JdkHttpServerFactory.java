@@ -51,6 +51,8 @@ import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -100,6 +102,27 @@ public final class JdkHttpServerFactory {
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration, final boolean start) {
         return createHttpServer(uri, new JdkHttpHandlerContainer(configuration), start);
+    }
+
+    /**
+     * Create (and possibly start) the {@link HttpServer JDK HttpServer} with the JAX-RS / Jersey application deployed
+     * on the given {@link URI}.
+     * <p/>
+     *
+     * @param uri           the {@link URI uri} on which the Jersey application will be deployed.
+     * @param configuration the Jersey server-side application configuration.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @return Newly created {@link HttpServer}.
+     * @throws ProcessingException thrown when problems during server creation occurs.
+     * @see org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer
+     * @see org.glassfish.hk2.api.ServiceLocator
+     *
+     * @since 2.12
+     */
+    public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration,
+                                              final ServiceLocator parentLocator) {
+        return createHttpServer(uri, new JdkHttpHandlerContainer(configuration, parentLocator), true);
     }
 
     private static HttpServer createHttpServer(final URI uri, final JdkHttpHandlerContainer handler, final boolean start) {

@@ -48,6 +48,8 @@ import org.glassfish.jersey.server.ContainerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -159,6 +161,58 @@ public final class JettyHttpContainerFactory {
      * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
      * in turn manages all root resource and provider classes declared by the
      * resource configuration.
+     *
+     * @param uri           the URI to create the http server. The URI scheme must be
+     *                      equal to "https". The URI user information and host
+     *                      are ignored If the URI port is not present then port 143 will be
+     *                      used. The URI path, query and fragment components are ignored.
+     * @param config        the resource configuration.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param start         if set to false, server will not get started, this allows end users to set
+     *                      additional properties on the underlying listener.
+     * @return newly created {@link Server}.
+     * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
+     * @throws IllegalArgumentException if {@code uri} is {@code null}.
+     * @see JettyHttpContainer
+     * @see org.glassfish.hk2.api.ServiceLocator
+     *
+     * @since 2.12
+     */
+    public static Server createServer(final URI uri, final ResourceConfig config, final boolean start,
+                                      final ServiceLocator parentLocator) {
+        return createServer(uri, null, new JettyHttpContainer(config, parentLocator), start);
+    }
+
+
+    /**
+     * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
+     *
+     * @param uri           the URI to create the http server. The URI scheme must be
+     *                      equal to "https". The URI user information and host
+     *                      are ignored If the URI port is not present then port 143 will be
+     *                      used. The URI path, query and fragment components are ignored.
+     * @param config        the resource configuration.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @return newly created {@link Server}.
+     * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
+     * @throws IllegalArgumentException if {@code uri} is {@code null}.
+     * @see JettyHttpContainer
+     * @see org.glassfish.hk2.api.ServiceLocator
+     *
+     * @since 2.12
+     */
+    public static Server createServer(final URI uri, final ResourceConfig config, final ServiceLocator parentLocator) {
+        return createServer(uri, null, new JettyHttpContainer(config, parentLocator), true);
+    }
+
+    /**
+     * Create a {@link Server} that registers an {@link org.eclipse.jetty.server.Handler} that
+     * in turn manages all root resource and provider classes declared by the
+     * resource configuration.
      * <p/>
      * This implementation defers to the
      * {@link ContainerFactory#createContainer(Class, javax.ws.rs.core.Application)} method
@@ -172,7 +226,6 @@ public final class JettyHttpContainerFactory {
      * @param sslContextFactory this is the SSL context factory used to configure SSL connector
      * @param config            the resource configuration.
      * @return newly created {@link Server}.
-     *
      * @throws ProcessingException      in case of any failure when creating a new Jetty {@code Server} instance.
      * @throws IllegalArgumentException if {@code uri} is {@code null}.
      */
@@ -213,11 +266,11 @@ public final class JettyHttpContainerFactory {
         int defaultPort = ConfigHelper.DEFAULT_HTTP_PORT;
 
         if (sslContextFactory == null) {
-            if (!scheme.equalsIgnoreCase("http")) {
+            if (!"http".equalsIgnoreCase(scheme)) {
                 throw new IllegalArgumentException(LocalizationMessages.WRONG_SCHEME_WHEN_USING_HTTP());
             }
         } else {
-            if (!scheme.equalsIgnoreCase("https")) {
+            if (!"https".equalsIgnoreCase(scheme)) {
                 throw new IllegalArgumentException(LocalizationMessages.WRONG_SCHEME_WHEN_USING_HTTPS());
             }
             defaultPort = ConfigHelper.DEFAULT_HTTPS_PORT;

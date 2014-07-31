@@ -48,6 +48,8 @@ import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
+import org.glassfish.hk2.api.ServiceLocator;
+
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpHandlerRegistration;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -200,6 +202,53 @@ public final class GrizzlyHttpServerFactory {
      *
      * @param uri                   uri on which the {@link ApplicationHandler} will be deployed. Only first path
      *                              segment will be used as context path, the rest will be ignored.
+     * @param config                web application configuration.
+     * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
+     * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @return newly created {@code HttpServer}.
+     *
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     * @see GrizzlyHttpContainer
+     * @see org.glassfish.hk2.api.ServiceLocator
+     *
+     * @since 2.12
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final ResourceConfig config,
+                                              final boolean secure,
+                                              final SSLEngineConfigurator sslEngineConfigurator,
+                                              final ServiceLocator parentLocator) {
+        return createHttpServer(uri, new GrizzlyHttpContainer(config, parentLocator), secure, sslEngineConfigurator, true);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
+     * @param uri           uri on which the {@link ApplicationHandler} will be deployed. Only first path
+     *                      segment will be used as context path, the rest will be ignored.
+     * @param config        web application configuration.
+     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @return newly created {@code HttpServer}.
+     * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
+     * @see GrizzlyHttpContainer
+     * @see org.glassfish.hk2.api.ServiceLocator
+     *
+     * @since 2.12
+     */
+    public static HttpServer createHttpServer(final URI uri,
+                                              final ResourceConfig config,
+                                              final ServiceLocator parentLocator) {
+        return createHttpServer(uri, new GrizzlyHttpContainer(config, parentLocator), false, null, true);
+    }
+
+    /**
+     * Create new {@link HttpServer} instance.
+     *
+     * @param uri                   uri on which the {@link ApplicationHandler} will be deployed. Only first path
+     *                              segment will be used as context path, the rest will be ignored.
      * @param handler               {@link HttpHandler} instance.
      * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
      * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
@@ -248,7 +297,7 @@ public final class GrizzlyHttpServerFactory {
             try {
                 // Start the server.
                 server.start();
-            } catch (IOException ex) {
+            } catch (final IOException ex) {
                 server.shutdownNow();
                 throw new ProcessingException(LocalizationMessages.FAILED_TO_START_SERVER(ex.getMessage()), ex);
             }
