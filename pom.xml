@@ -439,6 +439,7 @@
                         <outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
                         <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile>
                         <configLocation>etc/config/checkstyle.xml</configLocation>
+                        <suppressionsLocation>etc/config/checkstyle-suppressions.xml</suppressionsLocation>
                     </configuration>
                     <executions>
                         <execution>
@@ -931,6 +932,7 @@
                 <version>${checkstyle.mvn.plugin.version}</version>
                 <configuration>
                     <configLocation>etc/config/checkstyle.xml</configLocation>
+                    <suppressionsLocation>etc/config/checkstyle-suppressions.xml</suppressionsLocation>
                 </configuration>
                 <reportSets>
                     <reportSet>
@@ -1420,7 +1422,7 @@
         <jersey.version>${project.version}</jersey.version>
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
-        <checkstyle.mvn.plugin.version>2.11</checkstyle.mvn.plugin.version>
+        <checkstyle.mvn.plugin.version>2.12.1</checkstyle.mvn.plugin.version>
         <ejb.version>3.2</ejb.version>
         <gf.impl.version>4.0</gf.impl.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
