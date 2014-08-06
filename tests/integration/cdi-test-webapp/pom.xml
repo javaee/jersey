@@ -45,7 +45,7 @@
     <parent>
         <groupId>org.glassfish.jersey.tests.integration</groupId>
         <artifactId>project</artifactId>
-        <version>2.10.3</version>
+        <version>2.10.4-SNAPSHOT</version>
     </parent>
 
     <artifactId>cdi-test-webapp</artifactId>
