@@ -75,6 +75,22 @@
 
             These APIs are now part of the official public Jersey 2.x API.
         </section>
+
+        <section xml:id="mig-2.12-breaking-changes">
+            <title>Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Because of a bug fix for issue
+                            <link xlink:href='https://java.net/jira/browse/JERSEY-2602'>JERSEY-2602</link>, we re-generate WADL
+                            classes from <literal>wadl.xsd</literal> to make sure the getters for boolean properties starts with
+                            <literal>is</literal> instead of <literal>get</literal> as in Jersey 1 and Jersey &lt;= 2.6.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
     </section>
 
 

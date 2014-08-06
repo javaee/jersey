@@ -114,10 +114,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.sun.research.ws.wadl.Method;
+import com.sun.research.ws.wadl.Param;
 import com.sun.research.ws.wadl.Resources;
 
 /**
@@ -129,7 +132,7 @@ import com.sun.research.ws.wadl.Resources;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({WadlResourceTest.Wadl1Test.class, WadlResourceTest.Wadl2Test.class, WadlResourceTest.Wadl3Test.class,
         WadlResourceTest.Wadl5Test.class, WadlResourceTest.Wadl7Test.class, WadlResourceTest.Wadl8Test.class,
-        WadlResourceTest.Wadl9Test.class})
+        WadlResourceTest.Wadl9Test.class, WadlResourceTest.Wadl10Test.class})
 public class WadlResourceTest {
 
     private static Document extractWadlAsDocument(final Response response) throws ParserConfigurationException, SAXException,
@@ -1389,4 +1392,42 @@ public class WadlResourceTest {
 
     } // class Wadl9Test
 
+    /**
+     * Tests whether boolean getters have been generated with "is" prefix.
+     */
+    public static class Wadl10Test extends JerseyTest {
+
+        @Path("wadl10test")
+        public static class Resource {
+
+            @GET
+            public Boolean foo(@QueryParam("q") final Boolean q) {
+                return q;
+            }
+
+        } // class Resource
+
+        @Override
+        protected Application configure() {
+            return new ResourceConfig(Resource.class);
+        }
+
+        @Test
+        public void testWadl() throws Exception {
+            final Response response = target("/application.wadl").request().get();
+
+            assertThat(response.getStatus(), is(200));
+            assertThat(response.hasEntity(), is(true));
+
+            final Method method = (Method) response.readEntity(com.sun.research.ws.wadl.Application.class) // wadl
+                    .getResources().get(0).getResource().get(0) // resource
+                    .getMethodOrResource().get(0); // method
+            final Param param = method.getRequest().getParam().get(0); // param
+
+            // not interested in returned value, only whether we can compile.
+            assertThat(param.isRequired(), notNullValue());
+            assertThat(param.isRepeating(), notNullValue());
+        }
+
+    } // class Wadl10Test
 }
