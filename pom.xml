@@ -994,7 +994,7 @@
             <dependency>
                 <groupId>javax.ws.rs</groupId>
                 <artifactId>javax.ws.rs-api</artifactId>
-                <version>${jaxrs.api.version}</version>
+                <version>${jaxrs.api.impl.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>
@@ -1443,8 +1443,8 @@
         <javax.persistence.version>1.0</javax.persistence.version>
         <jaxb.api.version>2.2.7</jaxb.api.version>
         <jaxb.ri.version>2.2.7</jaxb.ri.version>
-        <jaxrs.api.version>2.0</jaxrs.api.version>
-        <jaxrs.api.last.final.version>1.1</jaxrs.api.last.final.version>
+        <jaxrs.api.spec.version>2.0</jaxrs.api.spec.version>
+        <jaxrs.api.impl.version>2.0.1</jaxrs.api.impl.version>
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <jersey1.version>1.17</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>

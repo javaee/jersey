@@ -69,7 +69,7 @@
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
-            <version>${jaxrs.api.version}</version>
+            <version>${jaxrs.api.impl.version}</version>
             <classifier>sources</classifier>
         </dependency>
 
@@ -257,14 +257,13 @@
                     <instructions>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-SpecVersion>${jaxrs.api.version}</Bundle-SpecVersion>
-                        <Specification-Version>${jaxrs.api.version}</Specification-Version>
+                        <Specification-Version>${jaxrs.api.spec.version}</Specification-Version>
                         <Implementation-Version>
                             ${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.qualifier}
                         </Implementation-Version>
                         <Extension-Name>${project.artifactId}</Extension-Name>
                         <Export-Package>
-                            javax.ws.rs.*;version=${jaxrs.api.version},
+                            javax.ws.rs.*;version=${jaxrs.api.impl.version},
                             org.glassfish.jersey.*;version=${project.version},
                             com.sun.research.ws.wadl.*;version=${project.version}
                         </Export-Package>
