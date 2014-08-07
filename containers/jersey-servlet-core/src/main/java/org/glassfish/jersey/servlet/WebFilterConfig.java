@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,11 +52,11 @@ import javax.servlet.ServletContext;
  * @author Paul Sandoz
  * @author Guilherme Silveira
  */
-public class WebFilterConfig implements WebConfig {
+public final class WebFilterConfig implements WebConfig {
 
     private final FilterConfig filterConfig;
 
-    public WebFilterConfig(FilterConfig filterConfig) {
+    public WebFilterConfig(final FilterConfig filterConfig) {
         this.filterConfig = filterConfig;
     }
 
@@ -81,7 +81,7 @@ public class WebFilterConfig implements WebConfig {
     }
 
     @Override
-    public String getInitParameter(String name) {
+    public String getInitParameter(final String name) {
         return filterConfig.getInitParameter(name);
     }
 
@@ -94,9 +94,4 @@ public class WebFilterConfig implements WebConfig {
     public ServletContext getServletContext() {
         return filterConfig.getServletContext();
     }
-
-//    public ResourceConfig getDefaultResourceConfig(Map<String, Object> props)
-//            throws ServletException {
-//        return null;
-//    }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,50 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.servlet;
+package org.glassfish.jersey.tests.integration.servlet_3_init_6;
 
-import java.util.Enumeration;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.glassfish.jersey.tests.integration.servlet_3_init_6.resource.ResourceOne;
+import org.glassfish.jersey.tests.integration.servlet_3_init_6.resource.ResourceTwo;
+
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
- * A servlet based web config. Delegates all invocations to the servlet
- * configuration from the servlet api.
- *
- * @author Paul Sandoz
- * @author guilherme silveira
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public final class WebServletConfig implements WebConfig {
+public class EmptyApplicationITCase extends JerseyTest {
 
-    private final ServletContainer servlet;
-
-    public WebServletConfig(final ServletContainer servlet) {
-        this.servlet = servlet;
+    @Override
+    protected Application configure() {
+        return new EmptyApplication();
     }
 
     @Override
-    public WebConfig.ConfigType getConfigType() {
-        return WebConfig.ConfigType.ServletConfig;
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
     }
 
-    @Override
-    public ServletConfig getServletConfig() {
-        return servlet.getServletConfig();
+    @Test
+    public void testResourceOne() throws Exception {
+        final Response response = target("one").request().get();
+
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.readEntity(String.class), is(ResourceOne.class.getSimpleName()));
     }
 
-    @Override
-    public FilterConfig getFilterConfig() {
-        return null;
-    }
+    @Test
+    public void testResourceTwo() throws Exception {
+        final Response response = target("two").request().get();
 
-    @Override
-    public String getName() {
-        return servlet.getServletName();
-    }
-
-    @Override
-    public String getInitParameter(final String name) {
-        return servlet.getInitParameter(name);
-    }
-
-    @Override
-    public Enumeration getInitParameterNames() {
-        return servlet.getInitParameterNames();
-    }
-
-    @Override
-    public ServletContext getServletContext() {
-        return servlet.getServletContext();
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.readEntity(String.class), is(ResourceTwo.class.getSimpleName()));
     }
 }
