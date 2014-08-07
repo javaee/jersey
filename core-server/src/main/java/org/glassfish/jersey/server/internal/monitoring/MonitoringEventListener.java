@@ -210,7 +210,9 @@ public final class MonitoringEventListener implements ApplicationEventListener {
             case RELOAD_FINISHED:
             case INITIALIZATION_FINISHED:
                 this.applicationStartTime = now;
-                this.applicationEvents.add(event);
+                if (!this.applicationEvents.offer(event)) {
+                    LOGGER.warning(LocalizationMessages.ERROR_MONITORING_QUEUE_APP());
+                }
                 this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(serviceLocator, this);
                 this.monitoringStatisticsProcessor.startMonitoringWorker();
                 break;
@@ -245,7 +247,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
 
     private class ReqEventListener implements RequestEventListener {
 
-        private volatile long requestTimeStart;
+        private final long requestTimeStart;
         private volatile long methodTimeStart;
         private volatile MethodStats methodStats;
 
@@ -266,11 +268,15 @@ public final class MonitoringEventListener implements ApplicationEventListener {
                     methodStats = new MethodStats(method, methodTimeStart, now - methodTimeStart);
                     break;
                 case EXCEPTION_MAPPING_FINISHED:
-                    exceptionMapperEvents.add(event);
+                    if (!exceptionMapperEvents.offer(event)) {
+                        LOGGER.warning(LocalizationMessages.ERROR_MONITORING_QUEUE_MAPPER());
+                    }
                     break;
                 case FINISHED:
                     if (event.isResponseWritten()) {
-                        responseStatuses.add(event.getContainerResponse().getStatus());
+                        if (!responseStatuses.offer(event.getContainerResponse().getStatus())) {
+                            LOGGER.warning(LocalizationMessages.ERROR_MONITORING_QUEUE_RESPONSE());
+                        }
                     }
                     final StringBuilder sb = new StringBuilder();
                     final List<UriTemplate> orderedTemplates = Lists.reverse(event.getUriInfo().getMatchedTemplates());
@@ -283,8 +289,11 @@ public final class MonitoringEventListener implements ApplicationEventListener {
                         sb.setLength(sb.length() - 1);
                     }
 
-                    requestQueuedItems.add(new RequestStats(new TimeStats(requestTimeStart, now - requestTimeStart),
-                            methodStats, sb.toString()));
+                    if (!requestQueuedItems.offer(new RequestStats(new TimeStats(requestTimeStart, now - requestTimeStart),
+                            methodStats, sb.toString()))) {
+                        LOGGER.warning(LocalizationMessages.ERROR_MONITORING_QUEUE_REQUEST());
+                    }
+
             }
         }
     }
