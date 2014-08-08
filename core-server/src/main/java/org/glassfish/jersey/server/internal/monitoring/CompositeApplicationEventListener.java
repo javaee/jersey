@@ -51,7 +51,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * {@link ApplicationEventListener application event listener} that aggregates more event listeners into one.
- * Calling listener methods on this listener will cause calling methods on all aggregated listener.
+ * Calling listener methods on this listener will cause calling methods on all aggregated listeners.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
@@ -64,22 +64,22 @@ public class CompositeApplicationEventListener implements ApplicationEventListen
      *
      * @param applicationEventListeners List of application event listener that should be aggregated.
      */
-    public CompositeApplicationEventListener(List<ApplicationEventListener> applicationEventListeners) {
+    public CompositeApplicationEventListener(final List<ApplicationEventListener> applicationEventListeners) {
         this.applicationEventListeners = applicationEventListeners;
     }
 
     @Override
-    public void onEvent(ApplicationEvent event) {
-        for (ApplicationEventListener applicationEventListener : applicationEventListeners) {
+    public void onEvent(final ApplicationEvent event) {
+        for (final ApplicationEventListener applicationEventListener : applicationEventListeners) {
             applicationEventListener.onEvent(event);
         }
     }
 
     @Override
-    public RequestEventListener onRequest(RequestEvent requestEvent) {
-        List<RequestEventListener> requestEventListeners = Lists.newArrayList();
-        for (ApplicationEventListener applicationEventListener : applicationEventListeners) {
-            RequestEventListener requestEventListener = applicationEventListener.onRequest(requestEvent);
+    public RequestEventListener onRequest(final RequestEvent requestEvent) {
+        final List<RequestEventListener> requestEventListeners = Lists.newArrayList();
+        for (final ApplicationEventListener applicationEventListener : applicationEventListeners) {
+            final RequestEventListener requestEventListener = applicationEventListener.onRequest(requestEvent);
             if (requestEventListener != null) {
                 requestEventListeners.add(requestEventListener);
             }
