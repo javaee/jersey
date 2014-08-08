@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,39 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.servlet;
+package org.glassfish.jersey.tests.integration.servlet_3_init_7;
 
-import java.util.Enumeration;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerException;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 /**
- * A servlet based web config. Delegates all invocations to the servlet
- * configuration from the servlet api.
- *
- * @author Paul Sandoz
- * @author guilherme silveira
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public final class WebServletConfig implements WebConfig {
+public class HelloWorldResourceITCase extends JerseyTest {
 
-    private final ServletContainer servlet;
+    @Override
+    protected ResourceConfig configure() {
+        enable(TestProperties.LOG_TRAFFIC);
 
-    public WebServletConfig(final ServletContainer servlet) {
-        this.servlet = servlet;
+        return new ResourceConfig(HelloWorldResource.class);
     }
 
     @Override
-    public WebConfig.ConfigType getConfigType() {
-        return WebConfig.ConfigType.ServletConfig;
+    protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+        return new ExternalTestContainerFactory();
     }
 
-    @Override
-    public ServletConfig getServletConfig() {
-        return servlet.getServletConfig();
-    }
-
-    @Override
-    public FilterConfig getFilterConfig() {
-        return null;
-    }
-
-    @Override
-    public String getName() {
-        return servlet.getServletName();
-    }
-
-    @Override
-    public String getInitParameter(final String name) {
-        return servlet.getInitParameter(name);
-    }
-
-    @Override
-    public Enumeration getInitParameterNames() {
-        return servlet.getInitParameterNames();
-    }
-
-    @Override
-    public ServletContext getServletContext() {
-        return servlet.getServletContext();
+    @Test
+    public void testHelloWorld() throws Exception {
+        String s = target().path("helloworld").request().get(String.class);
+        assertTrue(s.equals("Hello World! " + this.getClass().getPackage().getName()));
     }
 }

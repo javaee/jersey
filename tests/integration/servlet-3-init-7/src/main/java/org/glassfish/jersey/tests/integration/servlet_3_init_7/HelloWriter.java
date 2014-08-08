@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,46 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.servlet;
+package org.glassfish.jersey.tests.integration.servlet_3_init_7;
 
-import java.util.Enumeration;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.MessageBodyWriter;
+import javax.ws.rs.ext.Provider;
 
 /**
- * A servlet based web config. Delegates all invocations to the servlet
- * configuration from the servlet api.
- *
- * @author Paul Sandoz
- * @author guilherme silveira
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public final class WebServletConfig implements WebConfig {
+@Provider
+public class HelloWriter implements MessageBodyWriter<HelloWorldResource.Hello> {
 
-    private final ServletContainer servlet;
-
-    public WebServletConfig(final ServletContainer servlet) {
-        this.servlet = servlet;
+    @Override
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
+        return type.equals(HelloWorldResource.Hello.class);
     }
 
     @Override
-    public WebConfig.ConfigType getConfigType() {
-        return WebConfig.ConfigType.ServletConfig;
+    public long getSize(final HelloWorldResource.Hello hello, final Class<?> type, final Type genericType,
+                        final Annotation[] annotations, final MediaType mediaType) {
+        return -1;
     }
 
     @Override
-    public ServletConfig getServletConfig() {
-        return servlet.getServletConfig();
-    }
-
-    @Override
-    public FilterConfig getFilterConfig() {
-        return null;
-    }
-
-    @Override
-    public String getName() {
-        return servlet.getServletName();
-    }
-
-    @Override
-    public String getInitParameter(final String name) {
-        return servlet.getInitParameter(name);
-    }
-
-    @Override
-    public Enumeration getInitParameterNames() {
-        return servlet.getInitParameterNames();
-    }
-
-    @Override
-    public ServletContext getServletContext() {
-        return servlet.getServletContext();
+    public void writeTo(final HelloWorldResource.Hello hello,
+                        final Class<?> type,
+                        final Type genericType,
+                        final Annotation[] annotations,
+                        final MediaType mediaType,
+                        final MultivaluedMap<String, Object> httpHeaders,
+                        final OutputStream entityStream) throws IOException, WebApplicationException {
+        entityStream.write(("Hello World! " + this.getClass().getPackage().getName()).getBytes());
     }
 }
