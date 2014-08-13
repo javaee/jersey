@@ -78,18 +78,16 @@ final class SingleValueExtractor<T> extends AbstractParamValueExtractor<T> imple
     @Override
     public T extract(MultivaluedMap<String, String> parameters) {
         String v = parameters.getFirst(getName());
-        if (v != null) {
-            try {
-                return fromString(v);
-            } catch (WebApplicationException ex) {
-                throw ex;
-            } catch (ProcessingException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                throw new ExtractorException(ex);
-            }
-        } else {
+        try {
+            return fromString(v);
+        } catch (WebApplicationException ex) {
+            throw ex;
+        } catch (ProcessingException ex) {
+            throw ex;
+        } catch (IllegalArgumentException ex) {
             return defaultValue();
+        } catch (Exception ex) {
+            throw new ExtractorException(ex);
         }
     }
 }

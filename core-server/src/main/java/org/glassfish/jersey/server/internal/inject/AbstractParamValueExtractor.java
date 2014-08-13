@@ -138,6 +138,8 @@ abstract class AbstractParamValueExtractor<T> {
             return paramConverter.fromString(value);
         } catch (WebApplicationException wae) {
             throw wae;
+        } catch (IllegalArgumentException iae) {
+            throw iae;
         } catch (Exception ex) {
             throw new ExtractorException(ex);
         }
