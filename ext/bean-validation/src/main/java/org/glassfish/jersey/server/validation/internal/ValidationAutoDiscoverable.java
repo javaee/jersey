@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.validation.internal;
 
+import javax.annotation.Priority;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
@@ -54,6 +55,7 @@ import org.glassfish.jersey.server.validation.ValidationFeature;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
 public final class ValidationAutoDiscoverable implements ForcedAutoDiscoverable {
 
     @Override

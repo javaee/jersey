@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.media.htmljson.internal;
 
+import javax.annotation.Priority;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.FeatureContext;
 
@@ -49,6 +50,7 @@ import org.glassfish.jersey.media.htmljson.HtmlJsonProvider;
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
 public class HtmlJsonAutoDiscoverable implements AutoDiscoverable {
 
     @Override

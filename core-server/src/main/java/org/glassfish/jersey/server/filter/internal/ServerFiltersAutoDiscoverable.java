@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.filter.internal;
 
+import javax.annotation.Priority;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Configuration;
@@ -55,6 +56,7 @@ import org.glassfish.jersey.server.filter.UriConnegFilter;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
 public final class ServerFiltersAutoDiscoverable implements AutoDiscoverable {
 
     @Override

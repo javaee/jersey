@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.jsonp.internal;
 
+import javax.annotation.Priority;
 import javax.ws.rs.core.FeatureContext;
 
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
@@ -51,7 +52,8 @@ import org.glassfish.jersey.jsonp.JsonProcessingFeature;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class JsonProcessingAutoDiscoverable  implements ForcedAutoDiscoverable {
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
+public class JsonProcessingAutoDiscoverable implements ForcedAutoDiscoverable {
 
     @Override
     public void configure(final FeatureContext context) {
