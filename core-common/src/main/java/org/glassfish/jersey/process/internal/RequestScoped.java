@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,17 +41,14 @@ package org.glassfish.jersey.process.internal;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
-import javax.inject.Scope;
-
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import javax.inject.Scope;
+
 /**
  * Request scope binding annotation.
- *
- * TODO find a way how to bind the scope annotation to the request scope instance.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
