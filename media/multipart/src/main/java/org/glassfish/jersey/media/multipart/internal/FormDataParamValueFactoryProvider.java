@@ -63,6 +63,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
@@ -219,7 +220,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                 if (formDataBodyPart == null) {
                     if (parameter.getDefaultValue() != null) {
                         // Convert default value to bytes.
-                        in = new ByteArrayInputStream(parameter.getDefaultValue().getBytes());
+                        in = new ByteArrayInputStream(parameter.getDefaultValue().getBytes(MessageUtils.getCharset(mediaType)));
                     } else {
                         return null;
                     }
@@ -334,7 +335,7 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
             }
         } else if (parameter.getSourceAnnotation().annotationType() == FormDataParam.class) {
             final String parameterName = parameter.getSourceName();
-            if (parameterName == null || parameterName.length() == 0) {
+            if (parameterName == null || parameterName.isEmpty()) {
                 // Invalid query parameter name
                 return null;
             }

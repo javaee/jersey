@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,6 +66,7 @@ import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.Boundary;
 import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * {@link Provider} {@link MessageBodyWriter} implementation for {@link MultiPart} entities.
@@ -86,7 +87,7 @@ public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
      */
     private final Providers providers;
 
-    public MultiPartWriter(@Context Providers providers) {
+    public MultiPartWriter(@Context final Providers providers) {
         this.providers = providers;
     }
 
@@ -139,14 +140,14 @@ public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
 
         // If our entity is not nested, make sure the MIME-Version header is set.
         if (entity.getParent() == null) {
-            Object value = headers.getFirst("MIME-Version");
+            final Object value = headers.getFirst("MIME-Version");
             if (value == null) {
                 headers.putSingle("MIME-Version", "1.0");
             }
         }
 
         // Initialize local variables we need.
-        final Writer writer = new BufferedWriter(new OutputStreamWriter(stream));
+        final Writer writer = new BufferedWriter(new OutputStreamWriter(stream, MessageUtils.getCharset(mediaType)));
 
         // Determine the boundary string to be used, creating one if needed.
         final MediaType boundaryMediaType = Boundary.addBoundary(mediaType);
@@ -189,7 +190,7 @@ public class MultiPartWriter implements MessageBodyWriter<MultiPart> {
                 writer.write(entry.getKey());
                 writer.write(':');
                 boolean first = true;
-                for (String value : entry.getValue()) {
+                for (final String value : entry.getValue()) {
                     if (first) {
                         writer.write(' ');
                         first = false;

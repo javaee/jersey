@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,15 +39,19 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+
+import org.glassfish.jersey.message.MessageUtils;
+
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
@@ -56,18 +60,23 @@ import java.lang.reflect.Type;
 @Provider
 public class HelloWriter implements MessageBodyWriter<AbstractHelloWorldResource.Hello> {
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
         return type.equals(AbstractHelloWorldResource.Hello.class);
     }
 
     @Override
-    public long getSize(AbstractHelloWorldResource.Hello hello, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public long getSize(final AbstractHelloWorldResource.Hello hello, final Class<?> type, final Type genericType,
+                        final Annotation[] annotations, final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(AbstractHelloWorldResource.Hello hello, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-        String value = String.format("Hello %s!", hello.getName());
-        entityStream.write(value.getBytes());
+    public void writeTo(final AbstractHelloWorldResource.Hello hello, final Class<?> type, final Type genericType,
+                        final Annotation[] annotations, final MediaType mediaType,
+                        final MultivaluedMap<String, Object> httpHeaders,
+                        final OutputStream entityStream) throws IOException, WebApplicationException {
+        final String value = String.format("Hello %s!", hello.getName());
+        entityStream.write(value.getBytes(MessageUtils.getCharset(mediaType)));
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,11 +64,11 @@ public final class SimEngine {
     /**
      * X-axis coordinate boundary.
      */
-    public static int X_BOUND = 800;
+    public static final int X_BOUND = 800;
     /**
      * Y-axis coordinate boundary.
      */
-    public static int Y_BOUND = 350;
+    public static final int Y_BOUND = 350;
     /**
      * Simulation step executor.
      */
@@ -83,7 +83,7 @@ public final class SimEngine {
      */
     private static final AtomicBoolean started = new AtomicBoolean(false);
 
-    public static boolean register(EventOutput output) {
+    public static boolean register(final EventOutput output) {
         return broadcaster.add(output);
     }
 
@@ -101,7 +101,7 @@ public final class SimEngine {
         return started.compareAndSet(true, false);
     }
 
-    public static Location bound(Location location) {
+    public static Location bound(final Location location) {
         int x = location.getX();
         int y = location.getY();
         if (x >= X_BOUND) {
@@ -128,10 +128,10 @@ public final class SimEngine {
             vectors = new ArrayList<Location>(flights.size());
             final int boundSpeedX = X_BOUND / 30;
             final int boundSpeedY = Y_BOUND / 30;
-            int count = 0;
-            for (Flight flight : flights) {
+            final int count = 0;
+            for (final Flight flight : flights) {
                 flight.setStatus(Flight.Status.CLOSED);
-                Location vector = DataStore.generateLocation(boundSpeedX, boundSpeedY);
+                final Location vector = DataStore.generateLocation(boundSpeedX, boundSpeedY);
                 switch (count / 4) {
                     case 0:
                         vector.setX(-vector.getX());
@@ -169,7 +169,7 @@ public final class SimEngine {
                 newLocation = bound(newLocation);
                 flight.getAircraft().setLocation(newLocation);
 
-                OutboundEvent flightMovedEvent = new OutboundEvent.Builder()
+                final OutboundEvent flightMovedEvent = new OutboundEvent.Builder()
                         .mediaType(MediaType.APPLICATION_JSON_TYPE)
                         .data(new FlightLocation(flight.getId(), newLocation))
                         .build();
@@ -185,7 +185,7 @@ public final class SimEngine {
         }
 
         private void cleanup() {
-            for (Flight flight : flights) {
+            for (final Flight flight : flights) {
                 flight.setStatus(Flight.Status.OPEN);
             }
         }

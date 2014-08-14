@@ -102,7 +102,7 @@ final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {
     }
 
     @Override
-    public void writeTo(String templateReference, Viewable viewable, MediaType mediaType,
+    public void writeTo(final String templateReference, final Viewable viewable, final MediaType mediaType,
                         final MultivaluedMap<String, Object> httpHeaders, final OutputStream out) throws IOException {
 
         if (!(viewable instanceof ResolvedViewable)) {
@@ -112,10 +112,10 @@ final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {
 
         // SPI could supply instance of ResolvedViewable but we would like to keep the backward
         // compatibility, so the cast is here.
-        ResolvedViewable resolvedViewable = (ResolvedViewable) viewable;
+        final ResolvedViewable resolvedViewable = (ResolvedViewable) viewable;
 
 
-        TracingLogger tracingLogger = TracingLogger.getInstance(containerRequestProvider.get().getPropertiesDelegate());
+        final TracingLogger tracingLogger = TracingLogger.getInstance(containerRequestProvider.get().getPropertiesDelegate());
         if (tracingLogger.isLogEnabled(MvcJspEvent.JSP_FORWARD)) {
             tracingLogger.log(MvcJspEvent.JSP_FORWARD, templateReference, resolvedViewable.getModel());
         }
@@ -134,7 +134,7 @@ final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {
                 out.write(b);
             }
         };
-        final PrintWriter responseWriter = new PrintWriter(new OutputStreamWriter(responseStream));
+        final PrintWriter responseWriter = new PrintWriter(new OutputStreamWriter(responseStream, getEncoding()));
 
         try {
             wrapper.forward(requestProviderRef.get().get(), new HttpServletResponseWrapper(responseProviderRef.get().get()) {
@@ -149,7 +149,7 @@ final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {
                     return responseWriter;
                 }
             });
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new ContainerException(e);
         } finally {
             responseWriter.flush();
@@ -166,7 +166,7 @@ final class JspTemplateProcessor extends AbstractTemplateProcessor<String> {
         private final String category;
         private final String messageFormat;
 
-        private MvcJspEvent(TracingLogger.Level level, String category, String messageFormat) {
+        private MvcJspEvent(final TracingLogger.Level level, final String category, final String messageFormat) {
             this.level = level;
             this.category = category;
             this.messageFormat = messageFormat;

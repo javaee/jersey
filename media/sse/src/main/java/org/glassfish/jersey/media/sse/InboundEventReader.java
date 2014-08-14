@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,6 +59,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * Client-side single inbound Server-Sent Event reader.
@@ -80,17 +81,18 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
     }
 
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                              final MediaType mediaType) {
         return InboundEvent.class.equals(type) && SseFeature.SERVER_SENT_EVENTS_TYPE.isCompatible(mediaType);
     }
 
     @Override
-    public InboundEvent readFrom(Class<InboundEvent> type,
-                                 Type genericType,
-                                 Annotation[] annotations,
-                                 MediaType mediaType,
-                                 MultivaluedMap<String, String> headers,
-                                 InputStream entityStream) throws IOException, WebApplicationException {
+    public InboundEvent readFrom(final Class<InboundEvent> type,
+                                 final Type genericType,
+                                 final Annotation[] annotations,
+                                 final MediaType mediaType,
+                                 final MultivaluedMap<String, String> headers,
+                                 final InputStream entityStream) throws IOException, WebApplicationException {
         /**
          * SSE Event parsing based on:
          *
@@ -98,7 +100,8 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
          * last editors draft from 13 March 2012
          */
         final ByteArrayOutputStream tokenData = new ByteArrayOutputStream();
-        InboundEvent.Builder eventBuilder = new InboundEvent.Builder(messageBodyWorkers.get(), annotations, mediaType, headers);
+        final InboundEvent.Builder eventBuilder =
+                new InboundEvent.Builder(messageBodyWorkers.get(), annotations, mediaType, headers);
 
         int b = -1;
         State currentState = State.NEW_LINE;
@@ -126,7 +129,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
                 case FIELD:
                     // read field name
                     b = readLineUntil(entityStream, ':', tokenData);
-                    final String fieldName = tokenData.toString();
+                    final String fieldName = tokenData.toString(MessageUtils.getCharset(mediaType).name());
                     tokenData.reset();
 
                     if (b == ':') {
@@ -143,7 +146,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
                         }
                     }
 
-                    processField(eventBuilder, fieldName, tokenData.toByteArray());
+                    processField(eventBuilder, fieldName, mediaType, tokenData.toByteArray());
                     tokenData.reset();
 
                     currentState = State.NEW_LINE;
@@ -166,7 +169,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
      * @return value of the last byte read.
      * @throws IOException in case the reading or writing of the data failed.
      */
-    private int readLineUntil(InputStream in, int delimiter, OutputStream out) throws IOException {
+    private int readLineUntil(final InputStream in, final int delimiter, final OutputStream out) throws IOException {
         int b;
         while ((b = in.read()) != -1) {
             if (b == delimiter || b == '\n') {
@@ -179,8 +182,9 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
         return b;
     }
 
-    private void processField(InboundEvent.Builder inboundEventBuilder, String name, byte[] value) {
-        final String valueString = new String(value);
+    private void processField(final InboundEvent.Builder inboundEventBuilder, final String name,
+                              final MediaType mediaType, final byte[] value) {
+        final String valueString = new String(value, MessageUtils.getCharset(mediaType));
         if ("event".equals(name)) {
             inboundEventBuilder.name(valueString);
         } else if ("data".equals(name)) {
@@ -191,7 +195,7 @@ class InboundEventReader implements MessageBodyReader<InboundEvent> {
         } else if ("retry".equals(name)) {
             try {
                 inboundEventBuilder.reconnectDelay(Long.parseLong(valueString));
-            } catch (NumberFormatException ex) {
+            } catch (final NumberFormatException ex) {
                 LOGGER.log(Level.FINE, LocalizationMessages.IN_EVENT_RETRY_PARSE_ERROR(valueString), ex);
             }
         } else {

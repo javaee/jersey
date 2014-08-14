@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -51,6 +52,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.Providers;
+
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * Field injected provider to prove that provider registered via meta-inf/services
@@ -65,19 +68,24 @@ public class FieldInjectedProvider implements MessageBodyWriter<String> {
     @Context Providers providers;
 
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
         return type == String.class;
     }
 
     @Override
-    public long getSize(String t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public long getSize(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations,
+                        final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(String t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-        final MessageBodyWriter<String> plainTextWriter = providers.getMessageBodyWriter(String.class, genericType, annotations, MediaType.TEXT_PLAIN_TYPE);
-        entityStream.write("via field injected provider:".getBytes());
+    public void writeTo(final String t, final Class<?> type, final Type genericType, final Annotation[] annotations,
+                        final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders,
+                        final OutputStream entityStream) throws IOException, WebApplicationException {
+        final MessageBodyWriter<String> plainTextWriter =
+                providers.getMessageBodyWriter(String.class, genericType, annotations, MediaType.TEXT_PLAIN_TYPE);
+        entityStream.write("via field injected provider:".getBytes(MessageUtils.getCharset(mediaType)));
         plainTextWriter.writeTo(t, type, genericType, annotations, mediaType, httpHeaders, entityStream);
     }
 }

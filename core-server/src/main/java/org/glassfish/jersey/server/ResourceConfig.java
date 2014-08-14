@@ -116,7 +116,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
             this.resourcesView = Collections.unmodifiableSet(this.resources);
         }
 
-        public State(State original) {
+        public State(final State original) {
             super(original);
             this.classLoader = original.classLoader;
             this.applicationName = original.applicationName;
@@ -127,20 +127,20 @@ public class ResourceConfig extends Application implements Configurable<Resource
             this.resourceFinders = Sets.newHashSet(original.resourceFinders);
         }
 
-        public void setClassLoader(ClassLoader classLoader) {
+        public void setClassLoader(final ClassLoader classLoader) {
             this.classLoader = classLoader;
         }
 
 
-        public void setApplicationName(String applicationName) {
+        public void setApplicationName(final String applicationName) {
             this.applicationName = applicationName;
         }
 
-        public void registerResources(Set<Resource> resources) {
+        public void registerResources(final Set<Resource> resources) {
             this.resources.addAll(resources);
         }
 
-        public void registerFinder(ResourceFinder resourceFinder) {
+        public void registerFinder(final ResourceFinder resourceFinder) {
             this.resourceFinders.add(resourceFinder);
         }
 
@@ -148,7 +148,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         protected Inflector<ContractProvider.Builder, ContractProvider> getModelEnhancer(final Class<?> componentClass) {
             return new Inflector<ContractProvider.Builder, ContractProvider>() {
                 @Override
-                public ContractProvider apply(ContractProvider.Builder builder) {
+                public ContractProvider apply(final ContractProvider.Builder builder) {
                     if (builder.getScope() == null && builder.getContracts().isEmpty() &&
                             Resource.getPath(componentClass) != null) {
                         builder.scope(RequestScoped.class);
@@ -161,7 +161,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public State loadFrom(Configuration config) {
+        public State loadFrom(final Configuration config) {
             super.loadFrom(config);
             this.resourceFinders.clear();
             this.resources.clear();
@@ -216,77 +216,77 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     private static final class ImmutableState extends State {
-        private ImmutableState(State original) {
+        private ImmutableState(final State original) {
             super(original);
         }
 
         @Override
-        public void setClassLoader(ClassLoader classLoader) {
+        public void setClassLoader(final ClassLoader classLoader) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public void registerResources(Set<Resource> resources) {
+        public void registerResources(final Set<Resource> resources) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public void registerFinder(ResourceFinder resourceFinder) {
+        public void registerFinder(final ResourceFinder resourceFinder) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State addProperties(Map<String, ?> properties) {
+        public State addProperties(final Map<String, ?> properties) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State property(String name, Object value) {
+        public State property(final String name, final Object value) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State register(Class<?> componentClass) {
+        public State register(final Class<?> componentClass) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State register(Class<?> componentClass, int bindingPriority) {
+        public State register(final Class<?> componentClass, final int bindingPriority) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State register(Class<?> componentClass, Class<?>... contracts) {
+        public State register(final Class<?> componentClass, final Class<?>... contracts) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State register(Class<?> componentClass, Map<Class<?>, Integer> contracts) {
+        public State register(final Class<?> componentClass, final Map<Class<?>, Integer> contracts) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State register(Object component) {
+        public State register(final Object component) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State register(Object component, int bindingPriority) {
+        public State register(final Object component, final int bindingPriority) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State register(Object component, Class<?>... contracts) {
+        public State register(final Object component, final Class<?>... contracts) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State register(Object component, Map<Class<?>, Integer> contracts) {
+        public State register(final Object component, final Map<Class<?>, Integer> contracts) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
         @Override
-        public State setProperties(Map<String, ?> properties) {
+        public State setProperties(final Map<String, ?> properties) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
 
@@ -296,7 +296,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         }
 
         @Override
-        public void configureMetaProviders(ServiceLocator locator) {
+        public void configureMetaProviders(final ServiceLocator locator) {
             throw new IllegalStateException(LocalizationMessages.RC_NOT_MODIFIABLE());
         }
     }
@@ -310,7 +310,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param application Application to provide the {@code ResourceConfig} instance for.
      * @return ResourceConfig instance for the supplied application.
      */
-    public static ResourceConfig forApplication(Application application) {
+    public static ResourceConfig forApplication(final Application application) {
         return (application instanceof ResourceConfig) ? ((ResourceConfig) application) : new WrappingResourceConfig
                 (application, null, null);
     }
@@ -321,7 +321,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param applicationClass Class representing a JAX-RS application.
      * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
      */
-    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass) {
+    public static ResourceConfig forApplicationClass(final Class<? extends Application> applicationClass) {
         return new WrappingResourceConfig(null, applicationClass, null);
     }
 
@@ -329,8 +329,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * Returns a {@code ResourceConfig} instance wrapping the application of the supplied class.
      * <p/>
      * This method provides an option of supplying the set of classes that should be returned from {@link #getClasses()}
-     * method if the application defined by the supplied application class returns empty sets from {@link javax.ws.rs.core
-     * .Application#getClasses()}
+     * method if the application defined by the supplied application class returns empty sets from
+     * {@link javax.ws.rs.core.Application#getClasses()}
      * and {@link javax.ws.rs.core.Application#getSingletons()} methods.
      *
      * @param applicationClass Class representing a JAX-RS application.
@@ -338,8 +338,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
      *                         application does not provide any classes and singletons.
      * @return ResourceConfig wrapping the JAX-RS application defined by the supplied class.
      */
-    public static ResourceConfig forApplicationClass(Class<? extends Application> applicationClass,
-                                                     Set<Class<?>> defaultClasses) {
+    public static ResourceConfig forApplicationClass(final Class<? extends Application> applicationClass,
+                                                     final Set<Class<?>> defaultClasses) {
         return new WrappingResourceConfig(null, applicationClass, defaultClasses);
     }
 
@@ -357,7 +357,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      *
      * @param classes application-specific resource and/or provider classes.
      */
-    public ResourceConfig(Set<Class<?>> classes) {
+    public ResourceConfig(final Set<Class<?>> classes) {
         this();
         this.registerClasses(classes);
     }
@@ -368,7 +368,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      *
      * @param classes application-specific resource and/or provider classes.
      */
-    public ResourceConfig(Class<?>... classes) {
+    public ResourceConfig(final Class<?>... classes) {
         this(Sets.newHashSet(classes));
     }
 
@@ -390,7 +390,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param properties properties to add.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig addProperties(Map<String, Object> properties) {
+    public final ResourceConfig addProperties(final Map<String, Object> properties) {
         state.addProperties(properties);
         return this;
     }
@@ -409,7 +409,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     @Override
-    public ResourceConfig property(String name, Object value) {
+    public ResourceConfig property(final String name, final Object value) {
         state.property(name, value);
         return this;
     }
@@ -487,12 +487,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param classes classes to register.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig registerClasses(Set<Class<?>> classes) {
+    public final ResourceConfig registerClasses(final Set<Class<?>> classes) {
         if (classes == null) {
             return this;
         }
 
-        for (Class<?> cls : classes) {
+        for (final Class<?> cls : classes) {
             register(cls);
         }
         return this;
@@ -515,7 +515,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param classes classes to register.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig registerClasses(Class<?>... classes) {
+    public final ResourceConfig registerClasses(final Class<?>... classes) {
         if (classes == null) {
             return this;
         }
@@ -536,12 +536,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param instances instances to register.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig registerInstances(Set<Object> instances) {
+    public final ResourceConfig registerInstances(final Set<Object> instances) {
         if (instances == null) {
             return this;
         }
 
-        for (Object instance : instances) {
+        for (final Object instance : instances) {
             register(instance);
         }
         return this;
@@ -560,7 +560,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param instances instances to register.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig registerInstances(Object... instances) {
+    public final ResourceConfig registerInstances(final Object... instances) {
         if (instances == null) {
             return this;
         }
@@ -574,7 +574,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param resources resource models to register.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig registerResources(Resource... resources) {
+    public final ResourceConfig registerResources(final Resource... resources) {
         if (resources == null) {
             return this;
         }
@@ -588,7 +588,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param resources resource models to register.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig registerResources(Set<Resource> resources) {
+    public final ResourceConfig registerResources(final Set<Resource> resources) {
         if (resources == null) {
             return this;
         }
@@ -603,7 +603,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param resourceFinder {@link ResourceFinder}
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig registerFinder(ResourceFinder resourceFinder) {
+    public final ResourceConfig registerFinder(final ResourceFinder resourceFinder) {
         if (resourceFinder == null) {
             return this;
         }
@@ -622,7 +622,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param applicationName Unique application name.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig setApplicationName(String applicationName) {
+    public final ResourceConfig setApplicationName(final String applicationName) {
         state.setApplicationName(applicationName);
         return this;
     }
@@ -633,7 +633,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param classLoader provided {@link ClassLoader}.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig setClassLoader(ClassLoader classLoader) {
+    public final ResourceConfig setClassLoader(final ClassLoader classLoader) {
         this.state.setClassLoader(classLoader);
         return this;
     }
@@ -647,7 +647,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @return updated resource configuration instance.
      * @see #packages(boolean, String...)
      */
-    public final ResourceConfig packages(String... packages) {
+    public final ResourceConfig packages(final String... packages) {
         return packages(true, packages);
     }
 
@@ -661,7 +661,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @return updated resource configuration instance.
      * @see #packages(String...)
      */
-    public final ResourceConfig packages(boolean recursive, String... packages) {
+    public final ResourceConfig packages(final boolean recursive, final String... packages) {
         if (packages == null || packages.length == 0) {
             return this;
         }
@@ -676,7 +676,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param files array of file and directory names.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig files(String... files) {
+    public final ResourceConfig files(final String... files) {
         return files(true, files);
     }
 
@@ -689,7 +689,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param files     array of file and directory names.
      * @return updated resource configuration instance.
      */
-    public final ResourceConfig files(boolean recursive, String... files) {
+    public final ResourceConfig files(final boolean recursive, final String... files) {
         if (files == null || files.length == 0) {
             return this;
         }
@@ -735,7 +735,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     @Override
-    public final Object getProperty(String name) {
+    public final Object getProperty(final String name) {
         return state.getProperty(name);
     }
 
@@ -767,7 +767,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
     public final Set<Object> getSingletons() {
         if (cachedSingletonsView == null) {
             cachedSingletons = _getSingletons();
-            cachedSingletonsView = Collections.unmodifiableSet(cachedSingletons == null ? new HashSet<Object>() : cachedSingletons);
+            cachedSingletonsView = Collections.unmodifiableSet(cachedSingletons == null ? new HashSet<>() : cachedSingletons);
         }
 
         return cachedSingletonsView;
@@ -815,27 +815,27 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     @Override
-    public boolean isEnabled(Feature feature) {
+    public boolean isEnabled(final Feature feature) {
         return state.isEnabled(feature);
     }
 
     @Override
-    public boolean isEnabled(Class<? extends Feature> featureClass) {
+    public boolean isEnabled(final Class<? extends Feature> featureClass) {
         return state.isEnabled(featureClass);
     }
 
     @Override
-    public boolean isRegistered(Object component) {
+    public boolean isRegistered(final Object component) {
         return state.isRegistered(component);
     }
 
     @Override
-    public boolean isRegistered(Class<?> componentClass) {
+    public boolean isRegistered(final Class<?> componentClass) {
         return state.isRegistered(componentClass);
     }
 
     @Override
-    public Map<Class<?>, Integer> getContracts(Class<?> componentClass) {
+    public Map<Class<?>, Integer> getContracts(final Class<?> componentClass) {
         return state.getContracts(componentClass);
     }
 
@@ -852,18 +852,18 @@ public class ResourceConfig extends Application implements Configurable<Resource
     }
 
     private Set<Class<?>> scanClasses() {
-        Set<Class<?>> result = Sets.newHashSet();
+        final Set<Class<?>> result = Sets.newHashSet();
 
         final ResourceConfig.State _state = state;
-        Set<ResourceFinder> rfs = Sets.newHashSet(_state.getResourceFinders());
+        final Set<ResourceFinder> rfs = Sets.newHashSet(_state.getResourceFinders());
 
         // classes registered via configuration property
         final String[] classNames = parsePropertyValue(ServerProperties.PROVIDER_CLASSNAMES);
         if (classNames != null) {
-            for (String className : classNames) {
+            for (final String className : classNames) {
                 try {
                     result.add(_state.getClassLoader().loadClass(className));
-                } catch (ClassNotFoundException e) {
+                } catch (final ClassNotFoundException e) {
                     LOGGER.log(Level.CONFIG, LocalizationMessages.UNABLE_TO_LOAD_CLASS(className));
                 }
             }
@@ -881,21 +881,21 @@ public class ResourceConfig extends Application implements Configurable<Resource
             rfs.add(new FilesScanner(classPathElements, true));
         }
 
-        AnnotationAcceptingListener afl =
+        final AnnotationAcceptingListener afl =
                 AnnotationAcceptingListener.newJaxrsResourceAndProviderListener(_state.getClassLoader());
-        for (ResourceFinder resourceFinder : rfs) {
+        for (final ResourceFinder resourceFinder : rfs) {
             while (resourceFinder.hasNext()) {
                 final String next = resourceFinder.next();
                 if (afl.accept(next)) {
                     final InputStream in = resourceFinder.open();
                     try {
                         afl.process(next, in);
-                    } catch (IOException e) {
+                    } catch (final IOException e) {
                         LOGGER.log(Level.WARNING, LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_PROCESS(next));
                     } finally {
                         try {
                             in.close();
-                        } catch (IOException ex) {
+                        } catch (final IOException ex) {
                             LOGGER.log(Level.FINER, "Error closing resource stream.", ex);
                         }
                     }
@@ -936,7 +936,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @return set of configured resource and/or provider instances.
      */
     Set<Object> _getSingletons() {
-        Set<Object> result = Sets.newHashSet();
+        final Set<Object> result = Sets.newHashSet();
         result.addAll(state.getInstances());
         return result;
     }
@@ -1002,7 +1002,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param app JAX-RS application
      * @return this ResourceConfig instance (for convenience)
      */
-    final ResourceConfig setApplication(Application app) {
+    final ResourceConfig setApplication(final Application app) {
         return _setApplication(app);
     }
 
@@ -1012,7 +1012,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param app application to be set for this ResourceConfig
      * @return this resource config instance
      */
-    ResourceConfig _setApplication(Application app) {
+    ResourceConfig _setApplication(final Application app) {
         throw new UnsupportedOperationException();
     }
 
@@ -1022,7 +1022,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
         private final Set<Class<?>> defaultClasses = Sets.newHashSet();
 
         public WrappingResourceConfig(
-                Application application, Class<? extends Application> applicationClass, Set<Class<?>> defaultClasses) {
+                final Application application, final Class<? extends Application> applicationClass,
+                final Set<Class<?>> defaultClasses) {
 
             if (application == null && applicationClass == null) {
                 throw new IllegalArgumentException(LocalizationMessages.RESOURCE_CONFIG_ERROR_NULL_APPLICATIONCLASS());
@@ -1046,7 +1047,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
          * @return updated resource configuration instance.
          */
         @Override
-        ResourceConfig _setApplication(Application application) {
+        ResourceConfig _setApplication(final Application application) {
             this.application = application;
             this.applicationClass = null;
             mergeApplications(application);
@@ -1097,7 +1098,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
         private void mergeApplications(final Application application) {
             if (application instanceof ResourceConfig) {
                 // Merge custom binders.
-                ResourceConfig rc = (ResourceConfig) application;
+                final ResourceConfig rc = (ResourceConfig) application;
 
                 // Merge resources
                 super.registerResources(rc.getResources());
@@ -1118,8 +1119,8 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
         @Override
         Set<Class<?>> _getClasses() {
-            Set<Class<?>> result = Sets.newHashSet();
-            Set<Class<?>> applicationClasses = application.getClasses();
+            final Set<Class<?>> result = Sets.newHashSet();
+            final Set<Class<?>> applicationClasses = application.getClasses();
             result.addAll(applicationClasses == null ? new HashSet<Class<?>>() : applicationClasses);
             if (result.isEmpty() && getSingletons().isEmpty()) {
                 result.addAll(defaultClasses);
@@ -1145,7 +1146,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
      * @param application deploy-time JAX-RS/Jersey application configuration.
      * @return initialized run-time resource config.
      */
-    static ResourceConfig createRuntimeConfig(Application application) {
+    static ResourceConfig createRuntimeConfig(final Application application) {
         return (application instanceof ResourceConfig) ?
                 new RuntimeConfig((ResourceConfig) application) : new RuntimeConfig(application);
     }
@@ -1154,12 +1155,12 @@ public class ResourceConfig extends Application implements Configurable<Resource
         private final Set<Class<?>> originalRegistrations;
         private final Application application;
 
-        private RuntimeConfig(ResourceConfig original) {
+        private RuntimeConfig(final ResourceConfig original) {
             super(original);
 
             this.application = original;
 
-            Application customRootApp = ResourceConfig.unwrapCustomRootApplication(original);
+            final Application customRootApp = ResourceConfig.unwrapCustomRootApplication(original);
             if (customRootApp != null) {
                 registerComponentsOf(customRootApp);
             }
@@ -1168,18 +1169,18 @@ public class ResourceConfig extends Application implements Configurable<Resource
             originalRegistrations.addAll(super.getRegisteredClasses());
 
             // Register externally provided instances.
-            Set<Object> externalInstances = Sets.filter(original.getSingletons(), new Predicate<Object>() {
+            final Set<Object> externalInstances = Sets.filter(original.getSingletons(), new Predicate<Object>() {
                 @Override
-                public boolean apply(Object external) {
+                public boolean apply(final Object external) {
                     return !originalRegistrations.contains(external.getClass());
                 }
             });
             registerInstances(externalInstances);
 
             // Register externally provided classes.
-            Set<Class<?>> externalClasses = Sets.filter(original.getClasses(), new Predicate<Class<?>>() {
+            final Set<Class<?>> externalClasses = Sets.filter(original.getClasses(), new Predicate<Class<?>>() {
                 @Override
-                public boolean apply(Class<?> external) {
+                public boolean apply(final Class<?> external) {
                     return !originalRegistrations.contains(external);
                 }
             });
@@ -1196,7 +1197,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
                     if (singletons != null) {
                         registerInstances(Sets.filter(singletons, new Predicate<Object>() {
                             @Override
-                            public boolean apply(Object input) {
+                            public boolean apply(final Object input) {
                                 if (input == null) {
                                     Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(input));
                                 }
@@ -1209,7 +1210,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
                     if (classes != null) {
                         registerClasses(Sets.filter(classes, new Predicate<Class<?>>() {
                             @Override
-                            public boolean apply(Class<?> input) {
+                            public boolean apply(final Class<?> input) {
                                 if (input == null) {
                                     Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(input));
                                 }

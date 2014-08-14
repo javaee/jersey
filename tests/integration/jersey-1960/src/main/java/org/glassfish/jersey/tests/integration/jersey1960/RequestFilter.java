@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,6 +53,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.glassfish.jersey.message.MessageUtils;
+
 /**
  * Filter testing injection support for of servlet artifacts.
  *
@@ -71,8 +73,8 @@ public class RequestFilter implements ContainerRequestFilter {
     private ServletConfig sCfg;
 
     @Override
-    public void filter(ContainerRequestContext ctx) throws IOException {
-        StringBuilder sb = new StringBuilder();
+    public void filter(final ContainerRequestContext ctx) throws IOException {
+        final StringBuilder sb = new StringBuilder();
 
         // First, make sure there are no null injections.
         if (hsReq == null) {
@@ -109,6 +111,7 @@ public class RequestFilter implements ContainerRequestFilter {
         }
         final String header = hsReq.getHeader(REQUEST_NUMBER);
 
-        ctx.setEntityStream(new ByteArrayInputStream(("filtered-" + flags + "-" + header).getBytes()));
+        ctx.setEntityStream(new ByteArrayInputStream(("filtered-" + flags + "-" + header).getBytes(
+                MessageUtils.getCharset(ctx.getMediaType()))));
     }
 }

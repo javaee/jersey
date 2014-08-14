@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -53,6 +54,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * Writer for {@link OutboundEvent}.
@@ -61,44 +63,48 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
-    private static final byte[] COMMENT_LEAD= ": ".getBytes();
-    private static final byte[] NAME_LEAD= "event: ".getBytes();
-    private static final byte[] ID_LEAD= "id: ".getBytes();
-    private static final byte[] RETRY_LEAD= "retry: ".getBytes();
-    private static final byte[] DATA_LEAD= "data: ".getBytes();
+    private static final Charset UTF8 = Charset.forName("UTF-8");
+
+    // encoding does not matter (lower ASCII characters)
+    private static final byte[] COMMENT_LEAD= ": ".getBytes(UTF8);
+    private static final byte[] NAME_LEAD= "event: ".getBytes(UTF8);
+    private static final byte[] ID_LEAD= "id: ".getBytes(UTF8);
+    private static final byte[] RETRY_LEAD= "retry: ".getBytes(UTF8);
+    private static final byte[] DATA_LEAD= "data: ".getBytes(UTF8);
     private static final byte[] EOL= {'\n'};
 
     @Inject
     private Provider<MessageBodyWorkers> workersProvider;
 
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
         return type.equals(OutboundEvent.class) && SseFeature.SERVER_SENT_EVENTS_TYPE.isCompatible(mediaType);
     }
 
     @Override
-    public long getSize(OutboundEvent incomingEvent,
-                        Class<?> type,
-                        Type genericType,
-                        Annotation[] annotations,
-                        MediaType mediaType) {
+    public long getSize(final OutboundEvent incomingEvent,
+                        final Class<?> type,
+                        final Type genericType,
+                        final Annotation[] annotations,
+                        final MediaType mediaType) {
         return -1;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public void writeTo(OutboundEvent outboundEvent,
-                        Class<?> type,
-                        Type genericType,
-                        Annotation[] annotations,
-                        MediaType mediaType,
-                        MultivaluedMap<String, Object> httpHeaders,
+    public void writeTo(final OutboundEvent outboundEvent,
+                        final Class<?> type,
+                        final Type genericType,
+                        final Annotation[] annotations,
+                        final MediaType mediaType,
+                        final MultivaluedMap<String, Object> httpHeaders,
                         final OutputStream entityStream) throws IOException, WebApplicationException {
 
         if (outboundEvent.getComment() != null) {
-            for (String comment : outboundEvent.getComment().split("\n")) {
+            for (final String comment : outboundEvent.getComment().split("\n")) {
                 entityStream.write(COMMENT_LEAD);
-                entityStream.write(comment.getBytes());
+                entityStream.write(comment.getBytes(MessageUtils.getCharset(mediaType)));
                 entityStream.write(EOL);
             }
         }
@@ -136,7 +142,7 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
                         private boolean start = true;
 
                         @Override
-                        public void write(int i) throws IOException {
+                        public void write(final int i) throws IOException {
                             if (start) {
                                 entityStream.write(DATA_LEAD);
                                 start = false;

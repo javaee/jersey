@@ -44,6 +44,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import org.glassfish.jersey.Beta;
 
 /**
@@ -59,8 +60,8 @@ import org.glassfish.jersey.Beta;
 public @interface InjectLinks {
 
     /**
-     * Container for a set of {@link LinkHeader} annotations
-     * @return
+     * Container for a set of {@link org.glassfish.jersey.linking.InjectLink} annotations
+     * @return array of {@code InjectLink} elements
      */
     InjectLink[] value() default {};
 

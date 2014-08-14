@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,8 +41,9 @@ package org.glassfish.jersey.examples.reload;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -70,6 +71,7 @@ import org.glassfish.grizzly.http.server.HttpServer;
  */
 public class App {
 
+    private static final Logger LOGGER = Logger.getLogger(App.class.getName());
     private static final URI BASE_URI = URI.create("http://localhost:8080/flights/");
     public static final String ROOT_PATH = "arrivals";
     public static final String CONFIG_FILENAME = "resources";
@@ -88,7 +90,7 @@ public class App {
 
         @Override
         public void run() {
-            File configFile = new File(CONFIG_FILENAME);
+            final File configFile = new File(CONFIG_FILENAME);
             final long actualLastModified = configFile.lastModified();
             if (lastModified < actualLastModified) {
                 lastModified = actualLastModified;
@@ -96,31 +98,27 @@ public class App {
             }
         }
 
-        private void reloadApp(File configFile) {
-            System.out.println("Reloading resource classes:");
-            ResourceConfig rc = new ResourceConfig();
+        private void reloadApp(final File configFile) {
+            LOGGER.info("Reloading resource classes:");
+            final ResourceConfig rc = new ResourceConfig();
 
-            // @todo Java SE 7 - use try-with-resources
             try {
-                BufferedReader r = new BufferedReader(new FileReader(configFile));
-                try {
+                try (BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(configFile), "UTF-8"))) {
                     while (r.ready()) {
                         final String className = r.readLine();
                         if (!className.startsWith("#")) {
                             try {
                                 rc.registerClasses(Class.forName(className));
-                                System.out.printf(" + loaded class %s.\n", className);
-                            } catch (ClassNotFoundException ex) {
-                                System.out.printf(" ! class %s not found.\n", className);
+                                LOGGER.info(String.format(" + loaded class %s.\n", className));
+                            } catch (final ClassNotFoundException ex) {
+                                LOGGER.info(String.format(" ! class %s not found.\n", className));
                             }
                         } else {
-                            System.out.printf(" - ignored class %s\n", className.substring(1));
+                            LOGGER.info(String.format(" - ignored class %s\n", className.substring(1)));
                         }
                     }
-                } finally {
-                    r.close();
                 }
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
             }
             App.container.reload(rc);
@@ -128,37 +126,36 @@ public class App {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         try {
-            System.out.println("Resource Config Reload Jersey Example App");
+            LOGGER.info("Resource Config Reload Jersey Example App");
 
             final ResourceConfig resourceConfig = new ResourceConfig(ArrivalsResource.class);
             resourceConfig.registerInstances(new ContainerLifecycleListener() {
                 @Override
-                public void onStartup(Container container) {
+                public void onStartup(final Container container) {
                     App.container = container;
-                    Timer t = new Timer(true);
+                    final Timer t = new Timer(true);
                     t.scheduleAtFixedRate(new FileCheckTask(0), 0, REFRESH_PERIOD_MS);
                 }
 
                 @Override
-                public void onReload(Container container) {
+                public void onReload(final Container container) {
                     System.out.println("Application has been reloaded!");
                 }
 
                 @Override
-                public void onShutdown(Container container) {
+                public void onShutdown(final Container container) {
                     // ignore
                 }
             });
 
             final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, resourceConfig);
 
-            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...",
-                    BASE_URI, ROOT_PATH));
+            System.out.println(String.format("Application started.\nTry out %s%s\nHit enter to stop it...", BASE_URI, ROOT_PATH));
             System.in.read();
             server.shutdownNow();
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

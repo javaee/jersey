@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,14 +67,14 @@ public class ServerSentEventsResource {
     }
 
     @POST
-    public void addMessage(String message) throws IOException {
+    public void addMessage(final String message) throws IOException {
         eventOutput.write(new OutboundEvent.Builder().name("custom-message").data(String.class, message).build());
     }
 
     @DELETE
     public void close() throws IOException {
         eventOutput.close();
-        eventOutput = new EventOutput();
+        ServerSentEventsResource.setEventOutput(new EventOutput());
     }
 
     @POST
@@ -99,14 +99,16 @@ public class ServerSentEventsResource {
                     seq.write(new OutboundEvent.Builder().name("domain-progress").data(String.class, "done").build());
                     seq.close();
 
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
+                } catch (final InterruptedException | IOException e) {
                     e.printStackTrace();
                 }
             }
         }.start();
 
         return seq;
+    }
+
+    private static void setEventOutput(final EventOutput eventOutput) {
+        ServerSentEventsResource.eventOutput = eventOutput;
     }
 }

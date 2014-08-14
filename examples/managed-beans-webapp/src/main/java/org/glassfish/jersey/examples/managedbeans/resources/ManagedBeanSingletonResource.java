@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,13 +86,13 @@ public class ManagedBeanSingletonResource {
      * @param em entity manager factory injected by Java EE container.
      */
     @PersistenceUnit(unitName = "ManagedBeansPU")
-    void setEntityManager(EntityManagerFactory em) {
+    void setEntityManager(final EntityManagerFactory em) {
         entityManager = em.createEntityManager();
     }
 
     /**
      * Provide textual representation of the internal counter.
-     * @return
+     * @return internal counter {@code String} representation
      */
     @GET
     @Produces("text/plain")
@@ -106,7 +106,7 @@ public class ManagedBeanSingletonResource {
      */
     @PUT
     @Produces("text/plain")
-    public void putMessage(int i) {
+    public void putMessage(final int i) {
        counter = i;
     }
 
@@ -128,10 +128,10 @@ public class ManagedBeanSingletonResource {
      */
     @Path("widget/{id: \\d+}")
     @GET
-    public String getWidget(@PathParam("id") int id) {
+    public String getWidget(@PathParam("id") final int id) {
         try {
             return entityManager.find(Widget.class, id).val;
-        } catch (NullPointerException ignored) {
+        } catch (final NullPointerException ignored) {
             throw new WebApplicationException(Response.Status.NOT_FOUND);
         }
     }
@@ -143,7 +143,7 @@ public class ManagedBeanSingletonResource {
      */
     @Path("widget/{id: \\d+}")
     @PUT
-    public void putWidget(@PathParam("id") int id, String val) {
+    public void putWidget(@PathParam("id") final int id, final String val) {
         entityManager.merge(new Widget(id, val));
     }
 
@@ -153,7 +153,7 @@ public class ManagedBeanSingletonResource {
      */
     @Path("widget/{id: \\d+}")
     @DELETE
-    public void deleteWidget(@PathParam("id") int id) {
+    public void deleteWidget(@PathParam("id") final int id) {
         entityManager.remove(entityManager.find(Widget.class, id));
     }
 }

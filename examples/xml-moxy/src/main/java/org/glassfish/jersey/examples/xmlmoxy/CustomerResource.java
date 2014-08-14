@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -64,12 +64,12 @@ public class CustomerResource {
 
     @PUT
     @Consumes(MediaType.APPLICATION_XML)
-    public void setCustomer(Customer c) {
-        customer = c;
+    public void setCustomer(final Customer c) {
+        setCustomerToStatic(c);
     }
 
     private static Customer createInitialCustomer() {
-        Customer result = new Customer();
+        final Customer result = new Customer();
 
         result.setName("Jane Doe");
         result.setAddress(new Address("123 Any Street", "My Town"));
@@ -77,5 +77,9 @@ public class CustomerResource {
         result.getPhoneNumbers().add(new PhoneNumber("cell", "613-555-2222"));
 
         return result;
+    }
+
+    private static void setCustomerToStatic(final Customer customer) {
+        CustomerResource.customer = customer;
     }
 }

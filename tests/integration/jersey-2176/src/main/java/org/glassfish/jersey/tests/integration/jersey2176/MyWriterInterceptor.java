@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,11 +39,16 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2176;
 
-import javax.ws.rs.ext.WriterInterceptor;
-import javax.ws.rs.ext.WriterInterceptorContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+
+import javax.ws.rs.ext.WriterInterceptor;
+import javax.ws.rs.ext.WriterInterceptorContext;
+
+import org.glassfish.jersey.message.MessageUtils;
+
 
 /**
  * This just set new context output stream and test a clone method on set output stream instance is called.
@@ -53,10 +58,10 @@ import java.io.OutputStream;
 public class MyWriterInterceptor implements WriterInterceptor {
 
     @Override
-    public void aroundWriteTo(WriterInterceptorContext context) throws IOException {
-        boolean fail = context.getHeaders().containsKey(Issue2176ReproducerResource.X_FAIL_HEADER);
+    public void aroundWriteTo(final WriterInterceptorContext context) throws IOException {
+        final boolean fail = context.getHeaders().containsKey(Issue2176ReproducerResource.X_FAIL_HEADER);
 
-        context.setOutputStream(new MyOutputStream(context.getOutputStream()));
+        context.setOutputStream(new MyOutputStream(context.getOutputStream(), MessageUtils.getCharset(context.getMediaType())));
         context.proceed();
         if (fail) {
             throw new IllegalStateException("From MyWriterInterceptor");
@@ -67,14 +72,14 @@ public class MyWriterInterceptor implements WriterInterceptor {
         private final OutputStream delegate;
         final ByteArrayOutputStream localStream;
 
-        private MyOutputStream(OutputStream delegate) throws IOException {
+        private MyOutputStream(final OutputStream delegate, final Charset charset) throws IOException {
             this.delegate = delegate;
             this.localStream = new ByteArrayOutputStream();
-            localStream.write("[INTERCEPTOR]".getBytes());
+            localStream.write("[INTERCEPTOR]".getBytes(charset));
         }
 
         @Override
-        public void write(int b) throws IOException {
+        public void write(final int b) throws IOException {
             localStream.write(b);
         }
 
@@ -87,7 +92,7 @@ public class MyWriterInterceptor implements WriterInterceptor {
 
         @Override
         public void close() throws IOException {
-            localStream.write("[/INTERCEPTOR]".getBytes());
+            localStream.write("[/INTERCEPTOR]".getBytes("UTF-8"));
 
             delegate.write(localStream.toByteArray());
 

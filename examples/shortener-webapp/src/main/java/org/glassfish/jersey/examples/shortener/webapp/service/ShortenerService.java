@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -93,10 +93,11 @@ public final class ShortenerService {
     private static String encode(final String link) {
         final StringBuilder builder = new StringBuilder();
 
+        // NOTE: Math.abs(Integer.MIN_VALUE) = Integer.MIN_VALUE (negative value)
         int hash = Math.abs(link.hashCode());
-        while (hash > 0) {
-            builder.append(ALPHABET.charAt(hash % BASE));
-            hash /= BASE;
+        while (hash > 0 || hash == Integer.MIN_VALUE) {
+            builder.append(ALPHABET.charAt(Math.abs(hash % BASE)));
+            hash = Math.abs(hash / BASE);
         }
 
         return builder.reverse().toString();

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,6 +58,8 @@ import javax.ws.rs.ext.Provider;
 
 import javax.ejb.Stateless;
 
+import org.glassfish.jersey.message.MessageUtils;
+
 /**
  * A simple HTML message body writer to serialize list of message beans.
  *
@@ -70,33 +72,39 @@ public class MessageListWriter implements MessageBodyWriter<List<Message>> {
     @Context private javax.inject.Provider<UriInfo> ui;
 
     @Override
-    public boolean isWriteable(Class<?> clazz, Type type, Annotation[] annotation, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> clazz, final Type type, final Annotation[] annotation, final MediaType mediaType) {
         return verifyGenericType(type);
     }
 
-    private boolean verifyGenericType(Type genericType) {
-        if (!(genericType instanceof ParameterizedType)) return false;
+    private boolean verifyGenericType(final Type genericType) {
+        if (!(genericType instanceof ParameterizedType)) {
+            return false;
+        }
 
         final ParameterizedType pt = (ParameterizedType)genericType;
 
-        if (pt.getActualTypeArguments().length > 1) return false;
+        if (pt.getActualTypeArguments().length > 1) {
+            return false;
+        }
 
-        if (!(pt.getActualTypeArguments()[0] instanceof Class)) return false;
+        if (!(pt.getActualTypeArguments()[0] instanceof Class)) {
+            return false;
+        }
 
         final Class listClass = (Class)pt.getActualTypeArguments()[0];
         return listClass == Message.class;
     }
 
     @Override
-    public long getSize(List<Message> messages, Class<?> clazz, Type type, Annotation[] annotation, MediaType mediaType) {
+    public long getSize(final List<Message> messages, final Class<?> clazz, final Type type, final Annotation[] annotation, final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(List<Message> messages, Class<?> clazz, Type type, Annotation[] annotation, MediaType mediaType, MultivaluedMap<String, Object> arg5, OutputStream ostream) throws IOException, WebApplicationException {
-        for (Message m : messages) {
-            ostream.write(m.toString().getBytes());
-            URI mUri = ui.get().getAbsolutePathBuilder().path(Integer.toString(m.getUniqueId())).build();
+    public void writeTo(final List<Message> messages, final Class<?> clazz, final Type type, final Annotation[] annotation, final MediaType mediaType, final MultivaluedMap<String, Object> arg5, final OutputStream ostream) throws IOException, WebApplicationException {
+        for (final Message m : messages) {
+            ostream.write(m.toString().getBytes(MessageUtils.getCharset(mediaType)));
+            final URI mUri = ui.get().getAbsolutePathBuilder().path(Integer.toString(m.getUniqueId())).build();
             ostream.write((" <a href='" + mUri.toASCIIString() + "'>link</a><br />").getBytes());
         }
     }

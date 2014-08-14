@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -54,6 +54,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.server.validation.ValidationError;
 
 /**
@@ -106,7 +107,7 @@ public class ValidationErrorMessageBodyWriter implements MessageBodyWriter<Objec
                         final MediaType mediaType,
                         final MultivaluedMap<String, Object> httpHeaders,
                         final OutputStream entityStream) throws IOException, WebApplicationException {
-        Collection<ValidationError> errors;
+        final Collection<ValidationError> errors;
 
         if (entity instanceof ValidationError) {
             errors = Arrays.asList((ValidationError) entity);
@@ -114,7 +115,7 @@ public class ValidationErrorMessageBodyWriter implements MessageBodyWriter<Objec
             errors = (Collection<ValidationError>) entity;
         }
 
-        boolean isPlain = MediaType.TEXT_PLAIN_TYPE.getSubtype().equals(mediaType.getSubtype());
+        final boolean isPlain = MediaType.TEXT_PLAIN_TYPE.getSubtype().equals(mediaType.getSubtype());
 
         final StringBuilder builder = new StringBuilder();
 
@@ -158,7 +159,7 @@ public class ValidationErrorMessageBodyWriter implements MessageBodyWriter<Objec
             builder.append("</div>");
         }
 
-        entityStream.write(builder.toString().getBytes());
+        entityStream.write(builder.toString().getBytes(MessageUtils.getCharset(mediaType)));
         entityStream.flush();
     }
 }

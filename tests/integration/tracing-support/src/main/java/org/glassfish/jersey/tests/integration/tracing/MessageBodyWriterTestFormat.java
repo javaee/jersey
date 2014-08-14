@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,12 +44,15 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
@@ -58,22 +61,22 @@ import javax.ws.rs.ext.Provider;
 @Produces(Utils.APPLICATION_X_JERSEY_TEST)
 public class MessageBodyWriterTestFormat implements MessageBodyWriter<Message> {
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        //System.out.println("*** MessageBodyWriterTestFormat.isWriteable");
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
         return type.isAssignableFrom(Message.class);
     }
 
     @Override
-    public long getSize(Message message, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        //System.out.println("*** MessageBodyWriterTestFormat.getSize");
+    public long getSize(final Message message, final Class<?> type, final Type genericType, final Annotation[] annotations,
+                        final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(Message message, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
-                        MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-        //System.out.println("*** MessageBodyWriterTestFormat.writeTo");
-        OutputStreamWriter writer = new OutputStreamWriter(entityStream);
+    public void writeTo(final Message message, final Class<?> type, final Type genericType, final Annotation[] annotations,
+                        final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders,
+                        final OutputStream entityStream) throws IOException, WebApplicationException {
+        final OutputStreamWriter writer = new OutputStreamWriter(entityStream, MessageUtils.getCharset(mediaType));
         writer.write(Utils.FORMAT_PREFIX);
         writer.write(message.getText());
         writer.write(Utils.FORMAT_SUFFIX);

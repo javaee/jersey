@@ -48,7 +48,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
- * JERSEY-2320 reproducer. {@link CustomBaseExceptionOne} will get mapped
+ * JERSEY-2320 reproducer. {@link CustomExceptionOne} will get mapped
  * to an ordinary response. We make sure the mapper gets injected properly
  * by both Jersey runtime and EJB container.
  *
@@ -63,7 +63,7 @@ public class EjbExceptionMapperOne extends EjbExceptionMapperBase<CustomExceptio
     @EJB EchoBean echoBean;
 
     @Override
-    public Response toResponse(CustomExceptionOne exception) {
+    public Response toResponse(final CustomExceptionOne exception) {
         return Response.ok(RESPONSE_BODY)
                 .header("My-Location", uriInfo.getPath())
                 .header("My-Echo", echoBean.echo("1")).build();

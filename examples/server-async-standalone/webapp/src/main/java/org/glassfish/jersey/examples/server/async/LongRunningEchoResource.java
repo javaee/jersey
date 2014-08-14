@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,7 +75,7 @@ public class LongRunningEchoResource {
     public String syncEcho(@PathParam("echo") final String echo) {
         try {
             Thread.sleep(SLEEP_TIME_IN_MILLIS);
-        } catch (InterruptedException ex) {
+        } catch (final InterruptedException ex) {
             throw new ServiceUnavailableException();
         }
         return echo;
@@ -85,7 +85,7 @@ public class LongRunningEchoResource {
      * Asynchronously echo the last path segment after sleeping for a long time.
      *
      * @param echo message to echo.
-     * @return echoed message.
+     * @param ar AsynchronousResponse, will contain echoed message.
      */
     @GET
     @Path("async/{echo}")
@@ -96,7 +96,7 @@ public class LongRunningEchoResource {
             public void run() {
                 try {
                     Thread.sleep(SLEEP_TIME_IN_MILLIS);
-                } catch (InterruptedException ex) {
+                } catch (final InterruptedException ex) {
                     ar.cancel();
                 }
                 ar.resume(echo);

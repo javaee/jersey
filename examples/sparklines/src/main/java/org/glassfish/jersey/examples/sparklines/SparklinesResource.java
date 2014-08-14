@@ -77,47 +77,50 @@ public class SparklinesResource {
     EntityTag tag;
 
     public SparklinesResource(
-            @QueryParam("d") IntegerList data,
-            @DefaultValue("0,100") @QueryParam("limits") Interval limits,
-            @Context Request request,
-            @Context UriInfo ui) {
-        if (data == null)
+            @QueryParam("d") final IntegerList data,
+            @DefaultValue("0,100") @QueryParam("limits") final Interval limits,
+            @Context final Request request,
+            @Context final UriInfo ui) {
+        if (data == null) {
             throw new WebApplicationException(400);
+        }
 
         this.data = data;
 
         this.limits = limits;
 
-        if (!limits.contains(data))
+        if (!limits.contains(data)) {
             throw new WebApplicationException(400);
+        }
 
         this.tag = computeEntityTag(ui.getRequestUri());
-        if (request.getMethod().equals("GET")) {
-            Response.ResponseBuilder rb = request.evaluatePreconditions(tag);
-            if (rb != null)
+        if ("GET".equals(request.getMethod())) {
+            final Response.ResponseBuilder rb = request.evaluatePreconditions(tag);
+            if (rb != null) {
                 throw new WebApplicationException(rb.build());
+            }
         }
     }
 
     @Path("discrete")
     @GET
     public Response discrete(
-            @DefaultValue("2") @QueryParam("width") int width,
-            @DefaultValue("50") @QueryParam("upper") int upper,
-            @DefaultValue("red") @QueryParam("upper-color") ColorParam upperColor,
-            @DefaultValue("gray") @QueryParam("lower-color") ColorParam lowerColor
+            @DefaultValue("2") @QueryParam("width") final int width,
+            @DefaultValue("50") @QueryParam("upper") final int upper,
+            @DefaultValue("red") @QueryParam("upper-color") final ColorParam upperColor,
+            @DefaultValue("gray") @QueryParam("lower-color") final ColorParam lowerColor
     ) {
-        BufferedImage image = new BufferedImage(
+        final BufferedImage image = new BufferedImage(
                 data.size() * width - 1, imageHeight, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = image.createGraphics();
+        final Graphics2D g = image.createGraphics();
         g.setBackground(Color.WHITE);
         g.clearRect(0, 0, image.getWidth(), image.getHeight());
 
 
-        int gap = 4;
-        float d = (limits.width() + 1) / (float) (imageHeight - gap);
-        for (int i = 0, x = 0, y = 0; i < data.size(); i++, x += width) {
-            int v = data.get(i);
+        final int gap = 4;
+        final float d = (limits.width() + 1) / (float) (imageHeight - gap);
+        for (int i = 0, x = 0, y; i < data.size(); i++, x += width) {
+            final int v = data.get(i);
             g.setColor((v >= upper) ? upperColor : lowerColor);
 
             y = imageHeight - (int) ((v - limits.lower()) / d);
@@ -130,39 +133,39 @@ public class SparklinesResource {
     @Path("smooth")
     @GET
     public Response smooth(
-            @DefaultValue("2") @QueryParam("step") int step,
-            @DefaultValue("true") @QueryParam("min-m") boolean hasMin,
-            @DefaultValue("true") @QueryParam("max-m") boolean hasMax,
-            @DefaultValue("true") @QueryParam("last-m") boolean hasLast,
-            @DefaultValue("blue") @QueryParam("min-color") ColorParam minColor,
-            @DefaultValue("green") @QueryParam("max-color") ColorParam maxColor,
-            @DefaultValue("red") @QueryParam("last-color") ColorParam lastColor
+            @DefaultValue("2") @QueryParam("step") final int step,
+            @DefaultValue("true") @QueryParam("min-m") final boolean hasMin,
+            @DefaultValue("true") @QueryParam("max-m") final boolean hasMax,
+            @DefaultValue("true") @QueryParam("last-m") final boolean hasLast,
+            @DefaultValue("blue") @QueryParam("min-color") final ColorParam minColor,
+            @DefaultValue("green") @QueryParam("max-color") final ColorParam maxColor,
+            @DefaultValue("red") @QueryParam("last-color") final ColorParam lastColor
     ) {
-        BufferedImage image = new BufferedImage(
+        final BufferedImage image = new BufferedImage(
                 data.size() * step - 4, imageHeight, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = image.createGraphics();
+        final Graphics2D g = image.createGraphics();
         g.setBackground(Color.WHITE);
         g.clearRect(0, 0, image.getWidth(), image.getHeight());
 
         g.setColor(Color.gray);
-        int[] xs = new int[data.size()];
-        int[] ys = new int[data.size()];
-        int gap = 4;
-        float d = (limits.width() + 1) / (float) (imageHeight - gap);
-        for (int i = 0, x = 0, y = 0; i < data.size(); i++, x += step) {
-            int v = data.get(i);
+        final int[] xs = new int[data.size()];
+        final int[] ys = new int[data.size()];
+        final int gap = 4;
+        final float d = (limits.width() + 1) / (float) (imageHeight - gap);
+        for (int i = 0, x = 0; i < data.size(); i++, x += step) {
+            final int v = data.get(i);
             xs[i] = x;
             ys[i] = imageHeight - 3 - (int) ((v - limits.lower()) / d);
         }
         g.drawPolyline(xs, ys, data.size());
 
         if (hasMin) {
-            int i = data.indexOf(Collections.min(data));
+            final int i = data.indexOf(Collections.min(data));
             g.setColor(minColor);
             g.fillRect(xs[i] - step / 2, ys[i] - step / 2, step, step);
         }
         if (hasMax) {
-            int i = data.indexOf(Collections.max(data));
+            final int i = data.indexOf(Collections.max(data));
             g.setColor(maxColor);
             g.fillRect(xs[i] - step / 2, ys[i] - step / 2, step, step);
         }
@@ -174,18 +177,18 @@ public class SparklinesResource {
         return Response.ok(image).tag(tag).build();
     }
 
-    private EntityTag computeEntityTag(URI u) {
+    private EntityTag computeEntityTag(final URI u) {
         return new EntityTag(
                 computeDigest(u.getRawPath() + u.getRawQuery()));
     }
 
-    private String computeDigest(String content) {
+    private String computeDigest(final String content) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA");
-            byte[] digest = md.digest(content.getBytes());
-            BigInteger bi = new BigInteger(digest);
+            final MessageDigest md = MessageDigest.getInstance("SHA");
+            final byte[] digest = md.digest(content.getBytes("UTF-8"));
+            final BigInteger bi = new BigInteger(digest);
             return bi.toString(16);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return "";
         }
     }

@@ -132,7 +132,7 @@ public class DeploymentContext {
      * <p>
      * If properties of the builder are not modified, default values will be utilized:
      * <ul>
-     * <li>Default value for the context path is <tt>{@value Builder#DEFAULT_CONTEXT_PATH}.</tt></li>
+     * <li>Default value for the context path is an empty string</li>
      * </ul>
      * </p>
      * <p>
@@ -173,7 +173,7 @@ public class DeploymentContext {
          *
          * @param appClass JAX-RS / Jersey application class.
          */
-        protected Builder(Class<? extends Application> appClass) {
+        protected Builder(final Class<? extends Application> appClass) {
             if (appClass == null) {
                 throw new NullPointerException("Application class must not be null.");
             }
@@ -189,7 +189,7 @@ public class DeploymentContext {
          *
          * @throws NullPointerException if {@code contextPath} is {@code null}.
          */
-        public Builder contextPath(String contextPath) {
+        public Builder contextPath(final String contextPath) {
             if (contextPath == null) {
                 throw new NullPointerException("The context path must not be null");
             }
@@ -205,7 +205,7 @@ public class DeploymentContext {
          * @return this application deployment context builder.
          */
         public DeploymentContext build() {
-            DeploymentContext lld = new DeploymentContext(this);
+            final DeploymentContext lld = new DeploymentContext(this);
 
             reset();
 
@@ -230,7 +230,7 @@ public class DeploymentContext {
      *
      * @param b {@link Builder} instance.
      */
-    protected DeploymentContext(Builder b) {
+    protected DeploymentContext(final Builder b) {
         this.contextPath = b.contextPath;
         this.resourceConfig = b.resourceConfig;
     }

@@ -334,7 +334,7 @@ public final class ServerProperties {
      * This property can be used on the server side to override the outbound message buffer size value - default or the global
      * custom value set using the {@value org.glassfish.jersey.CommonProperties#OUTBOUND_CONTENT_LENGTH_BUFFER} global property.
      * <p>
-     * The default value is <tt>{@value org.glassfish.jersey.message.internal.CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt>.
+     * The default value is <tt>8192</tt>.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
@@ -473,7 +473,7 @@ public final class ServerProperties {
      *
      * Exposed JMX MBeans are based
      * on {@link org.glassfish.jersey.server.monitoring.MonitoringStatistics} and therefore when they are enabled,
-     * also the calculation of monitoring statistics needs to be enabled. Therefore if this property is {@link true}
+     * also the calculation of monitoring statistics needs to be enabled. Therefore if this property is {@code true}
      * the calculation of monitoring statistics is automatically enabled (the same result as setting the property
      * {@link #MONITORING_STATISTICS_ENABLED}).
      * <p/>
@@ -569,7 +569,7 @@ public final class ServerProperties {
      * </p>
      *
      * @since 2.3
-     * @see {@link #TRACING}
+     * @see #TRACING
      */
     public static final String TRACING_THRESHOLD = "jersey.config.server.tracing.threshold";
 
@@ -630,7 +630,7 @@ public final class ServerProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final String key, final Class<T> type) {
         return PropertiesHelper.getValue(properties, key, type, null);
     }
 
@@ -640,7 +640,7 @@ public final class ServerProperties {
      *
      * If the property is not set or the real value type is not compatible with {@code defaultValue} type,
      * the specified {@code defaultValue} is returned. Calling this method is equivalent to calling
-     * {@code ServerProperties.getValue(properties, key, defaultValue, (Class<T>) defaultValue.getClass())}.
+     * {@code ServerProperties.getValue(properties, key, defaultValue, (Class&lt;T&gt;) defaultValue.getClass())}.
      *
      * @param properties    Map of properties to get the property value from.
      * @param key  Name of the property.
@@ -650,7 +650,7 @@ public final class ServerProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue) {
+    public static <T> T getValue(final Map<String, ?> properties, final String key, final T defaultValue) {
         return PropertiesHelper.getValue(properties, key, defaultValue, null);
     }
 
@@ -669,7 +669,7 @@ public final class ServerProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final String key, final T defaultValue, final Class<T> type) {
         return PropertiesHelper.getValue(properties, key, defaultValue, type, null);
     }
 
@@ -691,7 +691,7 @@ public final class ServerProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtimeType, String key, T defaultValue, Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtimeType, final String key, final T defaultValue, final Class<T> type) {
         return PropertiesHelper.getValue(properties, runtimeType, key, defaultValue, type, null);
     }
 }

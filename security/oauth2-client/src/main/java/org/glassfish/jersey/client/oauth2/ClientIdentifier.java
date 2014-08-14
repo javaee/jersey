@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,7 @@ public class ClientIdentifier {
      * @param clientId Client id.
      * @param clientSecret Client secret id.
      */
-    public ClientIdentifier(String clientId, String clientSecret) {
+    public ClientIdentifier(final String clientId, final String clientSecret) {
         this.clientId = clientId;
         this.clientSecret = clientSecret.getBytes();
     }
@@ -67,9 +67,9 @@ public class ClientIdentifier {
      * Create a new instance initialized with client id and client secret in form of byte array.
      *
      * @param clientId Client id.
-     * @param clientSecret Client secret id as a byte array value.
+     * @param clientSecret Client secret id as a byte array value in the default encoding.
      */
-    public ClientIdentifier(String clientId, byte[] clientSecret) {
+    public ClientIdentifier(final String clientId, final byte[] clientSecret) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
     }

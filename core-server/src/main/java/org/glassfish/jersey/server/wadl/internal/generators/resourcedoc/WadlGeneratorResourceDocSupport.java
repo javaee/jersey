@@ -106,12 +106,12 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     public WadlGeneratorResourceDocSupport() {
     }
 
-    public WadlGeneratorResourceDocSupport(WadlGenerator wadlGenerator, ResourceDocType resourceDoc) {
+    public WadlGeneratorResourceDocSupport(final WadlGenerator wadlGenerator, final ResourceDocType resourceDoc) {
         delegate = wadlGenerator;
         this.resourceDoc = new ResourceDocAccessor(resourceDoc);
     }
 
-    public void setWadlGeneratorDelegate(WadlGenerator delegate) {
+    public void setWadlGeneratorDelegate(final WadlGenerator delegate) {
         this.delegate = delegate;
     }
 
@@ -120,7 +120,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      * the <code>resourceDocStream</code> is not set, otherwise an {@link IllegalStateException} will be thrown.
      * @param resourceDocFile the resourcedoc file to set.
      */
-    public void setResourceDocFile(File resourceDocFile) {
+    public void setResourceDocFile(final File resourceDocFile) {
         if (resourceDocStream != null) {
             throw new IllegalStateException("The resourceDocStream property is already set," +
                     " therefore you cannot set the resourceDocFile property. Only one of both can be set at a time.");
@@ -136,7 +136,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
      * </p>
      * @param resourceDocStream the resourcedoc stream to set.
      */
-    public void setResourceDocStream(InputStream resourceDocStream) {
+    public void setResourceDocStream(final InputStream resourceDocStream) {
         if (this.resourceDocStream != null) {
             throw new IllegalStateException("The resourceDocFile property is already set," +
                     " therefore you cannot set the resourceDocStream property. Only one of both can be set at a time.");
@@ -152,7 +152,8 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
         delegate.init();
 
         try (final InputStream inputStream = resourceDocFile != null ? new FileInputStream(resourceDocFile) : resourceDocStream) {
-            final ResourceDocType resourceDocType = WadlUtils.unmarshall(inputStream, saxFactoryProvider.get(), ResourceDocType.class);
+            final ResourceDocType resourceDocType =
+                    WadlUtils.unmarshall(inputStream, saxFactoryProvider.get(), ResourceDocType.class);
             resourceDoc = new ResourceDocAccessor(resourceDocType);
         } finally {
             resourceDocFile = null;
@@ -169,7 +170,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     /**
-     * @return the {@link com.sun.research.ws.wadl.Application} created by the delegate
+     * @return the {@link com.sun.research.ws.wadl.Application} created by the delegate.
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createApplication()
      */
     public Application createApplication() {
@@ -177,14 +178,14 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     /**
-     * @param r
-     * @param path
-     * @return the enhanced {@link com.sun.research.ws.wadl.Resource}
+     * @param r Jersey resource component for which the WADL reource is to be created.
+     * @param path path where the resource is exposed.
+     * @return the enhanced {@link com.sun.research.ws.wadl.Resource}.
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResource(org.glassfish.jersey.server.model.Resource, String)
      */
-    public Resource createResource(org.glassfish.jersey.server.model.Resource r, String path) {
+    public Resource createResource(final org.glassfish.jersey.server.model.Resource r, final String path) {
         final Resource result = delegate.createResource(r, path);
-        for (Class<?> resourceClass : r.getHandlerClasses()) {
+        for (final Class<?> resourceClass : r.getHandlerClasses()) {
             final ClassDocType classDoc = resourceDoc.getClassDoc(resourceClass);
             if (classDoc != null && !isEmpty(classDoc.getCommentText())) {
                 final Doc doc = new Doc();
@@ -196,14 +197,14 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     /**
-     * @param resource
-     * @param resourceMethod
-     * @return the enhanced {@link com.sun.research.ws.wadl.Method}
+     * @param resource Jersey resource component.
+     * @param resourceMethod resource method.
+     * @return the enhanced {@link com.sun.research.ws.wadl.Method}.
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createMethod(org.glassfish.jersey.server.model.Resource,
      * org.glassfish.jersey.server.model.ResourceMethod)
      */
-    public Method createMethod(org.glassfish.jersey.server.model.Resource resource,
-                               ResourceMethod resourceMethod) {
+    public Method createMethod(final org.glassfish.jersey.server.model.Resource resource,
+                               final ResourceMethod resourceMethod) {
         final Method result = delegate.createMethod(resource, resourceMethod);
         final java.lang.reflect.Method method = resourceMethod.getInvocable().getDefinitionMethod();
         final MethodDocType methodDoc = resourceDoc.getMethodDoc(method.getDeclaringClass(), method);
@@ -218,17 +219,16 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     /**
-     * @param r
-     * @param m
-     * @param mediaType
-     * @return the enhanced {@link com.sun.research.ws.wadl.Representation}
-     * @see org.glassfish.jersey.server.wadl.WadlGenerator#
-     * createRequestRepresentation(org.glassfish.jersey.server.model.Resource,
+     * @param r Jersey resource component.
+     * @param m resource method.
+     * @param mediaType media type.
+     * @return the enhanced {@link com.sun.research.ws.wadl.Representation}.
+     * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequestRepresentation(org.glassfish.jersey.server.model.Resource,
      * org.glassfish.jersey.server.model.ResourceMethod, javax.ws.rs.core.MediaType)
      */
-    public Representation createRequestRepresentation(org.glassfish.jersey.server.model.Resource r,
-                                                      org.glassfish.jersey.server.model.ResourceMethod m,
-                                                      MediaType mediaType) {
+    public Representation createRequestRepresentation(final org.glassfish.jersey.server.model.Resource r,
+                                                      final org.glassfish.jersey.server.model.ResourceMethod m,
+                                                      final MediaType mediaType) {
         final Representation result = delegate.createRequestRepresentation(r, m, mediaType);
         final RepresentationDocType requestRepresentation = resourceDoc.getRequestRepresentation(m.getInvocable()
                         .getDefinitionMethod().getDeclaringClass(),
@@ -242,32 +242,32 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     /**
-     * @param r
-     * @param m
-     * @return the enhanced {@link com.sun.research.ws.wadl.Request}
+     * @param r Jersey resource component.
+     * @param m resource method.
+     * @return the enhanced {@link com.sun.research.ws.wadl.Request}.
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createRequest(org.glassfish.jersey.server.model.Resource,
      * org.glassfish.jersey.server.model.ResourceMethod)
      */
-    public Request createRequest(org.glassfish.jersey.server.model.Resource r, org.glassfish.jersey.server.model.ResourceMethod
-            m) {
+    public Request createRequest(final org.glassfish.jersey.server.model.Resource r,
+                                 final org.glassfish.jersey.server.model.ResourceMethod m) {
         return delegate.createRequest(r, m);
     }
 
     /**
-     * @param r
-     * @param m
-     * @return the enhanced {@link com.sun.research.ws.wadl.Response}
+     * @param r Jersey resource component.
+     * @param m resource method.
+     * @return the enhanced {@link com.sun.research.ws.wadl.Response}.
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResponses(org.glassfish.jersey.server.model.Resource,
      * org.glassfish.jersey.server.model.ResourceMethod)
      */
-    public List<Response> createResponses(org.glassfish.jersey.server.model.Resource r,
-                                          org.glassfish.jersey.server.model.ResourceMethod m) {
+    public List<Response> createResponses(final org.glassfish.jersey.server.model.Resource r,
+                                          final org.glassfish.jersey.server.model.ResourceMethod m) {
         final ResponseDocType responseDoc = resourceDoc.getResponse(m.getInvocable().getDefinitionMethod().getDeclaringClass(),
                 m.getInvocable().getDefinitionMethod());
         List<Response> responses = new ArrayList<Response>();
         if (responseDoc != null && responseDoc.hasRepresentations()) {
-            for (RepresentationDocType representationDoc : responseDoc.getRepresentations()) {
-                Response response = new Response();
+            for (final RepresentationDocType representationDoc : responseDoc.getRepresentations()) {
+                final Response response = new Response();
 
                 final Representation wadlRepresentation = new Representation();
                 wadlRepresentation.setElement(representationDoc.getElement());
@@ -282,20 +282,20 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
             }
 
             if (!responseDoc.getWadlParams().isEmpty()) {
-                for (WadlParamType wadlParamType : responseDoc.getWadlParams()) {
+                for (final WadlParamType wadlParamType : responseDoc.getWadlParams()) {
                     final Param param = new Param();
                     param.setName(wadlParamType.getName());
                     param.setStyle(ParamStyle.fromValue(wadlParamType.getStyle()));
                     param.setType(wadlParamType.getType());
                     addDoc(param.getDoc(), wadlParamType.getDoc());
-                    for (Response response : responses) {
+                    for (final Response response : responses) {
                         response.getParam().add(param);
                     }
                 }
             }
 
             if (!isEmpty(responseDoc.getReturnDoc())) {
-                for (Response response : responses) {
+                for (final Response response : responses) {
                     addDoc(response.getDoc(), responseDoc.getReturnDoc());
                 }
             }
@@ -329,15 +329,15 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     /**
-     * @param r
-     * @param m
-     * @param p
-     * @return the enhanced {@link Param}
+     * @param r Jersey resource component.
+     * @param m resource method.
+     * @param p method parameter.
+     * @return the enhanced {@link Param}.
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createParam(org.glassfish.jersey.server.model.Resource,
      * org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.model.Parameter)
      */
-    public Param createParam(org.glassfish.jersey.server.model.Resource r,
-                             org.glassfish.jersey.server.model.ResourceMethod m, Parameter p) {
+    public Param createParam(final org.glassfish.jersey.server.model.Resource r,
+                             final org.glassfish.jersey.server.model.ResourceMethod m, final Parameter p) {
         final Param result = delegate.createParam(r, m, p);
         if (result != null) {
             final ParamDocType paramDoc = resourceDoc.getParamDoc(m.getInvocable().getDefinitionMethod().getDeclaringClass(),
@@ -352,15 +352,15 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     /**
-     * @return the {@link com.sun.research.ws.wadl.Resources} created by the delegate
+     * @return the {@link com.sun.research.ws.wadl.Resources} created by the delegate.
      * @see org.glassfish.jersey.server.wadl.WadlGenerator#createResources()
      */
     public Resources createResources() {
         return delegate.createResources();
     }
 
-    private boolean isEmpty(String text) {
-        return text == null || text.length() == 0 || "".equals(text.trim());
+    private boolean isEmpty(final String text) {
+        return text == null || text.isEmpty() || "".equals(text.trim());
     }
 
     // ================ methods for post build actions =======================
@@ -371,7 +371,7 @@ public class WadlGeneratorResourceDocSupport implements WadlGenerator {
     }
 
     @Override
-    public void attachTypes(ApplicationDescription egd) {
+    public void attachTypes(final ApplicationDescription egd) {
         delegate.attachTypes(egd);
     }
 

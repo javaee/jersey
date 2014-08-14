@@ -48,8 +48,8 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
- * A JAX-RS container response filter that applies {@value #ACCEPT_PATCH_HEADER} header
- * to any response to an {@value HttpMethod#OPTIONS} request.
+ * A JAX-RS container response filter that applies {@code Accept-Patch} header
+ * to any response to an {@code OPTIONS} request.
  *
  * @author Gerard Davison (gerard.davison at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -59,7 +59,8 @@ public class OptionsAcceptPatchHeaderFilter implements ContainerResponseFilter {
     private static final String ACCEPT_PATCH_HEADER = "Accept-Patch";
 
     @Override
-    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+    public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext)
+            throws IOException {
 
         if (HttpMethod.OPTIONS.equals(requestContext.getMethod())) {
             final MultivaluedMap<String, Object> headers = responseContext.getHeaders();
