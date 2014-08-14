@@ -316,6 +316,7 @@
 <!ENTITY jersey.common.spi.ContentEncoder "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/ContentEncoder.html'>ContentEncoder</link>">
 <!ENTITY jersey.common.spi.RequestExecutorProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/spi/RequestExecutorProvider.html'>RequestExecutorProvider</link>">
 <!ENTITY jersey.common.uri.UriTemplate "<link xlink:href='&jersey.javadoc.uri.prefix;/uri/UriTemplate.html'>UriTemplate</link>">
+<!ENTITY jersey.common.JerseyPriorities.JERSEY_AUTO_DISCOVERABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/common/JerseyPriorities.html#JERSEY_AUTO_DISCOVERABLE'>JerseyPriorities.JERSEY_AUTO_DISCOVERABLE</link>">
 <!ENTITY jersey.containers.ServletContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletContainer.html'>ServletContainer</link>">
 <!ENTITY jersey.ext.ValidationConfig "<link xlink:href='&jersey.javadoc.uri.prefix;/server/validation/ValidationConfig.html'>ValidationConfig</link>">
 <!ENTITY jersey.ext.ValidationError "<link xlink:href='&jersey.javadoc.uri.prefix;/server/validation/ValidationError.html'>ValidationError</link>">
@@ -399,6 +400,7 @@
 <!ENTITY jersey.server.ServerProperties.LANGUAGE_MAPPINGS "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#LANGUAGE_MAPPINGS'>ServerProperties.LANGUAGE_MAPPINGS</link>" >
 <!ENTITY jersey.server.ServerProperties.MEDIA_TYPE_MAPPINGS "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#MEDIA_TYPE_MAPPINGS'>ServerProperties.MEDIA_TYPE_MAPPINGS</link>" >
 <!ENTITY jersey.server.ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#METAINF_SERVICES_LOOKUP_DISABLE'>ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE</link>" >
+<!ENTITY jersey.server.ServerProperties.MONITORING_ENABLED "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#MONITORING_ENABLED'>ServerProperties.MONITORING_ENABLED</link>" >
 <!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#MONITORING_STATISTICS_ENABLED'>ServerProperties.MONITORING_STATISTICS_ENABLED</link>" >
 <!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#MONITORING_STATISTICS_MBEANS_ENABLED'>ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED</link>" >
 <!ENTITY jersey.server.ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL "<link xlink:href='&jersey.javadoc.uri.prefix;/server/ServerProperties.html#MONITORING_STATISTICS_REFRESH_INTERVAL'>ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL</link>" >
@@ -424,11 +426,10 @@
 <!ENTITY jersey.server.monitoring.ApplicationEvent "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ApplicationEvent.html'>ApplicationEvent</link>">
 <!ENTITY jersey.server.monitoring.ApplicationEventListener "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ApplicationEventListener.html'>ApplicationEventListener</link>">
 <!ENTITY jersey.server.monitoring.ApplicationMXBean "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ApplicationMXBean.html'>ApplicationMXBean</link>">
-<!ENTITY jersey.server.monitoring.ApplicationStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ApplicationStatistics.html'>ApplicationStatistics</link>">
 <!ENTITY jersey.server.monitoring.ExceptionMapperMXBean "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ExceptionMapperMXBean.html'>ExceptionMapperMXBean</link>">
 <!ENTITY jersey.server.monitoring.ExceptionMapperStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ExceptionMapperStatistics.html'>ExceptionMapperStatistics</link>">
 <!ENTITY jersey.server.monitoring.ExecutionStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ExecutionStatistics.html'>ExecutionStatistics</link>">
-<!ENTITY jersey.server.monitoring.MonitoringStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/MonitoringStatistics.html'>MonitoringStatistics</link>">
+<!ENTITY jersey.server.monitoring.ApplicationInfo "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ApplicationInfo.html'>ApplicationInfo</link>">
 <!ENTITY jersey.server.monitoring.MonitoringStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/MonitoringStatistics.html'>MonitoringStatistics</link>">
 <!ENTITY jersey.server.monitoring.MonitoringStatisticsListener "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/MonitoringStatisticsListener.html'>MonitoringStatisticsListener</link>">
 <!ENTITY jersey.server.monitoring.DestroyListener "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/DestroyListener.html'>DestroyListener</link>">
@@ -440,7 +441,6 @@
 <!ENTITY jersey.server.monitoring.ResourceStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ResourceStatistics.html'>ResourceStatistics</link>">
 <!ENTITY jersey.server.monitoring.ResponseMXBean "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ResponseMXBean.html'>ResponseMXBean</link>">
 <!ENTITY jersey.server.monitoring.ResponseStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/ResponseStatistics.html'>ResponseStatistics</link>">
-<!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
 <!ENTITY jersey.server.monitoring.TimeWindowStatistics "<link xlink:href='&jersey.javadoc.uri.prefix;/server/monitoring/TimeWindowStatistics.html'>TimeWindowStatistics</link>">
 <!ENTITY jersey.server.mvc.ErrorTemplate "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/ErrorTemplate.html'>@ErrorTemplate</link>">
 <!ENTITY jersey.server.mvc.FreemarkerMvcFeature "<link xlink:href='&jersey.javadoc.uri.prefix;/server/mvc/freemarker/FreemarkerMvcFeature.html'>FreemarkerMvcFeature</link>">
@@ -750,12 +750,10 @@
 <!ENTITY lit.jersey.server.monitoring.ApplicationEvent "<literal>ApplicationEvent</literal>">
 <!ENTITY lit.jersey.server.monitoring.ApplicationEventListener "<literal>ApplicationEventListener</literal>">
 <!ENTITY lit.jersey.server.monitoring.ApplicationMXBean "<literal>ApplicationMXBean</literal>">
-<!ENTITY lit.jersey.server.monitoring.ApplicationStatistics "<literal>ApplicationStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.ExceptionMapperMXBean "<literal>ExceptionMapperMXBean</literal>">
 <!ENTITY lit.jersey.server.monitoring.ExceptionMapperStatistics "<literal>ExceptionMapperStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.ExecutionStatistics "<literal>ExecutionStatistics</literal>">
-<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
-<!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
+<!ENTITY lit.jersey.server.monitoring.ApplicationInfo "<literal>ApplicationInfo</literal>">
 <!ENTITY lit.jersey.server.monitoring.MonitoringStatistics "<literal>MonitoringStatistics</literal>">
 <!ENTITY lit.jersey.server.monitoring.MonitoringStatisticsListener "<literal>MonitoringStatisticsListener</literal>">
 <!ENTITY lit.jersey.server.monitoring.DestroyListener "<literal>DestroyListener</literal>">

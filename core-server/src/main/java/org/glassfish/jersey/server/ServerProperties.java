@@ -446,6 +446,21 @@ public final class ServerProperties {
     public static final String RESOURCE_VALIDATION_IGNORE_ERRORS =
             "jersey.config.server.resource.validation.ignoreErrors";
 
+    /**
+     * If {@code true} then application monitoring will be enabled.
+     *
+     * This will enable the possibility
+     * of injecting {@link org.glassfish.jersey.server.monitoring.ApplicationInfo} into resource and providers.
+     * <p>
+     * The default value is {@code false}.
+     * </p>
+     * <p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     * </p>
+     *
+     * @since 2.12
+     */
+    public static final String MONITORING_ENABLED = "jersey.config.server.monitoring.enabled";
 
     /**
      * If {@code true} then calculation of monitoring statistics will be enabled.
@@ -454,7 +469,11 @@ public final class ServerProperties {
      * of injecting {@link org.glassfish.jersey.server.monitoring.MonitoringStatistics} into resource and providers
      * and also the registered listeners
      * implementing {@link org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener} will be called
-     * when statistics are available. Enabling statistics has negative performance impact and therefore should
+     * when statistics are available.
+     * Monitoring statistics extends basic monitoring feature. Therefore when enabled,
+     * the monitoring gets automatically enabled too (the same result as setting the property
+     * {@link #MONITORING_ENABLED} {@code true}).
+     * Enabling statistics has negative performance impact and therefore should
      * be enabled only when needed.
      * <p>
      * The default value is {@code false}.
@@ -465,6 +484,7 @@ public final class ServerProperties {
      *
      * @see org.glassfish.jersey.server.monitoring.MonitoringStatistics
      * @see org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener
+     * @see #MONITORING_ENABLED
      */
     public static final String MONITORING_STATISTICS_ENABLED = "jersey.config.server.monitoring.statistics.enabled";
 
@@ -475,7 +495,7 @@ public final class ServerProperties {
      * on {@link org.glassfish.jersey.server.monitoring.MonitoringStatistics} and therefore when they are enabled,
      * also the calculation of monitoring statistics needs to be enabled. Therefore if this property is {@code true}
      * the calculation of monitoring statistics is automatically enabled (the same result as setting the property
-     * {@link #MONITORING_STATISTICS_ENABLED}).
+     * {@link #MONITORING_STATISTICS_ENABLED} to {@code true}).
      * <p/>
      * Enabling statistics MBeans has negative
      * performance impact and therefore should be enabled only when needed.
@@ -485,6 +505,8 @@ public final class ServerProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     *
+     * @see #MONITORING_STATISTICS_ENABLED
      */
     public static final String MONITORING_STATISTICS_MBEANS_ENABLED = "jersey.config.server.monitoring.statistics.mbeans.enabled";
 
@@ -568,8 +590,8 @@ public final class ServerProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
      *
-     * @since 2.3
      * @see #TRACING
+     * @since 2.3
      */
     public static final String TRACING_THRESHOLD = "jersey.config.server.tracing.threshold";
 

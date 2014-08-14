@@ -436,10 +436,12 @@ public final class ApplicationHandler {
             for (final ComponentProvider componentProvider : componentProviders) {
                 componentProvider.done();
             }
-            final List<ApplicationEventListener> appEventListeners = locator.getAllServices(ApplicationEventListener.class);
-            if (!appEventListeners.isEmpty()) {
-                compositeListener = new CompositeApplicationEventListener(
-                        appEventListeners);
+
+            final Iterable<ApplicationEventListener> appEventListeners = Providers.getAllProviders(locator,
+                            ApplicationEventListener.class, new RankedComparator<ApplicationEventListener>());
+
+            if (appEventListeners.iterator().hasNext()) {
+                compositeListener = new CompositeApplicationEventListener(appEventListeners);
                 compositeListener.onEvent(new ApplicationEventImpl(ApplicationEvent.Type.INITIALIZATION_START,
                         this.runtimeConfig, componentBag.getRegistrations(), resourceBag.classes, resourceBag.instances,
                         null));

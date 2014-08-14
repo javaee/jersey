@@ -250,16 +250,32 @@
                         </entry>
                     </row>
                     <row>
-                        <entry>&jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED;</entry>
+                        <entry>&jersey.server.ServerProperties.MONITORING_ENABLED; (Jersey 2.12 or later)</entry>
                         <entry><literal>jersey.config.server
                             .monitoring.statistics.enabled</literal></entry>
+                        <entry>
+                            <para>
+                                If &lit.true;, then application monitoring will be enabled. This will enable the possibility
+                                of injecting &jersey.server.monitoring.ApplicationInfo; into resource and providers.
+                                Default value is &lit.false;.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.server.ServerProperties.MONITORING_STATISTICS_ENABLED;</entry>
+                        <entry><literal>jersey.config.server
+                            .monitoring.enabled</literal></entry>
                         <entry>
                             <para>
                                 If &lit.true;, the calculation of monitoring statistics will be enabled. This will enable the
                                 possibility of injecting &jersey.server.monitoring.MonitoringStatistics; into resource and
                                 providers and also the registered listeners implementing
                                 &jersey.server.monitoring.MonitoringStatisticsListener; will be called when statistics are
-                                available for processing. Note that enabling statistics may have a negative performance impact
+                                available for processing.
+                                Monitoring statistics extends basic monitoring feature. Therefore when enabled,
+                                the monitoring gets automatically enabled too (the same result as setting the property
+                                &jersey.server.ServerProperties.MONITORING_ENABLED; to &lit.true;).
+                                Note that enabling statistics may have a negative performance impact
                                 and therefore should be enabled only when needed. Default value is &lit.false;.
                             </para>
                         </entry>
@@ -281,7 +297,8 @@
                     </row>
                     <row>
                         <entry>&jersey.server.ServerProperties.MONITORING_STATISTICS_REFRESH_INTERVAL; (Jersey 2.10 or later)</entry>
-                        <entry><literal>jersey.config.server.monitoring.statistics.refresh.interval</literal></entry>
+                        <entry><literal>jersey.config.server
+                            .monitoring.statistics.refresh.interval</literal></entry>
                         <entry>
                             <para>
                                 Interval (in <literal>ms</literal>}) indicating how often will be monitoring statistics refreshed

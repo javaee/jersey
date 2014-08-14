@@ -56,28 +56,27 @@
         <title>Migrating from Jersey 2.11 to 2.12</title>
         <section xml:id="mig-2.12-highlights">
             <title>Release 2.12 Highlights</title>
-            Following experimental APIs have been promoted to become part of public Jersey API:
-            <itemizedlist>
-                <listitem>
-                    <para>
-                        Jersey client-side &jersey.client.HttpAuthenticationFeature; API.
-                    </para>
-                </listitem>
-                <listitem>
-                    <para>
-                        Jersey server-side &jersey.server.monitoring.DestroyListener; (formerly
-                        <literal>ExtendedMonitoringStatisticsListener</literal>), which has been slightly refactored and
-                        is now a separate interface (e.g. not extending <literal>MonitoringStatisticsListener</literal>),
-                        hence providing better compatibility with lambdas.
-                    </para>
-                </listitem>
-            </itemizedlist>
-
-            These APIs are now part of the official public Jersey 2.x API.
+            <para>Following experimental APIs have been promoted to become part of public Jersey API:
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            Jersey client-side &jersey.client.HttpAuthenticationFeature; API.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            Jersey server-side &jersey.server.monitoring.DestroyListener; (formerly
+                            <literal>ExtendedMonitoringStatisticsListener</literal>), which has been slightly refactored and
+                            is now a separate interface (e.g. not extending <literal>MonitoringStatisticsListener</literal>),
+                            hence providing better compatibility with lambdas.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+                These APIs are now part of the official public Jersey 2.x API.
+            </para>
         </section>
-
         <section xml:id="mig-2.12-breaking-changes">
-            <title>Changes</title>
+            <title>Breaking Changes</title>
             <para>
                 <itemizedlist>
                     <listitem>
@@ -88,12 +87,21 @@
                             <literal>is</literal> instead of <literal>get</literal> as in Jersey 1 and Jersey &lt;= 2.6.
                         </para>
                     </listitem>
+                    <listitem>
+                        <para>
+                            For performance purposes a new server property &jersey.server.ServerProperties.MONITORING_ENABLED;
+                            has been introduced. It is possible to enable just basic almost static monitoring information using the
+                            property. It allows to inject &jersey.server.monitoring.ApplicationInfo; object,
+                            renamed original class <literal>org.glassfish.jersey.server.monitoring.ApplicationStatistics</literal>.
+                            And &jersey.server.monitoring.MonitoringStatistics; no more
+                            have a reference to <literal>ApplicationStatistics</literal>, method
+                            <literal>getApplicationStatistics()</literal> has been removed.
+                        </para>
+    gitc                </listitem>
                 </itemizedlist>
             </para>
         </section>
     </section>
-
-
 
     <section xml:id="mig-2.11">
         <title>Migrating from Jersey 2.10 to 2.11</title>
@@ -311,7 +319,8 @@
                     <listitem>
                         <para>
                             Deprecated <literal>getDestroyTime</literal> method has been removed from
-                            &jersey.server.monitoring.ApplicationStatistics;. To get the application shutdown information,
+                            <literal>org.glassfish.jersey.server.monitoring.ApplicationStatistics</literal>.
+                            To get the application shutdown information,
                             a &jersey.server.ContainerLifecycleListener; should be registered and its
                             <literal>onShutdown</literal> method implemented to listen to and process the application
                             shutdown event.

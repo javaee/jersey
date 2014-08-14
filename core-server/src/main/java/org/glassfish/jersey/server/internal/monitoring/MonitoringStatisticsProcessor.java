@@ -41,7 +41,6 @@
 package org.glassfish.jersey.server.internal.monitoring;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -60,7 +59,6 @@ import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.RuntimeExecutorsBinder;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
-import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 
@@ -114,7 +112,6 @@ final class MonitoringStatisticsProcessor {
             @Override
             public void run() {
                 try {
-                    processApplicationEvents();
                     processRequestItems();
                     processResponseCodeEvents();
                     processExceptionMapperEvents();
@@ -140,22 +137,6 @@ final class MonitoringStatisticsProcessor {
                 }
             }
         }, 0, interval, TimeUnit.MILLISECONDS);
-    }
-
-    private void processApplicationEvents() {
-        while (!monitoringEventListener.getApplicationEvents().isEmpty()) {
-            final ApplicationEvent appEvent = monitoringEventListener.getApplicationEvents().remove();
-            switch (appEvent.getType()) {
-                case INITIALIZATION_FINISHED:
-                case RELOAD_FINISHED:
-                    final ApplicationStatisticsImpl initStatistics = new ApplicationStatisticsImpl(appEvent.getResourceConfig(),
-                            new Date(monitoringEventListener.getApplicationStartTime()), appEvent.getRegisteredClasses(),
-                            appEvent.getRegisteredInstances(), appEvent.getProviders());
-                    statisticsBuilder.setApplicationStatisticsImpl(initStatistics);
-                    break;
-            }
-
-        }
     }
 
     private void processExceptionMapperEvents() {
@@ -206,7 +187,7 @@ final class MonitoringStatisticsProcessor {
      * processing of actual events and will be not executed again. The method finishes after the
      * internal thread finish its processing loop.
      *
-     * @throw ProcessingException thrown when waiting for the thread to finish the work is interrupted. In this
+     * @throws InterruptedException thrown when waiting for the thread to finish the work is interrupted. In this
      * case internal listeners will be still shutdown.
      */
     void shutDown() throws InterruptedException {

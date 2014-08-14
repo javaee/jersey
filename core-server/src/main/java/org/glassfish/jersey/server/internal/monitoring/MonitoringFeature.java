@@ -55,6 +55,7 @@ import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.monitoring.jmx.MBeanExposer;
+import org.glassfish.jersey.server.monitoring.ApplicationInfo;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 
@@ -85,36 +86,63 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public final class MonitoringFeature implements Feature {
-    private boolean monitoringEnabled = true;
-    private boolean mBeansEnabled; // monitoring mbeans are enabled only if monitoring is enabled
+
     private static final Logger LOGGER = Logger.getLogger(MonitoringFeature.class.getName());
+
+    private boolean monitoringEnabled = true;
+    private boolean statisticsEnabled = true; // monitoring statistics are enabled only if monitoring is enabled
+    private boolean mBeansEnabled; // monitoring mbeans are enabled only if monitoring statistics is enabled
 
     @Override
     public boolean configure(FeatureContext context) {
         final Boolean monitoringEnabledProperty = ServerProperties.getValue(context.getConfiguration().getProperties(),
+                ServerProperties.MONITORING_ENABLED, null, Boolean.class);
+        final Boolean statisticsEnabledProperty = ServerProperties.getValue(context.getConfiguration().getProperties(),
                 ServerProperties.MONITORING_STATISTICS_ENABLED, null, Boolean.class);
         final Boolean mbeansEnabledProperty = ServerProperties.getValue(context.getConfiguration().getProperties(),
                 ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, null, Boolean.class);
 
         if (monitoringEnabledProperty != null) {
             monitoringEnabled = monitoringEnabledProperty;
+            statisticsEnabled = monitoringEnabled; // monitoring statistics are enabled by default if monitoring is enabled
+        }
+
+        if (statisticsEnabledProperty != null) {
+            monitoringEnabled = monitoringEnabled || statisticsEnabledProperty;
+            statisticsEnabled = statisticsEnabledProperty;
         }
 
         if (mbeansEnabledProperty != null) {
             monitoringEnabled = monitoringEnabled || mbeansEnabledProperty;
+            statisticsEnabled = statisticsEnabled || mbeansEnabledProperty;
             mBeansEnabled = mbeansEnabledProperty;
         }
 
-        if (monitoringEnabledProperty != null && !monitoringEnabledProperty) {
+        if (statisticsEnabledProperty != null && !statisticsEnabledProperty) {
             if (mbeansEnabledProperty != null && mBeansEnabled) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.WARNING_MONITORING_FEATURE_ENABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
             } else {
-                LOGGER.log(Level.WARNING, LocalizationMessages.WARNING_MONITORING_FEATURE_ENABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
+                LOGGER.log(Level.WARNING, LocalizationMessages.WARNING_MONITORING_FEATURE_DISABLED(ServerProperties.MONITORING_STATISTICS_ENABLED));
             }
         }
 
-
         if (monitoringEnabled) {
+            context.register(ApplicationInfoListener.class);
+            context.register(new AbstractBinder() {
+                @Override
+                protected void configure() {
+                    bindFactory(ReferencingFactory.<ApplicationInfo>referenceFactory()).to(
+                            new TypeLiteral<Ref<ApplicationInfo>>() {
+                            }
+                    ).in(Singleton.class);
+
+                    bindFactory(ApplicationInfoInjectionFactory.class).to(
+                            ApplicationInfo.class).in(PerLookup.class);
+                }
+            });
+        }
+
+        if (statisticsEnabled) {
             context.register(MonitoringEventListener.class);
             context.register(new AbstractBinder() {
                 @Override
@@ -148,6 +176,20 @@ public final class MonitoringFeature implements Feature {
      */
     public void setmBeansEnabled(boolean mBeansEnabled) {
         this.mBeansEnabled = mBeansEnabled;
+    }
+
+    private static class ApplicationInfoInjectionFactory extends ReferencingFactory<ApplicationInfo> {
+
+        /**
+         * Create new referencing injection factory.
+         *
+         * @param referenceFactory reference provider backing the factory.
+         */
+        @Inject
+        public ApplicationInfoInjectionFactory(Provider<Ref<ApplicationInfo>> referenceFactory) {
+            super(referenceFactory);
+        }
+
     }
 
     private static class StatisticsInjectionFactory extends ReferencingFactory<MonitoringStatistics> {

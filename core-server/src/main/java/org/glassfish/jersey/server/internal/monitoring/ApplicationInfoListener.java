@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,54 +37,59 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.monitoring;
 
-import java.util.List;
-
+import org.glassfish.jersey.internal.util.collection.Ref;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
+import org.glassfish.jersey.server.monitoring.ApplicationInfo;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 
-import jersey.repackaged.com.google.common.collect.Lists;
+import javax.annotation.Priority;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import java.util.Date;
 
 /**
- * {@link ApplicationEventListener application event listener} that aggregates more event listeners into one.
- * Calling listener methods on this listener will cause calling methods on all aggregated listeners.
+ * {@link ApplicationEventListener Application event listener} that listens to {@link ApplicationEvent application}
+ * events and just prepare {@link ApplicationInfo} instance to be injectable.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @see MonitoringEventListener
+ *
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-public class CompositeApplicationEventListener implements ApplicationEventListener {
+@Priority(ApplicationInfoListener.PRIORITY)
+public final class ApplicationInfoListener implements ApplicationEventListener {
 
-    private final Iterable<ApplicationEventListener> applicationEventListeners;
+    public static final int PRIORITY = 1000;
 
-    /**
-     * Creates a new instance of composite event listener.
-     *
-     * @param applicationEventListeners List of application event listener that should be aggregated.
-     */
-    public CompositeApplicationEventListener(final Iterable<ApplicationEventListener> applicationEventListeners) {
-        this.applicationEventListeners = applicationEventListeners;
+    @Inject
+    private Provider<Ref<ApplicationInfo>> applicationInfoRefProvider;
+
+    @Override
+    public RequestEventListener onRequest(final RequestEvent requestEvent) {
+        return null;
     }
 
     @Override
     public void onEvent(final ApplicationEvent event) {
-        for (final ApplicationEventListener applicationEventListener : applicationEventListeners) {
-            applicationEventListener.onEvent(event);
+        final ApplicationEvent.Type type = event.getType();
+        switch (type) {
+            case RELOAD_FINISHED:
+            case INITIALIZATION_FINISHED:
+                processApplicationStatistics(event);
+                break;
         }
     }
 
-    @Override
-    public RequestEventListener onRequest(final RequestEvent requestEvent) {
-        final List<RequestEventListener> requestEventListeners = Lists.newArrayList();
-        for (final ApplicationEventListener applicationEventListener : applicationEventListeners) {
-            final RequestEventListener requestEventListener = applicationEventListener.onRequest(requestEvent);
-            if (requestEventListener != null) {
-                requestEventListeners.add(requestEventListener);
-            }
-        }
-
-        return requestEventListeners.isEmpty() ? null
-                : new CompositeRequestEventListener(requestEventListeners);
+    private void processApplicationStatistics(ApplicationEvent event) {
+        final long now = System.currentTimeMillis();
+        final ApplicationInfo applicationInfo = new ApplicationInfoImpl(event.getResourceConfig(),
+                new Date(now), event.getRegisteredClasses(),
+                event.getRegisteredInstances(), event.getProviders());
+        applicationInfoRefProvider.get().set(applicationInfo);
     }
+
 }

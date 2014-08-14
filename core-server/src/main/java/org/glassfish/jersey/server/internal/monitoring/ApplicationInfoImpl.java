@@ -37,57 +37,75 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.server.internal.monitoring;
 
-package org.glassfish.jersey.tests.e2e.server.monitoring;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-
-import javax.inject.Provider;
+import java.util.Date;
+import java.util.Set;
 
 import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
-import org.glassfish.jersey.test.JerseyTest;
-
-import org.junit.Assert;
-import org.junit.Test;
+import org.glassfish.jersey.server.monitoring.ApplicationInfo;
 
 /**
+ * Application statistics.
+ *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-public class MonitoringStatisticsTest extends JerseyTest {
+final class ApplicationInfoImpl implements ApplicationInfo {
+
+    private final ResourceConfig resourceConfig;
+    private final Date startTime;
+    private final Set<Class<?>> registeredClasses;
+    private final Set<Object> registeredInstances;
+    private final Set<Class<?>> providers;
+
+    /**
+     * Create a new application statistics instance.
+     *
+     * @param resourceConfig Resource config of the application being monitored.
+     * @param startTime Start time of the application (when initialization was finished).
+     * @param registeredClasses Registered resource classes.
+     * @param registeredInstances Registered resource instances.
+     * @param providers Registered providers.
+     */
+    ApplicationInfoImpl(final ResourceConfig resourceConfig, final Date startTime, final Set<Class<?>> registeredClasses,
+                        final Set<Object> registeredInstances, final Set<Class<?>> providers) {
+        this.resourceConfig = resourceConfig;
+        this.startTime = startTime;
+
+        this.registeredClasses = registeredClasses;
+        this.registeredInstances = registeredInstances;
+        this.providers = providers;
+    }
 
     @Override
-    protected Application configure() {
-        final ResourceConfig resourceConfig = new ResourceConfig(StatisticsTest.class);
-        resourceConfig.property(ServerProperties.MONITORING_STATISTICS_ENABLED, true);
-        resourceConfig.property(ServerProperties.APPLICATION_NAME, "testApp");
+    public ResourceConfig getResourceConfig() {
         return resourceConfig;
     }
 
-    @Path("resource")
-    public static class StatisticsTest {
-        @Context
-        Provider<MonitoringStatistics> statistics;
-
-        @GET
-        public String getAppName() throws InterruptedException {
-            final MonitoringStatistics monitoringStatistics = statistics.get();
-            final String name = monitoringStatistics.getApplicationStatistics()
-                    .getResourceConfig().getApplicationName();
-
-            return name;
-        }
+    @Override
+    public Date getStartTime() {
+        return startTime;
     }
 
-    @Test
-    public void test() {
-        final Response response = target().path("resource").request().get();
-        Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals("testApp", response.readEntity(String.class));
+    @Override
+    public Set<Class<?>> getRegisteredClasses() {
+        return registeredClasses;
     }
+
+    @Override
+    public Set<Object> getRegisteredInstances() {
+        return registeredInstances;
+    }
+
+    @Override
+    public Set<Class<?>> getProviders() {
+        return providers;
+    }
+
+    @Override
+    public ApplicationInfo snapshot() {
+        // snapshot functionality not yet implemented
+        return this;
+    }
+
 }
