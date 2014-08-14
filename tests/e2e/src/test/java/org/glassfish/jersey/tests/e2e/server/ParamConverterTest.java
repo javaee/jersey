@@ -41,6 +41,9 @@ package org.glassfish.jersey.tests.e2e.server;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
 
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.FormParam;
@@ -64,7 +67,9 @@ import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * Tests {@link ParamConverter param converters} as e2e test.
@@ -90,6 +95,41 @@ public class ParamConverterTest extends JerseyTest {
         final String str = response.readEntity(String.class);
         assertEquals("*pathParam*_*matrixParam*_*queryParam*_*headerParam*_*cookieParam*_*formParam*", str);
 
+    }
+
+    @Test
+    public void testListOfMyBeanParam() {
+        final Response response = target().path("resource/myBean/list")
+                .queryParam("q", "A")
+                .queryParam("q", "B")
+                .queryParam("q", "C")
+                .request().get();
+        final String str = response.readEntity(String.class);
+        assertEquals("*A**B**C*", str);
+    }
+
+    @Test
+    public void testSetOfMyBeanParam() {
+        final Response response = target().path("resource/myBean/set")
+                .queryParam("q", "A")
+                .queryParam("q", "B")
+                .queryParam("q", "C")
+                .request().get();
+        final String str = response.readEntity(String.class);
+        assertThat(str, containsString("*A*"));
+        assertThat(str, containsString("*B*"));
+        assertThat(str, containsString("*C*"));
+    }
+
+    @Test
+    public void testSortedSetOfMyBeanParam() {
+        final Response response = target().path("resource/myBean/sortedset")
+                .queryParam("q", "A")
+                .queryParam("q", "B")
+                .queryParam("q", "C")
+                .request().get();
+        final String str = response.readEntity(String.class);
+        assertEquals("*A**B**C*", str);
     }
 
     @Test
@@ -126,6 +166,38 @@ public class ParamConverterTest extends JerseyTest {
                     cookie.getValue() + "_" + form.getValue();
         }
 
+        @GET
+        @Path("myBean/list")
+        public String postMyBean(@QueryParam("q") List<MyBean> query) {
+            StringBuilder sb = new StringBuilder();
+            for (MyBean bean : query) {
+                sb.append(bean.getValue());
+            }
+
+            return sb.toString();
+        }
+
+        @GET
+        @Path("myBean/set")
+        public String postMyBean(@QueryParam("q") Set<MyBean> query) {
+            StringBuilder sb = new StringBuilder();
+            for (MyBean bean : query) {
+                sb.append(bean.getValue());
+            }
+
+            return sb.toString();
+        }
+
+        @GET
+        @Path("myBean/sortedset")
+        public String postMyBean(@QueryParam("q") SortedSet<MyBean> query) {
+            StringBuilder sb = new StringBuilder();
+            for (MyBean bean : query) {
+                sb.append(bean.getValue());
+            }
+
+            return sb.toString();
+        }
 
         @POST
         @Path("string/{path}")
@@ -153,6 +225,7 @@ public class ParamConverterTest extends JerseyTest {
 
     public static class MyParamProvider implements ParamConverterProvider {
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
             if (rawType != MyBean.class) {
@@ -170,7 +243,7 @@ public class ParamConverterTest extends JerseyTest {
 
                 @Override
                 public String toString(MyBean bean) throws IllegalArgumentException {
-                    return "*:" + bean.getValue().toString() + ":*";
+                    return "*:" + bean.getValue() + ":*";
                 }
 
             };
@@ -179,6 +252,7 @@ public class ParamConverterTest extends JerseyTest {
 
     public static class MyStringParamProvider implements ParamConverterProvider {
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
             if (rawType != String.class) {
@@ -201,11 +275,8 @@ public class ParamConverterTest extends JerseyTest {
         }
     }
 
-    public static class MyBean {
+    public static class MyBean implements Comparable<MyBean> {
         private String value;
-
-        public MyBean() {
-        }
 
         public void setValue(String value) {
             this.value = value;
@@ -220,6 +291,26 @@ public class ParamConverterTest extends JerseyTest {
             return "MyBean{" +
                     "value='" + value + '\'' +
                     '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof MyBean)) return false;
+
+            MyBean myBean = (MyBean) o;
+
+            return !(value != null ? !value.equals(myBean.value) : myBean.value != null);
+        }
+
+        @Override
+        public int hashCode() {
+            return value != null ? value.hashCode() : 0;
+        }
+
+        @Override
+        public int compareTo(MyBean o) {
+            return value.compareTo(o.value);
         }
     }
 }
