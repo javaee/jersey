@@ -40,7 +40,10 @@
     holder.
 
 -->
-<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents;
+    <!ENTITY jersey.github.osgi.webapp.example.link "<link xlink:href='&jersey.github.examples.uri;/osgi-helloworld-webapp'>WAB Example</link>">
+    <!ENTITY jersey.github.osgi.httpservice.example.link "<link xlink:href='&jersey.github.examples.uri;/osgi-http-service'>HTTP Service example</link>">
+]>
 <chapter xmlns="http://docbook.org/ns/docbook"
          version="5.0"
          xml:lang="en"
@@ -388,7 +391,8 @@ HttpServer server = JdkHttpServerFactory.createHttpServer(baseUri, config);</pro
             <section xml:id="deployment.http.simple">
                 <title>Simple server</title>
                 <para>
-                    &simple.link; is a framework which allows developers to create a HTTP server instance and embed it within
+                    <link xlink:href='http://www.simpleframework.org/'>Simple</link> is a framework which allows developers
+                    to create a HTTP server instance and embed it within
                     an application. Again, creating the server instance is achieved by calling a factory method from the
                     <literal>jersey-container-simple-http</literal> container extension module.
                 </para>
@@ -913,7 +917,7 @@ public class MyApplication extends ResourceConfig {
                 As with any other Servlet application, JAX-RS application classes are packaged in
                 <literal>WEB-INF/classes</literal> or <literal>WEB-INF/lib</literal> and required application libraries are
                 located in <literal>WEB-INF/lib</literal>.
-                For more details, please refer to the Servlet Specification (&jsr315.path;).
+                For more details, please refer to the Servlet Specification (&jsr315.link;).
             </para>
 
             <para>
@@ -1086,8 +1090,19 @@ public class StatelessEjbResource implements LocalEjb {
                 <title>Oracle WebLogic Server</title>
 
                 <para>
-                    WebLogic currently supports JAX-RS 1.1 (&jsr311.path;) out of the box with Jersey 1.x. To use more recent
-                    version with WebLogic, please follow this &weblogic.guide;.
+                    WebLogic 12.1.2 and earlier supports only JAX-RS 1.1 (&jsr311.link;) out of the box with Jersey 1.x
+                    (WebLogic 12.1.2 ships with Jersey 1.13). To update the version of Jersey 1.x in these earlier WebLogic
+                    releases, please read the
+                    <link xlink:href='http://docs.oracle.com/middleware/1212/wls/RESTF/version-restful-service.htm'>
+                        Updating the Version of Jersey JAX-RS RI
+                    </link> chapter in the WebLogic RESTful Web Services Development Guide.
+                </para>
+                <para>
+                    In WebLogic 12.1.3, Jersey 1.18 is shipped as a default JAX-RS 1.1 provider. In this version of WebLogic,
+                    JAX-RS 2.0 (using Jersey 2.5.1) is supported as an optionally installable shared library. Please read through
+                    the <link xlink:href="http://docs.oracle.com/middleware/1213/wls/RESTF/use-jersey20-ri.htm#RESTF290">WebLogic
+                    12.1.3 RESTful Web Services Development Guide</link> for details how to enable JAX-RS 2.0 support on
+                    WebLogic 12.1.3.
                 </para>
             </section>
 
@@ -1111,8 +1126,8 @@ public class StatelessEjbResource implements LocalEjb {
         <para>
             OSGi support has been added to the Jersey version 1.2. Since then, you should be able to utilize standard OSGi
             means to run Jersey based web applications in OSGi runtime as described in the OSGi Service Platform Enterprise
-            Specification. Jersey is currently compatible with OSGi 4.2.0, the specification could be downloaded from
-            &osgi.path;.
+            Specification. Jersey is currently compatible with OSGi 4.2.0, the specification could be downloaded from the
+            <link xlink:href='http://www.osgi.org/Download/Release4V42'>OSGi 4.2.0 Download Site</link>.
         </para>
         <para>
             The two supported ways of running an OSGi web application are:
@@ -1130,13 +1145,14 @@ public class StatelessEjbResource implements LocalEjb {
             them with Jersey:
 
             <itemizedlist>
-                <listitem>&jersey.github.osgi.webapp;</listitem>
-                <listitem>&jersey.github.osgi.httpservice;</listitem>
+                <listitem>&jersey.github.osgi.webapp.example.link;</listitem>
+                <listitem>&jersey.github.osgi.httpservice.example.link;</listitem>
             </itemizedlist>
 
             Both examples are multi-module maven projects and both consist of an application OSGi bundle module and a test module.
-            The tests are based on &pax.path; framework. Both OSGi examples also include a readme file containing instructions
-            how to manually run the example applications using &felix.path; framework.
+            The tests are based on the <link xlink:href='http://ops4j1.jira.com/wiki/display/PAXEXAM3/Pax+Exam'>PAX Exam</link>
+            framework. Both OSGi examples also include a readme file containing instructions
+            how to manually run the example applications using &felix.link; framework.
         </para>
 
         <para>
@@ -1222,11 +1238,12 @@ Bundle-ClassPath: WEB-INF/classese</programlisting>
                 compliant with the OSGi Enterprise Specification mentioned above. The third manifest header
                 worth mentioning is the Bundle-ClassPath specifying where to find the application
                 Java classes within the bundle archive.
-                More about manifest headers in OSGi can be found in the &osgi.wiki.headers;
+                More about manifest headers in OSGi can be found in the
+                <link xlink:href='http://wiki.osgi.org/wiki/Category:Manifest_Header'>OSGi Wiki</link>.
             </para>
 
             <para>
-                For more detailed information on the example please see the &jersey.github.osgi.webapp; source code. This
+                For more detailed information on the example please see the &jersey.github.osgi.webapp.example.link; source code. This
                 example does not package into a single <literal>war</literal> file. Instead a <literal>war</literal> and a
                 set of additional <literal>jar</literal>s is produced during the build. See the next example to see how to deploy OSGi
                 based Jersey application to GlassFish.
@@ -1254,7 +1271,8 @@ Bundle-ClassPath: WEB-INF/classese</programlisting>
 examples$ cd osgi-http-service/bundle
 bundle$ mvn clean package</programlisting>
 
-                You can also get the binary readily compiled from maven &repo.osgi.httpservice.bundle;.
+                You can also get the binary readily compiled from
+                <link xlink:href='&maven.java.net.releases.link;org/glassfish/jersey/examples/osgi-http-service/bundle/&version;'>Java.net Maven Repository</link>.
             </para>
             <para>
                 2) Install into OSGi runtime:
@@ -1309,8 +1327,10 @@ gogo$</programlisting>
             </para>
 
             <para>
-                The example app should now be up and running. You can access it on &localhost.example.osgi.http;. Please
-                see &jersey.github.osgi.httpservice; source code for more details on the example.
+                The example app should now be up and running. You can access it on
+                <link xlink:href='http://localhost:8080/osgi/jersey-http-service/status'>
+                    http://localhost:8080/osgi/jersey-http-service/status
+                </link>. Please see &jersey.github.osgi.httpservice.example.link; source code for more details on the example.
             </para>
         </section>
     </section>

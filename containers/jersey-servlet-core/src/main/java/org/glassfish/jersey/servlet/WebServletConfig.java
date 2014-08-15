@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,11 +52,11 @@ import javax.servlet.ServletContext;
  * @author Paul Sandoz
  * @author guilherme silveira
  */
-public class WebServletConfig implements WebConfig {
+public final class WebServletConfig implements WebConfig {
 
     private final ServletContainer servlet;
 
-    public WebServletConfig(ServletContainer servlet) {
+    public WebServletConfig(final ServletContainer servlet) {
         this.servlet = servlet;
     }
 
@@ -81,7 +81,7 @@ public class WebServletConfig implements WebConfig {
     }
 
     @Override
-    public String getInitParameter(String name) {
+    public String getInitParameter(final String name) {
         return servlet.getInitParameter(name);
     }
 

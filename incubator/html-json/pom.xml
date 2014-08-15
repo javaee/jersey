@@ -60,6 +60,10 @@
         net.java.html.json library. Define your objects via @Model annotation.
         Use them in Jersey.
     </description>
+    
+    <properties>
+        <net.java.html.version>0.8.3</net.java.html.version>
+    </properties>
 
     <repositories>
         <repository>
@@ -77,12 +81,12 @@
         <dependency>
             <groupId>org.netbeans.html</groupId>
             <artifactId>net.java.html.json</artifactId>
-            <version>0.7.1</version>
+            <version>${net.java.html.version}</version>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-util-lookup</artifactId>
-            <version>RELEASE73</version>
+            <version>RELEASE80</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -123,7 +127,7 @@
         <dependency>
             <groupId>org.netbeans.html</groupId>
             <artifactId>ko-ws-tyrus</artifactId>
-            <version>0.7.1</version>
+            <version>${net.java.html.version}</version>
             <scope>runtime</scope>
         </dependency>
         <!-- Overwrite Grizzly dependency defined in ko-ws-tyrus -->

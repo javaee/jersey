@@ -439,6 +439,7 @@
                         <outputDirectory>${project.build.directory}/checkstyle</outputDirectory>
                         <outputFile>${project.build.directory}/checkstyle/checkstyle-result.xml</outputFile>
                         <configLocation>etc/config/checkstyle.xml</configLocation>
+                        <suppressionsLocation>etc/config/checkstyle-suppressions.xml</suppressionsLocation>
                     </configuration>
                     <executions>
                         <execution>
@@ -931,6 +932,7 @@
                 <version>${checkstyle.mvn.plugin.version}</version>
                 <configuration>
                     <configLocation>etc/config/checkstyle.xml</configLocation>
+                    <suppressionsLocation>etc/config/checkstyle-suppressions.xml</suppressionsLocation>
                 </configuration>
                 <reportSets>
                     <reportSet>
@@ -994,7 +996,7 @@
             <dependency>
                 <groupId>javax.ws.rs</groupId>
                 <artifactId>javax.ws.rs-api</artifactId>
-                <version>${jaxrs.api.version}</version>
+                <version>${jaxrs.api.impl.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>
@@ -1444,7 +1446,7 @@
         <jersey.version>${project.version}</jersey.version>
         <bnd.plugin.version>2.3.6</bnd.plugin.version>
         <cdi.api.version>1.1</cdi.api.version>
-        <checkstyle.mvn.plugin.version>2.11</checkstyle.mvn.plugin.version>
+        <checkstyle.mvn.plugin.version>2.12.1</checkstyle.mvn.plugin.version>
         <ejb.version>3.2</ejb.version>
         <gf.impl.version>4.0</gf.impl.version>
         <fasterxml.classmate.version>0.8.0</fasterxml.classmate.version>
@@ -1455,7 +1457,7 @@
         <grizzly.client.version>1.8</grizzly.client.version>
         <grizzly2.version>2.3.16</grizzly2.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <hk2.version>2.3.0-b05</hk2.version>
+        <hk2.version>2.3.0-b10</hk2.version>
         <asm.version>5.0.2</asm.version>
         <httpclient.version>4.3.1</httpclient.version>
         <jackson.version>2.3.2</jackson.version>
@@ -1468,8 +1470,8 @@
         <javax.persistence.version>1.0</javax.persistence.version>
         <jaxb.api.version>2.2.7</jaxb.api.version>
         <jaxb.ri.version>2.2.7</jaxb.ri.version>
-        <jaxrs.api.version>2.0</jaxrs.api.version>
-        <jaxrs.api.last.final.version>1.1</jaxrs.api.last.final.version>
+        <jaxrs.api.spec.version>2.0</jaxrs.api.spec.version>
+        <jaxrs.api.impl.version>2.0.1</jaxrs.api.impl.version>
         <jboss.logging.version>3.1.1.GA</jboss.logging.version>
         <jersey1.version>1.17</jersey1.version>
         <jersey1.last.final.version>${jersey1.version}</jersey1.last.final.version>

@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -54,7 +54,7 @@
 
     <para>This chapter presents an overview of the core JAX-RS concepts - resources and sub-resources.</para>
 
-    <para>The JAX-RS &jax-rs.version; JavaDoc can be found online <link xlink:href="&jax-rs.release.path;/apidocs/index.html">here</link>.
+    <para>The JAX-RS &jax-rs.version; JavaDoc can be found online <link xlink:href="&jaxrs.release.uri;/apidocs/index.html">here</link>.
     </para>
 
     <para>The JAX-RS &jax-rs.version; specification draft can be found online <link

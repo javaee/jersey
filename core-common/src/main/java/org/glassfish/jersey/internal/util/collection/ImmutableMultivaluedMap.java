@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,6 +75,9 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
      * @param delegate the underlying MultivaluedMap
      */
     public ImmutableMultivaluedMap(MultivaluedMap<K, V> delegate) {
+        if (delegate == null) {
+            throw new NullPointerException("ImmutableMultivaluedMap delegate must not be 'null'.");
+        }
         this.delegate = delegate;
     }
 
@@ -171,5 +174,27 @@ public class ImmutableMultivaluedMap<K, V> implements MultivaluedMap<K, V> {
     @Override
     public Set<Entry<K, List<V>>> entrySet() {
         return Collections.unmodifiableSet(delegate.entrySet());
+    }
+
+    @Override
+    public String toString() {
+        return delegate.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ImmutableMultivaluedMap)) return false;
+
+        ImmutableMultivaluedMap that = (ImmutableMultivaluedMap) o;
+
+        if (!delegate.equals(that.delegate)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return delegate.hashCode();
     }
 }

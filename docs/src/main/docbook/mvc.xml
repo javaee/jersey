@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -383,7 +383,7 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                and for non-Maven users the list of dependencies is available at &jersey-mvc-bean-validation;.
+                and for non-Maven users the list of dependencies is available at &jersey.ext.mvc-bean-validation.deps.link;.
             </para>
         </section>
     </section>
@@ -537,7 +537,7 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                and for non-Maven users the list of dependencies is available at &jersey-mvc-mustache;.
+                and for non-Maven users the list of dependencies is available at &jersey.ext.mvc-mustache.deps.link;.
             </para>
         </section>
 
@@ -620,7 +620,7 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                and for non-Maven users the list of dependencies is available at &jersey-mvc-freemarker;.
+                and for non-Maven users the list of dependencies is available at &jersey.ext.mvc-freemarker.deps.link;.
             </para>
         </section>
 
@@ -719,7 +719,7 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                and for non-Maven users the list of dependencies is available at &jersey-mvc-jsp;.
+                and for non-Maven users the list of dependencies is available at &jersey.ext.mvc-jsp.deps.link;.
             </para>
         </section>
     </section>
@@ -794,7 +794,7 @@ class MyTemplateProcessor implements TemplateProcessor<String> {
         <para>
             If you want to use just templating API infrastructure provided by Jersey for the MVC templating support in order to
             implement your custom support for a templating engine other than the ones provided by Jersey,
-            you will need to add the base &jersey-mvc; module into the list of your dependencies:
+            you will need to add the base &jersey.ext.mvc.deps.link; module into the list of your dependencies:
 
             <programlisting language="xml">&lt;dependency&gt;
     &lt;groupId&gt;org.glassfish.jersey.ext&lt;/groupId&gt;
@@ -807,6 +807,7 @@ class MyTemplateProcessor implements TemplateProcessor<String> {
     <section>
         <title>Other Examples</title>
 
-        <para>To see an example of MVC (JSP) templating support in Jersey refer to the &jersey.github.mvc.example.path;.</para>
+        <para>To see an example of MVC (JSP) templating support in Jersey refer to the
+            <link xlink:href='&jersey.github.examples.uri;/bookstore-webapp'>MVC (Bookstore) Example</link>.</para>
     </section>
 </chapter>

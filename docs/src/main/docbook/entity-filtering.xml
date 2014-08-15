@@ -40,7 +40,12 @@
     holder.
 
 -->
-<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents; ]>
+<!DOCTYPE chapter [
+    <!ENTITY % ents SYSTEM "jersey.ent" > %ents;
+    <!ENTITY jersey.github.ef.example.link "<link xlink:href='&jersey.github.examples.uri;/entity-filtering'>Entity Filtering example</link>">
+    <!ENTITY jersey.github.ef.security.example.link "<link xlink:href='&jersey.github.examples.uri;/entity-filtering-security'>Entity Filtering example (with security annotations)</link>">
+]>
+
 <chapter xmlns="http://docbook.org/ns/docbook"
          version="5.0"
          xml:lang="en"
@@ -114,7 +119,7 @@
             <note>
                 <para>
                     If you're not using Maven make sure to have also all the transitive dependencies
-                    (see &jersey-entity-filtering;) on the classpath.
+                    (see &jersey.ext.entity-filtering.deps.link;) on the classpath.
                 </para>
             </note>
         </para>
@@ -236,7 +241,7 @@ final Client client = ClientClientBuilder.newClient(config);
             In the next section the entity-filtering features will be illustrated on a project-tracking application that
             contains three classes in it's domain model and few resources (only <literal>Project</literal> resource will be
             shown in this chapter). The full source code for the example application can be found in Jersey
-            &jersey.github.ef.example.path;.
+            &jersey.github.ef.example.link;.
         </para>
 
         <para>
@@ -520,7 +525,7 @@ public @interface ProjectDetailedView {
 
             <para>
                 To pass entity-filtering annotations via &jaxrs.core.Response; returned from a resource method you can leverage the
-                <link xlink:href='&jax-rs.javadoc.path;/core/Response.ResponseBuilder.html#entity(java.lang.Object, java.lang.annotation.Annotation[])'>Response.ResponseBuilder#entity(Object, Annotation[])</link>
+                <link xlink:href='&jaxrs.javadoc.uri;/core/Response.ResponseBuilder.html#entity(java.lang.Object, java.lang.annotation.Annotation[])'>Response.ResponseBuilder#entity(Object, Annotation[])</link>
                 method. The next example illustrates this approach. You will also see why every custom entity-filtering
                 annotation should contain a factory for creating instances of the annotation.
 
@@ -912,10 +917,10 @@ public class FilteringMoxyJsonProvider extends ConfigurableMoxyJsonProvider {
 
             <itemizedlist>
                 <listitem>
-                    <para>&jersey.github.ef.example.path;</para>
+                    <para>&jersey.github.ef.example.link;</para>
                 </listitem>
                 <listitem>
-                    <para>&jersey.github.ef.security.example.path;</para>
+                    <para>&jersey.github.ef.security.example.link;</para>
                 </listitem>
             </itemizedlist>
         </para>

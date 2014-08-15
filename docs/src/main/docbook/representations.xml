@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -373,15 +373,15 @@ public class EntityNotFoundMapper implements ExceptionMapper&lt;javax.persistenc
             root
             resource class computes an entity tag from the request URI and then calls
             the
-            <link xlink:href="&jax-rs.javadoc.path;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">request.evaluatePreconditions</link>
+            <link xlink:href="&jaxrs.javadoc.uri;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">request.evaluatePreconditions</link>
             with that entity tag. If a client request contains an
             <literal>If-None-Match</literal>
             header with a value that contains the
             same entity tag that was calculated then the
-            <link xlink:href="&jax-rs.javadoc.path;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">evaluatePreconditions</link>
+            <link xlink:href="&jaxrs.javadoc.uri;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">evaluatePreconditions</link>
             returns a pre-filled out response, with the 304 status code and entity tag
             set, that may be built and returned. Otherwise,
-            <link xlink:href="&jax-rs.javadoc.path;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">evaluatePreconditions</link>
+            <link xlink:href="&jaxrs.javadoc.uri;/core/Request.html#evaluatePreconditions(javax.ws.rs.core.EntityTag)">evaluatePreconditions</link>
             returns
             <literal>null</literal>
             and the normal response can be

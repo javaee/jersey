@@ -96,22 +96,39 @@
                 </configuration>
             </plugin>
             <plugin>
+                <!--
+                Note: If you need to re-generate WADL classes do so by invoking:
+
+                    mvn com.sun.tools.xjc.maven2:maven-jaxb-plugin:generate
+                -->
                 <groupId>com.sun.tools.xjc.maven2</groupId>
                 <artifactId>maven-jaxb-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>javax.xml.bind</groupId>
+                        <artifactId>jaxb-api</artifactId>
+                        <version>${jaxb.api.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.sun.xml.bind</groupId>
+                        <artifactId>jaxb-impl</artifactId>
+                        <version>${jaxb.ri.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.sun.xml.bind</groupId>
+                        <artifactId>jaxb-xjc</artifactId>
+                        <version>${jaxb.ri.version}</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
+                    <generateDirectory>${basedir}/src/main/java</generateDirectory>
                     <generatePackage>com.sun.research.ws.wadl</generatePackage>
                     <catalog>${basedir}/etc/catalog.xml</catalog>
                     <schemaDirectory>${basedir}/etc</schemaDirectory>
                     <includeSchemas>
                         <includeSchema>wadl.xsd</includeSchema>
                     </includeSchemas>
+                    <removeOldOutput>true</removeOldOutput>
                 </configuration>
             </plugin>
             <plugin>

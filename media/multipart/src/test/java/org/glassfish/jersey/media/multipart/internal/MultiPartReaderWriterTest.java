@@ -39,32 +39,50 @@
  */
 package org.glassfish.jersey.media.multipart.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.text.ParseException;
 import java.util.Set;
-
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
+import jersey.repackaged.com.google.common.collect.Sets;
+import jersey.repackaged.com.google.common.io.Files;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.MultiPart;
-
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-
-import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
  * Unit tests for {@link org.glassfish.jersey.media.multipart.internal.MultiPartReaderClientSide} (in the client) and
  * {@link org.glassfish.jersey.media.multipart.internal.MultiPartWriter} (in the server).
  */
 public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
+
+    private static File TMP_DIRECTORY;
+    private static String ORIGINAL_TMP_DIRECTORY;
+
+    @BeforeClass
+    public static void beforeClass() {
+        TMP_DIRECTORY = Files.createTempDir();
+        ORIGINAL_TMP_DIRECTORY = System.getProperty("java.io.tmpdir");
+        System.setProperty("java.io.tmpdir", TMP_DIRECTORY.getAbsolutePath());
+    }
+
+    @AfterClass
+    public static void afterClass() {
+       TMP_DIRECTORY.delete();
+       System.setProperty("java.io.tmpdir", ORIGINAL_TMP_DIRECTORY);
+    }
 
     @Override
     protected Set<Class<?>> getResourceClasses() {
@@ -277,6 +295,17 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
                 bodyPart("CONTENT", MediaType.TEXT_PLAIN_TYPE);
         String response = target.request("multipart/mixed").put(Entity.entity(entity, "multipart/mixed"), String.class);
         assertEquals("cleanup", response);
+    }
+
+    /**
+     * Test for JERSEY-2515 - Jersey should not leave any temporary files after verifying that it is possible
+     * to create files in java.io.tmpdir.
+     */
+    @Test
+    public void shouldNotBeAnyTemporaryFiles() {
+        // Make sure the MBR is initialized on the client-side as well.
+        target().request().get();
+        assertEquals(0, TMP_DIRECTORY.listFiles().length);
     }
 
     private void checkEntity(String expected, BodyPartEntity entity) throws IOException {

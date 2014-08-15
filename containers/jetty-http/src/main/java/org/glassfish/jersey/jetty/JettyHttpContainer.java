@@ -119,7 +119,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
      */
     private static class JettyRequestReferencingFactory extends ReferencingFactory<Request> {
         @Inject
-        public JettyRequestReferencingFactory(Provider<Ref<Request>> referenceFactory) {
+        public JettyRequestReferencingFactory(final Provider<Ref<Request>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -129,7 +129,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
      */
     private static class JettyResponseReferencingFactory extends ReferencingFactory<Response> {
         @Inject
-        public JettyResponseReferencingFactory(Provider<Ref<Response>> referenceFactory) {
+        public JettyResponseReferencingFactory(final Provider<Ref<Response>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -161,7 +161,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     private volatile ContainerLifecycleListener containerListener;
 
     @Override
-    public void handle(String target, final Request request, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
+    public void handle(final String target, final Request request, final HttpServletRequest httpServletRequest, final HttpServletResponse httpServletResponse) throws IOException, ServletException {
         final Response response = Response.getResponse(httpServletResponse);
         final ResponseWriter responseWriter = new ResponseWriter(request, response, configSetStatusOverSendError);
         final URI baseUri = getBaseUri(request);
@@ -179,15 +179,15 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
                     getSecurityContext(request),
                     new MapPropertiesDelegate());
             requestContext.setEntityStream(request.getInputStream());
-            Enumeration<String> headerNames = request.getHeaderNames();
+            final Enumeration<String> headerNames = request.getHeaderNames();
             while (headerNames.hasMoreElements()) {
-                String headerName = headerNames.nextElement();
+                final String headerName = headerNames.nextElement();
                 requestContext.headers(headerName, request.getHeader(headerName));
             }
             requestContext.setWriter(responseWriter);
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
-                public void initialize(ServiceLocator locator) {
+                public void initialize(final ServiceLocator locator) {
                     locator.<Ref<Request>>getService(RequestTYPE).set(request);
                     locator.<Ref<Response>>getService(ResponseTYPE).set(response);
                 }
@@ -196,7 +196,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
             // Mark the request as handled before generating the body of the response
             request.setHandled(true);
             appHandler.handle(requestContext);
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             throw new RuntimeException(ex);
         }
 
@@ -206,7 +206,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         return new SecurityContext() {
 
             @Override
-            public boolean isUserInRole(String role) {
+            public boolean isUserInRole(final String role) {
                 return false;
             }
 
@@ -249,19 +249,19 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         }
     }
 
-    private final static class ResponseWriter implements ContainerResponseWriter {
+    private static final class ResponseWriter implements ContainerResponseWriter {
         private final Response response;
         private final Continuation continuation;
         private final boolean configSetStatusOverSendError;
 
-        ResponseWriter(Request request, Response response, boolean configSetStatusOverSendError) {
+        ResponseWriter(final Request request, final Response response, final boolean configSetStatusOverSendError) {
             this.response = response;
             this.continuation = ContinuationSupport.getContinuation(request);
             this.configSetStatusOverSendError = configSetStatusOverSendError;
         }
 
         @Override
-        public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse context) throws ContainerException {
+        public OutputStream writeResponseStatusAndHeaders(final long contentLength, final ContainerResponse context) throws ContainerException {
             final javax.ws.rs.core.Response.StatusType statusInfo = context.getStatusInfo();
 
             final int code = statusInfo.getStatusCode();
@@ -280,7 +280,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
 
             try {
                 return response.getOutputStream();
-            } catch (IOException ioe) {
+            } catch (final IOException ioe) {
                 throw new ContainerException("Error during writing out the response headers.", ioe);
             }
         }
@@ -294,11 +294,11 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
                 }
                 continuation.addContinuationListener(new ContinuationListener() {
                     @Override
-                    public void onComplete(Continuation continuation) {
+                    public void onComplete(final Continuation continuation) {
                     }
 
                     @Override
-                    public void onTimeout(Continuation continuation) {
+                    public void onTimeout(final Continuation continuation) {
                         if (timeoutHandler != null) {
                             timeoutHandler.onTimeout(ResponseWriter.this);
                         }
@@ -306,13 +306,13 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
                 });
                 continuation.suspend();
                 return true;
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 return false;
             }
         }
 
         @Override
-        public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+        public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException {
             if (timeOut > 0) {
                 final long timeoutMillis = TimeUnit.MILLISECONDS.convert(timeOut, timeUnit);
                 continuation.setTimeout(timeoutMillis);
@@ -326,7 +326,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
                     continuation.resume();
                 }
                 response.closeOutput();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 logger.log(Level.WARNING, LocalizationMessages.UNABLE_TO_CLOSE_RESPONSE(), e);
             } finally {
                 logger.log(Level.FINEST, "commit() called");
@@ -334,7 +334,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         }
 
         @Override
-        public void failure(Throwable error) {
+        public void failure(final Throwable error) {
             try {
                 if (!response.isCommitted()) {
                     try {
@@ -344,10 +344,10 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
                         } else {
                             response.sendError(500, "Request failed.");
                         }
-                    } catch (IllegalStateException ex) {
+                    } catch (final IllegalStateException ex) {
                         // a race condition externally committing the response can still occur...
                         logger.log(Level.FINER, "Unable to reset failed response.", ex);
-                    } catch (IOException ex) {
+                    } catch (final IOException ex) {
                         throw new ContainerException(
                                 LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(500, "Request failed."),
                                 ex);
@@ -371,7 +371,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
          *
          * @param error throwable to be re-thrown
          */
-        private void rethrow(Throwable error) {
+        private void rethrow(final Throwable error) {
             if (error instanceof RuntimeException) {
                 throw (RuntimeException) error;
             } else {
@@ -393,7 +393,7 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
     }
 
     @Override
-    public void reload(ResourceConfig configuration) {
+    public void reload(final ResourceConfig configuration) {
         containerListener.onShutdown(this);
         appHandler = new ApplicationHandler(configuration.register(new JettyBinder()));
         containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
@@ -428,6 +428,11 @@ public final class JettyHttpContainer extends AbstractHandler implements Contain
         super.doStop();
         containerListener.onShutdown(this);
         appHandler = null;
+    }
+
+    JettyHttpContainer(final Application application, final ServiceLocator parentLocator) {
+        this.appHandler = new ApplicationHandler(application, new JettyBinder(), parentLocator);
+        this.containerListener = ConfigHelper.getContainerLifecycleListener(appHandler);
     }
 
     /**

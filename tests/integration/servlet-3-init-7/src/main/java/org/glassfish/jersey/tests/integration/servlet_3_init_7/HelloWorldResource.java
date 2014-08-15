@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,27 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.monitoring;
+package org.glassfish.jersey.tests.integration.servlet_3_init_7;
 
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-
-import org.glassfish.jersey.Beta;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 /**
- * Extension of the {@link MonitoringStatisticsListener} which allows to listen to the event
- * of destroying the application.
- *
- * @since 2.5
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
-@Beta
-@ConstrainedTo(RuntimeType.SERVER)
-public interface ExtendedMonitoringStatisticsListener extends MonitoringStatisticsListener {
-    /**
-     * The method is called when application is destroyed. Use this method release resources of
-     * the listener. This method will be called in the thread safe way (synchronously and by a single)
-     * according to other methods from this or parent interface.
-     */
-    public void onDestroy();
+@Path("helloworld")
+public class HelloWorldResource {
+
+    @GET
+    @Produces("text/plain")
+    public Hello get() {
+        return new Hello();
+    }
+
+    public static class Hello {
+
+    }
 }

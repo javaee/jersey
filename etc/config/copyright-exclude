@@ -51,3 +51,4 @@ build.readme
 /tests/e2e/server/mvc/MvcEncodingTest/MustacheResource.mustache
 /test/resources/org/glassfish/jersey/server/config/jaxrs-components
 /tests/e2e/src/test/resources/org/glassfish/jersey/tests/e2e/entity/xxe.txt
+/core-server/src/main/java/com/sun/research/ws/wadl

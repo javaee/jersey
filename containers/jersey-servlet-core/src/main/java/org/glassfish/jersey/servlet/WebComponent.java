@@ -91,6 +91,7 @@ import org.glassfish.jersey.servlet.internal.LocalizationMessages;
 import org.glassfish.jersey.servlet.internal.PersistenceUnitBinder;
 import org.glassfish.jersey.servlet.internal.ResponseWriter;
 import org.glassfish.jersey.servlet.internal.ServletContainerProviderFactory;
+import org.glassfish.jersey.servlet.internal.Utils;
 import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
@@ -114,10 +115,10 @@ public class WebComponent {
 
     private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
 
-    private static final Type RequestTYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
-    private static final Type ResponseTYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
+    private static final Type REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
+    private static final Type RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
 
-    private static final AsyncContextDelegate DefaultAsyncDELEGATE = new AsyncContextDelegate() {
+    private static final AsyncContextDelegate DEFAULT_ASYNC_DELEGATE = new AsyncContextDelegate() {
 
         @Override
         public void suspend() throws IllegalStateException {
@@ -131,7 +132,7 @@ public class WebComponent {
 
     /**
      * Return the first found {@link AsyncContextDelegateProvider}
-     * (via {@link Providers#getAllProviders(org.glassfish.hk2.api.ServiceLocator, Class)}) or {@code #DefaultAsyncDELEGATE} if
+     * (via {@link Providers#getAllProviders(org.glassfish.hk2.api.ServiceLocator, Class)}) or {@code #DEFAULT_ASYNC_DELEGATE} if
      * other delegate cannot be found.
      *
      * @return a non-null AsyncContextDelegateProvider.
@@ -147,7 +148,7 @@ public class WebComponent {
 
             @Override
             public AsyncContextDelegate createDelegate(final HttpServletRequest request, final HttpServletResponse response) {
-                return DefaultAsyncDELEGATE;
+                return DEFAULT_ASYNC_DELEGATE;
             }
         };
     }
@@ -155,7 +156,7 @@ public class WebComponent {
     @SuppressWarnings("JavaDoc")
     private static class HttpServletRequestReferencingFactory extends ReferencingFactory<HttpServletRequest> {
         @Inject
-        public HttpServletRequestReferencingFactory(Provider<Ref<HttpServletRequest>> referenceFactory) {
+        public HttpServletRequestReferencingFactory(final Provider<Ref<HttpServletRequest>> referenceFactory) {
             super(referenceFactory);
         }
     }
@@ -163,12 +164,12 @@ public class WebComponent {
     @SuppressWarnings("JavaDoc")
     private static class HttpServletResponseReferencingFactory extends ReferencingFactory<HttpServletResponse> {
         @Inject
-        public HttpServletResponseReferencingFactory(Provider<Ref<HttpServletResponse>> referenceFactory) {
+        public HttpServletResponseReferencingFactory(final Provider<Ref<HttpServletResponse>> referenceFactory) {
             super(referenceFactory);
         }
     }
 
-    private class WebComponentBinder extends AbstractBinder {
+    private final class WebComponentBinder extends AbstractBinder {
 
         private final Map<String, Object> applicationProperties;
 
@@ -178,7 +179,7 @@ public class WebComponent {
          *
          * @param applicationProperties map of properties to determine whether certain features are allowed or not.
          */
-        private WebComponentBinder(Map<String, Object> applicationProperties) {
+        private WebComponentBinder(final Map<String, Object> applicationProperties) {
             this.applicationProperties = applicationProperties;
         }
 
@@ -201,7 +202,7 @@ public class WebComponent {
                 }
 
                 @Override
-                public void dispose(ServletContext instance) {
+                public void dispose(final ServletContext instance) {
                     //not used
                 }
             }).to(ServletContext.class).in(Singleton.class);
@@ -215,13 +216,14 @@ public class WebComponent {
                     }
 
                     @Override
-                    public void dispose(ServletConfig instance) {
+                    public void dispose(final ServletConfig instance) {
                         //not used
                     }
                 }).to(ServletConfig.class).in(Singleton.class);
 
                 // @PersistenceUnit
-                for (final Enumeration initParams = servletConfig.getInitParameterNames(); initParams.hasMoreElements(); ) {
+                final Enumeration initParams = servletConfig.getInitParameterNames();
+                while (initParams.hasMoreElements()) {
                     final String initParamName = (String) initParams.nextElement();
 
                     if (initParamName.startsWith(PersistenceUnitBinder.PERSISTENCE_UNIT_PREFIX)) {
@@ -237,7 +239,7 @@ public class WebComponent {
                     }
 
                     @Override
-                    public void dispose(FilterConfig instance) {
+                    public void dispose(final FilterConfig instance) {
                         //not used
                     }
                 }).to(FilterConfig.class).in(Singleton.class);
@@ -250,13 +252,12 @@ public class WebComponent {
                 }
 
                 @Override
-                public void dispose(WebConfig instance) {
+                public void dispose(final WebConfig instance) {
                     //not used
                 }
             }).to(WebConfig.class).in(Singleton.class);
 
-            install(new ServiceFinderBinder<AsyncContextDelegateProvider>(AsyncContextDelegateProvider.class,
-                    applicationProperties, RuntimeType.SERVER));
+            install(new ServiceFinderBinder<>(AsyncContextDelegateProvider.class, applicationProperties, RuntimeType.SERVER));
         }
     }
 
@@ -304,14 +305,14 @@ public class WebComponent {
         // SPI/extension hook to configure ResourceConfig
         configure(resourceConfig);
 
-        AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
+        final AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
         resourceConfig.register(webComponentBinder);
 
         this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder);
 
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
-        this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig) &&
-                resourceConfig.isProperty(ServletProperties.FILTER_FORWARD_ON_404);
+        this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig)
+                && resourceConfig.isProperty(ServletProperties.FILTER_FORWARD_ON_404);
         this.configSetStatusOverSendError = ServerProperties.getValue(resourceConfig.getProperties(),
                 ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, false, Boolean.class);
         this.backgroundTaskScheduler = appHandler.getServiceLocator()
@@ -342,7 +343,7 @@ public class WebComponent {
             final HttpServletRequest servletRequest,
             final HttpServletResponse servletResponse) throws ServletException, IOException {
 
-        ContainerRequest requestContext = new ContainerRequest(baseUri, requestUri,
+        final ContainerRequest requestContext = new ContainerRequest(baseUri, requestUri,
                 servletRequest.getMethod(), getSecurityContext(servletRequest), new ServletPropertiesDelegate(servletRequest));
         requestContext.setEntityStream(servletRequest.getInputStream());
         addRequestHeaders(servletRequest, requestContext);
@@ -362,9 +363,9 @@ public class WebComponent {
 
             requestContext.setRequestScopedInitializer(new RequestScopedInitializer() {
                 @Override
-                public void initialize(ServiceLocator locator) {
-                    locator.<Ref<HttpServletRequest>>getService(RequestTYPE).set(servletRequest);
-                    locator.<Ref<HttpServletResponse>>getService(ResponseTYPE).set(servletResponse);
+                public void initialize(final ServiceLocator locator) {
+                    locator.<Ref<HttpServletRequest>>getService(REQUEST_TYPE).set(servletRequest);
+                    locator.<Ref<HttpServletResponse>>getService(RESPONSE_TYPE).set(servletResponse);
                 }
             });
             requestContext.setWriter(responseWriter);
@@ -381,13 +382,14 @@ public class WebComponent {
             final Response.Status status = Response.Status.BAD_REQUEST;
             if (configSetStatusOverSendError) {
                 servletResponse.reset();
+                //noinspection deprecation
                 servletResponse.setStatus(status.getStatusCode(), status.getReasonPhrase());
             } else {
                 servletResponse.sendError(status.getStatusCode(), status.getReasonPhrase());
             }
 
             return Values.of(status.getStatusCode());
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new ServletException(e);
         }
 
@@ -408,7 +410,7 @@ public class WebComponent {
             }
 
             @Override
-            public boolean isUserInRole(String role) {
+            public boolean isUserInRole(final String role) {
                 return request.isUserInRole(role);
             }
 
@@ -431,26 +433,34 @@ public class WebComponent {
      * @return resource config instance.
      * @throws ServletException if an error has occurred.
      */
-    private static ResourceConfig createResourceConfig(WebConfig config) throws ServletException {
+    private static ResourceConfig createResourceConfig(final WebConfig config) throws ServletException {
+        final ServletContext servletContext = config.getServletContext();
+
+        // check if ResourceConfig has already been created, if so use it
+        ResourceConfig resourceConfig = Utils.retrieve(config.getServletContext());
+        if (resourceConfig != null) {
+            return resourceConfig;
+        }
+
         final Map<String, Object> initParams = getInitParams(config);
-        final Map<String, Object> contextParams = getContextParams(config.getServletContext());
+        final Map<String, Object> contextParams = Utils.getContextParams(servletContext);
 
         // check if the JAX-RS application config class property is present
-        String jaxrsApplicationClassName = config.getInitParameter(ServletProperties.JAXRS_APPLICATION_CLASS);
+        final String jaxrsApplicationClassName = config.getInitParameter(ServletProperties.JAXRS_APPLICATION_CLASS);
 
         if (jaxrsApplicationClassName == null) {
             // If no resource config class property is present, create default config
-            final ResourceConfig rc = new ResourceConfig().addProperties(initParams).addProperties(contextParams);
+            resourceConfig = new ResourceConfig().addProperties(initParams).addProperties(contextParams);
 
             final String webApp = config.getInitParameter(ServletProperties.PROVIDER_WEB_APP);
             if (webApp != null && !"false".equals(webApp)) {
-                rc.registerFinder(new WebAppResourcesScanner(config.getServletContext()));
+                resourceConfig.registerFinder(new WebAppResourcesScanner(servletContext));
             }
-            return rc;
+            return resourceConfig;
         }
 
         try {
-            Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = AccessController.doPrivileged(
+            final Class<? extends javax.ws.rs.core.Application> jaxrsApplicationClass = AccessController.doPrivileged(
                     ReflectionHelper.<javax.ws.rs.core.Application>classForNameWithExceptionPEA(jaxrsApplicationClassName)
             );
 
@@ -461,10 +471,10 @@ public class WebComponent {
                 throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_PARENT_CLASS_INVALID(
                         jaxrsApplicationClassName, javax.ws.rs.core.Application.class));
             }
-        } catch (PrivilegedActionException e) {
+        } catch (final PrivilegedActionException e) {
             throw new ServletException(
                     LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_LOAD(jaxrsApplicationClassName), e.getCause());
-        } catch (ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             throw new ServletException(LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_LOAD(jaxrsApplicationClassName), e);
         }
     }
@@ -475,10 +485,10 @@ public class WebComponent {
      * @param resourceConfig Jersey application configuration.
      * @throws ServletException if an error has occurred.
      */
-    private static void configure(ResourceConfig resourceConfig) throws ServletException {
+    private static void configure(final ResourceConfig resourceConfig) throws ServletException {
         final ServletContainerProvider[] allServletContainerProviders = //TODO check if META-INF/services lookup is enabled
                 ServletContainerProviderFactory.getAllServletContainerProviders();
-        for (ServletContainerProvider servletContainerProvider : allServletContainerProviders) {
+        for (final ServletContainerProvider servletContainerProvider : allServletContainerProviders) {
             servletContainerProvider.configure(resourceConfig);
         }
     }
@@ -490,10 +500,13 @@ public class WebComponent {
      * @param requestContext container request to copy headers to.
      */
     @SuppressWarnings("unchecked")
-    private void addRequestHeaders(HttpServletRequest request, ContainerRequest requestContext) {
-        for (Enumeration<String> names = request.getHeaderNames(); names.hasMoreElements(); ) {
-            String name = names.nextElement();
-            for (Enumeration<String> values = request.getHeaders(name); values.hasMoreElements(); ) {
+    private void addRequestHeaders(final HttpServletRequest request, final ContainerRequest requestContext) {
+        final Enumeration<String> names = request.getHeaderNames();
+        while (names.hasMoreElements()) {
+            final String name = names.nextElement();
+
+            final Enumeration<String> values = request.getHeaders(name);
+            while (values.hasMoreElements()) {
                 final String value = values.nextElement();
                 if (value != null) { // filter out null values
                     requestContext.header(name, value);
@@ -508,41 +521,26 @@ public class WebComponent {
      * @param webConfig actual servlet context.
      * @return map representing current init parameters.
      */
-    private static Map<String, Object> getInitParams(WebConfig webConfig) {
-        Map<String, Object> props = new HashMap<String, Object>();
-        Enumeration names = webConfig.getInitParameterNames();
+    private static Map<String, Object> getInitParams(final WebConfig webConfig) {
+        final Map<String, Object> props = new HashMap<>();
+        final Enumeration names = webConfig.getInitParameterNames();
         while (names.hasMoreElements()) {
-            String name = (String) names.nextElement();
+            final String name = (String) names.nextElement();
             props.put(name, webConfig.getInitParameter(name));
         }
         return props;
     }
 
     /**
-     * Extract context params from {@link ServletContext}.
-     *
-     * @param servletContext actual servlet context.
-     * @return map representing current context parameters.
-     */
-    public static Map<String, Object> getContextParams(ServletContext servletContext) {
-        Map<String, Object> props = new HashMap<String, Object>();
-        Enumeration names = servletContext.getAttributeNames();
-        while (names.hasMoreElements()) {
-            String name = (String) names.nextElement();
-            props.put(name, servletContext.getAttribute(name));
-        }
-        return props;
-    }
-
-    /**
      * Extract parameters contained in {@link HttpServletRequest servlet request} and put them into
-     * {@link ContainerRequest container request} under {@value org.glassfish.jersey.server.internal.InternalServerProperties#FORM_DECODED_PROPERTY} property (as {@link Form}
+     * {@link ContainerRequest container request} under
+     * {@value org.glassfish.jersey.server.internal.InternalServerProperties#FORM_DECODED_PROPERTY} property (as {@link Form}
      * instance).
      *
      * @param servletRequest http servlet request to extract params from.
      * @param containerRequest container request to put {@link Form} property to.
      */
-    private void filterFormParameters(HttpServletRequest servletRequest, ContainerRequest containerRequest) {
+    private void filterFormParameters(final HttpServletRequest servletRequest, final ContainerRequest containerRequest) {
         if (MediaTypes.typeEqual(MediaType.APPLICATION_FORM_URLENCODED_TYPE, containerRequest.getMediaType())
                 && !containerRequest.hasEntity()) {
             final Form form = new Form();

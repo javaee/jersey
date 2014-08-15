@@ -57,6 +57,8 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.InjecteeImpl;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.hk2.utilities.cache.Cache;
+import org.glassfish.hk2.utilities.cache.Computable;
 
 /**
  * Injection resolver for {@link Context @Context} injection annotation.
@@ -82,6 +84,15 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
     @Inject
     private ServiceLocator serviceLocator;
 
+    private final Cache<Injectee, ActiveDescriptor<?>> descriptorCache
+            = new Cache<Injectee, ActiveDescriptor<?>>(new Computable<Injectee, ActiveDescriptor<?>>() {
+
+                @Override
+                public ActiveDescriptor<?> compute(Injectee key) {
+                    return serviceLocator.getInjecteeDescriptor(key);
+                }
+            });
+
     @Override
     public Object resolve(Injectee injectee, ServiceHandle<?> root) {
         Type requiredType = injectee.getRequiredType();
@@ -94,7 +105,8 @@ public class ContextInjectionResolver implements InjectionResolver<Context> {
             newInjectee = injectee;
         }
 
-        ActiveDescriptor<?> ad = serviceLocator.getInjecteeDescriptor(newInjectee);
+        ActiveDescriptor<?> ad = descriptorCache.compute(newInjectee);
+
         if (ad != null) {
             final ServiceHandle handle = serviceLocator.getServiceHandle(ad, newInjectee);
 

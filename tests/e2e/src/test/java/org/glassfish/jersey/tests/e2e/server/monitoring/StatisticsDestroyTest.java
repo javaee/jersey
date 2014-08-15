@@ -50,7 +50,7 @@ import javax.management.ObjectName;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.monitoring.ExtendedMonitoringStatisticsListener;
+import org.glassfish.jersey.server.monitoring.DestroyListener;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatisticsListener;
 import org.glassfish.jersey.server.spi.AbstractContainerLifecycleListener;
@@ -184,7 +184,7 @@ public class StatisticsDestroyTest {
     }
 
     public static class StatisticsListener extends AbstractContainerLifecycleListener
-            implements ExtendedMonitoringStatisticsListener {
+            implements MonitoringStatisticsListener, DestroyListener {
 
         public static boolean ON_SHUTDOWN_CALLED = false;
         public static boolean ON_STATISTICS_CALLED = false;

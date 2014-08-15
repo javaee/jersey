@@ -137,7 +137,7 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
         if (properties.getBufferThreshold() != MultiPartProperties.BUFFER_THRESHOLD_MEMORY_ONLY) {
             // Validate - this checks whether it's possible to create temp files in currently set temp directory.
             try {
-                File.createTempFile("MIME", null, tempDir != null ? new File(tempDir) : null);
+                File.createTempFile("MIME", null, tempDir != null ? new File(tempDir) : null).delete();
             } catch (final IOException ioe) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.TEMP_FILE_CANNOT_BE_CREATED(properties.getBufferThreshold()), ioe);
             }

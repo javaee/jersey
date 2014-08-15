@@ -282,7 +282,7 @@ try {
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-moxy;) on the classpath.
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey.media.moxy.deps.link;) on the classpath.
                 </para>
             </section>
             <section xml:id="moxy-registration">
@@ -450,7 +450,8 @@ final Application application = new ResourceConfig()
                 <title>Examples</title>
 
                 <para>
-                    Jersey provides an &jersey.github.moxy.json.example.path; on how to use MOXy to consume/produce JSON.
+                    Jersey provides a <link xlink:href='&jersey.github.examples.uri;/json-moxy'>JSON MOXy example</link>
+                    on how to use MOXy to consume/produce JSON.
                 </para>
             </section>
         </section>
@@ -471,7 +472,7 @@ final Application application = new ResourceConfig()
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-json-processing;)
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey.media.json-processing.deps.link;)
                     on the class-path.
                 </para>
             </section>
@@ -544,8 +545,9 @@ final Application application = new ResourceConfig()
             <section>
                 <title>Examples</title>
 
-                <para>Jersey provides an &jersey.github.json.processing.example.path; on how to use JSON-Processing to
-                    consume/produce JSON.</para>
+                <para>Jersey provides a
+                    <link xlink:href='&jersey.github.examples.uri;/json-processing-webapp'>JSON Processing example</link>
+                    on how to use JSON-Processing to consume/produce JSON.</para>
             </section>
         </section>
         <section xml:id="json.jackson">
@@ -572,8 +574,8 @@ final Application application = new ResourceConfig()
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-json-jackson; or
-                    &jersey-media-json-jackson;) on the classpath.
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey.media.json-jackson.deps.link; or
+                    &jersey.media.json-jackson.deps.link;) on the classpath.
                 </para>
             </section>
             <section xml:id="jackson-registration">
@@ -659,8 +661,9 @@ final Application application = new ResourceConfig()
                 <title>Examples</title>
 
                 <para>
-                    Jersey provides &jersey.github.jackson.example.path; and &jersey.github.jackson1.example.path; showing how to
-                    use Jackson to consume/produce JSON.
+                    Jersey provides <link xlink:href='&jersey.github.examples.uri;/json-jackson'>JSON Jackson (2.x) example</link>
+                    and <link xlink:href='&jersey.github.examples.uri;/json-jackson1'>JSON Jackson (1.x) example</link> showing
+                    how to use Jackson to consume/produce JSON.
                 </para>
             </section>
         </section>
@@ -690,7 +693,7 @@ final Application application = new ResourceConfig()
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-json-jettison;) on
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey.media.json-jettison.deps.link;) on
                     the classpath.
                 </para>
             </section>
@@ -950,7 +953,8 @@ final Application application = new ResourceConfig()
                 <title>Examples</title>
 
                 <para>
-                    Jersey provides an &jersey.github.jettison.example.path; on how to use Jettison to consume/produce JSON.
+                    Jersey provides an <link xlink:href='&jersey.github.examples.uri;/json-jettison'>JSON Jettison example</link>
+                    on how to use Jettison to consume/produce JSON.
                 </para>
             </section>
         </section>
@@ -959,8 +963,8 @@ final Application application = new ResourceConfig()
             <title><literal>@JSONP</literal> - JSON with Padding Support</title>
 
             <para>
-                Jersey provides out-of-the-box support for &wiki.JSONP; - JSON with padding. The following conditions has to be
-                met to take advantage of this capability:
+                Jersey provides out-of-the-box support for <link xlink:href='&wikipedia.uri;/JSONP'>JSONP</link>
+                - JSON with padding. The following conditions has to be met to take advantage of this capability:
 
                 <itemizedlist>
                     <listitem>
@@ -1091,7 +1095,8 @@ public JaxbBean getSimpleJSONP() {
             <formalpara>
                 <title>Example</title>
                 <para>
-                    You can take a look at a provided example available at &jersey.github.json.with.padding.example.path;.
+                    You can take a look at a provided
+                    <link xlink:href='&jersey.github.examples.uri;/json-with-padding'>JSON with Padding example</link>.
                 </para>
             </formalpara>
         </section>
@@ -1113,7 +1118,8 @@ public JaxbBean getSimpleJSONP() {
             <para>
                 Jersey currently support several low level data types: &jdk7.StreamSource;, &jdk7.SAXSource;, &jdk7.DOMSource;
                 and &jdk7.org.w3c.dom.Document;. You can use these types as the return type or as a method (resource) parameter.
-                Lets say we want to test this feature and we have &jersey.github.helloworld.example.path; as a starting point.
+                Lets say we want to test this feature and we have
+                <link xlink:href='&jersey.github.examples.uri;/helloworld'>helloworld example</link> as a starting point.
                 All we need to do is add methods (resources) which consumes and produces XML and types mentioned above will be
                 used.
             </para>
@@ -1163,9 +1169,9 @@ public Document getDocument(Document document) {
 
             <para>
                 Good start for people which already have some experience with JAXB annotations
-                is &jersey.github.jaxb.example.path;. You can see various use-cases there. This text is mainly meant for those who
-                don't have prior experience with JAXB. Don't expect that all possible annotations and their combinations will be
-                covered in this chapter,
+                is <link xlink:href='&jersey.github.examples.uri;/jaxb'>JAXB example</link>. You can see various use-cases there.
+                This text is mainly meant for those who don't have prior experience with JAXB. Don't expect that all possible
+                annotations and their combinations will be covered in this chapter,
                 <link xlink:href='http://jaxb.java.net'>JAXB (JSR 222 implementation)</link>
                 is pretty complex and comprehensive. But if you just want to know how you can interchange XML messages with your
                 REST service, you are looking at the right chapter.
@@ -1380,7 +1386,7 @@ Client client = ClientBuilder.newClient(config);
                 the <literal>JAXBContextFactory</literal> from which a &lit.jaxb.JAXBContext; instance would be obtained (for more
                 on this topic, read JavaDoc on &jaxb.JAXBContext;) or you can add <literal>jersey-media-moxy</literal> module to
                 your project and register/configure
-                <link xlink:href='&jersey.javadoc.path;/moxy/xml/MoxyXmlFeature.html'>MoxyXmlFeature</link> class/instance in
+                <link xlink:href='&jersey.javadoc.uri.prefix;/moxy/xml/MoxyXmlFeature.html'>MoxyXmlFeature</link> class/instance in
                 the &jaxrs.core.Configurable;.
             </para>
 
@@ -1481,7 +1487,7 @@ final ResourceConfig config = new ResourceConfig()
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
-                    If you're not using Maven make sure to have all needed dependencies (see &jersey-media-multipart;) on the
+                    If you're not using Maven make sure to have all needed dependencies (see &jersey.media.multipart.deps.link;) on the
                     class-path.
                 </para>
             </section>
@@ -1515,7 +1521,9 @@ final Application application = new ResourceConfig()
             <section>
                 <title>Examples</title>
 
-                <para>Jersey provides an &jersey.github.multipart.example.path; on how to use multipart features.</para>
+                <para>Jersey provides a
+                    <link xlink:href='&jersey.github.examples.uri;/multipart-webapp'>Multipart Web Application Example</link>
+                    on how to use multipart features.</para>
             </section>
         </section>
 
@@ -1524,8 +1532,10 @@ final Application application = new ResourceConfig()
 
             <para>
                 &jersey.media.multipart.MultiPart; class (or it's subclasses) can be used as an entry point to using
-                &lit.jersey-media-multipart; module on the client side. This class represents a &wiki.Multipart; and is able
-                to hold an arbitrary number of &jersey.media.multipart.BodyPart;s. Default media type is &wiki.MultipartMixed;
+                &lit.jersey-media-multipart; module on the client side. This class represents a
+                <link xlink:href='&wikipedia.uri;/MIME#Multipart_messages'>MIME multipart message</link> and is able
+                to hold an arbitrary number of &jersey.media.multipart.BodyPart;s. Default media type is
+                <link xlink:href='&wikipedia.uri;/MIME#Mixed'>multipart/mixed</link>
                 for &lit.jersey.media.multipart.MultiPart; entity and <literal>text/plain</literal> for
                 &lit.jersey.media.multipart.BodyPart;.
 

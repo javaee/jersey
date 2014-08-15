@@ -75,7 +75,7 @@
 
             <note>
                 <para>
-                    If you're not using Maven make sure to have also all the transitive dependencies (see &jersey-bean-validation;) on
+                    If you're not using Maven make sure to have also all the transitive dependencies (see &jersey.ext.bean-validation.deps.link;) on
                     the classpath.
                 </para>
             </note>
@@ -265,7 +265,9 @@ public class ValidationConfigurationContextResolver implements ContextResolver&l
         .register( ... );</programlisting>
 
                 <note>
-                    <para>This code snippet has been taken from &jersey.github.bv.example.path;.</para>
+                    <para>This code snippet has been taken from
+                        <link xlink:href='&jersey.github.examples.uri;/bean-validation-webapp'>Bean Validation example</link>.
+                    </para>
                 </note>
             </example>
         </para>
@@ -815,6 +817,6 @@ Server: Jetty(6.1.24)
         <title>Example</title>
 
         <para>To see a complete working example of using Bean Validation (JSR-349) with Jersey refer to the
-            &jersey.github.bv.example.path;.</para>
+            <link xlink:href='&jersey.github.examples.uri;/bean-validation-webapp'>Bean Validation Example</link>.</para>
     </section>
 </chapter>

@@ -2,7 +2,7 @@
 <!--
   ~ DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
   ~
-  ~ Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+  ~ Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
   ~
   ~ The contents of this file are subject to the terms of either the GNU
   ~ General Public License Version 2 only ("GPL") or the Common Development
@@ -298,8 +298,9 @@ Application my-monitored-application destroyed.</programlisting>
                     <listitem><para>
                         Implement event listeners as thread safe. While individual events will be arriving serially,
                         individual listener invocations may occur from different threads. Thus make sure that your listeners
-                        are processing data safely with respect to their &wiki.JavaMemoryModel; visibility (in the example above
-                        the fields <literal>requestNumber</literal>, <literal>startTime</literal> of
+                        are processing data safely with respect to their
+                        <link xlink:href='&wikipedia.uri;/Java_Memory_Model'>Java Memory Model</link> visibility (in the example
+                        above the fields <literal>requestNumber</literal>, <literal>startTime</literal> of
                         <literal>MyRequestEventListener</literal> are final and therefore the same value is
                         visible for all threads executing the <literal>onEvent()</literal> method).
                     </para></listitem>
@@ -503,7 +504,9 @@ request count: 4, average request processing [ms]: 73</programlisting>
                 <title>Monitoring Statistics as MBeans</title>
                 <note>
                     <para>
-                        Jersey examples contains &jersey.github.monitoring.example.path; which demonstrates usage of MBean statistics.
+                        Jersey examples contains a
+                        <link xlink:href='&jersey.github.examples.uri;/monitoring-webapp'>Monitoring Web Application Example</link>
+                        which demonstrates usage of MBean statistics.
                     </para>
                 </note>
 
