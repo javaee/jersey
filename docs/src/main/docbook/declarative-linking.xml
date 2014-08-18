@@ -262,6 +262,24 @@ List&lt;Link&gt; links</programlisting>
             Multiple link headers can be added by use of the <literal>@InjectLinks</literal> annotation
             which can contain multiple <literal>@InjectLink</literal> annotations.
         </para>
+      </section>
+
+    <section>
+        <title>Prevent Recursive Injection</title>
+        <para>
+          	By default, Jersey will try to recursively find all <literal>@InjectionLink</literal> annotations in
+          	the members of your object unless this member is annotated with <literal>@XmlTransient</literal>.
+
+          	But is some cases, you might want to control which member will be introspected regardless of the
+			<literal>@XmlTransient</literal> annotation.
+
+          	You can prevent Jersey to look into an object by adding <literal>@InjectLinkNoFollow</literal> to a field.
+
+			<programlisting language="java">
+				@InjectLinkNoFollow
+				Context context;
+			</programlisting>
+        </para>
     </section>
 
     <section>

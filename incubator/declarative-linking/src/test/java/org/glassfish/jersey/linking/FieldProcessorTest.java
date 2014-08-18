@@ -57,6 +57,7 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
@@ -693,5 +694,41 @@ public class FieldProcessorTest {
 
         Logger.getLogger(FieldDescriptor.class.getName()).setFilter(null);
 
+    }
+
+    public static class TestClassM {
+        @InjectLink(value = TEMPLATE_B, style = InjectLink.Style.RELATIVE_PATH)
+        private String thelink;
+
+        private String id;
+
+        @InjectLinkNoFollow
+        private TestClassE nested;
+
+        @XmlTransient
+        private TestClassE transientNested;
+
+        public TestClassM(String id, TestClassE e, TestClassE transientNested) {
+            this.id = id;
+            this.nested = e;
+            this.transientNested = transientNested;
+        }
+
+        public String getId() {
+            return id;
+        }
+    }
+
+    @Test
+    public void testNoRecursiveNesting() {
+        System.out.println("No Recursive Nesting");
+        FieldProcessor<TestClassM> instance = new FieldProcessor(TestClassM.class);
+        TestClassE nested = new TestClassE("10");
+        TestClassE transientNested = new TestClassE("30");
+        TestClassM testClass = new TestClassM("20", nested, transientNested);
+        instance.processLinks(testClass, mockUriInfo, mockRmc);
+        assertEquals("widgets/20", testClass.thelink);
+        assertEquals(null, testClass.nested.link);
+        assertEquals(null, testClass.transientNested.link);
     }
 }

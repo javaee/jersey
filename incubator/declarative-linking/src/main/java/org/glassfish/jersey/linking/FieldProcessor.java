@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
@@ -149,9 +150,18 @@ class FieldProcessor<T> {
 
         // Recursively process all member fields
         for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
-            processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo,rmc);
+
+            if (fieldSuitableForIntrospection(member)) {
+                processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo,rmc);
+            }
         }
 
+    }
+
+    private boolean fieldSuitableForIntrospection(FieldDescriptor member) {
+        return member.field == null
+                || (!member.field.isAnnotationPresent(InjectLinkNoFollow.class)
+                    && !member.field.isAnnotationPresent(XmlTransient.class));
     }
 
     private void processMember(Object entity, Object resource, Object member, Set<Object> processed, UriInfo uriInfo,
