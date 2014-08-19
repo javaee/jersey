@@ -42,6 +42,7 @@ package org.glassfish.jersey.message.internal;
 
 import java.util.Map;
 
+import javax.annotation.Priority;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -57,6 +58,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
 public class MetaInfServicesAutoDiscoverable implements ForcedAutoDiscoverable {
 
     @Override

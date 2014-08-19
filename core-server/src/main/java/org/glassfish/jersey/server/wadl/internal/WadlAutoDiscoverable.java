@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.server.wadl.internal;
 
+import javax.annotation.Priority;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
@@ -55,6 +56,7 @@ import org.glassfish.jersey.server.wadl.WadlFeature;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
 public final class WadlAutoDiscoverable implements ForcedAutoDiscoverable {
 
     @Override

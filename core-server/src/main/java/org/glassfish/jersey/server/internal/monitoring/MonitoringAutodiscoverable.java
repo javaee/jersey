@@ -40,10 +40,12 @@
 
 package org.glassfish.jersey.server.internal.monitoring;
 
+import javax.annotation.Priority;
 import javax.ws.rs.ConstrainedTo;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
 import org.glassfish.jersey.server.ServerProperties;
 
@@ -54,6 +56,7 @@ import org.glassfish.jersey.server.ServerProperties;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
 public final class MonitoringAutodiscoverable implements ForcedAutoDiscoverable {
 
     @Override

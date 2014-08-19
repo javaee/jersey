@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,10 +49,20 @@ import javax.ws.rs.core.FeatureContext;
  * A component implementing this contract becomes auto-discoverable by adding a new entry with fully qualified name of its
  * implementation class name to a {@code org.glassfish.jersey.internal.spi.AutoDiscoverable} file in the {@code
  * META-INF/services} directory.
+ * <p/>
+ * Almost all Jersey {@code AutoDiscoverable} implementations have
+ * {@link #DEFAULT_PRIORITY} {@link javax.annotation.Priority priority} set.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public interface AutoDiscoverable {
+
+    /**
+     * Default common priority of Jersey build-in auto-discoverables.
+     * Use lower number on your {@code AutoDiscoverable} implementation to run it before Jersey auto-discoverables
+     * and vice versa.
+     */
+    public static final int DEFAULT_PRIORITY = 2000;
 
     /**
      * A call-back method called when an auto-discoverable component is to be configured in a given runtime configuration scope.

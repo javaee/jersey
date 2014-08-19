@@ -40,7 +40,6 @@
 
 package org.glassfish.jersey.moxy.json.internal;
 
-import javax.ws.rs.Priorities;
 import javax.ws.rs.core.FeatureContext;
 
 import javax.annotation.Priority;
@@ -53,7 +52,7 @@ import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@Priority(Priorities.ENTITY_CODER - 100)
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY - 100)
 public final class MoxyJsonAutoDiscoverable implements AutoDiscoverable {
 
     @Override

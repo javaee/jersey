@@ -40,7 +40,6 @@
 
 package org.glassfish.jersey.jackson.internal;
 
-import javax.ws.rs.Priorities;
 import javax.ws.rs.core.FeatureContext;
 
 import javax.annotation.Priority;
@@ -53,7 +52,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-@Priority(Priorities.ENTITY_CODER)
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
 public class JacksonAutoDiscoverable implements AutoDiscoverable {
 
     @Override

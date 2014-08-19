@@ -157,6 +157,9 @@
                     <para>&jersey.server.UriConnegFilter; - a URI-based content negotiation filter.</para>
                 </listitem>
             </itemizedlist>
+
+            Almost all Jersey auto-discovery implementations have <code>AutoDiscoverable.DEFAULT_PRIORITY</code>
+            <literal>@Priority</literal> set.
         </para>
 
         <note>

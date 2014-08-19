@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.media.sse.internal;
 
+import javax.annotation.Priority;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.FeatureContext;
 
@@ -57,6 +58,7 @@ import org.glassfish.jersey.media.sse.SseFeature;
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
 public final class SseAutoDiscoverable implements AutoDiscoverable {
     @Override
     public void configure(final FeatureContext context) {
