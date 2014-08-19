@@ -39,26 +39,27 @@
  */
 package org.glassfish.jersey.media.multipart.internal;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.Set;
+
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
-import jersey.repackaged.com.google.common.collect.Sets;
-import jersey.repackaged.com.google.common.io.Files;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.BodyPartEntity;
 import org.glassfish.jersey.media.multipart.MultiPart;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -68,25 +69,29 @@ import static org.junit.Assert.fail;
  */
 public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
 
-    private static File TMP_DIRECTORY;
+    private static Path TMP_DIRECTORY;
     private static String ORIGINAL_TMP_DIRECTORY;
 
     @BeforeClass
-    public static void beforeClass() {
-        TMP_DIRECTORY = Files.createTempDir();
+    public static void beforeClass() throws IOException {
         ORIGINAL_TMP_DIRECTORY = System.getProperty("java.io.tmpdir");
-        System.setProperty("java.io.tmpdir", TMP_DIRECTORY.getAbsolutePath());
+
+        TMP_DIRECTORY = Files.createTempDirectory(MultiPartReaderWriterTest.class.getName());
+        System.setProperty("java.io.tmpdir", TMP_DIRECTORY.toString());
     }
 
     @AfterClass
-    public static void afterClass() {
-       TMP_DIRECTORY.delete();
-       System.setProperty("java.io.tmpdir", ORIGINAL_TMP_DIRECTORY);
+    public static void afterClass() throws IOException {
+        try {
+            Files.delete(TMP_DIRECTORY);
+        } finally {
+            System.setProperty("java.io.tmpdir", ORIGINAL_TMP_DIRECTORY);
+        }
     }
 
     @Override
     protected Set<Class<?>> getResourceClasses() {
-        return Sets.<Class<?>>newHashSet(MultiPartResource.class);
+        return Collections.<Class<?>>singleton(MultiPartResource.class);
     }
 
     @Test
@@ -302,10 +307,11 @@ public class MultiPartReaderWriterTest extends MultiPartJerseyTest {
      * to create files in java.io.tmpdir.
      */
     @Test
+    @SuppressWarnings("ConstantConditions")
     public void shouldNotBeAnyTemporaryFiles() {
         // Make sure the MBR is initialized on the client-side as well.
         target().request().get();
-        assertEquals(0, TMP_DIRECTORY.listFiles().length);
+        assertEquals(0, TMP_DIRECTORY.toFile().listFiles().length);
     }
 
     private void checkEntity(String expected, BodyPartEntity entity) throws IOException {
