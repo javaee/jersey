@@ -47,6 +47,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -55,6 +56,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * Custom message body worker.
@@ -66,30 +69,34 @@ import javax.ws.rs.ext.MessageBodyWriter;
 public class PersonProvider implements MessageBodyWriter<Person>, MessageBodyReader<Person> {
 
     @Override
-    public boolean isWriteable(Class<?> type, Type type1, Annotation[] antns, MediaType mt) {
+    public boolean isWriteable(final Class<?> type, final Type type1, final Annotation[] antns, final MediaType mt) {
         return type == Person.class;
     }
 
     @Override
-    public long getSize(Person t, Class<?> type, Type type1, Annotation[] antns, MediaType mt) {
-        return getByteRepresentation(t).length;
+    public long getSize(final Person t, final Class<?> type, final Type type1, final Annotation[] antns, final MediaType mt) {
+        return getByteRepresentation(t, MessageUtils.getCharset(mt)).length;
     }
 
     @Override
-    public void writeTo(Person t, Class<?> type, Type type1, Annotation[] antns, MediaType mt, MultivaluedMap<String, Object> mm, OutputStream out) throws IOException, WebApplicationException {
-        out.write(getByteRepresentation(t));
+    public void writeTo(final Person t, final Class<?> type, final Type type1, final Annotation[] antns, final MediaType mt,
+                        final MultivaluedMap<String, Object> mm, final OutputStream out)
+            throws IOException, WebApplicationException {
+        out.write(getByteRepresentation(t, MessageUtils.getCharset(mt)));
     }
 
     @Override
-    public boolean isReadable(Class<?> type, Type type1, Annotation[] antns, MediaType mt) {
+    public boolean isReadable(final Class<?> type, final Type type1, final Annotation[] antns, final MediaType mt) {
         return type == Person.class;
     }
 
     @Override
-    public Person readFrom(Class<Person> type, Type type1, Annotation[] antns, MediaType mt, MultivaluedMap<String, String> mm, InputStream in) throws IOException, WebApplicationException {
-        Person result = new Person();
+    public Person readFrom(final Class<Person> type, final Type type1, final Annotation[] antns, final MediaType mt,
+                           final MultivaluedMap<String, String> mm, final InputStream in)
+            throws IOException, WebApplicationException {
+        final Person result = new Person();
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
         final String nameLine = reader.readLine();
         result.name = nameLine.substring(nameLine.indexOf(": ") + 2);
         final String ageLine = reader.readLine();
@@ -100,7 +107,7 @@ public class PersonProvider implements MessageBodyWriter<Person>, MessageBodyRea
         return result;
     }
 
-    private byte[] getByteRepresentation(Person t) {
-        return String.format("name: %s\nage: %d\naddress: %s", t.name, t.age, t.address).getBytes();
+    private byte[] getByteRepresentation(final Person t, final Charset charset) {
+        return String.format("name: %s\nage: %d\naddress: %s", t.name, t.age, t.address).getBytes(charset);
     }
 }

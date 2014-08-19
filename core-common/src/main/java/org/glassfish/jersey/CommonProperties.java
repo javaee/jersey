@@ -216,7 +216,7 @@ public final class CommonProperties {
      * to this property "<tt>.server</tt>" or "<tt>.client</tt>"
      * (<tt>{@value}.server</tt> or  <tt>{@value}.client</tt>).
      * <p>
-     * The default value is <tt>{@value org.glassfish.jersey.message.internal.CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt>.
+     * The default value is <tt>8192</tt>.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
@@ -259,7 +259,7 @@ public final class CommonProperties {
      *
      * @since 2.8
      */
-    public static Object getValue(Map<String, ?> properties, String propertyName, Class<?> type) {
+    public static Object getValue(final Map<String, ?> properties, final String propertyName, final Class<?> type) {
         return PropertiesHelper.getValue(properties, propertyName, type, CommonProperties.LEGACY_FALLBACK_MAP);
     }
 
@@ -268,7 +268,7 @@ public final class CommonProperties {
      *
      * If the property is not set or the real value type is not compatible with {@code defaultValue} type,
      * the specified {@code defaultValue} is returned. Calling this method is equivalent to calling
-     * {@code CommonProperties.getValue(properties, key, defaultValue, (Class<T>) defaultValue.getClass())}
+     * {@code CommonProperties.getValue(properties, key, defaultValue, (Class&lt;T&gt;) defaultValue.getClass())}
      *
      * @param properties    Map of properties to get the property value from.
      * @param propertyName  Name of the property.
@@ -278,7 +278,7 @@ public final class CommonProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String propertyName, T defaultValue) {
+    public static <T> T getValue(final Map<String, ?> properties, final String propertyName, final T defaultValue) {
         return PropertiesHelper.getValue(properties, propertyName, defaultValue, CommonProperties.LEGACY_FALLBACK_MAP);
     }
 
@@ -287,7 +287,7 @@ public final class CommonProperties {
      *
      * If the property is not set or the real value type is not compatible with {@code defaultValue} type,
      * the specified {@code defaultValue} is returned. Calling this method is equivalent to calling
-     * {@code CommonProperties.getValue(properties, runtimeType, key, defaultValue, (Class<T>) defaultValue.getClass())}
+     * {@code CommonProperties.getValue(properties, runtimeType, key, defaultValue, (Class&lt;T&gt;) defaultValue.getClass())}
      *
      * @param properties    Map of properties to get the property value from.
      * @param runtime       Runtime type which is used to check whether there is a property with the same
@@ -300,7 +300,7 @@ public final class CommonProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtime, String propertyName, T defaultValue) {
+    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtime, final String propertyName, final T defaultValue) {
         return PropertiesHelper.getValue(properties, runtime, propertyName, defaultValue,CommonProperties.LEGACY_FALLBACK_MAP);
     }
 
@@ -322,8 +322,8 @@ public final class CommonProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtime, String propertyName, T defaultValue,
-                                 Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtime, final String propertyName, final T defaultValue,
+                                 final Class<T> type) {
         return PropertiesHelper.getValue(properties, runtime, propertyName, defaultValue, type,
                 CommonProperties.LEGACY_FALLBACK_MAP);
     }
@@ -345,7 +345,7 @@ public final class CommonProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, RuntimeType runtime, String propertyName, Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final RuntimeType runtime, final String propertyName, final Class<T> type) {
         return PropertiesHelper.getValue(properties, runtime, propertyName, type, CommonProperties.LEGACY_FALLBACK_MAP);
     }
 }

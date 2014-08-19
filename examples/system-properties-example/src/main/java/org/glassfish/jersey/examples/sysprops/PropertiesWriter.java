@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
 import java.util.Set;
 
 import javax.ws.rs.Produces;
@@ -51,6 +52,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyWriter;
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * @author Martin Matula (martin.matula at oracle.com)
@@ -58,20 +60,24 @@ import javax.ws.rs.ext.MessageBodyWriter;
 @Produces(MediaType.TEXT_PLAIN)
 public class PropertiesWriter implements MessageBodyWriter<Set<String>> {
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
         return Set.class.isAssignableFrom(type);
     }
 
     @Override
-    public long getSize(Set<String> s, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public long getSize(final Set<String> s, final Class<?> type, final Type genericType, final Annotation[] annotations,
+                        final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(Set<String> s, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-        PrintStream ps = new PrintStream(entityStream);
+    public void writeTo(final Set<String> s, final Class<?> type, final Type genericType, final Annotation[] annotations,
+                        final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders,
+                        final OutputStream entityStream) throws IOException, WebApplicationException {
+        final PrintStream ps = new PrintStream(entityStream, true, MessageUtils.getCharset(mediaType).name());
 
-        for (String item : s) {
+        for (final String item : s) {
             ps.println(item);
         }
     }

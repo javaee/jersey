@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -93,10 +93,13 @@ import com.sun.javadoc.SeeTag;
 import com.sun.javadoc.Tag;
 
 /**
- * This doclet creates a resourcedoc xml file. The ResourceDoc file contains the javadoc documentation
+ * Creates a resourcedoc xml file.
+ *
+ * <p>
+ * The ResourceDoc file contains the javadoc documentation
  * of resource classes, so that this can be used for extending generated wadl with useful
- * documentation.<br>
- * Created on: Jun 7, 2008<br>
+ * documentation.
+ * </p>
  *
  * @author <a href="mailto:martin.grotzke@freiheit.com">Martin Grotzke</a>
  */
@@ -107,16 +110,15 @@ public class ResourceDoclet {
     private static final String OPTION_CLASSPATH = "-classpath";
     private static final String OPTION_DOC_PROCESSORS = "-processors";
 
-    private static final Logger LOG = Logger.getLogger(ResourceDoclet.class
-            .getName());
+    private static final Logger LOG = Logger.getLogger(ResourceDoclet.class.getName());
 
     /**
      * Start the doclet.
      *
-     * @param root
-     * @return true if no exception is thrown
+     * @param root the root JavaDoc document.
+     * @return true if no exception is thrown.
      */
-    public static boolean start(RootDoc root) {
+    public static boolean start(final RootDoc root) {
         final String output = getOptionArg(root.options(), OPTION_OUTPUT);
 
         final String classpath = getOptionArg(root.options(), OPTION_CLASSPATH);
@@ -138,7 +140,7 @@ public class ResourceDoclet {
                 final Class<? extends DocProcessor> dpClazz = clazz.asSubclass(DocProcessor.class);
                 docProcessor.add(dpClazz.newInstance());
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.log(Level.SEVERE, "Could not load docProcessors " + docProcessorOption, e);
         }
 
@@ -146,14 +148,14 @@ public class ResourceDoclet {
             final ResourceDocType result = new ResourceDocType();
 
             final ClassDoc[] classes = root.classes();
-            for (ClassDoc classDoc : classes) {
+            for (final ClassDoc classDoc : classes) {
                 LOG.fine("Writing class " + classDoc.qualifiedTypeName());
                 final ClassDocType classDocType = new ClassDocType();
                 classDocType.setClassName(classDoc.qualifiedTypeName());
                 classDocType.setCommentText(classDoc.commentText());
                 docProcessor.processClassDoc(classDoc, classDocType);
 
-                for (MethodDoc methodDoc : classDoc.methods()) {
+                for (final MethodDoc methodDoc : classDoc.methods()) {
 
                     final MethodDocType methodDocType = new MethodDocType();
                     methodDocType.setMethodName(methodDoc.name());
@@ -188,7 +190,7 @@ public class ResourceDoclet {
 
                 LOG.info("Wrote " + output);
 
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 LOG.log(Level.SEVERE, "Could not serialize ResourceDoc.", e);
                 return false;
             }
@@ -199,7 +201,7 @@ public class ResourceDoclet {
         return true;
     }
 
-    private static String[] getCDataElements(DocProcessor docProcessor) {
+    private static String[] getCDataElements(final DocProcessor docProcessor) {
         final String[] original = new String[]{"ns1^commentText", "ns2^commentText", "^commentText"};
         if (docProcessor == null) {
             return original;
@@ -219,8 +221,8 @@ public class ResourceDoclet {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T, U> T[] copyOf(U[] original, int newLength) {
-        final T[] copy = ((Object) original.getClass() == (Object) Object[].class)
+    private static <T, U> T[] copyOf(final U[] original, final int newLength) {
+        final T[] copy = (original.getClass() == Object[].class)
                 ? (T[]) new Object[newLength]
                 : (T[]) Array.newInstance(original.getClass().getComponentType(), newLength);
         System.arraycopy(original, 0, copy, 0,
@@ -229,7 +231,7 @@ public class ResourceDoclet {
     }
 
     private static Class<?>[] getJAXBContextClasses(
-            final ResourceDocType result, DocProcessor docProcessor) {
+            final ResourceDocType result, final DocProcessor docProcessor) {
         final Class<?>[] clazzes;
         if (docProcessor == null) {
             clazzes = new Class<?>[1];
@@ -248,10 +250,11 @@ public class ResourceDoclet {
         return clazzes;
     }
 
-    private static XMLSerializer getXMLSerializer(OutputStream os, String[] cdataElements) throws InstantiationException,
+    private static XMLSerializer getXMLSerializer(final OutputStream os, final String[] cdataElements)
+            throws InstantiationException,
             IllegalAccessException, ClassNotFoundException {
         // configure an OutputFormat to handle CDATA
-        OutputFormat of = new OutputFormat();
+        final OutputFormat of = new OutputFormat();
 
         // specify which of your elements you want to be handled as CDATA.
         // The use of the '^' between the namespaceURI and the localname
@@ -265,14 +268,14 @@ public class ResourceDoclet {
         of.setIndenting(true);
 
         // create the serializer
-        XMLSerializer serializer = new XMLSerializer(of);
+        final XMLSerializer serializer = new XMLSerializer(of);
 
         serializer.setOutputByteStream(os);
 
         return serializer;
     }
 
-    private static void addResponseDoc(MethodDoc methodDoc,
+    private static void addResponseDoc(final MethodDoc methodDoc,
                                        final MethodDocType methodDocType) {
 
         final ResponseDocType responseDoc = new ResponseDocType();
@@ -283,10 +286,10 @@ public class ResourceDoclet {
         }
 
         final Tag[] responseParamTags = methodDoc.tags("response.param");
-        for (Tag responseParamTag : responseParamTags) {
+        for (final Tag responseParamTag : responseParamTags) {
             // LOG.info( "Have responseparam tag: " + print( responseParamTag ) );
             final WadlParamType wadlParam = new WadlParamType();
-            for (Tag inlineTag : responseParamTag.inlineTags()) {
+            for (final Tag inlineTag : responseParamTag.inlineTags()) {
                 final String tagName = inlineTag.name();
                 final String tagText = inlineTag.text();
                 /* skip empty tags
@@ -298,28 +301,34 @@ public class ResourceDoclet {
                     }
                     continue;
                 }
-                if ("@name".equals(tagName)) {
-                    wadlParam.setName(tagText);
-                } else if ("@style".equals(tagName)) {
-                    wadlParam.setStyle(tagText);
-                } else if ("@type".equals(tagName)) {
-                    wadlParam.setType(QName.valueOf(tagText));
-                } else if ("@doc".equals(tagName)) {
-                    wadlParam.setDoc(tagText);
-                } else {
-                    LOG.warning("Unknown inline tag of @response.param in method " +
-                            methodDoc.qualifiedName() + ": " + tagName +
-                            " (value: " + tagText + ")");
+                switch (tagName) {
+                    case "@name":
+                        wadlParam.setName(tagText);
+                        break;
+                    case "@style":
+                        wadlParam.setStyle(tagText);
+                        break;
+                    case "@type":
+                        wadlParam.setType(QName.valueOf(tagText));
+                        break;
+                    case "@doc":
+                        wadlParam.setDoc(tagText);
+                        break;
+                    default:
+                        LOG.warning("Unknown inline tag of @response.param in method " +
+                                methodDoc.qualifiedName() + ": " + tagName +
+                                " (value: " + tagText + ")");
+                        break;
                 }
             }
             responseDoc.getWadlParams().add(wadlParam);
         }
 
         final Map<String, List<Tag>> tagsByStatus = getResponseRepresentationTags(methodDoc);
-        for (Entry<String, List<Tag>> entry : tagsByStatus.entrySet()) {
+        for (final Entry<String, List<Tag>> entry : tagsByStatus.entrySet()) {
             final RepresentationDocType representationDoc = new RepresentationDocType();
             representationDoc.setStatus(Long.valueOf(entry.getKey()));
-            for (Tag tag : entry.getValue()) {
+            for (final Tag tag : entry.getValue()) {
                 if (tag.name().endsWith(".qname")) {
                     representationDoc.setElement(QName.valueOf(tag.text()));
                 } else if (tag.name().endsWith(".mediaType")) {
@@ -338,11 +347,11 @@ public class ResourceDoclet {
         methodDocType.setResponseDoc(responseDoc);
     }
 
-    private static boolean isEmpty(String value) {
-        return value == null || value.length() == 0 || value.trim().length() == 0 ? true : false;
+    private static boolean isEmpty(final String value) {
+        return value == null || value.isEmpty() || value.trim().isEmpty();
     }
 
-    private static void addRequestRepresentationDoc(MethodDoc methodDoc,
+    private static void addRequestRepresentationDoc(final MethodDoc methodDoc,
                                                     final MethodDocType methodDocType) {
         final Tag requestElement = getSingleTagOrNull(methodDoc, "request.representation.qname");
         final Tag requestExample = getSingleTagOrNull(methodDoc, "request.representation.example");
@@ -372,16 +381,15 @@ public class ResourceDoclet {
         }
     }
 
-    private static Map<String, List<Tag>> getResponseRepresentationTags(
-            MethodDoc methodDoc) {
-        final Map<String, List<Tag>> tagsByStatus = new HashMap<String, List<Tag>>();
-        for (Tag tag : methodDoc.tags()) {
+    private static Map<String, List<Tag>> getResponseRepresentationTags(final MethodDoc methodDoc) {
+        final Map<String, List<Tag>> tagsByStatus = new HashMap<>();
+        for (final Tag tag : methodDoc.tags()) {
             final Matcher matcher = PATTERN_RESPONSE_REPRESENATION.matcher(tag.name());
             if (matcher.matches()) {
                 final String status = matcher.group(1);
                 List<Tag> tags = tagsByStatus.get(status);
                 if (tags == null) {
-                    tags = new ArrayList<Tag>();
+                    tags = new ArrayList<>();
                     tagsByStatus.put(status, tags);
                 }
                 tags.add(tag);
@@ -391,17 +399,16 @@ public class ResourceDoclet {
     }
 
     /**
-     * Searches an <code>@link</code> tag within the inline tags of the specified tags
+     * Searches an <code>@link</code> tag within the inline tags of the specified tag
      * and serializes the referenced instance.
-     * @param tag
-     * @return
-     * @author Martin Grotzke
+     * @param tag the tag containing the inline tags to be searched.
+     * @return the {@code String} representation of the {@link com.sun.javadoc.Tag} or null if the parameter is null.
      */
-    private static String getSerializedExample(Tag tag) {
+    private static String getSerializedExample(final Tag tag) {
         if (tag != null) {
             final Tag[] inlineTags = tag.inlineTags();
             if (inlineTags != null && inlineTags.length > 0) {
-                for (Tag inlineTag : inlineTags) {
+                for (final Tag inlineTag : inlineTags) {
                     if (LOG.isLoggable(Level.FINE)) {
                         LOG.fine("Have inline tag: " + print(inlineTag));
                     }
@@ -423,7 +430,7 @@ public class ResourceDoclet {
         return null;
     }
 
-    private static Tag getSingleTagOrNull(MethodDoc methodDoc, String tagName) {
+    private static Tag getSingleTagOrNull(final MethodDoc methodDoc, final String tagName) {
         final Tag[] tags = methodDoc.tags(tagName);
         if (tags != null && tags.length == 1) {
             return tags[0];
@@ -431,7 +438,7 @@ public class ResourceDoclet {
         return null;
     }
 
-    private static void addParamDocs(MethodDoc methodDoc,
+    private static void addParamDocs(final MethodDoc methodDoc,
                                      final MethodDocType methodDocType,
                                      final DocProcessor docProcessor) {
         final Parameter[] parameters = methodDoc.parameters();
@@ -457,13 +464,13 @@ public class ResourceDoclet {
                 paramDocType.setCommentText(paramTag.parameterComment());
                 docProcessor.processParamTag(paramTag, parameter, paramDocType);
 
-                AnnotationDesc[] annotations = parameter.annotations();
+                final AnnotationDesc[] annotations = parameter.annotations();
                 if (annotations != null) {
-                    for (AnnotationDesc annotationDesc : annotations) {
+                    for (final AnnotationDesc annotationDesc : annotations) {
                         final AnnotationDocType annotationDocType = new AnnotationDocType();
                         final String typeName = annotationDesc.annotationType().qualifiedName();
                         annotationDocType.setAnnotationTypeName(typeName);
-                        for (ElementValuePair elementValuePair : annotationDesc.elementValues()) {
+                        for (final ElementValuePair elementValuePair : annotationDesc.elementValues()) {
                             final NamedValueType namedValueType = new NamedValueType();
                             namedValueType.setName(elementValuePair.element().name());
                             namedValueType.setValue(elementValuePair.value().value().toString());
@@ -498,14 +505,14 @@ public class ResourceDoclet {
         final ClassDoc containingClass = referencedMember.containingClass();
         final Object object;
         try {
-            Field declaredField = Class.forName(containingClass.qualifiedName(), false, Thread.currentThread()
+            final Field declaredField = Class.forName(containingClass.qualifiedName(), false, Thread.currentThread()
                     .getContextClassLoader()).getDeclaredField(referencedMember.name());
             if (referencedMember.isFinal()) {
                 declaredField.setAccessible(true);
             }
             object = declaredField.get(null);
             LOG.log(Level.FINE, "Got object " + object);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.info("Have classloader: " + ResourceDoclet.class.getClassLoader().getClass());
             LOG.info("Have thread classloader " + Thread.currentThread().getContextClassLoader().getClass());
             LOG.info("Have system classloader " + ClassLoader.getSystemClassLoader().getClass());
@@ -524,36 +531,34 @@ public class ResourceDoclet {
             final String result = stringWriter.getBuffer().toString();
             LOG.log(Level.FINE, "Got marshalled output:\n" + result);
             return result;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.log(Level.SEVERE, "Could serialize bean to xml: " + object, e);
             return null;
         }
     }
 
-    private static String print(Tag tag) {
-        final StringBuilder sb = new StringBuilder();
-        sb.append(tag.getClass()).append("[");
-        sb.append("firstSentenceTags=").append(toCSV(tag.firstSentenceTags()));
-        sb.append(", inlineTags=").append(toCSV(tag.inlineTags()));
-        sb.append(", kind=").append(tag.kind());
-        sb.append(", name=").append(tag.name());
-        sb.append(", text=").append(tag.text());
-        sb.append("]");
-        return sb.toString();
+    private static String print(final Tag tag) {
+        return String.valueOf(tag.getClass()) + "[" +
+                "firstSentenceTags=" + toCSV(tag.firstSentenceTags())
+                + ", inlineTags=" + toCSV(tag.inlineTags())
+                + ", kind=" + tag.kind()
+                + ", name=" + tag.name()
+                + ", text=" + tag.text()
+                + "]";
     }
 
-    static <T> String toCSV(Tag[] items) {
+    static String toCSV(final Tag[] items) {
         if (items == null) {
             return null;
         }
         return toCSV(Arrays.asList(items));
     }
 
-    static <I> String toCSV(Collection<Tag> items) {
+    static String toCSV(final Collection<Tag> items) {
         return toCSV(items, ", ", null);
     }
 
-    static <I> String toCSV(Collection<Tag> items, String separator, String delimiter) {
+    static String toCSV(final Collection<Tag> items, final String separator, final String delimiter) {
         if (items == null) {
             return null;
         }
@@ -581,10 +586,10 @@ public class ResourceDoclet {
      * Return array length for given option: 1 + the number of arguments that
      * the option takes.
      *
-     * @param option
+     * @param option option
      * @return the number of args for the specified option
      */
-    public static int optionLength(String option) {
+    public static int optionLength(final String option) {
         LOG.fine("Invoked with option " + option);
 
         if (OPTION_OUTPUT.equals(option)
@@ -599,33 +604,31 @@ public class ResourceDoclet {
     /**
      * Validate options.
      *
-     * @param options
-     * @param reporter
+     * @param options options to be validated
+     * @param reporter {@link com.sun.javadoc.DocErrorReporter} for collecting eventual errors
      * @return if the specified options are valid
      */
-    public static boolean validOptions(String[][] options, DocErrorReporter reporter) {
+    public static boolean validOptions(final String[][] options, final DocErrorReporter reporter) {
         return validOption(OPTION_OUTPUT, "<path-to-file>", options, reporter)
                 && validOption(OPTION_CLASSPATH, "<path>", options, reporter);
     }
 
-    private static boolean validOption(String optionName,
-                                       String reportOptionName,
-                                       String[][] options,
-                                       DocErrorReporter reporter) {
+    private static boolean validOption(final String optionName,
+                                       final String reportOptionName,
+                                       final String[][] options,
+                                       final DocErrorReporter reporter) {
         final String option = getOptionArg(options, optionName);
 
-        final boolean foundOption = option != null && option.trim().length() > 0;
+        final boolean foundOption = option != null && !option.trim().isEmpty();
         if (!foundOption) {
             reporter.printError(optionName + " " + reportOptionName + " must be specified.");
         }
         return foundOption;
     }
 
-    private static String getOptionArg(String[][] options, String option) {
+    private static String getOptionArg(final String[][] options, final String option) {
 
-        for (int i = 0; i < options.length; i++) {
-            String[] opt = options[i];
-
+        for (final String[] opt : options) {
             if (opt[0].equals(option)) {
                 return opt[1];
             }
@@ -636,25 +639,24 @@ public class ResourceDoclet {
 
     static class Loader extends URLClassLoader {
 
-        public Loader(String[] paths, ClassLoader parent) {
+        public Loader(final String[] paths, final ClassLoader parent) {
             super(getURLs(paths), parent);
         }
 
-        Loader(String[] paths) {
+        Loader(final String[] paths) {
             super(getURLs(paths));
         }
 
-        private static URL[] getURLs(String[] paths) {
-            final List<URL> urls = new ArrayList<URL>();
-            for (String path : paths) {
+        private static URL[] getURLs(final String[] paths) {
+            final List<URL> urls = new ArrayList<>();
+            for (final String path : paths) {
                 try {
                     urls.add(new File(path).toURI().toURL());
-                } catch (MalformedURLException e) {
+                } catch (final MalformedURLException e) {
                     throw new RuntimeException(e);
                 }
             }
-            final URL[] us = urls.toArray(new URL[0]);
-            return us;
+            return urls.toArray(new URL[urls.size()]);
         }
 
     }

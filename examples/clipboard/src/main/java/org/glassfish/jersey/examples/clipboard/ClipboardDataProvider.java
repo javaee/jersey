@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,6 +44,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.util.logging.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -54,11 +56,15 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
+import org.glassfish.jersey.message.MessageUtils;
+
 /**
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public abstract class ClipboardDataProvider implements MessageBodyWriter, MessageBodyReader {
+
+    private static final Logger LOG = Logger.getLogger(ClipboardDataProvider.class.getName());
 
     @Provider
     @Consumes("text/plain")
@@ -66,15 +72,17 @@ public abstract class ClipboardDataProvider implements MessageBodyWriter, Messag
     public static class TextPlain extends ClipboardDataProvider {
 
         @Override
-        public void writeTo(Object t, Class type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-            System.out.println("****writeTo on " + this.getClass().getName() + " invoked");
-            entityStream.write(t.toString().getBytes());
+        public void writeTo(final Object t, final Class type, final Type genericType, final Annotation[] annotations,
+                            final MediaType mediaType, final MultivaluedMap httpHeaders, final OutputStream entityStream)
+                throws IOException, WebApplicationException {
+            entityStream.write(t.toString().getBytes(MessageUtils.getCharset(mediaType)));
         }
 
         @Override
-        public Object readFrom(Class type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
-            System.out.println("****readFrom on " + this.getClass().getName() + " invoked");
-            return new ClipboardData(readStringFromStream(entityStream));
+        public Object readFrom(final Class type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType, final MultivaluedMap httpHeaders, final InputStream entityStream)
+                throws IOException, WebApplicationException {
+            return new ClipboardData(readStringFromStream(entityStream, MessageUtils.getCharset(mediaType)));
         }
     }
 
@@ -87,42 +95,50 @@ public abstract class ClipboardDataProvider implements MessageBodyWriter, Messag
         private static final String JsonClosing = "\"}";
 
         @Override
-        public void writeTo(Object t, Class type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap httpHeaders, OutputStream entityStream) throws IOException, WebApplicationException {
-            entityStream.write(String.format("%s%s%s", JsonOpenning, t.toString(), JsonClosing).getBytes());
+        public void writeTo(final Object t, final Class type, final Type genericType, final Annotation[] annotations,
+                            final MediaType mediaType, final MultivaluedMap httpHeaders, final OutputStream entityStream)
+                throws IOException, WebApplicationException {
+            entityStream.write(String.format("%s%s%s", JsonOpenning, t.toString(), JsonClosing)
+                    .getBytes(MessageUtils.getCharset(mediaType)));
         }
 
         @Override
-        public Object readFrom(Class type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
-            final String jsonExpression = readStringFromStream(entityStream);
+        public Object readFrom(final Class type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType, final MultivaluedMap httpHeaders, final InputStream entityStream)
+                throws IOException, WebApplicationException {
+            final String jsonExpression = readStringFromStream(entityStream, MessageUtils.getCharset(mediaType));
             return new ClipboardData(jsonExpression.replace(JsonOpenning, "").replace(JsonClosing, ""));
         }
     }
 
     @Override
-    public boolean isWriteable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isWriteable(final Class type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
         return isKnownType(type);
     }
 
-    private boolean isKnownType(Class<?> type) {
+    private boolean isKnownType(final Class<?> type) {
         return type.isAssignableFrom(ClipboardData.class);
     }
 
     @Override
-    public long getSize(Object t, Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public long getSize(final Object t, final Class type, final Type genericType, final Annotation[] annotations,
+                        final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public boolean isReadable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isReadable(final Class type, final Type genericType, final Annotation[] annotations,
+                              final MediaType mediaType) {
         return isKnownType(type);
     }
 
-    private static String readStringFromStream(InputStream entityStream) throws IOException {
-        StringBuilder result = new StringBuilder();
-        byte[] buf = new byte[2048];
+    private static String readStringFromStream(final InputStream entityStream, Charset charset) throws IOException {
+        final StringBuilder result = new StringBuilder();
+        final byte[] buf = new byte[2048];
         int i;
         while ((i = entityStream.read(buf)) != -1) {
-            result.append(new String(buf, 0, i));
+            result.append(new String(buf, 0, i, charset));
         }
         return result.toString();
     }

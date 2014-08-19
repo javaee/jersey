@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -87,7 +87,7 @@ public class JettisonConfig {
         protected Map<String, String> jsonXml2JsonNs = new HashMap<String, String>(0);
         protected List<String> serializeAsArray = new LinkedList<String>();
 
-        private Builder(Notation notation) {
+        private Builder(final Notation notation) {
             this.notation = notation;
         }
 
@@ -100,7 +100,7 @@ public class JettisonConfig {
             return new JettisonConfig(this);
         }
 
-        private void copyAttributes(JettisonConfig jc) {
+        private void copyAttributes(final JettisonConfig jc) {
             jsonXml2JsonNs.putAll(jc.getXml2JsonNs());
             serializeAsArray.addAll(jc.getArrayElements());
         }
@@ -112,7 +112,7 @@ public class JettisonConfig {
      */
     public static class MappedJettisonBuilder extends Builder {
 
-        private MappedJettisonBuilder(Notation notation) {
+        private MappedJettisonBuilder(final Notation notation) {
             super(notation);
         }
 
@@ -130,7 +130,7 @@ public class JettisonConfig {
          * @param jsonXml2JsonNs XML to JSON namespace map.
          * @return updated builder instance.
          */
-        public MappedJettisonBuilder xml2JsonNs(Map<String, String> jsonXml2JsonNs) {
+        public MappedJettisonBuilder xml2JsonNs(final Map<String, String> jsonXml2JsonNs) {
             this.jsonXml2JsonNs = jsonXml2JsonNs;
             return this;
         }
@@ -145,7 +145,7 @@ public class JettisonConfig {
          * <p>
          * The default value is an empty list.
          *
-         * @param element names to be serialized as arrays.
+         * @param arrays names to be serialized as arrays.
          * @return updated builder instance.
          */
         public MappedJettisonBuilder serializeAsArray(final String... arrays) {
@@ -162,7 +162,7 @@ public class JettisonConfig {
          * <p>
          * The default value is an empty list.
          *
-         * @param list of element names to be serialized as arrays.
+         * @param arrays of element names to be serialized as arrays.
          * @return updated builder instance.
          */
         public MappedJettisonBuilder serializeAsArray(final List<String> arrays) {
@@ -171,7 +171,7 @@ public class JettisonConfig {
         }
     }
 
-    private JettisonConfig(Builder b) {
+    private JettisonConfig(final Builder b) {
         notation = b.notation;
         jsonXml2JsonNs = b.jsonXml2JsonNs;
         serializeAsArray = b.serializeAsArray;
@@ -185,12 +185,12 @@ public class JettisonConfig {
      * @return copy of provided {@link JettisonConfig} with humanReadableFormatting set to formatted.
      * @throws IllegalArgumentException when provided {@code JettisonConfig} is null.
      */
-    public static JettisonConfig createJSONConfiguration(JettisonConfig c) throws IllegalArgumentException {
+    public static JettisonConfig createJSONConfiguration(final JettisonConfig c) throws IllegalArgumentException {
         if (c == null) {
             throw new IllegalArgumentException("JettisonConfig can't be null");
         }
 
-        Builder b = copyBuilder(c);
+        final Builder b = copyBuilder(c);
 
         return b.build();
     }

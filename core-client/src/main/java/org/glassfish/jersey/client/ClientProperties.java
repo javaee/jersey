@@ -178,7 +178,7 @@ public final class ClientProperties {
      * global property.
      * <p>
      * The default value is
-     * <tt>{@value org.glassfish.jersey.message.internal.CommittingOutputStream#DEFAULT_BUFFER_SIZE}</tt>.
+     * <tt>8192</tt>.
      * </p>
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
@@ -388,7 +388,7 @@ public final class ClientProperties {
      *
      * If the property is not set or the real value type is not compatible with
      * {@code defaultValue} type, the specified {@code defaultValue} is returned. Calling this method is equivalent to calling
-     * {@code ClientProperties.getValue(properties, key, defaultValue, (Class<T>) defaultValue.getClass())}
+     * {@code ClientProperties.getValue(properties, key, defaultValue, (Class&lt;T&gt;) defaultValue.getClass())}
      *
      * @param properties    Map of properties to get the property value from.
      * @param key  Name of the property.
@@ -398,7 +398,7 @@ public final class ClientProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue) {
+    public static <T> T getValue(final Map<String, ?> properties, final String key, final T defaultValue) {
         return PropertiesHelper.getValue(properties, key, defaultValue, null);
     }
 
@@ -417,7 +417,7 @@ public final class ClientProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, T defaultValue, Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final String key, final T defaultValue, final Class<T> type) {
         return PropertiesHelper.getValue(properties, key, defaultValue, type, null);
     }
 
@@ -435,7 +435,7 @@ public final class ClientProperties {
      *
      * @since 2.8
      */
-    public static <T> T getValue(Map<String, ?> properties, String key, Class<T> type) {
+    public static <T> T getValue(final Map<String, ?> properties, final String key, final Class<T> type) {
         return PropertiesHelper.getValue(properties, key, type, null);
     }
 }

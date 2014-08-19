@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,7 +59,7 @@ public final class ConsumerCredentials {
      * @param consumerKey Consumer key.
      * @param consumerSecret Consumer secret.
      */
-    public ConsumerCredentials(String consumerKey, String consumerSecret) {
+    public ConsumerCredentials(final String consumerKey, final String consumerSecret) {
         this.consumerKey = consumerKey;
         this.consumerSecret = consumerSecret.getBytes();
     }
@@ -68,9 +68,9 @@ public final class ConsumerCredentials {
      * Create a new consumer credentials with secret defined as byte array.
      *
      * @param consumerKey Consumer key.
-     * @param consumerSecret Consumer secret as byte array.
+     * @param consumerSecret Consumer secret as byte array in the default encoding.
      */
-    public ConsumerCredentials(String consumerKey, byte[] consumerSecret) {
+    public ConsumerCredentials(final String consumerKey, final byte[] consumerSecret) {
         this.consumerKey = consumerKey;
         this.consumerSecret = consumerSecret;
     }

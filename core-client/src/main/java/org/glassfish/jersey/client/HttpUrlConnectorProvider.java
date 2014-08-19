@@ -163,7 +163,7 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
      * @return updated connector provider instance.
      * @throws java.lang.NullPointerException in case the supplied connectionFactory is {@code null}.
      */
-    public HttpUrlConnectorProvider connectionFactory(ConnectionFactory connectionFactory) {
+    public HttpUrlConnectorProvider connectionFactory(final ConnectionFactory connectionFactory) {
         if (connectionFactory == null) {
             throw new NullPointerException(LocalizationMessages.NULL_INPUT_PARAMETER("connectionFactory"));
         }
@@ -176,7 +176,7 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
      * Set chunk size for requests transferred using a
      * <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.6.1">HTTP chunked transfer coding</a>.
      *
-     * If no value is set, the default chunk size of {@value #DEFAULT_HTTP_CHUNK_SIZE} bytes will be used.
+     * If no value is set, the default chunk size of 4096 bytes will be used.
      * <p>
      * Note that this programmatically set value can be overridden by
      * setting the {@link org.glassfish.jersey.client.ClientProperties#CHUNKED_ENCODING_SIZE} property
@@ -187,7 +187,7 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
      * @return updated connector provider instance.
      * @throws java.lang.IllegalArgumentException in case the specified chunk size is negative.
      */
-    public HttpUrlConnectorProvider chunkSize(int chunkSize) {
+    public HttpUrlConnectorProvider chunkSize(final int chunkSize) {
         if (chunkSize < 0) {
             throw new IllegalArgumentException(LocalizationMessages.NEGATIVE_INPUT_PARAMETER("chunkSize"));
         }
@@ -228,7 +228,7 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
     }
 
     @Override
-    public Connector getConnector(Client client, Configuration config) {
+    public Connector getConnector(final Client client, final Configuration config) {
         final Map<String, Object> properties = config.getProperties();
 
         int computedChunkSize = ClientProperties.getValue(properties,
@@ -279,20 +279,28 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
     private static class DefaultConnectionFactory implements ConnectionFactory {
 
         @Override
-        public HttpURLConnection getConnection(URL url) throws IOException {
+        public HttpURLConnection getConnection(final URL url) throws IOException {
             return (HttpURLConnection) url.openConnection();
         }
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
-        HttpUrlConnectorProvider that = (HttpUrlConnectorProvider) o;
+        final HttpUrlConnectorProvider that = (HttpUrlConnectorProvider) o;
 
-        if (chunkSize != that.chunkSize) return false;
-        if (useFixedLengthStreaming != that.useFixedLengthStreaming) return false;
+        if (chunkSize != that.chunkSize) {
+            return false;
+        }
+        if (useFixedLengthStreaming != that.useFixedLengthStreaming) {
+            return false;
+        }
 
         return connectionFactory.equals(that.connectionFactory);
     }

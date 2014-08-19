@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,13 +67,13 @@ import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
  */
 @Provider
 public class DefaultOAuth1Provider implements OAuth1Provider {
-    private static final ConcurrentHashMap<String, Consumer> consumerByConsumerKey = new ConcurrentHashMap<String, Consumer>();
-    private static final ConcurrentHashMap<String, Token> accessTokenByTokenString = new ConcurrentHashMap<String, Token>();
-    private static final ConcurrentHashMap<String, Token> requestTokenByTokenString = new ConcurrentHashMap<String, Token>();
-    private static final ConcurrentHashMap<String, String> verifierByTokenString = new ConcurrentHashMap<String, String>();
+    private static final ConcurrentHashMap<String, Consumer> consumerByConsumerKey = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Token> accessTokenByTokenString = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Token> requestTokenByTokenString = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, String> verifierByTokenString = new ConcurrentHashMap<>();
 
     @Override
-    public Consumer getConsumer(String consumerKey) {
+    public Consumer getConsumer(final String consumerKey) {
         return consumerByConsumerKey.get(consumerKey);
     }
 
@@ -83,9 +83,9 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * @param owner Identifier of the owner that registers the consumer (user ID or similar).
      * @param attributes Additional attributes (name-values pairs - to store additional
      * information about the consumer, such as name, URI, description, etc.)
-     * @return Consumer object for the newly registered consumer.
+     * @return {@link Consumer} object for the newly registered consumer.
      */
-    public Consumer registerConsumer(String owner, MultivaluedMap<String, String> attributes) {
+    public Consumer registerConsumer(final String owner, final MultivaluedMap<String, String> attributes) {
         return registerConsumer(newUUIDString(), newUUIDString(), owner, attributes);
     }
 
@@ -97,10 +97,10 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * @param secret Consumer key secret.
      * @param attributes Additional attributes (name-values pairs - to store additional
      * information about the consumer, such as name, URI, description, etc.)
-     * @return
+     * @return {@link Consumer} object for the newly registered consumer.
      */
-    public Consumer registerConsumer(String owner, String key, String secret, MultivaluedMap<String, String> attributes) {
-        Consumer c = new Consumer(key, secret, owner, attributes);
+    public Consumer registerConsumer(final String owner, final String key, final String secret, final MultivaluedMap<String, String> attributes) {
+        final Consumer c = new Consumer(key, secret, owner, attributes);
         consumerByConsumerKey.put(c.getKey(), c);
         return c;
     }
@@ -111,9 +111,9 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * @param owner Identifier of the owner that registered the consumers to be retrieved.
      * @return consumers registered by the owner.
      */
-    public Set<Consumer> getConsumers(String owner) {
-        Set<Consumer> result = new HashSet<Consumer>();
-        for (Consumer consumer : consumerByConsumerKey.values()) {
+    public Set<Consumer> getConsumers(final String owner) {
+        final Set<Consumer> result = new HashSet<>();
+        for (final Consumer consumer : consumerByConsumerKey.values()) {
             if (consumer.getOwner().equals(owner)) {
                 result.add(consumer);
             }
@@ -126,9 +126,9 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * @param principalName Principal name for which to retrieve the authorized tokens.
      * @return authorized access tokens.
      */
-    public Set<Token> getAccessTokens(String principalName) {
-        Set<Token> tokens = new HashSet<Token>();
-        for (Token token : accessTokenByTokenString.values()) {
+    public Set<Token> getAccessTokens(final String principalName) {
+        final Set<Token> tokens = new HashSet<>();
+        for (final Token token : accessTokenByTokenString.values()) {
             if (principalName.equals(token.getPrincipal().getName())) {
                 tokens.add(token);
             }
@@ -144,10 +144,10 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * @param roles Set of roles to authorize the token for.
      * @return OAuth verifier value for exchanging this token for an access token.
      */
-    public String authorizeToken(Token token, Principal userPrincipal, Set<String> roles) {
-        Token authorized = token.authorize(userPrincipal, roles);
+    public String authorizeToken(final Token token, final Principal userPrincipal, final Set<String> roles) {
+        final Token authorized = token.authorize(userPrincipal, roles);
         requestTokenByTokenString.put(token.getToken(), authorized);
-        String verifier = newUUIDString();
+        final String verifier = newUUIDString();
         verifierByTokenString.put(token.getToken(), verifier);
         return verifier;
     }
@@ -158,8 +158,8 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * @param token Access token to revoke the authorization for.
      * @param principalName Principal name the token is currently authorized for.
      */
-    public void revokeAccessToken(String token, String principalName) {
-        Token t = (Token) getAccessToken(token);
+    public void revokeAccessToken(final String token, final String principalName) {
+        final Token t = (Token) getAccessToken(token);
         if (t != null && t.getPrincipal().getName().equals(principalName)) {
             accessTokenByTokenString.remove(token);
         }
@@ -171,38 +171,38 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * @return Random UUID string.
      */
     protected String newUUIDString() {
-        String tmp = UUID.randomUUID().toString();
+        final String tmp = UUID.randomUUID().toString();
         return tmp.replaceAll("-", "");
     }
 
     @Override
-    public Token getRequestToken(String token) {
+    public Token getRequestToken(final String token) {
         return requestTokenByTokenString.get(token);
     }
 
     @Override
-    public OAuth1Token newRequestToken(String consumerKey, String callbackUrl, Map<String, List<String>> attributes) {
-        Token rt = new Token(newUUIDString(), newUUIDString(), consumerKey, callbackUrl, attributes);
+    public OAuth1Token newRequestToken(final String consumerKey, final String callbackUrl, final Map<String, List<String>> attributes) {
+        final Token rt = new Token(newUUIDString(), newUUIDString(), consumerKey, callbackUrl, attributes);
         requestTokenByTokenString.put(rt.getToken(), rt);
         return rt;
     }
 
     @Override
-    public OAuth1Token newAccessToken(OAuth1Token requestToken, String verifier) {
-        if (verifier == null || !verifier.equals(verifierByTokenString.remove(requestToken.getToken()))) {
+    public OAuth1Token newAccessToken(final OAuth1Token requestToken, final String verifier) {
+        if (verifier == null || requestToken == null || !verifier.equals(verifierByTokenString.remove(requestToken.getToken()))) {
             return null;
         }
-        Token token = requestToken == null ? null : requestTokenByTokenString.remove(requestToken.getToken());
+        final Token token = requestTokenByTokenString.remove(requestToken.getToken());
         if (token == null) {
             return null;
         }
-        Token at = new Token(newUUIDString(), newUUIDString(), token);
+        final Token at = new Token(newUUIDString(), newUUIDString(), token);
         accessTokenByTokenString.put(at.getToken(), at);
         return at;
     }
 
-    public void addAccessToken(String token, String secret, String consumerKey, String callbackUrl,
-                               Principal principal, Set<String> roles, MultivaluedMap<String, String> attributes) {
+    public void addAccessToken(final String token, final String secret, final String consumerKey, final String callbackUrl,
+                               final Principal principal, final Set<String> roles, final MultivaluedMap<String, String> attributes) {
         final Token accessToken = new Token(token, secret, consumerKey, callbackUrl, principal, roles, attributes);
 
 
@@ -210,7 +210,7 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
     }
 
     @Override
-    public OAuth1Token getAccessToken(String token) {
+    public OAuth1Token getAccessToken(final String token) {
         return accessTokenByTokenString.get(token);
     }
 
@@ -222,7 +222,7 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
         private final String owner;
         private final MultivaluedMap<String, String> attributes;
 
-        private Consumer(String key, String secret, String owner, Map<String, List<String>> attributes) {
+        private Consumer(final String key, final String secret, final String owner, final Map<String, List<String>> attributes) {
             this.key = key;
             this.secret = secret;
             this.owner = owner;
@@ -263,15 +263,15 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
         }
 
         @Override
-        public boolean isInRole(String role) {
+        public boolean isInRole(final String role) {
             return false;
         }
     }
 
 
-    private static MultivaluedMap<String, String> getImmutableMap(Map<String, List<String>> map) {
-        final MultivaluedHashMap<String, String> newMap = new MultivaluedHashMap<String, String>();
-        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+    private static MultivaluedMap<String, String> getImmutableMap(final Map<String, List<String>> map) {
+        final MultivaluedHashMap<String, String> newMap = new MultivaluedHashMap<>();
+        for (final Map.Entry<String, List<String>> entry : map.entrySet()) {
             newMap.put(entry.getKey(), entry.getValue());
         }
         return newMap;
@@ -290,8 +290,8 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
         private final Set<String> roles;
         private final MultivaluedMap<String, String> attribs;
 
-        protected Token(String token, String secret, String consumerKey, String callbackUrl,
-                        Principal principal, Set<String> roles, MultivaluedMap<String, String> attributes) {
+        protected Token(final String token, final String secret, final String consumerKey, final String callbackUrl,
+                        final Principal principal, final Set<String> roles, final MultivaluedMap<String, String> attributes) {
             this.token = token;
             this.secret = secret;
             this.consumerKey = consumerKey;
@@ -301,12 +301,12 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
             this.attribs = attributes;
         }
 
-        public Token(String token, String secret, String consumerKey, String callbackUrl, Map<String, List<String>> attributes) {
+        public Token(final String token, final String secret, final String consumerKey, final String callbackUrl, final Map<String, List<String>> attributes) {
             this(token, secret, consumerKey, callbackUrl, null, Collections.<String>emptySet(),
-                    new ImmutableMultivaluedMap<String, String>(getImmutableMap(attributes)));
+                    new ImmutableMultivaluedMap<>(getImmutableMap(attributes)));
         }
 
-        public Token(String token, String secret, Token requestToken) {
+        public Token(final String token, final String secret, final Token requestToken) {
             this(token, secret, requestToken.getConsumer().getKey(), null,
                     requestToken.principal, requestToken.roles, ImmutableMultivaluedMap.<String, String>empty());
         }
@@ -337,7 +337,7 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
         }
 
         @Override
-        public boolean isInRole(String role) {
+        public boolean isInRole(final String role) {
             return roles.contains(role);
         }
 
@@ -356,8 +356,9 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
          * @param roles Roles to add to the token.
          * @return Cloned token with the principal and roles set.
          */
-        protected Token authorize(Principal principal, Set<String> roles) {
-            return new Token(token, secret, consumerKey, callbackUrl, principal, roles == null ? Collections.<String>emptySet() : new HashSet<String>(roles), attribs);
+        protected Token authorize(final Principal principal, final Set<String> roles) {
+            return new Token(token, secret, consumerKey, callbackUrl, principal,
+                    roles == null ? Collections.<String>emptySet() : new HashSet<>(roles), attribs);
         }
     }
 }

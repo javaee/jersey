@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,7 @@ import javax.ws.rs.ApplicationPath;
 
 /**
  * Configure {@link org.glassfish.jersey.server.ServerProperties#RESPONSE_SET_STATUS_OVER_SEND_ERROR} by {@code true} -
- * method {@link javax.servlet.http.HttpServletResponse#sendError will be called in case of errors
+ * method {@link javax.servlet.http.HttpServletResponse#sendError} will be called in case of errors
  * (status {@code 4xx} or {@code 5xx}).
  *
  * @author Libor Kramolis (libor.kramolis at oracle.com)

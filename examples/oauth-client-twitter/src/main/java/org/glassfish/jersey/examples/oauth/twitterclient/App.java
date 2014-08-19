@@ -45,6 +45,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Properties;
 
@@ -67,7 +68,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 public class App {
-    private static final BufferedReader IN = new BufferedReader(new InputStreamReader(System.in));
+    private static final BufferedReader IN = new BufferedReader(new InputStreamReader(System.in, Charset.forName("UTF-8")));
     private static final String FRIENDS_TIMELINE_URI = "https://api.twitter.com/1.1/statuses/home_timeline.json";
     private static final Properties PROPERTIES = new Properties();
     private static final String PROPERTIES_FILE_NAME = "twitterclient.properties";
@@ -85,7 +86,7 @@ public class App {
      * @param args Command line arguments.
      * @throws Exception Thrown when error occurs.
      */
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         // retrieve consumer key/secret and token/secret from the property file
         // or system properties
         loadSettings();
@@ -94,7 +95,7 @@ public class App {
                 PROPERTIES.getProperty(PROPERTY_CONSUMER_KEY),
                 PROPERTIES.getProperty(PROPERTY_CONSUMER_SECRET));
 
-        Feature filterFeature;
+        final Feature filterFeature;
         if (PROPERTIES.getProperty(PROPERTY_TOKEN) == null) {
 
             // we do not have Access Token yet. Let's perfom the Authorization Flow first,
@@ -110,10 +111,10 @@ public class App {
             System.out.println("Enter the following URI into a web browser and authorize me:");
             System.out.println(authorizationUri);
             System.out.print("Enter the authorization code: ");
-            String verifier = null;
+            final String verifier;
             try {
                 verifier = IN.readLine();
-            } catch (IOException ex) {
+            } catch (final IOException ex) {
                 throw new RuntimeException(ex);
             }
             final AccessToken accessToken = authFlow.finish(verifier);
@@ -126,7 +127,7 @@ public class App {
             // received access token
             filterFeature = authFlow.getOAuth1Feature();
         } else {
-            AccessToken storedToken = new AccessToken(PROPERTIES.getProperty(PROPERTY_TOKEN),
+            final AccessToken storedToken = new AccessToken(PROPERTIES.getProperty(PROPERTY_TOKEN),
                     PROPERTIES.getProperty(PROPERTY_TOKEN_SECRET));
             // build a new feature from the stored consumer credentials and access token
             filterFeature = OAuth1ClientSupport.builder(consumerCredentials).feature()
@@ -136,7 +137,7 @@ public class App {
 
         // create a new Jersey client and register filter feature that will add OAuth signatures and
         // JacksonFeature that will process returned JSON data.
-        Client client = ClientBuilder.newBuilder()
+        final Client client = ClientBuilder.newBuilder()
                 .register(filterFeature)
                 .register(JacksonFeature.class)
                 .build();
@@ -157,11 +158,11 @@ public class App {
         // persist the current consumer key/secret and token/secret for future use
         storeSettings();
 
-        List<Status> statuses = response.readEntity(new GenericType<List<Status>>() {
+        final List<Status> statuses = response.readEntity(new GenericType<List<Status>>() {
         });
 
         System.out.println("Tweets:\n");
-        for (Status s : statuses) {
+        for (final Status s : statuses) {
             System.out.println(s.getText());
             System.out.println("[posted by " + s.getUser().getName() + " at " + s.getCreatedAt() + "]");
         }
@@ -174,21 +175,21 @@ public class App {
         try {
             st = new FileInputStream(PROPERTIES_FILE_NAME);
             PROPERTIES.load(st);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             // ignore
         } finally {
             if (st != null) {
                 try {
                     st.close();
-                } catch (IOException ex) {
+                } catch (final IOException ex) {
                     // ignore
                 }
             }
         }
 
-        for (String name : new String[]{PROPERTY_CONSUMER_KEY, PROPERTY_CONSUMER_SECRET,
+        for (final String name : new String[]{PROPERTY_CONSUMER_KEY, PROPERTY_CONSUMER_SECRET,
                 PROPERTY_TOKEN, PROPERTY_TOKEN_SECRET}) {
-            String value = System.getProperty(name);
+            final String value = System.getProperty(name);
             if (value != null) {
                 PROPERTIES.setProperty(name, value);
             }
@@ -207,14 +208,14 @@ public class App {
         try {
             st = new FileOutputStream(PROPERTIES_FILE_NAME);
             PROPERTIES.store(st, null);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             // ignore
         } finally {
             try {
                 if (st != null) {
                     st.close();
                 }
-            } catch (IOException ex) {
+            } catch (final IOException ex) {
                 // ignore
             }
         }

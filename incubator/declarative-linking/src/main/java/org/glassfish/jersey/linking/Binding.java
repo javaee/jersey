@@ -47,7 +47,7 @@ import org.glassfish.jersey.Beta;
 
 /**
  * Specifies the binding between a URI template parameter and a bean property.
- * @see Link#bindings()
+ * @see org.glassfish.jersey.linking.InjectLink#bindings()
  * 
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
@@ -71,12 +71,12 @@ public @interface Binding {
      * <p>Three implicit beans are supported:</p>
      * <dl>
      * <dt><code>instance</code></dt><dd>The object whose class contains the
-     * {@link Link} annotation.</dd>
+     * {@link org.glassfish.jersey.linking.InjectLink} annotation.</dd>
      * <dt><code>entity</code></dt><dd>The entity returned by the resource 
      * class method. This is either the resource method return value
      * or the entity property for a resource method that returns Response.</dd>
      * <dt><code>resource</code></dt><dd>The resource class instance that
-     * returned the object that contains the {@link Link} annotation.</dd>
+     * returned the object that contains the {@code InjectLink} annotation.</dd>
      * </dd>
      * </dl>
      */

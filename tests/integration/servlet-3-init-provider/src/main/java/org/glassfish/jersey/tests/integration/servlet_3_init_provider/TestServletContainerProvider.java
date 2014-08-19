@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.tests.integration.servlet_3_init_provider;
 
 import java.util.EnumSet;
 import java.util.Set;
+
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -61,22 +62,23 @@ public class TestServletContainerProvider implements ServletContainerProvider {
     private static boolean immutableServletNames = false;
 
     @Override
-    public void preInit(ServletContext servletContext, Set<Class<?>> classes) throws ServletException {
+    public void preInit(final ServletContext servletContext, final Set<Class<?>> classes) throws ServletException {
         classes.add(AbstractHelloWorldResource.class);
     }
 
     @Override
-    public void postInit(ServletContext servletContext, Set<Class<?>> classes, Set<String> servletNames) throws ServletException {
+    public void postInit(final ServletContext servletContext, final Set<Class<?>> classes, final Set<String> servletNames)
+            throws ServletException {
         try {
             servletNames.add("TEST");
-        } catch (UnsupportedOperationException ex) {
-            immutableServletNames = true;
+        } catch (final UnsupportedOperationException ex) {
+            TestServletContainerProvider.setImmutableServletNames(true);
         }
     }
 
     @Override
-    public void onRegister(ServletContext servletContext, Set<String> servletNames) throws ServletException {
-        this.SERVLET_NAMES = servletNames;
+    public void onRegister(final ServletContext servletContext, final Set<String> servletNames) throws ServletException {
+        TestServletContainerProvider.setServletNames(servletNames);
 
         servletContext.addFilter(TEST_FILTER, TestFilter.class).
                 addMappingForServletNames(EnumSet.allOf(DispatcherType.class), false,
@@ -84,7 +86,7 @@ public class TestServletContainerProvider implements ServletContainerProvider {
     }
 
     @Override
-    public void configure(ResourceConfig resourceConfig) throws ServletException {
+    public void configure(final ResourceConfig resourceConfig) throws ServletException {
         if (!resourceConfig.isRegistered(TestContainerLifecycleListener.class)) {
             resourceConfig.register(TestContainerLifecycleListener.class);
         }
@@ -96,6 +98,14 @@ public class TestServletContainerProvider implements ServletContainerProvider {
 
     public static boolean isImmutableServletNames() {
         return immutableServletNames;
+    }
+
+    private static void setServletNames(final Set<String> servletNames) {
+        TestServletContainerProvider.SERVLET_NAMES = servletNames;
+    }
+
+    public static void setImmutableServletNames(final boolean immutableServletNames) {
+        TestServletContainerProvider.immutableServletNames = immutableServletNames;
     }
 
 }

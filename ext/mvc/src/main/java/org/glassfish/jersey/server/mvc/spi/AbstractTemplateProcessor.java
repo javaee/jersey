@@ -40,8 +40,8 @@
 
 package org.glassfish.jersey.server.mvc.spi;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -193,7 +193,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
             // ServletContext.
             if (servletContext != null) {
                 final InputStream stream = servletContext.getResourceAsStream(template);
-                reader = stream != null ? new InputStreamReader(stream) : null;
+                reader = stream != null ? new InputStreamReader(stream, encoding) : null;
             }
 
             // Classloader.
@@ -208,7 +208,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
             // File-system path.
             if (reader == null) {
                 try {
-                    reader = new FileReader(template);
+                    reader = new InputStreamReader(new FileInputStream(template), encoding);
                 } catch (final FileNotFoundException fnfe) {
                     // NOOP.
                 }
@@ -309,11 +309,11 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
      * @param httpHeaders Http headers.
      * @return Selected encoding.
      */
-    protected Charset setContentType(MediaType mediaType, MultivaluedMap<String, Object> httpHeaders) {
-        Charset encoding;
+    protected Charset setContentType(final MediaType mediaType, final MultivaluedMap<String, Object> httpHeaders) {
+        final Charset encoding;
 
         final String charset = mediaType.getParameters().get(MediaType.CHARSET_PARAMETER);
-        MediaType finalMediaType;
+        final MediaType finalMediaType;
         if (charset == null) {
             encoding = getEncoding();
             final HashMap<String, String> params = new HashMap<String, String>(mediaType.getParameters());

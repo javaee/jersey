@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import javax.ejb.Singleton;
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * A simple message body writer to serialize a single message bean.
@@ -63,17 +64,20 @@ import javax.ejb.Singleton;
 public class MessageWriter implements MessageBodyWriter<Message> {
 
     @Override
-    public boolean isWriteable(Class<?> clazz, Type type, Annotation[] annotation, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> clazz, final Type type, final Annotation[] annotation, final MediaType mediaType) {
         return clazz == Message.class;
     }
 
     @Override
-    public long getSize(Message message, Class<?> clazz, Type type, Annotation[] annotation, MediaType mediaType) {
+    public long getSize(final Message message, final Class<?> clazz, final Type type, final Annotation[] annotation,
+                        final MediaType mediaType) {
         return -1;
     }
 
     @Override
-    public void writeTo(Message message, Class<?> clazz, Type type, Annotation[] annotation, MediaType mediaType, MultivaluedMap<String, Object> arg5, OutputStream ostream) throws IOException, WebApplicationException {
-        ostream.write(message.toString().getBytes());
+    public void writeTo(final Message message, final Class<?> clazz, final Type type, final Annotation[] annotation,
+                        final MediaType mediaType, final MultivaluedMap<String, Object> arg5, final OutputStream ostream)
+            throws IOException, WebApplicationException {
+        ostream.write(message.toString().getBytes(MessageUtils.getCharset(mediaType)));
     }
 }

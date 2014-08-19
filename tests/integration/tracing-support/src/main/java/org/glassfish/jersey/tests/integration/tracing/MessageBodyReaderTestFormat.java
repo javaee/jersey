@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,12 +45,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Provider;
+
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * @author Libor Kramolis (libor.kramolis at oracle.com)
@@ -59,19 +62,18 @@ import javax.ws.rs.ext.Provider;
 @Consumes(Utils.APPLICATION_X_JERSEY_TEST)
 public class MessageBodyReaderTestFormat implements MessageBodyReader<Message> {
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-        //System.out.println("*** MessageBodyReaderTestFormat.isReadable");
+    public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                              final MediaType mediaType) {
         return type.isAssignableFrom(Message.class);
     }
 
     @Override
-    public Message readFrom(Class<Message> type, Type genericType, Annotation[] annotations, MediaType mediaType,
-                            MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
-        //System.out.println("*** MessageBodyReaderTestFormat.readFrom");
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(entityStream));
+    public Message readFrom(final Class<Message> type, final Type genericType, final Annotation[] annotations,
+                            final MediaType mediaType, final MultivaluedMap<String, String> httpHeaders,
+                            final InputStream entityStream) throws IOException, WebApplicationException {
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(entityStream, MessageUtils.getCharset(mediaType)));
 
-        String line = reader.readLine();
-        //System.out.println("*** MessageBodyReaderTestFormat.readFrom: .d|" + line + "|b.");
+        final String line = reader.readLine();
         if (line == null || !line.startsWith(Utils.FORMAT_PREFIX) || !line.endsWith(Utils.FORMAT_SUFFIX)) {
             throw new WebApplicationException
                     (new IllegalArgumentException("Input content '" + line + "' is not in a valid format!"));

@@ -41,9 +41,11 @@ package org.glassfish.jersey.tests.performance.tools;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -93,7 +95,7 @@ public class TestDataGeneratorApp {
     private static final URI BASE_URI = URI.create("http://localhost:8080/");
     private static URI baseUri;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(final String[] args) throws Exception {
         baseUri = args.length > 0 ? URI.create(args[0]) : BASE_URI;
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, createApp());
 
@@ -126,7 +128,7 @@ public class TestDataGeneratorApp {
             if (GENERATE_ALSO_GIGABYTE_DATASETS) {
                 generateFile("simple/xml", 1024 * 1024 * 1024, FILE_PATH + "custom-1GB.json");
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             LOG.log(Level.SEVERE, "An error occurred during test data generation. ", e);
         }
         server.shutdown();
@@ -140,23 +142,25 @@ public class TestDataGeneratorApp {
 
     public static ContextResolver<MoxyJsonConfig> createMoxyJsonResolver() {
         final MoxyJsonConfig moxyJsonConfig = new MoxyJsonConfig();
-        Map<String, String> namespacePrefixMapper = new HashMap<>(1);
+        final Map<String, String> namespacePrefixMapper = new HashMap<>(1);
         namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
         moxyJsonConfig.setNamespacePrefixMapper(namespacePrefixMapper).setNamespaceSeparator(':');
         return moxyJsonConfig.resolver();
     }
 
-    public static void generateFile(String resourceRelativeUrl, int minimalSize, String fileName) throws IOException {
+    public static void generateFile(final String resourceRelativeUrl, final int minimalSize, final String fileName)
+            throws IOException {
         LOG.info("Generating file " + fileName);
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(baseUri).path("generate").path(resourceRelativeUrl);
+        final Client client = ClientBuilder.newClient();
+        final WebTarget target = client.target(baseUri).path("generate").path(resourceRelativeUrl);
 
-        File file = new File(fileName);
-        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+        final File file = new File(fileName);
+        final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(file), Charset.forName("UTF-8")));
 
         int actualSize = 0;
         while (actualSize < minimalSize) {
-            String response = target.request().get(String.class);
+            final String response = target.request().get(String.class);
             writer.write(response + ENTITY_SEPARATOR);
             actualSize += response.length();
         }

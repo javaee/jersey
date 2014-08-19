@@ -216,7 +216,7 @@ public interface RequestEvent {
      * processed. So, for example for event {@link Type#EXCEPTION_MAPPING_FINISHED} event type the method
      * returns mapped response and not the original response created from execution of the resource method.
      *
-     * @return Latest response being processed or {@link null} if no response has been produced yet.
+     * @return Latest response being processed or {@code null} if no response has been produced yet.
      */
     public ContainerResponse getContainerResponse();
 
@@ -224,7 +224,7 @@ public interface RequestEvent {
      * Get the latest exception, if any, thrown by the request and response processing. When this method
      * returns not null value, the method {@link #getExceptionCause()} returns the origin of the exception.
      *
-     * @return Exception thrown or {@link null} if no exception has been thrown.
+     * @return Exception thrown or {@code null} if no exception has been thrown.
      */
     public Throwable getException();
 
@@ -233,14 +233,14 @@ public interface RequestEvent {
      * null for {@link Type#START} event. The returned {@code ExtendedUriInfo} can be used to retrieve
      * information relevant to many event types (especially event types describing the matching process).
      *
-     * @return Extended uri info or {@link null} if it is not available yet.
+     * @return Extended uri info or {@code null} if it is not available yet.
      */
     public ExtendedUriInfo getUriInfo();
 
     /**
      * Get the {@link ExceptionMapper} that was found and used during the exception mapping phase.
      *
-     * @return Exception mapper or {@link null} if no exception mapper was found or even needed.
+     * @return Exception mapper or {@code null} if no exception mapper was found or even needed.
      */
     public ExceptionMapper<?> getExceptionMapper();
 
@@ -249,7 +249,7 @@ public interface RequestEvent {
      * Get {@link ContainerRequestFilter container request filters} used during the request filtering
      * phase.
      *
-     * @return Container request filters or {@link null} if no filters were used yet.
+     * @return Container request filters or {@code null} if no filters were used yet.
      */
     public Iterable<ContainerRequestFilter> getContainerRequestFilters();
 
@@ -257,7 +257,7 @@ public interface RequestEvent {
      * Get {@link ContainerResponseFilter container response filters} used during the response filtering
      * phase.
      *
-     * @return Container response filter or {@link null} if no filters were used yet.
+     * @return Container response filter or {@code null} if no filters were used yet.
      */
     public Iterable<ContainerResponseFilter> getContainerResponseFilters();
 

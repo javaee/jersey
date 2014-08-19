@@ -76,7 +76,6 @@ public class FreemarkerResource {
     @Path("hello-default-model")
     @Produces(MediaType.TEXT_HTML)
     public Viewable getHelloWithDefaultModel() {
-        final Map<String, Object> map = new HashMap<String, Object>();
         return new Viewable("/hello-default-model.ftl", "Pavel");
     }
 

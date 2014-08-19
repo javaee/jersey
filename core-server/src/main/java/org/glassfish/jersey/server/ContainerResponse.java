@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -84,7 +84,7 @@ public class ContainerResponse implements ContainerResponseContext {
      * @param requestContext associated container request context.
      * @param response response instance initializing the response context.
      */
-    public ContainerResponse(ContainerRequest requestContext, Response response) {
+    public ContainerResponse(final ContainerRequest requestContext, final Response response) {
         this(requestContext, OutboundJaxrsResponse.from(response));
     }
 
@@ -94,7 +94,7 @@ public class ContainerResponse implements ContainerResponseContext {
      * @param requestContext associated container request context.
      * @param response response instance initializing the response context.
      */
-    ContainerResponse(ContainerRequest requestContext, OutboundJaxrsResponse response) {
+    ContainerResponse(final ContainerRequest requestContext, final OutboundJaxrsResponse response) {
         this.requestContext = requestContext;
         this.requestContext.inResponseProcessing();
         this.status = response.getStatusInfo();
@@ -111,8 +111,9 @@ public class ContainerResponse implements ContainerResponseContext {
     }
 
     /**
-     * Returns true if the response is result of the exception (for example created during {@link javax.ws.rs.ext
-     * .ExceptionMapper exception mapping}).
+     * Returns true if the response is result of the exception (for example created during
+     * {@link javax.ws.rs.ext.ExceptionMapper exception mapping}).
+     *
      * @return True if this response was created based on the exception, false otherwise.
      */
     public boolean isMappedFromException() {
@@ -124,7 +125,7 @@ public class ContainerResponse implements ContainerResponseContext {
      * @param mappedFromException True if this exception if result of the exception (for example result of
      *                      {@link javax.ws.rs.ext.ExceptionMapper exception mapping}).
      */
-    public void setMappedFromException(boolean mappedFromException) {
+    public void setMappedFromException(final boolean mappedFromException) {
         this.mappedFromException = mappedFromException;
     }
 
@@ -134,12 +135,12 @@ public class ContainerResponse implements ContainerResponseContext {
     }
 
     @Override
-    public void setStatus(int code) {
+    public void setStatus(final int code) {
         this.status = Statuses.from(code);
     }
 
     @Override
-    public void setStatusInfo(Response.StatusType status) {
+    public void setStatusInfo(final Response.StatusType status) {
         if (status == null) {
             throw new NullPointerException("Response status must not be 'null'");
         }
@@ -175,7 +176,7 @@ public class ContainerResponse implements ContainerResponseContext {
     }
 
     @Override
-    public String getHeaderString(String name) {
+    public String getHeaderString(final String name) {
         return messageContext.getHeaderString(name);
     }
 
@@ -235,17 +236,17 @@ public class ContainerResponse implements ContainerResponseContext {
     }
 
     @Override
-    public boolean hasLink(String relation) {
+    public boolean hasLink(final String relation) {
         return messageContext.hasLink(relation);
     }
 
     @Override
-    public Link getLink(String relation) {
+    public Link getLink(final String relation) {
         return messageContext.getLink(relation);
     }
 
     @Override
-    public Link.Builder getLinkBuilder(String relation) {
+    public Link.Builder getLinkBuilder(final String relation) {
         return messageContext.getLinkBuilder(relation);
     }
 
@@ -265,7 +266,7 @@ public class ContainerResponse implements ContainerResponseContext {
      * @param entity entity object.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public void setEntity(Object entity) {
+    public void setEntity(final Object entity) {
         messageContext.setEntity(entity);
     }
 
@@ -276,7 +277,7 @@ public class ContainerResponse implements ContainerResponseContext {
      * @param annotations annotations attached to the entity.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public void setEntity(Object entity, Annotation[] annotations) {
+    public void setEntity(final Object entity, final Annotation[] annotations) {
         messageContext.setEntity(entity, annotations);
     }
 
@@ -288,12 +289,12 @@ public class ContainerResponse implements ContainerResponseContext {
      * @param annotations annotations attached to the entity.
      * @see javax.ws.rs.ext.MessageBodyWriter
      */
-    public void setEntity(Object entity, Type type, Annotation[] annotations) {
+    public void setEntity(final Object entity, final Type type, final Annotation[] annotations) {
         messageContext.setEntity(entity, type, annotations);
     }
 
     @Override
-    public void setEntity(Object entity, Annotation[] annotations, MediaType mediaType) {
+    public void setEntity(final Object entity, final Annotation[] annotations, final MediaType mediaType) {
         messageContext.setEntity(entity, annotations, mediaType);
     }
 
@@ -302,7 +303,7 @@ public class ContainerResponse implements ContainerResponseContext {
      *
      * @param mediaType message content media type.
      */
-    public void setMediaType(MediaType mediaType) {
+    public void setMediaType(final MediaType mediaType) {
         messageContext.setMediaType(mediaType);
     }
 
@@ -345,7 +346,7 @@ public class ContainerResponse implements ContainerResponseContext {
      *
      * @param annotations entity annotations.
      */
-    public void setEntityAnnotations(Annotation[] annotations) {
+    public void setEntityAnnotations(final Annotation[] annotations) {
         messageContext.setEntityAnnotations(annotations);
     }
 
@@ -355,7 +356,7 @@ public class ContainerResponse implements ContainerResponseContext {
     }
 
     @Override
-    public void setEntityStream(OutputStream outputStream) {
+    public void setEntityStream(final OutputStream outputStream) {
         messageContext.setEntityStream(outputStream);
     }
 
@@ -367,7 +368,7 @@ public class ContainerResponse implements ContainerResponseContext {
      *
      * @param streamProvider non-{@code null} output stream provider.
      */
-    public void setStreamProvider(OutboundMessageContext.StreamProvider streamProvider) {
+    public void setStreamProvider(final OutboundMessageContext.StreamProvider streamProvider) {
         messageContext.setStreamProvider(streamProvider);
     }
 
@@ -380,7 +381,7 @@ public class ContainerResponse implements ContainerResponseContext {
      *
      * @param configuration runtime configuration.
      */
-    public void enableBuffering(Configuration configuration) {
+    public void enableBuffering(final Configuration configuration) {
         messageContext.enableBuffering(configuration);
     }
 

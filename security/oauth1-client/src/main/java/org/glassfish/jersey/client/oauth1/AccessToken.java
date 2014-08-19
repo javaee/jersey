@@ -61,7 +61,7 @@ public final class AccessToken {
      * @param token Access token.
      * @param accessTokenSecret Access token secret.
      */
-    public AccessToken(String token, String accessTokenSecret) {
+    public AccessToken(final String token, final String accessTokenSecret) {
         this.token = token;
         this.accessTokenSecret = accessTokenSecret.getBytes();
     }
@@ -70,9 +70,9 @@ public final class AccessToken {
      * Create a new access token with secret defined as byte array.
      *
      * @param token Access token.
-     * @param accessTokenSecret Access token secret as byte array.
+     * @param accessTokenSecret Access token secret as byte array in the default encoding.
      */
-    public AccessToken(String token, byte[] accessTokenSecret) {
+    public AccessToken(final String token, final byte[] accessTokenSecret) {
         this.token = token;
         this.accessTokenSecret = accessTokenSecret;
     }

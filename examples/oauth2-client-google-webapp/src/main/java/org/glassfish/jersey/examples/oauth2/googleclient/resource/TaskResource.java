@@ -112,25 +112,24 @@ public class TaskResource {
      * @param client Client configured for authentication with access token.
      * @return String html Google task data.
      */
-    private static AllTaskListsModel getTasks(Client client) {
+    private static AllTaskListsModel getTasks(final Client client) {
         client.register(JacksonFeature.class);
         final WebTarget baseTarget = client.target(GOOGLE_TASKS_BASE_URI);
         final Response response = baseTarget.path("users/@me/lists").request().get();
 
-        StringBuilder sb = new StringBuilder();
         final TaskRootBean taskRootBean = response.readEntity(TaskRootBean.class);
 
         final List<TaskListModel> listOfTaskLists = new ArrayList<TaskListModel>();
-        for (TaskListBean taskListBean : taskRootBean.getItems()) {
-            List<TaskModel> taskList = new ArrayList<TaskModel>();
+        for (final TaskListBean taskListBean : taskRootBean.getItems()) {
+            final List<TaskModel> taskList = new ArrayList<TaskModel>();
             final WebTarget listTarget = baseTarget.path("lists/{tasklist}/tasks")
                     .resolveTemplate("tasklist", taskListBean.getId());
 
             final TaskListBean fullTaskListBean = listTarget.request().get(TaskListBean.class);
-            for (TaskBean taskBean : fullTaskListBean.getTasks()) {
+            for (final TaskBean taskBean : fullTaskListBean.getTasks()) {
                 taskList.add(new TaskModel(taskBean.getTitle()));
             }
-            TaskListModel listModel = new TaskListModel(taskListBean == null ? "No tasks were found. Define some tasks."
+            final TaskListModel listModel = new TaskListModel(taskListBean == null ? "No tasks were found. Define some tasks."
                     : taskListBean.getTitle(), taskList);
             listOfTaskLists.add(listModel);
 
