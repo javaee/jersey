@@ -214,6 +214,13 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-vfs</artifactId>
+            <version>3.2.6.Final</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <profiles>

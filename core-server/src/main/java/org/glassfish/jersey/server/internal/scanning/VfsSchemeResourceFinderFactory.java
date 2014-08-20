@@ -39,22 +39,29 @@
  */
 package org.glassfish.jersey.server.internal.scanning;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
-import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
-
-import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.server.ResourceFinder;
 
 /**
  * A JBoss-based "vfsfile", "vfs" and "vfszip" scheme URI scanner.
  *
+ * This approach uses reflection to allow for zero-deps and support
+ * for both the v2 (EAP5, AS5) and v3 VFS APIs (AS6, AS7, EAP6 & WildFly)
+ * which are not binary compatible.
+ *
+ * @author Jason T. Greene
  * @author Paul Sandoz
  */
 class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
@@ -67,100 +74,128 @@ class VfsSchemeResourceFinderFactory implements UriSchemeResourceFinderFactory {
     }
 
     @Override
-    public VfsSchemeScanner create(final URI uri, boolean recursive) {
-        ResourceFinderStack resourceFinderStack = new ResourceFinderStack();
+    public ResourceFinder create(final URI uri, boolean recursive) {
+        return new VfsResourceFinder(uri, recursive);
+    }
 
-        if (!uri.getScheme().equalsIgnoreCase("vfszip")) {
-            resourceFinderStack.push(
-                    new FileSchemeResourceFinderFactory().create(UriBuilder.fromUri(uri).scheme("file").build(), true));
-        } else {
-            final String su = uri.toString();
-            final int webInfIndex = su.indexOf("/WEB-INF/classes");
-            if (webInfIndex != -1) {
-                final String war = su.substring(0, webInfIndex);
-                final String path = su.substring(webInfIndex + 1);
+    private static class VfsResourceFinder implements ResourceFinder {
+        private Object current;
+        private Object next;
+        private final Method openStream;
+        private final Method getName;
+        private final Method isLeaf;
+        private final Iterator<?> iterator;
 
-                final int warParentIndex = war.lastIndexOf('/');
-                final String warParent = su.substring(0, warParentIndex);
+        public VfsResourceFinder(URI uri, boolean recursive) {
+            Object directory = bindDirectory(uri);
+            this.openStream = bindMethod(directory, "openStream");
+            this.getName = bindMethod(directory, "getName");
+            this.isLeaf = bindMethod(directory, "isLeaf");
+            this.iterator = getChildren(directory, recursive);
+        }
 
-                // Check is there is a war within an ear
-                // If so we need to load the ear then obtain the InputStream
-                // of the entry to the war
-                if (warParent.endsWith(".ear")) {
-                    final String warName = su.substring(warParentIndex + 1, war.length());
-                    try {
+        private Iterator<?> getChildren(Object directory, boolean recursive) {
+            Method getChildren = bindMethod(directory, recursive ? "getChildrenRecursively" : "getChildren");
 
-                        final JarFileScanner jarFileScanner =
-                                new JarFileScanner(new URL(warParent.replace("vfszip", "file")).openStream(), "", true);
+            List<?> list = invoke(directory, getChildren, List.class);
+            if (list == null) {
+                throw new ResourceFinderException("VFS object returned null when accessing children");
+            }
 
-                        while (jarFileScanner.hasNext()) {
-                            if (jarFileScanner.next().equals(warName)) {
+            return list.iterator();
+        }
 
-                                resourceFinderStack.push(new JarFileScanner(new FilterInputStream(jarFileScanner.open()) {
-                                    // This is required so that the underlying ear
-                                    // is not closed
-
-                                    @Override
-                                    public void close() throws IOException {
-                                    }
-                                }, "", true));
-                            }
-                        }
-
-                    } catch (IOException e) {
-                        throw new ResourceFinderException("IO error when scanning war " + uri, e);
+        private Method bindMethod(final Object object, final String name) {
+            if (System.getSecurityManager() != null) {
+                AccessController.doPrivileged(new PrivilegedAction<Method>() {
+                    public Method run() {
+                        return bindMethod0(object, name);
                     }
-                } else {
-                    try {
-                        resourceFinderStack.push(
-                                new JarFileScanner(new URL(war.replace("vfszip", "file")).openStream(), path, recursive));
-                    } catch (IOException e) {
-                        throw new ResourceFinderException("IO error when scanning war " + uri, e);
-                    }
-                }
-            } else {
-                try {
-                    resourceFinderStack.push(new JarFileScanner(new URL(su).openStream(), "", true));
-                } catch (IOException e) {
-                    throw new ResourceFinderException("IO error when scanning jar " + uri, e);
-                }
+                });
+            }
+
+            return bindMethod0(object, name);
+        }
+
+        private <T> T invoke(Object instance, Method method, Class<T> type) {
+            try {
+                return type.cast(method.invoke(instance));
+            } catch (Exception e) {
+                throw new ResourceFinderException("VFS object could not be invoked upon");
             }
         }
 
-        return new VfsSchemeScanner(resourceFinderStack);
-    }
+        private Method bindMethod0(Object object, String name) {
+            Class<?> clazz = object.getClass();
 
-    private class VfsSchemeScanner implements ResourceFinder {
-
-        private final ResourceFinderStack resourceFinderStack;
-
-        private VfsSchemeScanner(final ResourceFinderStack resourceFinderStack) {
-            this.resourceFinderStack = resourceFinderStack;
+            try {
+                return clazz.getMethod(name);
+            } catch (NoSuchMethodException e) {
+                throw new ResourceFinderException("VFS object did not have a valid signature");
+            }
         }
 
-        @Override
-        public boolean hasNext() {
-            return resourceFinderStack.hasNext();
-        }
+        private Object bindDirectory(URI uri) {
+            Object directory = null;
+            try {
+                directory = uri.toURL().getContent();
+            } catch (IOException e) {
+                // Eat
+            }
 
-        @Override
-        public String next() {
-            return resourceFinderStack.next();
-        }
+            if (directory == null || !directory.getClass().getSimpleName().equals("VirtualFile")) {
+                throw new ResourceFinderException("VFS URL did not map to a valid VFS object");
+            }
 
-        @Override
-        public void remove() {
-            resourceFinderStack.next();
+            return directory;
         }
 
         @Override
         public InputStream open() {
-            return resourceFinderStack.open();
+            Object current = this.current;
+            if (current == null) {
+                throw new IllegalStateException("next() must be called before open()");
+            }
+
+            return invoke(current, openStream, InputStream.class);
         }
 
         @Override
         public void reset() {
-            resourceFinderStack.reset();
+            throw new UnsupportedOperationException();
+        }
+
+        public boolean advance() {
+            while (iterator.hasNext()) {
+                Object next = iterator.next();
+                if (invoke(next, isLeaf, Boolean.class)) {
+                    this.next = next;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return next != null || advance();
+        }
+
+        @Override
+        public String next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
+            current = next;
+            next = null;
+            return invoke(current, getName, String.class);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 }

@@ -63,6 +63,11 @@ grant codebase "file:${project.build.directory}/test-classes/-" {
   permission java.util.PropertyPermission "*", "read";
   permission java.net.NetPermission "specifyStreamHandler";
   permission java.net.SocketPermission "home", "connect,resolve";
+
+  // Needed by VFSSchemeResourceFinderTest
+  permission java.util.PropertyPermission "java.protocol.handler.pkgs", "read,write";
+  permission java.lang.RuntimePermission "modifyThread";
+  permission org.jboss.vfs.VirtualFilePermission "<<ALL FILES>>", "read";
 };
 
 grant codebase "file:${project.build.directory}/classes/-" {
@@ -72,6 +77,7 @@ grant codebase "file:${project.build.directory}/classes/-" {
   permission java.lang.RuntimePermission "getClassLoader";
   permission java.util.PropertyPermission "*", "read";
   permission java.io.FilePermission "<<ALL FILES>>", "read,write";
+  permission org.jboss.vfs.VirtualFilePermission "<<ALL FILES>>", "read";
   permission java.net.NetPermission "specifyStreamHandler";
   permission java.net.SocketPermission "home", "connect,resolve";
 };
