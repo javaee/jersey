@@ -63,11 +63,13 @@ public final class MonitoringAutodiscoverable implements ForcedAutoDiscoverable 
     public void configure(final FeatureContext context) {
         if (!context.getConfiguration().isRegistered(MonitoringFeature.class)) {
             final Boolean monitoringEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
+                    ServerProperties.MONITORING_ENABLED, Boolean.FALSE);
+            final Boolean statisticsEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
                     ServerProperties.MONITORING_STATISTICS_ENABLED, Boolean.FALSE);
             final Boolean mbeansEnabled = ServerProperties.getValue(context.getConfiguration().getProperties(),
                     ServerProperties.MONITORING_STATISTICS_MBEANS_ENABLED, Boolean.FALSE);
 
-            if (monitoringEnabled || mbeansEnabled) {
+            if (monitoringEnabled || statisticsEnabled || mbeansEnabled) {
                 context.register(MonitoringFeature.class);
             }
         }

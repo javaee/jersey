@@ -47,7 +47,7 @@ import java.util.Set;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.monitoring.ApplicationMXBean;
-import org.glassfish.jersey.server.monitoring.ApplicationStatistics;
+import org.glassfish.jersey.server.monitoring.ApplicationInfo;
 
 import jersey.repackaged.com.google.common.collect.Maps;
 import jersey.repackaged.com.google.common.collect.Sets;
@@ -70,29 +70,29 @@ public class ApplicationMXBeanImpl implements ApplicationMXBean {
     /**
      * Create a new application MXBean and register it to the mbean server using {@code mBeanExposer}.
      *
-     * @param applicationStatistics Application statistics which should be exposed.
+     * @param applicationInfo Application info which should be exposed.
      * @param mBeanExposer MBean exposer.
      * @param parentName {@link javax.management.ObjectName Object name} prefix of parent mbeans.
      */
-    public ApplicationMXBeanImpl(final ApplicationStatistics applicationStatistics, final MBeanExposer mBeanExposer,
+    public ApplicationMXBeanImpl(final ApplicationInfo applicationInfo, final MBeanExposer mBeanExposer,
                                  final String parentName) {
         this.providers = Sets.newHashSet();
         this.registeredClasses = Sets.newHashSet();
         this.registeredInstances = Sets.newHashSet();
 
-        for (final Class<?> provider : applicationStatistics.getProviders()) {
+        for (final Class<?> provider : applicationInfo.getProviders()) {
             this.providers.add(provider.getName());
         }
 
-        for (final Class<?> registeredClass : applicationStatistics.getRegisteredClasses()) {
+        for (final Class<?> registeredClass : applicationInfo.getRegisteredClasses()) {
             this.registeredClasses.add(registeredClass.toString());
         }
 
-        for (final Object registeredInstance : applicationStatistics.getRegisteredInstances()) {
+        for (final Object registeredInstance : applicationInfo.getRegisteredInstances()) {
             this.registeredInstances.add(registeredInstance.getClass().getName());
         }
 
-        final ResourceConfig resourceConfig = applicationStatistics.getResourceConfig();
+        final ResourceConfig resourceConfig = applicationInfo.getResourceConfig();
         this.applicationName = resourceConfig.getApplicationName();
         this.applicationClass = resourceConfig.getApplication().getClass().getName();
         this.configurationProperties = Maps.newHashMap();
@@ -107,7 +107,7 @@ public class ApplicationMXBeanImpl implements ApplicationMXBean {
             }
             configurationProperties.put(entry.getKey(), stringValue);
         }
-        this.startTime = new Date(applicationStatistics.getStartTime().getTime());
+        this.startTime = new Date(applicationInfo.getStartTime().getTime());
 
         mBeanExposer.registerMBean(this, parentName + ",global=Configuration");
     }

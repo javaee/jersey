@@ -48,7 +48,6 @@ import java.util.SortedMap;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceModel;
-import org.glassfish.jersey.server.monitoring.ApplicationStatistics;
 import org.glassfish.jersey.server.monitoring.ExceptionMapperStatistics;
 import org.glassfish.jersey.server.monitoring.ExecutionStatistics;
 import org.glassfish.jersey.server.monitoring.MonitoringStatistics;
@@ -92,7 +91,6 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
         });
 
         private ExecutionStatisticsImpl.Builder requestStatisticsBuilder;
-        private ApplicationStatisticsImpl applicationStatisticsImpl;
 
         /**
          * Create a new builder.
@@ -200,14 +198,6 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
 
 
         /**
-         * Set the application statistics.
-         * @param applicationStatisticsImpl Application statistics.
-         */
-        void setApplicationStatisticsImpl(final ApplicationStatisticsImpl applicationStatisticsImpl) {
-            this.applicationStatisticsImpl = applicationStatisticsImpl;
-        }
-
-        /**
          * Build a new instance of monitoring statistics.
          * @return New instance of {@code MonitoringStatisticsImpl}.
          */
@@ -223,14 +213,12 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
             return new MonitoringStatisticsImpl(
                     uriStats, classStats, requestStats,
                     responseStatisticsBuilder.build(),
-                    applicationStatisticsImpl,
                     exceptionMapperStatisticsBuilder.build());
         }
     }
 
     private final ExecutionStatistics requestStatistics;
     private final ResponseStatistics responseStatistics;
-    private final ApplicationStatistics applicationStatistics;
     private final ExceptionMapperStatistics exceptionMapperStatistics;
     private final Map<String, ResourceStatistics> uriStatistics;
     private final Map<Class<?>, ResourceStatistics> resourceClassStatistics;
@@ -240,13 +228,11 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
                                      final Map<Class<?>, ResourceStatistics> resourceClassStatistics,
                                      final ExecutionStatistics requestStatistics,
                                      final ResponseStatistics responseStatistics,
-                                     final ApplicationStatistics applicationStatistics,
                                      final ExceptionMapperStatistics exceptionMapperStatistics) {
         this.uriStatistics = uriStatistics;
         this.resourceClassStatistics = resourceClassStatistics;
         this.requestStatistics = requestStatistics;
         this.responseStatistics = responseStatistics;
-        this.applicationStatistics = applicationStatistics;
         this.exceptionMapperStatistics = exceptionMapperStatistics;
     }
 
@@ -271,11 +257,6 @@ final class MonitoringStatisticsImpl implements MonitoringStatistics {
     @Override
     public Map<Class<?>, ResourceStatistics> getResourceClassStatistics() {
         return resourceClassStatistics;
-    }
-
-    @Override
-    public ApplicationStatistics getApplicationStatistics() {
-        return applicationStatistics;
     }
 
     @Override

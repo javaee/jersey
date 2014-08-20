@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,8 +46,7 @@ import java.util.Map;
 /**
  * Monitoring statistics return statistic information about application run like number of requests received,
  * duration of request processing, number of successfully processed requests, statistical information about
- * execution of methods and resources, information about matching but also static information about application
- * configuration like application name, registered resource classes and such.
+ * execution of methods and resources, information about matching.
  * <p/>
  * Monitoring statistics is the main interface from which all statistic information can be retrieved. Statistics
  * can be retried in two ways: these can be injected or received from registered callback
@@ -59,12 +58,11 @@ import java.util.Map;
  *       Provider&lt;MonitoringStatistics&gt; statistics;
  *
  *       &#064;GET
- *       public String getAppName() throws InterruptedException {
+ *       public long getTotalExceptionMappings() throws InterruptedException {
  *           final MonitoringStatistics monitoringStatistics = statistics.get();
- *           final String name = monitoringStatistics.getApplicationStatistics()
- *                               .getResourceConfig().getApplicationName();
+ *           final long totalExceptionMappings = monitoringStatistics.getExceptionMapperStatistics().getTotalMappings();
  *
- *           return name;
+ *           return totalExceptionMappings;
  *       }
  *   }
  * </pre>
@@ -132,13 +130,6 @@ public interface MonitoringStatistics {
      * @return Application response statistics.
      */
     public ResponseStatistics getResponseStatistics();
-
-    /**
-     * Get global statistics about application and configuration of application.
-     *
-     * @return Global application statistics and configuration.
-     */
-    public ApplicationStatistics getApplicationStatistics();
 
     /**
      * Get statistics about registered {@link javax.ws.rs.ext.ExceptionMapper exception mappers}.

@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
 
+import javax.annotation.Priority;
 import javax.inject.Inject;
 
 import org.glassfish.jersey.server.internal.LocalizationMessages;
@@ -79,18 +80,18 @@ import jersey.repackaged.com.google.common.collect.Queues;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @see MonitoringStatisticsProcessor
  */
+@Priority(ApplicationInfoListener.PRIORITY + 100)
 public final class MonitoringEventListener implements ApplicationEventListener {
 
     private static final Logger LOGGER = Logger.getLogger(MonitoringEventListener.class.getName());
+    private static final int EVENT_QUEUE_SIZE = 50000;
 
     @Inject
     private ServiceLocator serviceLocator;
 
-    private final Queue<ApplicationEvent> applicationEvents = Queues.newArrayBlockingQueue(20);
-    private final Queue<RequestStats> requestQueuedItems = Queues.newArrayBlockingQueue(50000);
-    private final Queue<Integer> responseStatuses = Queues.newArrayBlockingQueue(50000);
-    private final Queue<RequestEvent> exceptionMapperEvents = Queues.newArrayBlockingQueue(50000);
-    private volatile long applicationStartTime;
+    private final Queue<RequestStats> requestQueuedItems = Queues.newArrayBlockingQueue(EVENT_QUEUE_SIZE);
+    private final Queue<Integer> responseStatuses = Queues.newArrayBlockingQueue(EVENT_QUEUE_SIZE);
+    private final Queue<RequestEvent> exceptionMapperEvents = Queues.newArrayBlockingQueue(EVENT_QUEUE_SIZE);
     private volatile MonitoringStatisticsProcessor monitoringStatisticsProcessor;
 
     /**
@@ -126,7 +127,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
     }
 
     /**
-     * Method statistics
+     * Method statistics.
      */
     static class MethodStats extends TimeStats {
 
@@ -150,7 +151,7 @@ public final class MonitoringEventListener implements ApplicationEventListener {
     /**
      * Request statistics.
      */
-    class RequestStats {
+    static class RequestStats {
 
         private final TimeStats requestStats;
         private final MethodStats methodStats; // might be null if a method was not executed during a request
@@ -202,22 +203,16 @@ public final class MonitoringEventListener implements ApplicationEventListener {
 
     @Override
     public void onEvent(final ApplicationEvent event) {
-        final long now = System.currentTimeMillis();
         final ApplicationEvent.Type type = event.getType();
         switch (type) {
             case INITIALIZATION_START:
                 break;
             case RELOAD_FINISHED:
             case INITIALIZATION_FINISHED:
-                this.applicationStartTime = now;
-                if (!this.applicationEvents.offer(event)) {
-                    LOGGER.warning(LocalizationMessages.ERROR_MONITORING_QUEUE_APP());
-                }
                 this.monitoringStatisticsProcessor = new MonitoringStatisticsProcessor(serviceLocator, this);
                 this.monitoringStatisticsProcessor.startMonitoringWorker();
                 break;
             case DESTROY_FINISHED:
-                this.applicationEvents.add(event);
                 if (monitoringStatisticsProcessor != null) {
                     try {
                         monitoringStatisticsProcessor.shutDown();
@@ -296,24 +291,6 @@ public final class MonitoringEventListener implements ApplicationEventListener {
 
             }
         }
-    }
-
-    /**
-     * Get the time of application start (when initialization is finished).
-     *
-     * @return time in Unix timestamp format.
-     */
-    long getApplicationStartTime() {
-        return applicationStartTime;
-    }
-
-    /**
-     * Get the queue of application events.
-     *
-     * @return Application event queue.
-     */
-    public Queue<ApplicationEvent> getApplicationEvents() {
-        return applicationEvents;
     }
 
     /**

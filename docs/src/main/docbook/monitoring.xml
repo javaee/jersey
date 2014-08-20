@@ -411,12 +411,6 @@ request count: 4, average request processing [ms]: 73</programlisting>
                             </listitem>
                         </varlistentry>
                         <varlistentry>
-                            <term>&jersey.server.monitoring.ApplicationStatistics;</term>
-                            <listitem>
-                                <para>mostly configuration of the application</para>
-                            </listitem>
-                        </varlistentry>
-                        <varlistentry>
                             <term>&jersey.server.monitoring.ResponseStatistics;</term>
                             <listitem>
                                 <para>response statistics (eg. response status codes and their count)</para>

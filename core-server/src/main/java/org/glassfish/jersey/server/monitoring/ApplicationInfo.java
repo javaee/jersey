@@ -45,16 +45,40 @@ import java.util.Set;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
- * Monitoring statistics and configuration of an application.
+ * Monitoring configuration of an application.
  * <p/>
- * Statistics retrieved from Jersey runtime might be mutable and thanks to it might provide inconsistent data
- * as not all statistics are updated in the same time. To retrieve the immutable and consistent
- * statistics data the method {@link #snapshot()} should be used.
+ * Application info instance can be injected, e.g:
+ * <pre>
+ *   &#064;Path("resource")
+ *   public static class ApplicationInfoTest {
+ *       &#064;Inject
+ *       Provider&lt;ApplicationInfo&gt; applicationInfoProvider;
+ *
+ *       &#064;GET
+ *       public String getAppName() throws InterruptedException {
+ *           final ApplicationInfo applicationInfo = appInfoProvider.get();
+ *           final String name = applicationInfo.getResourceConfig().getApplicationName();
+ *
+ *           return name;
+ *       }
+ *   }
+ * </pre>
+ * Note usage of {@link javax.inject.Provider} to retrieve application info. Info changes over time and this will
+ * inject the latest info. In the case of singleton resources usage of {@code Provider} is the only way how
+ * to inject application info that are up to date.
+ * <p/>
+ * Application info retrieved from Jersey runtime might be mutable and thanks to it might provide inconsistent data
+ * as not all attributes are updated in the same time. To retrieve the immutable and consistent
+ * data the method {@link #snapshot()} should be used.
  *
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Libor Kramolis (libor.kramolis at oracle.com)
+ * @see ApplicationEvent
+ * @see ApplicationEventListener
  * @see MonitoringStatistics See MonitoringStatistics class for general details about statistics.
+ * @since 2.12
  */
-public interface ApplicationStatistics {
+public interface ApplicationInfo {
     /**
      * Get the resource config.
      *
@@ -108,13 +132,13 @@ public interface ApplicationStatistics {
     public Set<Class<?>> getProviders();
 
     /**
-     * Get the immutable consistent snapshot of the monitoring statistics. Working with snapshots might
+     * Get the immutable consistent snapshot of the application info. Working with snapshots might
      * have negative performance impact as snapshot must be created but ensures consistency of data over time.
-     * However, the usage of snapshot is encouraged to avoid working with inconsistent data. Not all statistics
-     * must be updated in the same time on mutable version of statistics.
+     * However, the usage of snapshot is encouraged to avoid working with inconsistent data. Not all attributes
+     * must be updated in the same time on mutable version of info.
      *
-     * @return Snapshot of application statistics.
+     * @return Snapshot of application info.
      */
-    public ApplicationStatistics snapshot();
+    public ApplicationInfo snapshot();
 }
 
