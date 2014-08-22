@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.Priorities;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -59,6 +58,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import org.glassfish.jersey.JerseyPriorities;
+import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.JSONP;
 
@@ -99,7 +99,7 @@ public class JsonWithPaddingInterceptor implements WriterInterceptor {
         if (wrapIntoCallback) {
             context.setMediaType(MediaType.APPLICATION_JSON_TYPE);
 
-            context.getOutputStream().write(getCallbackName(jsonp).getBytes());
+            context.getOutputStream().write(getCallbackName(jsonp).getBytes(MessageUtils.getCharset(context.getMediaType())));
             context.getOutputStream().write('(');
         }
 
@@ -117,7 +117,7 @@ public class JsonWithPaddingInterceptor implements WriterInterceptor {
      * @return {@code true} if the given media type is a JavaScript type, {@code false} otherwise (or if the media type is
      *         {@code null}}
      */
-    private boolean isJavascript(MediaType mediaType) {
+    private boolean isJavascript(final MediaType mediaType) {
         if (mediaType == null) {
             return false;
         }
@@ -159,7 +159,7 @@ public class JsonWithPaddingInterceptor implements WriterInterceptor {
         final Annotation[] annotations = context.getAnnotations();
 
         if (annotations != null && annotations.length > 0) {
-            for (Annotation annotation : annotations) {
+            for (final Annotation annotation : annotations) {
                 if (annotation instanceof JSONP) {
                     return (JSONP) annotation;
                 }

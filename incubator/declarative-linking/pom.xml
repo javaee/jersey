@@ -99,8 +99,8 @@
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <configuration>
                             <links>
-                                <link>https://jsr311.dev.java.net/nonav/releases/1.1</link>
-                                <link>https://jersey.dev.java.net/nonav/apidocs/${project.version}/jersey/</link>
+                                <link>https://jsr311.java.net/nonav/releases/1.1</link>
+                                <link>https://jersey.java.net/nonav/apidocs/latest/jersey/</link>
                             </links>
                             <notimestamp>true</notimestamp>
                         </configuration>

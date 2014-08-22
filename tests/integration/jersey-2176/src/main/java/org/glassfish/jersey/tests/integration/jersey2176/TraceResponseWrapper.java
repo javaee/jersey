@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ public class TraceResponseWrapper extends HttpServletResponseWrapper {
         super(response);
 
         localStream = new ByteArrayOutputStream();
-        localStream.write("[FILTER]".getBytes());
+        localStream.write("[FILTER]".getBytes(response.getCharacterEncoding()));
     }
 
     @Override
@@ -74,8 +74,8 @@ public class TraceResponseWrapper extends HttpServletResponseWrapper {
         };
     }
 
-    public void writeBodyAndClose() throws IOException {
-        localStream.write("[/FILTER]".getBytes());
+    public void writeBodyAndClose(final String encoding) throws IOException {
+        localStream.write("[/FILTER]".getBytes(encoding));
 
         super.getOutputStream().write(localStream.toByteArray());
         super.getOutputStream().close();

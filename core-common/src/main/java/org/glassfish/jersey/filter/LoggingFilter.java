@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,7 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.util.collection.StringIgnoreCaseKeyComparator;
+import org.glassfish.jersey.message.MessageUtils;
 
 /**
  * Universal logging filter.
@@ -205,14 +207,14 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         return sortedHeaders;
     }
 
-    private InputStream logInboundEntity(final StringBuilder b, InputStream stream) throws IOException {
+    private InputStream logInboundEntity(final StringBuilder b, InputStream stream, final Charset charset) throws IOException {
         if (!stream.markSupported()) {
             stream = new BufferedInputStream(stream);
         }
         stream.mark(maxEntitySize + 1);
         final byte[] entity = new byte[maxEntitySize + 1];
         final int entitySize = stream.read(entity);
-        b.append(new String(entity, 0, Math.min(entitySize, maxEntitySize)));
+        b.append(new String(entity, 0, Math.min(entitySize, maxEntitySize), charset));
         if (entitySize > maxEntitySize) {
             b.append("...more...");
         }
@@ -248,7 +250,8 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         printPrefixedHeaders(b, id, RESPONSE_PREFIX, responseContext.getHeaders());
 
         if (printEntity && responseContext.hasEntity()) {
-            responseContext.setEntityStream(logInboundEntity(b, responseContext.getEntityStream()));
+            responseContext.setEntityStream(logInboundEntity(b, responseContext.getEntityStream(),
+                    MessageUtils.getCharset(responseContext.getMediaType())));
         }
 
         log(b);
@@ -263,7 +266,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         printPrefixedHeaders(b, id, REQUEST_PREFIX, context.getHeaders());
 
         if (printEntity && context.hasEntity()) {
-            context.setEntityStream(logInboundEntity(b, context.getEntityStream()));
+            context.setEntityStream(logInboundEntity(b, context.getEntityStream(), MessageUtils.getCharset(context.getMediaType())));
         }
 
         log(b);
