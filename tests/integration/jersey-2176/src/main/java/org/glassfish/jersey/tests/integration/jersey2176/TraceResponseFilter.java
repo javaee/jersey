@@ -62,7 +62,7 @@ public class TraceResponseFilter implements Filter {
     public static final String X_NO_FILTER_HEADER = "X-NO-FILTER";
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(final FilterConfig filterConfig) throws ServletException {
     }
 
     @Override
@@ -70,17 +70,18 @@ public class TraceResponseFilter implements Filter {
     }
 
     @Override
-    public void doFilter(final ServletRequest request, ServletResponse response, final FilterChain chain) throws IOException, ServletException {
+    public void doFilter(final ServletRequest request, ServletResponse response, final FilterChain chain)
+            throws IOException, ServletException {
         TraceResponseWrapper wrappedResponse = null;
         if (((HttpServletRequest)request).getHeader(X_NO_FILTER_HEADER) == null) {
             response = wrappedResponse = new TraceResponseWrapper((HttpServletResponse) response);
         }
         String status = "n/a";
-        long startTime = System.nanoTime();
+        final long startTime = System.nanoTime();
         try {
             chain.doFilter(request, response);
             status = "OK";
-        } catch (Throwable th) {
+        } catch (final Throwable th) {
             status = "FAIL";
         } finally {
             final long duration = System.nanoTime() - startTime;
@@ -88,7 +89,7 @@ public class TraceResponseFilter implements Filter {
             ((HttpServletResponse) response).addHeader(X_STATUS_HEADER, status);
             if (wrappedResponse != null) {
                 ((HttpServletResponse) response).setHeader(HttpHeaders.CONTENT_LENGTH, wrappedResponse.getContentLength());
-                wrappedResponse.writeBodyAndClose();
+                wrappedResponse.writeBodyAndClose(response.getCharacterEncoding());
             }
         }
     }

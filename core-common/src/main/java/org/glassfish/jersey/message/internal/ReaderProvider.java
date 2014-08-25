@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,8 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.message.MessageUtils;
+
 /**
  *
  * @author Paul Sandoz
@@ -67,41 +69,44 @@ import javax.inject.Singleton;
 public final class ReaderProvider extends AbstractMessageReaderWriterProvider<Reader> {
 
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isReadable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                              final MediaType mediaType) {
         return Reader.class == type;
     }
 
     @Override
     public Reader readFrom(
-            Class<Reader> type,
-            Type genericType,
-            Annotation annotations[],
-            MediaType mediaType,
-            MultivaluedMap<String, String> httpHeaders,
-            InputStream inputStream) throws IOException {
+            final Class<Reader> type,
+            final Type genericType,
+            final Annotation[] annotations,
+            final MediaType mediaType,
+            final MultivaluedMap<String, String> httpHeaders,
+            final InputStream inputStream) throws IOException {
 
         final EntityInputStream entityStream = EntityInputStream.create(inputStream);
         if (entityStream.isEmpty()) {
-            return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(new byte[0])));
+            return new BufferedReader(new InputStreamReader(
+                    new ByteArrayInputStream(new byte[0]), MessageUtils.getCharset(mediaType)));
         }
 
         return new BufferedReader(new InputStreamReader(entityStream, getCharset(mediaType)));
     }
 
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation annotations[], MediaType mediaType) {
+    public boolean isWriteable(final Class<?> type, final Type genericType, final Annotation[] annotations,
+                               final MediaType mediaType) {
         return Reader.class.isAssignableFrom(type);
     }
 
     @Override
     public void writeTo(
-            Reader t,
-            Class<?> type,
-            Type genericType,
-            Annotation annotations[],
-            MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders,
-            OutputStream entityStream) throws IOException {
+            final Reader t,
+            final Class<?> type,
+            final Type genericType,
+            final Annotation[] annotations,
+            final MediaType mediaType,
+            final MultivaluedMap<String, Object> httpHeaders,
+            final OutputStream entityStream) throws IOException {
         try {
             final OutputStreamWriter out = new OutputStreamWriter(entityStream,
                     getCharset(mediaType));

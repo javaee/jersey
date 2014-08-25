@@ -58,6 +58,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.message.MessageUtils;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -185,7 +186,7 @@ final class DigestAuthenticator {
             if (parts.length != 2) {
                 continue;
             }
-            if (!parts[0].toLowerCase().equals("digest")) {
+            if (!"digest".equals(parts[0].toLowerCase())) {
                 continue;
             }
 
@@ -207,17 +208,17 @@ final class DigestAuthenticator {
                 final String valNoQuotes = match.group(3);
                 final String valQuotes = match.group(4);
                 final String val = (valNoQuotes == null) ? valQuotes : valNoQuotes;
-                if (key.equals("qop")) {
+                if ("qop".equals(key)) {
                     qop = QOP.parse(val);
-                } else if (key.equals("realm")) {
+                } else if ("realm".equals(key)) {
                     realm = val;
-                } else if (key.equals("nonce")) {
+                } else if ("nonce".equals(key)) {
                     nonce = val;
-                } else if (key.equals("opaque")) {
+                } else if ("opaque".equals(key)) {
                     opaque = val;
-                } else if (key.equals("stale")) {
+                } else if ("stale".equals(key)) {
                     stale = Boolean.parseBoolean(val);
-                } else if (key.equals("algorithm")) {
+                } else if ("algorithm".equals(key)) {
                     algorithm = Algorithm.parse(val);
                 }
             }
@@ -249,16 +250,18 @@ final class DigestAuthenticator {
         append(sb, "uri", uri);
 
         final String ha1;
-        if (ds.getAlgorithm().equals(Algorithm.MD5_SESS)) {
-            ha1 = md5(md5(credentials.getUsername(), ds.getRealm(), new String(credentials.getPassword())));
+        if (ds.getAlgorithm() == Algorithm.MD5_SESS) {
+            ha1 = md5(md5(credentials.getUsername(), ds.getRealm(),
+                    new String(credentials.getPassword(), MessageUtils.getCharset(requestContext.getMediaType()))));
         } else {
-            ha1 = md5(credentials.getUsername(), ds.getRealm(), new String(credentials.getPassword()));
+            ha1 = md5(credentials.getUsername(), ds.getRealm(),
+                    new String(credentials.getPassword(), MessageUtils.getCharset(requestContext.getMediaType())));
         }
 
         final String ha2 = md5(requestContext.getMethod(), uri);
 
         final String response;
-        if (ds.getQop().equals(QOP.UNSPECIFIED)) {
+        if (ds.getQop() == QOP.UNSPECIFIED) {
             response = md5(ha1, ds.getNonce(), ha2);
         } else {
             final String cnonce = randomBytes(CLIENT_NONCE_BYTE_COUNT); // client nonce
@@ -280,7 +283,7 @@ final class DigestAuthenticator {
      * @param value value string
      * @param useQuote true if value needs to be enclosed in quotes
      */
-    static private void append(final StringBuilder sb, final String key, final String value, final boolean useQuote) {
+    private static void append(final StringBuilder sb, final String key, final String value, final boolean useQuote) {
 
         if (value == null) {
             return;
@@ -309,7 +312,7 @@ final class DigestAuthenticator {
      * @param key key string
      * @param value value string
      */
-    static private void append(final StringBuilder sb, final String key, final String value) {
+    private static void append(final StringBuilder sb, final String key, final String value) {
         append(sb, key, value, true);
     }
 

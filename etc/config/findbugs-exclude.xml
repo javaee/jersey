@@ -39,6 +39,16 @@
     only if the new code is made subject to such option by the copyright
     holder.
 -->
+<!--
+  Configuration file for FindBugs exclusion filter.
+
+  When a file, class or rule (detector) is matched, it is not reported as a potential problem by FindBugs.
+
+  Note that this configuration file is not used by default in the maven build (mvn site), as FindBugs maven plugin
+  handles the paths as relative to a module root and would require to have such file in each module separately.
+  To use this exclusion configuration, run build with:
+  mvn site -Dfindbugs.exclude=[jersey_project_root]/etc/config/findbugs-exclude.xml
+  -->
 <FindBugsFilter>
     <!-- skip FindBugs analysis in examples -->
     <Match>
@@ -48,6 +58,32 @@
     <!-- skip FindBugs analysis in tests -->
     <Match>
         <Package name="~org\.glassfish\.jersey\.tests.*" />
+    </Match>
+    <Match>
+        <Class name="~.*\.*Test" />
+    </Match>
+
+    <!-- skip analysis in repackaged libraries -->
+    <Match>
+        <Package name="~jersey\.repackaged.*" />
+    </Match>
+
+    <!-- skip analysis in the spec package -->
+    <Match>
+        <Package name="~javax\.ws\.rs.*" />
+    </Match>
+
+    <!-- do not report issues found in bundles -->
+    <Match>
+        <Source name="~.*bundles.*" />
+    </Match>
+
+    <!--
+    ignore warnings coming from VO_VOLATILE_INCREMENT, there is a known bug which causes false positives:
+    http://sourceforge.net/p/findbugs/bugs/1032/
+    -->
+    <Match>
+        <Bug pattern="VO_VOLATILE_INCREMENT" />
     </Match>
 
     <!-- ignore irrelevant additional GlassFish logging detectors -->
