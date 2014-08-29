@@ -114,7 +114,7 @@ public class SseFeature implements Feature {
      *
      * @since 2.3
      */
-    public static long RECONNECT_NOT_SET = -1;
+    public static final long RECONNECT_NOT_SET = -1;
 
     /**
      * {@code "Last-Event-ID"} HTTP request header name as defined by
@@ -126,7 +126,7 @@ public class SseFeature implements Feature {
 
 
     @Override
-    public boolean configure(FeatureContext context) {
+    public boolean configure(final FeatureContext context) {
         if (context.getConfiguration().isEnabled(this.getClass())) {
             return false;
         }
@@ -149,7 +149,7 @@ public class SseFeature implements Feature {
      * @param ctx configurable context in which the SSE feature should be registered.
      * @return updated configurable context.
      */
-    static <T extends Configurable<T>> T register(T ctx) {
+    static <T extends Configurable<T>> T register(final T ctx) {
         if (!ctx.getConfiguration().isRegistered(SseFeature.class)) {
             ctx.register(SseFeature.class);
         }

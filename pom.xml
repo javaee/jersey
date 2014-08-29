@@ -324,7 +324,15 @@
                         <links>
                             <link>http://jax-rs-spec.java.net/nonav/2.0/apidocs</link>
                             <link>http://hk2.java.net/nonav/hk2-api/apidocs</link>
+                            <link>http://docs.oracle.com/javaee/7/api</link>
                         </links>
+                        <excludePackageNames>
+                            *.examples.*:*.internal.*:*.tests.*
+                        </excludePackageNames>
+                        <sourceFileExcludes>
+                            <exclude>bundles/**</exclude>
+                        </sourceFileExcludes>
+                        <verbose />
                     </configuration>
                     <executions>
                         <execution>

@@ -101,10 +101,11 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
                         final MultivaluedMap<String, Object> httpHeaders,
                         final OutputStream entityStream) throws IOException, WebApplicationException {
 
+        final Charset charset = MessageUtils.getCharset(mediaType);
         if (outboundEvent.getComment() != null) {
             for (final String comment : outboundEvent.getComment().split("\n")) {
                 entityStream.write(COMMENT_LEAD);
-                entityStream.write(comment.getBytes(MessageUtils.getCharset(mediaType)));
+                entityStream.write(comment.getBytes(charset));
                 entityStream.write(EOL);
             }
         }
@@ -112,17 +113,17 @@ class OutboundEventWriter implements MessageBodyWriter<OutboundEvent> {
         if (outboundEvent.getType() != null) {
             if (outboundEvent.getName() != null) {
                 entityStream.write(NAME_LEAD);
-                entityStream.write(outboundEvent.getName().getBytes());
+                entityStream.write(outboundEvent.getName().getBytes(charset));
                 entityStream.write(EOL);
             }
             if (outboundEvent.getId() != null) {
                 entityStream.write(ID_LEAD);
-                entityStream.write(outboundEvent.getId().getBytes());
+                entityStream.write(outboundEvent.getId().getBytes(charset));
                 entityStream.write(EOL);
             }
             if (outboundEvent.getReconnectDelay() > SseFeature.RECONNECT_NOT_SET) {
                 entityStream.write(RETRY_LEAD);
-                entityStream.write(Long.toString(outboundEvent.getReconnectDelay()).getBytes());
+                entityStream.write(Long.toString(outboundEvent.getReconnectDelay()).getBytes(charset));
                 entityStream.write(EOL);
             }
 

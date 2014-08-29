@@ -185,7 +185,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
 @SuppressWarnings("deprecation")
 class ApacheConnector implements Connector {
 
-    private final static Logger LOGGER = Logger.getLogger(ApacheConnector.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ApacheConnector.class.getName());
 
     private static final VersionInfo vi;
     private static final String release;
@@ -205,7 +205,7 @@ class ApacheConnector implements Connector {
      *
      * @param config client configuration.
      */
-    ApacheConnector(Configuration config) {
+    ApacheConnector(final Configuration config) {
         Object reqConfig = null;
 
         if (config != null) {
@@ -259,15 +259,15 @@ class ApacheConnector implements Connector {
                 clientBuilder.setDefaultCredentialsProvider((CredentialsProvider) credentialsProvider);
             }
 
-            Object proxyUri;
+            final Object proxyUri;
             proxyUri = config.getProperty(ClientProperties.PROXY_URI);
             if (proxyUri != null) {
                 final URI u = getProxyUri(proxyUri);
                 final HttpHost proxy = new HttpHost(u.getHost(), u.getPort(), u.getScheme());
-                String userName;
+                final String userName;
                 userName = ClientProperties.getValue(config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
                 if (userName != null) {
-                    String password;
+                    final String password;
                     password = ClientProperties.getValue(config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
 
                     if (password != null) {
@@ -291,7 +291,7 @@ class ApacheConnector implements Connector {
 
 
         if (reqConfig != null) {
-            RequestConfig.Builder reqConfigBuilder = RequestConfig.copy((RequestConfig) reqConfig);
+            final RequestConfig.Builder reqConfigBuilder = RequestConfig.copy((RequestConfig) reqConfig);
             if (connectTimeout > 0) {
                 reqConfigBuilder.setConnectTimeout(connectTimeout);
             }
@@ -322,6 +322,10 @@ class ApacheConnector implements Connector {
     }
 
     private SSLContext getSslContext(final Configuration config) {
+        if (config == null) {
+            return null;
+        }
+
         final SslConfigurator sslConfigurator = ApacheClientProperties.getValue(
                 config.getProperties(),
                 ApacheClientProperties.SSL_CONFIG,
@@ -624,9 +628,9 @@ class ApacheConnector implements Connector {
     }
 
     private static Map<String, String> writeOutBoundHeaders(final MultivaluedMap<String, Object> headers, final HttpUriRequest request) {
-        Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
+        final Map<String, String> stringHeaders = HeaderUtils.asStringHeadersSingleValue(headers);
 
-        for (Map.Entry<String, String> e : stringHeaders.entrySet()) {
+        for (final Map.Entry<String, String> e : stringHeaders.entrySet()) {
             request.addHeader(e.getKey(), e.getValue());
         }
         return stringHeaders;

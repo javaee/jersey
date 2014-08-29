@@ -80,7 +80,7 @@ final class NonceManager {
     /**
      * Maps timestamps to key-nonce pairs.
      */
-    private final SortedMap<Long, Map<String, Set<String>>> tsToKeyNoncePairs = new TreeMap<Long, Map<String, Set<String>>>();
+    private final SortedMap<Long, Map<String, Set<String>>> tsToKeyNoncePairs = new TreeMap<>();
 
     private volatile long mapSize = 0;
 
@@ -95,7 +95,7 @@ final class NonceManager {
      * @param maximumCacheSize maximum size of the cache that keeps nonces. If the cache exceeds the method
      *                         {@link #verify(String, String, String)} will return {@code false}.
      */
-    public NonceManager(long maxAge, int gcPeriod, TimeUnit timestampUnit, long maximumCacheSize) {
+    public NonceManager(final long maxAge, final int gcPeriod, final TimeUnit timestampUnit, final long maximumCacheSize) {
         if (maxAge <= 0 || gcPeriod <= 0) {
             throw new IllegalArgumentException();
         }
@@ -120,9 +120,9 @@ final class NonceManager {
      * @param now       current time in milliseconds
      * @return true if the timestamp/nonce are valid.
      */
-    synchronized boolean verify(String key, String timestamp, String nonce, long now) {
+    synchronized boolean verify(final String key, final String timestamp, final String nonce, final long now) {
         // convert timestamp to milliseconds since epoch to deal with uniformly
-        long stamp = timestampUnit.toMillis(longValue(timestamp));
+        final long stamp = timestampUnit.toMillis(longValue(timestamp));
 
         if (mapSize + 1 > maximumMapSize) {
             gc(now);
@@ -139,17 +139,17 @@ final class NonceManager {
 
         Map<String, Set<String>> keyToNonces = tsToKeyNoncePairs.get(stamp);
         if (keyToNonces == null) {
-            keyToNonces = new HashMap<String, Set<String>>();
+            keyToNonces = new HashMap<>();
             tsToKeyNoncePairs.put(stamp, keyToNonces);
         }
 
         Set<String> nonces = keyToNonces.get(key);
         if (nonces == null) {
-            nonces = new HashSet<String>();
+            nonces = new HashSet<>();
             keyToNonces.put(key, nonces);
         }
 
-        boolean result = nonces.add(nonce);
+        final boolean result = nonces.add(nonce);
         if (result) {
             mapSize++;
         }
@@ -172,7 +172,7 @@ final class NonceManager {
      * @param nonce     the oauth_nonce value for a given consumer request.
      * @return true if the timestamp/nonce are valid.
      */
-    public synchronized boolean verify(String key, String timestamp, String nonce) {
+    public synchronized boolean verify(final String key, final String timestamp, final String nonce) {
         return verify(key, timestamp, nonce, System.currentTimeMillis());
     }
 
@@ -182,11 +182,11 @@ final class NonceManager {
      *
      * @param now milliseconds since epoch representing "now"
      */
-    void gc(long now) {
+    void gc(final long now) {
         gcCounter = 0;
         final SortedMap<Long, Map<String, Set<String>>> headMap = tsToKeyNoncePairs.headMap(now - maxAge);
-        for (Map.Entry<Long, Map<String, Set<String>>> entry : headMap.entrySet()) {
-            for (Map.Entry<String, Set<String>> timeEntry : entry.getValue().entrySet()) {
+        for (final Map.Entry<Long, Map<String, Set<String>>> entry : headMap.entrySet()) {
+            for (final Map.Entry<String, Set<String>> timeEntry : entry.getValue().entrySet()) {
                 mapSize -= timeEntry.getValue().size();
             }
         }
@@ -200,17 +200,17 @@ final class NonceManager {
      */
     long checkAndGetSize() {
         long size = 0;
-        for (Map<String, Set<String>> keyToNonces : tsToKeyNoncePairs.values()) {
+        for (final Map<String, Set<String>> keyToNonces : tsToKeyNoncePairs.values()) {
             size += keyToNonces.values().size();
         }
         assert mapSize == size;
         return mapSize;
     }
 
-    private static long longValue(String value) {
+    private static long longValue(final String value) {
         try {
-            return Long.valueOf(value);
-        } catch (NumberFormatException nfe) {
+            return Long.parseLong(value);
+        } catch (final NumberFormatException nfe) {
             return -1;
         }
     }

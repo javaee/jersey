@@ -941,7 +941,7 @@ public abstract class JerseyTest {
         private final List<LogRecord> records;
 
         private JerseyTestLogHandler() {
-            this.logLevel = Integer.valueOf(getProperty(TestProperties.RECORD_LOG_LEVEL));
+            this.logLevel = Integer.parseInt(getProperty(TestProperties.RECORD_LOG_LEVEL));
             this.records = new ArrayList<>();
         }
 

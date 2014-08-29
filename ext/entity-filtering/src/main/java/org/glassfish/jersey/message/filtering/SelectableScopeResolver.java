@@ -62,12 +62,12 @@ public class SelectableScopeResolver implements ScopeResolver {
     /**
      * Prefix for all selectable scopes
      */
-    public static String PREFIX = SelectableScopeResolver.class.getName() + "_";
+    public static final String PREFIX = SelectableScopeResolver.class.getName() + "_";
 
     /**
      * Scope used for selecting all fields, i.e.: when no filter is applied
      */
-    public static String DEFAULT_SCOPE = PREFIX + "*";
+    public static final String DEFAULT_SCOPE = PREFIX + "*";
 
     /**
      * Query parameter name for selectable feature, set to default value
@@ -88,7 +88,7 @@ public class SelectableScopeResolver implements ScopeResolver {
 
     @Override
     public Set<String> resolve(final Annotation[] annotations) {
-        final Set<String> scopes = new HashSet<String>();
+        final Set<String> scopes = new HashSet<>();
 
         final List<String> fields = uriInfo.getQueryParameters().get(SELECTABLE_PARAM_NAME);
         if (fields != null && !fields.isEmpty()) {
