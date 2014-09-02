@@ -225,7 +225,7 @@ public final class ReaderInterceptorExecutor extends InterceptorExecutor<ReaderI
                     if (input.isEmpty() && !context.getHeaders().containsKey(HttpHeaders.CONTENT_TYPE)) {
                         return null;
                     } else {
-                        LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(context.getMediaType(),
+                        LOGGER.log(Level.FINE, LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(context.getMediaType(),
                                 context.getType(), context.getGenericType()));
                         throw new MessageBodyProviderNotFoundException(LocalizationMessages.ERROR_NOTFOUND_MESSAGEBODYREADER(
                                 context.getMediaType(), context.getType(), context.getGenericType()));
