@@ -193,7 +193,7 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
             // ServletContext.
             if (servletContext != null) {
                 final InputStream stream = servletContext.getResourceAsStream(template);
-                reader = stream != null ? new InputStreamReader(stream, encoding) : null;
+                reader = stream != null ? new InputStreamReader(stream) : null;
             }
 
             // Classloader.
@@ -316,14 +316,14 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
         final MediaType finalMediaType;
         if (charset == null) {
             encoding = getEncoding();
-            final HashMap<String, String> params = new HashMap<String, String>(mediaType.getParameters());
+            final HashMap<String, String> params = new HashMap<>(mediaType.getParameters());
             params.put(MediaType.CHARSET_PARAMETER, encoding.name());
             finalMediaType = new MediaType(mediaType.getType(), mediaType.getSubtype(), params);
         } else {
             encoding = Charset.forName(charset);
             finalMediaType = mediaType;
         }
-        final ArrayList<Object> typeList = new ArrayList<Object>(1);
+        final ArrayList<Object> typeList = new ArrayList<>(1);
         typeList.add(finalMediaType.toString());
         httpHeaders.put(HttpHeaders.CONTENT_TYPE, typeList);
         return encoding;

@@ -183,22 +183,22 @@ public class MultiPartProperties {
             if (stream == null) {
                 return;
             }
-            Properties props = new Properties();
+            final Properties props = new Properties();
             props.load(stream);
 
             if (props.containsKey(BUFFER_THRESHOLD)) {
-                this.bufferThreshold = Integer.valueOf(props.getProperty(BUFFER_THRESHOLD));
+                this.bufferThreshold = Integer.parseInt(props.getProperty(BUFFER_THRESHOLD));
             }
             if (props.containsKey(TEMP_DIRECTORY)) {
                 this.tempDir = props.getProperty(TEMP_DIRECTORY);
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             throw new IllegalArgumentException(e);
         } finally {
             if (stream != null) {
                 try {
                     stream.close();
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     // Pass through
                 }
             }

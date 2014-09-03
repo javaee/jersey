@@ -56,7 +56,7 @@ import org.glassfish.jersey.message.internal.HttpHeaderReader;
  */
 public class ContentDisposition {
 
-    private String type;
+    private final String type;
     private final Map<String, String> parameters;
     private String fileName;
     private Date creationDate;
@@ -229,7 +229,7 @@ public class ContentDisposition {
             return -1;
         }
         try {
-            return Long.valueOf(value);
+            return Long.parseLong(value);
         } catch (final NumberFormatException e) {
             throw new ParseException("Error parsing size parameter of value, " + value, 0);
         }

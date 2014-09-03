@@ -90,4 +90,18 @@
     <Match>
         <Bug pattern="GF_INVALID_MSG_ID_PATTERN,GF_MISSING_LOGGER_INFO_ANNOTATION,GF_MISSING_LOGMESSAGE_INFO_ANNOTATION" />
     </Match>
+
+    <!-- individual ad-hoc ignores -->
+    <!-- ServerScopeProvider.getFilteringScopes() - returned object would be identical -->
+    <Match>
+        <Class name="~.*.ServerScopeProvider" />
+        <Method name="getFilteringScopes()" />
+        <Bug pattern="RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED" />
+    </Match>
+
+    <!-- There are few cases in the codebase -->
+    <Match>
+        <Bug pattern="CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE" />
+    </Match>
+
 </FindBugsFilter>
