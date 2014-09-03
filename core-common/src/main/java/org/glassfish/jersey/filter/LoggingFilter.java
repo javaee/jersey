@@ -295,7 +295,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         final LoggingStream stream = (LoggingStream) writerInterceptorContext.getProperty(ENTITY_LOGGER_PROPERTY);
         writerInterceptorContext.proceed();
         if (stream != null) {
-            log(stream.getStringBuilder());
+            log(stream.getStringBuilder(MessageUtils.getCharset(writerInterceptorContext.getMediaType())));
         }
     }
 
@@ -309,11 +309,11 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
             this.inner = inner;
         }
 
-        StringBuilder getStringBuilder() {
+        StringBuilder getStringBuilder(Charset charset) {
             // write entity to the builder
             final byte[] entity = baos.toByteArray();
 
-            b.append(new String(entity, 0, Math.min(entity.length, maxEntitySize)));
+            b.append(new String(entity, 0, Math.min(entity.length, maxEntitySize), charset));
             if (entity.length > maxEntitySize) {
                 b.append("...more...");
             }

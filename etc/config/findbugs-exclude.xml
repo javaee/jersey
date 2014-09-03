@@ -94,14 +94,45 @@
     <!-- individual ad-hoc ignores -->
     <!-- ServerScopeProvider.getFilteringScopes() - returned object would be identical -->
     <Match>
-        <Class name="~.*.ServerScopeProvider" />
-        <Method name="getFilteringScopes()" />
+        <Class name="org.glassfish.jersey.message.filtering.ServerScopeProvider" />
+        <Method name="getFilteringScopes" />
         <Bug pattern="RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED" />
+    </Match>
+
+    <!-- used as fallback, can be ignored here -->
+    <Match>
+        <Bug pattern="DM_DEFAULT_ENCODING" />
+        <Class name="~.*.Base64" />
     </Match>
 
     <!-- There are few cases in the codebase -->
     <Match>
         <Bug pattern="CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE" />
+    </Match>
+
+    <Match>
+        <Bug pattern="REC_CATCH_EXCEPTION" />
+        <Class name="~.*.VfsSchemeResourceFinderFactory" />
+    </Match>
+
+    <!-- TODOs - those are the FindBugs warnings not resolved yet -->
+    <!-- Those exclusions should either be fixed or, after evaluation moved outside of this "TODO" section -->
+    <Match>
+        <Bug pattern="DM_DEFAULT_ENCODING" />
+        <Or>
+            <Class name="~.*.AbstractTemplateProcessor" />
+            <Class name="~.*.HmaSha1Method" />
+            <Class name="~.*.RsaSha1Method" />
+            <Class name="~.*.ConsumerCredentials" />
+            <Class name="~.*.AccessToken" />
+            <Class name="~.*.ClientIdentifier" />
+            <Class name="~.*.ChunkedInput" />
+            <Class name="~.*.ChunkedOutput" />
+        </Or>
+    </Match>
+
+    <Match>
+        <Class name="org.glassfish.jersey.apache.connector.ApacheConnector" />
     </Match>
 
 </FindBugsFilter>
