@@ -203,7 +203,7 @@ public final class Resource implements Routed, ResourceModelComponent {
         private List<String> names;
         private String path;
 
-        private final Set<ResourceMethod.Builder> methodBuilders;
+        private final List<ResourceMethod.Builder> methodBuilders;
         private final Set<Resource.Builder> childResourceBuilders;
         private final List<Resource.Data> childResources;
 
@@ -219,7 +219,7 @@ public final class Resource implements Routed, ResourceModelComponent {
 
 
         private Builder(final Resource.Builder parentResource) {
-            this.methodBuilders = Sets.newIdentityHashSet();
+            this.methodBuilders = Lists.newLinkedList();
             this.childResourceBuilders = Sets.newIdentityHashSet();
             this.childResources = Lists.newLinkedList();
             this.resourceMethods = Lists.newLinkedList();
