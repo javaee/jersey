@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,11 @@
  */
 package org.glassfish.jersey.jetty;
 
-import org.junit.Test;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -49,24 +53,33 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.container.TimeoutHandler;
 import javax.ws.rs.core.Response;
-import java.util.concurrent.*;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Arul Dhesiaseelan (aruld at acm.org)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class AsyncTest extends AbstractJettyServerTester {
 
     @Path("/async")
+    @SuppressWarnings("VoidMethodAnnotatedWithGET")
     public static class AsyncResource {
+
+        public static AtomicInteger INVOCATION_COUNT = new AtomicInteger(0);
+
         @GET
         public void asyncGet(@Suspended final AsyncResponse asyncResponse) {
             new Thread(new Runnable() {
 
                 @Override
                 public void run() {
-                    String result = veryExpensiveOperation();
+                    final String result = veryExpensiveOperation();
                     asyncResponse.resume(result);
                 }
 
@@ -74,7 +87,7 @@ public class AsyncTest extends AbstractJettyServerTester {
                     // ... very expensive operation that typically finishes within 5 seconds, simulated using sleep()
                     try {
                         Thread.sleep(5000);
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         // ignore
                     }
                     return "DONE";
@@ -88,9 +101,9 @@ public class AsyncTest extends AbstractJettyServerTester {
             asyncResponse.setTimeoutHandler(new TimeoutHandler() {
 
                 @Override
-                public void handleTimeout(AsyncResponse asyncResponse) {
-                    asyncResponse.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                            .entity("Operation time out.").build());
+                public void handleTimeout(final AsyncResponse asyncResponse) {
+                    asyncResponse.resume(Response.status(Response.Status.SERVICE_UNAVAILABLE).entity("Operation time out.")
+                            .build());
                 }
             });
             asyncResponse.setTimeout(3, TimeUnit.SECONDS);
@@ -99,7 +112,7 @@ public class AsyncTest extends AbstractJettyServerTester {
 
                 @Override
                 public void run() {
-                    String result = veryExpensiveOperation();
+                    final String result = veryExpensiveOperation();
                     asyncResponse.resume(result);
                 }
 
@@ -107,7 +120,7 @@ public class AsyncTest extends AbstractJettyServerTester {
                     // ... very expensive operation that typically finishes within 10 seconds, simulated using sleep()
                     try {
                         Thread.sleep(7000);
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         // ignore
                     }
                     return "DONE";
@@ -115,12 +128,37 @@ public class AsyncTest extends AbstractJettyServerTester {
             }).start();
         }
 
+        @GET
+        @Path("multiple-invocations")
+        public void asyncMultipleInvocations(@Suspended final AsyncResponse asyncResponse) {
+            INVOCATION_COUNT.incrementAndGet();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    asyncResponse.resume("OK");
+                }
+            }).start();
+        }
+    }
+
+    private Client client;
+
+    @Before
+    public void setUp() throws Exception {
+        startServer(AsyncResource.class);
+        client = ClientBuilder.newClient();
+    }
+
+    @Override
+    @After
+    public void tearDown() {
+        super.tearDown();
+        client = null;
     }
 
     @Test
     public void testAsyncGet() throws ExecutionException, InterruptedException {
-        startServer(AsyncResource.class);
-        Client client = ClientBuilder.newClient();
         final Future<Response> responseFuture = client.target(getUri().path("/async")).request().async().get();
         // Request is being processed asynchronously.
         final Response response = responseFuture.get();
@@ -130,8 +168,6 @@ public class AsyncTest extends AbstractJettyServerTester {
 
     @Test
     public void testAsyncGetWithTimeout() throws ExecutionException, InterruptedException, TimeoutException {
-        startServer(AsyncResource.class);
-        Client client = ClientBuilder.newClient();
         final Future<Response> responseFuture = client.target(getUri().path("/async/timeout")).request().async().get();
         // Request is being processed asynchronously.
         final Response response = responseFuture.get();
@@ -141,4 +177,16 @@ public class AsyncTest extends AbstractJettyServerTester {
         assertEquals("Operation time out.", response.readEntity(String.class));
     }
 
+    /**
+     * JERSEY-2616 reproducer. Make sure resource method is only invoked once per one request.
+     */
+    @Test
+    public void testAsyncMultipleInvocations() throws Exception {
+        final Response response = client.target(getUri().path("/async/multiple-invocations")).request().get();
+
+        assertThat(AsyncResource.INVOCATION_COUNT.get(), is(1));
+
+        assertThat(response.getStatus(), is(200));
+        assertThat(response.readEntity(String.class), is("OK"));
+    }
 }
