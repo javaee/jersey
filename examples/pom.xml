@@ -105,6 +105,7 @@
         <module>oauth-client-twitter</module>
         <module>oauth2-client-google-webapp</module>
         <module>reload</module>
+        <module>rx-client-webapp</module>
         <module>server-async</module>
         <module>server-async-managed</module>
         <module>server-async-standalone</module>

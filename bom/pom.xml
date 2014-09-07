@@ -86,6 +86,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.glassfish.jersey.bundles.repackaged</groupId>
+                <artifactId>jersey-jsr166e</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.glassfish.jersey.bundles.glassfish.v4_0</groupId>
                 <artifactId>jersey-gfv4_0-core</artifactId>
                 <version>${project.version}</version>
@@ -230,7 +235,6 @@
                 <artifactId>html-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.glassfish.jersey.ext</groupId>
                 <artifactId>jersey-wadl-doclet</artifactId>
@@ -269,6 +273,31 @@
             <dependency>
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-sse</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.rx</groupId>
+                <artifactId>jersey-rx-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.rx</groupId>
+                <artifactId>jersey-rx-client-guava</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.rx</groupId>
+                <artifactId>jersey-rx-client-java8</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.rx</groupId>
+                <artifactId>jersey-rx-client-jsr166e</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.rx</groupId>
+                <artifactId>jersey-rx-client-rxjava</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -62,7 +62,7 @@ import static jersey.repackaged.com.google.common.base.Preconditions.checkNotNul
 import static jersey.repackaged.com.google.common.base.Preconditions.checkState;
 
 /**
- * Jersey implementation of {@link javax.ws.rs.client.Client JAX-RS JerseyClient}
+ * Jersey implementation of {@link javax.ws.rs.client.Client JAX-RS Client}
  * contract.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)

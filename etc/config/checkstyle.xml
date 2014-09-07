@@ -214,6 +214,9 @@
         <module name="RedundantThrows">
             <property name="allowUnchecked" value="true"/>
         </module>
+        <module name="RedundantModifier">
+            <property name="tokens" value="INTERFACE_DEF"/>
+        </module>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
 

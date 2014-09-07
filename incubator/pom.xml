@@ -62,6 +62,7 @@
         <module>declarative-linking</module>
         <module>gae-integration</module>
         <module>html-json</module>
+        <module>rx</module>
     </modules>
 
 </project>
