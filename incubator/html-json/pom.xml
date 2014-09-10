@@ -62,7 +62,7 @@
     </description>
     
     <properties>
-        <net.java.html.version>0.8.3</net.java.html.version>
+        <net.java.html.version>1.0</net.java.html.version>
     </properties>
 
     <repositories>
