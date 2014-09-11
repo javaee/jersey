@@ -39,17 +39,18 @@
  */
 package org.glassfish.jersey.server.spring.fieldinjection;
 
+import javax.ws.rs.core.Application;
+
 import org.glassfish.jersey.server.spring.SpringTestConfiguration;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import javax.ws.rs.core.Application;
-
 import static org.junit.Assert.assertEquals;
 
 public class SpringFieldInjectionTest extends JerseyTest {
+
     @Override
     protected Application configure() {
         ApplicationContext context = new AnnotationConfigApplicationContext(SpringTestConfiguration.class);
@@ -71,6 +72,12 @@ public class SpringFieldInjectionTest extends JerseyTest {
 
     @Test
     public void testInjectionOfSetOfBeans() {
+        String result = target("test3").request().get(String.class);
+        assertEquals("test ok", result);
+    }
+
+    @Test
+    public void JERSEY_2643() {
         String result = target("test3").request().get(String.class);
         assertEquals("test ok", result);
     }

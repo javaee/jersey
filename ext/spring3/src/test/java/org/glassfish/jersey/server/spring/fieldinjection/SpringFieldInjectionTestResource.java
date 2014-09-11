@@ -39,15 +39,16 @@
  */
 package org.glassfish.jersey.server.spring.fieldinjection;
 
-import org.glassfish.jersey.server.spring.TestComponent1;
-import org.glassfish.jersey.server.spring.TestComponent2;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+
+import org.glassfish.jersey.server.spring.NoComponent;
+import org.glassfish.jersey.server.spring.TestComponent1;
+import org.glassfish.jersey.server.spring.TestComponent2;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Path("/")
 public class SpringFieldInjectionTestResource {
@@ -61,6 +62,8 @@ public class SpringFieldInjectionTestResource {
     @Autowired
     Set<TestComponent2> testComponent2Set;
 
+    @Autowired(required = false)
+    private NoComponent noComponent;
 
     @Path("test1")
     @GET
@@ -82,4 +85,11 @@ public class SpringFieldInjectionTestResource {
         return (testComponent2Set.size() == 2 && "test ok".equals(iterator.next().result())
                 && "test ok".equals(iterator.next().result())) ? "test ok" : "test failed";
     }
+
+    @Path("JERSEY-2643")
+    @GET
+    public String JERSEY_2643() {
+        return noComponent == null ? "test ok" : "test failed";
+    }
+
 }
