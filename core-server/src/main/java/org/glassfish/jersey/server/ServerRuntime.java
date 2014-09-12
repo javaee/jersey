@@ -125,6 +125,13 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ServerRuntime {
+
+
+   // This should introduce some new FindBugs warnings -
+   // DEFAULT ENCODING, UNUSED (dead storage), SHOULD BE FINAL, etc.
+   public static String DUMMY = new String("Just making fun of FindBugs!");
+   public static byte[] DUMMY_ARRAY = DUMMY.getBytes();
+	
     private final Stage<RequestProcessingContext> requestProcessingRoot;
     private final ProcessingProviders processingProviders;
 
