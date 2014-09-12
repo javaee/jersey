@@ -190,7 +190,7 @@ public final class ContractProvider implements Scoped, NameBound {
          * Get the scope of the built contract provider model.
          *
          * @return scope associated with the model or {@code null} if no scope
-         *         has been set explicitly.
+         * has been set explicitly.
          */
         public Class<? extends Annotation> getScope() {
             return scope;
@@ -233,15 +233,23 @@ public final class ContractProvider implements Scoped, NameBound {
                 scope = Singleton.class;
             }
 
-            if (scope == Singleton.class && contracts.isEmpty() && defaultPriority == NO_PRIORITY && nameBindings.isEmpty()) {
+            final Map<Class<?>, Integer> _contracts = (contracts.isEmpty()) ?
+                    Collections.<Class<?>, Integer>emptyMap() :
+                    Maps.transformEntries(contracts, new Maps.EntryTransformer<Class<?>, Integer, Integer>() {
+                        @Override
+                        public Integer transformEntry(final Class<?> contract, final Integer priority) {
+                            return (priority != NO_PRIORITY) ? priority : defaultPriority;
+                        }
+                    });
+
+            final Set<Class<? extends Annotation>> bindings = (nameBindings.isEmpty()) ?
+                    Collections.<Class<? extends Annotation>>emptySet() : Collections.unmodifiableSet(nameBindings);
+
+            if (scope == Singleton.class && _contracts.isEmpty() && defaultPriority == NO_PRIORITY && bindings.isEmpty()) {
                 return EMPTY_MODEL;
             }
 
-            return new ContractProvider(
-                    scope,
-                    Collections.unmodifiableMap(contracts),
-                    defaultPriority,
-                    Collections.unmodifiableSet(nameBindings));
+            return new ContractProvider(scope, _contracts, defaultPriority, bindings);
         }
     }
 
@@ -271,6 +279,7 @@ public final class ContractProvider implements Scoped, NameBound {
      * Get provided contracts recognized by Jersey.
      *
      * @return provided contracts.
+     *
      * @see org.glassfish.jersey.spi.Contract
      */
     public Set<Class<?>> getContracts() {
@@ -296,12 +305,12 @@ public final class ContractProvider implements Scoped, NameBound {
      *
      * @param contract provider contract.
      * @return provider priority.
+     *
      * @see javax.annotation.Priority
      */
     public int getPriority(final Class<?> contract) {
         if (contracts.containsKey(contract)) {
-            final int priority = contracts.get(contract);
-            return (priority != NO_PRIORITY) ? priority : defaultPriority;
+            return contracts.get(contract);
         }
         return defaultPriority;
     }
