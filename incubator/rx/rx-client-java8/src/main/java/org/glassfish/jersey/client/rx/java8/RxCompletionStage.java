@@ -67,9 +67,10 @@ public final class RxCompletionStage {
      * the {@link java.util.concurrent.CompletionStage completion stage} from Java 8. Reactive requests,
      * invoked using {@link org.glassfish.jersey.client.rx.RxInvocationBuilder#rx() rx(...)} methods, are executed via
      * {@link java.util.concurrent.Executors#newCachedThreadPool() "new thread pool" service}.
-     * <p/>
+     * <p>
      * Instance is initialized with a JAX-RS client created using the default client builder implementation class provided by the
      * JAX-RS implementation provider.
+     * <p>
      *
      * @return new reactive client extension.
      * @see Rx#newClient(Class)
@@ -83,9 +84,10 @@ public final class RxCompletionStage {
      * the {@link java.util.concurrent.CompletionStage completion stage} from Java 8. Reactive requests,
      * invoked using {@link org.glassfish.jersey.client.rx.RxInvocationBuilder#rx() rx(...)} method, are executed via given
      * {@link java.util.concurrent.ExecutorService executor service}.
-     * <p/>
+     * <p>
      * Instance is initialized with a JAX-RS client created using the default client builder implementation class provided by the
      * JAX-RS implementation provider.
+     * </p>
      *
      * @param executor the executor service to execute reactive requests.
      * @return new reactive client extension.

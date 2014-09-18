@@ -275,7 +275,8 @@ public final class JerseyServletContainerInitializer implements ServletContainer
         final ApplicationPath ap = clazz.getAnnotation(ApplicationPath.class);
         if (ap != null) {
             // App is annotated with ApplicationPath
-            final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(clazz, defaultClasses);
+            final ResourceConfig resourceConfig = ResourceConfig.forApplicationClass(clazz, defaultClasses)
+                    .addProperties(Utils.getContextParams(context));
             final ServletContainer s = new ServletContainer(resourceConfig);
             final ServletRegistration.Dynamic dsr = context.addServlet(clazz.getName(), s);
             dsr.setAsyncSupported(true);
