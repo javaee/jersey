@@ -344,7 +344,7 @@ public Response smooth(
         </example>
 
         <para>If a query parameter "step" exists in the query component of the
-            request URI then the "step" value will be will extracted and parsed as a
+            request URI then the "step" value will be extracted and parsed as a
             32 bit signed integer and assigned to the step method parameter. If "step"
             does not exist then a default value of 2, as declared in the &jaxrs.DefaultValue;
             annotation, will be assigned to the step method parameter. If the "step"
