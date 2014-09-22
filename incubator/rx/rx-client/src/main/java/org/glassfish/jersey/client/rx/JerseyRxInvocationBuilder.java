@@ -94,13 +94,17 @@ final class JerseyRxInvocationBuilder<RX extends RxInvoker> implements RxInvocat
     @Override
     public RX rx() {
         if (invoker == null) {
-            invoker = rx(invokerType);
+            invoker = rx(invokerType, executor);
         }
         return invoker;
     }
 
     @Override
-    public <CX extends RxInvoker> CX rx(final Class<CX> customType) {
+    public RX rx(final ExecutorService executorService) {
+        return rx(invokerType, executorService);
+    }
+
+    private <CX extends RxInvoker> CX rx(final Class<CX> customType, final ExecutorService executor) {
         final RxInvokerProvider provider = PROVIDER_MAP.get(customType);
         RxInvoker customInvoker = null;
 
