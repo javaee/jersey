@@ -41,6 +41,8 @@
 package org.glassfish.jersey.client.rx;
 
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.CacheControl;
@@ -56,8 +58,11 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -87,13 +92,11 @@ public class RxInvocationBuilderTest {
     }
 
     @Test
-    public void testRxCustomType() throws Exception {
-        assertThat(rxBuilder.rx(RxFutureInvoker.class), notNullValue());
-    }
+    public void testRxCustomExecutor() throws Exception {
+        final ExecutorService executor = new ScheduledThreadPoolExecutor(1,
+                new ThreadFactoryBuilder().setNameFormat("jersey-rx-client-test-%d").build());
 
-    @Test
-    public void testRxCustomTypeNegative() throws Exception {
-        assertThat(Rx.newClient(RxInvoker.class).target("http://jersey.java.net").request().rx(RxInvoker.class), nullValue());
+        assertThat(rxBuilder.rx(executor).get().get().getHeaderString("Test-Thread"), containsString("jersey-rx-client-test"));
     }
 
     @Test

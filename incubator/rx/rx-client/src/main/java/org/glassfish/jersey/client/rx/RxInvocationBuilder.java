@@ -41,6 +41,7 @@
 package org.glassfish.jersey.client.rx;
 
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.CacheControl;
@@ -54,8 +55,8 @@ import org.glassfish.jersey.Beta;
  * A reactive client request invocation builder.
  * <p/>
  * The builder is enhanced with two methods in addition to the invocation builder from JAX-RS, {@link #rx()} and
- * {@link #rx(Class)}, giving access to {@link org.glassfish.jersey.client.rx.RxInvoker reactive invoker} that provide means to
- * invoke reactive client requests.
+ * {@link #rx(java.util.concurrent.ExecutorService)}, giving access to
+ * {@link org.glassfish.jersey.client.rx.RxInvoker reactive invoker} that provide means to invoke reactive client requests.
  *
  * @param <RX> the concrete reactive invocation type.
  * @author Michal Gajdos (michal.gajdos at oracle.com)
@@ -75,14 +76,13 @@ public interface RxInvocationBuilder<RX extends RxInvoker> extends Invocation.Bu
     public RX rx();
 
     /**
-     * Access the reactive request invocation interface of given type to invoke the built request.
+     * Access the reactive request invocation interface to invoke the built request on a given
+     * {@link java.util.concurrent.ExecutorService executor service}.
      *
-     * @param invokerType custom invocation type to be returned instead of the default one.
-     * @param <CX>        custom invocation type.
-     * @return reactive request invocation interface of given type or {@code null} if a invoker for a given type cannot be
-     * created.
+     * @param executorService the executor service to execute current reactive request.
+     * @return reactive request invocation interface or {@code null} if a invoker for a given type cannot be created.
      */
-    public <CX extends RxInvoker> CX rx(Class<CX> invokerType);
+    public RX rx(ExecutorService executorService);
 
     @Override
     public RxInvocationBuilder<RX> accept(String... mediaTypes);
