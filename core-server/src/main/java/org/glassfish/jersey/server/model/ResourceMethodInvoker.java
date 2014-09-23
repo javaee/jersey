@@ -87,8 +87,6 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodInvocationHandlerP
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.hk2.utilities.cache.Cache;
-import org.glassfish.hk2.utilities.cache.Computable;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -103,6 +101,9 @@ import jersey.repackaged.com.google.common.collect.Lists;
 public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 
     private final ResourceMethod method;
+    private final Annotation[] methodAnnotations;
+    private final Type invocableResponseType;
+    private final boolean canUseInvocableResponseType;
     private final ResourceMethodDispatcher dispatcher;
     private final Method resourceMethod;
     private final Class<?> resourceClass;
@@ -244,6 +245,16 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                 new RankedComparator<WriterInterceptor>(), _writerInterceptors)));
         this.requestFilters.addAll(_requestFilters);
         this.responseFilters.addAll(_responseFilters);
+
+        // pre-compute & cache invocation properties
+        this.methodAnnotations = invocable.getHandlingMethod().getDeclaredAnnotations();
+        this.invocableResponseType = invocable.getResponseType();
+        this.canUseInvocableResponseType = invocableResponseType != null &&
+                Void.TYPE != invocableResponseType &&
+                Void.class != invocableResponseType &&
+                // Do NOT change the entity type for Response or it's subclasses.
+                !((invocableResponseType instanceof Class) && Response.class.isAssignableFrom((Class) invocableResponseType));
+
     }
 
     private <T> void addNameBoundProviders(
@@ -332,14 +343,6 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         }
     }
 
-    private static final Cache<Method, Annotation[]> methodAnnotationCache = new Cache<>(new Computable<Method, Annotation[]>() {
-
-        @Override
-        public Annotation[] compute(final Method m) {
-            return m.getDeclaredAnnotations();
-        }
-    });
-
     private Response invoke(final RequestProcessingContext context, final Object resource) {
 
         Response jaxrsResponse;
@@ -355,28 +358,22 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     return response;
                 }
 
-                final Invocable invocable = method.getInvocable();
                 final Annotation[] entityAnn = response.getEntityAnnotations();
-                final Annotation[] methodAnn = methodAnnotationCache.compute(invocable.getHandlingMethod());
-                if (methodAnn.length > 0) {
+                if (methodAnnotations.length > 0) {
                     if (entityAnn.length == 0) {
-                        response.setEntityAnnotations(methodAnn);
+                        response.setEntityAnnotations(methodAnnotations);
                     } else {
-                        final Annotation[] mergedAnn = Arrays.copyOf(methodAnn, methodAnn.length + entityAnn.length);
-                        System.arraycopy(entityAnn, 0, mergedAnn, methodAnn.length, entityAnn.length);
+                        final Annotation[] mergedAnn = Arrays.copyOf(methodAnnotations,
+                                methodAnnotations.length + entityAnn.length);
+                        System.arraycopy(entityAnn, 0, mergedAnn, methodAnnotations.length, entityAnn.length);
                         response.setEntityAnnotations(mergedAnn);
                     }
                 }
 
-                if (response.hasEntity() && !(response.getEntityType() instanceof ParameterizedType)) {
-                    final Type invocableType = invocable.getResponseType();
-                    if (invocableType != null &&
-                            Void.TYPE != invocableType &&
-                            Void.class != invocableType &&
-                            // Do NOT change the entity type for Response or it's subclasses.
-                            (!(invocableType instanceof Class) || !Response.class.isAssignableFrom((Class) invocableType))) {
-                        response.setEntityType(invocableType);
-                    }
+                if (canUseInvocableResponseType &&
+                        response.hasEntity() &&
+                        !(response.getEntityType() instanceof ParameterizedType)) {
+                    response.setEntityType(invocableResponseType);
                 }
 
                 return response;

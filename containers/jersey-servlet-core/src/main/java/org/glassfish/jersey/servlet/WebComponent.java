@@ -115,8 +115,8 @@ public class WebComponent {
 
     private static final Logger LOGGER = Logger.getLogger(WebComponent.class.getName());
 
-    private static final Type REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
-    private static final Type RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
+    private final Type REQUEST_TYPE = (new TypeLiteral<Ref<HttpServletRequest>>() {}).getType();
+    private final Type RESPONSE_TYPE = (new TypeLiteral<Ref<HttpServletResponse>>() {}).getType();
 
     private static final AsyncContextDelegate DEFAULT_ASYNC_DELEGATE = new AsyncContextDelegate() {
 

@@ -99,9 +99,9 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     private static final ExtendedLogger logger =
             new ExtendedLogger(Logger.getLogger(GrizzlyHttpContainer.class.getName()), Level.FINEST);
 
-    private static final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {
+    private final Type RequestTYPE = (new TypeLiteral<Ref<Request>>() {
     }).getType();
-    private static final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
+    private final Type ResponseTYPE = (new TypeLiteral<Ref<Response>>() {
     }).getType();
     /**
      * Cached value of configuration property
