@@ -78,7 +78,7 @@ public class SpringFieldInjectionTest extends JerseyTest {
 
     @Test
     public void JERSEY_2643() {
-        String result = target("test3").request().get(String.class);
+        String result = target("JERSEY-2643").request().get(String.class);
         assertEquals("test ok", result);
     }
 }
