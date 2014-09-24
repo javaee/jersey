@@ -278,7 +278,7 @@ class HttpUrlConnector implements Connector {
             if (verifier != null) {
                 suc.setHostnameVerifier(verifier);
             }
-            suc.setSSLSocketFactory(client.getSslContext().getSocketFactory());
+            suc.setSSLSocketFactory(client.getSslSocketFactory());
         }
 
         final Object entity = request.getEntity();
@@ -336,7 +336,7 @@ class HttpUrlConnector implements Connector {
         return responseContext;
     }
 
-    private void setOutboundHeaders(MultivaluedMap<String, String> headers, HttpURLConnection uc) {
+  private void setOutboundHeaders(MultivaluedMap<String, String> headers, HttpURLConnection uc) {
         boolean restrictedSent = false;
         for (Map.Entry<String, List<String>> header : headers.entrySet()) {
             String headerName = header.getKey();
