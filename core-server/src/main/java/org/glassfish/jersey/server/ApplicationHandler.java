@@ -831,12 +831,9 @@ public final class ApplicationHandler {
 
             ContractProvider model = componentBag.getModel(componentClass);
 
-            if (bindWithComponentProvider(componentClass, model, componentProviders)) {
-                continue;
-            }
-
-            if (resourceClasses.contains(componentClass)) {
-
+            if (bindWithComponentProvider(componentClass, model, componentProviders) || !resourceClasses.contains(componentClass)) {
+                ProviderBinder.bindProvider(componentClass, model, dc);
+            } else {
                 if (!Resource.isAcceptable(componentClass)) {
                     LOGGER.warning(LocalizationMessages.NON_INSTANTIABLE_COMPONENT(componentClass));
                     continue;
@@ -851,8 +848,6 @@ public final class ApplicationHandler {
                     model = null;
                 }
                 resourceContext.unsafeBindResource(componentClass, model, dc);
-            } else {
-                ProviderBinder.bindProvider(componentClass, model, dc);
             }
         }
 
