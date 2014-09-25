@@ -881,29 +881,34 @@ public class ResourceConfig extends Application implements Configurable<Resource
             rfs.add(new FilesScanner(classPathElements, true));
         }
 
-        final AnnotationAcceptingListener afl =
-                AnnotationAcceptingListener.newJaxrsResourceAndProviderListener(_state.getClassLoader());
-        for (final ResourceFinder resourceFinder : rfs) {
-            while (resourceFinder.hasNext()) {
-                final String next = resourceFinder.next();
-                if (afl.accept(next)) {
-                    final InputStream in = resourceFinder.open();
-                    try {
-                        afl.process(next, in);
-                    } catch (final IOException e) {
-                        LOGGER.log(Level.WARNING, LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_PROCESS(next));
-                    } finally {
+        if(!rfs.isEmpty()) {
+            final AnnotationAcceptingListener afl =
+                    AnnotationAcceptingListener.newJaxrsResourceAndProviderListener(_state.getClassLoader());
+            for (final ResourceFinder resourceFinder : rfs) {
+                while (resourceFinder.hasNext()) {
+                    final String next = resourceFinder.next();
+                    if (afl.accept(next)) {
+                        final InputStream in = resourceFinder.open();
                         try {
-                            in.close();
-                        } catch (final IOException ex) {
-                            LOGGER.log(Level.FINER, "Error closing resource stream.", ex);
+                            afl.process(next, in);
+                        } catch (final IOException e) {
+                            LOGGER.log(Level.WARNING, LocalizationMessages.RESOURCE_CONFIG_UNABLE_TO_PROCESS(next));
+                        } finally {
+                            try {
+                                in.close();
+                            } catch (final IOException ex) {
+                                LOGGER.log(Level.FINER, "Error closing resource stream.", ex);
+                            }
                         }
                     }
                 }
             }
+
+            result.addAll(afl.getAnnotatedClasses());
+        } else {
+            LOGGER.log(Level.FINE, "Skipping provider scan");
         }
 
-        result.addAll(afl.getAnnotatedClasses());
         return result;
     }
 
