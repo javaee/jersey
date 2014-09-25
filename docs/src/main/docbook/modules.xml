@@ -979,6 +979,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/webapp-example-parent/rx-client-webapp/dependencies.html">
+    rx-client-webapp
+</link>
+</entry>
+<entry>Jersey Reactive Client Extension WebApp Example.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/server-async/dependencies.html">
     server-async
 </link>
