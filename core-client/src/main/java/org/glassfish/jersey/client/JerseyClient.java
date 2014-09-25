@@ -79,7 +79,7 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     private final LinkedBlockingDeque<ShutdownHook> shutdownHooks = new LinkedBlockingDeque<ShutdownHook>();
     private final Value<SSLSocketFactory> sslSocketFactory;
 
-  /**
+    /**
      * Client instance shutdown hook.
      */
     static interface ShutdownHook {
