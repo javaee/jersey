@@ -89,10 +89,11 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
                 beanName = an.value();
             }
         }
-        return getBeanFromSpringContext(beanName, injectee);
+        boolean required = parent != null ? parent.getAnnotation(Autowired.class).required() : false;
+        return getBeanFromSpringContext(beanName, injectee, required);
     }
 
-    private Object getBeanFromSpringContext(String beanName, Injectee injectee) {
+    private Object getBeanFromSpringContext(String beanName, Injectee injectee, final boolean required) {
         try {
             DependencyDescriptor dependencyDescriptor = createSpringDependencyDescriptor(injectee);
             Set<String> autowiredBeanNames = new HashSet<>(1);
@@ -100,8 +101,11 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
             return ctx.getAutowireCapableBeanFactory().resolveDependency(dependencyDescriptor, null,
                     autowiredBeanNames, null);
         } catch (NoSuchBeanDefinitionException e) {
-            LOGGER.warning(e.getMessage());
-            throw e;
+            if (required) {
+                LOGGER.warning(e.getMessage());
+                throw e;
+            }
+            return null;
         }
     }
 
