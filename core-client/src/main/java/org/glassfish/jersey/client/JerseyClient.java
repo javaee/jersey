@@ -170,6 +170,8 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     /**
      * Lazily gets the SSL socket factory connected to the SSLContext.
      * The instance is cached for a subsequent retrieval.
+     * Use this to avoid getting new instances of the factory from SSLContextImpl every time the
+     * getter is called.
      *
      * @return {@code SSLSocketFactory} from the {@code SSLContext}. Created on first retrieval.
      */
