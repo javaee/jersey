@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.spring;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -111,9 +112,12 @@ public class AutowiredInjectResolver implements InjectionResolver<Autowired> {
 
     private DependencyDescriptor createSpringDependencyDescriptor(final Injectee injectee) {
         AnnotatedElement annotatedElement = injectee.getParent();
+
         if (annotatedElement.getClass().isAssignableFrom(Field.class)) {
-            return new DependencyDescriptor((Field) annotatedElement,
-                    !injectee.isOptional());
+            return new DependencyDescriptor((Field) annotatedElement,!injectee.isOptional());
+        } else if (annotatedElement.getClass().isAssignableFrom(Method.class)) {
+            return new DependencyDescriptor(
+                    new MethodParameter((Method) annotatedElement, injectee.getPosition()), !injectee.isOptional());
         } else {
             return new DependencyDescriptor(
                     new MethodParameter((Constructor) annotatedElement, injectee.getPosition()), !injectee.isOptional());
