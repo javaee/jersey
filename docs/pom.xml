@@ -80,7 +80,7 @@
                                 <replace file="${src.dir}/jersey.ent" token="$src.branch" value="${jersey.src.branch}" />
                                 <replace file="${src.dir}/jersey.ent" token="$repository" value="${javanet.repository.id}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="${jaxrs.version}" />
-                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.impl.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jaxb-api-jar-version" value="${jaxb.api.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jackson-version" value="${jackson.version}" />
                             </tasks>
@@ -214,7 +214,8 @@
         <jersey.docs.version>snapshot</jersey.docs.version>
         <jersey.apidocs.version>snapshot</jersey.apidocs.version>
         <jersey.src.branch>master</jersey.src.branch>
-        <jaxrs.version>${jaxrs.api.version}</jaxrs.version>
+        <jaxrs.version>${jaxrs.api.spec.version}</jaxrs.version>
+        <jaxrs.impl.version>${jaxrs.api.impl.version}</jaxrs.impl.version>
     </properties>
 
 </project>
