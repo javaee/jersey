@@ -38,16 +38,17 @@
  * holder.
  */
 
-package org.glassfish.jersey.message.internal;
+package org.glassfish.jersey.internal.spidiscovery;
 
 import java.util.Map;
 
-import javax.annotation.Priority;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.FeatureContext;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
+
+import javax.annotation.Priority;
 
 import org.glassfish.jersey.internal.ServiceFinderBinder;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
