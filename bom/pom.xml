@@ -48,6 +48,7 @@
         <groupId>net.java</groupId>
         <artifactId>jvnet-parent</artifactId>
         <version>4</version>
+        <relativePath />
     </parent>
 
     <groupId>org.glassfish.jersey</groupId>
