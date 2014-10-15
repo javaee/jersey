@@ -1,1 +1,1 @@
-org.glassfish.jersey.message.internal.MetaInfServicesAutoDiscoverable
+org.glassfish.jersey.internal.spidiscovery.MetaInfServicesAutoDiscoverable
