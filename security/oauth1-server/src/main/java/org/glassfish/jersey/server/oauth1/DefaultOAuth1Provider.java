@@ -86,7 +86,7 @@ public class DefaultOAuth1Provider implements OAuth1Provider {
      * @return {@link Consumer} object for the newly registered consumer.
      */
     public Consumer registerConsumer(final String owner, final MultivaluedMap<String, String> attributes) {
-        return registerConsumer(newUUIDString(), newUUIDString(), owner, attributes);
+        return registerConsumer(owner, newUUIDString(), newUUIDString(), attributes);
     }
 
     /**
