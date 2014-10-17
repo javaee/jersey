@@ -48,7 +48,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -57,10 +56,10 @@ import javax.ws.rs.core.PathSegment;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.uri.UriComponent;
-
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -71,11 +70,69 @@ import static org.junit.Assert.fail;
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Vetle Leinonen-Roeim (vetle at roeim.net)
  */
 public class JerseyUriBuilderTest {
 
     public JerseyUriBuilderTest() {
     }
+
+    // Reproducer for JERSEY-2537
+    @Test
+    public void shouldKeepTrailingSlash() throws MalformedURLException, URISyntaxException {
+        URL url = new URL("http://example.com/authentications;email=joe@joe.com/");
+        UriBuilder builder = UriBuilder.fromPath(url.getPath()).replaceMatrix(null);
+
+        URI result = builder.build();
+        assertEquals("/authentications/", result.toString());
+    }
+
+    // Reproducer for JERSEY-2537
+    @Test
+    public void shouldRemoveAllIncludingSemicolon() throws MalformedURLException, URISyntaxException {
+        URL url = new URL("http://example.com/authentications;email=joe@joe.com");
+        UriBuilder builder = UriBuilder.fromPath(url.getPath()).replaceMatrix(null);
+
+        URI result = builder.build();
+        assertEquals("/authentications", result.toString());
+    }
+
+    // Reproducer for JERSEY-2537
+    @Test
+    public void shouldLeaveURIUntouched() {
+        UriBuilder builder =
+                UriBuilder.fromPath("/apples;order=random;color=blue/2006").replaceMatrix(null);
+        URI result = builder.build();
+        assertEquals("/apples;order=random;color=blue/2006", result.toString());
+    }
+
+    // Reproducer for JERSEY-2537
+    @Test
+    public void shouldLeaveURIUntouchedAndKeepSlash() {
+        UriBuilder builder =
+                UriBuilder.fromPath("/apples;order=random;color=blue/2006/").replaceMatrix(null);
+        URI result = builder.build();
+        assertEquals("/apples;order=random;color=blue/2006/", result.toString());
+    }
+
+    // Reproducer for JERSEY-2537
+    @Test
+    public void shouldOnlyRemoveMatrixInFinalSegment() {
+        UriBuilder builder =
+                UriBuilder.fromPath("/apples;order=random;color=blue/2006/bar;zot=baz").replaceMatrix(null);
+        URI result = builder.build();
+        assertEquals("/apples;order=random;color=blue/2006/bar", result.toString());
+    }
+
+    // Reproducer for JERSEY-2537
+    @Test
+    public void shouldOnlyRemoveMatrixInFinalSegmentAndKeepSlash() {
+        UriBuilder builder =
+                UriBuilder.fromPath("/apples;order=random;color=blue/2006/bar;zot=baz/").replaceMatrix(null);
+        URI result = builder.build();
+        assertEquals("/apples;order=random;color=blue/2006/bar/", result.toString());
+    }
+
 
     // Reproducer for JERSEY-2036
     @Test
@@ -285,7 +342,6 @@ public class JerseyUriBuilderTest {
         testUri("a://#fragment"); // fails in JerseyUriBuilder
         testUri("a://?query");
 
-
         // fails: opaque uris are not supported by UriTemplate
         URI uri = new JerseyUriBuilder().uri("{scheme}://{mailto}").build("mailto", "email@test.ttt");
         assertEquals("mailto:email@test.ttt", uri.toString());
@@ -298,7 +354,6 @@ public class JerseyUriBuilderTest {
 
         uri = new JerseyUriBuilder().uri("{scheme}://{host}").build("http", "localhost");
         assertEquals("http://localhost", uri.toString());
-
 
         uri = new JerseyUriBuilder().uri("http://{host}:8080/{path}").build("l", "a/b/c");
         assertEquals("http://l:8080/a%2Fb%2Fc", uri.toString());
@@ -317,17 +372,14 @@ public class JerseyUriBuilderTest {
         uri = new JerseyUriBuilder().uri("{scheme}://{host}:{port}/{path}?{query}#{fragment}").buildFromMap(values);
         assertEquals("s://h:1/p%2Fp?q#f", uri.toString());
 
-
         uri = new JerseyUriBuilder().uri("{scheme}://{host}:{port}/{path}/{path2}").build("s", "h", new Integer(1), "a", "b");
         assertEquals("s://h:1/a/b", uri.toString());
-
 
         uri = new JerseyUriBuilder().uri("{scheme}://{host}:{port}/{path}/{path2}").build("s", "h", new Integer(1), "a", "b");
         assertEquals("s://h:1/a/b", uri.toString());
 
         uri = new JerseyUriBuilder().uri("//{host}:{port}/{path}/{path2}").build("h", new Integer(1), "a", "b");
         assertEquals("//h:1/a/b", uri.toString());
-
 
         uri = new JerseyUriBuilder().uri("/{a}/{a}/{b}").build("a", "b");
         assertEquals("/a/a/b", uri.toString());
@@ -384,13 +436,11 @@ public class JerseyUriBuilderTest {
         assertEquals(input, uri.toString());
     }
 
-
     @org.junit.Test
     public void testOpaqueUri() {
         URI uri = UriBuilder.fromUri("mailto:a@b").build();
         Assert.assertEquals("mailto:a@b", uri.toString());
     }
-
 
     @Test
     public void testOpaqueUriReplaceSchemeSpecificPart() {
@@ -551,7 +601,6 @@ public class JerseyUriBuilderTest {
             Assert.assertEquals(1, c.size());
             Assert.assertEquals("c", c.get(0));
         }
-
 
         {
             URI uri = JerseyUriBuilder.fromUri("http://localhost:8080/a;w=123;q=15/b/c;a=x;b=y").
@@ -877,7 +926,6 @@ public class JerseyUriBuilderTest {
         assertEquals(URI.create("http://localhost:80/aaa/1param/bbb/2param/ccc"), uri);
     }
 
-
     @Test
     public void testWhitespacesInPathParams2() {
         URI uri = UriBuilder.fromUri("http://localhost:80/aaa/{  par1}").path("bbb/{  par2 : \\d*  }/ccc").build("1param", "2");
@@ -890,7 +938,6 @@ public class JerseyUriBuilderTest {
                 .resolveTemplate("par1", "1param").resolveTemplate("par2", "2").build();
         assertEquals(URI.create("http://localhost:80/aaa/1param/bbb/2/ccc"), uri);
     }
-
 
     @Test
     public void testWhitespacesInQueryParams() {
@@ -1015,6 +1062,7 @@ public class JerseyUriBuilderTest {
 
     @Path("resource")
     class Resource {
+
         @Path("method")
         public
         @GET
@@ -1047,6 +1095,7 @@ public class JerseyUriBuilderTest {
 
     @Path("resource/{id}")
     class ResourceWithTemplate {
+
         @Path("method/{id1}")
         public
         @GET
@@ -1079,6 +1128,7 @@ public class JerseyUriBuilderTest {
 
     @Path("resource/{id: .+}")
     class ResourceWithTemplateRegex {
+
         @Path("method/{id1: .+}")
         public
         @GET
@@ -1110,7 +1160,8 @@ public class JerseyUriBuilderTest {
     }
 
     interface GenericInterface<T, U> {
-        T find (U u);
+
+        T find(U u);
     }
 
     @Path("resource/")
@@ -1185,7 +1236,6 @@ public class JerseyUriBuilderTest {
         Assert.assertEquals(URI.create("http://x_y.com:8080/a/b/c/x/y/z/x"), uri);
     }
 
-
     @Test
     public void testBuildFromMap() {
         Map<String, Object> maps = new HashMap<String, Object>();
@@ -1207,7 +1257,6 @@ public class JerseyUriBuilderTest {
 
         Assert.assertTrue(caught);
     }
-
 
     @Test
     public void testBuildFromMapByResolve() {
@@ -1290,7 +1339,6 @@ public class JerseyUriBuilderTest {
         Assert.assertEquals(URI.create("http://localhost:8080/a/b/c/x/y/z/x#x"), uri);
     }
 
-
     @Test
     public void testResolveTemplateFromFragmentTemplates() {
         URI uri = UriBuilder.fromUri("http://localhost:8080/a/b/c").
@@ -1337,7 +1385,6 @@ public class JerseyUriBuilderTest {
                 path("/{foo}/{bar}/{baz}/{foo}").resolveTemplates(m).build();
         Assert.assertEquals(URI.create("http://localhost/a/b/c/x/y/z/x"), uri);
     }
-
 
     @Test
     public void testClone() {
@@ -1565,7 +1612,6 @@ public class JerseyUriBuilderTest {
         Assert.assertEquals("http://localhost:8080/x%2Fy%2Fz%253F%2520/param-b%2Faaa/paramc1%2Fparamc2?query=q?%2520%2526",
                 uriBuilder.buildFromMap(buildMap).toString());
     }
-
 
     @Test
     public void resolveTemplatesEncodeSlash() {

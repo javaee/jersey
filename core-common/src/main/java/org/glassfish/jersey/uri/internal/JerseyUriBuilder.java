@@ -46,20 +46,18 @@ import java.net.URISyntaxException;
 import java.security.AccessController;
 import java.util.List;
 import java.util.Map;
-
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriBuilderException;
 
+import jersey.repackaged.com.google.common.collect.Maps;
+import jersey.repackaged.com.google.common.net.InetAddresses;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.uri.UriTemplate;
-
-import jersey.repackaged.com.google.common.collect.Maps;
-import jersey.repackaged.com.google.common.net.InetAddresses;
 
 /**
  * A Jersey implementation of {@link UriBuilder}.
@@ -67,20 +65,31 @@ import jersey.repackaged.com.google.common.net.InetAddresses;
  * @author Paul Sandoz
  * @author Martin Matula (martin.matula at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Vetle Leinonen-Roeim (vetle at roeim.net)
  */
 public class JerseyUriBuilder extends UriBuilder {
 
     // All fields should be in the percent-encoded form
     private String scheme;
+
     private String ssp;
+
     private String authority;
+
     private String userInfo;
+
     private String host;
+
     private String port;
+
     private final StringBuilder path;
+
     private MultivaluedMap<String, String> matrixParams;
+
     private final StringBuilder query;
+
     private MultivaluedMap<String, String> queryParams;
+
     private String fragment;
 
     /**
@@ -427,20 +436,27 @@ public class JerseyUriBuilder extends UriBuilder {
     @Override
     public JerseyUriBuilder replaceMatrix(String matrix) {
         checkSsp();
-        int i = path.lastIndexOf("/");
-        if (i != -1) {
-            i = 0;
-        }
-        i = path.indexOf(";", i);
+        boolean trailingSlash = path.charAt(path.length() - 1) == '/';
+        int slashIndex = trailingSlash ? path.lastIndexOf("/", path.length() - 2) : path.lastIndexOf("/");
+
+        int i = path.indexOf(";", slashIndex);
+
         if (i != -1) {
             path.setLength(i + 1);
-        } else {
+        } else if (matrix != null) {
             path.append(';');
         }
 
         if (matrix != null) {
             path.append(encode(matrix, UriComponent.Type.PATH));
+        } else if (i != -1) {
+            path.setLength(i);
+
+            if (trailingSlash) {
+                path.append("/");
+            }
         }
+
         return this;
     }
 
@@ -625,7 +641,6 @@ public class JerseyUriBuilder extends UriBuilder {
         return this;
     }
 
-
     @Override
     public JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues) throws IllegalArgumentException {
         resolveTemplates(templateValues, true, true);
@@ -644,7 +659,6 @@ public class JerseyUriBuilder extends UriBuilder {
         resolveTemplates(templateValues, false, false);
         return this;
     }
-
 
     private JerseyUriBuilder resolveTemplates(Map<String, Object> templateValues, boolean encode, boolean encodeSlashInPath) {
         if (templateValues == null) {
@@ -678,7 +692,6 @@ public class JerseyUriBuilder extends UriBuilder {
 
         return this;
     }
-
 
     @Override
     public JerseyUriBuilder fragment(String fragment) {
@@ -916,7 +929,7 @@ public class JerseyUriBuilder extends UriBuilder {
 
     /**
      * Check whether or not the URI represented by this {@code UriBuilder} is absolute.
-     *
+     * <p/>
      * <p> A URI is absolute if, and only if, it has a scheme component.</p>
      *
      * @return {@code true} if, and only if, the URI represented by this {@code UriBuilder} is absolute.
