@@ -538,13 +538,13 @@ public class ClientRequest extends OutboundMessageContext implements ClientReque
                 if (entityStream != null) {
                     try {
                         entityStream.close();
-                    } catch (final IOException ex) {
+                    } catch (final Throwable ex) {
                         LOGGER.log(Level.FINE, LocalizationMessages.ERROR_CLOSING_OUTPUT_STREAM(), ex);
                     }
                 }
                 try {
                     commitStream();
-                } catch (final IOException e) {
+                } catch (final Throwable e) {
                     LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_COMMITTING_OUTPUT_STREAM(), e);
                 }
             }
