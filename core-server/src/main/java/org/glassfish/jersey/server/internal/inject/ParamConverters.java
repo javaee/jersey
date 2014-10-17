@@ -76,6 +76,9 @@ class ParamConverters {
 
         @Override
         public T fromString(final String value) {
+            if (value == null) {
+                throw new IllegalArgumentException("Supplied value is null");
+            }
             try {
                 return _fromString(value);
             } catch (final InvocationTargetException ex) {
@@ -197,6 +200,9 @@ class ParamConverters {
 
                 @Override
                 public T fromString(final String value) {
+                    if (value == null) {
+                        throw new IllegalArgumentException("Supplied value is null");
+                    }
                     try {
                         return rawType.cast(HttpDateFormat.readDate(value));
                     } catch (final ParseException ex) {

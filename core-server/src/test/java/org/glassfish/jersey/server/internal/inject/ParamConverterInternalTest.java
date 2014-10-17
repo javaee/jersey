@@ -123,7 +123,11 @@ public class ParamConverterInternalTest extends AbstractTest {
 
             return (ParamConverter<T>) new ParamConverter<URI>() {
                 public URI fromString(final String value) {
-                    return URI.create(value);
+                    try {
+                        return URI.create(value);
+                    } catch(IllegalArgumentException iae) {
+                        throw new ExtractorException(iae);
+                    }
                 }
 
                 @Override
@@ -265,6 +269,9 @@ public class ParamConverterInternalTest extends AbstractTest {
     public static class MyAbstractParamConverter implements ParamConverter<MyBean> {
         @Override
         public MyBean fromString(final String value) throws IllegalArgumentException {
+            if (value == null) {
+                throw new IllegalArgumentException("Supplied value is null");
+            }
             if ("fail".equals(value)) {
                 throw new RuntimeException("fail");
             }

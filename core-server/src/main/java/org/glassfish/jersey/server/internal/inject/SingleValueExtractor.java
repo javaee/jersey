@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -78,18 +78,16 @@ final class SingleValueExtractor<T> extends AbstractParamValueExtractor<T> imple
     @Override
     public T extract(MultivaluedMap<String, String> parameters) {
         String v = parameters.getFirst(getName());
-        if (v != null) {
-            try {
-                return fromString(v);
-            } catch (WebApplicationException ex) {
-                throw ex;
-            } catch (ProcessingException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                throw new ExtractorException(ex);
-            }
-        } else {
+        try {
+            return fromString(v);
+        } catch (WebApplicationException ex) {
+            throw ex;
+        } catch (ProcessingException ex) {
+            throw ex;
+        } catch (IllegalArgumentException ex) {
             return defaultValue();
+        } catch (Exception ex) {
+            throw new ExtractorException(ex);
         }
     }
 }
