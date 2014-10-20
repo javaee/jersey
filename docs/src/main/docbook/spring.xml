@@ -67,7 +67,7 @@ holder.
         To enable JAX-RS resources to work Spring functionality that requires proxying, such as Spring transaction management
         (with <literal>@Transactional</literal>), Spring Security and aspect oriented programming (such as <literal>@Aspect</literal>), the resources
         must themselves be managed by Spring, by annotating with <literal>@Component</literal>, <literal>@Service</literal>,
-        <literal>@Controller</literal> or <literal>@Repository</literal></literal>:
+        <literal>@Controller</literal> or <literal>@Repository</literal>:
 
         <programlisting language="java" linenumbering="numbered">import javax.ws.rs.GET;
 import javax.ws.rs.Path;
