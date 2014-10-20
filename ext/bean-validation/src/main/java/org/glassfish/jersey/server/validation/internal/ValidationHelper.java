@@ -99,7 +99,25 @@ public final class ValidationHelper {
         }
 
         if (invalidValue.getClass().isArray()) {
-            return Arrays.toString((Object[]) invalidValue);
+            if (invalidValue instanceof Object[]) {
+                return Arrays.toString((Object[]) invalidValue);                
+            } else if (invalidValue instanceof boolean[]) {
+                return Arrays.toString((boolean[]) invalidValue);               
+            } else if (invalidValue instanceof byte[]) {
+                return Arrays.toString((byte[]) invalidValue);              
+            } else if (invalidValue instanceof char[]) {
+                return Arrays.toString((char[]) invalidValue);              
+            } else if (invalidValue instanceof double[]) {
+                return Arrays.toString((double[]) invalidValue);                
+            } else if (invalidValue instanceof float[]) {
+                return Arrays.toString((float[]) invalidValue);             
+            } else if (invalidValue instanceof int[]) {
+                return Arrays.toString((int[]) invalidValue);               
+            } else if (invalidValue instanceof long[]) {
+                return Arrays.toString((long[]) invalidValue);              
+            } else if (invalidValue instanceof short[]) {
+                return Arrays.toString((short[]) invalidValue);             
+            }
         }
 
         return invalidValue.toString();
