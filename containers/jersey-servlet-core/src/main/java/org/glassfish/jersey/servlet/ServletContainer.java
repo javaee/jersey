@@ -528,7 +528,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                 build();
 
         final URI requestUri = absoluteUriBuilder.replacePath(requestURI).
-                replaceQuery(queryString).
+                replaceQuery(ContainerUtils.encodeUnsafeCharacters(queryString)).
                 build();
 
         final int status = service(baseUri, requestUri, request, response).get();
