@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,7 +43,10 @@ package org.glassfish.jersey.server.validation.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.validation.ValidationException;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -79,6 +82,8 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  */
 public class ValidationBinder extends AbstractBinder {
 
+    private static final Logger LOGGER = Logger.getLogger(ValidationBinder.class.getName());
+
     @Override
     protected void configure() {
         bindFactory(DefaultConfigurationProvider.class, Singleton.class).to(Configuration.class).in(Singleton.class);
@@ -102,24 +107,30 @@ public class ValidationBinder extends AbstractBinder {
 
         @Override
         public Configuration provide() {
-            if (!inOsgi) {
-                return Validation.byDefaultProvider().configure();
-            } else {
-                return Validation.
-                        byDefaultProvider().
-                        providerResolver(new ValidationProviderResolver() {
-                            @Override
-                            public List<ValidationProvider<?>> getValidationProviders() {
-                                final List<ValidationProvider<?>> validationProviders = new ArrayList<ValidationProvider<?>>();
+            try {
+                if (!inOsgi) {
+                    return Validation.byDefaultProvider().configure();
+                } else {
+                    return Validation.
+                            byDefaultProvider().
+                            providerResolver(new ValidationProviderResolver() {
+                                @Override
+                                public List<ValidationProvider<?>> getValidationProviders() {
+                                    final List<ValidationProvider<?>> validationProviders = new ArrayList<>();
 
-                                for (final ValidationProvider validationProvider : ServiceFinder.find(ValidationProvider.class)) {
-                                    validationProviders.add(validationProvider);
+                                    for (final ValidationProvider validationProvider : ServiceFinder.find(ValidationProvider.class)) {
+                                        validationProviders.add(validationProvider);
+                                    }
+
+                                    return validationProviders;
                                 }
-
-                                return validationProviders;
-                            }
-                        }).
-                        configure();
+                            }).
+                            configure();
+                }
+            } catch (final ValidationException e) {
+                // log and re-trow
+                LOGGER.log(Level.FINE, LocalizationMessages.VALIDATION_EXCEPTION_PROVIDER(), e);
+                throw e;
             }
         }
 
@@ -187,7 +198,7 @@ public class ValidationBinder extends AbstractBinder {
         private ConfiguredValidator defaultValidator;
 
         private final WeakHashMap<ContextResolver<ValidationConfig>, ConfiguredValidator> validatorCache =
-                new WeakHashMap<ContextResolver<ValidationConfig>, ConfiguredValidator>();
+                new WeakHashMap<>();
 
         @Override
         public ConfiguredValidator provide() {

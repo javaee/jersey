@@ -66,6 +66,10 @@
             <groupId>org.glassfish.jersey.ext</groupId>
             <artifactId>jersey-mvc-mustache</artifactId>
         </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

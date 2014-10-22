@@ -110,6 +110,17 @@
             <artifactId>hibernate-validator</artifactId>
         </dependency>
 
+        <!-- java-el related dependencies are in scope "provided" in hibernate-validator -->
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>javax.el</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-bundle</artifactId>
