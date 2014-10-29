@@ -42,6 +42,7 @@ package org.glassfish.jersey.server.mvc.spi;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -219,6 +220,12 @@ public abstract class AbstractTemplateProcessor<T> implements TemplateProcessor<
                     return resolve(template, reader);
                 } catch (final Exception e) {
                     LOGGER.log(Level.WARNING, LocalizationMessages.TEMPLATE_RESOLVE_ERROR(template), e);
+                } finally {
+                    try {
+                        reader.close();
+                    } catch (final IOException e) {
+                        LOGGER.log(Level.WARNING, LocalizationMessages.TEMPLATE_ERROR_CLOSING_READER(), e);
+                    }
                 }
             }
         }
