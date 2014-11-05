@@ -301,4 +301,10 @@ public class WebResourceFactoryTest extends JerseyTest {
         String result = resource.postByNameFormSortedSet(set);
         assertEquals("3:[a, bb, ccc]", result);
     }
+
+    @Test
+    public void testAcceptHeader() {
+        assertTrue("Accept HTTP header does not match @Produces annotation", resource.isAcceptHeaderValid(null));
+    }
+
 }
