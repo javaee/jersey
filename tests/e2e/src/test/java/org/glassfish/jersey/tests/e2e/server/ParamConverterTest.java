@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.SortedSet;
 
 import javax.ws.rs.CookieParam;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -155,6 +156,47 @@ public class ParamConverterTest extends JerseyTest {
 
     }
 
+    @Test
+    public void testMyBeanFormParamDefault() {
+        Form form = new Form();
+        Response response = target().path("resource/myBeanFormDefault")
+                .request().post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        String str = response.readEntity(String.class);
+        assertEquals("*form-default*", str);
+    }
+
+    @Test
+    public void testMyBeanQueryParamDefault() {
+        final Response response = target().path("resource/myBeanQueryDefault")
+                .request().get();
+        final String str = response.readEntity(String.class);
+        assertEquals("*query-default*", str);
+    }
+
+    @Test
+    public void testMyBeanMatrixParamDefault() {
+        final Response response = target().path("resource/myBeanMatrixDefault")
+                .request().get();
+        final String str = response.readEntity(String.class);
+        assertEquals("*matrix-default*", str);
+    }
+
+    @Test
+    public void testMyBeanCookieParamDefault() {
+        final Response response = target().path("resource/myBeanCookieDefault")
+                .request().get();
+        final String str = response.readEntity(String.class);
+        assertEquals("*cookie-default*", str);
+    }
+
+    @Test
+    public void testMyBeanHeaderParamDefault() {
+        final Response response = target().path("resource/myBeanHeaderDefault")
+                .request().get();
+        final String str = response.readEntity(String.class);
+        assertEquals("*header-default*", str);
+    }
+
     @Path("resource")
     public static class Resource {
         @POST
@@ -197,6 +239,36 @@ public class ParamConverterTest extends JerseyTest {
             }
 
             return sb.toString();
+        }
+
+        @POST
+        @Path("myBeanFormDefault")
+        public String postMyBeanFormDefault(@DefaultValue("form-default") @FormParam("form") MyBean pathParam) {
+            return pathParam.getValue();
+        }
+
+        @GET
+        @Path("myBeanQueryDefault")
+        public String getMyBeanQueryDefault(@DefaultValue("query-default") @QueryParam("q") MyBean queryParam) {
+            return queryParam.getValue();
+        }
+
+        @GET
+        @Path("myBeanMatrixDefault")
+        public String getMyBeanMatrixDefault(@DefaultValue("matrix-default") @MatrixParam("m") MyBean matrixParam) {
+            return matrixParam.getValue();
+        }
+
+        @GET
+        @Path("myBeanCookieDefault")
+        public String getMyBeanCookieDefault(@DefaultValue("cookie-default") @CookieParam("c") MyBean cookieParam) {
+            return cookieParam.getValue();
+        }
+
+        @GET
+        @Path("myBeanHeaderDefault")
+        public String getMyBeanHeaderDefault(@DefaultValue("header-default") @HeaderParam("h") MyBean headerParam) {
+            return headerParam.getValue();
         }
 
         @POST
