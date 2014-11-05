@@ -39,6 +39,8 @@
  */
 package org.glassfish.jersey.client.proxy;
 
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -163,5 +165,11 @@ public class MyResource implements MyResourceIfc {
     @Override
     public MySubResourceIfc getSubResource() {
         return new MySubResource();
+    }
+
+    @Override
+    public boolean isAcceptHeaderValid(HttpHeaders headers) {
+        List<MediaType> accepts = headers.getAcceptableMediaTypes();
+        return accepts.contains(MediaType.TEXT_PLAIN_TYPE) && accepts.contains(MediaType.TEXT_XML_TYPE);
     }
 }
