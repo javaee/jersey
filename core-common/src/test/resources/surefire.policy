@@ -55,6 +55,7 @@ grant codebase "file:${project.build.directory}/test-classes/-" {
 };
 
 grant codebase "file:${project.build.directory}/classes/-" {
+  permission java.lang.RuntimePermission "accessClassInPackage.sun.misc";
   permission java.lang.RuntimePermission "accessDeclaredMembers";
   permission java.lang.RuntimePermission "getClassLoader";
   permission java.util.PropertyPermission "*", "read";
