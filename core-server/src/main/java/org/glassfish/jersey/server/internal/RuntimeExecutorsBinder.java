@@ -39,6 +39,9 @@
  */
 package org.glassfish.jersey.server.internal;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -109,8 +112,15 @@ public class RuntimeExecutorsBinder extends AbstractBinder {
         }
 
         @Override
-        public void dispose(ScheduledExecutorService instance) {
-            instance.shutdown();
+        public void dispose(final ScheduledExecutorService instance) {
+            AccessController.doPrivileged(new PrivilegedAction(){
+
+                @Override
+                public Object run() {
+                    instance.shutdown();
+                    return null;
+                }
+            });
         }
     }
 

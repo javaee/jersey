@@ -61,6 +61,7 @@ allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.lang.reflect.ReflectPermission "suppressAccessChecks") } "suppressAccessChecksToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.net.SocketPermission "*" "connect,resolve") } "socketPermissionToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.lang.RuntimePermission "accessDeclaredMembers") } "accessDeclaredMembersToJerseyCommon";
+allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.lang.RuntimePermission "accessClassInPackage.sun.misc") } "accessClassInPackageSunMisc";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.lang.RuntimePermission "getClassLoader") } "getCLToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.util.PropertyPermission "*" "read") } "propReadToJerseyCommon";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-common*"] (java.io.FilePermission "<<ALL FILES>>" "read,write") } "fileReadToJerseyCommon";
@@ -72,4 +73,5 @@ allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.lang.RuntimePermission "getClassLoader") } "getClassLoaderToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.util.PropertyPermission "*" "read") } "propReadToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.io.FilePermission "<<ALL FILES>>" "read,write") } "fileReadToJerseyServer";
+allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-server*"] (java.lang.RuntimePermission "modifyThread") } "modifyThreadToJerseyServer";
 allow { [org.osgi.service.condpermadmin.BundleLocationCondition "*jersey-container*"] (java.security.AllPermission) } "allToJerseyContainer";
