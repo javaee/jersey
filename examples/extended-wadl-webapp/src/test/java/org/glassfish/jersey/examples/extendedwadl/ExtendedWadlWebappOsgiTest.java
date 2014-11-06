@@ -73,6 +73,7 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.wadl.internal.WadlUtils;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -108,9 +109,13 @@ public class ExtendedWadlWebappOsgiTest {
 
     private final static Logger LOGGER = Logger.getLogger(ExtendedWadlWebappOsgiTest.class.getName());
 
+    // we want to re-use the port number as set for Jersey test container to avoid CT port number clashes
+    private static final String testContainerPort = System.getProperty(TestProperties.CONTAINER_PORT);
+    private static final int testPort = testContainerPort == null ? TestProperties.DEFAULT_CONTAINER_PORT : Integer.parseInt(testContainerPort);
+
     private static final URI baseUri = UriBuilder.
             fromUri("http://localhost").
-            port(8080).
+            port(testPort).
             path("extended-wadl-webapp").build();
 
     @Configuration
