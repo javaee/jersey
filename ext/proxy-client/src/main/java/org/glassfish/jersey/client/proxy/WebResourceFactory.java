@@ -274,7 +274,17 @@ public final class WebResourceFactory implements InvocationHandler {
             return WebResourceFactory.newResource(responseType, newTarget, true, headers, cookies, form);
         }
 
-        // accepted media types
+        Invocation.Builder builder;
+        if (accepts != null) {
+            builder = newTarget.request(accepts);
+        } else {
+            builder = newTarget.request();
+        }
+
+        // apply header params and cookies
+        builder.headers(headers);
+        
+               // accepted media types
         Produces produces = method.getAnnotation(Produces.class);
         if (produces == null) {
             produces = proxyIfc.getAnnotation(Produces.class);
@@ -293,16 +303,6 @@ public final class WebResourceFactory implements InvocationHandler {
                 contentType = consumes.value()[0];
             }
         }
-
-        Invocation.Builder builder;
-        if (accepts != null) {
-            builder = newTarget.request(accepts);
-        } else {
-            builder = newTarget.request();
-        }
-
-        // apply header params and cookies
-        builder.headers(headers);
 
         for (final Cookie c : cookies) {
             builder = builder.cookie(c);
