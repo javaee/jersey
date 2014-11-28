@@ -84,9 +84,9 @@
             <version>${net.java.html.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.netbeans.api</groupId>
+            <groupId>org.codeartisans.thirdparties.swing</groupId>
             <artifactId>org-openide-util-lookup</artifactId>
-            <version>RELEASE80</version>
+            <version>8.3.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
