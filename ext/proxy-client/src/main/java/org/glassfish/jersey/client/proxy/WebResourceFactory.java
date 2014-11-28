@@ -87,6 +87,8 @@ import org.glassfish.jersey.internal.util.ReflectionHelper;
  */
 public final class WebResourceFactory implements InvocationHandler {
 
+    static private final String[] EMPTY = {};
+
     private final WebTarget target;
     private final MultivaluedMap<String, Object> headers;
     private final List<Cookie> cookies;
@@ -279,7 +281,7 @@ public final class WebResourceFactory implements InvocationHandler {
         if (produces == null) {
             produces = proxyIfc.getAnnotation(Produces.class);
         }
-        final String[] accepts = produces == null ? null : produces.value();
+        final String[] accepts = (produces == null) ? EMPTY : produces.value();
 
         // determine content type
         String contentType = null;
@@ -294,15 +296,9 @@ public final class WebResourceFactory implements InvocationHandler {
             }
         }
 
-        Invocation.Builder builder;
-        if (accepts != null) {
-            builder = newTarget.request(accepts);
-        } else {
-            builder = newTarget.request();
-        }
-
-        // apply header params and cookies
-        builder.headers(headers);
+        Invocation.Builder builder = newTarget.request()
+                .headers(headers) // this resets all headers so do this first
+                .accept(accepts); // if @Produces is defined, propagate values into Accept header; empty array is NO-OP
 
         for (final Cookie c : cookies) {
             builder = builder.cookie(c);
