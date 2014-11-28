@@ -121,10 +121,8 @@ public class MBeanExposer extends AbstractContainerLifecycleListener implements 
         String str = name.replace("\\", "\\\\");
         str = str.replace("?", "\\?");
         str = str.replace("*", "\\*");
-        StringBuilder sb = new StringBuilder();
-        sb.append("\"").append(str).append("\"");
 
-        return sb.toString();
+        return "\"" + str + "\"";
     }
 
     /**

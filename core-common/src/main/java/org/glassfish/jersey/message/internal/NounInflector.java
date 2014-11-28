@@ -640,10 +640,7 @@ final class NounInflector {
             return word;
         }
         // otherwise turn the first character to lower case and attach the rest
-        StringBuilder sb = new StringBuilder(word.length());
-        sb.append(Character.toLowerCase(first));
-        sb.append(word.substring(1));
-        return sb.toString();
+        return String.valueOf(Character.toLowerCase(first)) + word.substring(1);
     }
 
     /**

@@ -249,8 +249,8 @@ public class UriConnegFilter implements ContainerRequestFilter {
             parseMappings(property, (String) mappings, mappingsMap, parser);
         } else if (mappings instanceof String[]) {
             final String[] mappingsArray = (String[])mappings;
-            for (int i = 0; i < mappingsArray.length; i++) {
-                parseMappings(property, mappingsArray[i], mappingsMap, parser);
+            for (final String aMappingsArray : mappingsArray) {
+                parseMappings(property, aMappingsArray, mappingsMap, parser);
             }
         } else {
             throw new IllegalArgumentException(LocalizationMessages.INVALID_MAPPING_TYPE(property));

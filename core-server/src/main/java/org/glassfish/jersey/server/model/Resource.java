@@ -858,9 +858,7 @@ public final class Resource implements Routed, ResourceModelComponent {
                     return data.names.get(0);
                 } else {
                     // return merged name
-                    StringBuilder nameBuilder = new StringBuilder("Merge of ");
-                    nameBuilder.append(data.names.toString());
-                    return nameBuilder.toString();
+                    return "Merge of " + data.names.toString();
                 }
             }
         });

@@ -114,7 +114,7 @@ public class Localizer {
                                 if (osgiRegistry != null) {
                                     bundle = osgiRegistry.getResourceBundle(bundlename);
                                 } else {
-                                    final String path = new StringBuilder(bundlename.replace('.', '/')).append(".properties").toString();
+                                    final String path = bundlename.replace('.', '/') + ".properties";
                                     final URL bundleUrl = ResourceFinder.findEntry(path);
                                     if (bundleUrl != null) {
                                         try {
