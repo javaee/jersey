@@ -609,18 +609,13 @@ final Application application = new ResourceConfig()
 public class MyObjectMapperProvider implements ContextResolver&lt;ObjectMapper&gt; {
 
     final ObjectMapper defaultObjectMapper;
-    final ObjectMapper combinedObjectMapper;
 
     public MyObjectMapperProvider() {
         defaultObjectMapper = createDefaultMapper();
-        combinedObjectMapper = createCombinedObjectMapper();
     }
 
     @Override
     public ObjectMapper getContext(Class&lt;?&gt; type) {
-        if (type == CombinedAnnotationBean.class) {
-            return combinedObjectMapper;
-        } else {
             return defaultObjectMapper;
         }
     }
@@ -634,6 +629,10 @@ public class MyObjectMapperProvider implements ContextResolver&lt;ObjectMapper&g
 
     // ...
 }</programlisting>
+<para>To view the complete example source code, see
+    <link xlink:href='&jersey.github.examples.uri;/json-jackson/src/main/java/org/glassfish/jersey/examples/jackson/MyObjectMapperProvider.java'>
+    MyObjectMapperProvider</link> class from the
+    <link xlink:href='&jersey.github.examples.uri;/json-jackson'>JSON-Jackson</link> example.</para>
                     </example>
 
                     <example>
