@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -75,6 +75,8 @@ import static org.junit.Assert.assertTrue;
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class FieldProcessorTest {
+
+    private static final Logger LOG = Logger.getLogger(FieldProcessor.class.getName()); 
 
     ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
@@ -249,7 +251,8 @@ public class FieldProcessorTest {
 
     @Test
     public void testProcessLinks() {
-        System.out.println("Links");
+        LOG.info("Links");
+
         FieldProcessor<TestClassD> instance = new FieldProcessor(TestClassD.class);
         TestClassD testClass = new TestClassD();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -276,7 +279,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testProcessLinksWithFields() {
-        System.out.println("Links from field values");
+        LOG.info("Links from field values");
         FieldProcessor<TestClassE> instance = new FieldProcessor(TestClassE.class);
         TestClassE testClass = new TestClassE("10");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -302,7 +305,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testNesting() {
-        System.out.println("Nesting");
+        LOG.info("Nesting");
         FieldProcessor<TestClassF> instance = new FieldProcessor(TestClassF.class);
         TestClassE nested = new TestClassE("10");
         TestClassF testClass = new TestClassF("20", nested);
@@ -313,7 +316,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testArray() {
-        System.out.println("Array");
+        LOG.info("Array");
         FieldProcessor<TestClassE[]> instance = new FieldProcessor(TestClassE[].class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
@@ -325,7 +328,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testCollection() {
-        System.out.println("Collection");
+        LOG.info("Collection");
         FieldProcessor<List> instance = new FieldProcessor(List.class);
         TestClassE item1 = new TestClassE("10");
         TestClassE item2 = new TestClassE("20");
@@ -361,7 +364,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testLinkStyles() {
-        System.out.println("Link styles");
+        LOG.info("Link styles");
         FieldProcessor<TestClassG> instance = new FieldProcessor(TestClassG.class);
         TestClassG testClass = new TestClassG("10");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -382,7 +385,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testComputedProperty() {
-        System.out.println("Computed property");
+        LOG.info("Computed property");
         FieldProcessor<TestClassH> instance = new FieldProcessor(TestClassH.class);
         TestClassH testClass = new TestClassH();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -400,7 +403,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testEL() {
-        System.out.println("EL link");
+        LOG.info("El link");
         FieldProcessor<TestClassI> instance = new FieldProcessor(TestClassI.class);
         TestClassI testClass = new TestClassI();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -418,7 +421,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testMixed() {
-        System.out.println("Mixed EL and template vars link");
+        LOG.info("Mixed EL and template vars link");
         FieldProcessor<TestClassJ> instance = new FieldProcessor(TestClassJ.class);
         TestClassJ testClass = new TestClassJ();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -446,7 +449,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testELScopes() {
-        System.out.println("EL scopes");
+        LOG.info("EL scopes");
         FieldProcessor<OuterBean> instance = new FieldProcessor(OuterBean.class);
         OuterBean testClass = new OuterBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -465,7 +468,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testELBinding() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         FieldProcessor<BoundLinkBean> instance = new FieldProcessor(BoundLinkBean.class);
         BoundLinkBean testClass = new BoundLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -485,7 +488,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testELBindingOnLink() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         FieldProcessor<BoundLinkOnLinkBean> instance = new FieldProcessor(BoundLinkOnLinkBean.class);
         BoundLinkOnLinkBean testClass = new BoundLinkOnLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -525,7 +528,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testELBindingOnLinks() {
-        System.out.println("EL binding");
+        LOG.info("EL binding");
         FieldProcessor<BoundLinkOnLinksBean> instance = new FieldProcessor(BoundLinkOnLinksBean.class);
         BoundLinkOnLinksBean testClass = new BoundLinkOnLinksBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -562,7 +565,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testCondition() {
-        System.out.println("Condition");
+        LOG.info("Condition");
         FieldProcessor<ConditionalLinkBean> instance = new FieldProcessor(ConditionalLinkBean.class);
         ConditionalLinkBean testClass = new ConditionalLinkBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -586,7 +589,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testSubresource() {
-        System.out.println("Subresource");
+        LOG.info("Subresource");
         FieldProcessor<SubResourceBean> instance = new FieldProcessor(SubResourceBean.class);
         SubResourceBean testClass = new SubResourceBean();
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -632,7 +635,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testQueryResource() {
-        System.out.println("QueryResource");
+        LOG.info("QueryResource");
         FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
         QueryResourceBean testClass = new QueryResourceBean("queryExample", null);
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -641,7 +644,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testDoubleQueryResource() {
-        System.out.println("QueryResource");
+        LOG.info("QueryResource");
         FieldProcessor<QueryResourceBean> instance = new FieldProcessor(QueryResourceBean.class);
         QueryResourceBean testClass = new QueryResourceBean("queryExample", "queryExample2");
         instance.processLinks(testClass, mockUriInfo, mockRmc);
@@ -721,7 +724,7 @@ public class FieldProcessorTest {
 
     @Test
     public void testNoRecursiveNesting() {
-        System.out.println("No Recursive Nesting");
+        LOG.info("No Recursive Nesting");
         FieldProcessor<TestClassM> instance = new FieldProcessor(TestClassM.class);
         TestClassE nested = new TestClassE("10");
         TestClassE transientNested = new TestClassE("30");

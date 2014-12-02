@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -267,11 +267,11 @@ List&lt;Link&gt; links</programlisting>
     <section>
         <title>Prevent Recursive Injection</title>
         <para>
-          	By default, Jersey will try to recursively find all <literal>@InjectionLink</literal> annotations in
+            By default, Jersey will try to recursively find all <literal>@InjectionLink</literal> annotations in
           	the members of your object unless this member is annotated with <literal>@XmlTransient</literal>.
 
-          	But is some cases, you might want to control which member will be introspected regardless of the
-			<literal>@XmlTransient</literal> annotation.
+          	But in some cases, you might want to control which member will be introspected regardless of the
+            <literal>@XmlTransient</literal> annotation.
 
           	You can prevent Jersey to look into an object by adding <literal>@InjectLinkNoFollow</literal> to a field.
 
