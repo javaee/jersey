@@ -89,6 +89,13 @@ public class WebResourceFactoryTest extends JerseyTest {
     }
 
     @Test
+    public void testPostValid() {
+        MyBean bean = new MyBean();
+        bean.name = "Ahoj";
+        assertEquals("Ahoj", resource.postValid(bean).name);
+    }
+
+    @Test
     public void testPathParam() {
         assertEquals("jouda", resource.getId("jouda"));
     }

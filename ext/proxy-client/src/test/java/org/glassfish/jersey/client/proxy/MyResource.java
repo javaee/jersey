@@ -58,6 +58,11 @@ public class MyResource implements MyResourceIfc {
     }
 
     @Override
+    public MyBean postValid(@Valid MyBean entity) {
+        return entity;
+    }
+
+    @Override
     public String getId(String id) {
         return id;
     }
