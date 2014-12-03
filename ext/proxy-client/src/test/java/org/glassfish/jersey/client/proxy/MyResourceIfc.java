@@ -70,6 +70,8 @@ public interface MyResourceIfc {
     List<MyBean> postIt(List<MyBean> entity);
 
     @POST
+    @Path("valid")
+    @Consumes({MediaType.APPLICATION_XML})
     @Produces({MediaType.APPLICATION_XML})
     MyBean postValid(@Valid MyBean entity);
 
