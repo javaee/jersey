@@ -231,8 +231,7 @@ List&lt;Link&gt; links</programlisting>
             <literal>@InjectLink</literal>, you instead annotate the entity class itself with
             <literal>@InjectLinks</literal>. E.g.:
             <programlisting language="java">@InjectLinks(
-    value=@InjectLink("widgets/${resource.nextId}"),
-    rel="next"
+    @InjectLink(value="widgets/${resource.nextId}", rel="next")
 )</programlisting>
         </para>
 
