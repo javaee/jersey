@@ -45,6 +45,7 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.glassfish.jersey.server.spring.SpringTestConfiguration;
 
 import javax.ws.rs.core.Application;
 
@@ -52,7 +53,7 @@ public class SpringMethodInjectionTest extends JerseyTest {
 
     @Override
     protected Application configure() {
-        ApplicationContext context = new AnnotationConfigApplicationContext(org.glassfish.jersey.server.spring.SpringTestConfiguration.class);
+        ApplicationContext context = new AnnotationConfigApplicationContext(SpringTestConfiguration.class);
         return new SpringMethodInjectionJerseyTestConfig()
                 .property("contextConfig", context);
     }

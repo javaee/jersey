@@ -39,11 +39,12 @@
  */
 package org.glassfish.jersey.server.spring.methodinjection;
 
+import org.glassfish.jersey.server.spring.scope.RequestContextFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 
 public class SpringMethodInjectionJerseyTestConfig extends ResourceConfig {
     public SpringMethodInjectionJerseyTestConfig() {
-        register(org.glassfish.jersey.server.spring.scope.RequestContextFilter.class);
+        register(RequestContextFilter.class);
         register(SpringMethodInjectionTestResource.class);
     }
 }
