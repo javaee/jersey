@@ -332,7 +332,7 @@
                             <link>http://docs.oracle.com/javaee/7/api</link>
                         </links>
                         <excludePackageNames>
-                            *.examples.*:*.internal.*:*.tests.*
+                            *.internal.*:*.tests.*
                         </excludePackageNames>
                         <sourceFileExcludes>
                             <exclude>bundles/**</exclude>

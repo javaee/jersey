@@ -38,7 +38,7 @@
  * holder.
  */
 
-package org.glassfish.jersey.internal.spidiscovery;
+package org.glassfish.jersey.spidiscovery.internal;
 
 import java.util.Map;
 
