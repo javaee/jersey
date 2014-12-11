@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,45 +37,19 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.tests.integration.jersey2704;
 
-package org.glassfish.jersey.internal.spidiscovery;
+import org.glassfish.jersey.server.ResourceConfig;
 
-import java.util.Map;
-
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.core.FeatureContext;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
-
-import javax.annotation.Priority;
-
-import org.glassfish.jersey.internal.ServiceFinderBinder;
-import org.glassfish.jersey.internal.spi.AutoDiscoverable;
-import org.glassfish.jersey.internal.spi.ForcedAutoDiscoverable;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 /**
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * Jersey application.
+ *
+ * @author Bartosz Firyn (bartoszfiryn at gmail.com)
  */
-@Priority(AutoDiscoverable.DEFAULT_PRIORITY)
-public class MetaInfServicesAutoDiscoverable implements ForcedAutoDiscoverable {
+public class TestApplication extends ResourceConfig {
 
-    @Override
-    public void configure(final FeatureContext context) {
-        final Map<String, Object> properties = context.getConfiguration().getProperties();
-        final RuntimeType runtimeType = context.getConfiguration().getRuntimeType();
-
-        context.register(new AbstractBinder() {
-            @Override
-            protected void configure() {
-                // Message Body providers.
-                install(new ServiceFinderBinder<MessageBodyReader>(MessageBodyReader.class, properties, runtimeType));
-                install(new ServiceFinderBinder<MessageBodyWriter>(MessageBodyWriter.class, properties, runtimeType));
-                // Exception Mappers.
-                install(new ServiceFinderBinder<ExceptionMapper>(ExceptionMapper.class, properties, runtimeType));
-            }
-        });
-    }
+	public TestApplication() {
+		register(TestResource.class);
+	}
 }

@@ -283,6 +283,11 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.5.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>2.6</version>
                 </plugin>
@@ -327,7 +332,7 @@
                             <link>http://docs.oracle.com/javaee/7/api</link>
                         </links>
                         <excludePackageNames>
-                            *.examples.*:*.internal.*:*.tests.*
+                            *.internal.*:*.tests.*
                         </excludePackageNames>
                         <sourceFileExcludes>
                             <exclude>bundles/**</exclude>
@@ -512,6 +517,11 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ear-plugin</artifactId>
+                    <version>2.8</version>
+                </plugin>
+                <plugin>
                     <groupId>org.glassfish.embedded</groupId>
                     <artifactId>maven-embedded-glassfish-plugin</artifactId>
                     <version>3.1.2.2</version>
@@ -638,12 +648,12 @@
                 <plugin>
                     <groupId>com.github.wvengen</groupId>
                     <artifactId>proguard-maven-plugin</artifactId>
-                    <version>2.0.6</version>
+                    <version>2.0.8</version>
                     <dependencies>
                         <dependency>
                             <groupId>net.sf.proguard</groupId>
                             <artifactId>proguard-base</artifactId>
-                            <version>4.11</version>
+                            <version>5.1</version>
                             <scope>runtime</scope>
                         </dependency>
                     </dependencies>
@@ -828,6 +838,41 @@
                     <url>http://localhost</url>
                 </site>
             </distributionManagement>
+        </profile>
+        <profile>
+            <id>jdk1.8</id>
+            <activation>
+                <jdk>1.8</jdk>
+            </activation>
+            <modules>
+                <module>incubator/rx/rx-client-java8</module>
+            </modules>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                            <inherited>true</inherited>
+                            <configuration>
+                                <additionalparam>-Xdoclint:none</additionalparam>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+            <reporting>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </reporting>
         </profile>
     </profiles>
 
@@ -1468,7 +1513,7 @@
         <grizzly.client.version>1.8</grizzly.client.version>
         <grizzly2.version>2.3.16</grizzly2.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <hk2.version>2.4.0-b02</hk2.version>
+        <hk2.version>2.4.0-b06</hk2.version>
         <asm.version>5.0.2</asm.version>
         <httpclient.version>4.3.1</httpclient.version>
         <jackson.version>2.3.2</jackson.version>

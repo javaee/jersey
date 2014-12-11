@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.servlet;
 
+import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.jersey.internal.util.PropertiesClass;
 
 /**
@@ -146,6 +147,19 @@ public final class ServletProperties {
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String PROVIDER_WEB_APP = "jersey.config.servlet.provider.webapp";
+
+    /**
+     * Identifies the object that will be used as a parent {@link ServiceLocator} in the Jersey
+     * {@link WebComponent}.
+     * <p></p>
+     * This property gives a possibility to use HK2 services that are registered and/or created
+     * outside of the Jersey server context.
+     * <p></p>
+     * By default this property is not set.
+     * <p></p>
+     * The name of the configuration property is <tt>{@value}</tt>.
+     */
+    public static final String SERVICE_LOCATOR = "jersey.config.servlet.context.serviceLocator";
 
     private ServletProperties() {
         // prevents instantiation

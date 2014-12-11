@@ -130,6 +130,17 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <!--
+                        Excluding only *.tests.* packages for this module. At least one class has to exist in non-excluded
+                        packages to generate proper -javadoc.jar file. See https://jira.codehaus.org/browse/MJAVADOC-329
+                      -->
+                    <excludePackageNames>*.tests.*</excludePackageNames>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

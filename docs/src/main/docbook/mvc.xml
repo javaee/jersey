@@ -506,7 +506,7 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
                 <itemizedlist>
                     <listitem>
                         <para><literal>MustacheMvcFeature.TEMPLATE_BASE_PATH</literal> -
-                            <literal>jersey.config.server.mvc.templateBasepath.mustache</literal></para>
+                            <literal>jersey.config.server.mvc.templateBasePath.mustache</literal></para>
                         <para>The base path where Mustache templates are located.</para>
                     </listitem>
                     <listitem>
@@ -588,7 +588,7 @@ public ShortenedLink createLink(@NotEmpty @FormParam("link") final String link) 
                 <itemizedlist>
                     <listitem>
                         <para><literal>FreemarkerMvcFeature.TEMPLATE_BASE_PATH</literal> -
-                            <literal>jersey.config.server.mvc.templateBasepath.freemarker</literal></para>
+                            <literal>jersey.config.server.mvc.templateBasePath.freemarker</literal></para>
                         <para>The base path where Freemarker templates are located.</para>
                     </listitem>
                     <listitem>

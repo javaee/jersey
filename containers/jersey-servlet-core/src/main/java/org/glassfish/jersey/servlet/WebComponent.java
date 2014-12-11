@@ -297,7 +297,9 @@ public class WebComponent {
      *                          resource configuration.
      */
     public WebComponent(final WebConfig webConfig, ResourceConfig resourceConfig) throws ServletException {
+
         this.webConfig = webConfig;
+
         if (resourceConfig == null) {
             resourceConfig = createResourceConfig(webConfig);
         }
@@ -308,7 +310,9 @@ public class WebComponent {
         final AbstractBinder webComponentBinder = new WebComponentBinder(resourceConfig.getProperties());
         resourceConfig.register(webComponentBinder);
 
-        this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder);
+        ServiceLocator locator = (ServiceLocator) webConfig.getServletContext().getAttribute(ServletProperties.SERVICE_LOCATOR);
+
+        this.appHandler = new ApplicationHandler(resourceConfig, webComponentBinder, locator);
 
         this.asyncExtensionDelegate = getAsyncExtensionDelegate();
         this.forwardOn404 = webConfig.getConfigType().equals(WebConfig.ConfigType.FilterConfig)
@@ -561,5 +565,14 @@ public class WebComponent {
                 }
             }
         }
+    }
+
+    /**
+     * Get {@link ApplicationHandler} used by this web component.
+     * 
+     * @return The application handler
+     */
+    public ApplicationHandler getAppHandler() {
+        return appHandler;
     }
 }

@@ -95,6 +95,7 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
+                            !${jersey.repackaged.prefix}.com.google.common.*,
                             javax.annotation;resolution:=optional;version="[1.2,2)",
                             javax.inject;resolution:=optional;version="[1.0,2)",
                             sun.misc.*;resolution:=optional,
@@ -219,6 +220,8 @@
                                     <options>
                                         <option>-dontoptimize</option>
                                         <option>-dontobfuscate</option>
+                                        <option>-keepparameternames</option>
+                                        <option>-keepattributes Signature,InnerClasses,*Annotation*</option>
                                     </options>
                                     <addMavenDescriptor>false</addMavenDescriptor>
                                     <proguardInclude>${project.build.directory}/proguard.conf</proguardInclude>
