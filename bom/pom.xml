@@ -92,16 +92,6 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.glassfish.jersey.bundles.glassfish.v4_0</groupId>
-                <artifactId>jersey-gfv4_0-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.bundles.glassfish.v4_0</groupId>
-                <artifactId>jersey-gfv4_0-docs-and-examples</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.glassfish.jersey.connectors</groupId>
                 <artifactId>jersey-apache-connector</artifactId>
                 <version>${project.version}</version>
