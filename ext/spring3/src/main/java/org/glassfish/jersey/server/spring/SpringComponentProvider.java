@@ -134,6 +134,11 @@ public class SpringComponentProvider implements ComponentProvider {
 
             ServiceBindingBuilder bb = Injections.newFactoryBinder(new SpringComponentProvider.SpringManagedBeanFactory(ctx, locator, beanName));
             bb.to(component);
+            if (providerContracts != null) {
+                for (Class<?> providerContract : providerContracts) {
+                    bb.to(providerContract);
+                }
+            }
             Injections.addBinding(bb, c);
             c.commit();
 
