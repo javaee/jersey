@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.BadRequestException;
@@ -61,6 +62,8 @@ import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
 import org.glassfish.jersey.media.sse.SseFeature;
+import org.glassfish.jersey.server.BroadcasterListener;
+import org.glassfish.jersey.server.ChunkedOutput;
 
 /**
  * A resource for storing named items.
@@ -74,6 +77,22 @@ public class ItemStoreResource {
     private static final ReentrantReadWriteLock storeLock = new ReentrantReadWriteLock();
     private static final LinkedList<String> itemStore = new LinkedList<String>();
     private static final SseBroadcaster broadcaster = new SseBroadcaster();
+
+    static {
+        broadcaster.add(new BroadcasterListener<OutboundEvent>() {
+            @Override
+            public void onException(ChunkedOutput<OutboundEvent> chunkedOutput, Exception exception) {
+                LOGGER.log(Level.WARNING,
+                        "An exception has been thrown while broadcasting to an event output.",
+                        exception);
+            }
+
+            @Override
+            public void onClose(ChunkedOutput<OutboundEvent> chunkedOutput) {
+                LOGGER.log(Level.INFO, "Chunked output has been closed.");
+            }
+        });
+    }
 
     private static volatile long reconnectDelay = 0;
 

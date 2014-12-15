@@ -52,7 +52,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -158,7 +157,7 @@ public class ItemStoreResourceTest extends JerseyTest {
                         } else if ("size".equals(inboundEvent.getName())) {
                             sizeEventsCount.incrementAndGet();
                         }
-                    } catch (ProcessingException ex) {
+                    } catch (Exception ex) {
                         LOGGER.log(Level.SEVERE, "[-x-] SOURCE " + id + ": Error getting event data.", ex);
                         indexes.add(-999);
                     } finally {
@@ -232,7 +231,7 @@ public class ItemStoreResourceTest extends JerseyTest {
                             LOGGER.info("[-i-] SOURCE " + id + ": Received event id=" + inboundEvent.getId() + " data=" + data);
                             received.add(data);
                         }
-                    } catch (ProcessingException ex) {
+                    } catch (Exception ex) {
                         LOGGER.log(Level.SEVERE, "[-x-] SOURCE " + id + ": Error getting event data.", ex);
                         received.add("[data processing error]");
                     }
