@@ -143,7 +143,8 @@ public class RequestScope implements Context<RequestScoped> {
     /**
      * A thread local copy of the current scope instance.
      */
-    private ThreadLocal<Instance> currentScopeInstance = new ThreadLocal<Instance>();
+    private final ThreadLocal<Instance> currentScopeInstance = new ThreadLocal<Instance>();
+    private volatile boolean isActive = true;
 
     @Override
     public Class<? extends Annotation> getScope() {
@@ -165,7 +166,7 @@ public class RequestScope implements Context<RequestScoped> {
 
     @Override
     public boolean containsKey(ActiveDescriptor<?> descriptor) {
-        Instance instance = current();
+        final Instance instance = current();
         return instance.contains(descriptor);
     }
 
@@ -176,7 +177,7 @@ public class RequestScope implements Context<RequestScoped> {
 
     @Override
     public boolean isActive() {
-        return true;
+        return isActive;
     }
 
     @Override
@@ -187,7 +188,7 @@ public class RequestScope implements Context<RequestScoped> {
 
     @Override
     public void shutdown() {
-        currentScopeInstance = null;
+        isActive = false;
     }
 
     /**
@@ -216,7 +217,8 @@ public class RequestScope implements Context<RequestScoped> {
      *
      * @return currently active {@link RequestScope.Instance request scope instance}.
      * @throws IllegalStateException in case there is no active request scope associated
-     *                               with the current thread.
+     *                               with the current thread or if the request scope has
+     *                               been already shut down.
      * @see #suspendCurrent()
      */
     public Instance referenceCurrent() throws IllegalStateException {
@@ -224,9 +226,26 @@ public class RequestScope implements Context<RequestScoped> {
     }
 
     private Instance current() {
-        Instance scopeInstance = currentScopeInstance.get();
+        checkState(isActive, "Request scope has been already shut down.");
+
+        final Instance scopeInstance = currentScopeInstance.get();
         checkState(scopeInstance != null, "Not inside a request scope.");
+
         return scopeInstance;
+    }
+
+    private Instance retrieveCurrent() {
+        checkState(isActive, "Request scope has been already shut down.");
+        return currentScopeInstance.get();
+    }
+
+    private void setCurrent(Instance instance) {
+        checkState(isActive, "Request scope has been already shut down.");
+        currentScopeInstance.set(instance);
+    }
+
+    private void resumeCurrent(Instance instance) {
+        currentScopeInstance.set(instance);
     }
 
     /**
@@ -249,7 +268,7 @@ public class RequestScope implements Context<RequestScoped> {
      * @see #referenceCurrent()
      */
     public Instance suspendCurrent() {
-        final Instance scopeInstance = currentScopeInstance.get();
+        final Instance scopeInstance = retrieveCurrent();
         if (scopeInstance == null) {
             return null;
         }
@@ -291,13 +310,13 @@ public class RequestScope implements Context<RequestScoped> {
      * @param task          Task to be executed.
      */
     public void runInScope(Instance scopeInstance, Runnable task) {
-        Instance oldInstance = currentScopeInstance.get();
+        final Instance oldInstance = retrieveCurrent();
         try {
-            currentScopeInstance.set(scopeInstance.getReference());
+            setCurrent(scopeInstance.getReference());
             Errors.process(task);
         } finally {
             scopeInstance.release();
-            currentScopeInstance.set(oldInstance);
+            resumeCurrent(oldInstance);
         }
     }
 
@@ -313,14 +332,14 @@ public class RequestScope implements Context<RequestScoped> {
      * @param task Task to be executed.
      */
     public void runInScope(Runnable task) {
-        Instance oldInstance = currentScopeInstance.get();
-        Instance instance = createInstance();
+        final Instance oldInstance = retrieveCurrent();
+        final Instance instance = createInstance();
         try {
-            currentScopeInstance.set(instance);
+            setCurrent(instance);
             Errors.process(task);
         } finally {
             instance.release();
-            currentScopeInstance.set(oldInstance);
+            resumeCurrent(oldInstance);
         }
     }
 
@@ -341,13 +360,13 @@ public class RequestScope implements Context<RequestScoped> {
      * @throws Exception Exception thrown by the {@code task}.
      */
     public <T> T runInScope(Instance scopeInstance, Callable<T> task) throws Exception {
-        Instance oldInstance = currentScopeInstance.get();
+        final Instance oldInstance = retrieveCurrent();
         try {
-            currentScopeInstance.set(scopeInstance.getReference());
+            setCurrent(scopeInstance.getReference());
             return Errors.process(task);
         } finally {
             scopeInstance.release();
-            currentScopeInstance.set(oldInstance);
+            resumeCurrent(oldInstance);
         }
     }
 
@@ -366,14 +385,14 @@ public class RequestScope implements Context<RequestScoped> {
      * @throws Exception Exception thrown by the {@code task}.
      */
     public <T> T runInScope(Callable<T> task) throws Exception {
-        Instance oldInstance = currentScopeInstance.get();
-        Instance instance = createInstance();
+        final Instance oldInstance = retrieveCurrent();
+        final Instance instance = createInstance();
         try {
-            currentScopeInstance.set(instance);
+            setCurrent(instance);
             return Errors.process(task);
         } finally {
             instance.release();
-            currentScopeInstance.set(oldInstance);
+            resumeCurrent(oldInstance);
         }
     }
 
@@ -393,13 +412,13 @@ public class RequestScope implements Context<RequestScoped> {
      * @return result returned by the {@code task}
      */
     public <T> T runInScope(Instance scopeInstance, Producer<T> task) {
-        Instance oldInstance = currentScopeInstance.get();
+        final Instance oldInstance = retrieveCurrent();
         try {
-            currentScopeInstance.set(scopeInstance.getReference());
+            setCurrent(scopeInstance.getReference());
             return Errors.process(task);
         } finally {
             scopeInstance.release();
-            currentScopeInstance.set(oldInstance);
+            resumeCurrent(oldInstance);
         }
     }
 
@@ -417,14 +436,14 @@ public class RequestScope implements Context<RequestScoped> {
      * @return result returned by the {@code task}.
      */
     public <T> T runInScope(Producer<T> task) {
-        Instance oldInstance = currentScopeInstance.get();
-        Instance instance = createInstance();
+        final Instance oldInstance = retrieveCurrent();
+        final Instance instance = createInstance();
         try {
-            currentScopeInstance.set(instance);
+            setCurrent(instance);
             return Errors.process(task);
         } finally {
             instance.release();
-            currentScopeInstance.set(oldInstance);
+            resumeCurrent(oldInstance);
         }
     }
 
