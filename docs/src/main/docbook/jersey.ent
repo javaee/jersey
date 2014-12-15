@@ -49,6 +49,8 @@
 <!ENTITY experimentalrepository "snapshots">
 <!ENTITY jaxb-api-jar.version "$jaxb-api-jar-version">
 <!ENTITY jax-rs.version "$jax-rs-version">
+<!ENTITY javax-el.version "$javax-el-version">
+<!ENTITY javax-el-impl.version "$javax-el-impl-version">
 <!ENTITY jax-rs-api-jar.version "$jax-rs-api-jar-version">
 <!ENTITY jackson.javadoc.version "$jackson-version">
 <!-- temporary hardcoded javadoc version - the correct one is missing at the provider's web -->

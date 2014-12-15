@@ -76,6 +76,21 @@
     &lt;version&gt;&version;&lt;/version&gt;
 &lt;/dependency&gt;</programlisting>
 
+            Additionaly you will need to add the following dependencies, if you are not deploying
+            into a container that is already including them:
+
+            <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;javax.el&lt;/groupId&gt;
+    &lt;artifactId&gt;javax.el-api&lt;/artifactId&gt;
+    &lt;version&gt;&javax-el.version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
+            <programlisting language="xml" linenumbering="unnumbered">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.web&lt;/groupId&gt;
+    &lt;artifactId&gt;javax-el&lt;/artifactId&gt;
+    &lt;version&gt;&javax-el-impl.version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+
             If you're not using Maven make sure to have all needed dependencies (see &jersey.ext.declarative-linking.deps.link;) on
             the classpath.
         </para>
