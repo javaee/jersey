@@ -80,6 +80,8 @@
                                 <replace file="${src.dir}/jersey.ent" token="$src.branch" value="${jersey.src.branch}" />
                                 <replace file="${src.dir}/jersey.ent" token="$repository" value="${javanet.repository.id}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jax-rs-version" value="${jaxrs.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$javax-el-version" value="${javax.el.version}" />
+                                <replace file="${src.dir}/jersey.ent" token="$javax-el-impl-version" value="${javax.el.impl.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jax-rs-api-jar-version" value="${jaxrs.impl.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jaxb-api-jar-version" value="${jaxb.api.version}" />
                                 <replace file="${src.dir}/jersey.ent" token="$jackson-version" value="${jackson.version}" />
