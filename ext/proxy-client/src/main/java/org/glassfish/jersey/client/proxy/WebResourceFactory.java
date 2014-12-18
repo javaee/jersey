@@ -47,6 +47,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.security.AccessController;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -96,6 +97,9 @@ public final class WebResourceFactory implements InvocationHandler {
 
     private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<String, Object>();
     private static final Form EMPTY_FORM = new Form();
+    private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(
+        PathParam.class, QueryParam.class, HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class
+    );
 
     /**
      * Creates a new client-side representation of a resource described by
@@ -201,7 +205,7 @@ public final class WebResourceFactory implements InvocationHandler {
             }
             Annotation ann;
             Object value = args[i];
-            if (anns.isEmpty()) {
+            if (!hasAnyParamAnnotation(anns)) {
                 entityType = method.getGenericParameterTypes()[i];
                 entity = value;
             } else {
@@ -333,6 +337,15 @@ public final class WebResourceFactory implements InvocationHandler {
         }
 
         return result;
+    }
+
+    private boolean hasAnyParamAnnotation(Map<Class, Annotation> anns) {
+        for (Class paramAnnotationClass : PARAM_ANNOTATION_CLASSES) {
+            if (anns.containsKey(paramAnnotationClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Object[] convert(final Collection value) {
