@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -962,7 +962,7 @@ final Application application = new ResourceConfig()
             <title><literal>@JSONP</literal> - JSON with Padding Support</title>
 
             <para>
-                Jersey provides out-of-the-box support for <link xlink:href='&wikipedia.uri;/JSONP'>JSONP</link>
+                Jersey provides out-of-the-box support for <link xlink:href='&wikipedia.uri;JSONP'>JSONP</link>
                 - JSON with padding. The following conditions has to be met to take advantage of this capability:
 
                 <itemizedlist>
@@ -1532,9 +1532,9 @@ final Application application = new ResourceConfig()
             <para>
                 &jersey.media.multipart.MultiPart; class (or it's subclasses) can be used as an entry point to using
                 &lit.jersey-media-multipart; module on the client side. This class represents a
-                <link xlink:href='&wikipedia.uri;/MIME#Multipart_messages'>MIME multipart message</link> and is able
+                <link xlink:href='&wikipedia.uri;MIME#Multipart_messages'>MIME multipart message</link> and is able
                 to hold an arbitrary number of &jersey.media.multipart.BodyPart;s. Default media type is
-                <link xlink:href='&wikipedia.uri;/MIME#Mixed'>multipart/mixed</link>
+                <link xlink:href='&wikipedia.uri;MIME#Mixed'>multipart/mixed</link>
                 for &lit.jersey.media.multipart.MultiPart; entity and <literal>text/plain</literal> for
                 &lit.jersey.media.multipart.BodyPart;.
 

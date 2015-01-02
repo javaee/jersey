@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -91,7 +91,7 @@ public class ListenableFutureAgentResource {
 
     @GET
     @ManagedAsync
-    public void observable(@Suspended final AsyncResponse async) {
+    public void listenable(@Suspended final AsyncResponse async) {
         final long time = System.nanoTime();
         final AgentResponse response = new AgentResponse();
 

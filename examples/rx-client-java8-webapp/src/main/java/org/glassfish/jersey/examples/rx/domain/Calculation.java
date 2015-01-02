@@ -38,47 +38,50 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.spi;
+package org.glassfish.jersey.examples.rx.domain;
 
-import java.util.concurrent.ExecutorService;
-
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.client.Invocation;
-
-import org.glassfish.jersey.Beta;
-import org.glassfish.jersey.spi.Contract;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Client-provider interface for creating {@link org.glassfish.jersey.client.rx.RxInvoker reactive invoker} instances.
- *
- * If supported by the provider, an invoker instance of the requested Java type will be created.
- * <p/>
- * A provider shall support a one-to-one mapping between a type, provided the type is not {@link Object}. A provider may also
- * support mapping of sub-types of a type (provided the type is not {@code Object}). It is expected that each provider supports
- * mapping for distinct set of types and subtypes so that different providers do not conflict with each other.
- * <p/>
- * An implementation can identify itself by placing a Java service provider configuration file (if not already present) -
- * {@code org.glassfish.jersey.client.rx.spi.RxInvokerProvider} - in the resource directory {@code META-INF/services}, and adding
- * the fully qualified service-provider-class of the implementation in the file.
- *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
- * @since 2.13
  */
-@Beta
-@Contract
-@ConstrainedTo(RuntimeType.CLIENT)
-public interface RxInvokerProvider {
+@XmlRootElement
+public class Calculation {
 
-    /**
-     * Create an invoker of a given type.
-     *
-     * @param invokerType the invoker type.
-     * @param builder     the builder to create JAX-RS {@link javax.ws.rs.client.Invocation invocation} invoked in reactive way.
-     * @param executor    the executor service to execute reactive requests.
-     * @param <RX>        the concrete reactive invocation type.
-     * @return the invoker, otherwise {@code null} if the provider does not support the requested {@code type}.
-     * @throws javax.ws.rs.ProcessingException if there is an error creating the invoker.
-     */
-    public <RX> RX getInvoker(Class<RX> invokerType, Invocation.Builder builder, ExecutorService executor);
+    private String from;
+    private String to;
+    private int price;
+
+    public Calculation() {
+    }
+
+    public Calculation(final String from, final String to, final int price) {
+        this.from = from;
+        this.to = to;
+        this.price = price;
+    }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(final String from) {
+        this.from = from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(final String to) {
+        this.to = to;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(final int price) {
+        this.price = price;
+    }
 }

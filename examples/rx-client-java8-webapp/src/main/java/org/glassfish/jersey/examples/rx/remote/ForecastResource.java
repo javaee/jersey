@@ -38,47 +38,33 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.spi;
+package org.glassfish.jersey.examples.rx.remote;
 
-import java.util.concurrent.ExecutorService;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.client.Invocation;
-
-import org.glassfish.jersey.Beta;
-import org.glassfish.jersey.spi.Contract;
+import org.glassfish.jersey.examples.rx.Helper;
+import org.glassfish.jersey.examples.rx.domain.Forecast;
+import org.glassfish.jersey.server.ManagedAsync;
 
 /**
- * Client-provider interface for creating {@link org.glassfish.jersey.client.rx.RxInvoker reactive invoker} instances.
- *
- * If supported by the provider, an invoker instance of the requested Java type will be created.
- * <p/>
- * A provider shall support a one-to-one mapping between a type, provided the type is not {@link Object}. A provider may also
- * support mapping of sub-types of a type (provided the type is not {@code Object}). It is expected that each provider supports
- * mapping for distinct set of types and subtypes so that different providers do not conflict with each other.
- * <p/>
- * An implementation can identify itself by placing a Java service provider configuration file (if not already present) -
- * {@code org.glassfish.jersey.client.rx.spi.RxInvokerProvider} - in the resource directory {@code META-INF/services}, and adding
- * the fully qualified service-provider-class of the implementation in the file.
+ * Obtain current weather conditions in a destination.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
- * @since 2.13
  */
-@Beta
-@Contract
-@ConstrainedTo(RuntimeType.CLIENT)
-public interface RxInvokerProvider {
+@Path("remote/forecast")
+@Produces("application/xml")
+public class ForecastResource {
 
-    /**
-     * Create an invoker of a given type.
-     *
-     * @param invokerType the invoker type.
-     * @param builder     the builder to create JAX-RS {@link javax.ws.rs.client.Invocation invocation} invoked in reactive way.
-     * @param executor    the executor service to execute reactive requests.
-     * @param <RX>        the concrete reactive invocation type.
-     * @return the invoker, otherwise {@code null} if the provider does not support the requested {@code type}.
-     * @throws javax.ws.rs.ProcessingException if there is an error creating the invoker.
-     */
-    public <RX> RX getInvoker(Class<RX> invokerType, Invocation.Builder builder, ExecutorService executor);
+    @GET
+    @ManagedAsync
+    @Path("/{destination}")
+    public Forecast forecast(@PathParam("destination") final String destination) {
+        // Simulate long-running operation.
+        Helper.sleep(350);
+
+        return new Forecast(destination, Helper.getForecast());
+    }
 }
