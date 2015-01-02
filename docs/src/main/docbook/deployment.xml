@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -1018,6 +1018,11 @@ public class CdiBeanResource {
         return bean.getIt();
     }
 }</programlisting>
+            </para>
+            <para>
+	    	The above works naturally inside any Java EE compliant AS container. In Jersey version 2.15, container agnostic CDI support was introduced.
+		This feature allows you to publish CDI based JAX-RS resources also in other containers. Jersey cdi-webapp example shows Jersey/CDI integration
+		in Grizzly HTTP and Apache Tomcat server.
             </para>
         </section>
 

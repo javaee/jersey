@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,6 +40,9 @@
 
 package org.glassfish.jersey.model.internal;
 
+import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.Set;
 import javax.ws.rs.Priorities;
 
 import javax.annotation.Priority;
@@ -56,6 +59,7 @@ public class RankedProvider<T> {
 
     private final T provider;
     private final int rank;
+    private final Set<Type> contractTypes;
 
     /**
      * Creates a new {@code RankedProvider} instance. The rank of the provider is obtained from the {@link javax.annotation.Priority}
@@ -66,6 +70,7 @@ public class RankedProvider<T> {
     public RankedProvider(final T provider) {
         this.provider = provider;
         this.rank = computeRank(provider, ContractProvider.NO_PRIORITY);
+        this.contractTypes = null;
     }
 
     /**
@@ -75,8 +80,20 @@ public class RankedProvider<T> {
      * @param rank rank of this provider.
      */
     public RankedProvider(final T provider, final int rank) {
+        this(provider, rank, null);
+    }
+
+    /**
+     * Creates a new {@code RankedProvider} instance for given {@code provider} with specific {@code rank} (> 0).
+     *
+     * @param provider service provider to create a {@code RankedProvider} instance from.
+     * @param rank rank of this provider.
+     * @param contracts contracts implemented by the service provider
+     */
+    public RankedProvider(final T provider, final int rank, final Set<Type> contracts) {
         this.provider = provider;
         this.rank = computeRank(provider, rank);
+        this.contractTypes = contracts;
     }
 
     private int computeRank(final T provider, final int rank) {
@@ -97,6 +114,16 @@ public class RankedProvider<T> {
 
     public int getRank() {
         return rank;
+    }
+
+    /**
+     * Get me set of implemented contracts.
+     * Returns null if no contracts are implemented.
+     *
+     * @return set of contracts or null if no contracts have been implemented.
+     */
+    public Set<Type> getContractTypes() {
+        return contractTypes;
     }
 
     @Override

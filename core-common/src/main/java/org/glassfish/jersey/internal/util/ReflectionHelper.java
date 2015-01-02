@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -310,7 +310,7 @@ public class ReflectionHelper {
             }
         };
     }
-    
+
     /**
      * Get privileged action to obtain fields on given class, recursively through inheritance hierarchy.
      * If run using security manager, the returned privileged action
@@ -329,7 +329,7 @@ public class ReflectionHelper {
             	recurse(clazz, fields);
                 return fields.toArray(new Field[0]);
             }
-            
+
            private void recurse(final Class<?> clazz, final List<Field> fields) {
         	   fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
         	   if(clazz.getSuperclass() != null) {
@@ -940,6 +940,27 @@ public class ReflectionHelper {
         chars[offset] = Character.toLowerCase(chars[offset]);
 
         return new String(chars, offset, chars.length - offset);
+    }
+
+    /**
+     * Determine the most specific type from given set.
+     *
+     * @param contractTypes to be taken into account.
+     * @return the most specific type.
+     */
+    public static Class<?> theMostSpecificTypeOf(Set<Type> contractTypes) {
+        Class<?> result = null;
+        for (Type t : contractTypes) {
+            final Class<?> next = (Class<?>) t;
+            if (result == null) {
+                result = next;
+            } else {
+                if (result.isAssignableFrom(next)) {
+                    result = next;
+                }
+            }
+        }
+        return result;
     }
 
     /**

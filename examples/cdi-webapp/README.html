@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -51,13 +51,28 @@
 
         <h2>Running the Example</h2>
 
-        <p>This example currently works only with a standalone GlassFish 4 instance.
-        The easiest way to get the application running is to build it and deploy as follows:
+        <p>This example should work on any Java EE 7 compliant application server.
+        It has been tested on a standalone GlassFish 4 instance.
+        The easiest way to get the application running there is to build it and deploy as follows:
 <pre>
 mvn clean package
 $AS_HOME/asadmin deploy target/cdi-webapp.war
 </pre>
         </p>
+
+        <p>Another option, introduced in Jersey 2.15, is to run this example in Grizzly HTTP server.
+        To get the application running there you just invoke the following command:
+<pre>
+mvn clean compile exec:java
+</pre>
+
+        <p>Since Weld Servlet support is provided also for Apache Tomcat server, there is yet
+        another way how to deploy the application. Use the <code>tomcat-packaging</code> maven profile
+        to get the WAR archive packaged in a way that makes it ready for Tomcat 7+ deployment:
+<pre>
+mvn -Ptomcat-packaging clean package
+cp target/cdi-webapp.war $CATALINA_HOME/webapps
+</pre>
 
         <p>After you successfully deploy the application, visit the following URLs:</p>
         <blockquote>
@@ -80,12 +95,30 @@ $AS_HOME/asadmin deploy target/cdi-webapp.war
                  <tr>
                     <td>Shows injection of context objects into the fields of a managed bean.</td>
                     <td><code><a href="http://localhost:8080/cdi-webapp/singleton/counter">http://localhost:8080/cdi-webapp/singleton/counter</a></code></td>
-                    <td><code>42 (initial value, which gets incremented with each request)</code></td>
+                    <td>
+<table>
+  <tr>
+    <td>
+      <table>
+        <tr><td><code>0</code>:</td><td>standalone Grizzly (no resource injection support)</td></tr>
+      </table>
+    </td>
+    <td rowspan="2">initial value, that gets incremented with each other request</td>
+    <td>
+  </tr>
+  <tr>
+    <td>
+      <table>
+        <tr><td><code>42</code>:</td><td>Java EE compliant AS</td></tr>
+      </table>
+    </td>
+  </tr>
+</table></td>
                 </tr>
                 <tr>
                     <td>Shows injection of context objects and path parameters into the fields of a managed bean.</td>
                     <td><code><a href="http://localhost:8080/cdi-webapp/other/C/D">http://localhost:8080/cdi-webapp/other/C/D</a></code></td>
-                    <td><code>OK GET http://localhost:8080/cdi-webapp/other, c=C, d=D</code></td>
+                    <td><code>INTERCEPTED: OK GET http://localhost:8080/cdi-webapp/other, c=C, d=D</code></td>
                 </tr>
                 <!--tr>
                     <td>Shows constructor injection of a path parameter in a managed bean.</td>

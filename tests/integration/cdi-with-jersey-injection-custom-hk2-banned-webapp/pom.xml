@@ -45,7 +45,7 @@
     <parent>
         <groupId>org.glassfish.jersey.tests.integration</groupId>
         <artifactId>project</artifactId>
-        <version>2.7-SNAPSHOT</version>
+        <version>2.15-SNAPSHOT</version>
     </parent>
 
     <artifactId>cdi-with-jersey-injection-custom-hk2-banned-webapp</artifactId>
@@ -56,8 +56,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.glassfish.jersey.containers.glassfish</groupId>
-            <artifactId>jersey-gf-cdi</artifactId>
+            <groupId>org.glassfish.jersey.ext.cdi</groupId>
+            <artifactId>jersey-cdi1x</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.ext.cdi</groupId>
+            <artifactId>jersey-cdi1x-transaction</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

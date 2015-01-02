@@ -147,18 +147,28 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.glassfish.jersey.containers.glassfish</groupId>
-                <artifactId>jersey-gf-cdi</artifactId>
+                <groupId>org.glassfish.jersey.ext.cdi</groupId>
+                <artifactId>jersey-weld2-se</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.cdi</groupId>
+                <artifactId>jersey-cdi1x</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.cdi</groupId>
+                <artifactId>jersey-cdi1x-transaction</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext.cdi</groupId>
+                <artifactId>jersey-ext-cdi1x-ban-custom-hk2-binding</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.containers.glassfish</groupId>
                 <artifactId>jersey-gf-ejb</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.containers.glassfish</groupId>
-                <artifactId>jersey-gf-cdi-ban-custom-hk2-binding</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

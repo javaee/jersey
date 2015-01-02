@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -55,19 +55,24 @@
     <xsl:template
             match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
             or pom:groupId='org.glassfish.jersey.containers'
+            or pom:groupId='org.glassfish.jersey.ext.cdi'
             or pom:groupId='org.glassfish.jersey.media'
             or pom:artifactId='jersey-wadl-doclet'
             or pom:artifactId='jersey-mvc-jsp'
             or pom:artifactId='jersey-bean-validation'
             or pom:groupId='com.sun.xml.bind'
             or pom:groupId='org.codehaus.jettison'
-            or pom:groupId='javax.servlet']/pom:scope[text()!=test]">
+            or pom:groupId='javax.annotation'
+            or pom:groupId='javax.enterprise'
+            or pom:groupId='javax.servlet'
+            or pom:groupId='javax.ws.rs']/pom:scope[text()!=test]">
         <scope>provided</scope>
     </xsl:template>
 
     <xsl:template
             match="pom:dependencies/pom:dependency[pom:groupId='org.glassfish.jersey.core'
             or pom:groupId='org.glassfish.jersey.containers'
+            or pom:groupId='org.glassfish.jersey.ext.cdi'
             or pom:groupId='org.glassfish.jersey.media'
             or pom:artifactId='jersey-wadl-doclet'
             or pom:artifactId='jersey-mvc-jsp'
@@ -75,7 +80,10 @@
             or pom:groupId='com.sun.xml.bind'
             or pom:groupId='javax.validation'
             or pom:groupId='org.codehaus.jettison'
-            or pom:groupId='javax.servlet']">
+            or pom:groupId='javax.annotation'
+            or pom:groupId='javax.enterprise'
+            or pom:groupId='javax.servlet'
+            or pom:groupId='javax.ws.rs']">
         <xsl:copy>
             <xsl:apply-templates />
             <xsl:if test="count(pom:scope)=0">

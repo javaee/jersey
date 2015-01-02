@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -108,7 +108,7 @@ public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterI
      * @param entityStream {@link java.io.InputStream} from which an entity will be read. The stream is not
      *            closed after reading the entity.
      * @param workers {@link org.glassfish.jersey.message.MessageBodyWorkers Message body workers}.
-     * @param writerInterceptors Writer interceptor that are to be used to intercept the writing of an entity. The interceptors
+     * @param writerInterceptors Writer interceptors that are to be used to intercept writing of an entity.
      * @param serviceLocator Service locator.
      */
     public WriterInterceptorExecutor(final Object entity, final Class<?> rawType,

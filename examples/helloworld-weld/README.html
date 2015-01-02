@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<html><head><title>Weld on Grizzly Example</title></head>
+
+
+    <body>
+        <h1>Jersey Weld on Grizzly Example</h1>
+
+        <p>This example demonstrates how to develop RESTful web service with
+            CDI managed beans and Grizzly HTTP container.</p>
+
+        <h2>Running the Example</h2>
+
+        <p>To run this example in Grizzly HTTP server you just invoke the following from the command line:
+<pre>
+mvn clean compile exec:java
+</pre>
+
+        <p>We suggest you inspect the example source code to get better understanding on various
+        CDI features utilized there. Following table contains some of the published resources that you might want to check.</p>
+        <blockquote>
+            <table border="1">
+                <tr>
+                    <th>Description</th>
+                    <th>URL</th>
+                    <th>Expected Results</th>
+                </tr>
+                <tr>
+                    <td>A hello-world managed bean</td>
+                    <td><code><a href="http://localhost:8080/weld/helloworld?name=Bill">http://localhost:8080/weld/helloworld?name=Bill</a></code></td>
+                    <td><code>Hello Bill</code></td>
+                </tr>
+                <tr>
+                    <td>Application scoped resource</td>
+                    <td><code><a href="http://localhost:8080/weld/app/count">http://localhost:8080/weld/app/count</a></code></td>
+                    <td><code>request count (incremented with every other request)</code></td>
+                </tr>
+                <tr>
+                    <td>Request scoped resource</td>
+                    <td><code><a href="http://localhost:8080/weld/req/app/counter">http://localhost:8080/weld/req/app/counter</a></code></td>
+                    <td><code>links to above request counter</code></td>
+                </tr>
+                 <tr>
+                    <td>Asynchronous echo resource method that is being JAX-RS intercepted</td>
+                    <td><code><a href="http://localhost:8080/weld/req/parameterized-async?q=echo%20this">http://localhost:8080/weld/req/parameterized-async?q=echo%20this</a></code></td>
+                    <td><code>echo this</code></td>
+                </tr>
+           </table>
+        </blockquote>
+    </body>
+</html>

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,9 +41,11 @@ package org.glassfish.jersey.server;
 
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -119,12 +121,14 @@ import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.spi.ComponentProvider;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.ExternalRequestScope;
 
 import org.glassfish.hk2.api.DynamicConfiguration;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.Binder;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.hk2.utilities.binding.ScopedBindingBuilder;
 
 import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.base.Predicate;
@@ -432,6 +436,34 @@ public final class ApplicationHandler {
             }
 
             componentBag = runtimeConfig.getComponentBag();
+            final Class<ExternalRequestScope>[] extScopes = ServiceFinder.find(ExternalRequestScope.class, true).toClassArray();
+
+            boolean extScopesFound = false;
+
+            if (extScopes.length == 1) {
+                for (ComponentProvider p : componentProviders) {
+                    if (p.bind(extScopes[0], new HashSet<Class<?>>(){{add(ExternalRequestScope.class);}})) {
+                        extScopesFound = true;
+                        break;
+                    }
+                }
+            } else if (extScopes.length > 1) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    StringBuilder scopeList = new StringBuilder("\n");
+                    for (Class<ExternalRequestScope> ers : extScopes) {
+                        scopeList.append("   ").append(ers.getTypeParameters()[0]).append('\n');
+                    }
+                    LOGGER.warning(LocalizationMessages.WARNING_TOO_MANY_EXTERNAL_REQ_SCOPES(scopeList.toString()));
+                }
+            }
+
+            if (!extScopesFound) {
+                final DynamicConfiguration configuration = Injections.getConfiguration(locator);
+                final ScopedBindingBuilder<ExternalRequestScope> binder = Injections.newBinder((ExternalRequestScope)ServerRuntime.NOOP_EXTERNAL_REQ_SCOPE).to(ExternalRequestScope.class);
+                Injections.addBinding(binder, configuration);
+                configuration.commit();
+            }
+
             bindProvidersAndResources(componentProviders, componentBag, resourceBag.classes, resourceBag.instances);
             for (final ComponentProvider componentProvider : componentProviders) {
                 componentProvider.done();
@@ -767,7 +799,11 @@ public final class ApplicationHandler {
 
         for (final Iterator<RankedProvider<T>> it = all.iterator(); it.hasNext(); ) {
             final RankedProvider<T> provider = it.next();
-            final Class<?> providerClass = provider.getProvider().getClass();
+            Class<?> providerClass = provider.getProvider().getClass();
+            final Set<Type> contractTypes = provider.getContractTypes();
+            if (contractTypes != null && !contractTypes.contains(providerClass)) {
+                providerClass = ReflectionHelper.theMostSpecificTypeOf(contractTypes);
+            }
 
             ContractProvider model = componentBag.getModel(providerClass);
             if (model == null) {

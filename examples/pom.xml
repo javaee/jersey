@@ -79,6 +79,7 @@
         <module>helloworld-programmatic</module>
         <module>helloworld-pure-jax-rs</module>
         <module>helloworld-webapp</module>
+        <module>helloworld-weld</module>
         <module>helloworld-spring-webapp</module>
         <module>helloworld-spring-annotations</module>
         <module>http-patch</module>

@@ -107,6 +107,8 @@ import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 import org.glassfish.jersey.server.spi.ContainerResponseWriter;
+import org.glassfish.jersey.server.spi.ExternalRequestContext;
+import org.glassfish.jersey.server.spi.ExternalRequestScope;
 import org.glassfish.jersey.server.spi.ResponseErrorMapper;
 import org.glassfish.jersey.spi.ExceptionMappers;
 
@@ -125,6 +127,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class ServerRuntime {
+
     private final Stage<RequestProcessingContext> requestProcessingRoot;
     private final ProcessingProviders processingProviders;
 
@@ -138,10 +141,32 @@ public class ServerRuntime {
     private final ApplicationEventListener applicationEventListener;
     private final Configuration configuration;
 
+    private final ExternalRequestScope externalRequestScope;
+
     private final TracingConfig tracingConfig;
     private final TracingLogger.Level tracingThreshold;
 
     private final boolean processResponseErrors;
+
+    /*package */ static final ExternalRequestScope<Object> NOOP_EXTERNAL_REQ_SCOPE = new ExternalRequestScope<Object>() {
+
+            @Override
+            public ExternalRequestContext<Object> open() {
+                return null;
+            }
+
+            @Override
+            public void close() {
+            }
+
+            @Override
+            public void suspend(ExternalRequestContext<Object> o) {
+            }
+
+            @Override
+            public void resume(ExternalRequestContext<Object> o) {
+            }
+        };
 
     /**
      * Server-side request processing runtime builder.
@@ -160,6 +185,8 @@ public class ServerRuntime {
         private RequestExecutorFactory asyncExecutorFactory;
         @Inject
         private Configuration configuration;
+        @Inject
+        private ExternalRequestScope externalRequestScope;
 
         /**
          * Create new server-side request processing runtime.
@@ -174,6 +201,8 @@ public class ServerRuntime {
                 final ApplicationEventListener eventListener,
                 final ProcessingProviders processingProviders) {
 
+            ExternalRequestScope externalScope = externalRequestScope != null ? externalRequestScope : NOOP_EXTERNAL_REQ_SCOPE;
+
             return new ServerRuntime(
                     processingRoot,
                     processingProviders,
@@ -183,6 +212,7 @@ public class ServerRuntime {
                     exceptionMappers,
                     asyncExecutorFactory,
                     eventListener,
+                    externalScope,
                     configuration);
         }
     }
@@ -195,6 +225,7 @@ public class ServerRuntime {
                           final ExceptionMappers exceptionMappers,
                           final RequestExecutorFactory asyncExecutorFactory,
                           final ApplicationEventListener applicationEventListener,
+                          final ExternalRequestScope externalScope,
                           final Configuration configuration) {
         this.requestProcessingRoot = requestProcessingRoot;
         this.processingProviders = processingProviders;
@@ -204,6 +235,7 @@ public class ServerRuntime {
         this.exceptionMappers = exceptionMappers;
         this.asyncExecutorFactory = asyncExecutorFactory;
         this.applicationEventListener = applicationEventListener;
+        this.externalRequestScope = externalScope;
         this.configuration = configuration;
 
         this.tracingConfig = TracingUtils.getTracingConfig(configuration);
@@ -248,7 +280,7 @@ public class ServerRuntime {
         final Responder responder = new Responder(context, ServerRuntime.this);
         final RequestScope.Instance requestScopeInstance = requestScope.createInstance();
         final AsyncResponderHolder asyncResponderHolder =
-                new AsyncResponderHolder(responder, requestScopeInstance);
+                new AsyncResponderHolder(responder, externalRequestScope, requestScopeInstance, externalRequestScope.open());
         context.initAsyncContext(asyncResponderHolder);
 
         requestScope.runInScope(requestScopeInstance, new Runnable() {
@@ -272,6 +304,8 @@ public class ServerRuntime {
 
                     if (!asyncResponderHolder.isAsync()) {
                         responder.process(response);
+                    } else {
+                        externalRequestScope.suspend(asyncResponderHolder.externalContext);
                     }
                 } catch (final Throwable throwable) {
                     responder.process(throwable);
@@ -315,18 +349,25 @@ public class ServerRuntime {
 
     private static class AsyncResponderHolder implements Value<AsyncContext> {
         private final Responder responder;
+        private final ExternalRequestScope externalScope;
         private final RequestScope.Instance scopeInstance;
+        private final ExternalRequestContext<?> externalContext;
 
         private volatile AsyncResponder asyncResponder;
 
-        private AsyncResponderHolder(final Responder responder, final RequestScope.Instance scopeInstance) {
+        private AsyncResponderHolder(final Responder responder,
+                                        final ExternalRequestScope externalRequestScope,
+                                        final RequestScope.Instance scopeInstance,
+                                        final ExternalRequestContext<?> externalContext) {
             this.responder = responder;
+            this.externalScope = externalRequestScope;
             this.scopeInstance = scopeInstance;
+            this.externalContext = externalContext;
         }
 
         @Override
         public AsyncContext get() {
-            final AsyncResponder ar = new AsyncResponder(responder, scopeInstance);
+            final AsyncResponder ar = new AsyncResponder(responder, scopeInstance, externalScope, externalContext);
             asyncResponder = ar;
             return ar;
         }
@@ -723,6 +764,7 @@ public class ServerRuntime {
             } catch (final Throwable throwable) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.RELEASING_REQUEST_PROCESSING_RESOURCES_FAILED(), throwable);
             } finally {
+                runtime.externalRequestScope.close();
                 processingContext.triggerEvent(RequestEvent.Type.FINISHED);
             }
         }
@@ -745,15 +787,21 @@ public class ServerRuntime {
         private final Responder responder;
         // TODO this instance should be released once async invocation is finished.
         private final RequestScope.Instance scopeInstance;
+        private final ExternalRequestContext<?> foreignScopeInstance;
+        private final ExternalRequestScope requestScopeListener;
 
         private volatile TimeoutHandler timeoutHandler = DEFAULT_TIMEOUT_HANDLER;
 
         private final List<AbstractCallbackRunner<?>> callbackRunners;
 
         public AsyncResponder(final Responder responder,
-                              final RequestScope.Instance scopeInstance) {
+                              final RequestScope.Instance scopeInstance,
+                              final ExternalRequestScope requestScopeListener,
+                              final ExternalRequestContext<?> foreignScopeInstance) {
             this.responder = responder;
             this.scopeInstance = scopeInstance;
+            this.foreignScopeInstance = foreignScopeInstance;
+            this.requestScopeListener = requestScopeListener;
 
             this.callbackRunners = Collections.unmodifiableList(Arrays.asList(
                     responder.completionCallbackRunner, responder.connectionCallbackRunner));
@@ -791,6 +839,7 @@ public class ServerRuntime {
                         @Override
                         public void run() {
                             try {
+                                requestScopeListener.resume(foreignScopeInstance);
                                 final Response response = producer.call();
                                 if (response != null) {
                                     resume(response);
@@ -824,6 +873,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
+                        requestScopeListener.resume(foreignScopeInstance);
                         final Response jaxrsResponse =
                                 (response instanceof Response) ? (Response) response : Response.ok(response).build();
                         ServerRuntime.ensureAbsolute(
@@ -842,6 +892,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
+                        requestScopeListener.resume(foreignScopeInstance);
                         responder.process(new MappableException(error));
                     } catch (final Throwable error) {
                         // Ignore the exception - already resumed but may be rethrown by ContainerResponseWriter#failure.
@@ -916,6 +967,7 @@ public class ServerRuntime {
                 @Override
                 public void run() {
                     try {
+                        requestScopeListener.resume(foreignScopeInstance);
                         final Response response = responseValue.get();
                         responder.process(new ContainerResponse(responder.processingContext.request(), response));
                     } catch (final Throwable t) {
@@ -1144,8 +1196,5 @@ public class ServerRuntime {
                 }
             });
         }
-
-
     }
-
 }

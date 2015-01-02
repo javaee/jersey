@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.test.JerseyTest;
+import org.jboss.weld.environment.se.Weld;
 
 /**
  * Test for CDI web application resources.
@@ -58,6 +59,21 @@ import org.glassfish.jersey.test.JerseyTest;
  */
 public class CdiTest extends JerseyTest {
 
+    Weld weld;
+
+    @Override
+    public void setUp() throws Exception {
+        weld = new Weld();
+        weld.initialize();
+        super.setUp();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        weld.shutdown();
+        super.tearDown();
+    }
+
     @Override
     protected Application configure() {
         return new MyApplication();
@@ -68,4 +84,3 @@ public class CdiTest extends JerseyTest {
         return UriBuilder.fromUri(super.getBaseUri()).path("cdi-webapp").build();
     }
 }
-

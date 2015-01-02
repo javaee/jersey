@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@
 package org.glassfish.jersey.internal.inject;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -232,7 +233,16 @@ public final class Providers {
         for (final ServiceHandle<T> provider : providers) {
             final ActiveDescriptor<T> key = provider.getActiveDescriptor();
             if (!providerMap.containsKey(key)) {
-                providerMap.put(key, new RankedProvider<T>(provider.getService(), key.getRanking()));
+                final Set<Type> contractTypes = key.getContractTypes();
+                final Class<?> implementationClass = key.getImplementationClass();
+                boolean proxyGenerated = true;
+                for (Type ct : contractTypes) {
+                    if (((Class<?>)ct).isAssignableFrom(implementationClass)) {
+                        proxyGenerated = false;
+                        break;
+                    }
+                }
+                providerMap.put(key, new RankedProvider<T>(provider.getService(), key.getRanking(), proxyGenerated ? contractTypes : null));
             }
         }
 
