@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,12 +47,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Set;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
@@ -60,24 +64,30 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 
 import org.junit.Test;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import jersey.repackaged.com.google.common.collect.Sets;
 
 /**
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * Test-suite ensuring the correct functionality of name binding.
  *
+ * @author Miroslav Fuksa
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class NameBindingTest extends JerseyTest {
+
     @Override
     protected Application configure() {
         return new ResourceConfig(Resource.class, FooResource.class, BarResource.class, FooBarResource.class, FooFilter.class,
-                BarFilter.class, FooBarFilter.class);
+                BarFilter.class, FooBarFilter.class, PreMatchingFooFilter.class);
     }
 
     @Path("resource")
     public static class Resource {
+
         @GET
         public String noBinding() {
             return "noBinding";
@@ -105,27 +115,44 @@ public class NameBindingTest extends JerseyTest {
             return "foobar";
         }
 
+        @GET
+        @Path("preMatchingNameBinding")
+        public String preMatchingNameBinding(@HeaderParam("header") @DefaultValue("bar") final String header) {
+            return header;
+        }
     }
 
     @NameBinding
     @Target({ElementType.TYPE, ElementType.METHOD})
     @Retention(value = RetentionPolicy.RUNTIME)
     public static @interface FooBinding {
+
     }
 
     @NameBinding
     @Target({ElementType.TYPE, ElementType.METHOD})
     @Retention(value = RetentionPolicy.RUNTIME)
     public static @interface BarBinding {
-    }
 
+    }
 
     @FooBinding
     public static class FooFilter implements ContainerResponseFilter {
 
         @Override
-        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+        public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws
+                IOException {
             responseContext.getHeaders().add(this.getClass().getSimpleName(), "called");
+        }
+    }
+
+    @PreMatching
+    @FooBinding
+    public static class PreMatchingFooFilter implements ContainerRequestFilter {
+
+        @Override
+        public void filter(final ContainerRequestContext requestContext) throws IOException {
+            requestContext.getHeaders().putSingle("header", "foo");
         }
     }
 
@@ -133,7 +160,8 @@ public class NameBindingTest extends JerseyTest {
     public static class BarFilter implements ContainerResponseFilter {
 
         @Override
-        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+        public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws
+                IOException {
             responseContext.getHeaders().add(this.getClass().getSimpleName(), "called");
         }
     }
@@ -143,11 +171,11 @@ public class NameBindingTest extends JerseyTest {
     public static class FooBarFilter implements ContainerResponseFilter {
 
         @Override
-        public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+        public void filter(final ContainerRequestContext requestContext, final ContainerResponseContext responseContext) throws
+                IOException {
             responseContext.getHeaders().add(this.getClass().getSimpleName(), "called");
         }
     }
-
 
     private static final Set<Class<?>> FILTERS = initialize();
 
@@ -159,22 +187,20 @@ public class NameBindingTest extends JerseyTest {
         return set;
     }
 
-
-    private void checkCalled(Response response, Class<?>... filtersThatShouldBeCalled) {
-        Set<Class<?>> positiveFilters = Sets.newHashSet(filtersThatShouldBeCalled);
-        for (Class<?> filter : FILTERS) {
+    private void checkCalled(final Response response, final Class<?>... filtersThatShouldBeCalled) {
+        final Set<Class<?>> positiveFilters = Sets.newHashSet(filtersThatShouldBeCalled);
+        for (final Class<?> filter : FILTERS) {
             if (positiveFilters.contains(filter)) {
-                assertEquals("Filter '" + filter.getSimpleName() + "' should be called.",
-                        "called", response.getHeaders().getFirst(filter.getSimpleName()));
+                assertEquals("Filter '" + filter.getSimpleName() + "' should be called.", "called", response.getHeaders()
+                        .getFirst(filter.getSimpleName()));
             } else {
-                assertNull("Filter '" + filter.getSimpleName() + "' should not be called.",
-                        response.getHeaders().get(filter.getSimpleName()));
+                assertNull("Filter '" + filter.getSimpleName() + "' should not be called.", response.getHeaders().get(filter
+                        .getSimpleName()));
             }
         }
     }
 
-
-    private Response _getResponse(String path) {
+    private Response _getResponse(final String path) {
         final Response response = target().path(path).request().get();
         assertEquals(200, response.getStatus());
         return response;
@@ -190,6 +216,18 @@ public class NameBindingTest extends JerseyTest {
         checkCalled(_getResponse("resource/foo"), FooFilter.class);
     }
 
+    /**
+     * Reproducer for JERSEY-2739. Name bound annotation on a pre-matching filter should be ignored and the filter should be
+     * invoked for each resource method (globally).
+     */
+    @Test
+    public void preMatchingNameBinding() {
+        final Response response = _getResponse("resource/preMatchingNameBinding");
+
+        // Request filter - applied, even when the filter is name bound and the resource method is not.
+        assertThat("Name binding on a @PreMatching filter not ignored.", response.readEntity(String.class), is("foo"));
+    }
+
     @Test
     public void testResourceBarBinding() {
         checkCalled(_getResponse("resource/bar"), BarFilter.class);
@@ -200,10 +238,10 @@ public class NameBindingTest extends JerseyTest {
         checkCalled(_getResponse("resource/foobar"), FooFilter.class, BarFilter.class, FooBarFilter.class);
     }
 
-
     @Path("foo-resource")
     @FooBinding
     public static class FooResource extends Resource {
+
     }
 
     @Test
@@ -229,6 +267,7 @@ public class NameBindingTest extends JerseyTest {
     @Path("bar-resource")
     @BarBinding
     public static class BarResource extends Resource {
+
     }
 
     @Test
@@ -251,11 +290,11 @@ public class NameBindingTest extends JerseyTest {
         checkCalled(_getResponse("bar-resource/foobar"), BarFilter.class, FooFilter.class, FooBarFilter.class);
     }
 
-
     @Path("foobar-resource")
     @BarBinding
     @FooBinding
     public static class FooBarResource extends Resource {
+
     }
 
     @Test
@@ -277,6 +316,5 @@ public class NameBindingTest extends JerseyTest {
     public void testFooBarResourceFooBarBinding() {
         checkCalled(_getResponse("foobar-resource/foobar"), BarFilter.class, FooFilter.class, FooBarFilter.class);
     }
-
 
 }

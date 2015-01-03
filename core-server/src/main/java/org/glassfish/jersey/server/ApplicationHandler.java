@@ -780,7 +780,7 @@ public final class ApplicationHandler {
      * parameter.
      *
      * @param all                     Collection of all filters to be processed.
-     * @param preMatching             Collection into which pre-matching filters should be added.
+     * @param preMatchingFilters      Collection into which pre-matching filters should be added.
      * @param componentBag            Component bag
      * @param applicationNameBindings Collection of name binding annotations attached to the JAX-RS application.
      * @param inverseNameBoundMap     Inverse name bound map into which the name bound providers should be inserted. The keys
@@ -789,7 +789,7 @@ public final class ApplicationHandler {
      */
     private static <T> MultivaluedMap<Class<? extends Annotation>, RankedProvider<T>> filterNameBound(
             final Iterable<RankedProvider<T>> all,
-            final Collection<RankedProvider<ContainerRequestFilter>> preMatching,
+            final Collection<RankedProvider<ContainerRequestFilter>> preMatchingFilters,
             final ComponentBag componentBag,
             final Collection<Class<? extends Annotation>> applicationNameBindings,
             final MultivaluedMap<RankedProvider<T>, Class<? extends Annotation>> inverseNameBoundMap) {
@@ -811,23 +811,30 @@ public final class ApplicationHandler {
                 model = ComponentBag.modelFor(providerClass);
             }
 
-            if (preMatching != null && providerClass.getAnnotation(PreMatching.class) != null) {
+            final boolean preMatching = providerClass.getAnnotation(PreMatching.class) != null;
+            if (preMatching && preMatchingFilters != null) {
                 it.remove();
-                preMatching.add(new RankedProvider<>((ContainerRequestFilter) provider.getProvider(),
+                preMatchingFilters.add(new RankedProvider<>((ContainerRequestFilter) provider.getProvider(),
                         model.getPriority(ContainerRequestFilter.class)));
             }
 
             boolean nameBound = model.isNameBound();
-            if (nameBound && !applicationNameBindings.isEmpty() && applicationNameBindings.containsAll(model.getNameBindings())) {
+            if (nameBound
+                    && !applicationNameBindings.isEmpty()
+                    && applicationNameBindings.containsAll(model.getNameBindings())) {
                 // override the name-bound flag
                 nameBound = false;
             }
 
             if (nameBound) { // not application-bound
-                it.remove();
-                for (final Class<? extends Annotation> binding : model.getNameBindings()) {
-                    result.add(binding, provider);
-                    inverseNameBoundMap.add(provider, binding);
+                if (!preMatching) {
+                    it.remove();
+                    for (final Class<? extends Annotation> binding : model.getNameBindings()) {
+                        result.add(binding, provider);
+                        inverseNameBoundMap.add(provider, binding);
+                    }
+                } else {
+                    LOGGER.warning(LocalizationMessages.PREMATCHING_ALSO_NAME_BOUND(providerClass));
                 }
             }
         }
