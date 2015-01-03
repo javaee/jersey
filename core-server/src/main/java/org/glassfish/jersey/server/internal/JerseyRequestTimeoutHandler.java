@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,6 +59,7 @@ import org.glassfish.jersey.server.spi.ContainerResponseWriter.TimeoutHandler;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class JerseyRequestTimeoutHandler {
+
     private static final Logger LOGGER = Logger.getLogger(JerseyRequestTimeoutHandler.class.getName());
 
     private ScheduledFuture<?> timeoutTask = null; // guarded by runtimeLock
@@ -92,7 +93,7 @@ public class JerseyRequestTimeoutHandler {
      * @return {@code true} if the suspend operation completed successfully, {@code false} otherwise.
      * @see ContainerResponseWriter#suspend(long, TimeUnit, ContainerResponseWriter.TimeoutHandler)
      */
-    public boolean suspend(long timeOut, TimeUnit unit, final TimeoutHandler handler) {
+    public boolean suspend(final long timeOut, final TimeUnit unit, final TimeoutHandler handler) {
         synchronized (runtimeLock) {
             if (suspended) {
                 return false;
@@ -115,21 +116,7 @@ public class JerseyRequestTimeoutHandler {
      * @throws IllegalStateException in case the response writer has not been suspended yet.
      * @see ContainerResponseWriter#setSuspendTimeout(long, TimeUnit)
      */
-    public void setSuspendTimeout(long timeOut, TimeUnit unit) throws IllegalStateException {
-        final Runnable task = new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    synchronized (runtimeLock) {
-                        timeoutHandler.onTimeout(containerResponseWriter);
-                    }
-                } catch (Throwable throwable) {
-                    LOGGER.log(Level.WARNING, LocalizationMessages.SUSPEND_HANDLER_EXECUTION_FAILED(), throwable);
-                }
-            }
-        };
-
+    public void setSuspendTimeout(final long timeOut, final TimeUnit unit) throws IllegalStateException {
         synchronized (runtimeLock) {
             if (!suspended) {
                 throw new IllegalStateException(LocalizationMessages.SUSPEND_NOT_SUSPENDED());
@@ -142,8 +129,20 @@ public class JerseyRequestTimeoutHandler {
             }
 
             try {
-                timeoutTask = executor.schedule(task, timeOut, unit);
-            } catch (IllegalStateException ex) {
+                timeoutTask = executor.schedule(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            synchronized (runtimeLock) {
+                                timeoutHandler.onTimeout(containerResponseWriter);
+                            }
+                        } catch (final Throwable throwable) {
+                            LOGGER.log(Level.WARNING, LocalizationMessages.SUSPEND_HANDLER_EXECUTION_FAILED(), throwable);
+                        }
+                    }
+                }, timeOut, unit);
+            } catch (final IllegalStateException ex) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.SUSPEND_SCHEDULING_ERROR(), ex);
             }
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -665,8 +665,9 @@ public class ServerRuntime {
                             close = true;
                         }
 
+                        final ChunkedOutput chunked = (ChunkedOutput) entity;
                         try {
-                            ((ChunkedOutput) entity).setContext(
+                            chunked.setContext(
                                     runtime.requestScope,
                                     runtime.requestScope.referenceCurrent(),
                                     request,
@@ -677,9 +678,11 @@ public class ServerRuntime {
                             LOGGER.log(Level.SEVERE, LocalizationMessages.ERROR_WRITING_RESPONSE_ENTITY_CHUNK(), ex);
                             close = true;
                         }
-                        // suspend the writer indefinitely (passing null timeout handler is ok in such case).
+                        // suspend the writer indefinitely (passing null timeout handler is ok in such case) if the output is not
+                        // already closed.
                         // TODO what to do if we detect that the writer has already been suspended? override the timeout value?
-                        if (!writer.suspend(0, TimeUnit.SECONDS, null)) {
+                        if (!chunked.isClosed()
+                                && !writer.suspend(AsyncResponder.NO_TIMEOUT, TimeUnit.SECONDS, null)) {
                             LOGGER.fine(LocalizationMessages.ERROR_SUSPENDING_CHUNKED_OUTPUT_RESPONSE());
                         }
                     }

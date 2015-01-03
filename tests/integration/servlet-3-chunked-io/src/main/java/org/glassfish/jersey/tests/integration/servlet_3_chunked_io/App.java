@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,6 +56,7 @@ import org.glassfish.jersey.server.ResourceConfig;
  */
 @ApplicationPath("resources")
 public class App extends ResourceConfig {
+
     /**
      * Chunked I/O test JAX-RS application.
      */
@@ -71,11 +72,13 @@ public class App extends ResourceConfig {
      * @return new MOXy JSON config context resolver.
      */
     public static ContextResolver<MoxyJsonConfig> createMoxyJsonResolver() {
-        final MoxyJsonConfig moxyJsonConfig = new MoxyJsonConfig();
-        Map<String, String> namespacePrefixMapper = new HashMap<String, String>(1);
+        final Map<String, String> namespacePrefixMapper = new HashMap<>(1);
         namespacePrefixMapper.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
-        moxyJsonConfig.setNamespacePrefixMapper(namespacePrefixMapper).setNamespaceSeparator(':');
-        return moxyJsonConfig.resolver();
+
+        return new MoxyJsonConfig()
+                .setNamespacePrefixMapper(namespacePrefixMapper)
+                .setNamespaceSeparator(':')
+                .resolver();
     }
 
 }

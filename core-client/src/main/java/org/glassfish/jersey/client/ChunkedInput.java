@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,7 +70,9 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  * @param <T> chunk type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@SuppressWarnings("UnusedDeclaration")
 public class ChunkedInput<T> extends GenericType<T> implements Closeable {
+
     private static final Logger LOGGER = Logger.getLogger(ChunkedInput.class.getName());
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
@@ -108,12 +110,12 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
     private static class FixedBoundaryParser implements ChunkParser {
         private final byte[] delimiter;
 
-        public FixedBoundaryParser(byte[] boundary) {
+        public FixedBoundaryParser(final byte[] boundary) {
             delimiter = Arrays.copyOf(boundary, boundary.length);
         }
 
         @Override
-        public byte[] readChunk(InputStream in) throws IOException {
+        public byte[] readChunk(final InputStream in) throws IOException {
             final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             final byte[] delimiterBuffer = new byte[delimiter.length];
 
@@ -157,13 +159,13 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      * @param propertiesDelegate properties delegate for this request/response.
      */
     protected ChunkedInput(
-            Type chunkType,
-            InputStream inputStream,
-            Annotation[] annotations,
-            MediaType mediaType,
-            MultivaluedMap<String, String> headers,
-            MessageBodyWorkers messageBodyWorkers,
-            PropertiesDelegate propertiesDelegate) {
+            final Type chunkType,
+            final InputStream inputStream,
+            final Annotation[] annotations,
+            final MediaType mediaType,
+            final MultivaluedMap<String, String> headers,
+            final MessageBodyWorkers messageBodyWorkers,
+            final PropertiesDelegate propertiesDelegate) {
         super(chunkType);
 
         this.inputStream = inputStream;
@@ -196,7 +198,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      *
      * @param parser new chunk parser.
      */
-    public void setParser(ChunkParser parser) {
+    public void setParser(final ChunkParser parser) {
         this.parser = parser;
     }
 
@@ -236,7 +238,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      * @param mediaType custom chunk data media type. Must not be {@code null}.
      * @throws IllegalArgumentException in case the {@code mediaType} is {@code null}.
      */
-    public void setChunkType(MediaType mediaType) throws IllegalArgumentException {
+    public void setChunkType(final MediaType mediaType) throws IllegalArgumentException {
         if (mediaType == null) {
             throw new IllegalArgumentException(LocalizationMessages.CHUNKED_INPUT_MEDIA_TYPE_NULL());
         }
@@ -255,7 +257,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
      *                                  a valid {@link MediaType} instance or is {@code null}.
      * @see #setChunkType(javax.ws.rs.core.MediaType)
      */
-    public void setChunkType(String mediaType) throws IllegalArgumentException {
+    public void setChunkType(final String mediaType) throws IllegalArgumentException {
         this.mediaType = MediaType.valueOf(mediaType);
     }
 
@@ -265,7 +267,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
             if (inputStream != null) {
                 try {
                     inputStream.close();
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     LOGGER.log(Level.FINE, LocalizationMessages.CHUNKED_INPUT_STREAM_CLOSING_ERROR(), e);
                 }
             }
@@ -306,7 +308,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
             if (chunk == null) {
                 close();
             } else {
-                ByteArrayInputStream chunkStream = new ByteArrayInputStream(chunk);
+                final ByteArrayInputStream chunkStream = new ByteArrayInputStream(chunk);
                 // TODO: add interceptors: interceptors are used in ChunkedOutput, so the stream should
                 // be intercepted in the ChunkedInput too. Interceptors cannot be easily added to the readFrom
                 // method as they should wrap the stream before it is processed by ChunkParser. Also please check todo
@@ -323,7 +325,7 @@ public class ChunkedInput<T> extends GenericType<T> implements Closeable {
                         Collections.<ReaderInterceptor>emptyList(),
                         false);
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Logger.getLogger(this.getClass().getName()).log(Level.FINE, e.getMessage(), e);
             close();
         }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,6 +39,7 @@
  */
 package org.glassfish.jersey.servlet.async;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.servlet.AsyncContext;
@@ -69,6 +70,7 @@ public class AsyncContextDelegateProviderImpl implements AsyncContextDelegatePro
         private final HttpServletRequest request;
         private final HttpServletResponse response;
         private final AtomicReference<AsyncContext> asyncContextRef;
+        private final AtomicBoolean completed;
 
         /**
          * Create a Servlet 3.x {@link AsyncContextDelegate} with given {@code request} and {@code response}.
@@ -79,21 +81,27 @@ public class AsyncContextDelegateProviderImpl implements AsyncContextDelegatePro
         private ExtensionImpl(final HttpServletRequest request, final HttpServletResponse response) {
             this.request = request;
             this.response = response;
-            this.asyncContextRef = new AtomicReference<AsyncContext>();
+            this.asyncContextRef = new AtomicReference<>();
+            this.completed = new AtomicBoolean(false);
         }
 
         @Override
         public void suspend() throws IllegalStateException {
-            final AsyncContext asyncContext = request.startAsync(request, response);
+            // Suspend only if not completed and not suspended before.
+            if (!completed.get() && asyncContextRef.get() == null) {
+                final AsyncContext asyncContext = request.startAsync(request, response);
 
-            // Tell underlying asyncContext to never time out.
-            asyncContext.setTimeout(NEVER_TIMEOUT_VALUE);
+                // Tell underlying asyncContext to never time out.
+                asyncContext.setTimeout(NEVER_TIMEOUT_VALUE);
 
-            asyncContextRef.set(asyncContext);
+                asyncContextRef.set(asyncContext);
+            }
         }
 
         @Override
         public void complete() {
+            completed.set(true);
+
             final AsyncContext asyncContext = asyncContextRef.getAndSet(null);
             if (asyncContext != null) {
                 asyncContext.complete();

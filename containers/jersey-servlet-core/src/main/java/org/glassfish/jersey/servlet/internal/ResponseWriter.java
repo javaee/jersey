@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -119,7 +119,7 @@ public class ResponseWriter implements ContainerResponseWriter {
         try {
             // Suspend the servlet.
             asyncExt.suspend();
-        } catch (IllegalStateException ex) {
+        } catch (final IllegalStateException ex) {
             LOGGER.log(Level.WARNING, LocalizationMessages.SERVLET_REQUEST_SUSPEND_FAILED(), ex);
             return false;
         }
@@ -128,12 +128,12 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public void setSuspendTimeout(long timeOut, TimeUnit timeUnit) throws IllegalStateException {
+    public void setSuspendTimeout(final long timeOut, final TimeUnit timeUnit) throws IllegalStateException {
         requestTimeoutHandler.setSuspendTimeout(timeOut, timeUnit);
     }
 
     @Override
-    public OutputStream writeResponseStatusAndHeaders(long contentLength, ContainerResponse responseContext)
+    public OutputStream writeResponseStatusAndHeaders(final long contentLength, final ContainerResponse responseContext)
             throws ContainerException {
         this.responseContext.set(responseContext);
 
@@ -145,8 +145,8 @@ public class ResponseWriter implements ContainerResponseWriter {
         // the invocation of sendError as on some Servlet implementations
         // modification of the response headers will have no effect
         // after the invocation of sendError.
-        MultivaluedMap<String, String> headers = getResponseContext().getStringHeaders();
-        for (Map.Entry<String, List<String>> e : headers.entrySet()) {
+        final MultivaluedMap<String, String> headers = getResponseContext().getStringHeaders();
+        for (final Map.Entry<String, List<String>> e : headers.entrySet()) {
             final Iterator<String> it = e.getValue().iterator();
             if (!it.hasNext()) {
                 continue;
@@ -178,7 +178,7 @@ public class ResponseWriter implements ContainerResponseWriter {
                 // delegating output stream prevents closing the underlying servlet output stream,
                 // so that any Servlet filters in the chain can still write to the response after us.
                 return new NonCloseableOutputStreamWrapper(outputStream);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new ContainerException(e);
             }
         }
@@ -198,7 +198,7 @@ public class ResponseWriter implements ContainerResponseWriter {
                         } else {
                             response.sendError(status, reason);
                         }
-                    } catch (IOException ex) {
+                    } catch (final IOException ex) {
                         throw new ContainerException(
                                 LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(status, reason != null ? reason : "--"),
                                 ex);
@@ -212,7 +212,7 @@ public class ResponseWriter implements ContainerResponseWriter {
     }
 
     @Override
-    public void failure(Throwable error) {
+    public void failure(final Throwable error) {
         try {
             if (!response.isCommitted()) {
                 try {
@@ -223,10 +223,10 @@ public class ResponseWriter implements ContainerResponseWriter {
                     } else {
                         response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Request failed.");
                     }
-                } catch (IllegalStateException ex) {
+                } catch (final IllegalStateException ex) {
                     // a race condition externally committing the response can still occur...
                     LOGGER.log(Level.FINER, "Unable to reset failed response.", ex);
-                } catch (IOException ex) {
+                } catch (final IOException ex) {
                     throw new ContainerException(LocalizationMessages.EXCEPTION_SENDING_ERROR_RESPONSE(
                             Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), "Request failed."), ex);
                 } finally {
@@ -249,7 +249,7 @@ public class ResponseWriter implements ContainerResponseWriter {
      *
      * @param error throwable to be re-thrown
      */
-    private void rethrow(Throwable error) {
+    private void rethrow(final Throwable error) {
         if (error instanceof RuntimeException) {
             throw (RuntimeException) error;
         } else {
@@ -279,22 +279,22 @@ public class ResponseWriter implements ContainerResponseWriter {
     private static class NonCloseableOutputStreamWrapper extends OutputStream {
         private final OutputStream delegate;
 
-        public NonCloseableOutputStreamWrapper(OutputStream delegate) {
+        public NonCloseableOutputStreamWrapper(final OutputStream delegate) {
             this.delegate = delegate;
         }
 
         @Override
-        public void write(int b) throws IOException {
+        public void write(final int b) throws IOException {
             delegate.write(b);
         }
 
         @Override
-        public void write(byte[] b) throws IOException {
+        public void write(final byte[] b) throws IOException {
             delegate.write(b);
         }
 
         @Override
-        public void write(byte[] b, int off, int len) throws IOException {
+        public void write(final byte[] b, final int off, final int len) throws IOException {
             delegate.write(b, off, len);
         }
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -90,7 +90,7 @@ public class ChunkedInputOutputTest extends JerseyTest {
          */
         @GET
         public ChunkedOutput<String> get() {
-            final ChunkedOutput<String> output = new ChunkedOutput<String>(String.class, "\r\n");
+            final ChunkedOutput<String> output = new ChunkedOutput<>(String.class, "\r\n");
 
             new Thread() {
                 @Override
@@ -99,12 +99,12 @@ public class ChunkedInputOutputTest extends JerseyTest {
                         output.write("test");
                         output.write("test");
                         output.write("test");
-                    } catch (IOException e) {
+                    } catch (final IOException e) {
                         LOGGER.log(Level.SEVERE, "Error writing chunk.", e);
                     } finally {
                         try {
                             output.close();
-                        } catch (IOException e) {
+                        } catch (final IOException e) {
                             LOGGER.log(Level.INFO, "Error closing chunked output.", e);
                         }
                     }
@@ -142,30 +142,31 @@ public class ChunkedInputOutputTest extends JerseyTest {
      */
     @Intercepted
     public static class TestWriterInterceptor implements WriterInterceptor {
-        private static AtomicInteger interceptCounter = new AtomicInteger(0);
-        private static AtomicInteger writeCounter = new AtomicInteger(0);
-        private static AtomicInteger flushCounter = new AtomicInteger(0);
-        private static AtomicInteger closeCounter = new AtomicInteger(0);
+
+        private static final AtomicInteger interceptCounter = new AtomicInteger(0);
+        private static final AtomicInteger writeCounter = new AtomicInteger(0);
+        private static final AtomicInteger flushCounter = new AtomicInteger(0);
+        private static final AtomicInteger closeCounter = new AtomicInteger(0);
 
         @Override
-        public void aroundWriteTo(WriterInterceptorContext context) throws IOException, WebApplicationException {
+        public void aroundWriteTo(final WriterInterceptorContext context) throws IOException, WebApplicationException {
             interceptCounter.incrementAndGet();
             final OutputStream out = context.getOutputStream();
             context.setOutputStream(new OutputStream() {
                 @Override
-                public void write(int b) throws IOException {
+                public void write(final int b) throws IOException {
                     writeCounter.incrementAndGet();
                     out.write(b);
                 }
 
                 @Override
-                public void write(byte[] b) throws IOException {
+                public void write(final byte[] b) throws IOException {
                     writeCounter.incrementAndGet();
                     out.write(b);
                 }
 
                 @Override
-                public void write(byte[] b, int off, int len) throws IOException {
+                public void write(final byte[] b, final int off, final int len) throws IOException {
                     writeCounter.incrementAndGet();
                     out.write(b, off, len);
                 }

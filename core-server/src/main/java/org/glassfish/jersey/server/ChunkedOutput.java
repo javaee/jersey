@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -106,7 +106,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * @param chunkDelimiter custom chunk delimiter bytes. Must not be {code null}.
      * @since 2.4.1
      */
-    protected ChunkedOutput(byte[] chunkDelimiter) {
+    protected ChunkedOutput(final byte[] chunkDelimiter) {
         if (chunkDelimiter.length > 0) {
             this.chunkDelimiter = new byte[chunkDelimiter.length];
             System.arraycopy(chunkDelimiter, 0, this.chunkDelimiter, 0, chunkDelimiter.length);
@@ -122,7 +122,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * @param chunkDelimiter custom chunk delimiter bytes. Must not be {code null}.
      * @since 2.4.1
      */
-    public ChunkedOutput(final Type chunkType, byte[] chunkDelimiter) {
+    public ChunkedOutput(final Type chunkType, final byte[] chunkDelimiter) {
         super(chunkType);
         if (chunkDelimiter.length > 0) {
             this.chunkDelimiter = new byte[chunkDelimiter.length];
@@ -138,7 +138,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * @param chunkDelimiter custom chunk delimiter string. Must not be {code null}.
      * @since 2.4.1
      */
-    protected ChunkedOutput(String chunkDelimiter) {
+    protected ChunkedOutput(final String chunkDelimiter) {
         if (chunkDelimiter.isEmpty()) {
             this.chunkDelimiter = ZERO_LENGTH_DELIMITER;
         } else {
@@ -153,7 +153,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
      * @param chunkDelimiter custom chunk delimiter string. Must not be {code null}.
      * @since 2.4.1
      */
-    public ChunkedOutput(final Type chunkType, String chunkDelimiter) {
+    public ChunkedOutput(final Type chunkType, final String chunkDelimiter) {
         super(chunkType);
         if (chunkDelimiter.isEmpty()) {
             this.chunkDelimiter = ZERO_LENGTH_DELIMITER;
@@ -243,10 +243,10 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                                 // if MBW replaced the stream, let's make sure to set it in the response context.
                                 responseContext.setEntityStream(writtenStream);
                             }
-                        } catch (IOException ioe) {
+                        } catch (final IOException ioe) {
                             connectionCallback.onDisconnect(asyncContext.get());
                             throw ioe;
-                        } catch (MappableException mpe) {
+                        } catch (final MappableException mpe) {
                             if (mpe.getCause() instanceof IOException) {
                                 connectionCallback.onDisconnect(asyncContext.get());
                             }
@@ -278,7 +278,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
                     return null;
                 }
             });
-        } catch (Exception e) {
+        } catch (final Exception e) {
             closed = true;
             // remember the exception (it will get rethrown from finally clause, once it does it's work)
             ex = e;
@@ -286,7 +286,7 @@ public class ChunkedOutput<T> extends GenericType<T> implements Closeable {
             if (closed) {
                 try {
                     responseContext.close();
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     // if no exception remembered before, remember this one
                     // otherwise the previously remembered exception (from catch clause) takes precedence
                     ex = ex == null ? e : ex;

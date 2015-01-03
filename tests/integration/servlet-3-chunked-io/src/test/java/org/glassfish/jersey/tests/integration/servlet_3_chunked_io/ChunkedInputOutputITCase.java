@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,10 @@
  */
 package org.glassfish.jersey.tests.integration.servlet_3_chunked_io;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URLConnection;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
@@ -67,10 +70,9 @@ public class ChunkedInputOutputITCase extends JerseyTest {
 
     private static final int MAX_LISTENERS = 5;
 
-
     @Override
     protected Application configure() {
-        return new App();
+        return new Application();
     }
 
     @Override
@@ -79,7 +81,7 @@ public class ChunkedInputOutputITCase extends JerseyTest {
     }
 
     @Override
-    protected void configureClient(ClientConfig config) {
+    protected void configureClient(final ClientConfig config) {
         config.register(App.createMoxyJsonResolver());
 
         config.property(ClientProperties.CONNECT_TIMEOUT, 15000)
@@ -147,6 +149,50 @@ public class ChunkedInputOutputITCase extends JerseyTest {
         Message chunk;
         while ((chunk = input.read()) != null) {
             assertEquals("Unexpected value of chunk " + counter, new Message(counter, "test"), chunk);
+            counter++;
+        }
+
+        assertEquals("Unexpected numbed of received chunks.", 3, counter);
+    }
+
+    /**
+     * Test combination of AsyncResponse and ChunkedOutput.
+     */
+    @Test
+    public void chunkedOutputWithAsyncResponse() throws Exception {
+        final ChunkedInput<Message> input = target().path("test/chunked-async").request(MediaType.APPLICATION_JSON_TYPE)
+                .get(new GenericType<ChunkedInput<Message>>() {
+                });
+
+        int counter = 0;
+        Message chunk;
+        while ((chunk = input.read()) != null) {
+            assertEquals("Unexpected value of chunk " + counter, new Message(counter, "test"), chunk);
+            counter++;
+        }
+
+        assertEquals("Unexpected numbed of received chunks.", 3, counter);
+    }
+
+    /**
+     * Reproducer for JERSEY-2558. Checking that the connection is properly closed even when the
+     * {@link org.glassfish.jersey.server.ChunkedOutput#close()} is called before the response is processed by the runtime.
+     */
+    @Test
+    public void checkConnectionIsClosedUrlConnection() throws Exception {
+        final URI uri = UriBuilder.fromUri(super.getBaseUri()).path("test/close-before-return").build();
+        final URLConnection connection = uri.toURL().openConnection();
+
+        connection.setConnectTimeout(15000);
+        connection.setReadTimeout(15000);
+        connection.connect();
+
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+
+        String line;
+        int counter = 0;
+        while ((line = reader.readLine()) != null) {
+            assertEquals("Unexpected value of chunk " + counter, new Message(counter, "test").toString(), line);
             counter++;
         }
 
