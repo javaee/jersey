@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,9 +52,12 @@ import rx.Observable;
 /**
  * Reactive invoker providing support for {@link rx.Observable observable} from RxJava.
  * <p/>
- * Requests are by default invoked on a separate thread (as JAX-RS async client requests). This behavior can be overridden by
+ * Requests are by default invoked on a separate thread (as JAX-RS Async client requests). This behavior can be overridden by
  * providing a {@link java.util.concurrent.ExecutorService executor service} when client extension is being created
  * (in {@link org.glassfish.jersey.client.rx.rxjava.RxObservable RxObservable}).
+ * <p/>
+ * The observables produced by method calls are cold observables. That means that request to the service is invoked only when a
+ * subscriber is subscribed to the observable.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @since 2.13

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ public final class RxCompletableFuture {
      * Create a new {@link org.glassfish.jersey.client.rx.RxClient reactive client} instance parametrized with invoker based on
      * the {@link jersey.repackaged.jsr166e.CompletableFuture completable future} from JSR-166e (pre-Java 8). Reactive requests,
      * invoked using {@link org.glassfish.jersey.client.rx.RxInvocationBuilder#rx() rx(...)} methods, are executed via
-     * {@link java.util.concurrent.Executors#newCachedThreadPool() "new thread pool" service}.
+     * {@link jersey.repackaged.jsr166e.ForkJoinPool#commonPool() "common thread pool" service}.
      * <p/>
      * Instance is initialized with a JAX-RS client created using the default client builder implementation class provided by the
      * JAX-RS implementation provider.
@@ -100,7 +100,7 @@ public final class RxCompletableFuture {
      * instance and parametrized with invoker based on the {@link jersey.repackaged.jsr166e.CompletableFuture completable future} from
      * JSR-166e (pre-Java 8). Reactive requests, invoked using
      * {@link org.glassfish.jersey.client.rx.RxInvocationBuilder#rx() rx(...)} methods, are executed via
-     * {@link java.util.concurrent.Executors#newCachedThreadPool() "new thread pool" service}.
+     * {@link jersey.repackaged.jsr166e.ForkJoinPool#commonPool() "common thread pool" service}.
      *
      * @param client the JAX-RS client used to initialize new reactive client extension.
      * @return new reactive client extension.
@@ -131,7 +131,7 @@ public final class RxCompletableFuture {
      * JAX-RS client web target instance and parametrized with invoker based on the
      * {@link jersey.repackaged.jsr166e.CompletableFuture completable future} from JSR-166e (pre-Java 8). Reactive requests, invoked using
      * {@link org.glassfish.jersey.client.rx.RxInvocationBuilder#rx() rx(...)} methods, are executed via
-     * {@link java.util.concurrent.Executors#newCachedThreadPool() "new thread pool" service}.
+     * {@link jersey.repackaged.jsr166e.ForkJoinPool#commonPool() "common thread pool" service}.
      *
      * @param target the JAX-RS client target used to initialize new reactive client target extension.
      * @return new reactive client target extension.

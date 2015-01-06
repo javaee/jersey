@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -118,6 +118,7 @@ This line fits the page width.
     <xi:include href="jaxrs-resources.xml" />
     <xi:include href="deployment.xml" />
     <xi:include href="client.xml" />
+    <xi:include href="rx-client.xml" />
     <xi:include href="representations.xml" />
     <xi:include href="mbw.xml" />
     <xi:include href="media.xml" />

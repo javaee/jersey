@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,10 +53,10 @@ import org.glassfish.jersey.Beta;
  * support for {@code CompletionStage} from Java 8 the overridden methods should look like:
  * <pre>
  * &#64;Override
- * public CompletionStage<Response> get();
+ * public CompletionStage&lt;Response&gt; get();
  *
  * &#64;Override
- * public &lt;T> CompletionStage<T> get(Class&lt;T> responseType);</pre>
+ * public &lt;T&gt; CompletionStage&lt;T&gt; get(Class&lt;T&gt; responseType);</pre>
  *
  * Instances of {@code RxInvoker} extensions are created using the
  * {@link org.glassfish.jersey.client.rx.spi.RxInvokerProvider RxInvokerProvider} SPI contract.

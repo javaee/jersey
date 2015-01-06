@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -58,7 +58,9 @@ import rx.subscriptions.CompositeSubscription;
 import rx.subscriptions.Subscriptions;
 
 /**
- * Implementation of Reactive Invoker for {@code Observable}.
+ * Implementation of Reactive Invoker for {@code Observable}. If no executor service is provided the JAX-RS Async client is used
+ * to retrieve data when a subscriber is subscribed. When an executor service is provided a sync call is invoked on a thread
+ * provided on from this service.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @since 2.13

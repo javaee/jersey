@@ -38,47 +38,53 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.spi;
+package org.glassfish.jersey.examples.rx;
 
-import java.util.concurrent.ExecutorService;
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.ext.ContextResolver;
 
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.client.Invocation;
+import org.glassfish.jersey.examples.rx.agent.AsyncAgentResource;
+import org.glassfish.jersey.examples.rx.agent.CompletionStageAgentResource;
+import org.glassfish.jersey.examples.rx.agent.ListenableFutureAgentResource;
+import org.glassfish.jersey.examples.rx.agent.ObservableAgentResource;
+import org.glassfish.jersey.examples.rx.agent.SyncAgentResource;
+import org.glassfish.jersey.examples.rx.remote.CalculationResource;
+import org.glassfish.jersey.examples.rx.remote.DestinationResource;
+import org.glassfish.jersey.examples.rx.remote.ForecastResource;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
 
-import org.glassfish.jersey.Beta;
-import org.glassfish.jersey.spi.Contract;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
- * Client-provider interface for creating {@link org.glassfish.jersey.client.rx.RxInvoker reactive invoker} instances.
- *
- * If supported by the provider, an invoker instance of the requested Java type will be created.
- * <p/>
- * A provider shall support a one-to-one mapping between a type, provided the type is not {@link Object}. A provider may also
- * support mapping of sub-types of a type (provided the type is not {@code Object}). It is expected that each provider supports
- * mapping for distinct set of types and subtypes so that different providers do not conflict with each other.
- * <p/>
- * An implementation can identify itself by placing a Java service provider configuration file (if not already present) -
- * {@code org.glassfish.jersey.client.rx.spi.RxInvokerProvider} - in the resource directory {@code META-INF/services}, and adding
- * the fully qualified service-provider-class of the implementation in the file.
- *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
- * @since 2.13
  */
-@Beta
-@Contract
-@ConstrainedTo(RuntimeType.CLIENT)
-public interface RxInvokerProvider {
+@ApplicationPath("rx")
+public class RxApplication extends ResourceConfig {
 
-    /**
-     * Create an invoker of a given type.
-     *
-     * @param invokerType the invoker type.
-     * @param builder     the builder to create JAX-RS {@link javax.ws.rs.client.Invocation invocation} invoked in reactive way.
-     * @param executor    the executor service to execute reactive requests.
-     * @param <RX>        the concrete reactive invocation type.
-     * @return the invoker, otherwise {@code null} if the provider does not support the requested {@code type}.
-     * @throws javax.ws.rs.ProcessingException if there is an error creating the invoker.
-     */
-    public <RX> RX getInvoker(Class<RX> invokerType, Invocation.Builder builder, ExecutorService executor);
+    public RxApplication() {
+        // Remote (Server) Resources.
+        register(DestinationResource.class);
+        register(CalculationResource.class);
+        register(ForecastResource.class);
+        // Agent (Client) Resources.
+        register(ObservableAgentResource.class);
+        register(SyncAgentResource.class);
+        register(AsyncAgentResource.class);
+        register(ListenableFutureAgentResource.class);
+        register(CompletionStageAgentResource.class);
+
+        // Providers.
+        register(JacksonFeature.class);
+        register(ObjectMapperProvider.class);
+    }
+
+    public static class ObjectMapperProvider implements ContextResolver<ObjectMapper> {
+
+        @Override
+        public ObjectMapper getContext(final Class<?> type) {
+            return new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        }
+    }
 }

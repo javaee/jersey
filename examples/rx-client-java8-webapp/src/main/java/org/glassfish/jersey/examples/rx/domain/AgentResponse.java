@@ -38,47 +38,54 @@
  * holder.
  */
 
-package org.glassfish.jersey.client.rx.spi;
+package org.glassfish.jersey.examples.rx.domain;
 
-import java.util.concurrent.ExecutorService;
-
-import javax.ws.rs.ConstrainedTo;
-import javax.ws.rs.RuntimeType;
-import javax.ws.rs.client.Invocation;
-
-import org.glassfish.jersey.Beta;
-import org.glassfish.jersey.spi.Contract;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Client-provider interface for creating {@link org.glassfish.jersey.client.rx.RxInvoker reactive invoker} instances.
- *
- * If supported by the provider, an invoker instance of the requested Java type will be created.
- * <p/>
- * A provider shall support a one-to-one mapping between a type, provided the type is not {@link Object}. A provider may also
- * support mapping of sub-types of a type (provided the type is not {@code Object}). It is expected that each provider supports
- * mapping for distinct set of types and subtypes so that different providers do not conflict with each other.
- * <p/>
- * An implementation can identify itself by placing a Java service provider configuration file (if not already present) -
- * {@code org.glassfish.jersey.client.rx.spi.RxInvokerProvider} - in the resource directory {@code META-INF/services}, and adding
- * the fully qualified service-provider-class of the implementation in the file.
- *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
- * @since 2.13
  */
-@Beta
-@Contract
-@ConstrainedTo(RuntimeType.CLIENT)
-public interface RxInvokerProvider {
+public class AgentResponse {
 
-    /**
-     * Create an invoker of a given type.
-     *
-     * @param invokerType the invoker type.
-     * @param builder     the builder to create JAX-RS {@link javax.ws.rs.client.Invocation invocation} invoked in reactive way.
-     * @param executor    the executor service to execute reactive requests.
-     * @param <RX>        the concrete reactive invocation type.
-     * @return the invoker, otherwise {@code null} if the provider does not support the requested {@code type}.
-     * @throws javax.ws.rs.ProcessingException if there is an error creating the invoker.
-     */
-    public <RX> RX getInvoker(Class<RX> invokerType, Invocation.Builder builder, ExecutorService executor);
+    private List<Destination> visited = new ArrayList<>();
+    private List<Recommendation> recommended;
+    private long processingTime;
+
+    public AgentResponse() {
+    }
+
+    public List<Destination> getVisited() {
+        return visited;
+    }
+
+    public void setVisited(final List<Destination> visited) {
+        this.visited = visited;
+    }
+
+    public void setRecommended(final List<Recommendation> recommended) {
+        this.recommended = recommended;
+    }
+
+    public List<Recommendation> getRecommended() {
+        return recommended;
+    }
+
+    public void setProcessingTime(final long processingTime) {
+        this.processingTime = processingTime;
+    }
+
+    public long getProcessingTime() {
+        return processingTime;
+    }
+
+    public AgentResponse visited(final List<Destination> visited) {
+        setVisited(visited);
+        return this;
+    }
+
+    public AgentResponse recommended(final List<Recommendation> recommended) {
+        setRecommended(recommended);
+        return this;
+    }
 }
