@@ -62,7 +62,7 @@ import org.glassfish.jersey.spi.ExtendedExceptionMapper;
  */
 @ApplicationScoped
 @JerseyVetoed
-public final class TransactionalExceptionMapper implements ExtendedExceptionMapper<TransactionalException> {
+public class TransactionalExceptionMapper implements ExtendedExceptionMapper<TransactionalException> {
 
     @Inject
     @TransactionalExceptionInterceptorProvider.WaeQualifier
