@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -51,6 +51,61 @@
                              http://www.w3.org/1999/xlink http://www.w3.org/1999/xlink.xsd"
          xml:id="migration">
     <title>Migration Guide</title>
+
+    <section xml:id="mig-2.15">
+        <title>Migrating to 2.15</title>
+        <section xml:id="mig-2.15-highlights">
+            <title>Release 2.15 Highlights</title>
+
+            <section>
+              <title>Container agnostic CDI support</title>
+              <para>
+                Before 2.15, CDI integration was supported primarily in Java EE containers with built-in CDI support.
+                From version 2.15 onwards, it is possible to leverage CDI integration also outside of Java EE environment.
+                A new example, <link xlink:href='https://github.com/jersey/jersey/tree/master/examples/helloworld-weld'>helloworld-weld</link>,
+                has been introduced to demonstrate the new feature using Grizzly HTTP server.
+                Another example application, <link xlink:href='https://github.com/jersey/jersey/tree/master/examples/cdi-webapp'>cdi-webapp</link>,
+                has been updated so that it enables Apache Tomcat Server deployment.
+              </para>
+            </section>
+
+        </section>
+
+        <section xml:id="mig-2.15-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            CDI support improvement caused breaking changes for those users directly referring to the following CDI supporting Jersey
+                            module in maven:
+<programlisting language="xml" linenumbering="unnumbered">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.glassfish.jersey.containers.glassfish&lt;/groupId&gt;
+  &lt;artifactId&gt;jersey-gf-cdi&lt;/artifactId&gt;
+  &lt;version&gt;${pre-2.15-version}&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                            The above dependency needs to be replaced with:
+<programlisting language="xml" linenumbering="unnumbered">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.glassfish.jersey.ext.cdi&lt;/groupId&gt;
+  &lt;artifactId&gt;jersey-cdi1x&lt;/artifactId&gt;
+  &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                            The following needs to be included in addition if you want to leverage CDI JTA support:
+<programlisting language="xml" linenumbering="unnumbered">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.glassfish.jersey.ext.cdi&lt;/groupId&gt;
+  &lt;artifactId&gt;jersey-cdi1x-transaction&lt;/artifactId&gt;
+  &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
 
     <section xml:id="mig-2.12">
         <title>Migrating from Jersey 2.11 to 2.12</title>
