@@ -136,6 +136,7 @@ import jersey.repackaged.com.google.common.collect.Collections2;
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
 import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
+import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
  * Jersey server-side application handler.
@@ -234,6 +235,7 @@ public final class ApplicationHandler {
     private final ResourceConfig runtimeConfig;
     private final ServiceLocator locator;
     private ServerRuntime runtime;
+    private MessageBodyWorkers msgBodyWorkers;
 
 
     /**
@@ -538,7 +540,6 @@ public final class ApplicationHandler {
          */
         final Stage<RequestProcessingContext> rootStage = Stages
                 .chain(referencesInitializer)
-                .to(locator.createAndInitialize(ContainerMessageBodyWorkersInitializer.class))
                 .to(preMatchRequestFilteringStage)
                 .to(routingStage)
                 .to(resourceFilteringStage)
@@ -553,6 +554,8 @@ public final class ApplicationHandler {
         for (final Object instance : resourceBag.instances) {
             locator.inject(instance);
         }
+
+        msgBodyWorkers = locator.getService(MessageBodyWorkers.class);
 
         logApplicationInitConfiguration(locator, resourceBag, processingProviders);
 
@@ -1070,6 +1073,7 @@ public final class ApplicationHandler {
      * @param request container request context of the current request.
      */
     public void handle(final ContainerRequest request) {
+        request.setWorkers(msgBodyWorkers);
         runtime.process(request);
     }
 

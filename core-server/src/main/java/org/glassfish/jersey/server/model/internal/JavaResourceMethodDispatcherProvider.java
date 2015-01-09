@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,17 +45,18 @@ import java.util.List;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ParameterValueHelper;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 
 /**
  * An implementation of {@link ResourceMethodDispatcher.Provider} that
@@ -70,24 +71,26 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
     private ServiceLocator serviceLocator;
 
     @Override
-    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler invocationHandler) {
+    public ResourceMethodDispatcher create(final Invocable resourceMethod,
+            final InvocationHandler invocationHandler,
+            final ConfiguredValidator validator) {
         final List<Factory<?>> valueProviders = resourceMethod.getValueProviders(serviceLocator);
         final Class<?> returnType = resourceMethod.getHandlingMethod().getReturnType();
 
         ResourceMethodDispatcher resourceMethodDispatcher;
         if (Response.class.isAssignableFrom(returnType)) {
-            resourceMethodDispatcher = new ResponseOutInvoker(resourceMethod, invocationHandler, valueProviders);
+            resourceMethodDispatcher = new ResponseOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
 // TODO should we support JResponse?
 //        } else if (JResponse.class.isAssignableFrom(returnType)) {
 //            return new JResponseOutInvoker(resourceMethod, pp, invocationHandler);
         } else if (returnType != void.class) {
             if (returnType == Object.class || GenericEntity.class.isAssignableFrom(returnType)) {
-                resourceMethodDispatcher = new ObjectOutInvoker(resourceMethod, invocationHandler, valueProviders);
+                resourceMethodDispatcher = new ObjectOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
             } else {
-                resourceMethodDispatcher = new TypeOutInvoker(resourceMethod, invocationHandler, valueProviders);
+                resourceMethodDispatcher = new TypeOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
             }
         } else {
-            resourceMethodDispatcher = new VoidOutInvoker(resourceMethod, invocationHandler, valueProviders);
+            resourceMethodDispatcher = new VoidOutInvoker(resourceMethod, invocationHandler, valueProviders, validator);
         }
 
         // Inject validator.
@@ -110,10 +113,11 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         private final List<Factory<?>> valueProviders;
 
         public AbstractMethodParamInvoker(
-                Invocable resourceMethod,
-                InvocationHandler handler,
-                List<Factory<?>> valueProviders) {
-            super(resourceMethod, handler);
+                final Invocable resourceMethod,
+                final InvocationHandler handler,
+                final List<Factory<?>> valueProviders,
+                final ConfiguredValidator validator) {
+            super(resourceMethod, handler, validator);
             this.valueProviders = valueProviders;
         }
 
@@ -125,15 +129,16 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
     private static final class VoidOutInvoker extends AbstractMethodParamInvoker {
 
         public VoidOutInvoker(
-                Invocable resourceMethod,
-                InvocationHandler handler,
-                List<Factory<?>> valueProviders) {
-            super(resourceMethod, handler, valueProviders);
+                final Invocable resourceMethod,
+                final InvocationHandler handler,
+                final List<Factory<?>> valueProviders,
+                final ConfiguredValidator validator) {
+            super(resourceMethod, handler, valueProviders, validator);
         }
 
         @Override
-        protected Response doDispatch(Object resource, Request request) throws ProcessingException {
-            invoke(resource, getParamValues());
+        protected Response doDispatch(final Object resource, final ContainerRequest containerRequest) throws ProcessingException {
+            invoke(containerRequest, resource, getParamValues());
             return Response.noContent().build();
         }
     }
@@ -141,30 +146,32 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
     private static final class ResponseOutInvoker extends AbstractMethodParamInvoker {
 
         public ResponseOutInvoker(
-                Invocable resourceMethod,
-                InvocationHandler handler,
-                List<Factory<?>> valueProviders) {
-            super(resourceMethod, handler, valueProviders);
+                final Invocable resourceMethod,
+                final InvocationHandler handler,
+                final List<Factory<?>> valueProviders,
+                final ConfiguredValidator validator) {
+            super(resourceMethod, handler, valueProviders, validator);
         }
 
         @Override
-        protected Response doDispatch(Object resource, Request request) throws ProcessingException {
-            return Response.class.cast(invoke(resource, getParamValues()));
+        protected Response doDispatch(Object resource, final ContainerRequest containerRequest) throws ProcessingException {
+            return Response.class.cast(invoke(containerRequest, resource, getParamValues()));
         }
     }
 
     private static final class ObjectOutInvoker extends AbstractMethodParamInvoker {
 
         public ObjectOutInvoker(
-                Invocable resourceMethod,
-                InvocationHandler handler,
-                List<Factory<?>> valueProviders) {
-            super(resourceMethod, handler, valueProviders);
+                final Invocable resourceMethod,
+                final InvocationHandler handler,
+                final List<Factory<?>> valueProviders,
+                final ConfiguredValidator validator) {
+            super(resourceMethod, handler, valueProviders, validator);
         }
 
         @Override
-        protected Response doDispatch(Object resource, Request request) throws ProcessingException {
-            final Object o = invoke(resource, getParamValues());
+        protected Response doDispatch(final Object resource, final ContainerRequest containerRequest) throws ProcessingException {
+            final Object o = invoke(containerRequest, resource, getParamValues());
 
             if (o instanceof Response) {
                 return Response.class.cast(o);
@@ -183,16 +190,17 @@ class JavaResourceMethodDispatcherProvider implements ResourceMethodDispatcher.P
         private final Type t;
 
         public TypeOutInvoker(
-                Invocable resourceMethod,
-                InvocationHandler handler,
-                List<Factory<?>> valueProviders) {
-            super(resourceMethod, handler, valueProviders);
+                final Invocable resourceMethod,
+                final InvocationHandler handler,
+                final List<Factory<?>> valueProviders,
+                final ConfiguredValidator validator) {
+            super(resourceMethod, handler, valueProviders, validator);
             this.t = resourceMethod.getHandlingMethod().getGenericReturnType();
         }
 
         @Override
-        protected Response doDispatch(Object resource, Request request) throws ProcessingException {
-            final Object o = invoke(resource, getParamValues());
+        protected Response doDispatch(final Object resource, final ContainerRequest containerRequest) throws ProcessingException {
+            final Object o = invoke(containerRequest, resource, getParamValues());
             if (o != null) {
 
                 Response response = Response.ok().entity(o).build();

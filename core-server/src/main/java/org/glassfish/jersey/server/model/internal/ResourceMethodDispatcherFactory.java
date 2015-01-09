@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,6 +49,7 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
+import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
@@ -88,10 +89,13 @@ public final class ResourceMethodDispatcherFactory implements ResourceMethodDisp
 
     // ResourceMethodDispatchProvider
     @Override
-    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler handler) {
+    public ResourceMethodDispatcher create(final Invocable resourceMethod,
+                                            final InvocationHandler handler,
+                                            final ConfiguredValidator validator) {
+
         for (ResourceMethodDispatcher.Provider provider : providers) {
             try {
-                ResourceMethodDispatcher dispatcher = provider.create(resourceMethod, handler);
+                ResourceMethodDispatcher dispatcher = provider.create(resourceMethod, handler, validator);
                 if (dispatcher != null) {
                     return dispatcher;
                 }

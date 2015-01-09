@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,11 +44,12 @@ import java.lang.reflect.InvocationHandler;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.container.ResourceContext;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import javax.inject.Singleton;
 
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.model.Invocable;
 import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
 
@@ -68,23 +69,23 @@ final class VoidVoidDispatcherProvider implements ResourceMethodDispatcher.Provi
 
     private static class VoidToVoidDispatcher extends AbstractJavaResourceMethodDispatcher {
 
-        private VoidToVoidDispatcher(Invocable resourceMethod, InvocationHandler handler) {
-            super(resourceMethod, handler);
+        private VoidToVoidDispatcher(final Invocable resourceMethod, final InvocationHandler handler, final ConfiguredValidator validator) {
+            super(resourceMethod, handler, validator);
         }
 
         @Override
-        public Response doDispatch(Object resource, Request request) throws ProcessingException {
-            invoke(resource);
+        public Response doDispatch(final Object resource, final ContainerRequest containerRequest) throws ProcessingException {
+            invoke(containerRequest, resource);
             return Response.noContent().build();
         }
     }
 
     @Override
-    public ResourceMethodDispatcher create(Invocable resourceMethod, InvocationHandler handler) {
+    public ResourceMethodDispatcher create(final Invocable resourceMethod, final InvocationHandler handler, final ConfiguredValidator validator) {
         if (resourceMethod.getHandlingMethod().getReturnType() != void.class || !resourceMethod.getParameters().isEmpty()) {
             return null;
         }
 
-        return resourceContext.initResource(new VoidToVoidDispatcher(resourceMethod, handler));
+        return resourceContext.initResource(new VoidToVoidDispatcher(resourceMethod, handler, validator));
     }
 }

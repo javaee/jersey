@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -77,6 +77,7 @@ import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.LocalizationMessages;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
+import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.model.internal.ResourceMethodDispatcherFactory;
@@ -128,6 +129,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
         private ServiceLocator locator;
         @Inject
         private Configuration globalConfig;
+        @Inject
+        private javax.inject.Provider<ConfiguredValidator> validatorProvider;
 
         /**
          * Build a new resource method invoker instance.
@@ -146,7 +149,8 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
                     method,
                     processingProviders,
                     locator,
-                    globalConfig);
+                    globalConfig,
+                    validatorProvider.get());
         }
     }
 
@@ -156,13 +160,14 @@ public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
             final ResourceMethod method,
             final ProcessingProviders processingProviders,
             ServiceLocator locator,
-            final Configuration globalConfig) {
+            final Configuration globalConfig,
+            final ConfiguredValidator validator) {
 
 
         this.method = method;
         final Invocable invocable = method.getInvocable();
         this.dispatcher = dispatcherProvider.create(invocable,
-                invocationHandlerProvider.create(invocable));
+                invocationHandlerProvider.create(invocable), validator);
 
         this.resourceMethod = invocable.getHandlingMethod();
         this.resourceClass = invocable.getHandler().getHandlerClass();

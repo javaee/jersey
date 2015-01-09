@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,7 +39,6 @@
  */
 package org.glassfish.jersey.message.internal;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -186,9 +185,8 @@ public final class ReaderWriter {
      */
     public static void writeToAsString(String s, OutputStream out,
             MediaType type) throws IOException {
-        Writer osw = new BufferedWriter(new OutputStreamWriter(out,
-                getCharset(type)));
-        osw.write(s, 0, s.length()); // MUCH faster than BufferedWriter.write(s) on JDK 1.6
+        Writer osw = new OutputStreamWriter(out, getCharset(type));
+        osw.write(s, 0, s.length());
         osw.flush();
     }
 

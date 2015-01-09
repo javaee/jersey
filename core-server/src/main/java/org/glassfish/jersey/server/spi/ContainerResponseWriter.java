@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -197,7 +197,7 @@ public interface ContainerResponseWriter {
      * return {@code false} to prevent Jersey from buffering message entities unnecessarily.
      * </p>
      *
-     * @return {@code true} to enable the entity buffering should by Jersey runtime, {@code false} otherwise.
+     * @return {@code true} to enable entity buffering to be done by Jersey runtime, {@code false} otherwise.
      */
     public boolean enableResponseBuffering();
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,11 +47,9 @@ import java.security.PrivilegedAction;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import javax.inject.Inject;
 import javax.validation.ValidationException;
 
 import org.glassfish.jersey.message.internal.TracingLogger;
@@ -73,16 +71,10 @@ import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
  */
 abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDispatcher {
 
-    @Inject
-    private javax.inject.Provider<ConfiguredValidator> validatorProvider;
-
-    @Inject
-    private javax.inject.Provider<ContainerRequest> request;
-
     private final Method method;
     private final InvocationHandler methodHandler;
-
-    private Invocable resourceMethod;
+    private final Invocable resourceMethod;
+    private final ConfiguredValidator validator;
 
     /**
      * Initialize common java resource method dispatcher structures.
@@ -90,11 +82,11 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param resourceMethod invocable resource class Java method.
      * @param methodHandler  method invocation handler.
      */
-    AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler) {
+    AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler, ConfiguredValidator validator) {
         this.method = resourceMethod.getDefinitionMethod();
         this.methodHandler = methodHandler;
-
         this.resourceMethod = resourceMethod;
+        this.validator = validator;
     }
 
     @Override
@@ -118,7 +110,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @throws ProcessingException in case of a processing error.
      * @see ResourceMethodDispatcher#dispatch(Object, org.glassfish.jersey.server.ContainerRequest)
      */
-    protected abstract Response doDispatch(Object resource, Request request) throws ProcessingException;
+    protected abstract Response doDispatch(Object resource, ContainerRequest request) throws ProcessingException;
 
     /**
      * Use the underlying invocation handler to invoke the underlying Java method
@@ -130,16 +122,12 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @throws ProcessingException (possibly {@link MappableException mappable})
      *                             container exception in case the invocation failed.
      */
-    final Object invoke(final Object resource, final Object... args) throws ProcessingException {
+    final Object invoke(final ContainerRequest containerRequest, final Object resource, final Object... args) throws ProcessingException {
         try {
-            final ConfiguredValidator validator = validatorProvider.get();
-
             // Validate resource class & method input parameters.
             if (validator != null) {
                 validator.validateResourceAndInputParams(resource, resourceMethod, args);
             }
-
-            final ContainerRequest containerRequest = request.get();
 
             final PrivilegedAction invokeMethodAction = new PrivilegedAction() {
                 @Override

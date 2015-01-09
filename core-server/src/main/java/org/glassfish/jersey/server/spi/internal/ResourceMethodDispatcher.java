@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -46,6 +46,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.internal.inject.ConfiguredValidator;
 import org.glassfish.jersey.server.internal.process.MappableException;
 import org.glassfish.jersey.server.model.Invocable;
 
@@ -65,7 +66,7 @@ public interface ResourceMethodDispatcher {
      * method dispatcher} instances.
      *
      * A provider examines the model of the Web resource method and
-     * determine if an invoker can be created for that Web resource method.
+     * determines if an invoker can be created for that Web resource method.
      * <p>
      * Multiple providers can specify the support for different Web resource method
      * patterns, ranging from simple patterns (such as void return and input
@@ -96,10 +97,11 @@ public interface ResourceMethodDispatcher {
          *
          * @param method  the invocable resource method.
          * @param handler invocation handler to be used for the resource method invocation.
+         * @param validator configured validator to be used for validation during resource method invocation
          * @return the resource method dispatcher, or {@code null} if it could not be
          *         created for the given resource method.
          */
-        public ResourceMethodDispatcher create(final Invocable method, final InvocationHandler handler);
+        public ResourceMethodDispatcher create(final Invocable method, final InvocationHandler handler, final ConfiguredValidator validator);
     }
 
     /**
