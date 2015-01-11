@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -169,6 +169,14 @@
 </entry>
 <entry>Simple Http Container</entry>
 </row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-gf-ejb/dependencies.html">
+    jersey-gf-ejb
+</link>
+</entry>
+<entry>Jersey EJB for GlassFish integration</entry>
+</row>
         </tbody>
     </tgroup>
 </table>
@@ -312,6 +320,30 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-cdi1x/dependencies.html">
+    jersey-cdi1x
+</link>
+</entry>
+<entry>Jersey CDI 1.1 integration</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-cdi1x-ban-custom-hk2-binding/dependencies.html">
+    jersey-cdi1x-ban-custom-hk2-binding
+</link>
+</entry>
+<entry>Jersey CDI integration - this module disables custom HK2 bindings</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-cdi1x-transaction/dependencies.html">
+    jersey-cdi1x-transaction
+</link>
+</entry>
+<entry>Jersey CDI 1.x Transactional Support</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-declarative-linking/dependencies.html">
     jersey-declarative-linking
 </link>
@@ -384,6 +416,38 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client/dependencies.html">
+    jersey-rx-client
+</link>
+</entry>
+<entry>Jersey Reactive Client extension implementation.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-guava/dependencies.html">
+    jersey-rx-client-guava
+</link>
+</entry>
+<entry>Jersey Reactive Client - Guava (ListenableFuture) provider.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-jsr166e/dependencies.html">
+    jersey-rx-client-jsr166e
+</link>
+</entry>
+<entry>Jersey Reactive Client - JSR-166e, pre-Java 8, (CompletableFuture) provider.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-rx-client-rxjava/dependencies.html">
+    jersey-rx-client-rxjava
+</link>
+</entry>
+<entry>Jersey Reactive Client - RxJava (Observable) provider.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-servlet-portability/dependencies.html">
     jersey-servlet-portability
 </link>
@@ -408,6 +472,14 @@
         of resource classes, so that this can be used for extending generated wadl with useful
         documentation.</entry>
 </row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-weld2-se/dependencies.html">
+    jersey-weld2-se
+</link>
+</entry>
+<entry>WELD 2.x SE support</entry>
+</row>
         </tbody>
     </tgroup>
 </table>
@@ -429,6 +501,62 @@
 </link>
 </entry>
 <entry>Jersey Test Framework Core</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-bundle/dependencies.html">
+    jersey-test-framework-provider-bundle
+</link>
+</entry>
+<entry>Jersey Test Framework Providers Bundle</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-external/dependencies.html">
+    jersey-test-framework-provider-external
+</link>
+</entry>
+<entry>Jersey Test Framework - External container</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-grizzly2/dependencies.html">
+    jersey-test-framework-provider-grizzly2
+</link>
+</entry>
+<entry>Jersey Test Framework - Grizzly2 container</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-inmemory/dependencies.html">
+    jersey-test-framework-provider-inmemory
+</link>
+</entry>
+<entry>Jersey Test Framework - InMemory container</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-jdk-http/dependencies.html">
+    jersey-test-framework-provider-jdk-http
+</link>
+</entry>
+<entry>Jersey Test Framework - JDK HTTP container</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-jetty/dependencies.html">
+    jersey-test-framework-provider-jetty
+</link>
+</entry>
+<entry>Jersey Test Framework - Jetty HTTP container</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-test-framework-provider-simple/dependencies.html">
+    jersey-test-framework-provider-simple
+</link>
+</entry>
+<entry>Jersey Test Framework - Simple HTTP container</entry>
 </row>
         </tbody>
     </tgroup>
@@ -516,22 +644,6 @@
         <tbody>
 <row>
 <entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-gf-cdi/dependencies.html">
-    jersey-gf-cdi
-</link>
-</entry>
-<entry>Jersey CDI for GlassFish integration</entry>
-</row>
-<row>
-<entry>
-<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-gf-cdi-ban-custom-hk2-binding/dependencies.html">
-    jersey-gf-cdi-ban-custom-hk2-binding
-</link>
-</entry>
-<entry>Jersey CDI for GlassFish integration - this module disables custom HK2 binding</entry>
-</row>
-<row>
-<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/project/jersey-gf-ejb/dependencies.html">
     jersey-gf-ejb
 </link>
@@ -600,6 +712,22 @@
         <tbody>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/osgi-helloworld-webapp/additional-bundle/dependencies.html">
+    additional-bundle
+</link>
+</entry>
+<entry>OSGi Helloworld Webapp - additional bundle</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/osgi-helloworld-webapp/alternate-version-bundle/dependencies.html">
+    alternate-version-bundle
+</link>
+</entry>
+<entry>OSGi Helloworld Webapp - alternate version bundle</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/assemblies/dependencies.html">
     assemblies
 </link>
@@ -637,6 +765,14 @@
 </link>
 </entry>
 <entry>Jersey MVC Bookstore example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/osgi-http-service/bundle/dependencies.html">
+    bundle
+</link>
+</entry>
+<entry>OSGi HttpService example bundle</entry>
 </row>
 <row>
 <entry>
@@ -728,6 +864,22 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/osgi-helloworld-webapp/functional-test/dependencies.html">
+    functional-test
+</link>
+</entry>
+<entry>Jersey examples</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/osgi-http-service/functional-test/dependencies.html">
+    functional-test
+</link>
+</entry>
+<entry>OSGi HttpService example</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/groovy/dependencies.html">
     groovy
 </link>
@@ -781,6 +933,14 @@
 </link>
 </entry>
 <entry>Jersey annotated resource class "Hello world" example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/helloworld-weld/dependencies.html">
+    helloworld-weld
+</link>
+</entry>
+<entry>Jersey annotated resource class "Hello world" example with Weld support.</entry>
 </row>
 <row>
 <entry>
@@ -887,6 +1047,14 @@
 </link>
 </entry>
 <entry>Jersey JSON with Padding example.</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/osgi-helloworld-webapp/lib-bundle/dependencies.html">
+    lib-bundle
+</link>
+</entry>
+<entry>OSGi Helloworld Webapp - lib bundle</entry>
 </row>
 <row>
 <entry>
@@ -1096,6 +1264,14 @@
 </link>
 </entry>
 <entry>Jersey examples</entry>
+</row>
+<row>
+<entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/osgi-helloworld-webapp/war-bundle/dependencies.html">
+    war-bundle
+</link>
+</entry>
+<entry>OSGi Helloworld Webapp WAR bundle</entry>
 </row>
 <row>
 <entry>

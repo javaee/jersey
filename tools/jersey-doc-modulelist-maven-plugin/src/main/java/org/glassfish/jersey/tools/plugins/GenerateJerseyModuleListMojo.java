@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,8 +42,8 @@ package org.glassfish.jersey.tools.plugins;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.execution.ProjectDependencyGraph;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
 import java.io.BufferedReader;
@@ -51,13 +51,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The plugins main MOJO class.
@@ -179,24 +180,35 @@ public class GenerateJerseyModuleListMojo extends AbstractMojo {
         Map<String, List<MavenProject>> categorizedProjects = categorizeModules(projects);
 
         // list of already "used" categories (maintained in order to identified unmatched modules later)
-        List<String> allGroups = new ArrayList<String>();
+        Set<String> allGroups = new HashSet<>();
 
         // The entire module list table content - will replace the placeholder in the template
         StringBuilder content = new StringBuilder();
 
         // iterate over known categories
         for (PredefinedCategories category : PredefinedCategories.values()) {
-            allGroups.add(category.getGroupId());
+            String groupId = category.getGroupId();
+
+            allGroups.add(groupId);
             // ignore tests, but still keep them among the used categories (so that they do not appear in the unmatched list)
-            if (category.getGroupId().contains("tests")) {
+            if (groupId.contains("tests")) {
                 continue;
             }
-            List<MavenProject> projectsInCategory = categorizedProjects.get(category.getGroupId());
+            List<MavenProject> projectsInCategory = new LinkedList<>();
+            for (final Map.Entry<String, List<MavenProject>> entry : categorizedProjects.entrySet()) {
+                final String key = entry.getKey();
+
+                if (key.startsWith(groupId)) {
+                    allGroups.add(key);
+                    projectsInCategory.addAll(entry.getValue());
+                }
+            }
+
             content.append(processCategory(category, projectsInCategory));
         }
 
         // get the list of unmatched modules
-        List<MavenProject> unmatched = new LinkedList<MavenProject>();
+        List<MavenProject> unmatched = new LinkedList<>();
         for (String groupId : categorizedProjects.keySet()) {
             if (!allGroups.contains(groupId)) {
                 unmatched.addAll(categorizedProjects.get(groupId));
@@ -231,13 +243,13 @@ public class GenerateJerseyModuleListMojo extends AbstractMojo {
     }
 
     private Map<String, List<MavenProject>> categorizeModules(List<MavenProject> projects) {
-        Map<String, List<MavenProject>> categorizedProjects = new HashMap<String, List<MavenProject>>();
+        Map<String, List<MavenProject>> categorizedProjects = new HashMap<>();
         for (MavenProject project : projects) {
             String groupId = project.getGroupId();
             if (categorizedProjects.containsKey(groupId)) {
                 categorizedProjects.get(groupId).add(project);
             } else {
-                List<MavenProject> actualList = new LinkedList<MavenProject>();
+                List<MavenProject> actualList = new LinkedList<>();
                 actualList.add(project);
                 categorizedProjects.put(groupId, actualList);
             }
