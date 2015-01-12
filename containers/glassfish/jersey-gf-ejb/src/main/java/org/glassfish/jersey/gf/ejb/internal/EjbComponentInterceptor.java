@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,9 +42,9 @@ package org.glassfish.jersey.gf.ejb.internal;
 import javax.annotation.PostConstruct;
 import javax.interceptor.InvocationContext;
 
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.ext.cdi1x.internal.CdiComponentProvider;
 
-import org.glassfish.jersey.gf.cdi.internal.CdiComponentProvider;
+import org.glassfish.hk2.api.ServiceLocator;
 
 /**
  * EJB interceptor to inject Jersey specific stuff into EJB beans.

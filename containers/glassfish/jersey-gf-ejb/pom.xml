@@ -57,8 +57,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.glassfish.jersey.containers.glassfish</groupId>
-            <artifactId>jersey-gf-cdi</artifactId>
+            <groupId>org.glassfish.jersey.ext.cdi</groupId>
+            <artifactId>jersey-cdi1x</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
