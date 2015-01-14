@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -155,17 +155,17 @@ final class NounInflector {
      * <p>List of <code>Replacer</code>s for performing replacement operations
      * on matches for plural words.</p>
      */
-    private List<Replacer> plurals = new LinkedList<Replacer>();
+    private final List<Replacer> plurals = new LinkedList<Replacer>();
     /**
      * <p>List of <code>Replacer</code>s for performing replacement operations
      * on matches for addSingular words.</p>
      */
-    private List<Replacer> singulars = new ArrayList<Replacer>();
+    private final List<Replacer> singulars = new ArrayList<Replacer>();
     /**
      * <p>List of words that represent addUncountable concepts that cannot be
      * pluralized or singularized.</p>
      */
-    private List<String> uncountables = new LinkedList<String>();
+    private final List<String> uncountables = new LinkedList<String>();
 
 
     // ------------------------------------------------------ Instance Variables
@@ -191,7 +191,7 @@ final class NounInflector {
      *
      * @param word Word to be converted
      */
-    public String camelize(String word) {
+    public String camelize(final String word) {
 
         return camelize(word, false);
 
@@ -236,12 +236,12 @@ final class NounInflector {
      * @param flag Flag indicating that the initial character should
      *  be lower cased instead of upper cased
      */
-    public String camelize(String word, boolean flag) {
+    public String camelize(final String word, final boolean flag) {
         if (word.length() == 0) {
             return word;
         }
 
-        StringBuilder sb = new StringBuilder(word.length());
+        final StringBuilder sb = new StringBuilder(word.length());
         if (flag) {
             sb.append(Character.toLowerCase(word.charAt(0)));
         } else {
@@ -249,7 +249,7 @@ final class NounInflector {
         }
         boolean capitalize = false;
         for (int i = 1; i < word.length(); i++) {
-            char ch = word.charAt(i);
+            final char ch = word.charAt(i);
             if (capitalize) {
                 sb.append(Character.toUpperCase(ch));
                 capitalize = false;
@@ -289,7 +289,7 @@ final class NounInflector {
      */
     public String classify(String tableName) {
 
-        int period = tableName.lastIndexOf('.');
+        final int period = tableName.lastIndexOf('.');
         if (period >= 0) {
             tableName = tableName.substring(period + 1);
         }
@@ -317,7 +317,7 @@ final class NounInflector {
      *
      * @param word Word to be converted
      */
-    public String dasherize(String word) {
+    public String dasherize(final String word) {
 
         return word.replace('_', '-');
 
@@ -344,9 +344,9 @@ final class NounInflector {
      *
      * @param className Fully qualified class name to be converted
      */
-    public String demodulize(String className) {
+    public String demodulize(final String className) {
 
-        int period = className.lastIndexOf('.');
+        final int period = className.lastIndexOf('.');
         if (period >= 0) {
             return className.substring(period + 1);
         } else {
@@ -359,7 +359,7 @@ final class NounInflector {
      * <p>Create and return a foreign key name from a class name,
      * separating the "id" suffix with an underscore.</p>
      */
-    public String foreignKey(String className) {
+    public String foreignKey(final String className) {
 
         return foreignKey(className, true);
 
@@ -396,7 +396,7 @@ final class NounInflector {
      * @param underscore Flag indicating whether an underscore should
      *  be emitted between the class name and the "id" suffix
      */
-    public String foreignKey(String className, boolean underscore) {
+    public String foreignKey(final String className, final boolean underscore) {
 
         return underscore(demodulize(className) + (underscore ? "_id" : "id"));
 
@@ -430,10 +430,10 @@ final class NounInflector {
         if (words.endsWith("_id")) {
             words = words.substring(0, words.length() - 3);
         }
-        StringBuilder sb = new StringBuilder(words.length());
+        final StringBuilder sb = new StringBuilder(words.length());
         sb.append(Character.toUpperCase(words.charAt(0)));
         for (int i = 1; i < words.length(); i++) {
-            char ch = words.charAt(i);
+            final char ch = words.charAt(i);
             if (ch == '_') {
                 sb.append(' ');
             } else {
@@ -481,9 +481,9 @@ final class NounInflector {
      *
      * @param number Number to be converted
      */
-    public String ordinalize(int number) {
+    public String ordinalize(final int number) {
 
-        int modulo = number % 100;
+        final int modulo = number % 100;
         if ((modulo >= 11) && (modulo <= 13)) {
             return "" + number + "th";
         }
@@ -506,18 +506,18 @@ final class NounInflector {
      *
      * @param word Singular word to be converted
      */
-    public String pluralize(String word) {
+    public String pluralize(final String word) {
 
         // Scan uncountables and leave alone
-        for (int i = 0; i < uncountables.size(); i++) {
-            if (uncountables.get(i).equals(word)) {
+        for (final String uncountable : uncountables) {
+            if (uncountable.equals(word)) {
                 return word;
             }
         }
 
         // Scan our patterns for a match and return the correct replacement
-        for (int i = 0; i < plurals.size(); i++) {
-            String replacement = plurals.get(i).replacement(word);
+        for (final Replacer plural : plurals) {
+            final String replacement = plural.replacement(word);
             if (replacement != null) {
                 return replacement;
             }
@@ -534,18 +534,18 @@ final class NounInflector {
      *
      * @param word Plural word to be converted
      */
-    public String singularize(String word) {
+    public String singularize(final String word) {
 
         // Scan uncountables and leave alone
-        for (int i = 0; i < uncountables.size(); i++) {
-            if (uncountables.get(i).equals(word)) {
+        for (final String uncountable : uncountables) {
+            if (uncountable.equals(word)) {
                 return word;
             }
         }
 
         // Scan our patterns for a match and return the correct replacement
-        for (int i = 0; i < singulars.size(); i++) {
-            String replacement = singulars.get(i).replacement(word);
+        for (final Replacer singular : singulars) {
+            final String replacement = singular.replacement(word);
             if (replacement != null) {
                 return replacement;
             }
@@ -578,7 +578,7 @@ final class NounInflector {
      *
      * @param className Class name to be converted
      */
-    public String tableize(String className) {
+    public String tableize(final String className) {
 
         return pluralize(underscore(className));
 
@@ -606,12 +606,12 @@ final class NounInflector {
      *
      * @param words Word string to be converted
      */
-    public String titleize(String words) {
+    public String titleize(final String words) {
 
-        StringBuilder sb = new StringBuilder(words.length());
+        final StringBuilder sb = new StringBuilder(words.length());
         boolean capitalize = true; // To get the first character right
         for (int i = 0; i < words.length(); i++) {
-            char ch = words.charAt(i);
+            final char ch = words.charAt(i);
             if (Character.isWhitespace(ch)) {
                 sb.append(' ');
                 capitalize = true;
@@ -629,18 +629,18 @@ final class NounInflector {
 
     }
 
-    public String decapitalize(String word) {
+    public String decapitalize(final String word) {
         // do nothing if null or empty
         if ((word == null) || (word.length() < 1)) {
             return word;
         }
         // or if already decapitalized
-        char first =  word.charAt(0);
+        final char first =  word.charAt(0);
         if (Character.isLowerCase(first)) {
             return word;
         }
         // otherwise turn the first character to lower case and attach the rest
-     	StringBuilder sb = new StringBuilder(word.length());
+     	final StringBuilder sb = new StringBuilder(word.length());
 	sb.append(Character.toLowerCase(first));
 	sb.append(word.substring(1));
 	return sb.toString();
@@ -676,12 +676,12 @@ final class NounInflector {
      *
      * @param word Camel cased word to be converted
      */
-    public String underscore(String word) {
+    public String underscore(final String word) {
 
-        StringBuilder sb = new StringBuilder(word.length() + 5);
+        final StringBuilder sb = new StringBuilder(word.length() + 5);
         boolean uncapitalize = false;
         for (int i = 0; i < word.length(); i++) {
-            char ch = word.charAt(i);
+            final char ch = word.charAt(i);
             if (uncapitalize) {
                 sb.append(Character.toLowerCase(ch));
                 uncapitalize = false;
@@ -711,7 +711,7 @@ final class NounInflector {
      * @param singular Singular form of the word
      * @param plural Plural form of the word
      */
-    public void addIrregular(String singular, String plural) {
+    public void addIrregular(final String singular, final String plural) {
 
         addPlural("(.*)(" + singular.substring(0, 1) + ")" + singular.substring(1) + "$",
                 "\\1\\2" + plural.substring(1));
@@ -729,7 +729,7 @@ final class NounInflector {
      * @param match Match pattern regular expression
      * @param rule Replacement rule
      */
-    public void addPlural(String match, String rule) {
+    public void addPlural(final String match, final String rule) {
 
         addPlural(match, rule, true);
 
@@ -744,7 +744,7 @@ final class NounInflector {
      * @param rule Replacement rule
      * @param insensitive Flag indicating this match should be case insensitive
      */
-    public void addPlural(String match, String rule, boolean insensitive) {
+    public void addPlural(final String match, final String rule, final boolean insensitive) {
 
         plurals.add(0, new Replacer(match, rule, insensitive));
 
@@ -758,7 +758,7 @@ final class NounInflector {
      * @param match Match pattern regular expression
      * @param rule Replacement rule
      */
-    public void addSingular(String match, String rule) {
+    public void addSingular(final String match, final String rule) {
 
         addSingular(match, rule, true);
 
@@ -773,7 +773,7 @@ final class NounInflector {
      * @param rule Replacement rule
      * @param insensitive Flag indicating this match should be case insensitive
      */
-    public void addSingular(String match, String rule, boolean insensitive) {
+    public void addSingular(final String match, final String rule, final boolean insensitive) {
 
         singulars.add(0, new Replacer(match, rule, insensitive));
 
@@ -785,7 +785,7 @@ final class NounInflector {
      *
      * @param word Word to be added
      */
-    public void addUncountable(String word) {
+    public void addUncountable(final String word) {
 
         uncountables.add(0, word.toLowerCase());
 
@@ -801,7 +801,7 @@ final class NounInflector {
     private static class Replacer {
 
         // --------------------------------------------------------- Constructor
-        public Replacer(String match, String rule, boolean insensitive) {
+        public Replacer(final String match, final String rule, final boolean insensitive) {
 
             pattern = Pattern.compile(match,
                     insensitive ? Pattern.CASE_INSENSITIVE : 0);
@@ -822,13 +822,13 @@ final class NounInflector {
          * @param input the input string.
          * @return the replacement, if the input matches, otherwise null.
          */
-        public String replacement(String input) {
-            Matcher matcher = pattern.matcher(input);
+        public String replacement(final String input) {
+            final Matcher matcher = pattern.matcher(input);
             if (matcher.matches()) {
-                StringBuilder sb = new StringBuilder();
+                final StringBuilder sb = new StringBuilder();
                 boolean group = false;
                 for (int i = 0; i < rule.length(); i++) {
-                    char ch = rule.charAt(i);
+                    final char ch = rule.charAt(i);
                     if (group) {
                         sb.append(matcher.group(Character.digit(ch, 10)));
                         group = false;

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ public final class ResourceModelIssue {
      * @param source  issue source.
      * @param message human-readable issue description.
      */
-    public ResourceModelIssue(Object source, String message) {
+    public ResourceModelIssue(final Object source, final String message) {
         this(source, message, Severity.WARNING);
     }
 
@@ -77,7 +77,7 @@ public final class ResourceModelIssue {
      * @param message  human-readable issue description.
      * @param severity indicates severity of added error.
      */
-    public ResourceModelIssue(Object source, String message, Severity severity) {
+    public ResourceModelIssue(final Object source, final String message, final Severity severity) {
         this.source = source;
         this.message = message;
         this.severity = severity;
@@ -118,7 +118,7 @@ public final class ResourceModelIssue {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) {
             return true;
         }
@@ -126,7 +126,7 @@ public final class ResourceModelIssue {
             return false;
         }
 
-        ResourceModelIssue that = (ResourceModelIssue) o;
+        final ResourceModelIssue that = (ResourceModelIssue) o;
 
         if (message != null ? !message.equals(that.message) : that.message != null) {
             return false;

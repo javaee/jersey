@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -128,7 +128,7 @@ public final class ExtendedLogger {
 
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == null) {
             return false;
         }
@@ -153,95 +153,95 @@ public final class ExtendedLogger {
         return hash;
     }
 
-    public void warning(String msg) {
+    public void warning(final String msg) {
         logger.warning(msg);
     }
 
-    public void throwing(String sourceClass, String sourceMethod, Throwable thrown) {
+    public void throwing(final String sourceClass, final String sourceMethod, final Throwable thrown) {
         logger.throwing(sourceClass, sourceMethod, thrown);
     }
 
-    public void severe(String msg) {
+    public void severe(final String msg) {
         logger.severe(msg);
     }
 
-    public void setUseParentHandlers(boolean useParentHandlers) {
+    public void setUseParentHandlers(final boolean useParentHandlers) {
         logger.setUseParentHandlers(useParentHandlers);
     }
 
-    public void setParent(Logger parent) {
+    public void setParent(final Logger parent) {
         logger.setParent(parent);
     }
 
-    public void setLevel(Level newLevel) throws SecurityException {
+    public void setLevel(final Level newLevel) throws SecurityException {
         logger.setLevel(newLevel);
     }
 
-    public void setFilter(Filter newFilter) throws SecurityException {
+    public void setFilter(final Filter newFilter) throws SecurityException {
         logger.setFilter(newFilter);
     }
 
-    public void removeHandler(Handler handler) throws SecurityException {
+    public void removeHandler(final Handler handler) throws SecurityException {
         logger.removeHandler(handler);
     }
 
-    public void logrb(Level level, String sourceClass, String sourceMethod, String bundleName, String msg, Throwable thrown) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Throwable thrown) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, thrown);
     }
 
-    public void logrb(Level level, String sourceClass, String sourceMethod, String bundleName, String msg, Object[] params) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Object[] params) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, params);
     }
 
-    public void logrb(Level level, String sourceClass, String sourceMethod, String bundleName, String msg, Object param1) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg, final Object param1) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg, param1);
     }
 
-    public void logrb(Level level, String sourceClass, String sourceMethod, String bundleName, String msg) {
+    public void logrb(final Level level, final String sourceClass, final String sourceMethod, final String bundleName, final String msg) {
         logger.logrb(level, sourceClass, sourceMethod, bundleName, msg);
     }
 
-    public void logp(Level level, String sourceClass, String sourceMethod, String msg, Throwable thrown) {
+    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Throwable thrown) {
         logger.logp(level, sourceClass, sourceMethod, msg, thrown);
     }
 
-    public void logp(Level level, String sourceClass, String sourceMethod, String msg, Object[] params) {
+    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Object[] params) {
         logger.logp(level, sourceClass, sourceMethod, msg, params);
     }
 
-    public void logp(Level level, String sourceClass, String sourceMethod, String msg, Object param1) {
+    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg, final Object param1) {
         logger.logp(level, sourceClass, sourceMethod, msg, param1);
     }
 
-    public void logp(Level level, String sourceClass, String sourceMethod, String msg) {
+    public void logp(final Level level, final String sourceClass, final String sourceMethod, final String msg) {
         logger.logp(level, sourceClass, sourceMethod, msg);
     }
 
-    public void log(Level level, String msg, Throwable thrown) {
+    public void log(final Level level, final String msg, final Throwable thrown) {
         logger.log(level, msg, thrown);
     }
 
-    public void log(Level level, String msg, Object[] params) {
+    public void log(final Level level, final String msg, final Object[] params) {
         logger.log(level, msg, params);
     }
 
-    public void log(Level level, String msg, Object param1) {
+    public void log(final Level level, final String msg, final Object param1) {
         logger.log(level, msg, param1);
     }
 
-    public void log(Level level, String msg) {
+    public void log(final Level level, final String msg) {
         logger.log(level, msg);
     }
 
-    public void log(LogRecord record) {
+    public void log(final LogRecord record) {
         logger.log(record);
     }
 
-    public boolean isLoggable(Level level) {
+    public boolean isLoggable(final Level level) {
         return logger.isLoggable(level);
     }
 
-    public void info(String msg) {
+    public void info(final String msg) {
         logger.info(msg);
     }
 
@@ -277,43 +277,43 @@ public final class ExtendedLogger {
         return logger.getFilter();
     }
 
-    public void finest(String msg) {
+    public void finest(final String msg) {
         logger.finest(msg);
     }
 
-    public void finer(String msg) {
+    public void finer(final String msg) {
         logger.finer(msg);
     }
 
-    public void fine(String msg) {
+    public void fine(final String msg) {
         logger.fine(msg);
     }
 
-    public void exiting(String sourceClass, String sourceMethod, Object result) {
+    public void exiting(final String sourceClass, final String sourceMethod, final Object result) {
         logger.exiting(sourceClass, sourceMethod, result);
     }
 
-    public void exiting(String sourceClass, String sourceMethod) {
+    public void exiting(final String sourceClass, final String sourceMethod) {
         logger.exiting(sourceClass, sourceMethod);
     }
 
-    public void entering(String sourceClass, String sourceMethod, Object[] params) {
+    public void entering(final String sourceClass, final String sourceMethod, final Object[] params) {
         logger.entering(sourceClass, sourceMethod, params);
     }
 
-    public void entering(String sourceClass, String sourceMethod, Object param1) {
+    public void entering(final String sourceClass, final String sourceMethod, final Object param1) {
         logger.entering(sourceClass, sourceMethod, param1);
     }
 
-    public void entering(String sourceClass, String sourceMethod) {
+    public void entering(final String sourceClass, final String sourceMethod) {
         logger.entering(sourceClass, sourceMethod);
     }
 
-    public void config(String msg) {
+    public void config(final String msg) {
         logger.config(msg);
     }
 
-    public void addHandler(Handler handler) throws SecurityException {
+    public void addHandler(final Handler handler) throws SecurityException {
         logger.addHandler(handler);
     }
 }

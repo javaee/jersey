@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -60,7 +60,7 @@ public class JdkVersion implements Comparable<JdkVersion> {
             // Check environment availability.
             // Google App Engine (see https://developers.google.com/appengine/docs/java/#Java_The_environment).
             unsafeSupported &= System.getProperty("com.google.appengine.runtime.environment") == null;
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             // Make Unsafe not supported if either:
             // - sun.misc.Unsafe not found.
             // - we're not granted to read the property (* is not enough).
@@ -91,11 +91,11 @@ public class JdkVersion implements Comparable<JdkVersion> {
 
     public static JdkVersion parseVersion(String versionString) {
         try {
-            int dashIdx = versionString.indexOf('-');
+            final int dashIdx = versionString.indexOf('-');
             if (dashIdx != -1) {
                 versionString = versionString.substring(0, dashIdx);
             }
-            String[] parts = versionString.split("\\.|_");
+            final String[] parts = versionString.split("\\.|_");
             if (parts.length == 3) {
                 return new JdkVersion(Integer.parseInt(parts[0]),
                         Integer.parseInt(parts[1]),
@@ -107,7 +107,7 @@ public class JdkVersion implements Comparable<JdkVersion> {
                         Integer.parseInt(parts[2]),
                         Integer.parseInt(parts[3]));
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return UNKNOWN_VERSION;
         }
     }
@@ -158,7 +158,7 @@ public class JdkVersion implements Comparable<JdkVersion> {
     }
 
     @Override
-    public int compareTo(JdkVersion otherVersion) {
+    public int compareTo(final JdkVersion otherVersion) {
         if (major < otherVersion.major) {
             return -1;
         }
@@ -187,8 +187,8 @@ public class JdkVersion implements Comparable<JdkVersion> {
     }
 
     public static void main(String[] args) {
-        JdkVersion jdkVersion = JdkVersion.parseVersion("1.6.0");
-        JdkVersion minimumVersion = JdkVersion.parseVersion("1.7.0");
+        final JdkVersion jdkVersion = JdkVersion.parseVersion("1.6.0");
+        final JdkVersion minimumVersion = JdkVersion.parseVersion("1.7.0");
         System.out.println(minimumVersion.compareTo(jdkVersion));
     }
 }
