@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -59,12 +59,12 @@ import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentEx
 public class LocaleProvider implements HeaderDelegateProvider<Locale> {
 
     @Override
-    public boolean supports(Class<?> type) {
+    public boolean supports(final Class<?> type) {
         return Locale.class.isAssignableFrom(type);
     }
 
     @Override
-    public String toString(Locale header) {
+    public String toString(final Locale header) {
 
         throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.LOCALE_IS_NULL());
 
@@ -76,14 +76,14 @@ public class LocaleProvider implements HeaderDelegateProvider<Locale> {
     }
 
     @Override
-    public Locale fromString(String header) {
+    public Locale fromString(final String header) {
 
         throwIllegalArgumentExceptionIfNull(header, LocalizationMessages.LOCALE_IS_NULL());
 
         try {
-            LanguageTag lt = new LanguageTag(header);
+            final LanguageTag lt = new LanguageTag(header);
             return lt.getAsLocale();
-        } catch (ParseException ex) {
+        } catch (final ParseException ex) {
             throw new IllegalArgumentException(
                     "Error parsing date '" + header + "'", ex);
         }
