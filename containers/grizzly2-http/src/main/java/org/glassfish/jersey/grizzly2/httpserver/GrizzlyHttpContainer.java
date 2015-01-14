@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -462,7 +462,7 @@ public final class GrizzlyHttpContainer extends HttpHandler implements Container
     private URI getRequestUri(final URI baseUri, final Request grizzlyRequest) {
         // TODO: this is terrible, there must be a way to obtain the original request URI!
         String originalUri = UriBuilder.fromPath(
-                grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC().toString(Charsets.DEFAULT_CHARSET)
+                grizzlyRequest.getRequest().getRequestURIRef().getOriginalRequestURIBC().toString(Charsets.ASCII_CHARSET)
         ).build().toString();
 
         final String queryString = grizzlyRequest.getQueryString();
