@@ -117,13 +117,7 @@ public final class ExtendedLogger {
             }
             messageArguments[messageArguments.length - 1] = Thread.currentThread().getName();
 
-            final StringBuilder messageBuilder = new StringBuilder(messageTemplate.length() + 25);
-            messageBuilder
-                    .append("[DEBUG] ")
-                    .append(messageTemplate)
-                    .append(" on thread {").append(messageArguments.length - 1).append('}');
-
-            logger.log(debugLevel, messageBuilder.toString(), messageArguments);
+            logger.log(debugLevel, "[DEBUG] " + messageTemplate + " on thread {" + (messageArguments.length - 1) + '}', messageArguments);
         }
     }
 

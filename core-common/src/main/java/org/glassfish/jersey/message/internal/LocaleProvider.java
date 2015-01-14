@@ -71,8 +71,7 @@ public class LocaleProvider implements HeaderDelegateProvider<Locale> {
         if (header.getCountry().length() == 0) {
             return header.getLanguage();
         } else {
-            StringBuilder sb = new StringBuilder(header.getLanguage());
-            return sb.append('-').append(header.getCountry()).toString();
+            return header.getLanguage() + '-' + header.getCountry();
         }
     }
 

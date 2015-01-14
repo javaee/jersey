@@ -100,7 +100,7 @@ public class EncodingFilterTest {
                 DeflateEncoder.class
         ).property(ClientProperties.USE_ENCODING, "gzip").connectorProvider(new TestConnector()));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
-        Response r = invBuilder.post(Entity.entity(new String("Hello world"), MediaType.TEXT_PLAIN_TYPE));
+        Response r = invBuilder.post(Entity.entity("Hello world", MediaType.TEXT_PLAIN_TYPE));
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(ACCEPT_ENCODING));
         assertEquals("gzip", r.getHeaderString(CONTENT_ENCODING));
     }
@@ -111,7 +111,7 @@ public class EncodingFilterTest {
                 .connectorProvider(new TestConnector())
                 .register(new EncodingFeature("gzip", GZipEncoder.class, DeflateEncoder.class)));
         Invocation.Builder invBuilder = client.target(UriBuilder.fromUri("/").build()).request();
-        Response r = invBuilder.post(Entity.entity(new String("Hello world"), MediaType.TEXT_PLAIN_TYPE));
+        Response r = invBuilder.post(Entity.entity("Hello world", MediaType.TEXT_PLAIN_TYPE));
         assertEquals("deflate,gzip,x-gzip", r.getHeaderString(ACCEPT_ENCODING));
         assertEquals("gzip", r.getHeaderString(CONTENT_ENCODING));
     }

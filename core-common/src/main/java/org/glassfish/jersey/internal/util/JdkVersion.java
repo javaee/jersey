@@ -148,14 +148,7 @@ public class JdkVersion implements Comparable<JdkVersion> {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("JdkVersion");
-        sb.append("{major=").append(major);
-        sb.append(", minor=").append(minor);
-        sb.append(", maintenance=").append(maintenance);
-        sb.append(", update=").append(update);
-        sb.append('}');
-        return sb.toString();
+        return "JdkVersion" + "{major=" + major + ", minor=" + minor + ", maintenance=" + maintenance + ", update=" + update + '}';
     }
 
     // ------------------------------------------------- Methods from Comparable

@@ -114,12 +114,7 @@ public final class ResourceModelIssue {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("[").append(severity).append("] ");
-        ;
-        sb.append(message);
-        sb.append("; source='").append(source).append('\'');
-        return sb.toString();
+        return "[" + severity + "] " + message + "; source='" + source + '\'';
     }
 
     @Override

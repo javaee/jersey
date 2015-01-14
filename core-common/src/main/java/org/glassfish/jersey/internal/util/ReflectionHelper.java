@@ -139,10 +139,7 @@ public class ReflectionHelper {
         if (o == null) {
             return "null";
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append(o.getClass().getName()).
-                append('@').append(Integer.toHexString(o.hashCode()));
-        return sb.toString();
+        return o.getClass().getName() + '@' + Integer.toHexString(o.hashCode());
     }
 
     /**
@@ -327,7 +324,7 @@ public class ReflectionHelper {
             public Field[] run() {
             	final List<Field> fields = new ArrayList<Field>();
             	recurse(clazz, fields);
-                return fields.toArray(new Field[0]);
+                return fields.toArray(new Field[fields.size()]);
             }
 
            private void recurse(final Class<?> clazz, final List<Field> fields) {
