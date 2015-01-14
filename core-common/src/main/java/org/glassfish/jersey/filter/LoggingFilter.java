@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.filter;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -299,14 +300,14 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
         }
     }
 
-    private class LoggingStream extends OutputStream {
+    private class LoggingStream extends FilterOutputStream {
         private final StringBuilder b;
-        private final OutputStream inner;
         private final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         LoggingStream(final StringBuilder b, final OutputStream inner) {
+            super(inner);
+
             this.b = b;
-            this.inner = inner;
         }
 
         StringBuilder getStringBuilder(Charset charset) {
@@ -327,7 +328,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
             if (baos.size() <= maxEntitySize) {
                 baos.write(i);
             }
-            inner.write(i);
+            out.write(i);
         }
     }
 }
