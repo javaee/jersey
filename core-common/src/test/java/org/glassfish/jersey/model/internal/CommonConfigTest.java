@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,6 +71,7 @@ import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -946,6 +947,19 @@ public class CommonConfigTest {
         }
     }
 
+    public static class BindInjectMeInFeature implements Feature {
+        @Override
+        public boolean configure(FeatureContext context) {
+            context.register(new AbstractBinder() {
+                @Override
+                protected void configure() {
+                    bind(new InjectMe());
+                }
+            });
+            return true;
+        }
+    }
+
     @Test
     public void testFeatureInjections() throws Exception {
         config.register(InjectIntoFeatureClass.class)
@@ -963,4 +977,19 @@ public class CommonConfigTest {
         assertThat("Feature instance not injected", config.getProperty("instance-injected").toString(), is("true"));
         assertThat("Feature class not injected", config.getProperty("class-injected").toString(), is("true"));
     }
+
+    @Test
+    @Ignore
+    public void testFeatureInjectionsBindInFeature() throws Exception {
+        config.register(new BindInjectMeInFeature());
+        config.register(InjectIntoFeatureClass.class);
+        config.register(new InjectIntoFeatureInstance());
+
+        final ServiceLocator locator = Injections.createLocator();
+        config.configureMetaProviders(locator);
+
+        assertThat("Feature instance not injected", config.getProperty("instance-injected").toString(), is("true"));
+        assertThat("Feature class not injected", config.getProperty("class-injected").toString(), is("true"));
+    }
+
 }
