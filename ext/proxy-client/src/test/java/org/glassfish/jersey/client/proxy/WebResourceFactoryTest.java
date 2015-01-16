@@ -47,17 +47,25 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-
 import org.junit.Ignore;
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class WebResourceFactoryTest extends JerseyTest {
     private MyResourceIfc resource;
+    private MyResourceIfc resourceWithXML;
 
     @Override
     protected ResourceConfig configure() {
@@ -74,6 +82,10 @@ public class WebResourceFactoryTest extends JerseyTest {
     public void setUp() throws Exception {
         super.setUp();
         resource = WebResourceFactory.newResource(MyResourceIfc.class, target());
+
+        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<String, Object>(1);
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML);
+        resourceWithXML = WebResourceFactory.newResource(MyResourceIfc.class, target(), false, headers, Collections.<Cookie>emptyList(), new Form());
     }
 
     @Test
@@ -312,6 +324,11 @@ public class WebResourceFactoryTest extends JerseyTest {
     @Test
     public void testAcceptHeader() {
         assertTrue("Accept HTTP header does not match @Produces annotation", resource.isAcceptHeaderValid(null));
+    }
+
+    @Test
+    public void testPutWithExplicitContentType() {
+        assertEquals("Content-Type HTTP header does not match explicitly provided type", resourceWithXML.putIt(new MyBean()), MediaType.APPLICATION_XML);
     }
 
 }
