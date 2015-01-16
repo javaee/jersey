@@ -73,6 +73,7 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -290,13 +291,17 @@ public final class WebResourceFactory implements InvocationHandler {
         // determine content type
         String contentType = null;
         if (entity != null) {
-            Consumes consumes = method.getAnnotation(Consumes.class);
-            if (consumes == null) {
-                consumes = proxyIfc.getAnnotation(Consumes.class);
-            }
-            if (consumes != null && consumes.value().length > 0) {
-                // TODO: should consider q/qs instead of picking the first one
-                contentType = consumes.value()[0];
+            List<Object> contentTypeEntries = headers.get(HttpHeaders.CONTENT_TYPE);
+            if ((contentTypeEntries != null) && (!contentTypeEntries.isEmpty())) {
+                contentType = contentTypeEntries.get(0).toString();
+            } else {
+                Consumes consumes = method.getAnnotation(Consumes.class);
+                if (consumes == null) {
+                    consumes = proxyIfc.getAnnotation(Consumes.class);
+                }
+                if (consumes != null && consumes.value().length > 0) {
+                    contentType = consumes.value()[0];
+                }
             }
         }
 
