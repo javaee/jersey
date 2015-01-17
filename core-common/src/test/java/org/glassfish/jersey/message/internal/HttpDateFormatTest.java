@@ -69,7 +69,7 @@ public class HttpDateFormatTest {
     public void testPreferredFormatForParsingWithReferencePattern() throws ParseException
     {
         final SimpleDateFormat tester = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
-        tester.setTimeZone(TimeZone.getTimeZone("GMT"));
+        tester.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
         SimpleDateFormat preferred = HttpDateFormat.getPreferredDateFormat();
         date = new Date();
         final String today = tester.format(date);
@@ -89,7 +89,7 @@ public class HttpDateFormatTest {
     public void testPreferredFormatForFormattingWithReferencePattern()
     {
         final SimpleDateFormat tester = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'");
-        tester.setTimeZone(TimeZone.getTimeZone("GMT"));
+        tester.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
         final SimpleDateFormat preferred = HttpDateFormat.getPreferredDateFormat();
         date = new Date();
         assertEquals(tester.format(date), preferred.format(date));

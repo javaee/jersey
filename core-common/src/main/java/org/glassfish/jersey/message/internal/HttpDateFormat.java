@@ -109,7 +109,7 @@ public final class HttpDateFormat {
         @Override
         protected synchronized SimpleDateFormat initialValue() {
             final SimpleDateFormat format = new SimpleDateFormat(PREFERRED_DATE_FORMAT_PATTERN, Locale.US);
-            format.setTimeZone(TimeZone.getTimeZone("GMT"));
+            format.setTimeZone(TimeZone.getTimeZone("Etc/UTC"));
             return format;
         }
     };
@@ -130,7 +130,7 @@ public final class HttpDateFormat {
             new SimpleDateFormat(XSD_DATE_FORMAT_PATTERN_MIN2, Locale.US)
         };
 
-        final TimeZone tz = TimeZone.getTimeZone("GMT");
+        final TimeZone tz = TimeZone.getTimeZone("Etc/UTC");
         for (final SimpleDateFormat f : formats) {
             f.setTimeZone(tz);
         }
