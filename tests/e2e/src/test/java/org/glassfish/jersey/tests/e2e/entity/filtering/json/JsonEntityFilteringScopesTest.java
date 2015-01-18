@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -38,88 +38,86 @@
  * holder.
  */
 
-package org.glassfish.jersey.examples.entityfiltering;
+package org.glassfish.jersey.tests.e2e.entity.filtering.json;
 
 import java.util.Arrays;
-import java.util.List;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Feature;
-import javax.ws.rs.core.GenericType;
 
-import org.glassfish.jersey.examples.entityfiltering.domain.Project;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.tests.e2e.entity.filtering.PrimaryDetailedView;
+import org.glassfish.jersey.tests.e2e.entity.filtering.domain.ComplexEntity;
+import org.glassfish.jersey.tests.e2e.entity.filtering.domain.ComplexSubEntity;
+import org.glassfish.jersey.tests.e2e.entity.filtering.domain.ComplexSubSubEntity;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertThat;
 
 /**
- * {@link org.glassfish.jersey.examples.entityfiltering.resource.UsersResource} unit tests.
- *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @RunWith(Parameterized.class)
-public class ProjectsResourceTest extends JerseyTest {
+public class JsonEntityFilteringScopesTest extends JerseyTest {
 
     @Parameterized.Parameters(name = "Provider: {0}")
     public static Iterable<Class[]> providers() {
         return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
     }
 
-    public ProjectsResourceTest(final Class<Feature> filteringProvider) {
-        super(new ResourceConfig(EntityFilteringFeature.class)
-                .packages("org.glassfish.jersey.examples.entityfiltering.resource")
-                .register(filteringProvider));
+    public JsonEntityFilteringScopesTest(final Class<Feature> filteringProvider) {
+        super(new ResourceConfig(Resource.class, EntityFilteringFeature.class).register(filteringProvider));
 
         enable(TestProperties.DUMP_ENTITY);
         enable(TestProperties.LOG_TRAFFIC);
     }
 
-    @Test
-    public void testProjects() throws Exception {
-        for (final Project project : target("projects").request().get(new GenericType<List<Project>>() {})) {
-            testProject(project, false);
+    @Path("/")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public static class Resource {
+
+        @GET
+        @PrimaryDetailedView
+        public ComplexEntity get() {
+            return ComplexEntity.INSTANCE;
         }
     }
 
+    /**
+     * Primary -> Default -> Primary.
+     */
     @Test
-    public void testProject() throws Exception {
-        testProject(target("projects").path("1").request().get(Project.class), false);
-    }
+    public void testEntityFilteringScopes() throws Exception {
+        final ComplexEntity entity = target().request().get(ComplexEntity.class);
 
-    @Test
-    public void testDetailedProjects() throws Exception {
-        for (final Project project : target("projects/detailed").request().get(new GenericType<List<Project>>() {})) {
-            testProject(project, true);
-        }
-    }
+        // ComplexEntity
+        assertThat(entity.accessorTransient, is("propertyproperty"));
+        assertThat(entity.getProperty(), is("property"));
 
-    @Test
-    public void testDetailedProject() throws Exception {
-        testProject(target("projects/detailed").path("1").request().get(Project.class), true);
-    }
+        // ComplexSubEntity
+        final ComplexSubEntity subEntity = entity.field;
+        assertThat(subEntity, notNullValue());
+        assertThat(subEntity.accessorTransient, is("fieldfield"));
+        assertThat(subEntity.field, is("field"));
 
-    private void testProject(final Project project, final boolean isDetailed) {
-        // Following properties should be in every returned project.
-        assertThat(project.getId(), notNullValue());
-        assertThat(project.getName(), notNullValue());
-        assertThat(project.getDescription(), notNullValue());
-
-        // Tasks and users should be only in "detailed" view.
-        if (!isDetailed) {
-            assertThat("Users present in non-detailed project view", project.getUsers(), nullValue());
-            assertThat("Tasks present in non-detailed project view", project.getTasks(), nullValue());
-        } else {
-            assertThat("Users not present in detailed project view", project.getUsers(), notNullValue());
-            assertThat("Tasks not present in detailed project view", project.getTasks(), notNullValue());
-        }
+        // ComplexSubSubEntity
+        final ComplexSubSubEntity subSubEntity = entity.field.getProperty();
+        assertThat(subSubEntity.accessorTransient, is("fieldfield"));
+        assertThat(subSubEntity.getProperty(), is("property"));
+        assertThat(subSubEntity.field, nullValue());
     }
 }

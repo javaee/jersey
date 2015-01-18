@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,7 +61,7 @@ import org.glassfish.jersey.internal.util.collection.DataStructures;
 import jersey.repackaged.com.google.common.collect.Maps;
 
 /**
- * Utility methods for Security entity filtering.
+ * SPI utility methods for entity filtering.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
@@ -72,7 +72,7 @@ public final class FilteringHelper {
      */
     public static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
-    private static final ConcurrentMap<Type, Class<?>> entityClasses = DataStructures.createConcurrentMap();
+    private static final ConcurrentMap<Type, Class<?>> ENTITY_CLASSES = DataStructures.createConcurrentMap();
 
     /**
      * Determine whether given class is filterable by entity-filtering. Filterable classes are all classes that are not primitives
@@ -94,10 +94,10 @@ public final class FilteringHelper {
      * @return entity domain class.
      */
     public static Class<?> getEntityClass(final Type genericType) {
-        if (!entityClasses.containsKey(genericType)) {
-            entityClasses.putIfAbsent(genericType, _getEntityClass(genericType));
+        if (!ENTITY_CLASSES.containsKey(genericType)) {
+            ENTITY_CLASSES.putIfAbsent(genericType, _getEntityClass(genericType));
         }
-        return entityClasses.get(genericType);
+        return ENTITY_CLASSES.get(genericType);
     }
 
     /**
@@ -115,7 +115,10 @@ public final class FilteringHelper {
             }
             return clazz;
         } else if (genericType instanceof ParameterizedType) {
-            final Type type = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            final ParameterizedType parameterizedType = (ParameterizedType) genericType;
+            final Type[] arguments = parameterizedType.getActualTypeArguments();
+
+            final Type type = parameterizedType.getRawType() == Map.class ? arguments[1] : arguments[0];
             if (type instanceof ParameterizedType) {
                 final Type rawType = ((ParameterizedType) type).getRawType();
                 if (rawType == JAXBElement.class) {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,11 +57,12 @@ public final class App {
 
     private static final URI BASE_URI = URI.create("http://localhost:8080/");
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         try {
             System.out.println("Jersey Entity Data Filtering Example.");
 
-            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI, new SelectableEntityFilteringApplication());
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(BASE_URI,
+                    new SelectableEntityFilteringApplication());
 
             System.out.println("Application started.\nTry out one of these URIs:");
             for (final String path : new String[]{"people/1234", "people/1234?select=familyName,givenName",
@@ -74,9 +75,15 @@ public final class App {
             System.in.read();
 
             server.shutdownNow();
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             Logger.getLogger(App.class.getName())
                     .log(Level.SEVERE, "I/O error occurred during reading from an system input stream.", ex);
         }
+    }
+
+    /**
+     * Prevent instantiation.
+     */
+    private App() {
     }
 }

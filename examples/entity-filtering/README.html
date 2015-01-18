@@ -1,0 +1,246 @@
+<!doctype html>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+        <title>Entity Data Filtering - Custom Annotations Example</title>
+
+        <!-- Bootstrap -->
+        <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-offset-1 col-lg-10">
+                    <header class="page-header">
+                        <h1>Entity Data Filtering <small>Using custom annotations to filter entities</small></h1>
+                    </header>
+
+                    <p>
+                        This example demonstrates how to define custom entity filtering annotations (views) and how to apply them
+                        on domain classes as well as on JAX-RS resource classes or JAX-RS resource methods.
+                    </p>
+                    <p>
+                        The full description how Entity Data Filtering can be found in Jersey User Guide, chapter
+                        <a href="https://jersey.java.net/documentation/latest/entity-filtering.html" target="_blank">Entity Data Filtering</a>.
+                        Sections relevant to this example (describing this exact example) are:
+                        <ul>
+                            <li><a href="https://jersey.java.net/documentation/latest/entity-filtering.html#d0e13911" target="_blank">Enabling and configuring Entity Filtering in your application</a></li>
+                            <li><a href="https://jersey.java.net/documentation/latest/entity-filtering.html#d0e14024" target="_blank">Components used to describe Entity Filtering concepts</a></li>
+                            <li><a href="https://jersey.java.net/documentation/latest/entity-filtering.html#ef.annotations" target="_blank">Using custom annotations to filter entities</a></li>
+                        </ul>
+                    </p>
+
+                    <h2>Contents</h2>
+
+                    <p>
+                        The mapping of the URI path space is presented in the following table:
+                    </p>
+
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>URI path</th>
+                                <th>Resource class</th>
+                                <th>HTTP methods</th>
+                                <th>Allowed values</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td><code>/projects/{id}</code></td>
+                                <td>ProjectsResource</td>
+                                <td>GET</td>
+                                <td>int</td>
+                                <td>Basic view on Project class - id, name, description</td>
+                            </tr>
+                            <tr>
+                                <td><code>/projects</code></td>
+                                <td>ProjectsResource</td>
+                                <td>GET</td>
+                                <td>N/A</td>
+                                <td>Basic view on Project class - id, name, description</td>
+                            </tr>
+                            <tr>
+                                <td><code>/projects/detailed/{id}</code></td>
+                                <td>ProjectsResource</td>
+                                <td>GET</td>
+                                <td>int</td>
+                                <td>Detailed view on Project class - id, name, description, tasks, users</td>
+                            </tr>
+                            <tr>
+                                <td><code>/projects/detailed</code></td>
+                                <td>ProjectsResource</td>
+                                <td>GET</td>
+                                <td>N/A</td>
+                                <td>Detailed view on Project class - id, name, description, tasks, users</td>
+                            </tr>
+                            <tr>
+                                <td><code>/tasks/{id}?detailed={true|false}</code></td>
+                                <td>TasksResource</td>
+                                <td>GET</td>
+                                <td>int, boolean</td>
+                                <td>Basic / Detailed view on Task class - id, name, description, (project, users)</td>
+                            </tr>
+                            <tr>
+                                <td><code>/tasks</code></td>
+                                <td>TasksResource</td>
+                                <td>GET</td>
+                                <td>N/A</td>
+                                <td>Basic view on Task class - id, name, description</td>
+                            </tr>
+                            <tr>
+                                <td><code>/tasks/detailed</code></td>
+                                <td>TasksResource</td>
+                                <td>GET</td>
+                                <td>N/A</td>
+                                <td>Detailed view on Task class - id, name, description, project, users</td>
+                            </tr>
+                            <tr>
+                                <td><code>/users/{id}?detailed={true|false}</code></td>
+                                <td>UsersResource</td>
+                                <td>GET</td>
+                                <td>int, boolean</td>
+                                <td>Basic / Detailed view on User class - id, name, email, (projects, tasks)</td>
+                            </tr>
+                            <tr>
+                                <td><code>/tasks?detailed={true|false}</code></td>
+                                <td>UsersResource</td>
+                                <td>GET</td>
+                                <td>N/A</td>
+                                <td>Basic / Detailed view on User class - id, name, email, (projects, tasks)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>
+                        Application is based on Grizzly container (see <code>App</code>). Everything needed (resources/providers)
+                        is registered in <code>EntityFilteringApplication</code>.
+                    </p>
+
+                    <h2>Sample Response</h2>
+
+                    <p>
+                        Even though the same instance of, e.g. Project class, is used to create response for both basic and detailed
+                        view the actual data sent over the wire differ for each of these two views. For basic view it looks like:
+
+                        <pre>{
+   "description" : "Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339) production quality Reference Implementation for building RESTful Web services.",
+   "id" : 1,
+   "name" : "Jersey"
+}</pre>
+                        And for detailed view it looks like:
+
+                        <pre>{
+   "description" : "Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 (JSR 339) production quality Reference Implementation for building RESTful Web services.",
+   "id" : 1,
+   "name" : "Jersey",
+   "tasks" : [ {
+      "description" : "Entity Data Filtering",
+      "id" : 1,
+      "name" : "ENT_FLT"
+   }, {
+      "description" : "OAuth 1 + 2",
+      "id" : 2,
+      "name" : "OAUTH"
+   } ],
+   "users" : [ {
+      "email" : "very@secret.com",
+      "id" : 1,
+      "name" : "Jersey Robot"
+   } ]
+}</pre>
+                    </p>
+
+                    <h2>Running the Example</h2>
+
+                    <p>Run the example as follows:</p>
+                    <blockquote>
+                        <pre>mvn clean package exec:java</pre>
+                    </blockquote>
+
+                    <p>
+                        This deploys current example using Grizzly. You can access the application at:
+                        <ul>
+                            <li><a href="http://localhost:8080/projects">http://localhost:8080/projects</a></li>
+                            <li><a href="http://localhost:8080/projects/detailed">http://localhost:8080/projects/detailed</a></li>
+                            <li><a href="http://localhost:8080/users">http://localhost:8080/users</a></li>
+                            <li><a href="http://localhost:8080/users?detailed=true">http://localhost:8080/users?detailed=true</a></li>
+                            <li><a href="http://localhost:8080/tasks">http://localhost:8080/tasks</a></li>
+                            <li><a href="http://localhost:8080/tasks/detailed">http://localhost:8080/tasks/detailed</a></li>
+                        </ul>
+                    </p>
+
+                    <h2>Using Jackson instead of MOXy</h2>
+
+                    <p>
+                        This examples uses by default Entity Data Filtering feature together with MOXy. To switch MOXy JSON provider
+                        to Jackson (2.x) JSON provider simply
+
+                        <ul>
+                            <li>
+                                comment registration of MOXy ContextResolver, and<br/>
+                                <code>register(new MoxyJsonConfig().setFormattedOutput(true).resolver())</code>
+                            </li>
+                            <li>
+                                uncomment registration of JacksonFeature<br/>
+                                <code>register(JacksonFeature.class)</code>
+                            </li>
+                        </ul>
+
+                        in <code>EntityFilteringApplication</code> class.
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    </body>
+</html>

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,16 +40,23 @@
 
 package org.glassfish.jersey.examples.entityfiltering;
 
+import java.util.Arrays;
 import java.util.List;
 
-import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.GenericType;
 
 import org.glassfish.jersey.examples.entityfiltering.domain.Task;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -59,14 +66,21 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@RunWith(Parameterized.class)
 public class TaskResourceTest extends JerseyTest {
 
-    @Override
-    protected Application configure() {
-        enable(TestProperties.LOG_TRAFFIC);
-        enable(TestProperties.DUMP_ENTITY);
+    @Parameterized.Parameters(name = "Provider: {0}")
+    public static Iterable<Class[]> providers() {
+        return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
+    }
 
-        return new EntityFilteringApplication();
+    public TaskResourceTest(final Class<Feature> filteringProvider) {
+        super(new ResourceConfig(EntityFilteringFeature.class)
+                .packages("org.glassfish.jersey.examples.entityfiltering.resource")
+                .register(filteringProvider));
+
+        enable(TestProperties.DUMP_ENTITY);
+        enable(TestProperties.LOG_TRAFFIC);
     }
 
     @Test

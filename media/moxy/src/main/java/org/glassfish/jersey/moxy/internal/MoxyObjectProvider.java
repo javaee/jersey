@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,13 +62,13 @@ import jersey.repackaged.com.google.common.collect.Sets;
  */
 final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persistence.jaxb.ObjectGraph> {
 
-    private final static JAXBContext JAXB_CONTEXT;
+    private static final JAXBContext JAXB_CONTEXT;
 
     static {
         try {
             JAXB_CONTEXT = JAXBHelper.getJAXBContext(
                     JAXBContextFactory.createContext(new TypeMappingInfo[]{}, Collections.emptyMap(), null));
-        } catch (JAXBException e) {
+        } catch (final JAXBException e) {
             throw new RuntimeException(e);
         }
     }
@@ -78,7 +78,8 @@ final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persis
         return createObjectGraph(graph.getEntityClass(), graph);
     }
 
-    private org.eclipse.persistence.jaxb.ObjectGraph createObjectGraph(final Class<?> entityClass, final ObjectGraph objectGraph) {
+    private org.eclipse.persistence.jaxb.ObjectGraph createObjectGraph(final Class<?> entityClass,
+                                                                       final ObjectGraph objectGraph) {
         final org.eclipse.persistence.jaxb.ObjectGraph graph = JAXB_CONTEXT.createObjectGraph(entityClass);
         final Set<String> fields = objectGraph.getFields();
 
@@ -99,20 +100,22 @@ final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persis
         final Set<String> processed = Sets.newHashSet();
 
         for (final Map.Entry<String, ObjectGraph> entry : entitySubgraphs.entrySet()) {
-            final Subgraph subgraph = graph.addSubgraph(entry.getKey());
+            final String fieldName = entry.getKey();
+
+            final Subgraph subgraph = graph.addSubgraph(fieldName);
             final ObjectGraph entityGraph = entry.getValue();
 
-            final Set<String> fields = entityGraph.getFields(entry.getKey());
+            final Set<String> fields = entityGraph.getFields(fieldName);
             if (!fields.isEmpty()) {
                 subgraph.addAttributeNodes(fields.toArray(new String[fields.size()]));
             }
 
-            final Map<String, ObjectGraph> subgraphs = entityGraph.getSubgraphs(entry.getKey());
+            final Map<String, ObjectGraph> subgraphs = entityGraph.getSubgraphs(fieldName);
             if (!subgraphs.isEmpty()) {
                 final Class<?> subEntityClass = entityGraph.getEntityClass();
 
-                processed.add(getProcessedSubgraph(entityClass, entry.getKey(), subEntityClass));
-                createSubgraphs(entry.getKey(), subgraph, subEntityClass, subgraphs, processed);
+                processed.add(getProcessedSubgraph(entityClass, fieldName, subEntityClass));
+                createSubgraphs(fieldName, subgraph, subEntityClass, subgraphs, processed);
             }
         }
     }
@@ -120,19 +123,21 @@ final class MoxyObjectProvider extends AbstractObjectProvider<org.eclipse.persis
     private void createSubgraphs(final String parent, final Subgraph graph, final Class<?> entityClass,
                                  final Map<String, ObjectGraph> entitySubgraphs, final Set<String> processed) {
         for (final Map.Entry<String, ObjectGraph> entry : entitySubgraphs.entrySet()) {
-            final Subgraph subgraph = graph.addSubgraph(entry.getKey());
+            final String fieldName = entry.getKey();
+
+            final Subgraph subgraph = graph.addSubgraph(fieldName);
             final ObjectGraph entityGraph = entry.getValue();
-            
-            String path = parent + "." + entry.getKey();
+
+            final String path = parent + "." + fieldName;
 
             final Set<String> fields = entityGraph.getFields(path);
             if (!fields.isEmpty()) {
                 subgraph.addAttributeNodes(fields.toArray(new String[fields.size()]));
             }
 
-            final Map<String, ObjectGraph> subgraphs = entityGraph.getSubgraphs();
+            final Map<String, ObjectGraph> subgraphs = entityGraph.getSubgraphs(path);
             final Class<?> subEntityClass = entityGraph.getEntityClass();
-            final String processedSubgraph = getProcessedSubgraph(entityClass, entry.getKey(), subEntityClass);
+            final String processedSubgraph = getProcessedSubgraph(entityClass, fieldName, subEntityClass);
 
             if (!subgraphs.isEmpty() && !processed.contains(processedSubgraph)) {
                 processed.add(processedSubgraph);
