@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,35 +37,40 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.tests.integration.jersey2689;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
+package org.glassfish.jersey.tests.integration.jersey2637;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import java.io.IOException;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 /**
- * @author Oscar Guindzberg
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class Jersey2689 extends ResourceConfig {
+public class ParamEatingFilter implements Filter {
 
-    public Jersey2689() {
-        // Set package to look for resources in
-        packages("org.glassfish.jersey.tests.integration.jersey2689");
-
-        this.property(ServerProperties.BV_SEND_ERROR_IN_RESPONSE, true);
-
-        // create custom ObjectMapper
-        final ObjectMapper mapper = new ObjectMapper();
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-        // create JsonProvider to provide custom ObjectMapper
-        final JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
-        provider.setMapper(mapper);
-        this.register(provider);
-
+    @Override
+    public void init(final FilterConfig filterConfig) throws ServletException {
+        // NOOP
     }
 
+    @Override
+    public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
+            throws IOException, ServletException {
+        // NOM-NOM.
+        request.getParameterMap();
+
+        // Continue.
+        chain.doFilter(request, response);
+    }
+
+    @Override
+    public void destroy() {
+        // NOOP
+    }
 }

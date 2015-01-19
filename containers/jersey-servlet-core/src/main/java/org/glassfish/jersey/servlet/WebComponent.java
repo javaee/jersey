@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,10 +45,14 @@ import java.net.URI;
 import java.security.AccessController;
 import java.security.Principal;
 import java.security.PrivilegedActionException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.logging.Level;
@@ -95,11 +99,15 @@ import org.glassfish.jersey.servlet.internal.Utils;
 import org.glassfish.jersey.servlet.internal.spi.ServletContainerProvider;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegate;
 import org.glassfish.jersey.servlet.spi.AsyncContextDelegateProvider;
+import org.glassfish.jersey.uri.UriComponent;
 
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.api.TypeLiteral;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import jersey.repackaged.com.google.common.base.Predicate;
+import jersey.repackaged.com.google.common.collect.Collections2;
 
 /**
  * An common Jersey web component that may be extended by a Servlet and/or
@@ -550,11 +558,14 @@ public class WebComponent {
             final Form form = new Form();
             final Enumeration parameterNames = servletRequest.getParameterNames();
 
+            final String queryString = servletRequest.getQueryString();
+            final List<String> queryParams = queryString != null ? getDecodedQueryParamList(queryString) : Collections.<String>emptyList();
+
             while (parameterNames.hasMoreElements()) {
                 final String name = (String) parameterNames.nextElement();
-                final String[] values = servletRequest.getParameterValues(name);
+                final List<String> values = Arrays.asList(servletRequest.getParameterValues(name));
 
-                form.asMap().put(name, Arrays.asList(values));
+                form.asMap().put(name, queryParams.isEmpty() ? values : filterQueryParams(name, values, queryParams));
             }
 
             if (!form.asMap().isEmpty()) {
@@ -567,9 +578,36 @@ public class WebComponent {
         }
     }
 
+    private List<String> getDecodedQueryParamList(final String queryString) {
+        final List<String> params = new ArrayList<>();
+        for (final String param : queryString.split("&")) {
+            params.add(UriComponent.decode(param, UriComponent.Type.QUERY_PARAM));
+        }
+        return params;
+    }
+
+    /**
+     * From given list of values remove values that represents values of query params of the same name as the processed form
+     * parameter.
+     *
+     * @param name name of form/query parameter.
+     * @param values values of form/query parameter.
+     * @param params collection of unprocessed query parameters.
+     * @return list of form param values for given name without values of query param of the same name.
+     */
+    private List<String> filterQueryParams(final String name, final List<String> values, final Collection<String> params) {
+        return new ArrayList<>(Collections2.filter(values, new Predicate<String>() {
+            @Override
+            public boolean apply(final String input) {
+                return !params.remove(name + "=" + input)
+                        && !params.remove(name + "[]=" + input);
+            }
+        }));
+    }
+
     /**
      * Get {@link ApplicationHandler} used by this web component.
-     * 
+     *
      * @return The application handler
      */
     public ApplicationHandler getAppHandler() {

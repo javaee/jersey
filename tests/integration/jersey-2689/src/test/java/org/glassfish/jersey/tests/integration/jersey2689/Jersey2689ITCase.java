@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,9 +39,6 @@
  */
 package org.glassfish.jersey.tests.integration.jersey2689;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,7 +54,10 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.external.ExternalTestContainerFactory;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
+
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -75,7 +75,7 @@ public class Jersey2689ITCase extends JerseyTest {
     protected ResourceConfig configure() {
         return new Jersey2689();
     }
-    
+
     @Override
     protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
         return new ExternalTestContainerFactory();
@@ -96,13 +96,13 @@ public class Jersey2689ITCase extends JerseyTest {
             public Response call() throws Exception {
                 SampleBean bean = new SampleBean();
                 bean.setArray(new byte[]{});
-                
+
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.enable(SerializationFeature.INDENT_OUTPUT);
                 JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
                 provider.setMapper(mapper);
                 client().register(provider);
-                
+
                 return target().path("post-bean").request().post(Entity.entity(bean, MediaType.APPLICATION_JSON));
             }
 
@@ -116,10 +116,10 @@ public class Jersey2689ITCase extends JerseyTest {
 
         // Response.
         final Response response = responseFuture.get();
-        
+
         //Make sure we get a 400 error and not a 500 error
         assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatusInfo().getStatusCode());
-        
+
     }
 
 

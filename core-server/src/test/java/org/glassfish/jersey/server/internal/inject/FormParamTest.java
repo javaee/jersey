@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -76,7 +76,7 @@ public class FormParamTest extends AbstractTest {
     public static class SimpleFormResource {
         @POST
         public String post(
-                @FormParam("a") String a
+                @FormParam("a") final String a
         ) {
             assertEquals("foo", a);
             return a;
@@ -87,7 +87,7 @@ public class FormParamTest extends AbstractTest {
     public void testSimpleFormResource() throws ExecutionException, InterruptedException {
         initiateWebApplication(SimpleFormResource.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", "foo");
 
         final ContainerResponse responseContext = apply(
@@ -102,7 +102,7 @@ public class FormParamTest extends AbstractTest {
     public void testSimpleFormResourceWithCharset() throws ExecutionException, InterruptedException {
         initiateWebApplication(SimpleFormResource.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", "foo");
 
         final ContainerResponse responseContext = apply(RequestContextBuilder.from("/", "POST")
@@ -118,8 +118,8 @@ public class FormParamTest extends AbstractTest {
     public static class FormResourceNoConsumes {
         @POST
         public String post(
-                @FormParam("a") String a,
-                MultivaluedMap<String, String> form) {
+                @FormParam("a") final String a,
+                final MultivaluedMap<String, String> form) {
             assertEquals(a, form.getFirst("a"));
             return a;
         }
@@ -129,7 +129,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormResourceNoConsumes() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceNoConsumes.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", "foo");
 
         final ContainerResponse responseContext = apply(
@@ -143,8 +143,8 @@ public class FormParamTest extends AbstractTest {
     public static class FormResourceFormEntityParam {
         @POST
         public String post(
-                @FormParam("a") String a,
-                Form form) {
+                @FormParam("a") final String a,
+                final Form form) {
             assertEquals(a, form.asMap().getFirst("a"));
             return a;
         }
@@ -154,7 +154,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormResourceFormEntityParam() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceFormEntityParam.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", "foo");
 
         final ContainerResponse responseContext = apply(
@@ -172,10 +172,8 @@ public class FormParamTest extends AbstractTest {
         public JAXBBean() {
         }
 
-        public boolean equals(Object o) {
-            if (!(o instanceof JAXBBean))
-                return false;
-            return ((JAXBBean) o).value.equals(value);
+        public boolean equals(final Object o) {
+            return o instanceof JAXBBean && ((JAXBBean) o).value.equals(value);
         }
 
         public String toString() {
@@ -188,11 +186,11 @@ public class FormParamTest extends AbstractTest {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String post(
-                @FormParam("a") String a,
-                @FormParam("b") String b,
-                MultivaluedMap<String, String> form,
-                @Context UriInfo ui,
-                @QueryParam("a") String qa) {
+                @FormParam("a") final String a,
+                @FormParam("b") final String b,
+                final MultivaluedMap<String, String> form,
+                @Context final UriInfo ui,
+                @QueryParam("a") final String qa) {
             assertEquals(a, form.getFirst("a"));
             assertEquals(b, form.getFirst("b"));
             return a + b;
@@ -204,11 +202,11 @@ public class FormParamTest extends AbstractTest {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String post(
-                @FormParam("a") String a,
-                @FormParam("b") String b,
-                Form form,
-                @Context UriInfo ui,
-                @QueryParam("a") String qa) {
+                @FormParam("a") final String a,
+                @FormParam("b") final String b,
+                final Form form,
+                @Context final UriInfo ui,
+                @QueryParam("a") final String qa) {
             assertEquals(a, form.asMap().getFirst("a"));
             assertEquals(b, form.asMap().getFirst("b"));
             return a + b;
@@ -219,7 +217,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormParamX() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceX.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", "foo");
         form.param("b", "bar");
 
@@ -234,7 +232,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormParamY() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceY.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", "foo");
         form.param("b", "bar");
 
@@ -250,9 +248,9 @@ public class FormParamTest extends AbstractTest {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String createSubscription(
-                @FormParam("int") int i,
-                @FormParam("float") float f,
-                @FormParam("decimal") BigDecimal d
+                @FormParam("int") final int i,
+                @FormParam("float") final float f,
+                @FormParam("decimal") final BigDecimal d
         ) {
             return "" + i + " " + f + " " + d;
         }
@@ -262,7 +260,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormParamTypes() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormParamTypes.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("int", "1");
         form.param("float", "3.14");
         form.param("decimal", "3.14");
@@ -274,14 +272,30 @@ public class FormParamTest extends AbstractTest {
         assertEquals("1 3.14 3.14", responseContext.getEntity());
     }
 
+    /**
+     * JERSEY-2637 reproducer outside of container (pure server).
+     */
+    @Test
+    public void testFormParamAsQueryParams() throws Exception {
+        initiateWebApplication(FormParamTypes.class);
+
+        final ContainerResponse responseContext = apply(
+                RequestContextBuilder.from("/?int=2&float=2.71&decimal=2.71", "POST")
+                        .type(MediaType.APPLICATION_FORM_URLENCODED)
+                        .build()
+        );
+
+        assertEquals("0 0.0 null", responseContext.getEntity());
+    }
+
     @Path("/")
     public static class FormDefaultValueParamTypes {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String createSubscription(
-                @DefaultValue("1") @FormParam("int") int i,
-                @DefaultValue("3.14") @FormParam("float") float f,
-                @DefaultValue("3.14") @FormParam("decimal") BigDecimal d
+                @DefaultValue("1") @FormParam("int") final int i,
+                @DefaultValue("3.14") @FormParam("float") final float f,
+                @DefaultValue("3.14") @FormParam("decimal") final BigDecimal d
         ) {
             return "" + i + " " + f + " " + d;
         }
@@ -291,7 +305,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormDefaultValueParamTypes() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormDefaultValueParamTypes.class);
 
-        Form form = new Form();
+        final Form form = new Form();
 
         final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
@@ -303,7 +317,7 @@ public class FormParamTest extends AbstractTest {
     public static class TrimmedString {
         private final String string;
 
-        public TrimmedString(String string) {
+        public TrimmedString(final String string) {
             this.string = string.trim();
         }
 
@@ -318,7 +332,7 @@ public class FormParamTest extends AbstractTest {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String createSubscription(
-                @DefaultValue("") @FormParam("trim") TrimmedString s) {
+                @DefaultValue("") @FormParam("trim") final TrimmedString s) {
             return s.toString();
         }
     }
@@ -327,7 +341,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormConstructorValueParamTypes() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormConstructorValueParamTypes.class);
 
-        Form form = new Form();
+        final Form form = new Form();
 
         final ContainerResponse responseContext = apply(
                 RequestContextBuilder.from("/", "POST").type(MediaType.APPLICATION_FORM_URLENCODED).entity(form).build()
@@ -342,8 +356,8 @@ public class FormParamTest extends AbstractTest {
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         @Produces(MediaType.APPLICATION_XML)
         public JAXBBean post(
-                @FormParam("a") JAXBBean a,
-                @FormParam("b") List<JAXBBean> b) {
+                @FormParam("a") final JAXBBean a,
+                @FormParam("b") final List<JAXBBean> b) {
             assertEquals("a", a.value);
             assertEquals(2, b.size());
             assertEquals("b1", b.get(0).value);
@@ -356,7 +370,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormParamJAXB() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceJAXB.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", "<jaxbBean><value>a</value></jaxbBean>");
         form.param("b", "<jaxbBean><value>b1</value></jaxbBean>");
         form.param("b", "<jaxbBean><value>b2</value></jaxbBean>");
@@ -369,7 +383,7 @@ public class FormParamTest extends AbstractTest {
                 .build()
         );
 
-        JAXBBean b = (JAXBBean) responseContext.getEntity();
+        final JAXBBean b = (JAXBBean) responseContext.getEntity();
         assertEquals("a", b.value);
     }
 
@@ -377,7 +391,7 @@ public class FormParamTest extends AbstractTest {
     public void testFormParamJAXBError() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceJAXB.class);
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", "<x><value>a</value></jaxbBean>");
         form.param("b", "<x><value>b1</value></jaxbBean>");
         form.param("b", "<x><value>b2</value></jaxbBean>");
@@ -394,9 +408,9 @@ public class FormParamTest extends AbstractTest {
         @POST
         @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
         public String post(
-                @FormParam("a") Date a,
-                @FormParam("b") Date b,
-                @FormParam("c") Date c) {
+                @FormParam("a") final Date a,
+                @FormParam("b") final Date b,
+                @FormParam("c") final Date c) {
             assertNotNull(a);
             assertNotNull(b);
             assertNotNull(c);
@@ -408,11 +422,11 @@ public class FormParamTest extends AbstractTest {
     public void testFormParamDate() throws ExecutionException, InterruptedException {
         initiateWebApplication(FormResourceDate.class);
 
-        String date_RFC1123 = "Sun, 06 Nov 1994 08:49:37 GMT";
-        String date_RFC1036 = "Sunday, 06-Nov-94 08:49:37 GMT";
-        String date_ANSI_C = "Sun Nov  6 08:49:37 1994";
+        final String date_RFC1123 = "Sun, 06 Nov 1994 08:49:37 GMT";
+        final String date_RFC1036 = "Sunday, 06-Nov-94 08:49:37 GMT";
+        final String date_ANSI_C = "Sun Nov  6 08:49:37 1994";
 
-        Form form = new Form();
+        final Form form = new Form();
         form.param("a", date_RFC1123);
         form.param("b", date_RFC1036);
         form.param("c", date_ANSI_C);
