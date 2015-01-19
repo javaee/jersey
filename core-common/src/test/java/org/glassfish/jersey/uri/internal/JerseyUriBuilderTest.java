@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -185,6 +185,16 @@ public class JerseyUriBuilderTest {
         assertEquals("news:", ub.toTemplate());
         // note that even though the URI is valid according to RFC 3986,
         // it is not possible to create a java.net.URI from this builder if SSP is empty
+    }
+
+    // Reproducer for JERSEY-2753
+    @Test
+    public void testUriBuilderShouldLeaveRelativePathRelative() {
+        UriBuilder builder = JerseyUriBuilder.fromPath("");
+        builder.scheme("http");
+        builder.replacePath("path");
+
+        assertEquals("http:path", builder.build().toString());
     }
 
     @Test

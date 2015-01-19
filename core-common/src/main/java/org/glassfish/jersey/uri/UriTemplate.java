@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -921,7 +921,9 @@ public class UriTemplate {
             sb.append(':');
         }
 
+        boolean hasAuthority = false;
         if (notEmpty(userInfo) || notEmpty(host) || notEmpty(port)) {
+            hasAuthority = true;
             sb.append("//");
 
             if (notEmpty(userInfo)) {
@@ -942,6 +944,7 @@ public class UriTemplate {
                         offset, false, mapValues, sb);
             }
         } else if (notEmpty(authority)) {
+            hasAuthority = true;
             sb.append("//");
 
             offset = createUriComponent(UriComponent.Type.AUTHORITY, authority, values,
@@ -950,7 +953,7 @@ public class UriTemplate {
 
         if (notEmpty(path) || notEmpty(query) || notEmpty(fragment)) {
             // make sure we append at least the root path if only query or fragment is present
-            if (sb.length() > 0 && (path == null || path.isEmpty() || path.charAt(0) != '/')) {
+            if (hasAuthority && (path == null || path.isEmpty() || path.charAt(0) != '/')) {
                 sb.append('/');
             }
 
