@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -870,7 +870,7 @@ public class JerseyUriBuilder extends UriBuilder {
             }
 
             if (path.length() > 0) {
-                if (sb.length() > 0 && path.charAt(0) != '/') {
+                if (hasAuthority && path.charAt(0) != '/') {
                     sb.append("/");
                 }
                 sb.append(path);
