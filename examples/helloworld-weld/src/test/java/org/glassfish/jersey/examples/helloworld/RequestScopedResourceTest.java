@@ -47,6 +47,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.util.runner.ConcurrentParameterizedRunner;
 
 import org.jboss.weld.environment.se.Weld;
 import org.junit.AfterClass;

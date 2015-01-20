@@ -58,8 +58,10 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -68,6 +70,7 @@ import static org.junit.Assert.assertFalse;
  *
  * @author Miroslav Fuksa
  */
+@RunWith(ConcurrentRunner.class)
 public class PrimitiveTypesTest extends JerseyTest {
     @Override
     protected ResourceConfig configure() {

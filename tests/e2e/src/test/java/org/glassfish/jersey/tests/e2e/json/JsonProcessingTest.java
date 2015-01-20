@@ -62,8 +62,10 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -71,6 +73,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@RunWith(ConcurrentRunner.class)
 public class JsonProcessingTest extends JerseyTest {
 
     private static final String JSON_OBJECT_STR = "{\"foo\":\"bar\"}";

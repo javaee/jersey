@@ -67,15 +67,18 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 /**
  * Tests {@link org.glassfish.jersey.client.authentication.HttpAuthenticationFeature}.
  *
  * @author Miroslav Fuksa
  */
+@RunWith(ConcurrentRunner.class)
 public class HttpAuthorizationTest extends JerseyTest {
 
     @NameBinding

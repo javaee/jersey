@@ -75,6 +75,7 @@ import javax.xml.namespace.QName;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.moxy.xml.MoxyXmlFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -82,10 +83,12 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import org.junit.runner.RunWith;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
+@RunWith(ConcurrentRunner.class)
 public class XmlMoxyTest extends AbstractTypeTester {
 
     @Path("JaxbBeanResource")

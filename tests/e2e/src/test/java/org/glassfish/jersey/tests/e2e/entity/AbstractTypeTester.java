@@ -51,6 +51,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.RuntimeType;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -76,7 +79,7 @@ import static org.junit.Assert.assertEquals;
  */
 public abstract class AbstractTypeTester extends JerseyTest {
 
-    protected static byte[] requestEntity;
+    protected static final ThreadLocal localRequestEntity = new ThreadLocal();
 
     public abstract static class AResource<T> {
 
@@ -94,8 +97,17 @@ public abstract class AbstractTypeTester extends JerseyTest {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             writerInterceptorContext.setOutputStream(baos);
             writerInterceptorContext.proceed();
-            requestEntity = baos.toByteArray();
+            final byte[] requestEntity = baos.toByteArray();
+            writerInterceptorContext.setProperty("requestEntity", requestEntity);
             original.write(requestEntity);
+        }
+    }
+
+    public static class ResponseFilter implements ClientResponseFilter {
+
+        @Override
+        public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
+            localRequestEntity.set(requestContext.getProperty("requestEntity"));
         }
     }
 
@@ -130,6 +142,7 @@ public abstract class AbstractTypeTester extends JerseyTest {
     @Override
     protected void configureClient(ClientConfig config) {
         config.register(RequestEntityInterceptor.class);
+        config.register(ResponseFilter.class);
 
         for (Class<?> cls : getClass().getDeclaredClasses()) {
             if (cls.getAnnotation(Provider.class) != null) {
@@ -157,11 +170,19 @@ public abstract class AbstractTypeTester extends JerseyTest {
         WebTarget target = target(resource.getSimpleName());
         Response response = target.request().post(Entity.entity(in, m));
 
-        byte[] inBytes = requestEntity;
+        byte[] inBytes = getRequestEntity();
         byte[] outBytes = getEntityAsByteArray(response);
 
         if (verify) {
             _verify(inBytes, outBytes);
+        }
+    }
+
+    protected static byte[] getRequestEntity() {
+        try {
+            return (byte[]) localRequestEntity.get();
+        } finally {
+            localRequestEntity.set(null);
         }
     }
 

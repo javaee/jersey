@@ -73,13 +73,16 @@ import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
+@RunWith(ConcurrentRunner.class)
 public class JsonMoxyTest extends AbstractTypeTester {
 
     @Path("JAXBElementListResource")
@@ -181,7 +184,7 @@ public class JsonMoxyTest extends AbstractTypeTester {
                 Entity.entity(jaxbElementGenericEntity, "application/json"));
 
         // TODO: the following would not be needed if i knew how to workaround JAXBElement<String>.class literal
-        byte[] inBytes = requestEntity;
+        byte[] inBytes = getRequestEntity();
         byte[] outBytes = getEntityAsByteArray(rib);
 
         assertEquals(new String(outBytes), inBytes.length, outBytes.length);

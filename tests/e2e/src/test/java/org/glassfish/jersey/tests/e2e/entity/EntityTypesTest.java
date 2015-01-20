@@ -97,11 +97,13 @@ import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.message.internal.FileProvider;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.test.util.runner.ConcurrentRunner;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import static org.hamcrest.CoreMatchers.is;
@@ -112,6 +114,7 @@ import static org.junit.Assert.assertThat;
  * @author Paul Sandoz
  * @author Martin Matula
  */
+@RunWith(ConcurrentRunner.class)
 public class EntityTypesTest extends AbstractTypeTester {
 
     @Path("InputStreamResource")
@@ -661,7 +664,7 @@ public class EntityTypesTest extends AbstractTypeTester {
 
         // TODO: the following would not be needed if i knew how to workaround JAXBElement<String>.class literal
 
-        final byte[] inBytes = requestEntity;
+        final byte[] inBytes = getRequestEntity();
         final byte[] outBytes = getEntityAsByteArray(rib);
 
         assertEquals(new String(outBytes), inBytes.length, outBytes.length);
