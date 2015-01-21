@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -67,39 +67,30 @@ public class ContentNegotiationTest extends JerseyTest {
 
     @Path("persons")
     public static class MyResource {
+        private static final Person[] LIST = new Person[] {
+                new Person("Penny", 1),
+                new Person("Howard", 2),
+                new Person("Sheldon", 3)
+        };
+
         @GET
         @Produces({"application/xml;qs=0.75", "application/json;qs=1.0"})
         public Person[] getList() {
-            Person[] list = new Person[3];
-            list[0] = new Person("Penny", 1);
-            list[1] = new Person("Howard", 2);
-            list[2] = new Person("Sheldon", 3);
-
-            return list;
+            return LIST;
         }
 
         @GET
         @Produces({"application/json;qs=1", "application/xml;qs=0.75"})
         @Path("reordered")
         public Person[] getListReordered() {
-            Person[] list = new Person[3];
-            list[0] = new Person("Penny", 1);
-            list[1] = new Person("Howard", 2);
-            list[2] = new Person("Sheldon", 3);
-
-            return list;
+            return LIST;
         }
 
         @GET
         @Produces({"application/json;qs=0.75", "application/xml;qs=1"})
         @Path("inverted")
         public Person[] getListInverted() {
-            Person[] list = new Person[3];
-            list[0] = new Person("Penny", 1);
-            list[1] = new Person("Howard", 2);
-            list[2] = new Person("Sheldon", 3);
-
-            return list;
+            return LIST;
         }
 
 
@@ -107,12 +98,35 @@ public class ContentNegotiationTest extends JerseyTest {
         @Produces({"application/xml;qs=0.75", "application/json;qs=0.9", "unknown/hello;qs=1.0"})
         @Path("unkownMT")
         public Person[] getListWithUnkownType() {
-            Person[] list = new Person[3];
-            list[0] = new Person("Penny", 1);
-            list[1] = new Person("Howard", 2);
-            list[2] = new Person("Sheldon", 3);
+            return LIST;
+        }
 
-            return list;
+        @GET
+        @Produces({"application/json", "application/xml", "text/plain"})
+        @Path("shouldPickFirstJson")
+        public Person[] getJsonArrayUnlessOtherwiseSpecified() {
+            return LIST;
+        }
+
+        @GET
+        @Produces({"application/xml", "text/plain", "application/json"})
+        @Path("shouldPickFirstXml")
+        public Person[] getXmlUnlessOtherwiseSpecified() {
+            return LIST;
+        }
+
+        @GET
+        @Produces("application/json;qs=0.75")
+        @Path("twoMethodsOneEndpoint")
+        public Person[] getJsonArray() {
+            return LIST;
+        }
+
+        @GET
+        @Produces("application/xml;qs=1")
+        @Path("twoMethodsOneEndpoint")
+        public Person[] getXml() {
+            return LIST;
         }
     }
 
@@ -174,6 +188,30 @@ public class ContentNegotiationTest extends JerseyTest {
     }
 
     @Test
+    public void testWithoutDefinedRequestedMediaTypeAndTwoMethods() {
+        //We can not rely on method declaration ordering:
+        //From Class javadoc: "The elements in the returned array are not sorted and are not in any particular order."
+        //If there are same endpoints it is necessary to use quality parameter to ensure ordering.
+        Response response = target().path("/persons/twoMethodsOneEndpoint").request().get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(MediaType.APPLICATION_XML_TYPE, response.getMediaType());
+    }
+
+    @Test
+    public void testWithoutDefinedRequestedMediaTypeOrQualityModifiersJson() {
+        Response response = target().path("/persons/shouldPickFirstJson").request().get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+    }
+
+    @Test
+    public void testWithoutDefinedRequestedMediaTypeOrQualityModifiersXml() {
+        Response response = target().path("/persons/shouldPickFirstXml").request().get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(MediaType.APPLICATION_XML_TYPE, response.getMediaType());
+    }
+
+    @Test
     public void test() {
         WebTarget target = target().path("/persons");
         Response response = target.request(MediaType.WILDCARD).get();
@@ -190,7 +228,7 @@ public class ContentNegotiationTest extends JerseyTest {
     }
 
     @Test
-    public void testInvertedWithJSONPrefferedByClient() {
+    public void testInvertedWithJSONPreferredByClient() {
         WebTarget target = target().path("/persons/inverted");
         Response response = target.request("application/json;q=1.0", "application/xml;q=0.8").get();
         Assert.assertEquals(200, response.getStatus());
@@ -210,7 +248,7 @@ public class ContentNegotiationTest extends JerseyTest {
      * this type is ignored and "application/xml" is chosen (because it is the second preferred type by the client).
      */
     @Test
-    public void testWithUnkownTypePreferedByClient() {
+    public void testWithUnknownTypePreferredByClient() {
         WebTarget target = target().path("/persons/reordered");
         Response response = target.request("application/json;q=0.8", "application/xml;q=0.9",
                 "unknown/hello;qs=1.0").get();
