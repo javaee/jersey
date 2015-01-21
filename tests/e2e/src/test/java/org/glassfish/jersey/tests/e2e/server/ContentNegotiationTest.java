@@ -67,39 +67,30 @@ public class ContentNegotiationTest extends JerseyTest {
 
     @Path("persons")
     public static class MyResource {
+        private static final Person[] LIST = new Person[] {
+                new Person("Penny", 1),
+                new Person("Howard", 2),
+                new Person("Sheldon", 3)
+        };
+
         @GET
         @Produces({"application/xml;qs=0.75", "application/json;qs=1.0"})
         public Person[] getList() {
-            Person[] list = new Person[3];
-            list[0] = new Person("Penny", 1);
-            list[1] = new Person("Howard", 2);
-            list[2] = new Person("Sheldon", 3);
-
-            return list;
+            return LIST;
         }
 
         @GET
         @Produces({"application/json;qs=1", "application/xml;qs=0.75"})
         @Path("reordered")
         public Person[] getListReordered() {
-            Person[] list = new Person[3];
-            list[0] = new Person("Penny", 1);
-            list[1] = new Person("Howard", 2);
-            list[2] = new Person("Sheldon", 3);
-
-            return list;
+            return LIST;
         }
 
         @GET
         @Produces({"application/json;qs=0.75", "application/xml;qs=1"})
         @Path("inverted")
         public Person[] getListInverted() {
-            Person[] list = new Person[3];
-            list[0] = new Person("Penny", 1);
-            list[1] = new Person("Howard", 2);
-            list[2] = new Person("Sheldon", 3);
-
-            return list;
+            return LIST;
         }
 
 
@@ -107,12 +98,28 @@ public class ContentNegotiationTest extends JerseyTest {
         @Produces({"application/xml;qs=0.75", "application/json;qs=0.9", "unknown/hello;qs=1.0"})
         @Path("unkownMT")
         public Person[] getListWithUnkownType() {
-            Person[] list = new Person[3];
-            list[0] = new Person("Penny", 1);
-            list[1] = new Person("Howard", 2);
-            list[2] = new Person("Sheldon", 3);
+            return LIST;
+        }
 
-            return list;
+        @GET
+        @Produces({"application/json", "application/xml", "text/plain"})
+        @Path("shouldPickFirst")
+        public Person[] getJsonArrayUnlessOtherwiseSpecified() {
+            return LIST;
+        }
+
+        @GET
+        @Produces("application/json")
+        @Path("twoMethodsOneEndpoint")
+        public Person[] getJsonArray() {
+            return LIST;
+        }
+
+        @GET
+        @Produces("application/xml")
+        @Path("twoMethodsOneEndpoint")
+        public Person[] getXmlArray() {
+            return LIST;
         }
     }
 
@@ -169,6 +176,20 @@ public class ContentNegotiationTest extends JerseyTest {
     public void testWithoutDefinedRequestedMediaType() {
         WebTarget target = target().path("/persons");
         Response response = target.request().get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+    }
+
+    @Test
+    public void testWithoutDefinedRequestedMediaTypeAndTwoMethods() {
+        Response response = target().path("/persons/twoMethodsOneEndpoint").request().get();
+        Assert.assertEquals(200, response.getStatus());
+        Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
+    }
+
+    @Test
+    public void testWithoutDefinedRequestedMediaTypeOrQualityModifiers() {
+        Response response = target().path("/persons/shouldPickFirst").request().get();
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMediaType());
     }

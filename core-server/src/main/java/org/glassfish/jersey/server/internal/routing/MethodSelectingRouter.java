@@ -602,16 +602,15 @@ final class MethodSelectingRouter implements Router {
         CombinedClientServerMediaType selected = null;
 
         for (final MediaType acceptableMediaType : acceptableMediaTypes) {
-            // Use writers suitable for entity class to determine the media type.
-            for (final MessageBodyWriter<?> writer : workers.getMessageBodyWritersForType(responseEntityClass)) {
-                for (final MediaType writerProduces : MediaTypes.createFrom(writer.getClass().getAnnotation(Produces.class))) {
+            // Media types producible by method.
+            final List<MediaType> methodProducesTypes = !resourceMethod.getProducedTypes().isEmpty() ?
+                    resourceMethod.getProducedTypes() : Lists.newArrayList(MediaType.WILDCARD_TYPE);
 
-                    if (writerProduces.isCompatible(acceptableMediaType)) {
-                        // Media types producible by method.
-                        final List<MediaType> methodProducesTypes = !resourceMethod.getProducedTypes().isEmpty() ?
-                                resourceMethod.getProducedTypes() : Lists.newArrayList(MediaType.WILDCARD_TYPE);
-
-                        for (final MediaType methodProducesType : methodProducesTypes) {
+            for (final MediaType methodProducesType : methodProducesTypes) {
+                // Use writers suitable for entity class to determine the media type.
+                for (final MessageBodyWriter<?> writer : workers.getMessageBodyWritersForType(responseEntityClass)) {
+                    for (final MediaType writerProduces : MediaTypes.createFrom(writer.getClass().getAnnotation(Produces.class))) {
+                        if (writerProduces.isCompatible(acceptableMediaType)) {
                             if (methodProducesType.isCompatible(writerProduces)) {
 
                                 final CombinedClientServerMediaType.EffectiveMediaType effectiveProduces = new
@@ -627,7 +626,6 @@ final class MethodSelectingRouter implements Router {
                                             || CombinedClientServerMediaType.COMPARATOR.compare(candidate, selected) > 0) {
                                         if (writer.isWriteable(responseEntityClass, entityType,
                                                 handlingMethod.getDeclaredAnnotations(), candidate.getCombinedMediaType())) {
-
                                             selected = candidate;
                                         }
                                     }
