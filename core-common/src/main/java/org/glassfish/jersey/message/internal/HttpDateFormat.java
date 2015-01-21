@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,6 +70,9 @@ public final class HttpDateFormat {
      * The date format pattern for ANSI C asctime().
      */
     private static final String ANSI_C_ASCTIME_DATE_FORMAT_PATTERN = "EEE MMM d HH:mm:ss yyyy";
+
+    private static final TimeZone GMT_TIME_ZONE = TimeZone.getTimeZone("GMT");
+
     private static final ThreadLocal<List<SimpleDateFormat>> dateFormats = new ThreadLocal<List<SimpleDateFormat>>() {
 
         @Override
@@ -84,11 +87,9 @@ public final class HttpDateFormat {
             new SimpleDateFormat(RFC1036_DATE_FORMAT_PATTERN, Locale.US),
             new SimpleDateFormat(ANSI_C_ASCTIME_DATE_FORMAT_PATTERN, Locale.US)
         };
-
-        final TimeZone tz = TimeZone.getTimeZone("GMT");
-        formats[0].setTimeZone(tz);
-        formats[1].setTimeZone(tz);
-        formats[2].setTimeZone(tz);
+        formats[0].setTimeZone(GMT_TIME_ZONE);
+        formats[1].setTimeZone(GMT_TIME_ZONE);
+        formats[2].setTimeZone(GMT_TIME_ZONE);
 
         return Collections.unmodifiableList(Arrays.asList(formats));
     }
@@ -103,7 +104,7 @@ public final class HttpDateFormat {
      *
      * @return the list of data formats.
      */
-    public static List<SimpleDateFormat> getDateFormats() {
+    private static List<SimpleDateFormat> getDateFormats() {
         return dateFormats.get();
     }
 
@@ -117,7 +118,8 @@ public final class HttpDateFormat {
      * @return the preferred of data format.
      */
     public static SimpleDateFormat getPreferredDateFormat() {
-        return dateFormats.get().get(0);
+        // returns clone because calling SDF.parse(...) can change time zone
+        return (SimpleDateFormat) dateFormats.get().get(0).clone();
     }
 
     /**
@@ -132,7 +134,10 @@ public final class HttpDateFormat {
         ParseException pe = null;
         for (final SimpleDateFormat f : HttpDateFormat.getDateFormats()) {
             try {
-                return f.parse(date);
+                Date result = f.parse(date);
+                // parse can change time zone -> set it back to GMT
+                f.setTimeZone(GMT_TIME_ZONE);
+                return result;
             } catch (final ParseException e) {
                 pe = (pe == null) ? e : pe;
             }
