@@ -278,7 +278,7 @@ class HttpUrlConnector implements Connector {
             if (verifier != null) {
                 suc.setHostnameVerifier(verifier);
             }
-            suc.setSSLSocketFactory(client.getSslContext().getSocketFactory());
+            suc.setSSLSocketFactory(client.getSslSocketFactory());
         }
 
         final Object entity = request.getEntity();

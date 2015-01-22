@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.SSLSocketFactory;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriBuilder;
@@ -56,6 +57,7 @@ import javax.net.ssl.SSLContext;
 import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.client.internal.LocalizationMessages;
 import org.glassfish.jersey.internal.util.collection.UnsafeValue;
+import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.internal.util.collection.Values;
 
 import static jersey.repackaged.com.google.common.base.Preconditions.checkNotNull;
@@ -75,6 +77,7 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     private final HostnameVerifier hostnameVerifier;
     private final UnsafeValue<SSLContext, IllegalStateException> sslContext;
     private final LinkedBlockingDeque<ShutdownHook> shutdownHooks = new LinkedBlockingDeque<ShutdownHook>();
+    private final Value<SSLSocketFactory> sslSocketFactory;
 
     /**
      * Client instance shutdown hook.
@@ -118,6 +121,12 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
                            final HostnameVerifier verifier) {
         this.config = config == null ? new ClientConfig(this) : new ClientConfig(this, config);
         this.sslContext = Values.lazy(sslContextProvider != null ? sslContextProvider : createSslContextProvider());
+        this.sslSocketFactory = Values.lazy(new Value<SSLSocketFactory>() {
+          @Override
+          public SSLSocketFactory get() {
+            return sslContext.get().getSocketFactory();
+          }
+        });
         this.hostnameVerifier = verifier;
     }
 
@@ -156,6 +165,18 @@ public class JerseyClient implements javax.ws.rs.client.Client, Initializable<Je
     void registerShutdownHook(final ShutdownHook shutdownHook) {
         checkNotClosed();
         shutdownHooks.push(shutdownHook);
+    }
+
+    /**
+     * Lazily gets the SSL socket factory connected to the SSLContext.
+     * The instance is cached for a subsequent retrieval.
+     * Use this to avoid getting new instances of the factory from SSLContextImpl every time the
+     * getter is called.
+     *
+     * @return {@code SSLSocketFactory} from the {@code SSLContext}. Created on first retrieval.
+     */
+    protected SSLSocketFactory getSslSocketFactory() {
+      return sslSocketFactory.get();
     }
 
     /**
