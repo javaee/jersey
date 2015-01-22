@@ -80,6 +80,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-jaxb</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
             <version>${project.version}</version>
@@ -104,6 +109,12 @@
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
+            <version>${project.version}</version>
+            <classifier>sources</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-jaxb</artifactId>
             <version>${project.version}</version>
             <classifier>sources</classifier>
         </dependency>
@@ -243,7 +254,7 @@
                             <goal>unpack-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeGroupIds>javax.ws.rs,org.glassfish.jersey.core,org.glassfish.jersey.containers</includeGroupIds>
+                            <includeGroupIds>javax.ws.rs,org.glassfish.jersey.core,org.glassfish.jersey.containers,org.glassfish.jersey.jaxb</includeGroupIds>
                             <includeClassifiers>sources</includeClassifiers>
                             <outputDirectory>${generated.src.dir}</outputDirectory>
                         </configuration>

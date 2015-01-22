@@ -172,10 +172,12 @@ public class FormParamTest extends AbstractTest {
         public JAXBBean() {
         }
 
+        @Override
         public boolean equals(final Object o) {
             return o instanceof JAXBBean && ((JAXBBean) o).value.equals(value);
         }
 
+        @Override
         public String toString() {
             return "JAXBClass: " + value;
         }
