@@ -59,6 +59,7 @@ import javax.inject.Singleton;
 import org.glassfish.jersey.internal.inject.ExtractorException;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.message.internal.HttpDateFormat;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 import org.glassfish.hk2.api.ServiceLocator;
 
@@ -78,7 +79,7 @@ class ParamConverters {
         @Override
         public T fromString(final String value) {
             if (value == null) {
-                throw new IllegalArgumentException("Supplied value is null");
+                throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
             }
             try {
                 return _fromString(value);
@@ -102,6 +103,9 @@ class ParamConverters {
 
         @Override
         public String toString(final T value) throws IllegalArgumentException {
+            if(value == null) {
+                throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
+            }
             return value.toString();
         }
 
@@ -187,6 +191,40 @@ class ParamConverters {
         }
     }
 
+    @Singleton
+    public static class CharacterProvider implements ParamConverterProvider {
+        @Override
+        public <T> ParamConverter<T> getConverter(final Class<T> rawType, final Type genericType, final Annotation[] annotations) {
+            if(rawType.equals(Character.class)) {
+                return new ParamConverter<T>() {
+                    @Override
+                    public T fromString(String value) {
+                        if(value == null || value.isEmpty()) {
+                            return null;
+                            // throw new IllegalStateException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
+                        }
+
+                        if(value.length() == 1) {
+                            return rawType.cast(value.charAt(0));
+                        }
+
+                        throw new ExtractorException(LocalizationMessages.ERROR_PARAMETER_INVALID_CHAR_VALUE(value));
+                    }
+
+                    @Override
+                    public String toString(T value) {
+                        if(value == null) {
+                            throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
+                        }
+                        return value.toString();
+                    }
+                };
+            }
+
+            return null;
+        }
+    }
+
     /**
      * Provider of {@link ParamConverter param converter} that convert the supplied string into a Java
      * {@link Date} instance using conversion method from the
@@ -202,7 +240,7 @@ class ParamConverters {
                 @Override
                 public T fromString(final String value) {
                     if (value == null) {
-                        throw new IllegalArgumentException("Supplied value is null");
+                        throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
                     }
                     try {
                         return rawType.cast(HttpDateFormat.readDate(value));
@@ -213,6 +251,9 @@ class ParamConverters {
 
                 @Override
                 public String toString(final T value) throws IllegalArgumentException {
+                    if(value == null) {
+                        throw new IllegalArgumentException(LocalizationMessages.METHOD_PARAMETER_CANNOT_BE_NULL("value"));
+                    }
                     return value.toString();
                 }
             };
@@ -239,6 +280,7 @@ class ParamConverters {
                     locator.createAndInitialize(DateProvider.class),
                     locator.createAndInitialize(TypeFromStringEnum.class),
                     locator.createAndInitialize(TypeValueOf.class),
+                    locator.createAndInitialize(CharacterProvider.class),
                     locator.createAndInitialize(TypeFromString.class),
                     locator.createAndInitialize(StringConstructor.class),
             };

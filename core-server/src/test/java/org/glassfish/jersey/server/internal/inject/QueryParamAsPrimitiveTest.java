@@ -1,7 +1,7 @@
 /*
 * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 *
-* Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+* Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
 *
 * The contents of this file are subject to the terms of either the GNU
 * General Public License Version 2 only ("GPL") or the Common Development
@@ -96,6 +96,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         }
 
         @GET
+        @Produces("application/char")
+        public String doGet(@QueryParam("char") char v) {
+            assertEquals('c', v);
+            return "content";
+        }
+
+        @GET
         @Produces("application/short")
         public String doGet(@QueryParam("short") short v) {
             assertEquals(32767, v);
@@ -144,6 +151,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@QueryParam("byte") byte v) {
             assertEquals(0, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@QueryParam("char") char v) {
+            assertEquals(0x00, v);
             return "content";
         }
 
@@ -200,6 +214,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         }
 
         @GET
+        @Produces("application/char")
+        public String doGet(@QueryParam("char") @DefaultValue("c") char v) {
+            assertEquals('c', v);
+            return "content";
+        }
+
+        @GET
         @Produces("application/short")
         public String doGet(@QueryParam("short") @DefaultValue("32767") short v) {
             assertEquals(32767, v);
@@ -248,6 +269,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@QueryParam("byte") @DefaultValue("1") byte v) {
             assertEquals(127, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@QueryParam("char") @DefaultValue("d") char v) {
+            assertEquals('c', v);
             return "content";
         }
 
@@ -304,6 +332,14 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         }
 
         @GET
+        @Produces("application/char")
+        public String doGet(@QueryParam("char") Character v) {
+            assertEquals('c', v.charValue());
+            return "content";
+        }
+
+
+        @GET
         @Produces("application/short")
         public String doGet(@QueryParam("short") Short v) {
             assertEquals(32767, v.shortValue());
@@ -351,6 +387,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         @GET
         @Produces("application/byte")
         public String doGet(@QueryParam("byte") Byte v) {
+            assertEquals(null, v);
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@QueryParam("char") Character v) {
             assertEquals(null, v);
             return "content";
         }
@@ -408,6 +451,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         }
 
         @GET
+        @Produces("application/char")
+        public String doGet(@QueryParam("char") @DefaultValue("c") Character v) {
+            assertEquals('c', v.charValue());
+            return "content";
+        }
+
+        @GET
         @Produces("application/short")
         public String doGet(@QueryParam("short") @DefaultValue("32767") Short v) {
             assertEquals(32767, v.shortValue());
@@ -456,6 +506,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGet(@QueryParam("byte") @DefaultValue("1") Byte v) {
             assertEquals(127, v.byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGet(@QueryParam("char") @DefaultValue("d") Character v) {
+            assertEquals('c', v.charValue());
             return "content";
         }
 
@@ -512,6 +569,15 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
             assertEquals(127, v.get(0).byteValue());
             assertEquals(127, v.get(1).byteValue());
             assertEquals(127, v.get(2).byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetChar(@QueryParam("char") List<Character> v) {
+            assertEquals('c', v.get(0).charValue());
+            assertEquals('c', v.get(1).charValue());
+            assertEquals('c', v.get(2).charValue());
             return "content";
         }
 
@@ -578,6 +644,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         }
 
         @GET
+        @Produces("application/char")
+        public String doGetCharacter(@QueryParam("byte") List<Character> v) {
+            assertEquals(0, v.size());
+            return "content";
+        }
+
+        @GET
         @Produces("application/short")
         public String doGetShort(@QueryParam("short") List<Short> v) {
             assertEquals(0, v.size());
@@ -630,6 +703,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         }
 
         @GET
+        @Produces("application/char")
+        public String doGetCharacter(@QueryParam("byte") @DefaultValue("c") List<Character> v) {
+            assertEquals('c', v.get(0).charValue());
+            return "content";
+        }
+
+        @GET
         @Produces("application/short")
         public String doGetShort(@QueryParam("short") @DefaultValue("32767") List<Short> v) {
             assertEquals(32767, v.get(0).shortValue());
@@ -678,6 +758,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
         @Produces("application/byte")
         public String doGetByte(@QueryParam("byte") @DefaultValue("0") List<Byte> v) {
             assertEquals(127, v.get(0).byteValue());
+            return "content";
+        }
+
+        @GET
+        @Produces("application/char")
+        public String doGetCharacter(@QueryParam("char") @DefaultValue("d") List<Character> v) {
+            assertEquals('c', v.get(0).charValue());
             return "content";
         }
 
@@ -740,11 +827,13 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
     }
 
     void _testDefault(String base, String type, String value) throws ExecutionException, InterruptedException {
-        assertEquals("content", apply(
+        ContainerResponse get = apply(
                 RequestContextBuilder.from(base + "default/null", "GET").
                         accept("application/" + type).
                         build()
-        ).getEntity());
+        );
+        System.out.println("### " + get.getStatus());
+        assertEquals("content", get.getEntity());
 
         assertEquals("content", apply(
                 RequestContextBuilder.from(base + "default", "GET").
@@ -811,6 +900,26 @@ public class QueryParamAsPrimitiveTest extends AbstractTest {
     @Test
     public void testGetBytePrimitiveListDefault() throws ExecutionException, InterruptedException {
         _testListDefault("byte", "127");
+    }
+
+    @Test
+    public void testGetCharacter() throws ExecutionException, InterruptedException {
+        _test("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitivesDefault() throws ExecutionException, InterruptedException {
+        _testDefault("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitiveWrappersDefault() throws ExecutionException, InterruptedException {
+        _testWrappersDefault("char", "c");
+    }
+
+    @Test
+    public void testGetCharacterPrimitiveListDefault() throws ExecutionException, InterruptedException {
+        _testListDefault("char", "c");
     }
 
     @Test

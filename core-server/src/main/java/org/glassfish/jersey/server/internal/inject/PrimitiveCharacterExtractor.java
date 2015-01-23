@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,59 +37,58 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.internal.inject;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.glassfish.jersey.internal.inject.ExtractorException;
+import org.glassfish.jersey.server.internal.LocalizationMessages;
 
 /**
- * Utility class that maps the primitive types to their respective classes as well
- * as the default values as defined by the JAX-RS specification.
+ * Value extractor for {@link java.lang.Character} and {@code char} parameters.
  *
- * @author Paul Sandoz
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-final class PrimitiveMapper {
+class PrimitiveCharacterExtractor implements MultivaluedParameterExtractor<Object> {
 
-    static final Map<Class, Class> primitiveToClassMap =
-            getPrimitiveToClassMap();
-    static final Map<Class, Object> primitiveToDefaultValueMap =
-            getPrimitiveToDefaultValueMap();
+    final String parameter;
+    final String defaultStringValue;
+    final Object defaultPrimitiveTypeValue;
 
-    private static Map<Class, Class> getPrimitiveToClassMap() {
-        Map<Class, Class> m = new WeakHashMap<Class, Class>();
-        // Put all primitive to wrapper class mappings except
-        // that for Character
-        m.put(Boolean.TYPE, Boolean.class);
-        m.put(Byte.TYPE, Byte.class);
-        m.put(Character.TYPE, Character.class);
-        m.put(Short.TYPE, Short.class);
-        m.put(Integer.TYPE, Integer.class);
-        m.put(Long.TYPE, Long.class);
-        m.put(Float.TYPE, Float.class);
-        m.put(Double.TYPE, Double.class);
-
-        return Collections.unmodifiableMap(m);
+    public PrimitiveCharacterExtractor(String parameter, String defaultStringValue, Object defaultPrimitiveTypeValue) {
+        this.parameter = parameter;
+        this.defaultStringValue = defaultStringValue;
+        this.defaultPrimitiveTypeValue = defaultPrimitiveTypeValue;
     }
 
-    private static Map<Class, Object> getPrimitiveToDefaultValueMap() {
-        Map<Class, Object> m = new WeakHashMap<Class, Object>();
-        m.put(Boolean.class, Boolean.valueOf(false));
-        m.put(Byte.class, Byte.valueOf((byte) 0));
-        m.put(Character.class, Character.valueOf((char)0x00));
-        m.put(Short.class, Short.valueOf((short) 0));
-        m.put(Integer.class, Integer.valueOf(0));
-        m.put(Long.class, Long.valueOf(0l));
-        m.put(Float.class, Float.valueOf(0.0f));
-        m.put(Double.class, Double.valueOf(0.0d));
-
-        return Collections.unmodifiableMap(m);
+    @Override
+    public String getName() {
+        return parameter;
     }
 
-    /**
-     * Prevents instantiation.
-     */
-    private PrimitiveMapper() {
+    @Override
+    public String getDefaultValueString() {
+        return defaultStringValue;
+    }
+
+    @Override
+    public Object extract(MultivaluedMap<String, String> parameters) {
+        String v = parameters.getFirst(parameter);
+        if (v != null && !v.trim().isEmpty()) {
+            if(v.length() == 1) {
+                return v.charAt(0);
+            } else {
+                throw new ExtractorException(LocalizationMessages.ERROR_PARAMETER_INVALID_CHAR_VALUE(v));
+            }
+        } else if (defaultStringValue != null && !defaultStringValue.trim().isEmpty()) {
+            if(defaultStringValue.length() == 1) {
+                return defaultStringValue.charAt(0);
+            } else {
+                throw new ExtractorException(LocalizationMessages.ERROR_PARAMETER_INVALID_CHAR_VALUE(defaultStringValue));
+            }
+        }
+
+        return defaultPrimitiveTypeValue;
     }
 }

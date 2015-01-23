@@ -153,12 +153,20 @@ final class MultivaluedParameterExtractorFactory implements MultivaluedParameter
 
         if (rawType == String.class) {
             return new SingleStringValueExtractor(parameterName, defaultValue);
+        } else if(rawType == Character.class) {
+            Object defaultDefaultValue = PrimitiveMapper.primitiveToDefaultValueMap.get(rawType);
+            return new PrimitiveCharacterExtractor(parameterName, defaultValue, defaultDefaultValue);
         } else if (rawType.isPrimitive()) {
             // Convert primitive to wrapper class
             rawType = PrimitiveMapper.primitiveToClassMap.get(rawType);
             if (rawType == null) {
                 // Primitive type not supported
                 return null;
+            }
+
+            if(rawType == Character.class) {
+                Object defaultDefaultValue = PrimitiveMapper.primitiveToDefaultValueMap.get(rawType);
+                return new PrimitiveCharacterExtractor(parameterName, defaultValue, defaultDefaultValue);
             }
 
             // Check for static valueOf(String )
