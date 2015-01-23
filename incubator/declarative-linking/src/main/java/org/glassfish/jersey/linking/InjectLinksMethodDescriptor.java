@@ -37,58 +37,70 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.linking;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.UriInfo;
+import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
+import javax.ws.rs.core.Link;
 
 /**
- * Filter that processes {@link Link} annotated fields in returned response
- * entities.
- * <p/>
- * When an application is deployed as a Servlet or Filter this filter can be
- * registered using the following initialization parameters:
- * <blockquote><pre>
- *     &lt;init-param&gt
- *         &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *         &lt;param-value&gt;com.sun.jersey.server.linking.ResponseLinkFilter&lt;/param-value&gt;
- *     &lt;/init-param&gt;
- * </pre></blockquote>
- * <p/>
+ * Utility class for working with {@link InjectLinks} annotated methods.
  *
- * @author Mark Hadley
- * @author Gerard Davison (gerard.davison at oracle.com)
- * @see Link
+ * @author Ryan Peterson
  */
+class InjectLinksMethodDescriptor extends MethodDescriptor {
 
-class ResponseLinkFilter implements ContainerResponseFilter {
+    private final InjectLinks link;
+    private final Class<?> type;
 
-    @Context
-    private UriInfo uriInfo;
+    /**
+     * TODO javadoc.
+     */
+    public InjectLinksMethodDescriptor(Method m, InjectLinks l, Class<?> t) {
+        super(t, m);
+        link = l;
+        type = t;
+    }
 
-    @Context
-    private ResourceMappingContext rmc;
+    /**
+     * TODO javadoc.
+     */
+    public void setPropertyValue(Object instance, List<Link> list) {
+        setAccessibleMethod(setter);
+        try {
 
-    @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public void filter(ContainerRequestContext request, ContainerResponseContext response) {
-        final Object entity = response.getEntity();
+            Object value;
+            if (List.class.equals(type)) {
+                value = list;
+            } else if (type.isArray()) {
+                value = list.toArray((Object[]) Array.newInstance(type.getComponentType(), list.size()));
+            } else {
+                throw new IllegalArgumentException("Field type " + type + " not one of supported List<Link> or List[]");
+            }
 
-        if (entity != null && !uriInfo.getMatchedResources().isEmpty()) {
-            Class<?> entityClass = entity.getClass();
-            HeaderProcessor lhp = new HeaderProcessor(entityClass);
-            lhp.processLinkHeaders(entity, uriInfo, rmc, response.getHeaders());
-            FieldProcessor lp = new FieldProcessor(entityClass);
-            lp.processLinks(entity, uriInfo, rmc);
-            MethodProcessor lmp = new MethodProcessor(entityClass);
-            lmp.processLinks(entity, uriInfo, rmc);
+            setter.invoke(instance, value);
+
+
+        } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ex) {
+            Logger.getLogger(InjectLinksFieldDescriptor.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
 
+    /**
+     * TODO javadoc.
+     */
+    public InjectLinkMethodDescriptor[] getLinksToInject() {
+        final InjectLink[] listOfLinks = link.value();
+        InjectLinkMethodDescriptor[] methods = new InjectLinkMethodDescriptor[listOfLinks.length];
+        for (int i = 0; i < methods.length; i++) {
+            methods[i] = new InjectLinkMethodDescriptor(getter, listOfLinks[i], Link.class);
+        }
+        return methods;
     }
 }

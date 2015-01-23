@@ -55,7 +55,7 @@ import org.glassfish.jersey.Beta;
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
-@Target({ElementType.FIELD, ElementType.TYPE})
+@Target({ElementType.FIELD, ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Beta
 public @interface InjectLink {

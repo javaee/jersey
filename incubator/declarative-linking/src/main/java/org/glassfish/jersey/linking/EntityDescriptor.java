@@ -41,6 +41,7 @@
 package org.glassfish.jersey.linking;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -52,7 +53,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javassist.bytecode.SignatureAttribute.TypeParameter;
+
 import javax.ws.rs.core.Link;
 
 /**
@@ -84,6 +87,8 @@ class EntityDescriptor {
 
     private Map<String, FieldDescriptor> nonLinkFields;
     private Map<String, FieldDescriptor> linkFields;
+    private Map<String, MethodDescriptor> nonLinkMethods;
+    private Map<String, MethodDescriptor> linkMethods;
     private List<LinkHeaderDescriptor> linkHeaders;
 
     /**
@@ -102,6 +107,14 @@ class EntityDescriptor {
         findFields(entityClass);
         this.nonLinkFields = Collections.unmodifiableMap(this.nonLinkFields);
         this.linkFields = Collections.unmodifiableMap(this.linkFields);
+
+        // create a list of method names
+        this.nonLinkMethods = new HashMap<String, MethodDescriptor>();
+        this.linkMethods = new HashMap<String, MethodDescriptor>();
+        findMethods(entityClass);
+        this.nonLinkMethods = Collections.unmodifiableMap(this.nonLinkMethods);
+        this.linkMethods = Collections.unmodifiableMap(this.linkMethods);
+    
     }
 
     public Collection<FieldDescriptor> getLinkFields() {
@@ -115,6 +128,15 @@ class EntityDescriptor {
     public List<LinkHeaderDescriptor> getLinkHeaders() {
         return linkHeaders;
     }
+    
+    public Collection<MethodDescriptor> getLinkMethods() {
+        return linkMethods.values();
+    }
+
+    public Collection<MethodDescriptor> getNonLinkMethods() {
+        return nonLinkMethods.values();
+    }
+
 
     /**
      * Find and cache the fields of the supplied class and its superclasses and
@@ -188,6 +210,46 @@ class EntityDescriptor {
         // look in interfaces
         for (Class<?> ic : entityClass.getInterfaces()) {
             findLinkHeaders(ic);
+        }
+    }
+    
+    /**
+     * Find and cache the methods of the supplied class and its superclasses and
+     * interfaces.
+     * @param entityClass the class
+     */
+    private void findMethods(Class<?> entityClass) {
+        for (Method m: entityClass.getMethods()) {
+            InjectLink a = m.getAnnotation(InjectLink.class);
+            Class<?> t = m.getReturnType();
+            if (a != null) {
+                if (t.equals(String.class) || t.equals(URI.class) || Link.class.isAssignableFrom(t)) {
+                    if (!linkMethods.containsKey(m.getName())) {
+                    	linkMethods.put(m.getName(), new InjectLinkMethodDescriptor(m, a, t));
+                    }
+                }  else {
+                    // TODO unsupported type
+                }
+            } else if (m.isAnnotationPresent(InjectLinks.class)) {
+                
+                if (List.class.isAssignableFrom(t)
+                        || t.isArray() && Link.class.isAssignableFrom(t.getComponentType())) {
+                    
+                    InjectLinks a2 = m.getAnnotation(InjectLinks.class);
+                    linkMethods.put(m.getName(), new InjectLinksMethodDescriptor(m, a2, t));
+                } else {
+                    throw new IllegalArgumentException("Can only inject links onto a List<Link> or Link[] object");
+                }
+            
+            } else {
+                // see issue http://java.net/jira/browse/JERSEY-625
+                if(((m.getModifiers() & Modifier.STATIC) > 0) ||
+                        m.getName().startsWith("java.") ||
+                        m.getName().startsWith("javax.")
+                        )
+                    continue;
+                nonLinkMethods.put(m.getName(), new MethodDescriptor(entityClass, m));
+            }
         }
     }
 }
