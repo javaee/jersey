@@ -57,7 +57,6 @@ import org.glassfish.jersey.examples.rx.Helper;
 import org.glassfish.jersey.examples.rx.domain.Destination;
 import org.glassfish.jersey.server.ManagedAsync;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
 /**
@@ -91,12 +90,7 @@ public class DestinationResource {
             VISITED.put(user, Helper.getCountries(5));
         }
 
-        return Lists.transform(VISITED.get(user), new Function<String, Destination>() {
-            @Override
-            public Destination apply(final String input) {
-                return new Destination(input);
-            }
-        });
+        return Lists.transform(VISITED.get(user), Destination::new);
     }
 
     @GET
@@ -111,11 +105,6 @@ public class DestinationResource {
             VISITED.put(user, Helper.getCountries(5));
         }
 
-        return Lists.transform(Helper.getCountries(limit, VISITED.get(user)), new Function<String, Destination>() {
-            @Override
-            public Destination apply(final String input) {
-                return new Destination(input);
-            }
-        });
+        return Lists.transform(Helper.getCountries(limit, VISITED.get(user)), Destination::new);
     }
 }
