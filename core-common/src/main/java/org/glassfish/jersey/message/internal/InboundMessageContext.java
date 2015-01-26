@@ -741,8 +741,6 @@ public abstract class InboundMessageContext {
      *         {@code false} otherwise.
      */
     public boolean hasEntity() {
-        entityContent.ensureNotClosed();
-
         try {
             return !entityContent.isEmpty();
         } catch (IllegalStateException ex) {
