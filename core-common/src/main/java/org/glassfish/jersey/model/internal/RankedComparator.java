@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -66,7 +66,7 @@ public class RankedComparator<T> implements Comparator<RankedProvider<T>> {
          */
         DESCENDING(-1);
 
-        private int ordering;
+        private final int ordering;
 
         private Order(int ordering) {
             this.ordering = ordering;
@@ -85,10 +85,10 @@ public class RankedComparator<T> implements Comparator<RankedProvider<T>> {
 
     @Override
     public int compare(final RankedProvider<T> o1, final RankedProvider<T> o2) {
-        return (getPriority(o1) - getPriority(o2)) * order.ordering;
+        return ((getPriority(o1) > getPriority(o2)) ? order.ordering : -order.ordering);
     }
 
-    protected int getPriority(RankedProvider<T> rankedProvider) {
+    protected int getPriority(final RankedProvider<T> rankedProvider) {
         return rankedProvider.getRank();
     }
 }

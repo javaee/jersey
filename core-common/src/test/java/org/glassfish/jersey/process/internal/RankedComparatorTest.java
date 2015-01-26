@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -71,6 +71,8 @@ public class RankedComparatorTest {
         list.add(new RankedProvider<Object>(new F100()));
         list.add(new RankedProvider<Object>(new F200()));
         list.add(new RankedProvider<Object>(new F200()));
+        list.add(new RankedProvider<Object>(new F_INT_MIN()));
+        list.add(new RankedProvider<Object>(new F_INT_MAX()));
         Collections.sort(list, new RankedComparator<Object>(RankedComparator.Order.ASCENDING));
         int max = Integer.MIN_VALUE;
         for (RankedProvider<Object> o : list) {
@@ -112,4 +114,11 @@ public class RankedComparatorTest {
     private static class F1000 {
     }
 
+    @Priority(Integer.MIN_VALUE)
+    private static class F_INT_MIN {
+    }
+
+    @Priority(Integer.MAX_VALUE)
+    private static class F_INT_MAX {
+    }
 }
