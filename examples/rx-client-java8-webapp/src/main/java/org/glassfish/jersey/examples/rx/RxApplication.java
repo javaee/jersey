@@ -68,10 +68,11 @@ public class RxApplication extends ResourceConfig {
         register(DestinationResource.class);
         register(CalculationResource.class);
         register(ForecastResource.class);
+
         // Agent (Client) Resources.
-        register(ObservableAgentResource.class);
         register(SyncAgentResource.class);
         register(AsyncAgentResource.class);
+        register(ObservableAgentResource.class);
         register(ListenableFutureAgentResource.class);
         register(CompletionStageAgentResource.class);
 

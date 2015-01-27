@@ -171,20 +171,21 @@ public class AsyncAgentResource {
 
                         final Map<String, Calculation> calculations = new HashMap<>();
                         while (futures.size() > 0) {
-                            Iterator<Future<Calculation>> iterator = futures.iterator();
+                            final Iterator<Future<Calculation>> iterator = futures.iterator();
+
                             while (iterator.hasNext()) {
-                                Future<Calculation> f = iterator.next();
+                                final Future<Calculation> f = iterator.next();
                                 if (f.isDone()) {
                                     try {
                                         final Calculation calculation = f.get();
                                         calculations.put(calculation.getTo(), calculation);
 
-                                        iterator.remove();
-
                                         innerLatch.countDown();
                                     } catch (final Throwable t) {
                                         errors.offer("Calculation: " + t.getMessage());
                                         innerLatch.countDown();
+                                    } finally {
+                                        iterator.remove();
                                     }
                                 }
                             }
