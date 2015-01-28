@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ import org.glassfish.jersey.internal.LocalizationMessages;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class EntityInputStream extends InputStream {
+public class EntityInputStream extends InputStream {
     private InputStream input;
     private boolean closed;
 
@@ -82,7 +82,7 @@ class EntityInputStream extends InputStream {
      *
      * @param input underlying wrapped input stream.
      */
-    protected EntityInputStream(InputStream input) {
+    public EntityInputStream(InputStream input) {
         this.input = input;
     }
 
@@ -240,7 +240,7 @@ class EntityInputStream extends InputStream {
      *
      * @return wrapped input stream instance.
      */
-    protected final InputStream getWrappedStream() {
+    public final InputStream getWrappedStream() {
         return input;
     }
 
@@ -249,7 +249,7 @@ class EntityInputStream extends InputStream {
      *
      * @param wrapped new input stream instance to be wrapped.
      */
-    protected final void setWrappedStream(InputStream wrapped) {
+    public final void setWrappedStream(InputStream wrapped) {
         input = wrapped;
     }
 }

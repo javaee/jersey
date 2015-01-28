@@ -52,6 +52,47 @@
          xml:id="migration">
     <title>Migration Guide</title>
 
+    <section xml:id="mig-2.16">
+        <title>Migrating to 2.16</title>
+        <section xml:id="mig-2.16-highlights">
+            <title>Release 2.16 Highlights</title>
+
+            <section>
+              <title>JAX-B providers separated from the core</title>
+              <para>
+                From version 2.16 onwards, all JAX-B providers are being bundled in a separate module.
+              </para>
+            </section>
+
+        </section>
+
+        <section xml:id="mig-2.16-breaking-changes">
+            <title>Breaking Changes</title>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            JAX-B support modularization might cause breaking changes for those users relying on JAX-B and directly referring to the Jersey core-common module:
+<programlisting language="xml" linenumbering="unnumbered">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.glassfish.jersey.core&lt;/groupId&gt;
+  &lt;artifactId&gt;jersey-common&lt;/artifactId&gt;
+  &lt;version&gt;${pre-2.16-version}&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                            The following needs to be included in addition from version 2.16 on:
+<programlisting language="xml" linenumbering="unnumbered">
+&lt;dependency&gt;
+  &lt;groupId&gt;org.glassfish.jersey.media&lt;/groupId&gt;
+  &lt;artifactId&gt;jersey-media-jaxb&lt;/artifactId&gt;
+  &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;</programlisting>
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
+        </section>
+    </section>
+
     <section xml:id="mig-2.15">
         <title>Migrating to 2.15</title>
         <section xml:id="mig-2.15-highlights">

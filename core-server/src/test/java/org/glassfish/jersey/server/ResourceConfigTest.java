@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -126,20 +126,11 @@ public class ResourceConfigTest {
 
     @Test
     public void testResourceConfigMergeApplications() throws Exception {
-        // No custom binder.
-        ApplicationHandler ah = new ApplicationHandler(EmtpyResourceConfigWithoutWadl.class);
-        assertEquals(0, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
-
-        // with MyBinder
-        ah = new ApplicationHandler(MyResourceConfig1.class);
-        assertEquals(1, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
-
         // Add myBinder + one default.
         final MyOtherBinder defaultBinder = new MyOtherBinder();
         final ResourceConfig rc = ResourceConfig.forApplicationClass(MyResourceConfig1.class);
         rc.register(defaultBinder);
-        ah = new ApplicationHandler(rc);
-        assertEquals(2, ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).size());
+        ApplicationHandler ah = new ApplicationHandler(rc);
         assertTrue(ah.getConfiguration().getComponentBag().getInstances(ComponentBag.BINDERS_ONLY).contains(defaultBinder));
     }
 

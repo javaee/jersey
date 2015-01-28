@@ -242,6 +242,14 @@
 </row>
 <row>
 <entry>
+<link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-jaxb/dependencies.html">
+    jersey-media-jaxb
+</link>
+</entry>
+<entry>Jersey JAX-B entity providers support module.</entry>
+</row>
+<row>
+<entry>
 <link xlink:href="https://jersey.java.net/project-info/&version;/jersey/project/jersey-media-json-jackson/dependencies.html">
     jersey-media-json-jackson
 </link>

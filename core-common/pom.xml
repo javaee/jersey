@@ -178,13 +178,6 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
-            <!-- TODO scope as provided -->
-            <!--scope>provided</scope-->
-        </dependency>
-
-        <dependency>
             <groupId>org.glassfish.jersey.bundles.repackaged</groupId>
             <artifactId>jersey-guava</artifactId>
             <version>${project.version}</version>

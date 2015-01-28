@@ -59,6 +59,7 @@
     </description>
 
     <modules>
+        <module>jaxb</module>
         <module>json-jackson</module>
         <module>json-jackson1</module>
         <module>json-jettison</module>
