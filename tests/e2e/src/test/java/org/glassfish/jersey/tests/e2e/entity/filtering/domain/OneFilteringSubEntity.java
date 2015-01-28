@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,17 +40,37 @@
 
 package org.glassfish.jersey.tests.e2e.entity.filtering.domain;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
 import org.glassfish.jersey.tests.e2e.entity.filtering.PrimaryDetailedView;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 /**
 * @author Michal Gajdos (michal.gajdos at oracle.com)
 */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.ANY)
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class OneFilteringSubEntity {
 
-    private int field1;
+    public static final OneFilteringSubEntity INSTANCE;
 
+    static {
+        INSTANCE = new OneFilteringSubEntity();
+        INSTANCE.field1 = 20;
+        INSTANCE.field2 = 30;
+        INSTANCE.property1 = "property1";
+        INSTANCE.property2 = "property2";
+    }
+
+    @XmlElement
+    public int field1;
+
+    @XmlElement
     @PrimaryDetailedView
-    private int field2;
+    public int field2;
 
     private String property1;
     private String property2;

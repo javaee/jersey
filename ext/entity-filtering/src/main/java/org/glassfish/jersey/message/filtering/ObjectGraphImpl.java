@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,27 +86,27 @@ final class ObjectGraphImpl implements ObjectGraph {
     public Set<String> getFields() {
         return getFields(null);
     }
-    
-	@Override
-	public Set<String> getFields(final String parent) {
-		Set<String> childFilteringscopes = getFilteringScopes(parent);
-		if (fields == null) {
-            fields = graph.getFields(Sets.union(childFilteringscopes, Collections.singleton(ScopeProvider.DEFAULT_SCOPE)));
+
+    @Override
+    public Set<String> getFields(final String parent) {
+        final Set<String> childFilteringScopes = getFilteringScopes(parent);
+        if (fields == null) {
+            fields = graph.getFields(Sets.union(childFilteringScopes, Collections.singleton(ScopeProvider.DEFAULT_SCOPE)));
         }
         return fields;
-	}
+    }
 
-	@Override
+    @Override
     public Map<String, ObjectGraph> getSubgraphs() {
         return getSubgraphs(null);
     }
-	
-	@Override
+
+    @Override
     public Map<String, ObjectGraph> getSubgraphs(final String parent) {
-		Set<String> childFilteringscopes = getFilteringScopes(parent);
-		
+        final Set<String> childFilteringScopes = getFilteringScopes(parent);
+
         if (subgraphs == null) {
-            final Map<String, Class<?>> contextSubgraphs = graph.getSubgraphs(childFilteringscopes);
+            final Map<String, Class<?>> contextSubgraphs = graph.getSubgraphs(childFilteringScopes);
             contextSubgraphs.putAll(graph.getSubgraphs(ScopeProvider.DEFAULT_SCOPE));
 
             subgraphs = Maps.transformValues(contextSubgraphs, new Function<Class<?>, ObjectGraph>() {
@@ -119,23 +119,23 @@ final class ObjectGraphImpl implements ObjectGraph {
         }
         return subgraphs;
     }
-	
-	private Set<String> getFilteringScopes(final String parent){
-		Set<String> childFilteringscopes = new HashSet<String>();
-		if (filteringScopes.contains(SelectableScopeResolver.DEFAULT_SCOPE) || parent == null) {
-			childFilteringscopes = filteringScopes;
-		} else {
-			for(final String filteringScope : filteringScopes) {
-				final Pattern p = Pattern.compile(SelectableScopeResolver.PREFIX + parent + "\\.(\\w+)(\\.\\w+)*$");
-				final Matcher m = p.matcher(filteringScope);
-				if(m.matches()) {
-					childFilteringscopes.add(SelectableScopeResolver.PREFIX + m.group(1));
-				} else {
-					childFilteringscopes.add(filteringScope);
-				}
-			}
-		}
-		return childFilteringscopes;
-	}
+
+    private Set<String> getFilteringScopes(final String parent) {
+        Set<String> childFilteringScopes = new HashSet<>();
+        if (filteringScopes.contains(SelectableScopeResolver.DEFAULT_SCOPE) || parent == null) {
+            childFilteringScopes = filteringScopes;
+        } else {
+            for (final String filteringScope : filteringScopes) {
+                final Pattern p = Pattern.compile(SelectableScopeResolver.PREFIX + parent + "\\.(\\w+)(\\.\\w+)*$");
+                final Matcher m = p.matcher(filteringScope);
+                if (m.matches()) {
+                    childFilteringScopes.add(SelectableScopeResolver.PREFIX + m.group(1));
+                } else {
+                    childFilteringScopes.add(filteringScope);
+                }
+            }
+        }
+        return childFilteringScopes;
+    }
 
 }

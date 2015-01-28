@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,14 +53,14 @@ import java.util.Map;
 @SuppressWarnings({"JavaDoc", "UnusedDeclaration"})
 public final class EntityStore {
 
-    private static final Map<Long, Project> projects = new LinkedHashMap<Long, Project>();
-    private static final Map<Long, User> users = new LinkedHashMap<Long, User>();
-    private static final Map<Long, Task> tasks = new LinkedHashMap<Long, Task>();
+    private static final Map<Long, Project> PROJECTS = new LinkedHashMap<>();
+    private static final Map<Long, User> USERS = new LinkedHashMap<>();
+    private static final Map<Long, Task> TASKS = new LinkedHashMap<>();
 
     static {
         // Projects.
-        final Project project = createProject("Jersey", "Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 " +
-                "(JSR 339) production quality Reference Implementation for building RESTful Web services.");
+        final Project project = createProject("Jersey", "Jersey is the open source (under dual CDDL+GPL license) JAX-RS 2.0 "
+                + "(JSR 339) production quality Reference Implementation for building RESTful Web services.");
 
         // Users.
         final User robot = createUser("Jersey Robot", "very@secret.com");
@@ -108,11 +108,11 @@ public final class EntityStore {
 
     public static Project createProject(final String name, final String description, final List<User> users,
                                         final List<Task> tasks) {
-        final Project project = new Project(projects.size() + 1l, name, description);
+        final Project project = new Project(PROJECTS.size() + 1L, name, description);
 
         project.setTasks(tasks == null ? new ArrayList<Task>() : tasks);
         project.setUsers(users == null ? new ArrayList<User>() : users);
-        projects.put(project.getId(), project);
+        PROJECTS.put(project.getId(), project);
 
         return project;
     }
@@ -122,11 +122,11 @@ public final class EntityStore {
     }
 
     public static User createUser(final String name, final String email, final List<Project> projects, final List<Task> tasks) {
-        final User user = new User(users.size() + 1l, name, email);
+        final User user = new User(USERS.size() + 1L, name, email);
 
         user.setProjects(projects == null ? new ArrayList<Project>() : projects);
         user.setTasks(tasks == null ? new ArrayList<Task>() : tasks);
-        users.put(user.getId(), user);
+        USERS.put(user.getId(), user);
 
         return user;
     }
@@ -136,36 +136,42 @@ public final class EntityStore {
     }
 
     public static Task createTask(final String name, final String description, final Project project, final User user) {
-        final Task task = new Task(tasks.size() + 1l, name, description);
+        final Task task = new Task(TASKS.size() + 1L, name, description);
 
         task.setProject(project);
         task.setUser(user);
-        tasks.put(task.getId(), task);
+        TASKS.put(task.getId(), task);
 
         return task;
     }
 
     public static Project getProject(final Long id) {
-        return projects.get(id);
+        return PROJECTS.get(id);
     }
 
     public static User getUser(final Long id) {
-        return users.get(id);
+        return USERS.get(id);
     }
 
     public static Task getTask(final Long id) {
-        return tasks.get(id);
+        return TASKS.get(id);
     }
 
     public static List<Project> getProjects() {
-        return new ArrayList<Project>(projects.values());
+        return new ArrayList<>(PROJECTS.values());
     }
 
     public static List<User> getUsers() {
-        return new ArrayList<User>(users.values());
+        return new ArrayList<>(USERS.values());
     }
 
     public static List<Task> getTasks() {
-        return new ArrayList<Task>(tasks.values());
+        return new ArrayList<>(TASKS.values());
+    }
+
+    /**
+     * Prevent instantiation.
+     */
+    private EntityStore() {
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,7 +52,7 @@ import org.glassfish.jersey.examples.entityfiltering.selectable.domain.PhoneNumb
 
 /**
  * Resource to support query parameter driven entity filtering.
- * 
+ *
  * @author Andy Pemberton (pembertona at gmail.com)
  */
 @Path("people")
@@ -62,21 +62,26 @@ public class PersonResource {
     @GET
     @Path("{id}")
     public Person getPerson() {
-        Person person = new Person();
+        final Person person = new Person();
         person.setGivenName("Andrew");
         person.setFamilyName("Dowd");
         person.setHonorificPrefix("Mr.");
+        person.setHonorificSuffix("PhD");
         person.setRegion("1st Level Region");
-        person.setAddresses(new ArrayList<Address>());
-        person.getAddresses().add(new Address());
-        person.getAddresses().get(0).setRegion("2nd Level Region");
-        person.getAddresses().get(0).setStreetAddress("1234 fake st.");
-        person.getAddresses().get(0).setPhoneNumber(new PhoneNumber());
-        person.getAddresses().get(0).getPhoneNumber().setNumber("867-5309");
-        person.getAddresses().get(0).getPhoneNumber().setAreaCode("540");
+
+        final ArrayList<Address> addresses = new ArrayList<>();
+        person.setAddresses(addresses);
+
+        final Address address = new Address();
+        addresses.add(address);
+        address.setRegion("2nd Level Region");
+        address.setStreetAddress("1234 fake st.");
+        address.setPhoneNumber(new PhoneNumber());
+        address.getPhoneNumber().setNumber("867-5309");
+        address.getPhoneNumber().setAreaCode("540");
 
         person.setPhoneNumbers(new HashMap<String, PhoneNumber>());
-        PhoneNumber number = new PhoneNumber();
+        final PhoneNumber number = new PhoneNumber();
         number.setAreaCode("804");
         number.setNumber("867-5309");
         person.getPhoneNumbers().put("HOME", number);

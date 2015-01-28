@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,61 +37,52 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.moxy.json;
 
-import javax.ws.rs.Priorities;
+package org.glassfish.jersey.jackson.internal;
+
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.internal.InternalProperties;
-import org.glassfish.jersey.internal.util.PropertiesHelper;
-import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
-import org.glassfish.jersey.moxy.internal.MoxyFilteringFeature;
-import org.glassfish.jersey.moxy.json.internal.ConfigurableMoxyJsonProvider;
-import org.glassfish.jersey.moxy.json.internal.FilteringMoxyJsonProvider;
+import javax.inject.Singleton;
+
+import org.glassfish.jersey.message.filtering.spi.ObjectGraphTransformer;
+import org.glassfish.jersey.message.filtering.spi.ObjectProvider;
+
+import org.glassfish.hk2.api.TypeLiteral;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
+
+import com.fasterxml.jackson.databind.ser.FilterProvider;
 
 /**
- * Feature used to register MOXy JSON providers.
+ * {@link Feature} adding support for Entity Data Filtering into Jackson media module.
  *
- * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class MoxyJsonFeature implements Feature {
-
-    private final static String JSON_FEATURE = MoxyJsonFeature.class.getSimpleName();
+public final class JacksonFilteringFeature implements Feature {
 
     @Override
     public boolean configure(final FeatureContext context) {
         final Configuration config = context.getConfiguration();
 
-        if (CommonProperties.getValue(config.getProperties(), config.getRuntimeType(),
-                CommonProperties.MOXY_JSON_FEATURE_DISABLE, Boolean.FALSE, Boolean.class)) {
-            return false;
+        if (!config.isRegistered(JacksonFilteringFeature.Binder.class)) {
+            context.register(new Binder());
+            return true;
         }
+        return false;
+    }
 
-        final String jsonFeature = CommonProperties.getValue(config.getProperties(), config.getRuntimeType(),
-                InternalProperties.JSON_FEATURE, JSON_FEATURE, String.class);
-        // Other JSON providers registered.
-        if (!JSON_FEATURE.equalsIgnoreCase(jsonFeature)) {
-            return false;
+    private static final class Binder extends AbstractBinder {
+
+        @Override
+        protected void configure() {
+            bindAsContract(JacksonObjectProvider.class)
+                    // FilteringObjectProvider.
+                    .to(new TypeLiteral<ObjectProvider<FilterProvider>>() {})
+                    // FilteringGraphTransformer.
+                    .to(new TypeLiteral<ObjectGraphTransformer<FilterProvider>>() {})
+                    // Scope.
+                    .in(Singleton.class);
         }
-
-        // Disable other JSON providers.
-        context.property(PropertiesHelper.getPropertyNameForRuntime(InternalProperties.JSON_FEATURE, config.getRuntimeType()),
-                JSON_FEATURE);
-
-        // Set a slightly lower priority of workers than JSON-P so MOXy is not pick-ed up for JsonStructures (if both are used).
-        final int workerPriority = Priorities.USER + 2000;
-
-        if (EntityFilteringFeature.enabled(config)) {
-            context.register(MoxyFilteringFeature.class);
-            context.register(FilteringMoxyJsonProvider.class, workerPriority);
-        } else {
-            context.register(ConfigurableMoxyJsonProvider.class, workerPriority);
-        }
-
-        return true;
     }
 }

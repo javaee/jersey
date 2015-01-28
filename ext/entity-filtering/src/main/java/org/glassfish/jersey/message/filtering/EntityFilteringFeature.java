@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -106,5 +106,17 @@ public final class EntityFilteringFeature implements Feature {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Return {@code true} whether at least one of the entity filtering features is registered in the given config.
+     *
+     * @param config config to be examined for presence of entity filtering feature.
+     * @return {@code true} if entity filtering is enabled for given config, {@code false} otherwise.
+     */
+    public static boolean enabled(final Configuration config) {
+        return config.isRegistered(EntityFilteringFeature.class)
+                || config.isRegistered(SecurityEntityFilteringFeature.class)
+                || config.isRegistered(SelectableEntityFilteringFeature.class);
     }
 }

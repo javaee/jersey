@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.examples.entityfiltering;
 
 import javax.ws.rs.ApplicationPath;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.message.filtering.EntityFilteringFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -60,7 +61,10 @@ public class EntityFilteringApplication extends ResourceConfig {
         // Entity Data Filtering feature.
         register(EntityFilteringFeature.class);
 
-        // Configure MOXy Json provider.
+        // Configure MOXy Json provider. Comment this line to use Jackson. Uncomment to use MOXy.
         register(new MoxyJsonConfig().setFormattedOutput(true).resolver());
+
+        // Configure Jackson Json provider. Comment this line to use MOXy. Uncomment to use Jackson.
+        // register(JacksonFeature.class);
     }
 }

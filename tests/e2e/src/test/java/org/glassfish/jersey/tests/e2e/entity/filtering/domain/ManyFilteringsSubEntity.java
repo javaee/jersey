@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,18 +40,38 @@
 
 package org.glassfish.jersey.tests.e2e.entity.filtering.domain;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+
 import org.glassfish.jersey.tests.e2e.entity.filtering.PrimaryDetailedView;
 import org.glassfish.jersey.tests.e2e.entity.filtering.SecondaryDetailedView;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 /**
 * @author Michal Gajdos (michal.gajdos at oracle.com)
 */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.ANY)
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class ManyFilteringsSubEntity {
 
-    private int field1;
+    public static final ManyFilteringsSubEntity INSTANCE;
 
+    static {
+        INSTANCE = new ManyFilteringsSubEntity();
+        INSTANCE.field1 = 60;
+        INSTANCE.field2 = 70;
+        INSTANCE.property1 = "property1";
+        INSTANCE.property2 = "property2";
+    }
+
+    @XmlElement
+    public int field1;
+
+    @XmlElement
     @SecondaryDetailedView
-    private int field2;
+    public int field2;
 
     private String property1;
     private String property2;

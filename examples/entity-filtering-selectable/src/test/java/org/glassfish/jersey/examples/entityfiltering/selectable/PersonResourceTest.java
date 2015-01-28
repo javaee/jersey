@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,50 +40,115 @@
 
 package org.glassfish.jersey.examples.entityfiltering.selectable;
 
-import javax.ws.rs.core.Application;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
+import javax.ws.rs.core.Feature;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.examples.entityfiltering.selectable.domain.Address;
 import org.glassfish.jersey.examples.entityfiltering.selectable.domain.Person;
+import org.glassfish.jersey.examples.entityfiltering.selectable.domain.PhoneNumber;
 import org.glassfish.jersey.examples.entityfiltering.selectable.resource.PersonResource;
+import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.message.filtering.SelectableEntityFilteringFeature;
+import org.glassfish.jersey.moxy.json.MoxyJsonFeature;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
-import org.junit.Test;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * {@link PersonResource} unit tests.
- * 
+ *
  * @author Andy Pemberton (pembertona at gmail.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
+@RunWith(Parameterized.class)
 public class PersonResourceTest extends JerseyTest {
 
-    @Override
-    protected Application configure() {
-        enable(TestProperties.LOG_TRAFFIC);
-        enable(TestProperties.DUMP_ENTITY);
+    @Parameterized.Parameters(name = "Provider: {0}")
+    public static Iterable<Class[]> providers() {
+        return Arrays.asList(new Class[][]{{MoxyJsonFeature.class}, {JacksonFeature.class}});
+    }
 
-        return new SelectableEntityFilteringApplication();
+    private final Class<Feature> filteringProvider;
+
+    public PersonResourceTest(final Class<Feature> filteringProvider) {
+        super(new ResourceConfig(SelectableEntityFilteringFeature.class)
+                .packages("org.glassfish.jersey.examples.entityfiltering.selectable")
+                .property(SelectableEntityFilteringFeature.QUERY_PARAM_NAME, "select")
+                .register(filteringProvider));
+
+        this.filteringProvider = filteringProvider;
+
+        enable(TestProperties.DUMP_ENTITY);
+        enable(TestProperties.LOG_TRAFFIC);
+    }
+
+    @Override
+    protected void configureClient(final ClientConfig config) {
+        config.register(filteringProvider);
     }
 
     @Test
     public void testNoFilter() throws Exception {
-        final Person entity = target("people").path("1234").request()
-                .get(Person.class);
+        final Person entity = target("people").path("1234").request().get(Person.class);
 
         // Not null values.
         assertThat(entity.getFamilyName(), notNullValue());
         assertThat(entity.getGivenName(), notNullValue());
-        assertThat(entity.getAddresses(), notNullValue());
-        assertThat(entity.getPhoneNumbers(), notNullValue());
+        assertThat(entity.getHonorificPrefix(), notNullValue());
+        assertThat(entity.getHonorificSuffix(), notNullValue());
+        assertThat(entity.getRegion(), notNullValue());
 
+        final List<Address> addresses = entity.getAddresses();
+        assertThat(addresses, notNullValue());
+        final Address address = addresses.get(0);
+        assertThat(address, notNullValue());
+        assertThat(address.getRegion(), notNullValue());
+        assertThat(address.getStreetAddress(), notNullValue());
+        PhoneNumber phoneNumber = address.getPhoneNumber();
+        assertThat(phoneNumber, notNullValue());
+        assertThat(phoneNumber.getAreaCode(), notNullValue());
+        assertThat(phoneNumber.getNumber(), notNullValue());
+
+        final Map<String, PhoneNumber> phoneNumbers = entity.getPhoneNumbers();
+        assertThat(phoneNumbers, notNullValue());
+
+        // TODO: enable for MOXy as well when JERSEY-2751 gets fixed.
+        if (JacksonFeature.class.isAssignableFrom(filteringProvider)) {
+            phoneNumber = phoneNumbers.get("HOME");
+            assertThat(phoneNumber, notNullValue());
+            assertThat(phoneNumber.getAreaCode(), notNullValue());
+            assertThat(phoneNumber.getNumber(), notNullValue());
+        }
+    }
+
+    @Test
+    public void testInvalidFilter() throws Exception {
+        final Person entity = target("people").path("1234")
+                .queryParam("select", "invalid").request().get(Person.class);
+
+        // All null values.
+        assertThat(entity.getFamilyName(), nullValue());
+        assertThat(entity.getGivenName(), nullValue());
+        assertThat(entity.getHonorificPrefix(), nullValue());
+        assertThat(entity.getHonorificSuffix(), nullValue());
+        assertThat(entity.getRegion(), nullValue());
+        assertThat(entity.getAddresses(), nullValue());
+        assertThat(entity.getPhoneNumbers(), nullValue());
     }
 
     /**
-     * Test first level filters
-     * 
-     * @throws Exception
+     * Test first level filters.
      */
     @Test
     public void testFilters() throws Exception {
@@ -102,9 +167,7 @@ public class PersonResourceTest extends JerseyTest {
     }
 
     /**
-     * Test 2nd and 3rd level filters
-     * 
-     * @throws Exception
+     * Test 2nd and 3rd level filters.
      */
     @Test
     public void testSubFilters() throws Exception {
@@ -117,21 +180,16 @@ public class PersonResourceTest extends JerseyTest {
         // Not null values.
         assertThat(entity.getFamilyName(), notNullValue());
         assertThat(entity.getGivenName(), notNullValue());
-        assertThat(entity.getAddresses().get(0).getStreetAddress(),
-                notNullValue());
-        assertThat(entity.getAddresses().get(0).getPhoneNumber().getAreaCode(),
-                notNullValue());
+        assertThat(entity.getAddresses().get(0).getStreetAddress(), notNullValue());
+        assertThat(entity.getAddresses().get(0).getPhoneNumber().getAreaCode(), notNullValue());
 
         // Null values.
         assertThat(entity.getRegion(), nullValue());
-        assertThat(entity.getAddresses().get(0).getPhoneNumber().getNumber(),
-                nullValue());
+        assertThat(entity.getAddresses().get(0).getPhoneNumber().getNumber(), nullValue());
     }
 
     /**
-     * Test that 1st and 2nd level filters with the same name act as expected
-     * 
-     * @throws Exception
+     * Test that 1st and 2nd level filters with the same name act as expected.
      */
     @Test
     public void testFiltersSameName() throws Exception {
@@ -144,8 +202,7 @@ public class PersonResourceTest extends JerseyTest {
 
         // Not null values.
         assertThat(firstLevel.getRegion(), notNullValue());
-        assertThat(secondLevel.getAddresses().get(0).getRegion(),
-                notNullValue());
+        assertThat(secondLevel.getAddresses().get(0).getRegion(), notNullValue());
 
         // Null values.
         assertThat(firstLevel.getAddresses(), nullValue()); //confirms 2nd level region on addresses is null

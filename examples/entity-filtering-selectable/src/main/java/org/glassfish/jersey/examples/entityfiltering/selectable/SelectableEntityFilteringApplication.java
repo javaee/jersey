@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,6 +41,7 @@ package org.glassfish.jersey.examples.entityfiltering.selectable;
 
 import javax.ws.rs.ApplicationPath;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.message.filtering.SelectableEntityFilteringFeature;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -49,6 +50,7 @@ import org.glassfish.jersey.server.ResourceConfig;
  * Entity Data Filtering application using request parameters.
  *
  * @author Andy Pemberton (pembertona at gmail.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 @ApplicationPath("/")
 public class SelectableEntityFilteringApplication extends ResourceConfig {
@@ -59,11 +61,12 @@ public class SelectableEntityFilteringApplication extends ResourceConfig {
 
         // Register entity-filtering selectable feature.
         register(SelectableEntityFilteringFeature.class);
-
-        // Configure MOXy Json provider.
-        register(new MoxyJsonConfig().setFormattedOutput(true).resolver());
-        
         property(SelectableEntityFilteringFeature.QUERY_PARAM_NAME, "select");
 
+        // Configure MOXy Json provider. Comment this line to use Jackson. Uncomment to use MOXy.
+        register(new MoxyJsonConfig().setFormattedOutput(true).resolver());
+
+        // Configure Jackson Json provider. Comment this line to use MOXy. Uncomment to use Jackson.
+        // register(JacksonFeature.class);
     }
 }
