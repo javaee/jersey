@@ -39,15 +39,15 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Configurable;
-import javax.ws.rs.core.Configuration;
-
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
 import org.glassfish.jersey.client.Initializable;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
 
-import org.apache.http.client.HttpClient;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
 
 /**
  * Connector provider for Jersey {@link Connector connectors} that utilize
@@ -105,6 +105,7 @@ import org.apache.http.client.HttpClient;
  * @author jorgeluisw at mac.com
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Maksim Mukosey (mmukosey at gmail.com)
  * @since 2.5
  */
 public class ApacheConnectorProvider implements ConnectorProvider {
@@ -129,6 +130,40 @@ public class ApacheConnectorProvider implements ConnectorProvider {
      * @since 2.8
      */
     public static HttpClient getHttpClient(Configurable<?> component) {
+        Connector connector = getConnector(component);
+
+        if (connector instanceof ApacheConnector) {
+            return ((ApacheConnector) connector).getHttpClient();
+        }
+
+        throw new IllegalArgumentException(LocalizationMessages.EXPECTED_CONNECTOR_PROVIDER_NOT_USED());
+    }
+
+    /**
+     * Retrieve the underlying Apache {@link CookieStore} instance from
+     * {@link org.glassfish.jersey.client.JerseyClient} or {@link org.glassfish.jersey.client.JerseyWebTarget}
+     * configured to use {@code ApacheConnectorProvider}.
+     *
+     * @param component {@code JerseyClient} or {@code JerseyWebTarget} instance that is configured to use
+     *                  {@code ApacheConnectorProvider}.
+     * @return underlying Apache {@code CookieStore} instance.
+     *
+     * @throws java.lang.IllegalArgumentException in case the {@code component} is neither {@code JerseyClient}
+     *                                            nor {@code JerseyWebTarget} instance or in case the component
+     *                                            is not configured to use a {@code ApacheConnectorProvider}.
+     * @since 2.10
+     */
+    public static CookieStore getCookieStore(Configurable<?> component) {
+        Connector connector = getConnector(component);
+
+        if (connector instanceof ApacheConnector) {
+            return ((ApacheConnector) connector).getCookieStore();
+        }
+
+        throw new IllegalArgumentException(LocalizationMessages.EXPECTED_CONNECTOR_PROVIDER_NOT_USED());
+    }
+
+    private static Connector getConnector(Configurable<?> component) {
         if (!(component instanceof Initializable)) {
             throw new IllegalArgumentException(
                     LocalizationMessages.INVALID_CONFIGURABLE_COMPONENT_TYPE(component.getClass().getName()));
@@ -140,11 +175,6 @@ public class ApacheConnectorProvider implements ConnectorProvider {
             initializable.preInitialize();
             connector = initializable.getConfiguration().getConnector();
         }
-
-        if (connector instanceof ApacheConnector) {
-            return ((ApacheConnector) connector).getHttpClient();
-        }
-
-        throw new IllegalArgumentException(LocalizationMessages.EXPECTED_CONNECTOR_PROVIDER_NOT_USED());
+        return connector;
     }
 }
