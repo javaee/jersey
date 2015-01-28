@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -70,7 +70,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public class MonitoringStatisticsTest {
 
-    @Path("test-resource")
+    @Path("/test-resource")
     public static class TestResource {
 
         @GET
@@ -109,7 +109,7 @@ public class MonitoringStatisticsTest {
         public void post() {
         }
 
-        @Path("world")
+        @Path("/world")
         @GET
         public String childGet() {
             return "hello-world";
@@ -146,7 +146,7 @@ public class MonitoringStatisticsTest {
 
     private MonitoringStatisticsImpl.Builder getProgStats() {
         final Resource.Builder testBuilder = Resource.builder(TestResource.class);
-        testBuilder.addChildResource("prog-child").addMethod("GET").handledBy(MyInflector.class);
+        testBuilder.addChildResource("/prog-child").addMethod("GET").handledBy(MyInflector.class);
         final List<Resource> resources = Lists.newArrayList(testBuilder.build(),
                 Resource.from(HelloResource.class));
         final Resource.Builder prog = Resource.builder("prog");
