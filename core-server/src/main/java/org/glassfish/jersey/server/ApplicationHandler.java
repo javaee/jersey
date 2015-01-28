@@ -89,6 +89,7 @@ import org.glassfish.jersey.internal.inject.ProviderBinder;
 import org.glassfish.jersey.internal.inject.Providers;
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.NullOutputStream;
 import org.glassfish.jersey.model.ContractProvider;
 import org.glassfish.jersey.model.internal.ComponentBag;
@@ -115,6 +116,7 @@ import org.glassfish.jersey.server.model.ComponentModelValidator;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
+import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
@@ -136,7 +138,6 @@ import jersey.repackaged.com.google.common.collect.Collections2;
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
 import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
-import org.glassfish.jersey.message.MessageBodyWorkers;
 
 /**
  * Jersey server-side application handler.
@@ -161,6 +162,7 @@ import org.glassfish.jersey.message.MessageBodyWorkers;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
+ *
  * @see ResourceConfig
  * @see javax.ws.rs.core.Configuration
  * @see org.glassfish.jersey.server.spi.ContainerProvider
@@ -443,7 +445,7 @@ public final class ApplicationHandler {
             boolean extScopesFound = false;
 
             if (extScopes.length == 1) {
-                for (ComponentProvider p : componentProviders) {
+                for (final ComponentProvider p : componentProviders) {
                     if (p.bind(extScopes[0], new HashSet<Class<?>>(){{add(ExternalRequestScope.class);}})) {
                         extScopesFound = true;
                         break;
@@ -451,8 +453,8 @@ public final class ApplicationHandler {
                 }
             } else if (extScopes.length > 1) {
                 if (LOGGER.isLoggable(Level.WARNING)) {
-                    StringBuilder scopeList = new StringBuilder("\n");
-                    for (Class<ExternalRequestScope> ers : extScopes) {
+                    final StringBuilder scopeList = new StringBuilder("\n");
+                    for (final Class<ExternalRequestScope> ers : extScopes) {
                         scopeList.append("   ").append(ers.getTypeParameters()[0]).append('\n');
                     }
                     LOGGER.warning(LocalizationMessages.WARNING_TOO_MANY_EXTERNAL_REQ_SCOPES(scopeList.toString()));
@@ -516,9 +518,11 @@ public final class ApplicationHandler {
         final JerseyResourceContext jerseyResourceContext = locator.getService(JerseyResourceContext.class);
         jerseyResourceContext.setResourceModel(resourceModel);
 
-        final RuntimeModelBuilder runtimeModelBuilder = locator.getService(RuntimeModelBuilder.class);
-        runtimeModelBuilder.setProcessingProviders(processingProviders);
+        msgBodyWorkers = locator.getService(MessageBodyWorkers.class);
 
+        final RuntimeModelBuilder runtimeModelBuilder = new RuntimeModelBuilder(locator, runtimeConfig, msgBodyWorkers,
+                locator.getService(ResourceMethodInvoker.Builder.class));
+        runtimeModelBuilder.setProcessingProviders(processingProviders);
 
         // assembly request processing chain
         /**
@@ -554,8 +558,6 @@ public final class ApplicationHandler {
         for (final Object instance : resourceBag.instances) {
             locator.inject(instance);
         }
-
-        msgBodyWorkers = locator.getService(MessageBodyWorkers.class);
 
         logApplicationInitConfiguration(locator, resourceBag, processingProviders);
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ package org.glassfish.jersey.internal.util.collection;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public final class Values {
+
     private static final LazyValue EMPTY = new LazyValue() {
         @Override
         public Object get() {
@@ -100,7 +101,7 @@ public final class Values {
     /**
      * Get a new constant {@link Value value provider} whose {@link Value#get() get()}
      * method always returns the instance supplied to the {@code value} parameter.
-     *
+     * <p/>
      * In case the supplied value constant is {@code null}, an {@link #empty() empty} value
      * provider is returned.
      *
@@ -113,6 +114,7 @@ public final class Values {
     }
 
     private static class InstanceValue<T> implements Value<T> {
+
         private final T value;
 
         public InstanceValue(final T value) {
@@ -125,9 +127,13 @@ public final class Values {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             return value.equals(((InstanceValue) o).value);
         }
@@ -146,7 +152,7 @@ public final class Values {
     /**
      * Get a new constant {@link UnsafeValue value provider} whose {@link UnsafeValue#get() get()}
      * method always returns the instance supplied to the {@code value} parameter.
-     *
+     * <p/>
      * In case the supplied value constant is {@code null}, an {@link #emptyUnsafe() empty} value
      * provider is returned.
      *
@@ -159,6 +165,7 @@ public final class Values {
     }
 
     private static class InstanceUnsafeValue<T, E extends Throwable> implements UnsafeValue<T, E> {
+
         private final T value;
 
         public InstanceUnsafeValue(final T value) {
@@ -171,9 +178,13 @@ public final class Values {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             return value.equals(((InstanceUnsafeValue) o).value);
         }
@@ -192,11 +203,11 @@ public final class Values {
     /**
      * Get a new "throwing" {@link UnsafeValue unsafe value provider} whose {@link UnsafeValue#get() get()}
      * method always throws the exception supplied to the {@code throwable} parameter.
-     *
+     * <p/>
      * In case the supplied throwable is {@code null}, an {@link NullPointerException} is thrown.
      *
-     * @param <T> value type.
-     * @param <E> exception type.
+     * @param <T>       value type.
+     * @param <E>       exception type.
      * @param throwable throwable instance to be thrown.
      * @return "throwing" unsafe value provider.
      * @throws NullPointerException in case the supplied throwable instance is {@code null}.
@@ -210,6 +221,7 @@ public final class Values {
     }
 
     private static class ExceptionValue<T, E extends Throwable> implements UnsafeValue<T, E> {
+
         private final E throwable;
 
         public ExceptionValue(final E throwable) {
@@ -222,9 +234,13 @@ public final class Values {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             return throwable.equals(((ExceptionValue) o).throwable);
         }
@@ -242,7 +258,7 @@ public final class Values {
 
     /**
      * Get a new lazily initialized {@link Value value provider}.
-     *
+     * <p/>
      * The value returned by its {@link Value#get() get()} method is lazily retrieved during a first
      * call to the method from the supplied {@code delegate} value provider and is then cached for
      * a subsequent retrieval.
@@ -267,7 +283,7 @@ public final class Values {
 
     /**
      * Get a new eagerly initialized {@link Value value provider}.
-     *
+     * <p/>
      * The value returned by its {@link Value#get() get()} method is eagerly computed from the supplied
      * {@code delegate} value provider and is then stored in a final field for a subsequent retrieval.
      * <p>
@@ -289,9 +305,10 @@ public final class Values {
     }
 
     private static class EagerValue<T> implements Value<T> {
+
         private final T result;
 
-        private EagerValue(Value<T> value) {
+        private EagerValue(final Value<T> value) {
             this.result = value.get();
         }
 
@@ -302,6 +319,7 @@ public final class Values {
     }
 
     private static class LazyValueImpl<T> implements LazyValue<T> {
+
         private final Object lock;
         private final Value<T> delegate;
 
@@ -332,9 +350,13 @@ public final class Values {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             return delegate.equals(((LazyValueImpl) o).delegate);
         }
@@ -352,7 +374,7 @@ public final class Values {
 
     /**
      * Get a new lazily initialized {@link UnsafeValue unsafe value provider}.
-     *
+     * <p/>
      * The value returned by its {@link UnsafeValue#get() get()} method is lazily retrieved during a first
      * call to the method from the supplied {@code delegate} value provider and is then cached for
      * a subsequent retrieval.
@@ -380,6 +402,7 @@ public final class Values {
     }
 
     private static class LazyUnsafeValueImpl<T, E extends Throwable> implements LazyUnsafeValue<T, E> {
+
         private final Object lock;
         private final UnsafeValue<T, E> delegate;
 
@@ -400,7 +423,7 @@ public final class Values {
                     if (result == null) {
                         try {
                             result = Values.unsafe(delegate.get());
-                        } catch (Throwable e) {
+                        } catch (final Throwable e) {
                             //noinspection unchecked
                             result = Values.throwing((E) e);
                         }
@@ -417,9 +440,13 @@ public final class Values {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             return delegate.equals(((LazyUnsafeValueImpl) o).delegate);
         }

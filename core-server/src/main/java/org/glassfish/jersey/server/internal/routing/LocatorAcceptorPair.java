@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,33 +37,35 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.model.internal;
+package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.model.ModelProcessor;
-import org.glassfish.jersey.server.model.ResourceMethodInvoker;
-import org.glassfish.jersey.server.spi.internal.ResourceMethodDispatcher;
-import org.glassfish.jersey.server.wadl.processor.OptionsMethodProcessor;
-
-import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.server.model.ResourceModel;
 
 /**
- * Configures injection bindings for resource modeling API.
+ * A pair of resource model (for sub-resource locators) and a corresponding model router.
  *
- * @author Marek Potociar (marek.potociar at oracle.com)
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class ResourceModelBinder extends AbstractBinder {
+final class LocatorAcceptorPair {
 
-    @Override
-    protected void configure() {
-        // Resource method invocation bindings
-        bindAsContract(ResourceMethodInvoker.Builder.class);
-        bindAsContract(ResourceMethodDispatcherFactory.class);
-        bindAsContract(ResourceMethodInvocationHandlerFactory.class);
+    /**
+     * Sub-resource locator model.
+     */
+    final ResourceModel model;
 
-        // Dispatcher providers
-        bind(VoidVoidDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
-        bind(JavaResourceMethodDispatcherProvider.class).to(ResourceMethodDispatcher.Provider.class);
+    /**
+     * Sub-resource locator router.
+     */
+    final Router router;
 
-        bind(OptionsMethodProcessor.class).to(ModelProcessor.class);
+    /**
+     * Create a new instance.
+     *
+     * @param model  sub-resource locator model.
+     * @param router router that is needed to execute the {@code model}.
+     */
+    LocatorAcceptorPair(final ResourceModel model, final Router router) {
+        this.model = model;
+        this.router = router;
     }
 }
