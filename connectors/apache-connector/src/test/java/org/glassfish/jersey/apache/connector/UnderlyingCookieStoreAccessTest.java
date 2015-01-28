@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,14 +39,14 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.apache.http.client.CookieStore;
-import org.glassfish.jersey.client.ClientConfig;
-import org.junit.Test;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 
+import org.glassfish.jersey.client.ClientConfig;
+
+import org.apache.http.client.CookieStore;
+import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
@@ -69,9 +69,7 @@ public class UnderlyingCookieStoreAccessTest {
 
         assertNotNull("CookieStore instance set on JerseyClient should not be null.", csOnClient);
         assertNotNull("CookieStore instance set on JerseyWebTarget should not be null.", csOnTarget);
-        assertSame("CookieStore instance set on JerseyClient should be the same instance as the one set on JerseyWebTarget" +
-                        "(provided the target instance has not been further configured).",
-                csOnClient, csOnTarget
-        );
+        assertSame("CookieStore instance set on JerseyClient should be the same instance as the one set on JerseyWebTarget"
+                + "(provided the target instance has not been further configured).", csOnClient, csOnTarget);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -111,7 +111,7 @@ import javax.ws.rs.core.Configuration;
 public class ApacheConnectorProvider implements ConnectorProvider {
 
     @Override
-    public Connector getConnector(Client client, Configuration runtimeConfig) {
+    public Connector getConnector(final Client client, final Configuration runtimeConfig) {
         return new ApacheConnector(runtimeConfig);
     }
 
@@ -129,14 +129,8 @@ public class ApacheConnectorProvider implements ConnectorProvider {
      *                                            is not configured to use a {@code ApacheConnectorProvider}.
      * @since 2.8
      */
-    public static HttpClient getHttpClient(Configurable<?> component) {
-        Connector connector = getConnector(component);
-
-        if (connector instanceof ApacheConnector) {
-            return ((ApacheConnector) connector).getHttpClient();
-        }
-
-        throw new IllegalArgumentException(LocalizationMessages.EXPECTED_CONNECTOR_PROVIDER_NOT_USED());
+    public static HttpClient getHttpClient(final Configurable<?> component) {
+        return getConnector(component).getHttpClient();
     }
 
     /**
@@ -147,23 +141,16 @@ public class ApacheConnectorProvider implements ConnectorProvider {
      * @param component {@code JerseyClient} or {@code JerseyWebTarget} instance that is configured to use
      *                  {@code ApacheConnectorProvider}.
      * @return underlying Apache {@code CookieStore} instance.
-     *
      * @throws java.lang.IllegalArgumentException in case the {@code component} is neither {@code JerseyClient}
      *                                            nor {@code JerseyWebTarget} instance or in case the component
      *                                            is not configured to use a {@code ApacheConnectorProvider}.
-     * @since 2.10
+     * @since 2.16
      */
-    public static CookieStore getCookieStore(Configurable<?> component) {
-        Connector connector = getConnector(component);
-
-        if (connector instanceof ApacheConnector) {
-            return ((ApacheConnector) connector).getCookieStore();
-        }
-
-        throw new IllegalArgumentException(LocalizationMessages.EXPECTED_CONNECTOR_PROVIDER_NOT_USED());
+    public static CookieStore getCookieStore(final Configurable<?> component) {
+        return getConnector(component).getCookieStore();
     }
 
-    private static Connector getConnector(Configurable<?> component) {
+    private static ApacheConnector getConnector(final Configurable<?> component) {
         if (!(component instanceof Initializable)) {
             throw new IllegalArgumentException(
                     LocalizationMessages.INVALID_CONFIGURABLE_COMPONENT_TYPE(component.getClass().getName()));
@@ -175,6 +162,11 @@ public class ApacheConnectorProvider implements ConnectorProvider {
             initializable.preInitialize();
             connector = initializable.getConfiguration().getConnector();
         }
-        return connector;
+
+        if (connector instanceof ApacheConnector) {
+            return (ApacheConnector) connector;
+        } else {
+            throw new IllegalArgumentException(LocalizationMessages.EXPECTED_CONNECTOR_PROVIDER_NOT_USED());
+        }
     }
 }
