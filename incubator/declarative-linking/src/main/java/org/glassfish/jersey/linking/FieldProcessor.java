@@ -145,11 +145,11 @@ class FieldProcessor<T> {
             for (Object member : collection) {
                 processMember(entity, resource, member, processed, uriInfo,rmc);
             }
-        }
-
-        // Recursively process all member fields
-        for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
-            processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo,rmc);
+        } else {
+            // Recursively process all member fields
+            for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
+                processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo,rmc);
+            }
         }
 
     }
