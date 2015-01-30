@@ -53,19 +53,26 @@
     <title>Migration Guide</title>
 
     <section xml:id="mig-2.16">
-        <title>Migrating to 2.16</title>
+        <title>Migrating from Jersey 2.15 to 2.16</title>
         <section xml:id="mig-2.16-highlights">
             <title>Release 2.16 Highlights</title>
 
             <section>
-              <title>JAX-B providers separated from the core</title>
-              <para>
-                From version 2.16 onwards, all JAX-B providers are being bundled in a separate module.
-              </para>
+                <title>JAX-B providers separated from the core</title>
+                <para>
+                    From version 2.16 onwards, all JAX-B providers are being bundled in a separate module.
+                </para>
             </section>
-
+            <section>
+                <title>Performance gain when using Sub-Resource Locators</title>
+                <para>
+                    We improved the performance for using sub-resource locators in an Jersey application. The performance gains
+                    are available for cases when the sub-resource locator method returns either a resource class (return value is
+                    e.g. <literal>Class&lt;?&gt;</literal> or <literal>Class&lt;MySubResource&gt;</literal>) or a (non-proxied)
+                    resource instance (when return value is an instance of <literal>MySubResource</literal> class).
+                </para>
+            </section>
         </section>
-
         <section xml:id="mig-2.16-breaking-changes">
             <title>Breaking Changes</title>
             <para>

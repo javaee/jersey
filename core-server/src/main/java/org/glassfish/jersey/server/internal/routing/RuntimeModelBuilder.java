@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,11 +41,14 @@ package org.glassfish.jersey.server.internal.routing;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import javax.ws.rs.core.Configuration;
 
+import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.process.Inflector;
 import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.JerseyResourceContext;
 import org.glassfish.jersey.server.internal.ProcessingProviders;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.internal.routing.Routers.RootRouteBuilder;
@@ -69,31 +72,42 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * builder.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public final class RuntimeModelBuilder {
+
     private final RootRouteBuilder<PathPattern> rootBuilder;
     private final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder;
-    private final ServiceLocator locator;
     private final MessageBodyWorkers workers;
+
     private ProcessingProviders processingProviders;
 
+    // SubResourceLocator Model Builder.
+    private final Value<RuntimeLocatorModelBuilder> locatorBuilder;
+
     /**
-     * Injection constructor.
+     * Create a new instance of the runtime model builder.
      *
-     * @param resourceMethodInvokerBuilder   method invoker builder.
      * @param locator                        HK2 service locator.
+     * @param config                         configuration of the application.
      * @param workers                        message body workers.
+     * @param resourceMethodInvokerBuilder   method invoker builder.
      */
-    @Inject
-    public RuntimeModelBuilder(
-            final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder,
-            final ServiceLocator locator,
-            final MessageBodyWorkers workers) {
+    public RuntimeModelBuilder(final ServiceLocator locator,
+                               final Configuration config,
+                               final MessageBodyWorkers workers,
+                               final ResourceMethodInvoker.Builder resourceMethodInvokerBuilder) {
         this.resourceMethodInvokerBuilder = resourceMethodInvokerBuilder;
-        this.locator = locator;
         this.workers = workers;
         this.rootBuilder = new PathPatternRouteBuilder(locator);
+
+        this.locatorBuilder = Values.lazy(new Value<RuntimeLocatorModelBuilder>() {
+            @Override
+            public RuntimeLocatorModelBuilder get() {
+                final JerseyResourceContext resourceContext = locator.getService(JerseyResourceContext.class);
+                return new RuntimeLocatorModelBuilder(locator, config, resourceContext, RuntimeModelBuilder.this);
+            }
+        });
     }
 
     private Router createMethodAcceptor(final ResourceMethod resourceMethod) {
@@ -104,7 +118,7 @@ public final class RuntimeModelBuilder {
                 methodAcceptor = Routers.asTreeAcceptor(createInflector(resourceMethod));
                 break;
             case SUB_RESOURCE_LOCATOR:
-                methodAcceptor = new SubResourceLocatorRouter(locator, this, resourceMethod);
+                methodAcceptor = locatorBuilder.get().getSubResourceLocatorRouter(resourceMethod);
                 break;
         }
 
@@ -120,7 +134,8 @@ public final class RuntimeModelBuilder {
         );
     }
 
-    private Router createRootTreeAcceptor(RouteToPathBuilder<PathPattern> lastRoutedBuilder, boolean subResourceMode) {
+    private Router createRootTreeAcceptor(final RouteToPathBuilder<PathPattern> lastRoutedBuilder,
+                                          final boolean subResourceMode) {
         final Router routingRoot;
         if (lastRoutedBuilder != null) {
             routingRoot = lastRoutedBuilder.build();
@@ -133,7 +148,7 @@ public final class RuntimeModelBuilder {
             routingRoot = Routers.acceptingTree(new Function<RequestProcessingContext, RequestProcessingContext>() {
 
                 @Override
-                public RequestProcessingContext apply(RequestProcessingContext input) {
+                public RequestProcessingContext apply(final RequestProcessingContext input) {
                     return input;
                 }
 
@@ -152,7 +167,7 @@ public final class RuntimeModelBuilder {
             final PathPattern pathPattern,
             final PushMatchedUriRouter uriPushingAcceptor,
             final PushMatchedRuntimeResourceRouter resourcePushingRouter,
-            final Router methodAcceptor, boolean subResourceMode) {
+            final Router methodAcceptor, final boolean subResourceMode) {
 
         if (subResourceMode) {
             return routedBuilder(lastRoutedBuilder).route(pathPattern).to(resourcePushingRouter)
@@ -173,15 +188,15 @@ public final class RuntimeModelBuilder {
      * @param subResourceMode True if the {@code resourceModel} is a sub resource model returned from sub resource locator.
      * @return Root router of the router structure representing the resource model.
      */
-    public Router buildModel(RuntimeResourceModel resourceModel, final boolean subResourceMode) {
+    public Router buildModel(final RuntimeResourceModel resourceModel, final boolean subResourceMode) {
         final List<RuntimeResource> runtimeResources = resourceModel.getRuntimeResources();
 
         final PushMatchedUriRouter uriPushingRouter = new PushMatchedUriRouter();
         RouteToPathBuilder<PathPattern> lastRoutedBuilder = null;
 
         // route methods
-        for (RuntimeResource resource : runtimeResources) {
-            PushMatchedRuntimeResourceRouter resourcePushingRouter = new PushMatchedRuntimeResourceRouter(resource);
+        for (final RuntimeResource resource : runtimeResources) {
+            final PushMatchedRuntimeResourceRouter resourcePushingRouter = new PushMatchedRuntimeResourceRouter(resource);
 
             // resource methods
             if (!resource.getResourceMethods().isEmpty()) {
@@ -200,10 +215,10 @@ public final class RuntimeModelBuilder {
 
             RouteToPathBuilder<PathPattern> srRoutedBuilder = null;
             if (!resource.getChildRuntimeResources().isEmpty()) {
-                for (RuntimeResource child : resource.getChildRuntimeResources()) {
+                for (final RuntimeResource child : resource.getChildRuntimeResources()) {
                     final PathPattern childOpenPattern = child.getPathPattern();
                     final PathPattern childClosedPattern = PathPattern.asClosed(childOpenPattern);
-                    PushMatchedRuntimeResourceRouter childResourcePushingRouter =
+                    final PushMatchedRuntimeResourceRouter childResourcePushingRouter =
                             new PushMatchedRuntimeResourceRouter(child);
 
                     // sub resource methods
@@ -219,7 +234,8 @@ public final class RuntimeModelBuilder {
 
                     // sub resource locator
                     if (child.getResourceLocator() != null) {
-                        PushMatchedTemplateRouter locTemplateRouter = getTemplateRouterForChildLocator(subResourceMode, child);
+                        final PushMatchedTemplateRouter locTemplateRouter =
+                                getTemplateRouterForChildLocator(subResourceMode, child);
 
                         srRoutedBuilder = routedBuilder(srRoutedBuilder)
                                 .route(childOpenPattern)
@@ -258,9 +274,10 @@ public final class RuntimeModelBuilder {
         return createRootTreeAcceptor(lastRoutedBuilder, subResourceMode);
     }
 
-    private PushMatchedTemplateRouter getTemplateRouterForChildLocator(boolean subResourceMode, RuntimeResource child) {
+    private PushMatchedTemplateRouter getTemplateRouterForChildLocator(final boolean subResourceMode,
+                                                                       final RuntimeResource child) {
         int i = 0;
-        for (Resource res : child.getResources()) {
+        for (final Resource res : child.getResources()) {
             if (res.getResourceLocator() != null) {
                 return getTemplateRouter(subResourceMode,
                         child.getParentResources().get(i).getPathPattern().getTemplate(),
@@ -272,8 +289,8 @@ public final class RuntimeModelBuilder {
     }
 
 
-    private PushMatchedTemplateRouter getTemplateRouter(boolean subResourceMode, UriTemplate parentTemplate,
-                                                        UriTemplate childTemplate) {
+    private PushMatchedTemplateRouter getTemplateRouter(final boolean subResourceMode, final UriTemplate parentTemplate,
+                                                        final UriTemplate childTemplate) {
         if (childTemplate != null) {
             return new PushMatchedTemplateRouter(
                     subResourceMode ? PathPattern.OPEN_ROOT_PATH_PATTERN.getTemplate() : parentTemplate,
@@ -285,8 +302,8 @@ public final class RuntimeModelBuilder {
     }
 
 
-    private Resource getLocatorResource(RuntimeResource resource) {
-        for (Resource res : resource.getResources()) {
+    private Resource getLocatorResource(final RuntimeResource resource) {
+        for (final Resource res : resource.getResources()) {
             if (res.getResourceLocator() != null) {
                 return res;
             }
@@ -295,10 +312,10 @@ public final class RuntimeModelBuilder {
     }
 
 
-    private List<MethodAcceptorPair> createAcceptors(RuntimeResource runtimeResource, boolean subResourceMode) {
-        List<MethodAcceptorPair> acceptorPairList = Lists.newArrayList();
+    private List<MethodAcceptorPair> createAcceptors(final RuntimeResource runtimeResource, final boolean subResourceMode) {
+        final List<MethodAcceptorPair> acceptorPairList = Lists.newArrayList();
         int i = 0;
-        for (Resource resource : runtimeResource.getResources()) {
+        for (final Resource resource : runtimeResource.getResources()) {
 
             final Resource parentResource = runtimeResource.getParent() == null
                     ? null : runtimeResource.getParentResources().get(i++);
@@ -309,7 +326,7 @@ public final class RuntimeModelBuilder {
                     getTemplateRouter(subResourceMode, template, null)
                     : getTemplateRouter(subResourceMode, parentResource.getPathPattern().getTemplate(), template);
 
-            for (ResourceMethod resourceMethod : resource.getResourceMethods()) {
+            for (final ResourceMethod resourceMethod : resource.getResourceMethods()) {
                 acceptorPairList.add(new MethodAcceptorPair(resourceMethod,
                         templateRouter,
                         new PushMatchedMethodRouter(resourceMethod),
@@ -319,7 +336,7 @@ public final class RuntimeModelBuilder {
         return acceptorPairList;
     }
 
-    private RouteBuilder<PathPattern> routedBuilder(RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
+    private RouteBuilder<PathPattern> routedBuilder(final RouteToPathBuilder<PathPattern> lastRoutedBuilder) {
         return lastRoutedBuilder == null ? rootBuilder : lastRoutedBuilder;
     }
 
@@ -328,7 +345,7 @@ public final class RuntimeModelBuilder {
      *
      * @param processingProviders processing providers.
      */
-    public void setProcessingProviders(ProcessingProviders processingProviders) {
+    public void setProcessingProviders(final ProcessingProviders processingProviders) {
         this.processingProviders = processingProviders;
     }
 }
