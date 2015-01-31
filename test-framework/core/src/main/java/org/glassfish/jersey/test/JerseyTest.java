@@ -631,7 +631,10 @@ public abstract class JerseyTest {
         }
 
         try {
-            setTestContainer(null).stop();
+            TestContainer oldContainer = setTestContainer(null);
+            if (oldContainer != null) {
+                oldContainer.stop();
+            }
         } finally {
             closeIfNotNull(setClient(null));
         }
