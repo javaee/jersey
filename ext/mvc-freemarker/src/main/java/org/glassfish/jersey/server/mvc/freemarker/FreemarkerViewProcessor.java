@@ -39,18 +39,14 @@
  */
 package org.glassfish.jersey.server.mvc.freemarker;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -66,12 +62,6 @@ import org.glassfish.hk2.api.ServiceLocator;
 
 import org.jvnet.hk2.annotations.Optional;
 
-import freemarker.cache.ClassTemplateLoader;
-import freemarker.cache.FileTemplateLoader;
-import freemarker.cache.MultiTemplateLoader;
-import freemarker.cache.TemplateLoader;
-import freemarker.cache.WebappTemplateLoader;
-import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import jersey.repackaged.com.google.common.collect.Lists;
@@ -84,7 +74,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> {
 
-    private final Configuration factory;
+    private final FreemarkerConfigurationFactory factory;
 
     /**
      * Create an instance of this processor with injected {@link javax.ws.rs.core.Configuration config} and
@@ -99,25 +89,10 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
                                    @Optional final ServletContext servletContext) {
         super(config, servletContext, "freemarker", "ftl");
 
-        this.factory = getTemplateObjectFactory(serviceLocator, Configuration.class, new Value<Configuration>() {
+        this.factory = getTemplateObjectFactory(serviceLocator, FreemarkerConfigurationFactory.class, new Value<FreemarkerConfigurationFactory>() {
             @Override
-            public Configuration get() {
-                // Create different loaders.
-                final List<TemplateLoader> loaders = Lists.newArrayList();
-                if (servletContext != null) {
-                    loaders.add(new WebappTemplateLoader(servletContext));
-                }
-                loaders.add(new ClassTemplateLoader(FreemarkerViewProcessor.class, "/"));
-                try {
-                    loaders.add(new FileTemplateLoader(new File("/")));
-                } catch (IOException e) {
-                    // NOOP
-                }
-
-                // Create Factory.
-                final Configuration configuration = new Configuration();
-                configuration.setTemplateLoader(new MultiTemplateLoader(loaders.toArray(new TemplateLoader[loaders.size()])));
-                return configuration;
+            public FreemarkerConfigurationFactory get() {
+                return new FreemarkerDefaultConfigurationFactory(servletContext);
             }
         });
 
@@ -125,7 +100,7 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
 
     @Override
     protected Template resolve(final String templateReference, final Reader reader) throws Exception {
-        return factory.getTemplate(templateReference);
+        return factory.getConfiguration().getTemplate(templateReference);
     }
 
     @Override
