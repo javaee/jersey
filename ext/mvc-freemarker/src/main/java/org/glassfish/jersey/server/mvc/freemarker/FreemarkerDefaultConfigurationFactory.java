@@ -40,11 +40,46 @@
 package org.glassfish.jersey.server.mvc.freemarker;
 
 
+import javax.inject.Inject;
+import javax.servlet.ServletContext;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import freemarker.cache.*;
 import freemarker.template.Configuration;
+import org.jvnet.hk2.annotations.Optional;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 public class FreemarkerDefaultConfigurationFactory implements FreemarkerConfigurationFactory {
-    @Override
-    public Configuration getInstance() {
-        return null;
+
+    protected final Configuration configuration;
+
+    @Inject
+    public FreemarkerDefaultConfigurationFactory(@Optional final ServletContext servletContext) {
+        super();
+
+        // Create different loaders.
+        final List<TemplateLoader> loaders = Lists.newArrayList();
+        if (servletContext != null) {
+            loaders.add(new WebappTemplateLoader(servletContext));
+        }
+        loaders.add(new ClassTemplateLoader(FreemarkerDefaultConfigurationFactory.class, "/"));
+        try {
+            loaders.add(new FileTemplateLoader(new File("/")));
+        } catch (IOException e) {
+            // NOOP
+        }
+
+        // Create Base configuration.
+        configuration = new Configuration();
+        configuration.setTemplateLoader(new MultiTemplateLoader(loaders.toArray(new TemplateLoader[loaders.size()])));
+
     }
+
+    @Override
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
 }
