@@ -64,7 +64,6 @@ import org.jvnet.hk2.annotations.Optional;
 
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * {@link org.glassfish.jersey.server.mvc.spi.TemplateProcessor Template processor} providing support for Freemarker templates.
