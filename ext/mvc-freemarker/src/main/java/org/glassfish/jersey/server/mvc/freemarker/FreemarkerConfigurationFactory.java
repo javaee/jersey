@@ -43,6 +43,6 @@ import freemarker.template.Configuration;
 
 public interface FreemarkerConfigurationFactory {
 
-    public Configuration getInstance();
+    public Configuration getConfiguration();
 
 }
