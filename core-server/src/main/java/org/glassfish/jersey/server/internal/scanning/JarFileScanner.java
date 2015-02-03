@@ -58,7 +58,7 @@ public final class JarFileScanner implements ResourceFinder {
 
     private static final Logger LOGGER = Logger.getLogger(JarFileScanner.class.getName());
     // platform independent file separator within the jar file
-    private static final char JAR_FILE_SEPARATOR = '\\';
+    private static final char JAR_FILE_SEPARATOR = '/';
 
     private final JarInputStream jarInputStream;
     private final String parent;
@@ -91,14 +91,17 @@ public final class JarFileScanner implements ResourceFinder {
                         break;
                     }
                     if (!next.isDirectory() && next.getName().startsWith(parent)) {
+                        final String suffix = next.getName().substring(parent.length());
                         if (recursive) {
                             // accept any entries with the prefix
-                            break;
-                        }
-                        // accept only entries directly in the folder.
-                        final String suffix = next.getName().substring(parent.length());
-                        if (suffix.lastIndexOf(JAR_FILE_SEPARATOR) <= 0) {
-                            break;
+                            if (parent.isEmpty() || suffix.indexOf(JAR_FILE_SEPARATOR) == 0) {
+                                break;
+                            }
+                        } else {
+                            // accept only entries directly in the folder.
+                            if (suffix.lastIndexOf(JAR_FILE_SEPARATOR) == (parent.isEmpty() ? -1 : 0)) {
+                                break;
+                            }
                         }
                     }
                 } while (true);
