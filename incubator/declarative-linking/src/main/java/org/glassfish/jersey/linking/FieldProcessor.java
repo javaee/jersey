@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,17 +40,16 @@
 
 package org.glassfish.jersey.linking;
 
+import java.lang.Iterable;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import org.glassfish.jersey.linking.mapping.ResourceMappingContext;
 import org.glassfish.jersey.server.ExtendedUriInfo;
 
@@ -105,7 +104,7 @@ class FieldProcessor<T> {
 
         // Process any @Link annotated fields in entity
         for (FieldDescriptor field : instanceDescriptor.getLinkFields()) {
-            
+
             // TODO replace with properly poly-morphic code
             if (field instanceof InjectLinkFieldDescriptor)
             {
@@ -115,7 +114,7 @@ class FieldProcessor<T> {
                     linkField.setPropertyValue(instance, uri);
                 }
             } else if (field instanceof InjectLinksFieldDescriptor) {
-                
+
                 InjectLinksFieldDescriptor linksField = (InjectLinksFieldDescriptor) field;
                 List<Link> list = new ArrayList<Link>();
                 for (InjectLinkFieldDescriptor linkField : linksField.getLinksToInject())
@@ -124,34 +123,39 @@ class FieldProcessor<T> {
                        URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo, rmc);
                        Link link = linkField.getLink(uri);
                        list.add(link);
-                    }   
+                    }
                 }
-                
+
                 linksField.setPropertyValue(instance, list);
             }
         }
 
-        
-        
-        // If entity is an array or collection then process members
+        // If entity is an array, collection or map then process members
+        // Otherwise recursively process all fields
+        for (Object member : getMembers(instance)) {
+            processMember(entity, resource, member, processed, uriInfo, rmc);
+        }
+    }
+
+    private Iterable getMembers(final Object instance) {
         Class<?> instanceClass = instance.getClass();
         if (instanceClass.isArray() && Object[].class.isAssignableFrom(instanceClass)) {
-            Object array[] = (Object[]) instance;
-            for (Object member : array) {
-                processMember(entity, resource, member, processed, uriInfo,rmc);
-            }
-        } else if (instance instanceof Collection) {
-            Collection collection = (Collection) instance;
-            for (Object member : collection) {
-                processMember(entity, resource, member, processed, uriInfo,rmc);
-            }
-        } else {
-            // Recursively process all member fields
-            for (FieldDescriptor member : instanceDescriptor.getNonLinkFields()) {
-                processMember(entity, resource, member.getFieldValue(instance), processed, uriInfo,rmc);
-            }
-        }
+            return Arrays.asList((Object[]) instance);
 
+        } else if (instance instanceof Collection) {
+            return (Collection) instance;
+
+        } else if (instance instanceof Map) {
+            return ((Map) instance).values();
+
+        } else {
+            return Iterables.transform(instanceDescriptor.getNonLinkFields(), new Function<FieldDescriptor, Object>() {
+                @Override
+                public Object apply(FieldDescriptor input) {
+                    return input.getFieldValue(instance);
+                }
+            });
+        }
     }
 
     private void processMember(Object entity, Object resource, Object member, Set<Object> processed, UriInfo uriInfo,
