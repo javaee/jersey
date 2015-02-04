@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,148 +39,77 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.Inflecting;
-import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
-
-import org.glassfish.hk2.api.Factory;
-
-import jersey.repackaged.com.google.common.base.Function;
 
 /**
  * Routing tree assembly utilities.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public final class Routers {
+final class Routers {
 
-    private Routers() {
-        // prevents instantiation
-    }
-
-    /**
-     * Creates a leaf-node {@link Router} that implements {@link org.glassfish.jersey.process.internal.Inflecting}
-     * interface and returns the provided {@link org.glassfish.jersey.process.Inflector} instance
-     * when the {@link org.glassfish.jersey.process.internal.Inflecting#inflector()} method is called.
-     * {@link Router#apply} method of the created hierarchical router returns the unchanged request and an empty
-     * continuation iterator.
-     *
-     * @param inflector a request to response transformation to be wrapped in an
-     *                  {@code Router} instance.
-     * @return an {@code Router} that wraps the supplied {@code Inflector}.
-     */
-    @SuppressWarnings("unchecked")
-    public static Router asTreeAcceptor(final Inflector<RequestProcessingContext, ContainerResponse> inflector) {
-        return new InflectingRouter(inflector);
-    }
-
-    /**
-     * Start building a hierarchical routing tree.
-     *
-     * @param transformation root transformation function.
-     * @return hierarchical accepting tree builder.
-     */
-    public static Router.Builder acceptingTree(
-            Function<RequestProcessingContext, RequestProcessingContext> transformation) {
-        return new RouterBuilder(transformation);
-    }
-
-    public interface RootRouteBuilder<T> extends RouteBuilder<T> {
-
-        Router root(Router routingRoot);
-    }
-
-    public interface RouteBuilder<T> {
-
-        RouteToBuilder<T> route(String pattern);
-
-        RouteToBuilder<T> route(T pattern);
-    }
-
-    public interface RouteToBuilder<T> {
-
-        RouteToPathBuilder<T> to(Router.Builder ab);
-
-        RouteToPathBuilder<T> to(Router a);
-
-        RouteToPathBuilder<T> to(Class<? extends Router> ca);
-
-        RouteToPathBuilder<T> to(Factory<? extends Router> pa);
-    }
-
-    public interface RouteToPathBuilder<T> extends RouteBuilder<T>, RouteToBuilder<T>, Router.Builder {
-    }
-
-    private static class InflectingRouter
-            implements Router, Inflecting<RequestProcessingContext, ContainerResponse> {
-
-        private final Inflector<RequestProcessingContext, ContainerResponse> inflector;
-
-        public InflectingRouter(final Inflector<RequestProcessingContext, ContainerResponse> inflector) {
-            this.inflector = inflector;
-        }
+    private static final Router IDENTITY_ROUTER = new Router() {
 
         @Override
-        public Inflector<RequestProcessingContext, ContainerResponse> inflector() {
-            return inflector;
+        public Continuation apply(final RequestProcessingContext data) {
+            return Continuation.of(data);
+        }
+    };
+
+    private Routers() {
+        throw new AssertionError("No instances of this class.");
+    }
+
+    /**
+     * Create a terminal "no-op router" that accepts any input context and returns the unchanged request and an empty
+     * continuation iterator.
+     *
+     * @return a terminal "no-op" router.
+     */
+    public static Router noop() {
+        return IDENTITY_ROUTER;
+    }
+
+    /**
+     * Creates a terminal {@link Router} that wraps the given {@link org.glassfish.jersey.server.internal.process.Endpoint
+     * endpoint}.
+     *
+     * The {@link Router#apply} method of the created hierarchical router returns the unchanged request and an empty
+     * continuation iterator.
+     *
+     * @param endpoint a server-side endpoint to be wrapped in a router instance.
+     * @return a router that wraps the supplied endpoint.
+     */
+    public static Router endpoint(final Endpoint endpoint) {
+        return new EndpointRouter(endpoint);
+    }
+
+    /**
+     * Extract endpoint stored in a router (if any).
+     *
+     * @param router router from which a server endpoint should be extracted.
+     * @return extracted endpoint or {@code null} if there was no endpoint stored in the router.
+     */
+    public static Endpoint extractEndpoint(final Router router) {
+        if (router instanceof EndpointRouter) {
+            return ((EndpointRouter) router).endpoint;
+        }
+
+        return null;
+    }
+
+    private static class EndpointRouter implements Router {
+
+        private final Endpoint endpoint;
+
+        public EndpointRouter(final Endpoint endpoint) {
+            this.endpoint = endpoint;
         }
 
         @Override
         public Continuation apply(RequestProcessingContext context) {
             return Continuation.of(context);
-        }
-    }
-
-    private static class RouterBuilder implements Router.Builder {
-
-        private final Function<RequestProcessingContext, RequestProcessingContext> transformation;
-        private List<Router> children;
-
-        public RouterBuilder(Function<RequestProcessingContext, RequestProcessingContext> transformation) {
-            this.transformation = transformation;
-        }
-
-        @Override
-        public Router.Builder child(Router child) {
-            if (children == null) {
-                children = new LinkedList<>();
-            }
-            children.add(child);
-
-            return this;
-        }
-
-        @Override
-        public Router build() {
-            return (children == null)
-                    ? new LinkedRouter(transformation) : new LinkedRouter(transformation, children);
-        }
-    }
-
-    private static class LinkedRouter implements Router {
-
-        private final Function<RequestProcessingContext, RequestProcessingContext> transformation;
-        private final List<Router> children;
-
-        public LinkedRouter(
-                Function<RequestProcessingContext, RequestProcessingContext> transformation, List<Router> children) {
-            this.transformation = transformation;
-            this.children = children;
-        }
-
-        public LinkedRouter(Function<RequestProcessingContext, RequestProcessingContext> transformation) {
-            this.transformation = transformation;
-            this.children = Collections.emptyList();
-        }
-
-        @Override
-        public Continuation apply(RequestProcessingContext data) {
-            return Continuation.of(transformation.apply(data), children);
         }
     }
 }

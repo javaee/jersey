@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,11 +41,10 @@ package org.glassfish.jersey.server.internal.routing;
 
 import org.glassfish.jersey.message.internal.TracingLogger;
 import org.glassfish.jersey.process.internal.AbstractChainableStage;
-import org.glassfish.jersey.process.internal.Inflecting;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
+import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 
@@ -53,14 +52,13 @@ import org.glassfish.jersey.server.monitoring.RequestEvent;
  * Request pre-processing stage that encapsulates hierarchical resource matching
  * and request routing.
  *
- * Once the routing is finished, an inflector (if found) is {@link
- * RoutingContext#setInflector(org.glassfish.jersey.process.Inflector) stored in the
- * routing context}.
+ * Once the routing is finished, an endpoint (if matched) is
+ * {@link RoutingContext#setEndpoint stored in the routing context}.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @see RoutedInflectorExtractorStage
+ * @see MatchedEndpointExtractorStage
  */
-public class RoutingStage extends AbstractChainableStage<RequestProcessingContext> {
+final class RoutingStage extends AbstractChainableStage<RequestProcessingContext> {
 
     private final Router routingRoot;
 
@@ -69,7 +67,7 @@ public class RoutingStage extends AbstractChainableStage<RequestProcessingContex
      *
      * @param routingRoot root router.
      */
-    public RoutingStage(final Router routingRoot) {
+     RoutingStage(final Router routingRoot) {
         this.routingRoot = routingRoot;
     }
 
@@ -91,43 +89,59 @@ public class RoutingStage extends AbstractChainableStage<RequestProcessingContex
         final TracingLogger tracingLogger = TracingLogger.getInstance(request);
         final long timestamp = tracingLogger.timestamp(ServerTraceEvent.MATCH_SUMMARY);
         try {
-            final TransformableData<RequestProcessingContext, ContainerResponse> result = _apply(context, routingRoot);
+            final RoutingResult result = _apply(context, routingRoot);
 
             Stage<RequestProcessingContext> nextStage = null;
-            if (result.hasInflector()) {
-                context.routingContext().setInflector(result.inflector());
+            if (result.endpoint != null) {
+                context.routingContext().setEndpoint(result.endpoint);
                 nextStage = getDefaultNext();
             }
 
-            return Continuation.of(result.data(), nextStage);
+            return Continuation.of(result.context, nextStage);
         } finally {
             tracingLogger.logDuration(ServerTraceEvent.MATCH_SUMMARY, timestamp);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private TransformableData<RequestProcessingContext, ContainerResponse> _apply(
-            final RequestProcessingContext request, final Router router) {
+    private RoutingResult _apply(final RequestProcessingContext request, final Router router) {
 
         final Router.Continuation continuation = router.apply(request);
 
         for (Router child : continuation.next()) {
-            TransformableData<RequestProcessingContext, ContainerResponse> result =
-                    _apply(continuation.requestContext(), child);
+            RoutingResult result = _apply(continuation.requestContext(), child);
 
-            if (result.hasInflector()) {
+            if (result.endpoint != null) {
                 // we're done
                 return result;
             } // else continue
         }
 
-        if (router instanceof Inflecting) {
+        Endpoint endpoint = Routers.extractEndpoint(router);
+        if (endpoint != null) {
             // inflector at terminal stage found
-            return TransformableData.of(continuation.requestContext(),
-                    ((Inflecting<RequestProcessingContext, ContainerResponse>) router).inflector());
+            return RoutingResult.from(continuation.requestContext(), endpoint);
         }
 
         // inflector at terminal stage not found
-        return TransformableData.of(continuation.requestContext());
+        return RoutingResult.from(continuation.requestContext());
+    }
+
+    private static final class RoutingResult {
+        private final RequestProcessingContext context;
+        private final Endpoint endpoint;
+
+        private static RoutingResult from(final RequestProcessingContext requestProcessingContext, final Endpoint endpoint) {
+            return new RoutingResult(requestProcessingContext, endpoint);
+        }
+
+        private static RoutingResult from(final RequestProcessingContext requestProcessingContext) {
+            return new RoutingResult(requestProcessingContext, null);
+        }
+
+        private RoutingResult(final RequestProcessingContext context, final Endpoint endpoint) {
+            this.context = context;
+            this.endpoint = endpoint;
+        }
     }
 }

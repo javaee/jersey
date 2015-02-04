@@ -96,6 +96,7 @@ import org.glassfish.jersey.model.internal.ComponentBag;
 import org.glassfish.jersey.model.internal.RankedComparator;
 import org.glassfish.jersey.model.internal.RankedComparator.Order;
 import org.glassfish.jersey.model.internal.RankedProvider;
+import org.glassfish.jersey.process.internal.ChainableStage;
 import org.glassfish.jersey.process.internal.Stage;
 import org.glassfish.jersey.process.internal.Stages;
 import org.glassfish.jersey.server.internal.ConfigHelper;
@@ -108,15 +109,11 @@ import org.glassfish.jersey.server.internal.monitoring.CompositeApplicationEvent
 import org.glassfish.jersey.server.internal.monitoring.MonitoringContainerListener;
 import org.glassfish.jersey.server.internal.process.ReferencesInitializer;
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
-import org.glassfish.jersey.server.internal.routing.RoutedInflectorExtractorStage;
-import org.glassfish.jersey.server.internal.routing.Router;
-import org.glassfish.jersey.server.internal.routing.RoutingStage;
-import org.glassfish.jersey.server.internal.routing.RuntimeModelBuilder;
+import org.glassfish.jersey.server.internal.routing.Routing;
 import org.glassfish.jersey.server.model.ComponentModelValidator;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.ModelValidationException;
 import org.glassfish.jersey.server.model.Resource;
-import org.glassfish.jersey.server.model.ResourceMethodInvoker;
 import org.glassfish.jersey.server.model.ResourceModel;
 import org.glassfish.jersey.server.model.internal.ModelErrors;
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
@@ -162,7 +159,6 @@ import jersey.repackaged.com.google.common.util.concurrent.AbstractFuture;
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
- *
  * @see ResourceConfig
  * @see javax.ws.rs.core.Configuration
  * @see org.glassfish.jersey.server.spi.ContainerProvider
@@ -446,7 +442,9 @@ public final class ApplicationHandler {
 
             if (extScopes.length == 1) {
                 for (final ComponentProvider p : componentProviders) {
-                    if (p.bind(extScopes[0], new HashSet<Class<?>>(){{add(ExternalRequestScope.class);}})) {
+                    if (p.bind(extScopes[0], new HashSet<Class<?>>() {{
+                        add(ExternalRequestScope.class);
+                    }})) {
                         extScopesFound = true;
                         break;
                     }
@@ -463,7 +461,7 @@ public final class ApplicationHandler {
 
             if (!extScopesFound) {
                 final DynamicConfiguration configuration = Injections.getConfiguration(locator);
-                final ScopedBindingBuilder<ExternalRequestScope> binder = Injections.newBinder((ExternalRequestScope)ServerRuntime.NOOP_EXTERNAL_REQ_SCOPE).to(ExternalRequestScope.class);
+                final ScopedBindingBuilder<ExternalRequestScope> binder = Injections.newBinder((ExternalRequestScope) ServerRuntime.NOOP_EXTERNAL_REQ_SCOPE).to(ExternalRequestScope.class);
                 Injections.addBinding(binder, configuration);
                 configuration.commit();
             }
@@ -474,7 +472,7 @@ public final class ApplicationHandler {
             }
 
             final Iterable<ApplicationEventListener> appEventListeners = Providers.getAllProviders(locator,
-                            ApplicationEventListener.class, new RankedComparator<ApplicationEventListener>());
+                    ApplicationEventListener.class, new RankedComparator<ApplicationEventListener>());
 
             if (appEventListeners.iterator().hasNext()) {
                 compositeListener = new CompositeApplicationEventListener(appEventListeners);
@@ -520,25 +518,20 @@ public final class ApplicationHandler {
 
         msgBodyWorkers = locator.getService(MessageBodyWorkers.class);
 
-        final RuntimeModelBuilder runtimeModelBuilder = new RuntimeModelBuilder(locator, runtimeConfig, msgBodyWorkers,
-                locator.getService(ResourceMethodInvoker.Builder.class));
-        runtimeModelBuilder.setProcessingProviders(processingProviders);
-
         // assembly request processing chain
-        /**
-         * Root hierarchical request matching acceptor.
-         * Invoked in a single linear stage as part of the main linear accepting chain.
-         */
-        final Router resourceRoutingRoot = runtimeModelBuilder.buildModel(resourceModel.getRuntimeResourceModel(), false);
-
         final ReferencesInitializer referencesInitializer = locator.createAndInitialize(ReferencesInitializer.class);
         final ContainerFilteringStage preMatchRequestFilteringStage = new ContainerFilteringStage(
                 processingProviders.getPreMatchFilters(),
                 processingProviders.getGlobalResponseFilters());
-        final RoutingStage routingStage = new RoutingStage(resourceRoutingRoot);
-        final ContainerFilteringStage resourceFilteringStage = new ContainerFilteringStage(
-                processingProviders.getGlobalRequestFilters(), null);
-        final RoutedInflectorExtractorStage routedInflectorExtractorStage = new RoutedInflectorExtractorStage();
+        final ChainableStage<RequestProcessingContext> routingStage = Routing.forModel(resourceModel.getRuntimeResourceModel())
+                .locator(locator)
+                .resourceContext(jerseyResourceContext)
+                .configuration(runtimeConfig)
+                .entityProviders(msgBodyWorkers)
+                .processingProviders(processingProviders)
+                .buildStage();
+        final ContainerFilteringStage resourceFilteringStage =
+                new ContainerFilteringStage(processingProviders.getGlobalRequestFilters(), null);
         /**
          *  Root linear request acceptor. This is the main entry point for the whole request processing.
          */
@@ -547,7 +540,7 @@ public final class ApplicationHandler {
                 .to(preMatchRequestFilteringStage)
                 .to(routingStage)
                 .to(resourceFilteringStage)
-                .build(routedInflectorExtractorStage);
+                .build(Routing.matchedEndpointExtractor());
         this.runtime = locator.createAndInitialize(ServerRuntime.Builder.class)
                 .build(rootStage, compositeListener, processingProviders);
 

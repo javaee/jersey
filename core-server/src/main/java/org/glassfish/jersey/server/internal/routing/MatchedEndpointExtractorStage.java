@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,56 +39,32 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.internal.routing.Routers.RootRouteBuilder;
-import org.glassfish.jersey.server.internal.routing.Routers.RouteBuilder;
-import org.glassfish.jersey.server.internal.routing.Routers.RouteToBuilder;
-import org.glassfish.jersey.uri.PathPattern;
-
-import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.process.internal.Stage;
+import org.glassfish.jersey.process.internal.Stages;
+import org.glassfish.jersey.server.internal.process.Endpoint;
+import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 
 /**
- * {@link RouteBuilder} implementation that builds routes which use {@link PathPattern}
- * to perform path matching.
+ * Request pre-processing stage that {@link RoutingContext#getEndpoint() extracts
+ * an inflector from a routing context} where it was previously stored by the
+ * {@link RoutingStage request to resource matching stage} and
+ * (if available) returns the inflector wrapped in a next terminal stage.
  *
- * @author Paul Sandoz
+ * This request pre-processing stage should be a final stage in the request
+ * processing chain.
+ *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @see RoutingStage
  */
-final class PathPatternRouteBuilder implements RootRouteBuilder<PathPattern> {
-
-    private final ServiceLocator locator;
-
-    /**
-     * Create new {@link PathPattern}-based route builder.
-     *
-     * @param locator application service locator.
-     */
-    PathPatternRouteBuilder(final ServiceLocator locator) {
-        this.locator = locator;
-    }
+final class MatchedEndpointExtractorStage implements Stage<RequestProcessingContext> {
 
     @Override
-    public RouteToBuilder<PathPattern> route(String pattern) {
-        return route(new PathPattern(pattern));
-    }
+    public Continuation<RequestProcessingContext> apply(final RequestProcessingContext processingContext) {
+        final Endpoint endpoint =
+                processingContext.routingContext().getEndpoint();
 
-    @Override
-    public RouteToBuilder<PathPattern> route(PathPattern pattern) {
-        return new AbstractRouteToPathBuilder<PathPattern>(locator, pattern) {
-
-            @Override
-            public RouteToBuilder<PathPattern> route(String pattern) {
-                return super.route(new PathPattern(pattern));
-            }
-
-            @Override
-            public Router build() {
-                return new PathPatternRouter(acceptedRoutes());
-            }
-        };
-    }
-
-    @Override
-    public Router root(Router routingRoot) {
-        return new MatchResultInitializerRouter(routingRoot);
+        return endpoint != null
+                ? Continuation.of(processingContext, Stages.asStage(endpoint))
+                : Continuation.of(processingContext);
     }
 }

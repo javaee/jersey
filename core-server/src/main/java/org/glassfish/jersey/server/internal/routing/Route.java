@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,54 +39,38 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.Collections;
 import java.util.List;
 
-import org.glassfish.hk2.api.Factory;
-
-import jersey.repackaged.com.google.common.base.Function;
-import jersey.repackaged.com.google.common.collect.Lists;
+import org.glassfish.jersey.uri.PathPattern;
 
 /**
  * Request routing information. Contains a {@link #routingPattern() routing pattern}
  * and a {@link #next() list of next-level stages} to be processed in case the
  * routing pattern successfully matches the un-matched right-hand part of the request.
  *
- * @param <T> routing pattern type.
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class Route<T> {
-    /**
-     * Transformation function that converts router provider into router.
-     */
-    private static final Function<Factory<Router>, Router> PROVIDER_TO_ROUTER_TRANSFORMATION =
-            new Function<Factory<Router>, Router>() {
-
-                @Override
-                public Router apply(Factory<Router> f) {
-                    return f.provide();
-                }
-            };
-
-    private final T routingPattern;
-    private final List<Factory<Router>> routerProviders;
+final class Route {
+    private final PathPattern routingPattern;
+    private final List<Router> routers;
 
     /**
      * Create a new request route.
      *
-     * @param <T>             routing pattern type.
-     * @param routingPattern  request path routing pattern.
-     * @param routerProviders next-level routers to be processed in case the routing
-     *                        pattern matches the unmatched right-hand part of the request path.
+     * @param routingPattern request path routing pattern.
+     * @param routers        next-level routers to be processed in case the routing
+     *                       pattern matches the unmatched right-hand part of the request path.
      * @return new request route.
      */
-    static <T> Route<T> of(T routingPattern, List<Factory<Router>> routerProviders) {
-        return new Route<T>(routingPattern, routerProviders);
+    static Route of(PathPattern routingPattern, List<Router> routers) {
+        return new Route(routingPattern, routers);
     }
 
-    private Route(T routingPattern, List<Factory<Router>> routerProviders) {
+    private Route(PathPattern routingPattern, List<Router> routers) {
         this.routingPattern = routingPattern;
-        this.routerProviders = routerProviders;
+        // MUST NOT try to substitute for Collections.emptyList() is the routers list is empty as it can be filled in later.
+        // See PathMatchingRouterBuilder.startNewRoute(...) method.
+        this.routers = routers;
     }
 
     /**
@@ -94,7 +78,7 @@ final class Route<T> {
      *
      * @return request path routing pattern.
      */
-    public T routingPattern() {
+    public PathPattern routingPattern() {
         return routingPattern;
     }
 
@@ -105,10 +89,6 @@ final class Route<T> {
      * @return routed next-level next.
      */
     public List<Router> next() {
-        if (routerProviders.isEmpty()) {
-            return Collections.emptyList();
-        } else {
-            return Lists.transform(routerProviders, Route.PROVIDER_TO_ROUTER_TRANSFORMATION);
-        }
+        return routers;
     }
 }

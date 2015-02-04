@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,33 +39,33 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.Stage;
-import org.glassfish.jersey.process.internal.Stages;
-import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
+import org.glassfish.jersey.server.model.ResourceModel;
 
 /**
- * Request pre-processing stage that {@link RoutingContext#getInflector() extracts
- * an inflector from a routing context} where it was previously stored by the
- * {@link RoutingStage request to resource matching stage} and
- * (if available) returns the inflector wrapped in a next terminal stage.
+ * A pair of sub-resource locator model and a corresponding model router.
  *
- * This request pre-processing stage should be a final stage in the request
- * processing chain.
- *
- * @author Marek Potociar (marek.potociar at oracle.com)
- * @see RoutingStage
+ * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public class RoutedInflectorExtractorStage implements Stage<RequestProcessingContext> {
+final class LocatorRouting {
 
-    @Override
-    public Continuation<RequestProcessingContext> apply(final RequestProcessingContext processingContext) {
-        final Inflector<RequestProcessingContext, ContainerResponse> inflector =
-                processingContext.routingContext().getInflector();
+    /**
+     * Sub-resource locator model.
+     */
+    final ResourceModel locator;
 
-        return inflector != null
-                ? Continuation.of(processingContext, Stages.asStage(inflector))
-                : Continuation.of(processingContext);
+    /**
+     * Sub-resource locator router.
+     */
+    final Router router;
+
+    /**
+     * Create a new instance.
+     *
+     * @param locator  sub-resource locator model.
+     * @param router router that is needed to execute the {@code model}.
+     */
+    LocatorRouting(final ResourceModel locator, final Router router) {
+        this.locator = locator;
+        this.router = router;
     }
 }

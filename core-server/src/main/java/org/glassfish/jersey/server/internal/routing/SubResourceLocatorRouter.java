@@ -75,7 +75,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @author Miroslav Fuksa
  */
-class SubResourceLocatorRouter implements Router {
+final class SubResourceLocatorRouter implements Router {
 
     private final ResourceMethod locatorModel;
     private final List<Factory<?>> valueProviders;
@@ -114,11 +114,11 @@ class SubResourceLocatorRouter implements Router {
 
         final RoutingContext routingContext = processingContext.routingContext();
 
-        final LocatorAcceptorPair acceptor;
+        final LocatorRouting routing;
         if (subResourceInstance instanceof Resource) {
             // Caching here is disabled by default. It can be enabled by setting
             // ServerProperties.SUBRESOURCE_LOCATOR_CACHE_JERSEY_RESOURCE_ENABLED to true.
-            acceptor = runtimeLocatorBuilder.buildLocator((Resource) subResourceInstance);
+            routing = runtimeLocatorBuilder.getRouting((Resource) subResourceInstance);
         } else {
             Class<?> locatorClass = subResourceInstance.getClass();
 
@@ -126,7 +126,7 @@ class SubResourceLocatorRouter implements Router {
                 // subResourceInstance is class itself
                 locatorClass = (Class<?>) subResourceInstance;
 
-                if (!runtimeLocatorBuilder.containsAcceptorFor(locatorClass)) {
+                if (!runtimeLocatorBuilder.isCached(locatorClass)) {
                     // If we can't create an instance of the class, don't proceed.
                     subResourceInstance = Injections.getOrCreate(locator, locatorClass);
                 }
@@ -134,13 +134,13 @@ class SubResourceLocatorRouter implements Router {
             routingContext.pushMatchedResource(subResourceInstance);
             resourceContext.bindResourceIfSingleton(subResourceInstance);
 
-            acceptor = runtimeLocatorBuilder.buildLocator(locatorClass);
+            routing = runtimeLocatorBuilder.getRouting(locatorClass);
         }
 
-        routingContext.pushLocatorSubResource(acceptor.model.getResources().get(0));
+        routingContext.pushLocatorSubResource(routing.locator.getResources().get(0));
         processingContext.triggerEvent(RequestEvent.Type.SUBRESOURCE_LOCATED);
 
-        return Continuation.of(processingContext, acceptor.router);
+        return Continuation.of(processingContext, routing.router);
     }
 
     private Object getResource(final RequestProcessingContext context) {

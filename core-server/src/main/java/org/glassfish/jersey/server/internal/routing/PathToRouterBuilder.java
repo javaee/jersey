@@ -39,51 +39,26 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.List;
-
-import org.glassfish.jersey.server.model.ResourceMethod;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
- * A pair of resource method model and a corresponding resource method routers.
+ * An intermediate path matching router builder.
+ *
+ * This builder completes a routing information for a single routed {@link org.glassfish.jersey.uri.PathPattern}.
+ * In case the unmatched right-hand part of the request path is matched by the routed path pattern, the request
+ * processing context will be serially routed to all the child routers attached to the routing pattern using this
+ * routing completion builder.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class MethodAcceptorPair {
+@SuppressWarnings("ClassReferencesSubclass")
+interface PathToRouterBuilder {
 
     /**
-     * Resource method model.
-     */
-    final ResourceMethod model;
-
-    /**
-     * Resource method routers.
-     */
-    final List<Router> router;
-
-    /**
-     * Create a new instance.
+     * Register a new next-level router to be used for request routing in case the routing pattern matches the
+     * unmatched right-hand part of the request path.
      *
-     * @param model  Resource method handler.
-     * @param router List of routers that are needed to execute the {@code model}. These routers should contain
-     *               final {@link org.glassfish.jersey.process.internal.Inflecting inflecting router} as the last router
-     *               in the list.
+     * @param router new next-level router to be registered with the routed path pattern.
+     * @return updated route builder ready to build a new {@link Router router} instance
+     * (or add more routes to the currently built one).
      */
-    MethodAcceptorPair(final ResourceMethod model, final List<Router> router) {
-        this.model = model;
-        this.router = router;
-    }
-
-    /**
-     * Create a new instance.
-     *
-     * @param model   Resource method handler.
-     * @param routers Routers that are needed to execute the {@code model}. These routers should contain
-     *                final {@link org.glassfish.jersey.process.internal.Inflecting inflecting router} as the last router.
-     */
-    MethodAcceptorPair(final ResourceMethod model, final Router... routers) {
-        this.model = model;
-        this.router = Lists.newArrayList(routers);
-    }
+    PathMatchingRouterBuilder to(Router router);
 }

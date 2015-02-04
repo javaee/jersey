@@ -81,6 +81,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      *
      * @param resourceMethod invocable resource class Java method.
      * @param methodHandler  method invocation handler.
+     * @param validator      input/output parameter validator.
      */
     AbstractJavaResourceMethodDispatcher(Invocable resourceMethod, InvocationHandler methodHandler, ConfiguredValidator validator) {
         this.method = resourceMethod.getDefinitionMethod();
@@ -107,6 +108,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * @param resource resource class instance.
      * @param request  request to be dispatched.
      * @return response for the dispatched request.
+     *
      * @throws ProcessingException in case of a processing error.
      * @see ResourceMethodDispatcher#dispatch(Object, org.glassfish.jersey.server.ContainerRequest)
      */
@@ -116,9 +118,11 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
      * Use the underlying invocation handler to invoke the underlying Java method
      * with the supplied input method argument values on a given resource instance.
      *
-     * @param resource resource class instance.
-     * @param args     input argument values for the invoked Java method.
+     * @param containerRequest container request.
+     * @param resource         resource class instance.
+     * @param args             input argument values for the invoked Java method.
      * @return invocation result.
+     *
      * @throws ProcessingException (possibly {@link MappableException mappable})
      *                             container exception in case the invocation failed.
      */
@@ -138,11 +142,7 @@ abstract class AbstractJavaResourceMethodDispatcher implements ResourceMethodDis
 
                         return methodHandler.invoke(resource, method, args);
 
-                    } catch (IllegalAccessException ex) {
-                        throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
-                    } catch (IllegalArgumentException ex) {
-                        throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
-                    } catch (UndeclaredThrowableException ex) {
+                    } catch (IllegalAccessException | IllegalArgumentException | UndeclaredThrowableException ex) {
                         throw new ProcessingException(LocalizationMessages.ERROR_RESOURCE_JAVA_METHOD_INVOCATION(), ex);
                     } catch (InvocationTargetException ex) {
                         throw mapTargetToRuntimeEx(ex.getCause());

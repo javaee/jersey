@@ -39,104 +39,80 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.regex.MatchResult;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.glassfish.jersey.uri.PathPattern;
 
 /**
- * {@link MatchResult} implementation that returns the nested string as a
- * single matching result. This match result mimics matching of a single
- * matching group with group index 0 (the one containing the whole expression).
+ /**
+ * A request path pattern matching router hierarchy builder entry point.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class SingleMatchResult implements MatchResult {
+final class PathMatchingRouterBuilder implements PathToRouterBuilder {
 
-    private final String path;
+    private final List<Route> acceptedRoutes = new LinkedList<>();
+    private List<Router> currentRouters;
+
 
     /**
-     * Construct a match result matching the whole supplied path.
+     * Create new request path pattern matching router builder.
      *
-     * @param path matched path.
+     * @param pattern request path matching pattern.
+     * @return new request path pattern matching router builder.
      */
-    public SingleMatchResult(final String path) {
-        this.path = stripMatrixParams(path);
+    static PathToRouterBuilder newRoute(final PathPattern pattern) {
+        final PathMatchingRouterBuilder builder = new PathMatchingRouterBuilder();
+        builder.startNewRoute(pattern);
+        return builder;
+    }
+
+    private PathMatchingRouterBuilder() {
+        // preventing direct instantiation
+    }
+
+    private void startNewRoute(final PathPattern pattern) {
+        currentRouters = new LinkedList<>();
+        acceptedRoutes.add(Route.of(pattern, currentRouters));
     }
 
     /**
-     * Strip the matrix parameters from a path.
+     * Get the list of the registered sub-routes.
      *
-     * @return path stripped of matrix parameters.
+     * @return list of the registered sub-routes.
      */
-    private static String stripMatrixParams(final String path) {
-        int e = path.indexOf(";");
-        if (e == -1) {
-            return path;
-        }
-
-        int s = 0;
-        StringBuilder sb = new StringBuilder();
-        do {
-            // Append everything up to but not including the ';'
-            sb.append(path, s, e);
-
-            // Skip everything up to but not including the '/'
-            s = path.indexOf("/", e + 1);
-            if (s == -1) {
-                break;
-            }
-            e = path.indexOf(";", s);
-        } while (e != -1);
-
-        if (s != -1) {
-            // Append any remaining characters
-            sb.append(path, s, path.length());
-        }
-
-        return sb.toString();
-    }
-
-
-    @Override
-    public int start() {
-        return 0;
+    protected List<Route> acceptedRoutes() {
+        return acceptedRoutes;
     }
 
     @Override
-    public int start(final int group) {
-        if (group == 0) {
-            return start();
-        }
-        throw new IndexOutOfBoundsException();
+    public PathMatchingRouterBuilder to(final Router router) {
+        currentRouters.add(router);
+        return this;
     }
 
-    @Override
-    public int end() {
-        return path.length();
+    /**
+     * Complete the currently built unfinished sub-route (if any) and start building a new one.
+     *
+     * The completed sub-route is added to the list of the routes accepted by the router that is being built.
+     *
+     * @param pattern routing pattern for the new sub-route.
+     * @return updated router builder.
+     */
+    public PathToRouterBuilder route(final PathPattern pattern) {
+        startNewRoute(pattern);
+        return this;
     }
 
-    @Override
-    public int end(final int group) {
-        if (group == 0) {
-            return end();
-        }
-        throw new IndexOutOfBoundsException();
+    /**
+     * Build a {@link org.glassfish.jersey.server.internal.routing.Router hierarchical request path matching processor}.
+     *
+     * @return hierarchical request path matching processor (i.e. router).
+     */
+    public PathMatchingRouter build() {
+        return new PathMatchingRouter(acceptedRoutes());
     }
 
-    @Override
-    public String group() {
-        return path;
-    }
-
-    @Override
-    public String group(final int group) {
-        if (group == 0) {
-            return group();
-        }
-        throw new IndexOutOfBoundsException();
-    }
-
-    @Override
-    public int groupCount() {
-        return 0;
-    }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -49,15 +49,14 @@ import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 import org.glassfish.jersey.uri.PathPattern;
 
 /**
- * Matches the un-matched right-hand request path to a configured
- * {@link PathPattern path pattern}.
+ * Matches the un-matched right-hand request path to the configured collection of path pattern matching routes.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-class PathPatternRouter implements Router {
+final class PathMatchingRouter implements Router {
 
-    private final List<Route<PathPattern>> acceptedRoutes;
+    private final List<Route> acceptedRoutes;
 
     /**
      * Constructs route methodAcceptorPair that uses {@link PathPattern} instances for
@@ -66,8 +65,7 @@ class PathPatternRouter implements Router {
      * @param routes   next-level request routers to be returned in case the router matching
      *                 the built router is successful.
      */
-    PathPatternRouter(final List<Route<PathPattern>> routes) {
-
+    PathMatchingRouter(final List<Route> routes) {
         this.acceptedRoutes = routes;
     }
 
@@ -81,9 +79,9 @@ class PathPatternRouter implements Router {
         tracingLogger.log(ServerTraceEvent.MATCH_PATH_FIND, path);
 
         Router.Continuation result = null;
-        final Iterator<Route<PathPattern>> iterator = acceptedRoutes.iterator();
+        final Iterator<Route> iterator = acceptedRoutes.iterator();
         while (iterator.hasNext()) {
-            final Route<PathPattern> acceptedRoute = iterator.next();
+            final Route acceptedRoute = iterator.next();
             final PathPattern routePattern = acceptedRoute.routingPattern();
             final MatchResult m = routePattern.match(path);
             if (m != null) {
@@ -107,7 +105,7 @@ class PathPatternRouter implements Router {
 
         if (result == null) {
             // No match
-            result = Router.Continuation.of(context);
+            return Router.Continuation.of(context);
         }
 
         return result;
