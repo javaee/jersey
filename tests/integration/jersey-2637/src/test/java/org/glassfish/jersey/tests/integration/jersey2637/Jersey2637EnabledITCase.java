@@ -40,6 +40,9 @@
 
 package org.glassfish.jersey.tests.integration.jersey2637;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Form;
@@ -51,13 +54,24 @@ import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * Reproducer tests for JERSEY-2637.
+ * Reproducer tests for JERSEY-2637 - Query params can be injected using {@link javax.ws.rs.FormParam}.
  */
-public class Jersey2637ITCase extends JerseyTest {
+@RunWith(Parameterized.class)
+public class Jersey2637EnabledITCase extends JerseyTest {
+
+    @Parameterized.Parameters(name = "path = {0}")
+    public static Collection<Object[]> paths() {
+        return Arrays.asList(new Object[][]{{"defaut"}, {"enabled"}});
+    }
+
+    @Parameterized.Parameter
+    public String path;
 
     @Override
     protected Application configure() {
@@ -75,40 +89,40 @@ public class Jersey2637ITCase extends JerseyTest {
                 .param("username", "user")
                 .param("password", "pass");
 
-        final Response response = target().request().post(Entity.form(form));
+        final Response response = target(path).request().post(Entity.form(form));
 
         assertThat(response.readEntity(String.class), is("user_pass"));
     }
 
     @Test
     public void testQueryParams() throws Exception {
-        final Response response = target()
+        final Response response = target(path)
                 .queryParam("username", "user").queryParam("password", "pass")
                 .request()
                 .post(Entity.form(new Form()));
 
-        assertThat(response.readEntity(String.class), is("ko_ko"));
+        assertThat(response.readEntity(String.class), is("user_pass"));
     }
 
     @Test
     public void testDoubleQueryParams() throws Exception {
-        final Response response = target()
+        final Response response = target(path)
                 .queryParam("username", "user").queryParam("password", "pass")
                 .queryParam("username", "user").queryParam("password", "pass")
                 .request()
                 .post(Entity.form(new Form()));
 
-        assertThat(response.readEntity(String.class), is("ko_ko"));
+        assertThat(response.readEntity(String.class), is("user_pass"));
     }
 
     @Test
     public void testEncodedQueryParams() throws Exception {
-        final Response response = target()
+        final Response response = target(path)
                 .queryParam("username", "us%20er").queryParam("password", "pass")
                 .request()
                 .post(Entity.form(new Form()));
 
-        assertThat(response.readEntity(String.class), is("ko_ko"));
+        assertThat(response.readEntity(String.class), is("us er_pass"));
     }
 
     @Test
@@ -117,22 +131,7 @@ public class Jersey2637ITCase extends JerseyTest {
                 .param("username", "user")
                 .param("password", "pass");
 
-        final Response response = target()
-                .queryParam("username", "user").queryParam("password", "pass")
-                .request()
-                .post(Entity.form(form));
-
-        assertThat(response.readEntity(String.class), is("user_pass"));
-    }
-
-    @Test
-    public void testFormAndDoubleQueryParams() throws Exception {
-        final Form form = new Form()
-                .param("username", "user")
-                .param("password", "pass");
-
-        final Response response = target()
-                .queryParam("username", "user").queryParam("password", "pass")
+        final Response response = target(path)
                 .queryParam("username", "user").queryParam("password", "pass")
                 .request()
                 .post(Entity.form(form));

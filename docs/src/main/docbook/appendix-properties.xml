@@ -496,6 +496,99 @@
         </table>
     </section>
 
+    <section xml:id="appendix-properties-servlet">
+        <title>Servlet configuration properties</title>
+
+        <para>
+            List of servlet configuration properties that can be found in &jersey.servlet.ServletProperties; class.
+        </para>
+
+        <table>
+            <title>List of servlet configuration properties</title>
+            <tgroup cols="3">
+                <thead>
+                    <row>
+                        <entry>Constant</entry>
+                        <entry>Value</entry>
+                        <entry>Description</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.FILTER_CONTEXT_PATH;</entry>
+                        <entry><literal>jersey.config.servlet.filter.contextPath</literal></entry>
+                        <entry>
+                            <para>
+                                If set, indicates the URL pattern of the Jersey servlet filter context path.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.FILTER_FORWARD_ON_404;</entry>
+                        <entry><literal>jersey.config.servlet.filter.forwardOn404</literal></entry>
+                        <entry>
+                            <para>
+                                If set to <literal>true</literal> and a 404 response with no entity body is returned from either
+                                the runtime or the application then the runtime forwards the request to the next filter in the
+                                filter chain. This enables another filter or the underlying servlet engine to process the request.
+                                Before the request is forwarded the response status is set to 200.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.FILTER_STATIC_CONTENT_REGEX;</entry>
+                        <entry><literal>jersey.config.servlet.filter.staticContentRegex</literal></entry>
+                        <entry>
+                            <para>
+                                If set the regular expression is used to match an incoming servlet path URI to some web page
+                                content such as static resources or JSPs to be handled by the underlying servlet engine.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.JAXRS_APPLICATION_CLASS;</entry>
+                        <entry><literal>javax.ws.rs.Application</literal></entry>
+                        <entry>
+                            <para>
+                                Application configuration initialization property whose value is a fully qualified class name of a
+                                class that implements JAX-RS Application.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.PROVIDER_WEB_APP;</entry>
+                        <entry><literal>jersey.config.servlet.provider.webapp</literal></entry>
+                        <entry>
+                            <para>
+                                Indicates that Jersey should scan the whole web app for application-specific resources and
+                                providers.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.QUERY_PARAMS_AS_FORM_PARAMS_DISABLED;</entry>
+                        <entry><literal>jersey.config.servlet.form.queryParams.disabled</literal></entry>
+                        <entry>
+                            <para>
+                                If <literal>true</literal> then query parameters will not be treated as form parameters
+                                (e.g. injectable using @FormParam) in case a Form request is processed by server.
+                            </para>
+                        </entry>
+                    </row>
+                    <row>
+                        <entry>&jersey.servlet.ServletProperties.SERVICE_LOCATOR;</entry>
+                        <entry><literal>jersey.config.servlet.context.serviceLocator</literal></entry>
+                        <entry>
+                            <para>
+                                Identifies the object that will be used as a parent ServiceLocator in the Jersey WebComponent.
+                            </para>
+                        </entry>
+                    </row>
+                </tbody>
+            </tgroup>
+        </table>
+    </section>
+
     <section xml:id="appendix-properties-client">
         <title>Client configuration properties</title>
 

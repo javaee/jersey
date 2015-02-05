@@ -908,7 +908,7 @@ public class MyApplication extends ResourceConfig {
             <title>Jersey Servlet container modules</title>
 
             <para>
-                Jersey uses its own <literal>&jersey.containers.ServletContainer;</literal> implementation of Servlet and
+                Jersey uses its own <literal>&jersey.servlet.ServletContainer;</literal> implementation of Servlet and
                 Servlet Filter API to integrate with Servlet containers. As any JAX-RS runtime, Jersey provides support
                 for Servlet containers that support Servlet specification version 2.5 and higher. To support JAX-RS 2.0
                 asynchronous resources on top of a Servlet container, support for Servlet specification version 3.0 or higher
