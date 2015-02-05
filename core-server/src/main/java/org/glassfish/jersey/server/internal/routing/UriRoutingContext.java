@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,13 +55,9 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.glassfish.jersey.message.internal.TracingLogger;
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ContainerRequest;
-import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.ExtendedUriInfo;
 import org.glassfish.jersey.server.internal.ServerTraceEvent;
-import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
+import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.ResourceMethodInvoker;
@@ -78,8 +74,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-@RequestScoped
-public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
+public class UriRoutingContext implements RoutingContext {
 
     private final LinkedList<MatchResult> matchResults = Lists.newLinkedList();
     private final LinkedList<Object> matchedResources = Lists.newLinkedList();
@@ -96,8 +91,7 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     private ImmutableMultivaluedMap<String, String> decodedQueryParamsView;
 
     private final LinkedList<String> paths = Lists.newLinkedList();
-    // TODO re-type to endpoint?
-    private Inflector<RequestProcessingContext, ContainerResponse> inflector;
+    private Endpoint endpoint;
     private final LinkedList<RuntimeResource> matchedRuntimeResources = Lists.newLinkedList();
     private volatile ResourceMethod matchedResourceMethod = null;
     private final LinkedList<ResourceMethod> matchedLocators = Lists.newLinkedList();
@@ -184,11 +178,6 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
     }
 
     @Override
-    public MatchResult peekMatchResult() {
-        return matchResults.peek();
-    }
-
-    @Override
     public String getFinalMatchingGroup() {
         final MatchResult mr = matchResults.peek();
         if (mr == null) {
@@ -208,15 +197,14 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
         return matchResults;
     }
 
-
     @Override
-    public void setInflector(final Inflector<RequestProcessingContext, ContainerResponse> inflector) {
-        this.inflector = inflector;
+    public void setEndpoint(final Endpoint endpoint) {
+        this.endpoint = endpoint;
     }
 
     @Override
-    public Inflector<RequestProcessingContext, ContainerResponse> getInflector() {
-        return inflector;
+    public Endpoint getEndpoint() {
+        return endpoint;
     }
 
     @Override
@@ -484,14 +472,14 @@ public class UriRoutingContext implements RoutingContext, ExtendedUriInfo {
 
     @Override
     public Method getResourceMethod() {
-        return inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getResourceMethod() : null;
+        return endpoint instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) endpoint).getResourceMethod() : null;
     }
 
     @Override
     public Class<?> getResourceClass() {
-        return inflector instanceof ResourceMethodInvoker ?
-                ((ResourceMethodInvoker) inflector).getResourceClass() : null;
+        return endpoint instanceof ResourceMethodInvoker ?
+                ((ResourceMethodInvoker) endpoint).getResourceClass() : null;
     }
 
     @Override

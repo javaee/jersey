@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,33 +39,38 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import org.glassfish.jersey.server.model.ResourceModel;
+import java.util.Arrays;
+import java.util.List;
+
+import org.glassfish.jersey.server.model.ResourceMethod;
 
 /**
- * A pair of resource model (for sub-resource locators) and a corresponding model router.
+ * A combination of a resource method model and the corresponding routers.
  *
- * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-final class LocatorAcceptorPair {
+final class MethodRouting {
 
     /**
-     * Sub-resource locator model.
+     * Resource method model.
      */
-    final ResourceModel model;
+    final ResourceMethod method;
 
     /**
-     * Sub-resource locator router.
+     * Resource method routers.
      */
-    final Router router;
+    final List<Router> routers;
 
     /**
      * Create a new instance.
      *
-     * @param model  sub-resource locator model.
-     * @param router router that is needed to execute the {@code model}.
+     * @param method  Resource method handler.
+     * @param routers Routers that are needed to execute the {@code model}. These routers should contain a
+     *                {@link Routers#endpoint(org.glassfish.jersey.server.internal.process.Endpoint) endpoint router}
+     *                as the (last) terminal router.
      */
-    LocatorAcceptorPair(final ResourceModel model, final Router router) {
-        this.model = model;
-        this.router = router;
+    MethodRouting(final ResourceMethod method, final Router... routers) {
+        this.method = method;
+        this.routers = Arrays.asList(routers);
     }
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,8 +43,6 @@ import java.util.Collections;
 
 import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
 
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
  * Hierarchical request router that can be used to create dynamic routing tree
  * structures.  Each routing tree can be executed using a dedicated
@@ -52,7 +50,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public interface Router {
+interface Router {
     /**
      * Hierarchical request routing continuation.
      * <p>
@@ -72,7 +70,7 @@ public interface Router {
          * @return terminal continuation with no {@link #next() next level routers}
          *         in the routing hierarchy and the supplied routed request.
          */
-        public static Continuation of(final RequestProcessingContext result) {
+        static Continuation of(final RequestProcessingContext result) {
             return new Continuation(result, null);
         }
 
@@ -86,7 +84,7 @@ public interface Router {
          *         {@link #next() next} in the routing chain and the supplied routed
          *         request.
          */
-        public static Continuation of(final RequestProcessingContext result, Iterable<Router> next) {
+        static Continuation of(final RequestProcessingContext result, Iterable<Router> next) {
             return new Continuation(result, next);
         }
 
@@ -100,8 +98,8 @@ public interface Router {
          *         {@link #next() next} in the routing chain and the supplied routed
          *         request.
          */
-        public static Continuation of(final RequestProcessingContext request, final Router next) {
-            return new Continuation(request, Lists.newArrayList(next));
+        static Continuation of(final RequestProcessingContext request, final Router next) {
+            return new Continuation(request, Collections.singletonList(next));
         }
 
         private Continuation(final RequestProcessingContext request, final Iterable<Router> next) {
@@ -114,57 +112,20 @@ public interface Router {
          *
          * @return routed request context.
          */
-        public RequestProcessingContext requestContext() {
+        RequestProcessingContext requestContext() {
             return requestProcessingContext;
         }
 
         /**
          * Get the next level routers to be invoked or {@code an empty} if no next
-         * level routers are {@link #hasNext() present}.
+         * level routers are present.
          *
          * @return the next level routers to be invoked or an empty collection if not
          *         present.
          */
-        public Iterable<Router> next() {
+        Iterable<Router> next() {
             return next;
         }
-
-        /**
-         * Check if there are any next level routers present in the continuation.
-         * <p>
-         * The absence of any next level routers in the continuation indicates that the
-         * request routing reached a leaf stage.
-         * </p>
-         *
-         * @return {@code true} if there are any next level routers present in the continuation,
-         *         {@code false} otherwise.
-         */
-        public boolean hasNext() {
-            return next.iterator().hasNext();
-        }
-    }
-
-    /**
-     * A {@link Router} builder.
-     */
-    public static interface Builder {
-
-        /**
-         * Add new child node into the {@link Router hierarchical request router}
-         * being built.
-         *
-         * @param child new child node to be added.
-         * @return updated builder instance.
-         */
-        public Builder child(Router child);
-
-        /**
-         * Build a {@link Router hierarchical router} for the transformation of
-         * a given data type.
-         *
-         * @return hierarchical stage.
-         */
-        public Router build();
     }
 
     /**

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,14 +39,12 @@
  */
 package org.glassfish.jersey.server.internal.routing;
 
-import java.util.List;
 import java.util.regex.MatchResult;
 
 import javax.ws.rs.container.ResourceInfo;
 
-import org.glassfish.jersey.process.Inflector;
-import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.internal.process.RequestProcessingContext;
+import org.glassfish.jersey.server.ExtendedUriInfo;
+import org.glassfish.jersey.server.internal.process.Endpoint;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceMethod;
 import org.glassfish.jersey.server.model.RuntimeResource;
@@ -58,7 +56,7 @@ import org.glassfish.jersey.uri.UriTemplate;
  * @author Marek Potociar (marek.potociar at oracle.com)
  * @author Martin Matula (martin.matula at oracle.com)
  */
-public interface RoutingContext extends ResourceInfo {
+public interface RoutingContext extends ResourceInfo, ExtendedUriInfo {
 
     /**
      * Push the result of the successful request URI routing pattern match.
@@ -81,15 +79,6 @@ public interface RoutingContext extends ResourceInfo {
      * @return last resource matched as previously set by {@link #pushMatchedResource}
      */
     public Object peekMatchedResource();
-
-    /**
-     * Peek at the last successful request URI routing pattern
-     * {@link java.util.regex.MatchResult match result}.
-     *
-     * @return last successful request URI routing pattern match result.
-     */
-    // TODO: consider removing unused method
-    public MatchResult peekMatchResult();
 
     /**
      * Push matched request URI routing pattern {@link org.glassfish.jersey.uri.UriTemplate templates}
@@ -119,18 +108,6 @@ public interface RoutingContext extends ResourceInfo {
     public String getFinalMatchingGroup();
 
     /**
-     * Get a read-only list of {@link java.util.regex.MatchResult match results} for matched
-     * request URI routing patterns. Entries are ordered in reverse request URI
-     * matching order, with the root request URI routing pattern match result
-     * last.
-     *
-     * @return a read-only reverse list of request URI routing pattern match
-     *         results.
-     */
-    // TODO: consider removing unused method
-    public List<MatchResult> getMatchedResults();
-
-    /**
      * Add currently matched left-hand side part of request path to the list of
      * matched paths returned by {@link javax.ws.rs.core.UriInfo#getMatchedURIs()}.
      * <p/>
@@ -141,22 +118,21 @@ public interface RoutingContext extends ResourceInfo {
     public void pushLeftHandPath();
 
     /**
-     * Set the matched request to response inflector.
+     * Set the matched server-side endpoint.
      * <p/>
-     * This method can be used in a non-terminal stage to set the inflector that
+     * This method can be used in a non-terminal stage to set the server-side endpoint that
      * can be retrieved and processed by a subsequent stage.
      *
-     * @param inflector matched request to response inflector.
+     * @param endpoint matched server-side endpoint.
      */
-    public void setInflector(Inflector<RequestProcessingContext, ContainerResponse> inflector);
+    public void setEndpoint(Endpoint endpoint);
 
     /**
-     * Get the matched request to response data inflector if present, or {@code null}
-     * otherwise.
+     * Get the matched server-side endpoint if present, or {@code null} otherwise.
      *
-     * @return matched request to response inflector, or {@code null} if not available.
+     * @return matched server-side endpoint, or {@code null} if not available.
      */
-    public Inflector<RequestProcessingContext, ContainerResponse> getInflector();
+    public Endpoint getEndpoint();
 
     /**
      * Set the matched {@link ResourceMethod resource method}. This method needs to be called only if the method was

@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.internal.routing;
 
 import java.util.concurrent.ExecutionException;
@@ -84,7 +83,7 @@ final class RuntimeLocatorModelBuilder {
     private final RuntimeModelBuilder runtimeModelBuilder;
     private final JerseyResourceContext resourceContext;
 
-    private final LoadingCache<LocatorCacheKey, LocatorAcceptorPair> cache;
+    private final LoadingCache<LocatorCacheKey, LocatorRouting> cache;
 
     // Configuration.
     private final boolean disableValidation;
@@ -148,10 +147,10 @@ final class RuntimeLocatorModelBuilder {
             // Age eviction policy.
             cacheBuilder.expireAfterAccess(age, TimeUnit.SECONDS);
         }
-        cache = cacheBuilder.build(new CacheLoader<LocatorCacheKey, LocatorAcceptorPair>() {
+        cache = cacheBuilder.build(new CacheLoader<LocatorCacheKey, LocatorRouting>() {
             @Override
-            public LocatorAcceptorPair load(final LocatorCacheKey key) throws Exception {
-                return key.clazz != null ? createAcceptor(key.clazz) : createAcceptor(key.resource);
+            public LocatorRouting load(final LocatorCacheKey key) throws Exception {
+                return key.clazz != null ? createRouting(key.clazz) : buildRouting(key.resource);
             }
         });
     }
@@ -162,7 +161,7 @@ final class RuntimeLocatorModelBuilder {
      * @param resourceMethod resource method to obtain the router for.
      * @return sub-resource locator router.
      */
-    Router getSubResourceLocatorRouter(final ResourceMethod resourceMethod) {
+    Router getRouter(final ResourceMethod resourceMethod) {
         return new SubResourceLocatorRouter(locator, resourceMethod, resourceContext, this);
     }
 
@@ -170,14 +169,14 @@ final class RuntimeLocatorModelBuilder {
      * Build (or obtain from cache) a resource model and router for given sub-resource locator class.
      *
      * @param locatorClass sub-resource locator class to built model and router for.
-     * @return acceptor with built model and router for sub-resource locator.
+     * @return [locator, router] pair with built model and router for sub-resource locator.
      */
-    LocatorAcceptorPair buildLocator(final Class<?> locatorClass) {
+    LocatorRouting getRouting(final Class<?> locatorClass) {
         try {
             return cache.get(new LocatorCacheKey(locatorClass));
         } catch (final ExecutionException ee) {
             LOGGER.log(Level.FINE, LocalizationMessages.SUBRES_LOC_CACHE_LOAD_FAILED(locatorClass), ee);
-            return createAcceptor(locatorClass);
+            return createRouting(locatorClass);
         }
     }
 
@@ -186,41 +185,48 @@ final class RuntimeLocatorModelBuilder {
      * {@link org.glassfish.jersey.server.model.Resource resource}.
      *
      * @param subresource sub-resource locator resource to built model and router for.
-     * @return acceptor with built model and router for sub-resource locator.
+     * @return [locator, router] pair with built model and router for sub-resource locator.
      */
-    LocatorAcceptorPair buildLocator(final Resource subresource) {
+    LocatorRouting getRouting(final Resource subresource) {
         if (enableJerseyResourceCaching) {
             try {
                 return cache.get(new LocatorCacheKey(subresource));
             } catch (final ExecutionException ee) {
                 LOGGER.log(Level.FINE, LocalizationMessages.SUBRES_LOC_CACHE_LOAD_FAILED(subresource), ee);
-                return createAcceptor(subresource);
+                return buildRouting(subresource);
             }
         } else {
-            return createAcceptor(subresource);
+            return buildRouting(subresource);
         }
     }
 
-    boolean containsAcceptorFor(final Class<?> locatorClass) {
-        return cache.getIfPresent(locatorClass) != null;
+    /**
+     * Check if the model builder contains a cached [locator, router] pair for a given sub-resource locator class.
+     *
+     * @param srlClass sub-resource locator class.
+     * @return {@code true} if the [locator, router] pair  for the sub-resource locator class is present in the cache,
+     * {@code false} otherwise.
+     */
+    boolean isCached(final Class<?> srlClass) {
+        return cache.getIfPresent(srlClass) != null;
     }
 
-    private LocatorAcceptorPair createAcceptor(final Class<?> locatorClass) {
+    private LocatorRouting createRouting(final Class<?> locatorClass) {
         Resource.Builder builder = Resource.builder(locatorClass, disableValidation);
         if (builder == null) {
             // resource is empty - do not throw 404, wait if ModelProcessors add any method
             builder = Resource.builder().name(locatorClass.getName());
         }
 
-        return createAcceptor(builder.build());
+        return buildRouting(builder.build());
     }
 
-    private LocatorAcceptorPair createAcceptor(final Resource subResource) {
+    private LocatorRouting buildRouting(final Resource subResource) {
         final ResourceModel model = new ResourceModel.Builder(true).addResource(subResource).build();
-        final ResourceModel enhancedModel = processSubResource(model);
+        final ResourceModel enhancedModel = enhance(model);
 
         if (!disableValidation) {
-            validate(enhancedModel);
+            validateResource(enhancedModel);
         }
 
         final Resource enhancedLocator = enhancedModel.getResources().get(0);
@@ -228,31 +234,11 @@ final class RuntimeLocatorModelBuilder {
             resourceContext.bindResource(handlerClass);
         }
 
-        return new LocatorAcceptorPair(enhancedModel,
+        return new LocatorRouting(enhancedModel,
                 runtimeModelBuilder.buildModel(enhancedModel.getRuntimeResourceModel(), true));
     }
 
-    private ResourceModel processSubResource(ResourceModel subResourceModel) {
-        final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers
-                .getAllRankedProviders(locator, ModelProcessor.class);
-        final Iterable<ModelProcessor> modelProcessors = Providers
-                .sortRankedProviders(new RankedComparator<ModelProcessor>(), allRankedProviders);
-
-        for (final ModelProcessor modelProcessor : modelProcessors) {
-            subResourceModel = modelProcessor.processSubResource(subResourceModel, config);
-            validateEnhancedModel(subResourceModel);
-        }
-        return subResourceModel;
-    }
-
-    private void validateEnhancedModel(final ResourceModel subResourceModel) {
-        if (subResourceModel.getResources().size() != 1) {
-            throw new ProcessingException(LocalizationMessages.ERROR_SUB_RESOURCE_LOCATOR_MORE_RESOURCES(subResourceModel
-                    .getResources().size()));
-        }
-    }
-
-    private void validate(final ResourceModelComponent component) {
+    private void validateResource(final ResourceModelComponent component) {
         Errors.process(new Runnable() {
             @Override
             public void run() {
@@ -265,6 +251,26 @@ final class RuntimeLocatorModelBuilder {
                 }
             }
         });
+    }
+
+    private ResourceModel enhance(ResourceModel subResourceModel) {
+        final Iterable<RankedProvider<ModelProcessor>> allRankedProviders = Providers
+                .getAllRankedProviders(locator, ModelProcessor.class);
+        final Iterable<ModelProcessor> modelProcessors = Providers
+                .sortRankedProviders(new RankedComparator<ModelProcessor>(), allRankedProviders);
+
+        for (final ModelProcessor modelProcessor : modelProcessors) {
+            subResourceModel = modelProcessor.processSubResource(subResourceModel, config);
+            validateSubResource(subResourceModel);
+        }
+        return subResourceModel;
+    }
+
+    private void validateSubResource(final ResourceModel subResourceModel) {
+        if (subResourceModel.getResources().size() != 1) {
+            throw new ProcessingException(LocalizationMessages.ERROR_SUB_RESOURCE_LOCATOR_MORE_RESOURCES(subResourceModel
+                    .getResources().size()));
+        }
     }
 
     private static class LocatorCacheKey {
@@ -286,6 +292,7 @@ final class RuntimeLocatorModelBuilder {
         }
 
         @Override
+        @SuppressWarnings("RedundantIfStatement")
         public boolean equals(final Object o) {
             if (this == o) {
                 return true;

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -55,7 +55,7 @@ import org.glassfish.jersey.message.internal.QualitySourceMediaType;
  * @author Jakub Podlesak
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
-class CombinedClientServerMediaType {
+final class CombinedMediaType {
 
     private static int wildcardsMatched(MediaType clientMt, EffectiveMediaType serverMt) {
         return b2i(clientMt.isWildcardType() ^ serverMt.isWildcardType())
@@ -71,10 +71,12 @@ class CombinedClientServerMediaType {
     }
 
     private MediaType combinedMediaType;
-    private int q, qs, d;
-    private static final CombinedClientServerMediaType NO_MATCH = new CombinedClientServerMediaType();
+    private int q;
+    private int qs;
+    private int d;
+    private static final CombinedMediaType NO_MATCH = new CombinedMediaType();
 
-    private CombinedClientServerMediaType() {
+    private CombinedMediaType() {
     }
 
     /**
@@ -84,12 +86,12 @@ class CombinedClientServerMediaType {
      * @param serverMt server-side media type.
      * @return combined client/server media type.
      */
-    public static CombinedClientServerMediaType create(MediaType clientMt, EffectiveMediaType serverMt) {
+    public static CombinedMediaType create(MediaType clientMt, EffectiveMediaType serverMt) {
         if (!clientMt.isCompatible(serverMt.getMediaType())) {
             return NO_MATCH;
         }
 
-        CombinedClientServerMediaType result = new CombinedClientServerMediaType();
+        CombinedMediaType result = new CombinedMediaType();
 
         result.combinedMediaType = MediaTypes.stripQualityParams(MediaTypes.mostSpecific(clientMt, serverMt.getMediaType()));
         result.d = wildcardsMatched(clientMt, serverMt);
@@ -108,13 +110,13 @@ class CombinedClientServerMediaType {
 
 
     /**
-     * Comparator used to compare {@link CombinedClientServerMediaType}. The comparator sorts the elements of list
+     * Comparator used to compare {@link CombinedMediaType}. The comparator sorts the elements of list
      * in the ascending order from the least appropriate to the most appropriate {@link MediaType media type}.
      */
-    final static Comparator<CombinedClientServerMediaType> COMPARATOR = new Comparator<CombinedClientServerMediaType>() {
+    final static Comparator<CombinedMediaType> COMPARATOR = new Comparator<CombinedMediaType>() {
 
         @Override
-        public int compare(CombinedClientServerMediaType c1, CombinedClientServerMediaType c2) {
+        public int compare(CombinedMediaType c1, CombinedMediaType c2) {
             int partialComparison = partialOrderComparator.compare(c1.combinedMediaType, c2.combinedMediaType);
 
             if (partialComparison > 0) {
@@ -257,10 +259,7 @@ class CombinedClientServerMediaType {
 
             EffectiveMediaType that = (EffectiveMediaType) o;
 
-            if (derived != that.derived) return false;
-            if (!mediaType.equals(that.mediaType)) return false;
-
-            return true;
+            return derived == that.derived && mediaType.equals(that.mediaType);
         }
 
         @Override
