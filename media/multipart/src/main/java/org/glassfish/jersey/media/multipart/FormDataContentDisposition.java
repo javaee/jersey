@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,7 +53,7 @@ import org.glassfish.jersey.message.internal.HttpHeaderReader;
  */
 public class FormDataContentDisposition extends ContentDisposition {
 
-    private String name;
+    private final String name;
 
     /**
      * Constructor for the builder.
@@ -74,8 +74,8 @@ public class FormDataContentDisposition extends ContentDisposition {
         super(type, fileName, creationDate, modificationDate, readDate, size);
         this.name = name;
 
-        if (!getType().equalsIgnoreCase("form-data")) {
-            throw new IllegalArgumentException("The content dispostion type is not equal to form-data");
+        if (!"form-data".equalsIgnoreCase(getType())) {
+            throw new IllegalArgumentException("The content disposition type is not equal to form-data");
         }
 
         if (name == null) {
@@ -93,8 +93,8 @@ public class FormDataContentDisposition extends ContentDisposition {
 
     public FormDataContentDisposition(HttpHeaderReader reader, boolean fileNameFix) throws ParseException {
         super(reader, fileNameFix);
-        if (!getType().equalsIgnoreCase("form-data")) {
-            throw new IllegalArgumentException("The content dispostion type is not equal to form-data");
+        if (!"form-data".equalsIgnoreCase(getType())) {
+            throw new IllegalArgumentException("The content disposition type is not equal to form-data");
         }
 
         name = getParameters().get("name");
@@ -135,9 +135,10 @@ public class FormDataContentDisposition extends ContentDisposition {
      * Builder to build form data content disposition.
      *
      */
-    public static class FormDataContentDispositionBuilder extends ContentDispositionBuilder<FormDataContentDispositionBuilder, FormDataContentDisposition> {
+    public static class FormDataContentDispositionBuilder
+            extends ContentDispositionBuilder<FormDataContentDispositionBuilder, FormDataContentDisposition> {
 
-        private String name;
+        private final String name;
 
         FormDataContentDispositionBuilder(String name) {
             super("form-data");

@@ -47,6 +47,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
+import org.glassfish.jersey.message.internal.Quality;
 import org.glassfish.jersey.message.internal.QualitySourceMediaType;
 
 /**
@@ -56,8 +57,12 @@ import org.glassfish.jersey.message.internal.QualitySourceMediaType;
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  */
 final class CombinedMediaType {
+    /**
+     * Constant combined type representing no match.
+     */
+    static final CombinedMediaType NO_MATCH = new CombinedMediaType(null, 0, 0, 0);
 
-    private static int wildcardsMatched(MediaType clientMt, EffectiveMediaType serverMt) {
+    private static int matchedWildcards(MediaType clientMt, EffectiveMediaType serverMt) {
         return b2i(clientMt.isWildcardType() ^ serverMt.isWildcardType())
                 + b2i(clientMt.isWildcardSubtype() ^ serverMt.isWildcardSubType());
     }
@@ -66,99 +71,95 @@ final class CombinedMediaType {
         return b ? 1 : 0;
     }
 
-    private static int m2i(MediaType mt) {
-        return 10 * b2i(mt.isWildcardType()) + b2i(mt.isWildcardSubtype());
-    }
+    /**
+     * Combined client/server media type, stripped of q and qs parameters.
+     */
+    final MediaType combinedType;
+    /**
+     * Client-specified media type quality.
+     */
+    final int q;
+    /**
+     * Server-specified media type quality.
+     */
+    final int qs;
+    /**
+     * Distance of the combined media types.
+     * <ul>
+     * <li>
+     * 0 - if the type and subtype of both combined media types match exactly (i.e. ["m/n" + "m/n"]).
+     * </li>
+     * <li>
+     * 1 - if one media type contains a wildcard type or subtype value that matches a concrete type or subtype value.
+     * </li>
+     * <li>
+     * 2 - if one of the media types is a {@link MediaType#WILDCARD_TYPE} and the other one is a concrete media type.
+     * </li>
+     * </ul>
+     */
+    final int d;
 
-    private MediaType combinedMediaType;
-    private int q;
-    private int qs;
-    private int d;
-    private static final CombinedMediaType NO_MATCH = new CombinedMediaType();
-
-    private CombinedMediaType() {
+    private CombinedMediaType(final MediaType combinedType, final int q, final int qs, final int d) {
+        this.combinedType = combinedType;
+        this.q = q;
+        this.qs = qs;
+        this.d = d;
     }
 
     /**
      * Create combined client/server media type.
      *
-     * @param clientMt client-side media type.
-     * @param serverMt server-side media type.
+     * if the two types are not compatible, {@link #NO_MATCH} is returned.
+     *
+     * @param clientType client-side media type.
+     * @param serverType server-side media type.
      * @return combined client/server media type.
      */
-    public static CombinedMediaType create(MediaType clientMt, EffectiveMediaType serverMt) {
-        if (!clientMt.isCompatible(serverMt.getMediaType())) {
+    static CombinedMediaType create(MediaType clientType, EffectiveMediaType serverType) {
+        if (!clientType.isCompatible(serverType.getMediaType())) {
             return NO_MATCH;
         }
 
-        CombinedMediaType result = new CombinedMediaType();
+        final MediaType strippedClientType = MediaTypes.stripQualityParams(clientType);
+        final MediaType strippedServerType = MediaTypes.stripQualityParams(serverType.getMediaType());
 
-        result.combinedMediaType = MediaTypes.stripQualityParams(MediaTypes.mostSpecific(clientMt, serverMt.getMediaType()));
-        result.d = wildcardsMatched(clientMt, serverMt);
-        result.q = MediaTypes.getQuality(clientMt);
-        result.qs = QualitySourceMediaType.getQualitySource(serverMt.getMediaType());
-        return result;
+        return new CombinedMediaType(
+                MediaTypes.mostSpecific(strippedClientType, strippedServerType),
+                MediaTypes.getQuality(clientType),
+                QualitySourceMediaType.getQualitySource(serverType.getMediaType()),
+                matchedWildcards(clientType, serverType));
     }
-
-    private final static Comparator<MediaType> partialOrderComparator = new Comparator<MediaType>() {
-
-        @Override
-        public int compare(MediaType o1, MediaType o2) {
-            return m2i(o2) - m2i(o1);
-        }
-    };
-
 
     /**
      * Comparator used to compare {@link CombinedMediaType}. The comparator sorts the elements of list
-     * in the ascending order from the least appropriate to the most appropriate {@link MediaType media type}.
+     * in the ascending order from the most appropriate to the least appropriate combined media type.
      */
     final static Comparator<CombinedMediaType> COMPARATOR = new Comparator<CombinedMediaType>() {
 
         @Override
         public int compare(CombinedMediaType c1, CombinedMediaType c2) {
-            int partialComparison = partialOrderComparator.compare(c1.combinedMediaType, c2.combinedMediaType);
+            // more concrete is better
+            int delta = MediaTypes.PARTIAL_ORDER_COMPARATOR.compare(c1.combinedType, c2.combinedType);
+            if (delta != 0) return delta;
 
-            if (partialComparison > 0) {
-                return 1;
-            } else {
-                if (partialComparison == 0) {
-                    if (c1.q > c2.q) {
-                        return 1;
-                    } else if (c1.q == c2.q) {
-                        if (c1.qs > c2.qs) {
-                            return 1;
-                        } else if (c1.qs == c2.qs) {
-                            return c2.d - c1.d;
-                        }
-                    }
-                }
-            }
-            return -1;
+            // higher is better
+            delta = Quality.QUALITY_VALUE_COMPARATOR.compare(c1.q, c2.q);
+            if (delta != 0) return delta;
+
+            // higher is better
+            delta = Quality.QUALITY_VALUE_COMPARATOR.compare(c1.qs, c2.qs);
+            if (delta != 0) return delta;
+
+            // lower is better
+            return Integer.compare(c1.d, c2.d);
         }
     };
 
     @Override
     public String toString() {
-        return String.format("%s:%d:%d:%d", combinedMediaType, q, qs, d);
+        return String.format("%s;q=%d;qs=%d;d=%d", combinedType, q, qs, d);
     }
 
-
-    int getQ() {
-        return q;
-    }
-
-    int getQs() {
-        return qs;
-    }
-
-    int getD() {
-        return d;
-    }
-
-    MediaType getCombinedMediaType() {
-        return combinedMediaType;
-    }
 
     /**
      * {@link MediaType Media type} extended by flag indicating whether media type was
@@ -211,7 +212,7 @@ final class CombinedMediaType {
          * Returns true if Type of {@link MediaType} was originally  defined as wildcard.
          *
          * @return Returns true if method {@link Consumes} or {@link Produces} was
-         *         annotated with wildcard type (for example '*&#47;*').
+         * annotated with wildcard type (for example '*&#47;*').
          */
         public boolean isWildcardType() {
             return mediaType.isWildcardType();
@@ -221,7 +222,7 @@ final class CombinedMediaType {
          * Returns True if SubType of {@link MediaType} was originally defined as wildcard.
          *
          * @return Returns true if method {@link Consumes} or {@link Produces} was
-         *         annotated with wildcard subtype (for example 'text&#47;*').
+         * annotated with wildcard subtype (for example 'text&#47;*').
          */
         public boolean isWildcardSubType() {
             return mediaType.isWildcardSubtype();

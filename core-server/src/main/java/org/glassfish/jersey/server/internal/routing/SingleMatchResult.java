@@ -68,7 +68,7 @@ final class SingleMatchResult implements MatchResult {
      * @return path stripped of matrix parameters.
      */
     private static String stripMatrixParams(final String path) {
-        int e = path.indexOf(";");
+        int e = path.indexOf(';');
         if (e == -1) {
             return path;
         }
@@ -80,11 +80,11 @@ final class SingleMatchResult implements MatchResult {
             sb.append(path, s, e);
 
             // Skip everything up to but not including the '/'
-            s = path.indexOf("/", e + 1);
+            s = path.indexOf('/', e + 1);
             if (s == -1) {
                 break;
             }
-            e = path.indexOf(";", s);
+            e = path.indexOf(';', s);
         } while (e != -1);
 
         if (s != -1) {

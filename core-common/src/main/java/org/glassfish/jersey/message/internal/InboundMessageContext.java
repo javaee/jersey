@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -108,6 +108,8 @@ public abstract class InboundMessageContext {
         }
     };
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
+    private static final List<AcceptableMediaType> WILDCARD_ACCEPTABLE_TYPE_SINGLETON_LIST =
+            Collections.singletonList(MediaTypes.WILDCARD_ACCEPTABLE_TYPE);
 
     private final MultivaluedMap<String, String> headers;
     private final EntityContent entityContent;
@@ -368,7 +370,7 @@ public abstract class InboundMessageContext {
      */
     public Set<MatchingEntityTag> getIfMatch() {
         final String ifMatch = getHeaderString(HttpHeaders.IF_MATCH);
-        if (ifMatch == null || ifMatch.length() == 0) {
+        if (ifMatch == null || ifMatch.isEmpty()) {
             return null;
         }
         try {
@@ -385,7 +387,7 @@ public abstract class InboundMessageContext {
      */
     public Set<MatchingEntityTag> getIfNoneMatch() {
         final String ifNoneMatch = getHeaderString(HttpHeaders.IF_NONE_MATCH);
-        if (ifNoneMatch == null || ifNoneMatch.length() == 0) {
+        if (ifNoneMatch == null || ifNoneMatch.isEmpty()) {
             return null;
         }
         try {
@@ -424,7 +426,7 @@ public abstract class InboundMessageContext {
             @Override
             public Integer apply(String input) {
                 try {
-                    return (input != null && input.length() > 0) ? Integer.parseInt(input) : -1;
+                    return (input != null && !input.isEmpty()) ? Integer.parseInt(input) : -1;
                 } catch (NumberFormatException ex) {
                     throw new ProcessingException(ex);
                 }
@@ -460,8 +462,8 @@ public abstract class InboundMessageContext {
     public List<AcceptableMediaType> getQualifiedAcceptableMediaTypes() {
         final String value = getHeaderString(HttpHeaders.ACCEPT);
 
-        if (value == null || value.length() == 0) {
-            return Collections.unmodifiableList(MediaTypes.GENERAL_ACCEPT_MEDIA_TYPE_LIST);
+        if (value == null || value.isEmpty()) {
+            return WILDCARD_ACCEPTABLE_TYPE_SINGLETON_LIST;
         }
 
         try {
@@ -480,7 +482,7 @@ public abstract class InboundMessageContext {
     public List<AcceptableLanguageTag> getQualifiedAcceptableLanguages() {
         final String value = getHeaderString(HttpHeaders.ACCEPT_LANGUAGE);
 
-        if (value == null || value.length() == 0) {
+        if (value == null || value.isEmpty()) {
             return Collections.singletonList(new AcceptableLanguageTag("*", null));
         }
 
@@ -500,7 +502,7 @@ public abstract class InboundMessageContext {
     public List<AcceptableToken> getQualifiedAcceptCharset() {
         final String acceptCharset = getHeaderString(HttpHeaders.ACCEPT_CHARSET);
         try {
-            if (acceptCharset == null || acceptCharset.length() == 0) {
+            if (acceptCharset == null || acceptCharset.isEmpty()) {
                 return Collections.singletonList(new AcceptableToken("*"));
             }
             return HttpHeaderReader.readAcceptToken(acceptCharset);
@@ -518,7 +520,7 @@ public abstract class InboundMessageContext {
     public List<AcceptableToken> getQualifiedAcceptEncoding() {
         final String acceptEncoding = getHeaderString(HttpHeaders.ACCEPT_ENCODING);
         try {
-            if (acceptEncoding == null || acceptEncoding.length() == 0) {
+            if (acceptEncoding == null || acceptEncoding.isEmpty()) {
                 return Collections.singletonList(new AcceptableToken("*"));
             }
             return HttpHeaderReader.readAcceptToken(acceptEncoding);
@@ -555,7 +557,7 @@ public abstract class InboundMessageContext {
      */
     public Set<String> getAllowedMethods() {
         final String allowed = getHeaderString(HttpHeaders.ALLOW);
-        if (allowed == null || allowed.length() == 0) {
+        if (allowed == null || allowed.isEmpty()) {
             return Collections.emptySet();
         }
         try {

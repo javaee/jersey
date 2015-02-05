@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.client.oauth1;
 
 import java.io.ByteArrayInputStream;
@@ -47,6 +46,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.URI;
 
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.core.GenericEntity;
@@ -67,7 +67,11 @@ import org.glassfish.jersey.uri.UriComponent;
  * @author Paul C. Bryan <pbryan@sun.com>
  * @since 2.3
  */
-class RequestUtil {
+final class RequestUtil {
+
+    private RequestUtil() {
+        throw new AssertionError("Instantiation not allowed.");
+    }
 
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
 
@@ -94,6 +98,7 @@ class RequestUtil {
      * @param request the client request containing the entity to extract parameters from.
      * @return a {@link javax.ws.rs.core.MultivaluedMap} containing the entity form parameters.
      */
+    @SuppressWarnings("unchecked")
     public static MultivaluedMap<String, String> getEntityParameters(ClientRequestContext request,
                                                                      MessageBodyWorkers messageBodyWorkers) {
 
@@ -102,14 +107,14 @@ class RequestUtil {
         MediaType mediaType = request.getMediaType();
 
         // no entity, not a post or not x-www-form-urlencoded: return empty map
-        if (entity == null || method == null || !method.equalsIgnoreCase("POST") ||
+        if (entity == null || method == null || !HttpMethod.POST.equalsIgnoreCase(method) ||
                 mediaType == null || !mediaType.equals(MediaType.APPLICATION_FORM_URLENCODED_TYPE)) {
             return new MultivaluedHashMap<String, String>();
         }
 
         // it's ready to go if already expressed as a multi-valued map
         if (entity instanceof MultivaluedMap) {
-            return (MultivaluedMap) entity;
+            return (MultivaluedMap<String, String>) entity;
         }
 
         Type entityType = entity.getClass();

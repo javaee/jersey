@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,9 +50,9 @@ import java.util.Locale;
  */
 public class LanguageTag {
 
-    protected String tag;
-    protected String primaryTag;
-    protected String subTags;
+    String tag;
+    String primaryTag;
+    String subTags;
 
     protected LanguageTag() {
     }
@@ -89,7 +89,7 @@ public class LanguageTag {
         // Skip any white space
         reader.hasNext();
 
-        tag = reader.nextToken();
+        tag = reader.nextToken().toString();
 
         if (reader.hasNext()) {
             throw new ParseException("Invalid Language tag", reader.getIndex());
@@ -174,46 +174,24 @@ public class LanguageTag {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (object == null || getClass() != object.getClass()) {
-            return false;
-        }
-        LanguageTag lt = (LanguageTag) object;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof LanguageTag) || o.getClass() == this.getClass()) return false;
 
-        if (this.tag != null) {
-            if (!this.tag.equals(lt.getTag())) {
-                return false;
-            } else if (lt.getTag() != null) {
-                return false;
-            }
-        }
+        LanguageTag that = (LanguageTag) o;
 
-        if (this.primaryTag != null) {
-            if (!this.primaryTag.equals(lt.getPrimaryTag())) {
-                return false;
-            } else if (lt.getPrimaryTag() != null) {
-                return false;
-            }
-        }
+        if (primaryTag != null ? !primaryTag.equals(that.primaryTag) : that.primaryTag != null) return false;
+        if (subTags != null ? !subTags.equals(that.subTags) : that.subTags != null) return false;
+        return !(tag != null ? !tag.equals(that.tag) : that.tag != null);
 
-        if (this.subTags != null) {
-            if (!this.subTags.equals(lt.getSubTags())) {
-                return false;
-            } else if (lt.getSubTags() != null) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 47 * hash + (this.tag != null ? this.tag.hashCode() : 0);
-        hash = 47 * hash + (this.primaryTag != null ? this.primaryTag.hashCode() : 0);
-        hash = 47 * hash + (this.subTags != null ? this.subTags.hashCode() : 0);
-        return hash;
+        int result = tag != null ? tag.hashCode() : 0;
+        result = 31 * result + (primaryTag != null ? primaryTag.hashCode() : 0);
+        result = 31 * result + (subTags != null ? subTags.hashCode() : 0);
+        return result;
     }
 
     @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -53,7 +53,7 @@ public class AcceptableLanguageTag extends LanguageTag implements Qualified {
 
     public AcceptableLanguageTag(String primaryTag, String subTags) {
         super(primaryTag, subTags);
-        this.quality = Quality.DEFAULT_QUALITY;
+        this.quality = Quality.DEFAULT;
     }
 
     public AcceptableLanguageTag(String header) throws ParseException {
@@ -64,7 +64,7 @@ public class AcceptableLanguageTag extends LanguageTag implements Qualified {
         // Skip any white space
         reader.hasNext();
 
-        tag = reader.nextToken();
+        tag = reader.nextToken().toString();
         if (!tag.equals("*")) {
             parse(tag);
         } else {
@@ -74,7 +74,7 @@ public class AcceptableLanguageTag extends LanguageTag implements Qualified {
         if (reader.hasNext()) {
             quality = HttpHeaderReader.readQualityFactorParameter(reader);
         } else {
-            quality = Quality.DEFAULT_QUALITY;
+            quality = Quality.DEFAULT;
         }
     }
 

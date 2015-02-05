@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -40,21 +40,17 @@
 package org.glassfish.jersey.message.internal;
 
 /**
- * Quality factor for acceptable header types represented as a ppt (per mille) value.
+ * Quality factor for acceptable header types represented as a "parts per thousand" (i.e. per mille) value.
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public interface Qualified {
-    /**
-     * Name of a quality parameter in a header value.
-     */
-    public static final String QUALITY_PARAMETER_NAME = "q";
 
     /**
      * Get quality factor value (in [ppt]).
      *
      * @return quality factor value.
      */
-    int getQuality();
+    public int getQuality();
 }

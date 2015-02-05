@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,10 +48,10 @@ import javax.inject.Singleton;
 
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.spi.HeaderDelegateProvider;
-
 import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentExceptionIfNull;
 
 /**
+ * Header delegate provider for MediaType.
  *
  * @author Marc Hadley
  * @author Marek Potociar (marek.potociar at oracle.com)
@@ -75,7 +75,7 @@ public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
         StringBuilder b = new StringBuilder();
         b.append(header.getType()).append('/').append(header.getSubtype());
         for (Map.Entry<String, String> e : header.getParameters().entrySet()) {
-            b.append("; ").append(e.getKey()).append('=');
+            b.append(";").append(e.getKey()).append('=');
             StringBuilderUtils.appendQuotedIfNonToken(b, e.getValue());
         }
         return b.toString();
@@ -94,15 +94,23 @@ public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {
         }
     }
 
+    /**
+     * Create a new {@link javax.ws.rs.core.MediaType} instance from a header reader.
+     *
+     * @param reader header reader.
+     * @return new {@code MediaType} instance.
+     *
+     * @throws ParseException in case of a header parsing error.
+     */
     public static MediaType valueOf(HttpHeaderReader reader) throws ParseException {
         // Skip any white space
         reader.hasNext();
 
         // Get the type
-        String type = reader.nextToken();
+        final String type = reader.nextToken().toString();
         reader.nextSeparator('/');
         // Get the subtype
-        String subType = reader.nextToken();
+        final String subType = reader.nextToken().toString();
 
         Map<String, String> params = null;
 

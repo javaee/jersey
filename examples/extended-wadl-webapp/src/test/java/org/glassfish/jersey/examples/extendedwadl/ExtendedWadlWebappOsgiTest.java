@@ -71,9 +71,9 @@ import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.wadl.internal.WadlUtils;
+import org.glassfish.jersey.test.TestProperties;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.test.TestProperties;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -252,7 +252,7 @@ public class ExtendedWadlWebappOsgiTest {
         final ResourceConfig resourceConfig = createResourceConfig();
         final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(baseUri, resourceConfig);
         final Client client = ClientBuilder.newClient();
-        final Response response = client.target(baseUri).path("application.wadl").request(MediaTypes.WADL).buildGet().invoke();
+        final Response response = client.target(baseUri).path("application.wadl").request(MediaTypes.WADL_TYPE).buildGet().invoke();
 
         String wadl = response.readEntity(String.class);
         LOGGER.info("RESULT = " + wadl);
@@ -287,7 +287,7 @@ public class ExtendedWadlWebappOsgiTest {
         final Client client = ClientBuilder.newClient();
 
         String wadl = client.target(baseUri).path("items").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
-                .request(MediaTypes.WADL).options(String.class);
+                .request(MediaTypes.WADL_TYPE).options(String.class);
 
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
         assertTrue("Generated wadl doesn't contain the expected text",

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -224,6 +224,17 @@ public interface MessageBodyWorkers {
     List<MessageBodyReader> getMessageBodyReadersForType(Class<?> type);
 
     /**
+     * Get a list of {@code MessageBodyReader} models that are suitable for the given {@code type}.
+     *
+     * The list is sorted based on the class hierarchy (most specific readers are first).
+     *
+     * @param type the class of object readers are requested for.
+     * @return the list of supported {@code MessageBodyReader} models for given class.
+     * @since 2.16
+     */
+    List<ReaderModel> getReaderModelsForType(Class<?> type);
+
+    /**
      * Get the list of media types supported for a Java type.
      *
      * @param type        the class of object that is to be written.
@@ -256,6 +267,17 @@ public interface MessageBodyWorkers {
      * @return the list of supported {@code MessageBodyWriter}s for given class.
      */
     List<MessageBodyWriter> getMessageBodyWritersForType(Class<?> type);
+
+    /**
+     * Get a list of {@code MessageBodyWriter} models that are suitable for the given {@code type}.
+     *
+     * The list is sorted based on the class hierarchy (most specific writers are first).
+     *
+     * @param type the class of object writers are requested for.
+     * @return the list of supported {@code MessageBodyWriter} models for given class.
+     * @since 2.16
+     */
+    List<WriterModel> getWritersModelsForType(Class<?> type);
 
     /**
      * Get the most acceptable media type supported for a Java type given a set of

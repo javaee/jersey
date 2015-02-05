@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -85,6 +85,8 @@ import jersey.repackaged.com.google.common.collect.Lists;
  */
 public class OutboundMessageContext {
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[0];
+    private static final List<MediaType> WILDCARD_ACCEPTABLE_TYPE_SINGLETON_LIST =
+            Collections.<MediaType>singletonList(MediaTypes.WILDCARD_ACCEPTABLE_TYPE);
 
     private final MultivaluedMap<String, Object> headers;
     private final CommittingOutputStream committingOutputStream;
@@ -108,9 +110,10 @@ public class OutboundMessageContext {
          * @param contentLength the size of the buffered entity or -1 if the entity exceeded the maximum buffer
          *                      size or if the buffering is disabled.
          * @return the adapted output stream into which the serialized entity should be written. May return null
-         *         which will cause ignoring the written entity (in that case the entity will
-         *         still be written by {@link javax.ws.rs.ext.MessageBodyWriter message body writers}
-         *         but the output will be ignored).
+         * which will cause ignoring the written entity (in that case the entity will
+         * still be written by {@link javax.ws.rs.ext.MessageBodyWriter message body writers}
+         * but the output will be ignored).
+         *
          * @throws java.io.IOException in case of an IO error.
          */
         public OutputStream getOutputStream(int contentLength) throws IOException;
@@ -175,10 +178,10 @@ public class OutboundMessageContext {
      *
      * @param name the message header.
      * @return the message header value. If the message header is not present then
-     *         {@code null} is returned. If the message header is present but has no
-     *         value then the empty string is returned. If the message header is present
-     *         more than once then the values of joined together and separated by a ','
-     *         character.
+     * {@code null} is returned. If the message header is present but has no
+     * value then the empty string is returned. If the message header is present
+     * more than once then the values of joined together and separated by a ','
+     * character.
      */
     public String getHeaderString(String name) {
         return HeaderUtils.asHeaderString(headers.get(name), RuntimeDelegate.getInstance());
@@ -277,7 +280,7 @@ public class OutboundMessageContext {
      * Get the media type of the entity.
      *
      * @return the media type or {@code null} if not specified (e.g. there's no
-     *         message entity).
+     * message entity).
      */
     public MediaType getMediaType() {
         return singleHeader(HttpHeaders.CONTENT_TYPE, MediaType.class, new Function<String, MediaType>() {
@@ -292,28 +295,30 @@ public class OutboundMessageContext {
      * Get a list of media types that are acceptable for the message.
      *
      * @return a read-only list of requested message media types sorted according
-     *         to their q-value, with highest preference first.
+     * to their q-value, with highest preference first.
      */
     @SuppressWarnings("unchecked")
     public List<MediaType> getAcceptableMediaTypes() {
         final List<Object> values = headers.get(HttpHeaders.ACCEPT);
 
-        if (values == null || values.size() == 0) {
-            return Collections.unmodifiableList(new ArrayList<MediaType>(MediaTypes.GENERAL_ACCEPT_MEDIA_TYPE_LIST));
+        if (values == null || values.isEmpty()) {
+            return WILDCARD_ACCEPTABLE_TYPE_SINGLETON_LIST;
         }
         final List<MediaType> result = new ArrayList<MediaType>(values.size());
         final RuntimeDelegate rd = RuntimeDelegate.getInstance();
         boolean conversionApplied = false;
         for (final Object value : values) {
-            if (value instanceof MediaType) {
-                result.add((MediaType) value);
-            } else {
-                conversionApplied = true;
-                try {
+            try {
+                if (value instanceof MediaType) {
+                    final AcceptableMediaType _value = AcceptableMediaType.valueOf((MediaType) value);
+                    conversionApplied = _value != value; // true if value was not an instance of AcceptableMediaType already
+                    result.add(_value);
+                } else {
+                    conversionApplied = true;
                     result.addAll(HttpHeaderReader.readAcceptMediaType(HeaderUtils.asString(value, rd)));
-                } catch (java.text.ParseException e) {
-                    throw exception(HttpHeaders.ACCEPT, value, e);
                 }
+            } catch (java.text.ParseException e) {
+                throw exception(HttpHeaders.ACCEPT, value, e);
             }
         }
 
@@ -334,12 +339,12 @@ public class OutboundMessageContext {
      * Get a list of languages that are acceptable for the message.
      *
      * @return a read-only list of acceptable languages sorted according
-     *         to their q-value, with highest preference first.
+     * to their q-value, with highest preference first.
      */
     public List<Locale> getAcceptableLanguages() {
         final List<Object> values = headers.get(HttpHeaders.ACCEPT_LANGUAGE);
 
-        if (values == null || values.size() == 0) {
+        if (values == null || values.isEmpty()) {
             return Collections.singletonList(new AcceptableLanguageTag("*", null).getAsLocale());
         }
 
@@ -403,11 +408,11 @@ public class OutboundMessageContext {
      * Get the allowed HTTP methods from the Allow HTTP header.
      *
      * @return the allowed HTTP methods, all methods will returned as upper case
-     *         strings.
+     * strings.
      */
     public Set<String> getAllowedMethods() {
         final String allowed = getHeaderString(HttpHeaders.ALLOW);
-        if (allowed == null || allowed.length() == 0) {
+        if (allowed == null || allowed.isEmpty()) {
             return Collections.emptySet();
         }
         try {
@@ -421,14 +426,14 @@ public class OutboundMessageContext {
      * Get Content-Length value.
      *
      * @return Content-Length as integer if present and valid number. In other
-     *         cases returns -1.
+     * cases returns -1.
      */
     public int getLength() {
         return singleHeader(HttpHeaders.CONTENT_LENGTH, Integer.class, new Function<String, Integer>() {
             @Override
             public Integer apply(String input) {
                 try {
-                    return (input != null && input.length() > 0) ? Integer.parseInt(input) : -1;
+                    return (input != null && !input.isEmpty()) ? Integer.parseInt(input) : -1;
                 } catch (NumberFormatException ex) {
                     throw new ProcessingException(ex);
                 }
@@ -515,7 +520,7 @@ public class OutboundMessageContext {
      * Get the links attached to the message as header.
      *
      * @return links, may return empty {@link java.util.Set} if no links are present. Never
-     *         returns {@code null}.
+     * returns {@code null}.
      */
     public Set<Link> getLinks() {
         List<Object> values = headers.get(HttpHeaders.LINK);
@@ -557,7 +562,7 @@ public class OutboundMessageContext {
      *
      * @param relation link relation.
      * @return {@code true} if the for the relation link exists, {@code false}
-     *         otherwise.
+     * otherwise.
      */
     public boolean hasLink(String relation) {
         for (Link link : getLinks()) {
@@ -591,7 +596,7 @@ public class OutboundMessageContext {
      *
      * @param relation link relation.
      * @return the link builder for the relation, otherwise {@code null} if not
-     *         present.
+     * present.
      */
     public Link.Builder getLinkBuilder(String relation) {
         Link link = getLink(relation);
@@ -611,7 +616,7 @@ public class OutboundMessageContext {
      * {@code false} otherwise.
      *
      * @return {@code true} if there is an entity present in the message,
-     *         {@code false} otherwise.
+     * {@code false} otherwise.
      */
     public boolean hasEntity() {
         return entity != null;
@@ -623,7 +628,7 @@ public class OutboundMessageContext {
      * Returns {@code null} if the message does not contain an entity.
      *
      * @return the message entity or {@code null} if message does not contain an
-     *         entity body.
+     * entity body.
      */
     public Object getEntity() {
         return entity;

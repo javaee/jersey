@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,13 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.internal.util.collection;
 
 import org.junit.Test;
 
 /**
- *
  * @author Paul Sandoz
  */
 public class KeyComparatorLinkedHashMapTest extends AbstractKeyComparatorHashMapTest {
@@ -52,16 +50,14 @@ public class KeyComparatorLinkedHashMapTest extends AbstractKeyComparatorHashMap
     public void testNull() {
         final KeyComparatorHashMap<String, String> k = new KeyComparatorLinkedHashMap<String, String>(
                 new KeyComparator<String>() {
+                    @Override
                     public boolean equals(String s1, String s2) {
                         return s1.equals(s2);
                     }
 
+                    @Override
                     public int hash(String s1) {
                         return s1.hashCode();
-                    }
-
-                    public int compare(String s1, String s2) {
-                        return s1.compareTo(s2);
                     }
                 });
 

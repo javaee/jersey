@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -259,8 +259,8 @@ public class VariantsTest extends JerseyTest {
         @GET
         public Response doGet(@Context Request r) {
             List<Variant> vs = Variant.VariantListBuilder.newInstance().
-                    mediaTypes(MediaType.valueOf("application/xml")).
-                    mediaTypes(MediaType.valueOf("text/html;qs=2.0")).
+                    mediaTypes(MediaType.valueOf("application/xml;qs=0.8")).
+                    mediaTypes(MediaType.valueOf("text/html;qs=1.0")).
                     add().
                     build();
 

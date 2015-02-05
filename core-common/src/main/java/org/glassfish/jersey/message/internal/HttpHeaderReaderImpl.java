@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,21 +62,22 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
  */
 /* package */ final class HttpHeaderReaderImpl extends HttpHeaderReader {
 
-    private String header;
-    private boolean processComments;
-    private int index;
-    private int length;
-    private Event event;
-    private String value;
+    private final CharSequence header;
+    private final boolean processComments;
+    private final int length;
 
-    public HttpHeaderReaderImpl(String header, boolean processComments) {
+    private int index;
+    private Event event;
+    private CharSequence value;
+
+    HttpHeaderReaderImpl(String header, boolean processComments) {
         this.header = (header == null) ? "" : header;
         this.processComments = processComments;
         this.index = 0;
         this.length = this.header.length();
     }
 
-    public HttpHeaderReaderImpl(String header) {
+    HttpHeaderReaderImpl(String header) {
         this(header, false);
     }
 
@@ -119,7 +120,8 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
         }
 
         event = Event.Token;
-        return value = header.substring(start, index++);
+        value = header.subSequence(start, index++);
+        return value.toString();
     }
 
     @Override
@@ -143,13 +145,13 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
     }
 
     @Override
-    public String getEventValue() {
+    public CharSequence getEventValue() {
         return value;
     }
 
     @Override
-    public String getRemainder() {
-        return (index < length) ? header.substring(index) : null;
+    public CharSequence getRemainder() {
+        return (index < length) ? header.subSequence(index, header.length()) : null;
     }
 
     @Override
@@ -180,7 +182,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
     }
 
     private Event process(char c, boolean preserveBackslash) throws ParseException {
-        if (c > 127) {
+        if (c > Byte.MAX_VALUE) {
             index++;
             return Event.Control;
         }
@@ -193,7 +195,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
                         break;
                     }
                 }
-                value = header.substring(start, index);
+                value = header.subSequence(start, index);
                 return Event.Token;
             }
             case QUOTED_STRING:
@@ -241,7 +243,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
             throw new ParseException(LocalizationMessages.HTTP_HEADER_UNBALANCED_COMMENTS(), index);
         }
 
-        value = (filter) ? filterToken(header, start, index - 1) : header.substring(start, index - 1);
+        value = (filter) ? filterToken(header, start, index - 1) : header.subSequence(start, index - 1);
     }
 
     private void processQuotedString(boolean preserveBackslash) throws ParseException {
@@ -254,7 +256,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
             } else if (c == '\r') {
                 filter = true;
             } else if (c == '"') {
-                value = (filter) ? filterToken(header, start, index, preserveBackslash) : header.substring(start, index);
+                value = (filter) ? filterToken(header, start, index, preserveBackslash) : header.subSequence(start, index);
 
                 index++;
                 return;

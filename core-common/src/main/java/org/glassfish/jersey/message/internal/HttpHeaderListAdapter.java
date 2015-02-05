@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -50,9 +50,15 @@ import java.text.ParseException;
  */
 /* package */ class HttpHeaderListAdapter extends HttpHeaderReader {
 
-    private HttpHeaderReader reader;
-    boolean isTerminated;
+    private final HttpHeaderReader reader;
+    private boolean isTerminated;
 
+    /**
+     * Create new adapter for {@link HttpHeaderReader} that adds ability to read
+     * headers containing comma-separated value lists.
+     *
+     * @param reader http header reader to be wrapped.
+     */
     public HttpHeaderListAdapter(HttpHeaderReader reader) {
         this.reader = reader;
     }
@@ -118,7 +124,7 @@ import java.text.ParseException;
     }
 
     @Override
-    public String nextSeparatedString(char startSeparator, char endSeparator) throws ParseException {
+    public CharSequence nextSeparatedString(char startSeparator, char endSeparator) throws ParseException {
         if (isTerminated) {
             throw new ParseException("End of header", getIndex());
         }
@@ -137,12 +143,12 @@ import java.text.ParseException;
     }
 
     @Override
-    public String getEventValue() {
+    public CharSequence getEventValue() {
         return reader.getEventValue();
     }
 
     @Override
-    public String getRemainder() {
+    public CharSequence getRemainder() {
         return reader.getRemainder();
     }
 

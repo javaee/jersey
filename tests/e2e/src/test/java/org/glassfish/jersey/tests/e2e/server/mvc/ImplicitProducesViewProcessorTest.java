@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server.mvc;
 
 import java.io.IOException;
@@ -83,7 +82,7 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
 
     @Path("/implicit")
     @Template
-    @Produces("text/plain;qs=5")
+    @Produces("text/plain;qs=.5")
     public static class ImplicitTemplate {
 
         public String toString() {
@@ -126,10 +125,10 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
 
     @Path("/implicit-get")
     @Template
-    @Produces("text/plain;qs=5")
+    @Produces("text/plain;qs=0.5")
     public static class ImplicitWithGetTemplate {
         @GET
-        @Produces("application/foo")
+        @Produces("application/foo;qs=0.2")
         public String toString() {
             return "ImplicitWithGetTemplate";
         }
@@ -181,12 +180,12 @@ public class ImplicitProducesViewProcessorTest extends JerseyTest {
 
     @Path("/implicit-get-subresource")
     @Template
-    @Produces("text/plain;qs=5")
+    @Produces("text/plain;qs=0.5")
     public static class ImplicitWithSubResourceGetTemplate {
 
         @GET
         @Path("sub")
-        @Produces("application/foo")
+        @Produces("application/foo;qs=0.2")
         public String toString() {
             return "ImplicitWithSubResourceGetTemplate";
         }

@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.filter;
 
 import java.io.BufferedInputStream;
@@ -72,7 +71,6 @@ import javax.ws.rs.ext.WriterInterceptorContext;
 
 import javax.annotation.Priority;
 
-import org.glassfish.jersey.internal.util.collection.StringIgnoreCaseKeyComparator;
 import org.glassfish.jersey.message.MessageUtils;
 
 /**
@@ -100,7 +98,7 @@ public class LoggingFilter implements ContainerRequestFilter, ClientRequestFilte
 
                 @Override
                 public int compare(final Map.Entry<String, List<String>> o1, final Map.Entry<String, List<String>> o2) {
-                    return StringIgnoreCaseKeyComparator.SINGLETON.compare(o1.getKey(), o2.getKey());
+                    return o1.getKey().compareToIgnoreCase(o2.getKey());
                 }
             };
 

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -264,7 +264,7 @@ public class ResourceExtendedFlagTest extends JerseyTest {
     @Test
     public void testDetailedWadl() throws ParserConfigurationException, XPathExpressionException, IOException,
             SAXException {
-        Response response = target("/application.wadl").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).get();
+        Response response = target("/application.wadl").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL_TYPE).get();
         assertEquals(200, response.getStatus());
         File tmpFile = response.readEntity(File.class);
         DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
@@ -312,7 +312,7 @@ public class ResourceExtendedFlagTest extends JerseyTest {
     @Test
     public void testLimitedWadl() throws ParserConfigurationException, XPathExpressionException, IOException,
             SAXException {
-        Response response = target("/application.wadl").request(MediaTypes.WADL).get();
+        Response response = target("/application.wadl").request(MediaTypes.WADL_TYPE).get();
         assertEquals(200, response.getStatus());
         File tmpFile = response.readEntity(File.class);
         DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();

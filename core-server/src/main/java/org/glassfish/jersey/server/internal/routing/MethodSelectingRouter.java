@@ -56,16 +56,16 @@ import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotSupportedException;
-import javax.ws.rs.Produces;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.glassfish.jersey.message.MessageBodyWorkers;
+import org.glassfish.jersey.message.ReaderModel;
+import org.glassfish.jersey.message.WriterModel;
+import org.glassfish.jersey.message.internal.AcceptableMediaType;
 import org.glassfish.jersey.message.internal.MediaTypes;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ContainerResponse;
@@ -105,33 +105,31 @@ final class MethodSelectingRouter implements Router {
                     final ResourceMethod model2 = o2.methodRouting.method;
 
                     // @Consumes on method.
-                    int compared = compare(model2.getConsumedTypes(), model1.getConsumedTypes());
-
-                    if (compared == 0) {
-                        // @Produces on method.
-                        compared = compare(model2.getProducedTypes(), model1.getProducedTypes());
-
-                        if (compared == 0) {
-                            // Consumes media type of the acceptor.
-                            compared = MediaTypes.MEDIA_TYPE_COMPARATOR.compare(o1.consumes.getMediaType(),
-                                    o2.consumes.getMediaType());
-
-                            if (compared == 0) {
-                                // Produces media type of the acceptor.
-                                compared = MediaTypes.MEDIA_TYPE_COMPARATOR.compare(o1.produces.getMediaType(),
-                                        o2.produces.getMediaType());
-                            }
-                        }
+                    int compared = compare(model1.getConsumedTypes(), model2.getConsumedTypes());
+                    if (compared != 0) {
+                        return compared;
                     }
 
-                    return compared;
+                    compared = compare(model1.getProducedTypes(), model2.getProducedTypes());
+                    if (compared != 0) {
+                        return compared;
+                    }
+
+                    compared = MediaTypes.PARTIAL_ORDER_COMPARATOR.compare(o1.consumes.getMediaType(),
+                            o2.consumes.getMediaType());
+                    if (compared != 0) {
+                        return compared;
+                    }
+
+                    return MediaTypes.PARTIAL_ORDER_COMPARATOR.compare(o1.produces.getMediaType(),
+                            o2.produces.getMediaType());
                 }
 
                 private int compare(List<MediaType> mediaTypeList1, List<MediaType> mediaTypeList2) {
-                    mediaTypeList1 = mediaTypeList1.isEmpty() ? MediaTypes.GENERAL_MEDIA_TYPE_LIST : mediaTypeList1;
-                    mediaTypeList2 = mediaTypeList2.isEmpty() ? MediaTypes.GENERAL_MEDIA_TYPE_LIST : mediaTypeList2;
+                    mediaTypeList1 = mediaTypeList1.isEmpty() ? MediaTypes.WILDCARD_TYPE_SINGLETON_LIST : mediaTypeList1;
+                    mediaTypeList2 = mediaTypeList2.isEmpty() ? MediaTypes.WILDCARD_TYPE_SINGLETON_LIST : mediaTypeList2;
 
-                    return MediaTypes.MEDIA_TYPE_LIST_COMPARATOR.compare(mediaTypeList2, mediaTypeList1);
+                    return MediaTypes.MEDIA_TYPE_LIST_COMPARATOR.compare(mediaTypeList1, mediaTypeList2);
                 }
             };
 
@@ -142,35 +140,12 @@ final class MethodSelectingRouter implements Router {
     private final Router router;
 
     /**
-     * Injectable builder of a {@link MethodSelectingRouter} instance.
-     */
-    static class Builder {
-
-        /**
-         * Create a new {@link MethodSelectingRouter} for all the methods on the same path.
-         *
-         * The router selects the method that best matches the request based on
-         * produce/consume information from the resource method models.
-         *
-         * @param workers             message body workers.
-         * @param methodRoutings [method model, method methodAcceptorPair] pairs.
-         * @return new {@link MethodSelectingRouter}
-         */
-        public MethodSelectingRouter build(
-                final MessageBodyWorkers workers, final List<MethodRouting> methodRoutings) {
-
-            return new MethodSelectingRouter(workers,
-                    methodRoutings);
-        }
-    }
-
-    /**
      * Create a new {@code MethodSelectingRouter} for all the methods on the same path.
      *
      * The router selects the method that best matches the request based on
      * produce/consume information from the resource method models.
      *
-     * @param workers             message body workers.
+     * @param workers        message body workers.
      * @param methodRoutings [method model, method methodAcceptorPair] pairs.
      */
     MethodSelectingRouter(MessageBodyWorkers workers, List<MethodRouting> methodRoutings) {
@@ -239,9 +214,9 @@ final class MethodSelectingRouter implements Router {
      */
     private static class ConsumesProducesAcceptor {
 
-        private final CombinedMediaType.EffectiveMediaType consumes;
-        private final CombinedMediaType.EffectiveMediaType produces;
-        private final MethodRouting methodRouting;
+        final CombinedMediaType.EffectiveMediaType consumes;
+        final CombinedMediaType.EffectiveMediaType produces;
+        final MethodRouting methodRouting;
 
         private ConsumesProducesAcceptor(
                 CombinedMediaType.EffectiveMediaType consumes,
@@ -251,27 +226,6 @@ final class MethodSelectingRouter implements Router {
             this.consumes = consumes;
             this.produces = produces;
         }
-
-        /**
-         * Returns the {@link CombinedMediaType.EffectiveMediaType extended media type} which can be
-         * consumed by {@link ResourceMethod resource method} of this {@code ConsumesProducesAcceptor} router.
-         *
-         * @return Consumed type.
-         */
-        public CombinedMediaType.EffectiveMediaType getConsumes() {
-            return consumes;
-        }
-
-        /**
-         * Returns the {@link CombinedMediaType.EffectiveMediaType extended media type} which can be
-         * produced by {@link ResourceMethod resource method} of this {@code ConsumesProducesAcceptor} router.
-         *
-         * @return Produced type.
-         */
-        public CombinedMediaType.EffectiveMediaType getProduces() {
-            return produces;
-        }
-
 
         /**
          * Determines whether this {@code ConsumesProducesAcceptor} router can process the {@code request}.
@@ -329,27 +283,24 @@ final class MethodSelectingRouter implements Router {
      *
      * @see CombinedMediaType
      */
-    private static class RequestSpecificConsumesProducesAcceptor implements Comparable {
+    @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")
+    private static final class RequestSpecificConsumesProducesAcceptor implements Comparable {
 
-        CombinedMediaType consumes;
-        CombinedMediaType produces;
-        MethodRouting methodRouting;
+        final CombinedMediaType consumes;
+        final CombinedMediaType produces;
+        final MethodRouting methodRouting;
 
-        boolean consumesFromProviders;
-        boolean producesFromProviders;
+        final boolean producesFromProviders;
 
-        RequestSpecificConsumesProducesAcceptor(CombinedMediaType consumes,
-                                                boolean consumesFromProviders,
-                                                CombinedMediaType produces,
-                                                boolean producesFromProviders,
-                                                MethodRouting methodRouting) {
+        RequestSpecificConsumesProducesAcceptor(final CombinedMediaType consumes,
+                                                final CombinedMediaType produces,
+                                                final boolean producesFromProviders,
+                                                final MethodRouting methodRouting) {
 
             this.methodRouting = methodRouting;
-
             this.consumes = consumes;
             this.produces = produces;
 
-            this.consumesFromProviders = consumesFromProviders;
             this.producesFromProviders = producesFromProviders;
         }
 
@@ -361,15 +312,15 @@ final class MethodSelectingRouter implements Router {
         @Override
         public int compareTo(Object o) {
             if (o == null) {
-                return 1;
+                return -1;
             }
             if (!(o instanceof RequestSpecificConsumesProducesAcceptor)) {
-                return 1;
+                return -1;
             }
             RequestSpecificConsumesProducesAcceptor other = (RequestSpecificConsumesProducesAcceptor) o;
             final int consumedComparison = CombinedMediaType.COMPARATOR.compare(consumes, other.consumes);
-            return (consumedComparison != 0) ? consumedComparison : CombinedMediaType.COMPARATOR.compare(produces,
-                    other.produces);
+            return (consumedComparison != 0) ?
+                    consumedComparison : CombinedMediaType.COMPARATOR.compare(produces, other.produces);
         }
     }
 
@@ -387,12 +338,12 @@ final class MethodSelectingRouter implements Router {
         }
 
         void consider(RequestSpecificConsumesProducesAcceptor i) {
-            final int theGreaterTheBetter = i.compareTo(selected);
-            if (theGreaterTheBetter > 0) {
+            final int theLessTheBetter = i.compareTo(selected);
+            if (theLessTheBetter < 0) {
                 selected = i;
                 sameFitnessAcceptors = null;
             } else {
-                if (theGreaterTheBetter == 0 && (selected.methodRouting != i.methodRouting)) {
+                if (theLessTheBetter == 0 && (selected.methodRouting != i.methodRouting)) {
                     getSameFitnessList().add(i);
                 }
             }
@@ -458,7 +409,7 @@ final class MethodSelectingRouter implements Router {
         }
 
         boolean mediaTypesFromWorkers = effectiveTypes.isEmpty();
-        if (workers != null && mediaTypesFromWorkers) {
+        if (mediaTypesFromWorkers) {
             final Invocable invocableMethod = resourceMethod.getInvocable();
 
             // If not predefined from method - get it from workers.
@@ -529,7 +480,7 @@ final class MethodSelectingRouter implements Router {
             throw new NotSupportedException();
         }
 
-        final List<MediaType> acceptableMediaTypes = request.getAcceptableMediaTypes();
+        final List<AcceptableMediaType> acceptableMediaTypes = request.getQualifiedAcceptableMediaTypes();
 
         final MediaType requestContentType = request.getMediaType();
         final MediaType effectiveContentType = requestContentType == null ? MediaType.WILDCARD_TYPE : requestContentType;
@@ -547,16 +498,19 @@ final class MethodSelectingRouter implements Router {
             context.push(new Function<ContainerResponse, ContainerResponse>() {
                 @Override
                 public ContainerResponse apply(final ContainerResponse responseContext) {
-                    // we only need to compute and set the effective media type if it hasn't been set already
-                    // and either there is an entity, or we are responding to a HEAD request
-                    if (responseContext.getMediaType() == null
-                            && (responseContext.hasEntity()
-                            || HttpMethod.HEAD.equals(responseContext.getRequestContext().getMethod()))) {
+                    // we only need to compute and set the effective media type if:
+                    // - it hasn't been set already, and
+                    // - either there is an entity, or we are responding to a HEAD request
+                    if (responseContext.getMediaType() == null &&
+                            ((responseContext.hasEntity() || HttpMethod.HEAD.equals(request.getMethod())))) {
 
-                        MediaType effectiveResponseType = determineResponseMediaType(responseContext.getEntityClass(),
-                                responseContext.getEntityType(), methodSelector.selected, acceptableMediaTypes);
+                        MediaType effectiveResponseType = determineResponseMediaType(
+                                responseContext.getEntityClass(),
+                                responseContext.getEntityType(),
+                                methodSelector.selected,
+                                acceptableMediaTypes);
 
-                        if (isWildcard(effectiveResponseType)) {
+                        if (MediaTypes.isWildcard(effectiveResponseType)) {
                             if (effectiveResponseType.isWildcardType()
                                     || "application".equalsIgnoreCase(effectiveResponseType.getType())) {
                                 effectiveResponseType = MediaType.APPLICATION_OCTET_STREAM_TYPE;
@@ -577,8 +531,8 @@ final class MethodSelectingRouter implements Router {
     }
 
     /**
-     * Determine the {@link MediaType} of the {@link Response} based on writers suitable for the given entity class, pre-selected
-     * method and acceptable media types.
+     * Determine the {@link MediaType} of the {@link Response} based on writers suitable for the given entity class,
+     * pre-selected method and acceptable media types.
      *
      * @param entityClass          entity class to determine the media type for.
      * @param entityType           entity type for writers.
@@ -586,13 +540,15 @@ final class MethodSelectingRouter implements Router {
      * @param acceptableMediaTypes acceptable media types from request.
      * @return media type of the response.
      */
-    private MediaType determineResponseMediaType(final Class<?> entityClass,
-                                                 final Type entityType,
-                                                 final RequestSpecificConsumesProducesAcceptor selectedMethod,
-                                                 final List<MediaType> acceptableMediaTypes) {
+    private MediaType determineResponseMediaType(
+            final Class<?> entityClass,
+            final Type entityType,
+            final RequestSpecificConsumesProducesAcceptor selectedMethod,
+            final List<AcceptableMediaType> acceptableMediaTypes) {
+
         // Return pre-selected MediaType.
         if (usePreSelectedMediaType(selectedMethod, acceptableMediaTypes)) {
-            return selectedMethod.produces.getCombinedMediaType();
+            return selectedMethod.produces.combinedType;
         }
 
         final ResourceMethod resourceMethod = selectedMethod.methodRouting.method;
@@ -602,36 +558,45 @@ final class MethodSelectingRouter implements Router {
         final Class<?> responseEntityClass = entityClass == null ? invocable.getRawRoutingResponseType() : entityClass;
         final Method handlingMethod = invocable.getHandlingMethod();
 
+        // Media types producible by method.
+        final List<MediaType> methodProducesTypes = !resourceMethod.getProducedTypes().isEmpty() ?
+                resourceMethod.getProducedTypes() : Lists.newArrayList(MediaType.WILDCARD_TYPE);
+        // Applicable entity providers
+        final List<WriterModel> writersForEntityType = workers.getWritersModelsForType(responseEntityClass);
+
         CombinedMediaType selected = null;
-
         for (final MediaType acceptableMediaType : acceptableMediaTypes) {
-            // Media types producible by method.
-            final List<MediaType> methodProducesTypes = !resourceMethod.getProducedTypes().isEmpty() ?
-                    resourceMethod.getProducedTypes() : Lists.newArrayList(MediaType.WILDCARD_TYPE);
-
             for (final MediaType methodProducesType : methodProducesTypes) {
+                if (!acceptableMediaType.isCompatible(methodProducesType)) {
+                    // no need to go deeper if acceptable and method produces type are incompatible
+                    continue;
+                }
+
                 // Use writers suitable for entity class to determine the media type.
-                for (final MessageBodyWriter<?> writer : workers.getMessageBodyWritersForType(responseEntityClass)) {
-                    for (final MediaType writerProduces : MediaTypes.createFrom(writer.getClass().getAnnotation(Produces.class))) {
-                        if (writerProduces.isCompatible(acceptableMediaType)) {
-                            if (methodProducesType.isCompatible(writerProduces)) {
+                for (final WriterModel model : writersForEntityType) {
+                    for (final MediaType writerProduces : model.declaredTypes()) {
+                        if (!writerProduces.isCompatible(acceptableMediaType) ||
+                                !methodProducesType.isCompatible(writerProduces)) {
+                            continue;
+                        }
 
-                                final CombinedMediaType.EffectiveMediaType effectiveProduces = new
-                                        CombinedMediaType.EffectiveMediaType(
-                                        MediaTypes.mostSpecific(methodProducesType, writerProduces), false);
+                        final CombinedMediaType.EffectiveMediaType effectiveProduces =
+                                new CombinedMediaType.EffectiveMediaType(
+                                        MediaTypes.mostSpecific(methodProducesType, writerProduces),
+                                        false);
 
-                                final CombinedMediaType candidate = CombinedMediaType
-                                        .create(acceptableMediaType, effectiveProduces);
+                        final CombinedMediaType candidate =
+                                CombinedMediaType.create(acceptableMediaType, effectiveProduces);
 
-                                if (candidate.getCombinedMediaType() != null) {
-                                    // Look for a better compatible worker.
-                                    if (selected == null
-                                            || CombinedMediaType.COMPARATOR.compare(candidate, selected) > 0) {
-                                        if (writer.isWriteable(responseEntityClass, entityType,
-                                                handlingMethod.getDeclaredAnnotations(), candidate.getCombinedMediaType())) {
-                                            selected = candidate;
-                                        }
-                                    }
+                        if (candidate != CombinedMediaType.NO_MATCH) {
+                            // Look for a better compatible worker.
+                            if (selected == null || CombinedMediaType.COMPARATOR.compare(candidate, selected) < 0) {
+                                if (model.isWriteable(
+                                        responseEntityClass,
+                                        entityType,
+                                        handlingMethod.getDeclaredAnnotations(),
+                                        candidate.combinedType)) {
+                                    selected = candidate;
                                 }
                             }
                         }
@@ -642,12 +607,25 @@ final class MethodSelectingRouter implements Router {
 
         // Found media type for current writer.
         if (selected != null) {
-            return selected.getCombinedMediaType();
+            return selected.combinedType;
         }
 
         // If the media type couldn't be determined, choose pre-selected one and wait whether interceptors change the mediaType
         // so it can be written.
-        return selectedMethod.produces.getCombinedMediaType();
+        return selectedMethod.produces.combinedType;
+    }
+
+    private static boolean usePreSelectedMediaType(final RequestSpecificConsumesProducesAcceptor selectedMethod,
+                                                   final List<AcceptableMediaType> acceptableMediaTypes) {
+        // Resource method is annotated with @Produces and this annotation contains only one MediaType.
+        if (!selectedMethod.producesFromProviders
+                && selectedMethod.methodRouting.method.getProducedTypes().size() == 1) {
+            return true;
+        }
+
+        // There is only one (non-wildcard) acceptable media type - at this point the pre-selected method has to be chosen so
+        // there are compatible writers (not necessarily writeable ones).
+        return acceptableMediaTypes.size() == 1 && !MediaTypes.isWildcard(acceptableMediaTypes.get(0));
     }
 
     private boolean isWriteable(final RequestSpecificConsumesProducesAcceptor candidate) {
@@ -664,10 +642,12 @@ final class MethodSelectingRouter implements Router {
         final Type genericReturnType = genericType instanceof GenericType ?
                 ((GenericType) genericType).getType() : genericType;
 
-        for (final MessageBodyWriter<?> writer : workers.getMessageBodyWritersForType(responseType)) {
-            if (writer.isWriteable(responseType, genericReturnType,
+        for (final WriterModel model : workers.getWritersModelsForType(responseType)) {
+            if (model.isWriteable(
+                    responseType,
+                    genericReturnType,
                     invocable.getHandlingMethod().getDeclaredAnnotations(),
-                    candidate.produces.getCombinedMediaType())) {
+                    candidate.produces.combinedType)) {
                 return true;
             }
         }
@@ -685,29 +665,18 @@ final class MethodSelectingRouter implements Router {
         } else {
             final Class<?> entityType = entityParam.getRawType();
 
-            for (final MessageBodyReader<?> reader : workers.getMessageBodyReadersForType(entityType)) {
-                if (reader.isReadable(entityType, entityParam.getType(),
-                        handlingMethod.getDeclaredAnnotations
-                                (), candidate.consumes.getCombinedMediaType())) {
+            for (final ReaderModel model : workers.getReaderModelsForType(entityType)) {
+                if (model.isReadable(
+                        entityType,
+                        entityParam.getType(),
+                        handlingMethod.getDeclaredAnnotations(),
+                        candidate.consumes.combinedType)) {
                     return true;
                 }
             }
         }
 
         return false;
-    }
-
-    private boolean usePreSelectedMediaType(final RequestSpecificConsumesProducesAcceptor selectedMethod,
-                                            final List<MediaType> acceptableMediaTypes) {
-        // Resource method is annotated with @Produces and this annotation contains only one MediaType.
-        if (!selectedMethod.producesFromProviders
-                && selectedMethod.methodRouting.method.getProducedTypes().size() == 1) {
-            return true;
-        }
-
-        // There is only one (non-wildcard) acceptable media type - at this point the pre-selected method has to be chosen so
-        // there are compatible writers (not necessarily writeable ones).
-        return acceptableMediaTypes.size() == 1 && !isWildcard(acceptableMediaTypes.get(0));
     }
 
     /**
@@ -721,7 +690,7 @@ final class MethodSelectingRouter implements Router {
      *                              acceptors.
      * @return method to be invoked.
      */
-    private MethodSelector selectMethod(final List<MediaType> acceptableMediaTypes,
+    private MethodSelector selectMethod(final List<AcceptableMediaType> acceptableMediaTypes,
                                         final List<ConsumesProducesAcceptor> satisfyingAcceptors,
                                         final MediaType effectiveContentType,
                                         final boolean singleInvokableMethod) {
@@ -733,23 +702,23 @@ final class MethodSelectingRouter implements Router {
 
         for (final MediaType acceptableMediaType : acceptableMediaTypes) {
             for (final ConsumesProducesAcceptor satisfiable : satisfyingAcceptors) {
-                if (satisfiable.produces.getMediaType().isCompatible(acceptableMediaType)) {
 
-                    final CombinedMediaType produces = CombinedMediaType.create(acceptableMediaType,
-                            satisfiable.getProduces());
-                    final CombinedMediaType consumes = CombinedMediaType.create(effectiveContentType,
-                            satisfiable.getConsumes());
+                final CombinedMediaType produces =
+                        CombinedMediaType.create(acceptableMediaType, satisfiable.produces);
+
+                if (produces != CombinedMediaType.NO_MATCH) {
+                    final CombinedMediaType consumes =
+                            CombinedMediaType.create(effectiveContentType, satisfiable.consumes);
                     final RequestSpecificConsumesProducesAcceptor candidate = new RequestSpecificConsumesProducesAcceptor(
                             consumes,
-                            satisfiable.getConsumes().isDerived(),
                             produces,
-                            satisfiable.getProduces().isDerived(),
+                            satisfiable.produces.isDerived(),
                             satisfiable.methodRouting);
 
                     if (singleInvokableMethod) {
                         // Only one possible method and it's compatible.
                         return new MethodSelector(candidate);
-                    } else if (candidate.compareTo(method.selected) > 0) {
+                    } else if (candidate.compareTo(method.selected) < 0) {
                         // Candidate is better than the previous one.
                         if (method.selected == null
                                 || candidate.methodRouting.method != method.selected.methodRouting.method) {
@@ -771,11 +740,7 @@ final class MethodSelectingRouter implements Router {
         return method.selected != null ? method : alternative;
     }
 
-    private boolean isWildcard(final MediaType effectiveResponseType) {
-        return effectiveResponseType.isWildcardType() || effectiveResponseType.isWildcardSubtype();
-    }
-
-    private void reportMethodSelectionAmbiguity(List<MediaType> acceptableTypes,
+    private void reportMethodSelectionAmbiguity(List<AcceptableMediaType> acceptableTypes,
                                                 RequestSpecificConsumesProducesAcceptor selected,
                                                 List<RequestSpecificConsumesProducesAcceptor> sameFitnessAcceptors) {
         if (LOGGER.isLoggable(Level.WARNING)) {
@@ -805,7 +770,7 @@ final class MethodSelectingRouter implements Router {
                     context.push(
                             new Function<ContainerResponse, ContainerResponse>() {
                                 @Override
-                                public ContainerResponse apply(ContainerResponse responseContext) {
+                                public ContainerResponse apply(final ContainerResponse responseContext) {
                                     responseContext.getRequestContext().setMethodWithoutException(HttpMethod.HEAD);
                                     return responseContext;
                                 }

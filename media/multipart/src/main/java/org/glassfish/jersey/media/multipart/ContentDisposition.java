@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,7 +56,7 @@ import org.glassfish.jersey.message.internal.HttpHeaderReader;
  */
 public class ContentDisposition {
 
-    private final String type;
+    private final CharSequence type;
     private final Map<String, String> parameters;
     private String fileName;
     private Date creationDate;
@@ -105,7 +105,7 @@ public class ContentDisposition {
      * @return the type
      */
     public String getType() {
-        return type;
+        return (type == null) ? null : type.toString();
     }
 
     /**
@@ -238,7 +238,7 @@ public class ContentDisposition {
     /**
      * Start building content disposition.
      *
-     * @param type the disposition typr.
+     * @param type the disposition type.
      * @return the content disposition builder.
      */
     public static ContentDispositionBuilder type(final String type) {

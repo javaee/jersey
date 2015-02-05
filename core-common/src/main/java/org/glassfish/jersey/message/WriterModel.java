@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,45 +37,52 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.server.internal.routing;
+package org.glassfish.jersey.message;
 
-import java.util.Arrays;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.List;
 
-import org.glassfish.jersey.server.model.ResourceMethod;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.MessageBodyWriter;
+
+import org.glassfish.jersey.message.internal.MessageBodyFactory;
 
 /**
- * A combination of a resource method model and the corresponding routers.
+ * {@link javax.ws.rs.ext.MessageBodyWriter} model.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @since 2.16
  */
-final class MethodRouting {
-
+public final class WriterModel extends AbstractEntityProviderModel<MessageBodyWriter> {
     /**
-     * Resource method model.
-     */
-    final ResourceMethod method;
-
-    /**
-     * Resource method routers.
-     */
-    final List<Router> routers;
-
-    /**
-     * Create a new instance.
+     * Create new writer model instance.
      *
-     * @param method  Resource method handler.
-     * @param routers Routers that are needed to execute the {@code model}. These routers should contain a
-     *                {@link Routers#endpoint(org.glassfish.jersey.server.internal.process.Endpoint) endpoint router}
-     *                as the (last) terminal router.
+     * NOTE: This constructor is package-private on purpose.
+     *
+     * @param provider modelled message body writer instance.
+     * @param types    supported media types as declared in {@code @Consumes} annotation attached to the provider class.
+     * @param custom   custom flag.
      */
-    MethodRouting(final ResourceMethod method, final Router... routers) {
-        this.method = method;
-        this.routers = Arrays.asList(routers);
+    public WriterModel(MessageBodyWriter provider, List<MediaType> types, Boolean custom) {
+        super(provider, types, custom, MessageBodyWriter.class);
     }
 
-    @Override
-    public String toString() {
-        return "{" + method + " -> " + routers +'}';
+    /**
+     * Safely invokes {@link javax.ws.rs.ext.MessageBodyWriter#isWriteable isWriteable} method on the underlying provider.
+     *
+     * Any exceptions will be logged at finer level.
+     *
+     * @param type        the class of instance that is to be written.
+     * @param genericType the type of instance to be written, obtained either
+     *                    by reflection of a resource method return type or via inspection
+     *                    of the returned instance. {@link javax.ws.rs.core.GenericEntity}
+     *                    provides a way to specify this information at runtime.
+     * @param annotations an array of the annotations attached to the message entity instance.
+     * @param mediaType   the media type of the HTTP entity.
+     * @return {@code true} if the type is supported, otherwise {@code false}.
+     */
+    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        return MessageBodyFactory.isWriteable(super.provider(), type, genericType, annotations, mediaType);
     }
 }

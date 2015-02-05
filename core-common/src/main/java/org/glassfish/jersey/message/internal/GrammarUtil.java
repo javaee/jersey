@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -47,32 +47,60 @@ package org.glassfish.jersey.message.internal;
  */
 final class GrammarUtil {
 
-    /** Represents token type in the TYPE_TABLE */
+    /**
+     * Represents token type in the TYPE_TABLE.
+     */
     public static final int TOKEN = 0;
-    /** Represents quotes type in the TYPE_TABLE */
+    /**
+     * Represents quotes type in the TYPE_TABLE.
+     */
     public static final int QUOTED_STRING = 1;
-    /** Represents comment type in the TYPE_TABLE */
+    /**
+     * Represents comment type in the TYPE_TABLE.
+     */
     public static final int COMMENT = 2;
-    /** Represents separator type in the TYPE_TABLE */
+    /**
+     * Represents separator type in the TYPE_TABLE.
+     */
     public static final int SEPARATOR = 3;
-    /** Represents control type in the TYPE_TABLE */
+    /**
+     * Represents control type in the TYPE_TABLE.
+     */
     public static final int CONTROL = 4;
-    /** Array of chars representing white spaces */
+    /**
+     * Array of chars representing white spaces.
+     */
     private static final char[] WHITE_SPACE = {'\t', '\r', '\n', ' '};
-    /** Array of chars representing separators */
-    private static final char[] SEPARATORS = {'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', '\t'};
-    /** Mapping of chars to types */
+    /**
+     * Array of chars representing separators.
+     */
+    private static final char[] SEPARATORS =
+            {'(', ')', '<', '>', '@', ',', ';', ':', '\\', '"', '/', '[', ']', '?', '=', '{', '}', ' ', '\t'};
+    /**
+     * Mapping of chars to types.
+     */
     private static final int[] TYPE_TABLE = createEventTable();
-    /** Convenience table mapping chars to true if they are white space chars */
+    /**
+     * Convenience table mapping chars to true if they are white space chars.
+     */
     private static final boolean[] IS_WHITE_SPACE = createWhiteSpaceTable();
-    /** convenience table mapping chars to true if they are tokens */
+    /**
+     * convenience table mapping chars to true if they are tokens.
+     */
     private static final boolean[] IS_TOKEN = createTokenTable();
 
     private static int[] createEventTable() {
-        int[] table = new int[128];
+        int[] table = new int[Byte.MAX_VALUE + 1];
+
+        // Control
+        final int control_char_bound = 32;
+        for (int i = 0; i < control_char_bound; i++) {
+            table[i] = CONTROL;
+        }
+        table[Byte.MAX_VALUE] = CONTROL;
 
         // Token
-        for (int i = 0; i < 127; i++) {
+        for (int i = control_char_bound; i < Byte.MAX_VALUE; i++) {
             table[i] = TOKEN;
         }
 
@@ -87,12 +115,6 @@ final class GrammarUtil {
         // QuotedString
         table['"'] = QUOTED_STRING;
 
-        // Control
-        for (int i = 0; i < 32; i++) {
-            table[i] = CONTROL;
-        }
-        table[127] = CONTROL;
-
         // White space
         for (char c : WHITE_SPACE) {
             table[c] = -1;
@@ -102,7 +124,7 @@ final class GrammarUtil {
     }
 
     private static boolean[] createWhiteSpaceTable() {
-        boolean[] table = new boolean[128];
+        boolean[] table = new boolean[Byte.MAX_VALUE + 1];
 
         for (char c : WHITE_SPACE) {
             table[c] = true;
@@ -112,9 +134,9 @@ final class GrammarUtil {
     }
 
     private static boolean[] createTokenTable() {
-        boolean[] table = new boolean[128];
+        boolean[] table = new boolean[Byte.MAX_VALUE + 1];
 
-        for (int i = 0; i < 128; i++) {
+        for (int i = 0; i <= Byte.MAX_VALUE; i++) {
             table[i] = (TYPE_TABLE[i] == TOKEN);
         }
 
@@ -128,7 +150,7 @@ final class GrammarUtil {
      * @return {@code true} if c is a white space.
      */
     public static boolean isWhiteSpace(final char c) {
-        return (c < 128 && IS_WHITE_SPACE[c]);
+        return (c <= Byte.MAX_VALUE && IS_WHITE_SPACE[c]);
     }
 
     /**
@@ -138,7 +160,7 @@ final class GrammarUtil {
      * @return {@code true} if c is a token.
      */
     public static boolean isToken(final char c) {
-        return (c < 128 && IS_TOKEN[c]);
+        return (c <= Byte.MAX_VALUE && IS_TOKEN[c]);
     }
 
     /**
@@ -146,10 +168,11 @@ final class GrammarUtil {
      *
      * @param c char to check.
      * @return character type identifier.
+     *
      * @throws IllegalArgumentException in case the character value is greater than 127.
      */
     public static int getType(final char c) {
-        if (c > 127) {
+        if (c > Byte.MAX_VALUE) {
             throw new IllegalArgumentException("Unsupported character - ordinal value too high: " + c);
         }
         return TYPE_TABLE[c];
@@ -162,7 +185,7 @@ final class GrammarUtil {
      * @return {@code true} if c is a token.
      */
     public static boolean isSeparator(final char c) {
-        return (c < 128 && TYPE_TABLE[c] == SEPARATOR);
+        return (c <= Byte.MAX_VALUE && TYPE_TABLE[c] == SEPARATOR);
     }
 
     /**
@@ -199,12 +222,12 @@ final class GrammarUtil {
      * Filter a substring of a string by removing any new-line characters and
      * un-escaping escaped characters.
      *
-     * @param s string to use for substring token filtering.
+     * @param s     character sequence to use for substring token filtering.
      * @param start start filtering position in the string.
-     * @param end end filtering position in the string.
+     * @param end   end filtering position in the string.
      * @return filtered substring.
      */
-    public static String filterToken(final String s, final int start, final int end) {
+    public static String filterToken(final CharSequence s, final int start, final int end) {
         return filterToken(s, start, end, false);
     }
 
@@ -212,14 +235,14 @@ final class GrammarUtil {
      * Filter a substring of a string by removing any new-line characters and
      * un-escaping escaped characters (unless preserveBackslash is set to {@code true}).
      *
-     * @param s string to use for substring token filtering.
-     * @param start start filtering position in the string.
-     * @param end end filtering position in the string.
+     * @param s                 character sequence to use for substring token filtering.
+     * @param start             start filtering position in the string.
+     * @param end               end filtering position in the string.
      * @param preserveBackslash if set to {@code true}, this method does not treat backslash as an escape character
-     *                         (treats it as a regular character instead)
+     *                          (treats it as a regular character instead)
      * @return filtered substring.
      */
-    public static String filterToken(final String s, final int start, final int end, final boolean preserveBackslash) {
+    public static String filterToken(final CharSequence s, final int start, final int end, final boolean preserveBackslash) {
         StringBuilder sb = new StringBuilder();
         char c;
         boolean gotEscape = false;

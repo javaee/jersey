@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -93,16 +93,16 @@ public class MatchingEntityTag extends EntityTag {
      * @throws ParseException in case the header could not be parsed.
      */
     public static MatchingEntityTag valueOf(HttpHeaderReader reader) throws ParseException {
-        final String tagString = reader.getRemainder();
+        final CharSequence tagString = reader.getRemainder();
 
         HttpHeaderReader.Event e = reader.next(false);
         if (e == HttpHeaderReader.Event.QuotedString) {
-            return new MatchingEntityTag(reader.getEventValue());
+            return new MatchingEntityTag(reader.getEventValue().toString());
         } else if (e == HttpHeaderReader.Event.Token) {
-            String v = reader.getEventValue();
-            if (v.equals("W")) {
+            CharSequence ev = reader.getEventValue();
+            if (ev != null && ev.length() == 1 && 'W' == ev.charAt(0)) {
                 reader.nextSeparator('/');
-                return new MatchingEntityTag(reader.nextQuotedString(), true);
+                return new MatchingEntityTag(reader.nextQuotedString().toString(), true);
             }
         }
 

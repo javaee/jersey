@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -103,7 +103,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     @Test
     public void testExtendedWadl() throws Exception {
         String wadl = target().path("application.wadl")
-                .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).get(String.class);
+                .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL_TYPE).get(String.class);
 
         LOGGER.fine(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);
@@ -116,7 +116,7 @@ public class ExtendedWadlWebappTest extends JerseyTest {
     @Test
     public void testWadlOptionsMethod() throws Exception {
         String wadl = target().path("items")
-                .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).options(String.class);
+                .queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL_TYPE).options(String.class);
 
         LOGGER.fine(wadl);
         assertTrue("Generated wadl is of null length", wadl.length() > 0);

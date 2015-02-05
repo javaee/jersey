@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -86,14 +86,18 @@ import org.glassfish.jersey.internal.util.collection.DataStructures;
 import org.glassfish.jersey.internal.util.collection.KeyComparator;
 import org.glassfish.jersey.internal.util.collection.KeyComparatorHashMap;
 import org.glassfish.jersey.internal.util.collection.KeyComparatorLinkedHashMap;
+import org.glassfish.jersey.message.AbstractEntityProviderModel;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageProperties;
+import org.glassfish.jersey.message.ReaderModel;
+import org.glassfish.jersey.message.WriterModel;
 
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 
 import org.jvnet.hk2.annotations.Optional;
 
+import jersey.repackaged.com.google.common.base.Function;
 import jersey.repackaged.com.google.common.collect.Lists;
 import jersey.repackaged.com.google.common.collect.Sets;
 import jersey.repackaged.com.google.common.primitives.Primitives;
@@ -122,52 +126,38 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     /**
      * Media type comparator.
      */
-    public static final KeyComparator<MediaType> MEDIA_TYPE_COMPARATOR =
+    public static final KeyComparator<MediaType> MEDIA_TYPE_KEY_COMPARATOR =
             new KeyComparator<MediaType>() {
-
-                private static final long serialVersionUID = 2727819828630827763L;
+                private static final long serialVersionUID = 1616819828630827763L;
 
                 @Override
-                public boolean equals(MediaType x, MediaType y) {
-                    return x.getType().equalsIgnoreCase(y.getType())
-                            && x.getSubtype().equalsIgnoreCase(y.getSubtype());
+                public boolean equals(MediaType mt1, MediaType mt2) {
+                    // treat compatible types as equal
+                    return mt1.isCompatible(mt2);
                 }
 
                 @Override
-                public int hash(MediaType k) {
-                    return k.getType().toLowerCase().hashCode()
-                            + k.getSubtype().toLowerCase().hashCode();
-                }
-
-                // move to separate comparator?
-                @Override
-                public int compare(MediaType o1, MediaType o2) {
-                    if (equals(o1, o2)) {
-                        return 0;
-                    } else if (o1.isWildcardType() ^ o2.isWildcardType()) {
-                        return (o1.isWildcardType()) ? 1 : -1;
-                    } else if (o1.isWildcardSubtype() ^ o2.isWildcardSubtype()) {
-                        return (o1.isWildcardSubtype()) ? 1 : -1;
-                    }
-                    return 0;
+                public int hash(MediaType mt) {
+                    // treat compatible types as equal
+                    return mt.getType().toLowerCase().hashCode() + mt.getSubtype().toLowerCase().hashCode();
                 }
             };
-
     /**
-     * Compares message body workers by providing class (most specific first) and assigned media types if provider classes are
-     * the same.
+     * Compares entity providers by the provided class (most specific first)
+     * and then by the declared supported media types, if the provided classes
+     * are the same.
      */
-    private static final Comparator<WorkerModel<?>> WORKER_BY_TYPE_COMPARATOR =
-            new Comparator<WorkerModel<?>>() {
+    private static final Comparator<AbstractEntityProviderModel<?>> WORKER_BY_TYPE_COMPARATOR =
+            new Comparator<AbstractEntityProviderModel<?>>() {
 
                 @Override
-                public int compare(final WorkerModel<?> o1, final WorkerModel<?> o2) {
-                    final Class<?> o1ProviderClassParam = o1.providerClassParam;
-                    final Class<?> o2ProviderClassParam = o2.providerClassParam;
+                public int compare(final AbstractEntityProviderModel<?> o1, final AbstractEntityProviderModel<?> o2) {
+                    final Class<?> o1ProviderClassParam = o1.providedType();
+                    final Class<?> o2ProviderClassParam = o2.providedType();
 
                     if (o1ProviderClassParam == o2ProviderClassParam) {
                         // Compare producible media types.
-                        return compare(o2.types, o1.types);
+                        return compare(o2.declaredTypes(), o1.declaredTypes());
                     } else if (o1ProviderClassParam.isAssignableFrom(o2ProviderClassParam)) {
                         return 1;
                     } else if (o2ProviderClassParam.isAssignableFrom(o1ProviderClassParam)) {
@@ -177,8 +167,8 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
 
                 private int compare(List<MediaType> mediaTypeList1, List<MediaType> mediaTypeList2) {
-                    mediaTypeList1 = mediaTypeList1.isEmpty() ? MediaTypes.GENERAL_MEDIA_TYPE_LIST : mediaTypeList1;
-                    mediaTypeList2 = mediaTypeList2.isEmpty() ? MediaTypes.GENERAL_MEDIA_TYPE_LIST : mediaTypeList2;
+                    mediaTypeList1 = mediaTypeList1.isEmpty() ? MediaTypes.WILDCARD_TYPE_SINGLETON_LIST : mediaTypeList1;
+                    mediaTypeList2 = mediaTypeList2.isEmpty() ? MediaTypes.WILDCARD_TYPE_SINGLETON_LIST : mediaTypeList2;
 
                     return MediaTypes.MEDIA_TYPE_LIST_COMPARATOR.compare(mediaTypeList2, mediaTypeList1);
                 }
@@ -188,19 +178,19 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
     private final Boolean legacyProviderOrdering;
 
-    private final List<MbrModel> readers;
-    private final List<MbwModel> writers;
+    private final List<ReaderModel> readers;
+    private final List<WriterModel> writers;
 
     private final Map<MediaType, List<MessageBodyReader>> readersCache =
-            new KeyComparatorHashMap<MediaType, List<MessageBodyReader>>(MEDIA_TYPE_COMPARATOR);
+            new KeyComparatorHashMap<MediaType, List<MessageBodyReader>>(MEDIA_TYPE_KEY_COMPARATOR);
     private final Map<MediaType, List<MessageBodyWriter>> writersCache =
-            new KeyComparatorHashMap<MediaType, List<MessageBodyWriter>>(MEDIA_TYPE_COMPARATOR);
+            new KeyComparatorHashMap<MediaType, List<MessageBodyWriter>>(MEDIA_TYPE_KEY_COMPARATOR);
 
     private static final int LOOKUP_CACHE_INITIAL_CAPACITY = 32;
     private static final float LOOKUP_CACHE_LOAD_FACTOR = 0.75f;
-    private final Map<Class<?>, List<MessageBodyReader>> mbrTypeLookupCache = DataStructures.createConcurrentMap(
+    private final Map<Class<?>, List<ReaderModel>> mbrTypeLookupCache = DataStructures.createConcurrentMap(
             LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
-    private final Map<Class<?>, List<MessageBodyWriter>> mbwTypeLookupCache = DataStructures.createConcurrentMap(
+    private final Map<Class<?>, List<WriterModel>> mbwTypeLookupCache = DataStructures.createConcurrentMap(
             LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
 
     private final Map<Class<?>, List<MediaType>> typeToMediaTypeReadersCache = DataStructures.createConcurrentMap(
@@ -208,82 +198,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private final Map<Class<?>, List<MediaType>> typeToMediaTypeWritersCache = DataStructures.createConcurrentMap(
             LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
 
-    private final Map<ModelLookupKey, List<MbrModel>> mbrLookupCache = DataStructures.createConcurrentMap(
+    private final Map<ModelLookupKey, List<ReaderModel>> mbrLookupCache = DataStructures.createConcurrentMap(
             LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
-    private final Map<ModelLookupKey, List<MbwModel>> mbwLookupCache = DataStructures.createConcurrentMap(
+    private final Map<ModelLookupKey, List<WriterModel>> mbwLookupCache = DataStructures.createConcurrentMap(
             LOOKUP_CACHE_INITIAL_CAPACITY, LOOKUP_CACHE_LOAD_FACTOR, DataStructures.DEFAULT_CONCURENCY_LEVEL);
-
-    private static class WorkerModel<T> {
-
-        public final T provider;
-        public final List<MediaType> types;
-        public final Boolean custom;
-        public final Class<?> providerClassParam;
-
-        protected WorkerModel(
-                final T provider, final List<MediaType> types, final Boolean custom, Class<T> providerType) {
-            this.provider = provider;
-            this.types = types;
-            this.custom = custom;
-            this.providerClassParam = getProviderClassParam(provider, providerType);
-        }
-
-        private static Class<?> getProviderClassParam(Object provider, Class<?> providerType) {
-            final ReflectionHelper.DeclaringClassInterfacePair pair =
-                    ReflectionHelper.getClass(provider.getClass(), providerType);
-            final Class[] classArgs = ReflectionHelper.getParameterizedClassArguments(pair);
-
-            return classArgs != null ? classArgs[0] : Object.class;
-        }
-    }
-
-    private static class MbrModel extends WorkerModel<MessageBodyReader> {
-
-        public MbrModel(MessageBodyReader provider, List<MediaType> types, Boolean custom) {
-            super(provider, types, custom, MessageBodyReader.class);
-        }
-
-        public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-            return MbrModel.isReadable(provider, type, genericType, annotations, mediaType);
-        }
-
-        @SuppressWarnings("unchecked")
-        public static boolean isReadable(MessageBodyReader provider,
-                                         Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-            try {
-                return provider.isReadable(type, genericType, annotations, mediaType);
-            } catch (Exception ex) {
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.log(Level.FINE, LocalizationMessages.ERROR_MBR_ISREADABLE(provider.getClass().getName()), ex);
-                }
-            }
-            return false;
-        }
-    }
-
-    private static class MbwModel extends WorkerModel<MessageBodyWriter> {
-
-        public MbwModel(MessageBodyWriter provider, List<MediaType> types, Boolean custom) {
-            super(provider, types, custom, MessageBodyWriter.class);
-        }
-
-        public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-            return MbwModel.isWriteable(provider, type, genericType, annotations, mediaType);
-        }
-
-        @SuppressWarnings("unchecked")
-        public static boolean isWriteable(MessageBodyWriter provider,
-                                          Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-            try {
-                return provider.isWriteable(type, genericType, annotations, mediaType);
-            } catch (Exception ex) {
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.log(Level.FINE, LocalizationMessages.ERROR_MBW_ISWRITABLE(provider.getClass().getName()), ex);
-                }
-            }
-            return false;
-        }
-    }
 
     /**
      * Create new message body workers factory.
@@ -299,7 +217,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
 
         // Initialize readers
-        this.readers = new ArrayList<MbrModel>();
+        this.readers = new ArrayList<ReaderModel>();
         final Set<MessageBodyReader> customMbrs = Providers.getCustomProviders(locator, MessageBodyReader.class);
         final Set<MessageBodyReader> mbrs = Providers.getProviders(locator, MessageBodyReader.class);
 
@@ -310,21 +228,21 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         if (legacyProviderOrdering) {
             Collections.sort(readers, new LegacyWorkerComparator<MessageBodyReader>(MessageBodyReader.class));
 
-            for (MbrModel model : readers) {
-                for (MediaType mt : model.types) {
+            for (ReaderModel model : readers) {
+                for (MediaType mt : model.declaredTypes()) {
                     List<MessageBodyReader> readerList = readersCache.get(mt);
 
                     if (readerList == null) {
                         readerList = new ArrayList<MessageBodyReader>();
                         readersCache.put(mt, readerList);
                     }
-                    readerList.add(model.provider);
+                    readerList.add(model.provider());
                 }
             }
         }
 
         // Initialize writers
-        this.writers = new ArrayList<MbwModel>();
+        this.writers = new ArrayList<WriterModel>();
 
         final Set<MessageBodyWriter> customMbws = Providers.getCustomProviders(locator, MessageBodyWriter.class);
         final Set<MessageBodyWriter> mbws = Providers.getProviders(locator, MessageBodyWriter.class);
@@ -336,15 +254,15 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         if (legacyProviderOrdering) {
             Collections.sort(writers, new LegacyWorkerComparator<MessageBodyWriter>(MessageBodyWriter.class));
 
-            for (WorkerModel<MessageBodyWriter> model : writers) {
-                for (MediaType mt : model.types) {
+            for (AbstractEntityProviderModel<MessageBodyWriter> model : writers) {
+                for (MediaType mt : model.declaredTypes()) {
                     List<MessageBodyWriter> writerList = writersCache.get(mt);
 
                     if (writerList == null) {
                         writerList = new ArrayList<MessageBodyWriter>();
                         writersCache.put(mt, writerList);
                     }
-                    writerList.add(model.provider);
+                    writerList.add(model.provider());
                 }
             }
         }
@@ -401,16 +319,16 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     /**
-     * {@link org.glassfish.jersey.message.internal.MessageBodyFactory.WorkerModel} comparator
+     * {@link AbstractEntityProviderModel} comparator
      * which works as it is described in JAX-RS 2.x specification.
      *
      * Pairs are sorted by distance from required type, media type and custom/provided (provided goes first).
      *
      * @param <T> MessageBodyReader or MessageBodyWriter.
      * @see DeclarationDistanceComparator
-     * @see #MEDIA_TYPE_COMPARATOR
+     * @see #MEDIA_TYPE_KEY_COMPARATOR
      */
-    private static class WorkerComparator<T> implements Comparator<WorkerModel<T>> {
+    private static class WorkerComparator<T> implements Comparator<AbstractEntityProviderModel<T>> {
 
         final Class wantedType;
         final MediaType wantedMediaType;
@@ -421,21 +339,21 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         @Override
-        public int compare(WorkerModel<T> modelA, WorkerModel<T> modelB) {
+        public int compare(AbstractEntityProviderModel<T> modelA, AbstractEntityProviderModel<T> modelB) {
 
-            final int distance = compareTypeDistances(modelA.providerClassParam, modelB.providerClassParam);
+            final int distance = compareTypeDistances(modelA.providedType(), modelB.providedType());
             if (distance != 0) {
                 return distance;
             }
 
-            final int mediaTypeComparison =
-                    getMediaTypeDistance(wantedMediaType, modelA.types) - getMediaTypeDistance(wantedMediaType, modelB.types);
+            final int mediaTypeComparison = getMediaTypeDistance(wantedMediaType, modelA.declaredTypes()) -
+                    getMediaTypeDistance(wantedMediaType, modelB.declaredTypes());
             if (mediaTypeComparison != 0) {
                 return mediaTypeComparison;
             }
 
-            if (modelA.custom ^ modelB.custom) {
-                return (modelA.custom) ? -1 : 1;
+            if (modelA.isCustom() ^ modelB.isCustom()) {
+                return (modelA.isCustom()) ? -1 : 1;
             }
             return 0;
         }
@@ -519,16 +437,16 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     /**
-     * {@link org.glassfish.jersey.message.internal.MessageBodyFactory.WorkerModel} comparator which
+     * {@link AbstractEntityProviderModel} comparator which
      * works as it is described in JAX-RS 1.x specification.
      *
      * Pairs are sorted by custom/provided (custom goes first), media type and declaration distance.
      *
      * @param <T> MessageBodyReader or MessageBodyWriter.
      * @see DeclarationDistanceComparator
-     * @see #MEDIA_TYPE_COMPARATOR
+     * @see #MEDIA_TYPE_KEY_COMPARATOR
      */
-    private static class LegacyWorkerComparator<T> implements Comparator<WorkerModel<T>> {
+    private static class LegacyWorkerComparator<T> implements Comparator<AbstractEntityProviderModel<T>> {
 
         final DeclarationDistanceComparator<T> distanceComparator;
 
@@ -537,16 +455,19 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         @Override
-        public int compare(WorkerModel<T> modelA, WorkerModel<T> modelB) {
+        public int compare(AbstractEntityProviderModel<T> modelA, AbstractEntityProviderModel<T> modelB) {
 
-            if (modelA.custom ^ modelB.custom) {
-                return (modelA.custom) ? -1 : 1;
+            if (modelA.isCustom() ^ modelB.isCustom()) {
+                return (modelA.isCustom()) ? -1 : 1;
             }
-            final int mediaTypeComparison = MEDIA_TYPE_COMPARATOR.compare(modelA.types.get(0), modelB.types.get(0));
-            if (mediaTypeComparison != 0) {
+            final MediaType mtA = modelA.declaredTypes().get(0);
+            final MediaType mtB = modelB.declaredTypes().get(0);
+
+            final int mediaTypeComparison = MediaTypes.PARTIAL_ORDER_COMPARATOR.compare(mtA, mtB);
+            if (mediaTypeComparison != 0 && !mtA.isCompatible(mtB)) {
                 return mediaTypeComparison;
             }
-            return distanceComparator.compare(modelA.provider, modelB.provider);
+            return distanceComparator.compare(modelA.provider(), modelB.provider());
         }
     }
 
@@ -578,17 +499,17 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
     }
 
-    private static void addReaders(List<MbrModel> models, Set<MessageBodyReader> readers, boolean custom) {
+    private static void addReaders(List<ReaderModel> models, Set<MessageBodyReader> readers, boolean custom) {
         for (MessageBodyReader provider : readers) {
             List<MediaType> values = MediaTypes.createFrom(provider.getClass().getAnnotation(Consumes.class));
-            models.add(new MbrModel(provider, values, custom));
+            models.add(new ReaderModel(provider, values, custom));
         }
     }
 
-    private static void addWriters(List<MbwModel> models, Set<MessageBodyWriter> writers, boolean custom) {
+    private static void addWriters(List<WriterModel> models, Set<MessageBodyWriter> writers, boolean custom) {
         for (MessageBodyWriter provider : writers) {
             List<MediaType> values = MediaTypes.createFrom(provider.getClass().getAnnotation(Produces.class));
-            models.add(new MbwModel(provider, values, custom));
+            models.add(new WriterModel(provider, values, custom));
         }
     }
 
@@ -596,8 +517,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     @Override
     public Map<MediaType, List<MessageBodyReader>> getReaders(MediaType mediaType) {
         Map<MediaType, List<MessageBodyReader>> subSet =
-                new KeyComparatorLinkedHashMap<MediaType, List<MessageBodyReader>>(
-                        MEDIA_TYPE_COMPARATOR);
+                new KeyComparatorLinkedHashMap<MediaType, List<MessageBodyReader>>(MEDIA_TYPE_KEY_COMPARATOR);
 
         getCompatibleProvidersMap(mediaType, readers, subSet);
         return subSet;
@@ -606,8 +526,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     @Override
     public Map<MediaType, List<MessageBodyWriter>> getWriters(MediaType mediaType) {
         Map<MediaType, List<MessageBodyWriter>> subSet =
-                new KeyComparatorLinkedHashMap<MediaType, List<MessageBodyWriter>>(
-                        MEDIA_TYPE_COMPARATOR);
+                new KeyComparatorLinkedHashMap<MediaType, List<MessageBodyWriter>>(MEDIA_TYPE_KEY_COMPARATOR);
 
         getCompatibleProvidersMap(mediaType, writers, subSet);
         return subSet;
@@ -658,7 +577,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             }
             if (p == null) {
-                p = _getMessageBodyReader(c, t, as, mediaType, MediaTypes.GENERAL_MEDIA_TYPE, propertiesDelegate);
+                p = _getMessageBodyReader(c, t, as, mediaType, MediaType.WILDCARD_TYPE, propertiesDelegate);
             }
         } else {
             p = _getMessageBodyReader(c, t, as, mediaType, readers, propertiesDelegate);
@@ -672,10 +591,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public List<MediaType> getMessageBodyReaderMediaTypes(Class<?> type, Type genericType, Annotation[] annotations) {
         final Set<MediaType> readableMediaTypes = Sets.newLinkedHashSet();
 
-        for (MbrModel model : readers) {
+        for (ReaderModel model : readers) {
             boolean readableWorker = false;
 
-            for (MediaType mt : model.types) {
+            for (MediaType mt : model.declaredTypes()) {
                 if (model.isReadable(type, genericType, annotations, mt)) {
                     readableMediaTypes.add(mt);
                     readableWorker = true;
@@ -683,25 +602,25 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
                 if (!readableMediaTypes.contains(MediaType.WILDCARD_TYPE)
                         && readableWorker
-                        && model.types.contains(MediaType.WILDCARD_TYPE)) {
+                        && model.declaredTypes().contains(MediaType.WILDCARD_TYPE)) {
                     readableMediaTypes.add(MediaType.WILDCARD_TYPE);
                 }
             }
         }
 
         final List<MediaType> mtl = Lists.newArrayList(readableMediaTypes);
-        Collections.sort(mtl, MediaTypes.MEDIA_TYPE_COMPARATOR);
+        Collections.sort(mtl, MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mtl;
     }
 
     @SuppressWarnings("unchecked")
-    private <T> boolean isCompatible(WorkerModel<T> model, Class c, MediaType mediaType) {
-        if (model.providerClassParam.equals(Object.class) ||
+    private <T> boolean isCompatible(AbstractEntityProviderModel<T> model, Class c, MediaType mediaType) {
+        if (model.providedType().equals(Object.class) ||
                 // looks weird. Could/(should?) be separated to Writer/Reader check
-                model.providerClassParam.isAssignableFrom(c) ||
-                c.isAssignableFrom(model.providerClassParam)
+                model.providedType().isAssignableFrom(c) ||
+                c.isAssignableFrom(model.providedType())
                 ) {
-            for (MediaType mt : model.types) {
+            for (MediaType mt : model.declaredTypes()) {
                 if (mediaType == null) {
                     return true;
                 }
@@ -718,7 +637,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private <T> MessageBodyReader<T> _getMessageBodyReader(Class<T> c, Type t,
                                                            Annotation[] as,
                                                            MediaType mediaType,
-                                                           List<MbrModel> models,
+                                                           List<ReaderModel> models,
                                                            PropertiesDelegate propertiesDelegate) {
 
         // Ensure a parameter-less lookup type to prevent excessive memory consumption
@@ -728,11 +647,11 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 new MediaType(mediaType.getType(), mediaType.getSubtype());
 
         final ModelLookupKey lookupKey = new ModelLookupKey(c, lookupType);
-        List<MbrModel> readers = mbrLookupCache.get(lookupKey);
+        List<ReaderModel> readers = mbrLookupCache.get(lookupKey);
         if (readers == null) {
-            readers = new ArrayList<MbrModel>();
+            readers = new ArrayList<ReaderModel>();
 
-            for (MbrModel model : models) {
+            for (ReaderModel model : models) {
                 if (isCompatible(model, c, mediaType)) {
                     readers.add(model);
                 }
@@ -747,21 +666,21 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         MessageBodyReader<T> selected = null;
-        final Iterator<MbrModel> iterator = readers.iterator();
+        final Iterator<ReaderModel> iterator = readers.iterator();
         while (iterator.hasNext()) {
-            final MbrModel model = iterator.next();
+            final ReaderModel model = iterator.next();
             if (model.isReadable(c, t, as, mediaType)) {
-                selected = (MessageBodyReader<T>) model.provider;
+                selected = (MessageBodyReader<T>) model.provider();
                 tracingLogger.log(MsgTraceEvent.MBR_SELECTED, selected);
                 break;
             }
-            tracingLogger.log(MsgTraceEvent.MBR_NOT_READABLE, model.provider);
+            tracingLogger.log(MsgTraceEvent.MBR_NOT_READABLE, model.provider());
         }
 
         if (tracingLogger.isLogEnabled(MsgTraceEvent.MBR_SKIPPED)) {
             while (iterator.hasNext()) {
-                final MbrModel model = iterator.next();
-                tracingLogger.log(MsgTraceEvent.MBR_SKIPPED, model.provider);
+                final ReaderModel model = iterator.next();
+                tracingLogger.log(MsgTraceEvent.MBR_SKIPPED, model.provider());
             }
         }
 
@@ -785,7 +704,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         final Iterator<MessageBodyReader> iterator = readers.iterator();
         while (iterator.hasNext()) {
             final MessageBodyReader p = iterator.next();
-            if (MbrModel.isReadable(p, c, t, as, mediaType)) {
+            if (isReadable(p, c, t, as, mediaType)) {
                 selected = (MessageBodyReader<T>) p;
                 tracingLogger.log(MsgTraceEvent.MBR_SELECTED, selected);
                 break;
@@ -825,7 +744,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 }
             }
             if (p == null) {
-                p = _getMessageBodyWriter(c, t, as, mediaType, MediaTypes.GENERAL_MEDIA_TYPE, propertiesDelegate);
+                p = _getMessageBodyWriter(c, t, as, mediaType, MediaType.WILDCARD_TYPE, propertiesDelegate);
             }
         } else {
             p = _getMessageBodyWriter(c, t, as, mediaType, writers, propertiesDelegate);
@@ -838,7 +757,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     private <T> MessageBodyWriter<T> _getMessageBodyWriter(Class<T> c, Type t,
                                                            Annotation[] as,
                                                            MediaType mediaType,
-                                                           List<MbwModel> models,
+                                                           List<WriterModel> models,
                                                            PropertiesDelegate propertiesDelegate) {
         // Ensure  a parameter-less lookup type to prevent excessive memory consumption
         // reported in JERSEY-2297
@@ -847,12 +766,12 @@ public class MessageBodyFactory implements MessageBodyWorkers {
                 new MediaType(mediaType.getType(), mediaType.getSubtype());
 
         final ModelLookupKey lookupKey = new ModelLookupKey(c, lookupType);
-        List<MbwModel> writers = mbwLookupCache.get(lookupKey);
+        List<WriterModel> writers = mbwLookupCache.get(lookupKey);
         if (writers == null) {
 
-            writers = new ArrayList<MbwModel>();
+            writers = new ArrayList<WriterModel>();
 
-            for (MbwModel model : models) {
+            for (WriterModel model : models) {
                 if (isCompatible(model, c, mediaType)) {
                     writers.add(model);
                 }
@@ -867,21 +786,21 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         MessageBodyWriter<T> selected = null;
-        final Iterator<MbwModel> iterator = writers.iterator();
+        final Iterator<WriterModel> iterator = writers.iterator();
         while (iterator.hasNext()) {
-            final MbwModel model = iterator.next();
+            final WriterModel model = iterator.next();
             if (model.isWriteable(c, t, as, mediaType)) {
-                selected = (MessageBodyWriter<T>) model.provider;
+                selected = (MessageBodyWriter<T>) model.provider();
                 tracingLogger.log(MsgTraceEvent.MBW_SELECTED, selected);
                 break;
             }
-            tracingLogger.log(MsgTraceEvent.MBW_NOT_WRITEABLE, model.provider);
+            tracingLogger.log(MsgTraceEvent.MBW_NOT_WRITEABLE, model.provider());
         }
 
         if (tracingLogger.isLogEnabled(MsgTraceEvent.MBW_SKIPPED)) {
             while (iterator.hasNext()) {
-                final MbwModel model = iterator.next();
-                tracingLogger.log(MsgTraceEvent.MBW_SKIPPED, model.provider);
+                final WriterModel model = iterator.next();
+                tracingLogger.log(MsgTraceEvent.MBW_SKIPPED, model.provider());
             }
         }
 
@@ -904,7 +823,7 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         final Iterator<MessageBodyWriter> iterator = writers.iterator();
         while (iterator.hasNext()) {
             final MessageBodyWriter p = iterator.next();
-            if (MbwModel.isWriteable(p, c, t, as, mediaType)) {
+            if (isWriteable(p, c, t, as, mediaType)) {
                 selected = (MessageBodyWriter<T>) p;
                 tracingLogger.log(MsgTraceEvent.MBW_SELECTED, selected);
                 break;
@@ -921,33 +840,32 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         return selected;
     }
 
-    private <T> void getCompatibleProvidersMap(MediaType mediaType,
-                                               List<? extends WorkerModel<T>> set,
-                                               Map<MediaType, List<T>> subSet) {
+    private static <T> void getCompatibleProvidersMap(
+            MediaType mediaType, List<? extends AbstractEntityProviderModel<T>> set, Map<MediaType, List<T>> subSet) {
+
         if (mediaType.isWildcardType()) {
             getCompatibleProvidersList(mediaType, set, subSet);
         } else if (mediaType.isWildcardSubtype()) {
             getCompatibleProvidersList(mediaType, set, subSet);
-            getCompatibleProvidersList(MediaTypes.GENERAL_MEDIA_TYPE, set, subSet);
+            getCompatibleProvidersList(MediaType.WILDCARD_TYPE, set, subSet);
         } else {
             getCompatibleProvidersList(mediaType, set, subSet);
             getCompatibleProvidersList(
                     MediaTypes.getTypeWildCart(mediaType),
                     set, subSet);
-            getCompatibleProvidersList(MediaTypes.GENERAL_MEDIA_TYPE, set, subSet);
+            getCompatibleProvidersList(MediaType.WILDCARD_TYPE, set, subSet);
         }
 
     }
 
-    private <T> void getCompatibleProvidersList(MediaType mediaType,
-                                                List<? extends WorkerModel<T>> set,
-                                                Map<MediaType, List<T>> subSet) {
+    private static <T> void getCompatibleProvidersList(
+            MediaType mediaType, List<? extends AbstractEntityProviderModel<T>> set, Map<MediaType, List<T>> subSet) {
 
         List<T> providers = new ArrayList<T>();
 
-        for (WorkerModel<T> model : set) {
-            if (model.types.contains(mediaType)) {
-                providers.add(model.provider);
+        for (AbstractEntityProviderModel<T> model : set) {
+            if (model.declaredTypes().contains(mediaType)) {
+                providers.add(model.provider());
             }
         }
 
@@ -961,10 +879,10 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     public List<MediaType> getMessageBodyWriterMediaTypes(Class<?> c, Type t, Annotation[] as) {
         final Set<MediaType> writeableMediaTypes = Sets.newLinkedHashSet();
 
-        for (MbwModel model : writers) {
+        for (WriterModel model : writers) {
             boolean writeableWorker = false;
 
-            for (MediaType mt : model.types) {
+            for (MediaType mt : model.declaredTypes()) {
                 if (model.isWriteable(c, t, as, mt)) {
                     writeableMediaTypes.add(mt);
                     writeableWorker = true;
@@ -972,55 +890,65 @@ public class MessageBodyFactory implements MessageBodyWorkers {
 
                 if (!writeableMediaTypes.contains(MediaType.WILDCARD_TYPE)
                         && writeableWorker
-                        && model.types.contains(MediaType.WILDCARD_TYPE)) {
+                        && model.declaredTypes().contains(MediaType.WILDCARD_TYPE)) {
                     writeableMediaTypes.add(MediaType.WILDCARD_TYPE);
                 }
             }
         }
 
         final List<MediaType> mtl = Lists.newArrayList(writeableMediaTypes);
-        Collections.sort(mtl, MediaTypes.MEDIA_TYPE_COMPARATOR);
+        Collections.sort(mtl, MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mtl;
     }
 
+    private static final Function<WriterModel, MessageBodyWriter> MODEL_TO_WRITER =
+            new Function<WriterModel, MessageBodyWriter>() {
+                @Override
+                public MessageBodyWriter apply(WriterModel input) {
+                    return input.provider();
+                }
+            };
+
     @Override
     @SuppressWarnings("unchecked")
-    public List<MessageBodyWriter> getMessageBodyWritersForType(final Class<?> clazz) {
-        if (!mbwTypeLookupCache.containsKey(clazz)) {
-            processMessageBodyWritersForType(clazz);
-        }
-        return mbwTypeLookupCache.get(clazz);
+    public List<MessageBodyWriter> getMessageBodyWritersForType(final Class<?> type) {
+        return Lists.transform(getWritersModelsForType(type), MODEL_TO_WRITER);
     }
 
-    private void processMessageBodyWritersForType(final Class<?> clazz) {
-        final List<WorkerModel<MessageBodyWriter>> suitableWriters = Lists.newArrayList();
+    @Override
+    public List<WriterModel> getWritersModelsForType(Class<?> type) {
+        final List<WriterModel> writerModels = mbwTypeLookupCache.get(type);
+        if (writerModels != null) {
+            return writerModels;
+        }
+        return processMessageBodyWritersForType(type);
+    }
+
+    private List<WriterModel> processMessageBodyWritersForType(final Class<?> clazz) {
+        final List<WriterModel> suitableWriters = Lists.newArrayList();
 
         if (Response.class.isAssignableFrom(clazz)) {
             suitableWriters.addAll(writers);
         } else {
-            for (final WorkerModel<MessageBodyWriter> workerPair : writers) {
-                final Class<?> wrapped = Primitives.wrap(clazz);
+            final Class<?> wrapped = Primitives.wrap(clazz);
+            for (final WriterModel model : writers) {
 
-                if (workerPair.providerClassParam == null
-                        || workerPair.providerClassParam.isAssignableFrom(wrapped)
-                        || workerPair.providerClassParam == clazz) {
+                if (model.providedType() == null
+                        || model.providedType() == clazz
+                        || model.providedType().isAssignableFrom(wrapped)) {
 
-                    suitableWriters.add(workerPair);
+                    suitableWriters.add(model);
                 }
             }
         }
+        // Type -> Writer.
+        Collections.sort(suitableWriters, WORKER_BY_TYPE_COMPARATOR);
+        mbwTypeLookupCache.put(clazz, suitableWriters);
 
         // Type -> MediaType.
         typeToMediaTypeWritersCache.put(clazz, getMessageBodyWorkersMediaTypesByType(suitableWriters));
 
-        // Type -> Writer.
-        Collections.sort(suitableWriters, WORKER_BY_TYPE_COMPARATOR);
-
-        final List<MessageBodyWriter> writers = Lists.newArrayList();
-        for (final WorkerModel<MessageBodyWriter> workerPair : suitableWriters) {
-            writers.add(workerPair.provider);
-        }
-        mbwTypeLookupCache.put(clazz, writers);
+        return suitableWriters;
     }
 
     @Override
@@ -1040,63 +968,73 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> List<MediaType> getMessageBodyWorkersMediaTypesByType(final List<? extends WorkerModel<T>> workerModels) {
+    private static <T> List<MediaType> getMessageBodyWorkersMediaTypesByType(
+            final List<? extends AbstractEntityProviderModel<T>> workerModels) {
+
         final Set<MediaType> mediaTypeSet = Sets.newHashSet();
-        for (final WorkerModel<T> model : workerModels) {
-            mediaTypeSet.addAll(model.types);
+        for (final AbstractEntityProviderModel<T> model : workerModels) {
+            mediaTypeSet.addAll(model.declaredTypes());
         }
 
         final List<MediaType> mediaTypes = Lists.newArrayList(mediaTypeSet);
-        Collections.sort(mediaTypes, MediaTypes.MEDIA_TYPE_COMPARATOR);
+        Collections.sort(mediaTypes, MediaTypes.PARTIAL_ORDER_COMPARATOR);
         return mediaTypes;
     }
 
+    private static final Function<ReaderModel, MessageBodyReader> MODEL_TO_READER =
+            new Function<ReaderModel, MessageBodyReader>() {
+                @Override
+                public MessageBodyReader apply(ReaderModel input) {
+                    return input.provider();
+                }
+            };
+
     @Override
     @SuppressWarnings("unchecked")
-    public List<MessageBodyReader> getMessageBodyReadersForType(final Class<?> clazz) {
-        if (!mbrTypeLookupCache.containsKey(clazz)) {
-            processMessageBodyReadersForType(clazz);
-        }
-
-        return mbrTypeLookupCache.get(clazz);
+    public List<MessageBodyReader> getMessageBodyReadersForType(final Class<?> type) {
+        return Lists.transform(getReaderModelsForType(type), MODEL_TO_READER);
     }
 
-    private void processMessageBodyReadersForType(final Class<?> clazz) {
-        final List<MbrModel> suitableReaders = Lists.newArrayList();
+    @Override
+    public List<ReaderModel> getReaderModelsForType(Class<?> type) {
+        if (!mbrTypeLookupCache.containsKey(type)) {
+            processMessageBodyReadersForType(type);
+        }
 
-        for (MbrModel reader : readers) {
-            final Class<?> wrapped = Primitives.wrap(clazz);
+        return mbrTypeLookupCache.get(type);
+    }
 
-            if (reader.providerClassParam == null
-                    || reader.providerClassParam.isAssignableFrom(wrapped)
-                    || reader.providerClassParam == clazz) {
+    private List<ReaderModel> processMessageBodyReadersForType(final Class<?> clazz) {
+        final List<ReaderModel> suitableReaders = Lists.newArrayList();
+
+        final Class<?> wrapped = Primitives.wrap(clazz);
+        for (ReaderModel reader : readers) {
+            if (reader.providedType() == null
+                    || reader.providedType() == clazz
+                    || reader.providedType().isAssignableFrom(wrapped)) {
                 suitableReaders.add(reader);
             }
         }
 
+        // Type -> Writer.
+        Collections.sort(suitableReaders, WORKER_BY_TYPE_COMPARATOR);
+        mbrTypeLookupCache.put(clazz, suitableReaders);
+
         // Type -> MediaType.
         typeToMediaTypeReadersCache.put(clazz, getMessageBodyWorkersMediaTypesByType(suitableReaders));
 
-        // Type -> Writer.
-        Collections.sort(suitableReaders, WORKER_BY_TYPE_COMPARATOR);
-
-        final List<MessageBodyReader> readers = Lists.newArrayList();
-        for (final MbrModel reader : suitableReaders) {
-            readers.add(reader.provider);
-        }
-        mbrTypeLookupCache.put(clazz, readers);
+        return suitableReaders;
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public MediaType getMessageBodyWriterMediaType(Class<?> c, Type t,
-                                                   Annotation[] as, List<MediaType> acceptableMediaTypes) {
-        for (MediaType acceptable : acceptableMediaTypes) {
+    public MediaType getMessageBodyWriterMediaType(
+            Class<?> c, Type t, Annotation[] as, List<MediaType> acceptableMediaTypes) {
 
-            for (MbwModel model : writers) {
-                for (MediaType mt : model.types) {
-                    if (mt.isCompatible(acceptable)
-                            && model.isWriteable(c, t, as, acceptable)) {
+        for (MediaType acceptable : acceptableMediaTypes) {
+            for (WriterModel model : writers) {
+                for (MediaType mt : model.declaredTypes()) {
+                    if (mt.isCompatible(acceptable) && model.isWriteable(c, t, as, acceptable)) {
                         return MediaTypes.mostSpecific(mt, acceptable);
                     }
                 }
@@ -1107,19 +1045,32 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @Override
-    public Object readFrom(Class<?> rawType,
-                           Type type,
-                           Annotation[] annotations,
-                           MediaType mediaType,
-                           MultivaluedMap<String, String> httpHeaders,
-                           PropertiesDelegate propertiesDelegate,
-                           InputStream entityStream,
-                           Iterable<ReaderInterceptor> readerInterceptors,
-                           boolean translateNce) throws WebApplicationException, IOException {
-        ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(rawType, type, annotations, mediaType,
-                httpHeaders, propertiesDelegate, entityStream, this, readerInterceptors, translateNce, serviceLocator);
+    public Object readFrom(final Class<?> rawType,
+                           final Type type,
+                           final Annotation[] annotations,
+                           final MediaType mediaType,
+                           final MultivaluedMap<String, String> httpHeaders,
+                           final PropertiesDelegate propertiesDelegate,
+                           final InputStream entityStream,
+                           final Iterable<ReaderInterceptor> readerInterceptors,
+                           final boolean translateNce) throws WebApplicationException, IOException {
+
+        ReaderInterceptorExecutor executor = new ReaderInterceptorExecutor(
+                rawType,
+                type,
+                annotations,
+                mediaType,
+                httpHeaders,
+                propertiesDelegate,
+                entityStream,
+                this,
+                readerInterceptors,
+                translateNce,
+                serviceLocator);
+
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         final long timestamp = tracingLogger.timestamp(MsgTraceEvent.RI_SUMMARY);
+
         try {
             Object instance = executor.proceed();
             if (!(instance instanceof Closeable) && !(instance instanceof Source)) {
@@ -1136,20 +1087,33 @@ public class MessageBodyFactory implements MessageBodyWorkers {
     }
 
     @Override
-    public OutputStream writeTo(Object t,
-                                Class<?> rawType,
-                                Type type,
-                                Annotation[] annotations,
-                                MediaType mediaType,
-                                MultivaluedMap<String, Object> httpHeaders,
-                                PropertiesDelegate propertiesDelegate,
-                                OutputStream entityStream,
-                                Iterable<WriterInterceptor> writerInterceptors)
+    public OutputStream writeTo(final Object t,
+                                final Class<?> rawType,
+                                final Type type,
+                                final Annotation[] annotations,
+                                final MediaType mediaType,
+                                final MultivaluedMap<String, Object> httpHeaders,
+                                final PropertiesDelegate propertiesDelegate,
+                                final OutputStream entityStream,
+                                final Iterable<WriterInterceptor> writerInterceptors)
             throws IOException, WebApplicationException {
-        WriterInterceptorExecutor executor = new WriterInterceptorExecutor(t, rawType, type, annotations, mediaType,
-                httpHeaders, propertiesDelegate, entityStream, this, writerInterceptors, serviceLocator);
+
+        WriterInterceptorExecutor executor = new WriterInterceptorExecutor(
+                t,
+                rawType,
+                type,
+                annotations,
+                mediaType,
+                httpHeaders,
+                propertiesDelegate,
+                entityStream,
+                this,
+                writerInterceptors,
+                serviceLocator);
+
         final TracingLogger tracingLogger = TracingLogger.getInstance(propertiesDelegate);
         final long timestamp = tracingLogger.timestamp(MsgTraceEvent.WI_SUMMARY);
+
         try {
             executor.proceed();
         } finally {
@@ -1157,5 +1121,68 @@ public class MessageBodyFactory implements MessageBodyWorkers {
         }
 
         return executor.getOutputStream();
+    }
+
+    /**
+     * Safely invokes {@link javax.ws.rs.ext.MessageBodyWriter#isWriteable isWriteable} method on the supplied provider.
+     *
+     * Any exceptions will be logged at finer level.
+     *
+     * @param provider    message body writer on which the {@code isWriteable} should be invoked.
+     * @param type        the class of instance that is to be written.
+     * @param genericType the type of instance to be written, obtained either
+     *                    by reflection of a resource method return type or via inspection
+     *                    of the returned instance. {@link javax.ws.rs.core.GenericEntity}
+     *                    provides a way to specify this information at runtime.
+     * @param annotations an array of the annotations attached to the message entity instance.
+     * @param mediaType   the media type of the HTTP entity.
+     * @return {@code true} if the type is supported, otherwise {@code false}.
+     */
+    public static boolean isWriteable(
+            MessageBodyWriter<?> provider, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        try {
+            return provider.isWriteable(type, genericType, annotations, mediaType);
+        } catch (Exception ex) {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, LocalizationMessages.ERROR_MBW_ISWRITABLE(provider.getClass().getName()), ex);
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     * Safely invokes {@link javax.ws.rs.ext.MessageBodyReader#isReadable isReadable} method on the supplied provider.
+     *
+     * Any exceptions will be logged at finer level.
+     *
+     * @param provider    message body reader on which the {@code isReadable} should be invoked.
+     *                    Safely invokes {@link javax.ws.rs.ext.MessageBodyReader#isReadable isReadable} method on the underlying
+     *                    provider.
+     * @param type        the class of instance to be produced.
+     * @param genericType the type of instance to be produced. E.g. if the
+     *                    message body is to be converted into a method parameter, this will be
+     *                    the formal type of the method parameter as returned by
+     *                    {@code Method.getGenericParameterTypes}.
+     * @param annotations an array of the annotations on the declaration of the
+     *                    artifact that will be initialized with the produced instance. E.g. if the
+     *                    message body is to be converted into a method parameter, this will be
+     *                    the annotations on that parameter returned by
+     *                    {@code Method.getParameterAnnotations}.
+     * @param mediaType   the media type of the HTTP entity, if one is not
+     *                    specified in the request then {@code application/octet-stream} is
+     *                    used.
+     * @return {@code true} if the type is supported, otherwise {@code false}.
+     */
+    public static boolean isReadable(MessageBodyReader<?> provider,
+                                     Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        try {
+            return provider.isReadable(type, genericType, annotations, mediaType);
+        } catch (Exception ex) {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, LocalizationMessages.ERROR_MBR_ISREADABLE(provider.getClass().getName()), ex);
+            }
+        }
+        return false;
     }
 }

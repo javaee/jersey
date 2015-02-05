@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -355,8 +355,8 @@ public class AcceptMediaTypeProviderTest {
     @Test
     public void testFirefoxAcceptHeaderWithPrority() throws Exception {
         String header = "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5";
-        List<AcceptableMediaType> l = HttpHeaderReader.readAcceptMediaType(header,
-                HttpHeaderReader.readQualitySourceMediaType("text/html;qs=2"));
+        List<AcceptableMediaType> l = HttpHeaderReader.readAcceptMediaType(
+                header, HttpHeaderReader.readQualitySourceMediaType("text/html;qs=1"));
 
         assertEquals(7, l.size());
 
@@ -394,8 +394,9 @@ public class AcceptMediaTypeProviderTest {
     @Test
     public void testFirefoxAcceptHeaderWithPrority2() throws Exception {
         String header = "text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5";
-        List<AcceptableMediaType> l = HttpHeaderReader.readAcceptMediaType(header,
-                HttpHeaderReader.readQualitySourceMediaType(new String[]{"text/html;qs=2", "application/xml;qs=1.1"}));
+        List<AcceptableMediaType> l = HttpHeaderReader.readAcceptMediaType(
+                header,
+                HttpHeaderReader.readQualitySourceMediaType(new String[]{"text/html;qs=0.8", "application/xml;qs=0.1"}));
 
         assertEquals(7, l.size());
 

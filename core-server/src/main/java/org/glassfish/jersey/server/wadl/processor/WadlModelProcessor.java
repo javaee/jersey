@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.server.wadl.processor;
 
 import java.io.ByteArrayOutputStream;
@@ -93,7 +92,7 @@ public class WadlModelProcessor implements ModelProcessor {
 
     public WadlModelProcessor() {
         methodList = Lists.newArrayList();
-        methodList.add(new ModelProcessorUtil.Method(HttpMethod.OPTIONS, MediaType.WILDCARD_TYPE, MediaTypes.WADL,
+        methodList.add(new ModelProcessorUtil.Method(HttpMethod.OPTIONS, MediaType.WILDCARD_TYPE, MediaTypes.WADL_TYPE,
                 OptionsHandler.class));
     }
 
@@ -158,7 +157,7 @@ public class WadlModelProcessor implements ModelProcessor {
             }
 
             return Response.ok()
-                    .type(MediaTypes.WADL)
+                    .type(MediaTypes.WADL_TYPE)
                     .allow(ModelProcessorUtil.getAllowedMethods(resource))
                     .header("Last-modified", lastModified)
                     .entity(bytes)

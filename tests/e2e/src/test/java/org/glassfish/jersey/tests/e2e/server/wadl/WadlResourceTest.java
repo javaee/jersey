@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,7 +37,6 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-
 package org.glassfish.jersey.tests.e2e.server.wadl;
 
 import java.io.ByteArrayInputStream;
@@ -124,7 +123,7 @@ import com.sun.research.ws.wadl.Param;
 import com.sun.research.ws.wadl.Resources;
 
 /**
- * @author mh124079
+ * @author Marc Hadley
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
  * @author Libor Kramolis (libor.kramolis at oracle.com)
@@ -176,14 +175,14 @@ public class WadlResourceTest {
         @Test
         public void testPathTemplateInSubResourceMethod() throws ParserConfigurationException, SAXException, IOException,
                 XPathExpressionException {
-            final Response response = target("root/foo").request(MediaTypes.WADL).options();
+            final Response response = target("root/foo").request(MediaTypes.WADL_TYPE).options();
             assertEquals(200, response.getStatus());
         }
 
         @Test
         public void testPathTemplateInSubResourceMethod2() throws ParserConfigurationException, SAXException, IOException,
                 XPathExpressionException {
-            final Response response = target("root").request(MediaTypes.WADL).options();
+            final Response response = target("root").request(MediaTypes.WADL_TYPE).options();
             assertEquals(200, response.getStatus());
         }
     }
@@ -380,7 +379,7 @@ public class WadlResourceTest {
         public void testLastModifiedOPTIONS() {
             final WebTarget target = target("/widgets/3/verbose");
 
-            final Response r = target.queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL).options();
+            final Response r = target.queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true").request(MediaTypes.WADL_TYPE).options();
             System.out.println(r.readEntity(String.class));
             assertTrue(r.getHeaders().containsKey("Last-modified"));
         }
@@ -390,7 +389,7 @@ public class WadlResourceTest {
                 SAXException {
             // test WidgetsResource
             Response response = target("/widgets").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
-                    .request(MediaTypes.WADL).options();
+                    .request(MediaTypes.WADL_TYPE).options();
             assertEquals(200, response.getStatus());
 //            System.out.println(response.readEntity(String.class));
             File tmpFile = response.readEntity(File.class);
@@ -442,7 +441,7 @@ public class WadlResourceTest {
             assertEquals("1", val);
 
             response = target("/foo").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
-                    .request(MediaTypes.WADL).options();
+                    .request(MediaTypes.WADL_TYPE).options();
             assertEquals(200, response.getStatus());
             tmpFile = response.readEntity(File.class);
             b = bf.newDocumentBuilder();
@@ -468,7 +467,7 @@ public class WadlResourceTest {
 
             // test WidgetsResource
             final File tmpFile = target("/widgets/3/verbose").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
-                    .request(MediaTypes.WADL).options(File.class);
+                    .request(MediaTypes.WADL_TYPE).options(File.class);
             final DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
             bf.setNamespaceAware(true);
             bf.setValidating(false);
@@ -499,7 +498,7 @@ public class WadlResourceTest {
                 XPathExpressionException {
             // test WidgetsResource
             final File tmpFile = target("/widgets/3").queryParam(WadlUtils.DETAILED_WADL_QUERY_PARAM, "true")
-                    .request(MediaTypes.WADL).options(File.class);
+                    .request(MediaTypes.WADL_TYPE).options(File.class);
             final DocumentBuilderFactory bf = DocumentBuilderFactory.newInstance();
             bf.setNamespaceAware(true);
             bf.setValidating(false);
@@ -1033,7 +1032,7 @@ public class WadlResourceTest {
 
         private void _testRecursiveWadl(final String path) throws ParserConfigurationException, SAXException, IOException,
                 XPathExpressionException {
-            final Document d = extractWadlAsDocument(target(path).request(MediaTypes.WADL).options());
+            final Document d = extractWadlAsDocument(target(path).request(MediaTypes.WADL_TYPE).options());
 
             final XPath xp = XPathFactory.newInstance().newXPath();
             xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
@@ -1325,7 +1324,7 @@ public class WadlResourceTest {
         // TODO: fix
         public void testWadlForAmbiguousResourceTemplates() throws IOException, SAXException, ParserConfigurationException,
                 XPathExpressionException {
-            final Response response = target().path("foo").request(MediaTypes.WADL).options();
+            final Response response = target().path("foo").request(MediaTypes.WADL_TYPE).options();
             final Document d = extractWadlAsDocument(response);
             final XPath xp = XPathFactory.newInstance().newXPath();
             xp.setNamespaceContext(new SimpleNamespaceResolver("wadl", "http://wadl.dev.java.net/2009/02"));
@@ -1343,7 +1342,7 @@ public class WadlResourceTest {
         // TODO: fix
         public void testWadlForAmbiguousChildResourceTemplates() throws IOException, SAXException, ParserConfigurationException,
                 XPathExpressionException {
-            final Response response = target().path("resource/bar").request(MediaTypes.WADL).options();
+            final Response response = target().path("resource/bar").request(MediaTypes.WADL_TYPE).options();
 
             final Document d = extractWadlAsDocument(response);
             final XPath xp = XPathFactory.newInstance().newXPath();

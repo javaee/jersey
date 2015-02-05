@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,20 +57,23 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.ContainerResponse;
 import org.glassfish.jersey.server.RequestContextBuilder;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import org.junit.Test;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
- *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class AcceptAnnotatedReaderWriterTest {
@@ -80,19 +83,25 @@ public class AcceptAnnotatedReaderWriterTest {
     }
 
     public static class StringWrapper {
-
         public String s;
 
         public StringWrapper() {
+            // DO NOT REMOVE: used by StringWrapperWorker.readFrom
         }
 
         public StringWrapper(String s) {
             this.s = s;
         }
+
+        @Override
+        public String toString() {
+            return s;
+        }
     }
 
     public static class StringWrapperFoo extends StringWrapper {
         public StringWrapperFoo() {
+            // DO NOT REMOVE: used by StringWrapperWorker.readFrom
         }
 
         public StringWrapperFoo(String s) {
@@ -102,6 +111,7 @@ public class AcceptAnnotatedReaderWriterTest {
 
     public static class StringWrapperBar extends StringWrapper {
         public StringWrapperBar() {
+            // DO NOT REMOVE: used by StringWrapperWorker.readFrom
         }
 
         public StringWrapperBar(String s) {
@@ -159,6 +169,7 @@ public class AcceptAnnotatedReaderWriterTest {
         }
 
         abstract MediaType getMediaType();
+
         abstract String getPrefix();
 
         @Override
@@ -269,7 +280,8 @@ public class AcceptAnnotatedReaderWriterTest {
     @Path("/")
     public static class MultiplePostMethodResource {
 
-        @Context HttpHeaders httpHeaders;
+        @Context
+        HttpHeaders httpHeaders;
 
         @POST
         public StringWrapperBar postFoo2Bar(StringWrapperFoo foo) {
@@ -315,8 +327,11 @@ public class AcceptAnnotatedReaderWriterTest {
         }
         ContainerRequest requestContext = requestContextBuilder.accept(accept).build();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        app.apply(requestContext, baos);
-        assertEquals(expected, baos.toString());
+
+        final ContainerResponse response = app.apply(requestContext, baos).get();
+
+        assertThat(response.getStatus(), equalTo(Response.Status.OK.getStatusCode()));
+        assertThat(baos.toString(), equalTo(expected));
     }
 
     static String readString(InputStream is) throws IOException {

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -127,7 +127,7 @@ public class QualitySourceMediaTypeProviderTest {
 
     @Test
     public void testMultipleMediaTypeWithQuality2() throws Exception {
-        final String header = "application/xml;qs=10.1, text/xml;qs=10.2, text/html;qs=99.3";
+        final String header = "application/xml;qs=0.1, text/xml;qs=0.2, text/html;qs=0.93";
         final List<QualitySourceMediaType> l = HttpHeaderReader.readQualitySourceMediaType(header);
 
         assertEquals(3, l.size());

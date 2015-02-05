@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -219,7 +219,7 @@ public class OptionsTest {
         final ContainerResponse response = application.apply(request).get();
         Assert.assertEquals(200, response.getStatus());
         final MediaType type = response.getMediaType();
-        Assert.assertTrue(type.equals(MediaTypes.WADL) || type.equals(MediaType.TEXT_HTML_TYPE)
+        Assert.assertTrue(type.equals(MediaTypes.WADL_TYPE) || type.equals(MediaType.TEXT_HTML_TYPE)
                 || type.equals(MediaType.TEXT_PLAIN));
 
     }
@@ -243,7 +243,7 @@ public class OptionsTest {
     @Test
     public void testRequestWadl() throws ExecutionException, InterruptedException {
         ApplicationHandler application = new ApplicationHandler(new ResourceConfig(WadlResource.class, ResponseWadlFilter.class));
-        final MediaType requestType = MediaTypes.WADL;
+        final MediaType requestType = MediaTypes.WADL_TYPE;
         final ContainerResponse response = testOptions(requestType, application, "/resource");
     }
 
@@ -272,7 +272,7 @@ public class OptionsTest {
         @Override
         public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
             final MediaType type = responseContext.getMediaType();
-            Assert.assertEquals(MediaTypes.WADL, type);
+            Assert.assertEquals(MediaTypes.WADL_TYPE, type);
             responseContext.getEntity().getClass().equals(Application.class);
 
         }
