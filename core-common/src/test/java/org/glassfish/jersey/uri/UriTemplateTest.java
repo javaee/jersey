@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -48,6 +48,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.MatchResult;
+
+import org.glassfish.jersey.uri.internal.UriTemplateParser;
 
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -217,7 +219,7 @@ public class UriTemplateTest {
 
     @Test
     public void testTemplateRegexes() {
-        _testTemplateRegex("{a:}", "([^/]+?)");
+        _testTemplateRegex("{a:}", "(" + UriTemplateParser.TEMPLATE_VALUE_PATTERN.pattern() + ")");
         _testTemplateRegex("{a:.*}", "(.*)");
         _testTemplateRegex("{a:  .*}", "(.*)");
         _testTemplateRegex("{a:  .*  }", "(.*)");
