@@ -63,7 +63,7 @@
         <title>Creating a New Project from Maven Archetype</title>
 
         <para>
-            Jersey project is build using &maven.link; software project build and management tool. All modules produced as
+            Jersey project is built using &maven.link; software project build and management tool. All modules produced as
             part of Jersey project build are pushed to the &maven.central.repo.link;. Therefore it is very convenient to work
             with Jersey for any Maven-based project as all the released (non-SNAPSHOT) Jersey dependencies are readily
             available without a need to configure a special maven repository to consume the Jersey modules.
