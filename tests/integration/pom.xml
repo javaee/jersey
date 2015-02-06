@@ -63,6 +63,7 @@
         <module>ejb-jax-rs-ear1</module>
         <module>ejb-jax-rs-web1</module>
         <module>ejb-lib</module>
+        <module>j-376</module>
         <module>jersey-780</module>
         <module>jersey-1107</module>
         <module>jersey-1223</module>
