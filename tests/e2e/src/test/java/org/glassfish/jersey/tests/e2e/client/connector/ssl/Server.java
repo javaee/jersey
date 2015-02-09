@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,11 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.apache.connector.ssl;
+package org.glassfish.jersey.tests.e2e.client.connector.ssl;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
@@ -57,16 +58,25 @@ import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import com.google.common.io.ByteStreams;
 
 /**
+ * A simple SSL-secured HTTP server for testing purposes.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-public class Server {
+final class Server {
 
+    private static final String SERVER_TRUST_STORE = "truststore_server";
+    private static final String SERVER_KEY_STORE = "keystore_server";
     private static HttpServer webServer;
-
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
+    /**
+     * Base server URI.
+     */
     public static final URI BASE_URI = getBaseURI();
-    public static final String CONTENT = "JERSEY HTTPS EXAMPLE\n";
+
+    private Server() {
+        throw new AssertionError("Instantiation not allowed.");
+    }
 
     private static URI getBaseURI() {
         return UriBuilder.fromUri("https://localhost/").port(getPort(4463)).build();
@@ -78,7 +88,7 @@ public class Server {
             try {
                 return Integer.parseInt(port);
             } catch (NumberFormatException e) {
-                System.out.println("Value of jersey.config.test.container.port property" +
+                LOGGER.warning("Value of jersey.config.test.container.port property" +
                         " is not a valid positive integer [" + port + "]." +
                         " Reverting to default [" + defaultPort + "].");
             }
@@ -86,15 +96,20 @@ public class Server {
         return defaultPort;
     }
 
-    protected static void startServer() throws IOException {
-        final InputStream trustStore = Server.class.getResourceAsStream("/truststore_server");
-        final InputStream keyStore = Server.class.getResourceAsStream("/keystore_server");
+    /**
+     * Start SSL-secured HTTP test server.
+     *
+     * @throws IOException in case there is an error while reading server key store or trust store.
+     */
+    static void startServer() throws IOException {
+        final InputStream trustStore = Server.class.getResourceAsStream(SERVER_TRUST_STORE);
+        final InputStream keyStore = Server.class.getResourceAsStream(SERVER_KEY_STORE);
 
         // Grizzly ssl configuration
         SSLContextConfigurator sslContext = new SSLContextConfigurator();
 
         // set up security context
-        sslContext.setKeyStoreBytes(ByteStreams.toByteArray(keyStore));  // contains server keypair
+        sslContext.setKeyStoreBytes(ByteStreams.toByteArray(keyStore));  // contains server key pair
         sslContext.setKeyStorePass("asdfgh");
         sslContext.setTrustStoreBytes(ByteStreams.toByteArray(trustStore)); // contains client certificate
         sslContext.setTrustStorePass("asdfgh");
@@ -112,22 +127,18 @@ public class Server {
             );
 
             // start Grizzly embedded server //
-            System.out.println("Jersey app started. Try out " + BASE_URI + "\nHit CTRL + C to stop it...");
+            LOGGER.info("Jersey app started. Try out " + BASE_URI + "\nHit CTRL + C to stop it...");
             webServer.start();
 
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            LOGGER.log(Level.SEVERE, "Error while starting the server.", ex);
         }
     }
 
-    protected static void stopServer() {
+    /**
+     * Stop SSL-secured HTTP test server.
+     */
+    static void stopServer() {
         webServer.shutdownNow();
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void main(String[] args) throws InterruptedException, IOException {
-        startServer();
-
-        System.in.read();
     }
 }

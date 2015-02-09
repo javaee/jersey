@@ -39,15 +39,16 @@
  */
 package org.glassfish.jersey.apache.connector;
 
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configurable;
+import javax.ws.rs.core.Configuration;
+
 import org.glassfish.jersey.client.Initializable;
 import org.glassfish.jersey.client.spi.Connector;
 import org.glassfish.jersey.client.spi.ConnectorProvider;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Configurable;
-import javax.ws.rs.core.Configuration;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
 
 /**
  * Connector provider for Jersey {@link Connector connectors} that utilize
@@ -112,7 +113,7 @@ public class ApacheConnectorProvider implements ConnectorProvider {
 
     @Override
     public Connector getConnector(final Client client, final Configuration runtimeConfig) {
-        return new ApacheConnector(runtimeConfig);
+        return new ApacheConnector(client, runtimeConfig);
     }
 
     /**
