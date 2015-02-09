@@ -3,7 +3,7 @@
 
     DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 
-    Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
 
     The contents of this file are subject to the terms of either the GNU
     General Public License Version 2 only ("GPL") or the Common Development
@@ -133,6 +133,19 @@
 
     <Match>
         <Class name="org.glassfish.jersey.apache.connector.ApacheConnector" />
+    </Match>
+
+    <!-- CDI extension observer methods are called by CDI bean manager at runtime -->
+    <Match>
+        <Class name="org.glassfish.jersey.ext.cdi1x.internal.CdiComponentProvider" />
+        <Bug pattern="UPM_UNCALLED_PRIVATE_METHOD" />
+        <Or>
+          <Method name="processAnnotatedType" />
+          <Method name="afterTypeDiscovery" />
+          <Method name="beforeTypeDiscovery" />
+          <Method name="processInjectionTarget" />
+          <Method name="afterDiscoveryObserver" />
+        </Or>
     </Match>
 
 </FindBugsFilter>
