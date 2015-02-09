@@ -43,6 +43,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.WildcardType;
+import java.lang.reflect.GenericArrayType;
 import java.security.AccessController;
 import java.util.Map;
 import java.util.Set;
@@ -59,6 +62,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.JAXBElement;
 
 import org.glassfish.jersey.internal.util.ReflectionHelper;
 import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
@@ -205,4 +209,45 @@ public class ConfigurableMoxyJsonProvider extends MOXyJsonProvider {
                 || CoreClassConstants.PBOOLEAN == type || CoreClassConstants.BOOLEAN == type
                 || CoreClassConstants.PBYTE == type || CoreClassConstants.BYTE == type;
     }
+
+    @Override
+    protected Class<?> getDomainClass(Type genericType) {
+        if(null == genericType) {
+            return Object.class;
+        }
+        if(genericType instanceof Class && genericType != JAXBElement.class) {
+            Class<?> clazz = (Class<?>) genericType;
+            if(clazz.isArray()) {
+                return getDomainClass(clazz.getComponentType());
+            }
+            return clazz;
+        } else if(genericType instanceof ParameterizedType) {
+            Type type = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            if(type instanceof ParameterizedType) {
+                Type rawType = ((ParameterizedType) type).getRawType();
+                if(rawType == JAXBElement.class) {
+                    return getDomainClass(type);
+                } else if (rawType instanceof Class) {
+                    return (Class<?>) rawType;
+                }
+            } else if(type instanceof WildcardType) {
+                Type[] upperTypes = ((WildcardType)type).getUpperBounds();
+                if(upperTypes.length > 0){
+                    Type upperType = upperTypes[0];
+                    if(upperType instanceof Class){
+                        return (Class<?>) upperType;
+                    }
+                }
+            } else if(JAXBElement.class == type) {
+                return Object.class;
+            }
+            return (Class<?>) type;
+        } else if (genericType instanceof GenericArrayType) {
+            GenericArrayType genericArrayType = (GenericArrayType) genericType;
+            return getDomainClass(genericArrayType.getGenericComponentType());
+        } else {
+            return Object.class;
+        }
+    }
+
 }
