@@ -60,9 +60,8 @@ public final class Quality {
 
         @Override
         public int compare(Qualified o1, Qualified o2) {
-            final int q1 = o1.getQuality();
-            final int q2 = o2.getQuality();
-            return -Integer.compare(q1, q2);
+            // reverse comparison to achieve the "higher first" behavior.
+            return Integer.compare(o2.getQuality(), o1.getQuality());
         }
     };
 
@@ -74,8 +73,9 @@ public final class Quality {
     public static final Comparator<Integer> QUALITY_VALUE_COMPARATOR = new Comparator<Integer>() {
 
         @Override
-        public int compare(Integer o1, Integer o2) {
-            return -Integer.compare(o1, o2);
+        public int compare(Integer q1, Integer q2) {
+            // reverse comparison to achieve the "higher first" behavior.
+            return Integer.compare(q2, q1);
         }
     };
 
