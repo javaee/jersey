@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -62,7 +63,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -75,7 +75,6 @@ import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartProperties;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.internal.MediaTypes;
-
 import org.jvnet.mimepull.Header;
 import org.jvnet.mimepull.MIMEConfig;
 import org.jvnet.mimepull.MIMEMessage;
@@ -138,6 +137,7 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
         if (properties.getBufferThreshold() != MultiPartProperties.BUFFER_THRESHOLD_MEMORY_ONLY) {
             // Validate - this checks whether it's possible to create temp files in currently set temp directory.
             try {
+                //noinspection ResultOfMethodCallIgnored
                 File.createTempFile("MIME", null, tempDir != null ? new File(tempDir) : null).delete();
             } catch (final IOException ioe) {
                 LOGGER.log(Level.WARNING, LocalizationMessages.TEMP_FILE_CANNOT_BE_CREATED(properties.getBufferThreshold()), ioe);
@@ -190,57 +190,59 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
     protected MultiPart readMultiPart(final Class<MultiPart> type,
                                       final Type genericType,
                                       final Annotation[] annotations,
-                                      final MediaType mediaType,
+                                      MediaType mediaType,
                                       final MultivaluedMap<String, String> headers,
                                       final InputStream stream) throws IOException, MIMEParsingException {
+        mediaType = unquoteMediaTypeParameters(mediaType, "boundary");
+
         final MIMEMessage mimeMessage = new MIMEMessage(stream,
                 mediaType.getParameters().get("boundary"),
                 mimeConfig);
 
-        boolean formData = MediaTypes.typeEqual(mediaType, MediaType.MULTIPART_FORM_DATA_TYPE);
-        MultiPart multiPart = formData ? new FormDataMultiPart() : new MultiPart();
+        final boolean formData = MediaTypes.typeEqual(mediaType, MediaType.MULTIPART_FORM_DATA_TYPE);
+        final MultiPart multiPart = formData ? new FormDataMultiPart() : new MultiPart();
 
         final MessageBodyWorkers workers = messageBodyWorkers.get();
         multiPart.setMessageBodyWorkers(workers);
 
-        MultivaluedMap<String, String> multiPartHeaders = multiPart.getHeaders();
-        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
-            List<String> values = entry.getValue();
+        final MultivaluedMap<String, String> multiPartHeaders = multiPart.getHeaders();
+        for (final Map.Entry<String, List<String>> entry : headers.entrySet()) {
+            final List<String> values = entry.getValue();
 
-            for (String value : values) {
+            for (final String value : values) {
                 multiPartHeaders.add(entry.getKey(), value);
             }
         }
 
-        boolean fileNameFix;
+        final boolean fileNameFix;
         if (!formData) {
             multiPart.setMediaType(mediaType);
             fileNameFix = false;
         } else {
             // see if the User-Agent header corresponds to some version of MS Internet Explorer
             // if so, need to set fileNameFix to true to handle issue http://java.net/jira/browse/JERSEY-759
-            String userAgent = headers.getFirst(HttpHeaders.USER_AGENT);
+            final String userAgent = headers.getFirst(HttpHeaders.USER_AGENT);
             fileNameFix = userAgent != null && userAgent.contains(" MSIE ");
         }
 
-        for (MIMEPart mimePart : mimeMessage.getAttachments()) {
-            BodyPart bodyPart = formData ? new FormDataBodyPart(fileNameFix) : new BodyPart();
+        for (final MIMEPart mimePart : mimeMessage.getAttachments()) {
+            final BodyPart bodyPart = formData ? new FormDataBodyPart(fileNameFix) : new BodyPart();
 
             // Configure providers.
             bodyPart.setMessageBodyWorkers(workers);
 
             // Copy headers.
-            for (Header header : mimePart.getAllHeaders()) {
+            for (final Header header : mimePart.getAllHeaders()) {
                 bodyPart.getHeaders().add(header.getName(), header.getValue());
             }
 
             try {
-                String contentType = bodyPart.getHeaders().getFirst("Content-Type");
+                final String contentType = bodyPart.getHeaders().getFirst("Content-Type");
                 if (contentType != null)
                     bodyPart.setMediaType(MediaType.valueOf(contentType));
 
                 bodyPart.getContentDisposition();
-            } catch (IllegalArgumentException ex) {
+            } catch (final IllegalArgumentException ex) {
                 throw new BadRequestException(ex);
             }
 
@@ -254,4 +256,21 @@ public class MultiPartReaderClientSide implements MessageBodyReader<MultiPart> {
         return multiPart;
     }
 
+    protected static MediaType unquoteMediaTypeParameters(final MediaType mediaType, final String... parameters) {
+        if (parameters == null || parameters.length == 0) {
+            return mediaType;
+        }
+
+        final Map<String, String> unquotedParams = new HashMap<>(mediaType.getParameters());
+        for (final String parameter : parameters) {
+            String value = mediaType.getParameters().get(parameter);
+
+            if (value != null && value.startsWith("\"")) {
+                value = value.substring(1, value.length() - 1);
+                unquotedParams.put(parameter, value);
+            }
+        }
+
+        return new MediaType(mediaType.getType(), mediaType.getSubtype(), unquotedParams);
+    }
 }

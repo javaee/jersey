@@ -1476,7 +1476,6 @@
                 <artifactId>pax-web-extender-war</artifactId>
                 <version>${pax.web.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.openjdk.jmh</groupId>
                 <artifactId>jmh-core</artifactId>
