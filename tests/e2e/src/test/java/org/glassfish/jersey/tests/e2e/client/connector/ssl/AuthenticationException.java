@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,46 +37,34 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.apache.connector.ssl;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-
-import org.glassfish.jersey.internal.util.Base64;
+package org.glassfish.jersey.tests.e2e.client.connector.ssl;
 
 /**
- * Simple resource demonstrating low level approach of getting user credentials.
- *
- * Better way would be injecting {@link javax.ws.rs.core.SecurityContext}.
+ * A runtime exception representing a failure to provide correct authentication credentials.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-@Path("/")
-public class RootResource {
+public class AuthenticationException extends RuntimeException {
 
-    @GET
-    public String get1(@Context HttpHeaders headers) {
-        // you can get username form HttpHeaders
-        System.out.println("Service: GET / User: " + getUser(headers));
-
-        return Server.CONTENT;
+    /**
+     * Create new authentication exception.
+     *
+     * @param message error message.
+     * @param realm   security realm.
+     */
+    public AuthenticationException(String message, String realm) {
+        super(message);
+        this.realm = realm;
     }
 
-    private String getUser(HttpHeaders headers) {
+    private String realm = null;
 
-        // this is a very minimalistic and "naive" code; if you plan to use it
-        // add necessary checks (see org.glassfish.jersey.examples.httpsclientservergrizzly.authservergrizzly.SecurityFilter)
-
-        String auth = headers.getRequestHeader("authorization").get(0);
-
-        auth = auth.substring("Basic ".length());
-        String[] values = new String(Base64.decodeAsString(auth)).split(":");
-
-        // String username = values[0];
-        // String password = values[1];
-
-        return values[0];
+    /**
+     * Get security realm.
+     *
+     * @return security realm.
+     */
+    public String getRealm() {
+        return this.realm;
     }
 }

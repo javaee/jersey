@@ -307,6 +307,7 @@
 <!ENTITY jersey.client.ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#BUFFER_RESPONSE_ENTITY_ON_EXCEPTION'>ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION</link>" >
 <!ENTITY jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#CHUNKED_ENCODING_SIZE'>ClientProperties.CHUNKED_ENCODING_SIZE</link>" >
 <!ENTITY jersey.client.ClientProperties.CONNECT_TIMEOUT "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#CONNECT_TIMEOUT'>ClientProperties.CONNECT_TIMEOUT</link>" >
+<!ENTITY jersey.client.ClientProperties.DEFAULT_CHUNK_SIZE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#DEFAULT_CHUNK_SIZE'>ClientProperties.DEFAULT_CHUNK_SIZE</link>" >
 <!ENTITY jersey.client.ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#FEATURE_AUTO_DISCOVERY_DISABLE'>ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE</link>" >
 <!ENTITY jersey.client.ClientProperties.FOLLOW_REDIRECTS "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#FOLLOW_REDIRECTS'>ClientProperties.FOLLOW_REDIRECTS</link>" >
 <!ENTITY jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE "<link xlink:href='&jersey.javadoc.uri.prefix;/client/ClientProperties.html#JSON_PROCESSING_FEATURE_DISABLE'>ClientProperties.JSON_PROCESSING_FEATURE_DISABLE</link>" >
@@ -755,6 +756,7 @@
 <!ENTITY lit.jersey.client.ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION "<literal>ClientProperties.BUFFER_RESPONSE_ENTITY_ON_EXCEPTION</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.CHUNKED_ENCODING_SIZE "<literal>ClientProperties.CHUNKED_ENCODING_SIZE</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.CONNECT_TIMEOUT "<literal>ClientProperties.CONNECT_TIMEOUT</literal>" >
+<!ENTITY lit.jersey.client.ClientProperties.DEFAULT_CHUNK_SIZE "<literal>ClientProperties.DEFAULT_CHUNK_SIZE</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE "<literal>ClientProperties.FEATURE_AUTO_DISCOVERY_DISABLE</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.FOLLOW_REDIRECTS "<literal>ClientProperties.FOLLOW_REDIRECTS</literal>" >
 <!ENTITY lit.jersey.client.ClientProperties.JSON_PROCESSING_FEATURE_DISABLE "<literal>ClientProperties.JSON_PROCESSING_FEATURE_DISABLE</literal>" >

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
@@ -203,42 +204,38 @@ class ApacheConnector implements Connector {
     /**
      * Create the new Apache HTTP Client connector.
      *
+     * @param client JAX-RS client instance for which the connector is being created.
      * @param config client configuration.
      */
-    ApacheConnector(final Configuration config) {
-        Object reqConfig = null;
-
-        if (config != null) {
-            final Object connectionManager = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
-
-            if (connectionManager != null) {
-                if (!(connectionManager instanceof HttpClientConnectionManager)) {
-                    LOGGER.log(
-                            Level.WARNING,
-                            LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
-                                    ApacheClientProperties.CONNECTION_MANAGER,
-                                    connectionManager.getClass().getName(),
-                                    HttpClientConnectionManager.class.getName())
-                    );
-                }
-            }
-
-            reqConfig = config.getProperties().get(ApacheClientProperties.REQUEST_CONFIG);
-            if (reqConfig != null) {
-                if (!(reqConfig instanceof RequestConfig)) {
-                    LOGGER.log(
-                            Level.WARNING,
-                            LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
-                                    ApacheClientProperties.REQUEST_CONFIG,
-                                    reqConfig.getClass().getName(),
-                                    RequestConfig.class.getName())
-                    );
-                    reqConfig = null;
-                }
+    ApacheConnector(final Client client, final Configuration config) {
+        final Object connectionManager = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
+        if (connectionManager != null) {
+            if (!(connectionManager instanceof HttpClientConnectionManager)) {
+                LOGGER.log(
+                        Level.WARNING,
+                        LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                ApacheClientProperties.CONNECTION_MANAGER,
+                                connectionManager.getClass().getName(),
+                                HttpClientConnectionManager.class.getName())
+                );
             }
         }
 
-        final SSLContext sslContext = getSslContext(config);
+        Object reqConfig = config.getProperties().get(ApacheClientProperties.REQUEST_CONFIG);
+        if (reqConfig != null) {
+            if (!(reqConfig instanceof RequestConfig)) {
+                LOGGER.log(
+                        Level.WARNING,
+                        LocalizationMessages.IGNORING_VALUE_OF_PROPERTY(
+                                ApacheClientProperties.REQUEST_CONFIG,
+                                reqConfig.getClass().getName(),
+                                RequestConfig.class.getName())
+                );
+                reqConfig = null;
+            }
+        }
+
+        final SSLContext sslContext = getSslContext(client, config);
         final HttpClientBuilder clientBuilder = HttpClientBuilder.create();
 
         clientBuilder.setConnectionManager(getConnectionManager(config, sslContext));
@@ -246,48 +243,41 @@ class ApacheConnector implements Connector {
 
         final RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 
-        int connectTimeout = 0;
-        int socketTimeout = 0;
-        boolean ignoreCookies = false;
-        if (config != null) {
-            connectTimeout = ClientProperties.getValue(config.getProperties(), ClientProperties.CONNECT_TIMEOUT, 0);
-            socketTimeout = ClientProperties.getValue(config.getProperties(), ClientProperties.READ_TIMEOUT, 0);
-            ignoreCookies = PropertiesHelper.isProperty(config.getProperties(), ApacheClientProperties.DISABLE_COOKIES);
+        final int connectTimeout = ClientProperties.getValue(config.getProperties(), ClientProperties.CONNECT_TIMEOUT, 0);
+        final int socketTimeout = ClientProperties.getValue(config.getProperties(), ClientProperties.READ_TIMEOUT, 0);
+        final boolean ignoreCookies = PropertiesHelper.isProperty(config.getProperties(), ApacheClientProperties.DISABLE_COOKIES);
 
-            final Object credentialsProvider = config.getProperty(ApacheClientProperties.CREDENTIALS_PROVIDER);
-            if (credentialsProvider != null && (credentialsProvider instanceof CredentialsProvider)) {
-                clientBuilder.setDefaultCredentialsProvider((CredentialsProvider) credentialsProvider);
-            }
-
-            final Object proxyUri;
-            proxyUri = config.getProperty(ClientProperties.PROXY_URI);
-            if (proxyUri != null) {
-                final URI u = getProxyUri(proxyUri);
-                final HttpHost proxy = new HttpHost(u.getHost(), u.getPort(), u.getScheme());
-                final String userName;
-                userName = ClientProperties.getValue(config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
-                if (userName != null) {
-                    final String password;
-                    password = ClientProperties.getValue(config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
-
-                    if (password != null) {
-                        final CredentialsProvider credsProvider = new BasicCredentialsProvider();
-                        credsProvider.setCredentials(
-                                new AuthScope(u.getHost(), u.getPort()),
-                                new UsernamePasswordCredentials(userName, password)
-                        );
-                        clientBuilder.setDefaultCredentialsProvider(credsProvider);
-                    }
-                }
-                clientBuilder.setProxy(proxy);
-            }
-
-            final Boolean preemptiveBasicAuthProperty = (Boolean) config.getProperties()
-                    .get(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
-            this.preemptiveBasicAuth = (preemptiveBasicAuthProperty != null) ? preemptiveBasicAuthProperty : false;
-        } else {
-            this.preemptiveBasicAuth = false;
+        final Object credentialsProvider = config.getProperty(ApacheClientProperties.CREDENTIALS_PROVIDER);
+        if (credentialsProvider != null && (credentialsProvider instanceof CredentialsProvider)) {
+            clientBuilder.setDefaultCredentialsProvider((CredentialsProvider) credentialsProvider);
         }
+
+        final Object proxyUri;
+        proxyUri = config.getProperty(ClientProperties.PROXY_URI);
+        if (proxyUri != null) {
+            final URI u = getProxyUri(proxyUri);
+            final HttpHost proxy = new HttpHost(u.getHost(), u.getPort(), u.getScheme());
+            final String userName;
+            userName = ClientProperties.getValue(config.getProperties(), ClientProperties.PROXY_USERNAME, String.class);
+            if (userName != null) {
+                final String password;
+                password = ClientProperties.getValue(config.getProperties(), ClientProperties.PROXY_PASSWORD, String.class);
+
+                if (password != null) {
+                    final CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                    credsProvider.setCredentials(
+                            new AuthScope(u.getHost(), u.getPort()),
+                            new UsernamePasswordCredentials(userName, password)
+                    );
+                    clientBuilder.setDefaultCredentialsProvider(credsProvider);
+                }
+            }
+            clientBuilder.setProxy(proxy);
+        }
+
+        final Boolean preemptiveBasicAuthProperty = (Boolean) config.getProperties()
+                .get(ApacheClientProperties.PREEMPTIVE_BASIC_AUTHENTICATION);
+        this.preemptiveBasicAuth = (preemptiveBasicAuthProperty != null) ? preemptiveBasicAuthProperty : false;
 
 
         if (reqConfig != null) {
@@ -321,20 +311,16 @@ class ApacheConnector implements Connector {
         this.client = clientBuilder.build();
     }
 
-    private SSLContext getSslContext(final Configuration config) {
-        if (config == null) {
-            return null;
-        }
-
+    private SSLContext getSslContext(final Client client, final Configuration config) {
         final SslConfigurator sslConfigurator = ApacheClientProperties.getValue(
                 config.getProperties(),
                 ApacheClientProperties.SSL_CONFIG,
                 SslConfigurator.class);
 
-        return sslConfigurator != null ? sslConfigurator.createSSLContext() : null;
+        return sslConfigurator != null ? sslConfigurator.createSSLContext() : client.getSslContext();
     }
 
-    HttpClientConnectionManager getConnectionManager(final Configuration config, final SSLContext sslContext) {
+    private HttpClientConnectionManager getConnectionManager(final Configuration config, final SSLContext sslContext) {
         final Object cmObject = config.getProperties().get(ApacheClientProperties.CONNECTION_MANAGER);
 
         // Connection manager from configuration.
@@ -397,7 +383,7 @@ class ApacheConnector implements Connector {
                 .build();
 
         final Integer chunkSize = ClientProperties.getValue(config.getProperties(),
-                ClientProperties.CHUNKED_ENCODING_SIZE, 4096, Integer.class);
+                ClientProperties.CHUNKED_ENCODING_SIZE, ClientProperties.DEFAULT_CHUNK_SIZE, Integer.class);
 
         final PoolingHttpClientConnectionManager connectionManager =
                 new PoolingHttpClientConnectionManager(registry, new ConnectionFactory(chunkSize));
@@ -507,7 +493,7 @@ class ApacheConnector implements Connector {
 
 
             try {
-                responseContext.setEntityStream(new HttpClientResponseInputStream(response));
+                responseContext.setEntityStream(new HttpClientResponseInputStream(getInputStream(response)));
             } catch (final IOException e) {
                 LOGGER.log(Level.SEVERE, null, e);
             }
@@ -638,8 +624,8 @@ class ApacheConnector implements Connector {
 
     private static final class HttpClientResponseInputStream extends FilterInputStream {
 
-        HttpClientResponseInputStream(final CloseableHttpResponse response) throws IOException {
-            super(getInputStream(response));
+        HttpClientResponseInputStream(final InputStream inputStream) throws IOException {
+            super(inputStream);
         }
 
         @Override

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -99,12 +99,17 @@ public final class ClientProperties {
      * The property defines the size of the chunk in bytes. The property does not enable
      * chunked encoding (it is controlled by {@link #REQUEST_ENTITY_PROCESSING} property).
      * <p />
-     * A default value is not set and is {@link org.glassfish.jersey.client.spi.Connector connector}
-     * implementation-specific.
+     * A default value is {@value #DEFAULT_CHUNK_SIZE} (since Jersey 2.16).
      * <p />
      * The name of the configuration property is <tt>{@value}</tt>.
      */
     public static final String CHUNKED_ENCODING_SIZE = "jersey.config.client.chunkedEncodingSize";
+    /**
+     * Default chunk size in HTTP chunk-encoded messages.
+     *
+     * @since 2.16
+     */
+    public static final int DEFAULT_CHUNK_SIZE = 4096;
 
     /**
      * Asynchronous thread pool size.
@@ -362,8 +367,8 @@ public final class ClientProperties {
      * The value MUST be an instance of {@link String} or an enum value {@link RequestEntityProcessing} in the case
      * of programmatic definition of the property. Allowed values are:
      * <ul>
-     *     <li><b>{@code BUFFERED}</b>: the entity will be buffered and content length will be send in Content-length header.</li>
-     *     <li><b>{@code CHUNKED}</b>: chunked encoding will be used and entity will be streamed.</li>
+     * <li><b>{@code BUFFERED}</b>: the entity will be buffered and content length will be send in Content-length header.</li>
+     * <li><b>{@code CHUNKED}</b>: chunked encoding will be used and entity will be streamed.</li>
      * </ul>
      * </p>
      * <p>
@@ -375,6 +380,7 @@ public final class ClientProperties {
      * <p>
      * The name of the configuration property is <tt>{@value}</tt>.
      * </p>
+     *
      * @since 2.5
      */
     public static final String REQUEST_ENTITY_PROCESSING = "jersey.config.client.request.entity.processing";
@@ -390,11 +396,11 @@ public final class ClientProperties {
      * {@code defaultValue} type, the specified {@code defaultValue} is returned. Calling this method is equivalent to calling
      * {@code ClientProperties.getValue(properties, key, defaultValue, (Class&lt;T&gt;) defaultValue.getClass())}
      *
-     * @param properties    Map of properties to get the property value from.
-     * @param key  Name of the property.
-     * @param defaultValue  Default value if property is not registered
-     * @param <T>           Type of the property value.
-     * @return              Value of the property or {@code null}.
+     * @param properties   Map of properties to get the property value from.
+     * @param key          Name of the property.
+     * @param defaultValue Default value if property is not registered
+     * @param <T>          Type of the property value.
+     * @return Value of the property or {@code null}.
      *
      * @since 2.8
      */
@@ -408,12 +414,12 @@ public final class ClientProperties {
      * If the property is not set or the real value type is not compatible with the specified value type,
      * returns {@code defaultValue}.
      *
-     * @param properties    Map of properties to get the property value from.
-     * @param key  Name of the property.
-     * @param defaultValue  Default value if property is not registered
-     * @param type          Type to retrieve the value as.
-     * @param <T>           Type of the property value.
-     * @return              Value of the property or {@code null}.
+     * @param properties   Map of properties to get the property value from.
+     * @param key          Name of the property.
+     * @param defaultValue Default value if property is not registered
+     * @param type         Type to retrieve the value as.
+     * @param <T>          Type of the property value.
+     * @return Value of the property or {@code null}.
      *
      * @since 2.8
      */
@@ -427,11 +433,11 @@ public final class ClientProperties {
      * If the property is not set or the actual property value type is not compatible with the specified type, the method will
      * return {@code null}.
      *
-     * @param properties    Map of properties to get the property value from.
-     * @param key  Name of the property.
-     * @param type          Type to retrieve the value as.
-     * @param <T>           Type of the property value.
-     * @return              Value of the property or {@code null}.
+     * @param properties Map of properties to get the property value from.
+     * @param key        Name of the property.
+     * @param type       Type to retrieve the value as.
+     * @param <T>        Type of the property value.
+     * @return Value of the property or {@code null}.
      *
      * @since 2.8
      */

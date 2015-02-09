@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -127,12 +127,6 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
      */
     public static final String SET_METHOD_WORKAROUND =
             "jersey.config.client.httpUrlConnection.setMethodWorkaround";
-
-
-    /**
-     * Default chunk size in HTTP chunk-encoded messages.
-     */
-    private static final int DEFAULT_HTTP_CHUNK_SIZE = 4096;
     /**
      * Default connection factory to be used.
      */
@@ -150,7 +144,7 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
      */
     public HttpUrlConnectorProvider() {
         this.connectionFactory = DEFAULT_CONNECTION_FACTORY;
-        this.chunkSize = DEFAULT_HTTP_CHUNK_SIZE;
+        this.chunkSize = ClientProperties.DEFAULT_CHUNK_SIZE;
         this.useFixedLengthStreaming = false;
         this.useSetMethodWorkaround = false;
     }
@@ -244,6 +238,7 @@ public class HttpUrlConnectorProvider implements ConnectorProvider {
                 SET_METHOD_WORKAROUND, useSetMethodWorkaround, Boolean.class);
 
         return new HttpUrlConnector(
+                client,
                 connectionFactory,
                 computedChunkSize,
                 computedUseFixedLengthStreaming,

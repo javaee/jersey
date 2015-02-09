@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,35 +37,69 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.apache.connector.ssl;
+package org.glassfish.jersey.tests.e2e.client.connector.ssl;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import javax.net.ssl.SSLContext;
+
 import org.glassfish.jersey.SslConfigurator;
-import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.client.spi.ConnectorProvider;
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
+import org.glassfish.jersey.jetty.connector.JettyConnectorProvider;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.io.ByteStreams;
 
 /**
+ * SSL connector tests.
+ *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Arul Dhesiaseelan (aruld at acm.org)
+ * @author Marek Potociar (marek.potociar at oracle.com)
  */
-public class MainTest {
+@RunWith(Parameterized.class)
+public class SslConnectorConfigurationTest {
+
+    private static final String CLIENT_TRUST_STORE = "truststore_client";
+    private static final String CLIENT_KEY_STORE = "keystore_client";
+
+    /**
+     * Test parameters provider.
+     *
+     * @return test parameters.
+     */
+    @Parameterized.Parameters(name = "{index}: {0}")
+    public static Iterable<Object[]> testData() {
+        return Arrays.asList(new Object[][]{
+                {new HttpUrlConnectorProvider()},
+                {new GrizzlyConnectorProvider()},
+                {new JettyConnectorProvider()},
+                {new ApacheConnectorProvider()}
+        });
+    }
+
+    @Parameterized.Parameter(0)
+    public ConnectorProvider connectorProvider;
 
     @Before
     public void setUp() throws Exception {
@@ -77,29 +111,35 @@ public class MainTest {
         Server.stopServer();
     }
 
-    /**
-     * Test to see that the correct Http status is returned.
-     */
-    @Test
-    public void testSSLWithAuth() throws Exception {
-        final InputStream trustStore = MainTest.class.getResourceAsStream("/truststore_client");
-        final InputStream keyStore = MainTest.class.getResourceAsStream("/keystore_client");
-        SslConfigurator sslConfig = SslConfigurator.newInstance()
+    private static SSLContext getSslContext() throws IOException {
+        final InputStream trustStore = SslConnectorConfigurationTest.class.getResourceAsStream(CLIENT_TRUST_STORE);
+        final InputStream keyStore = SslConnectorConfigurationTest.class.getResourceAsStream(CLIENT_KEY_STORE);
+        return SslConfigurator.newInstance()
                 .trustStoreBytes(ByteStreams.toByteArray(trustStore))
                 .trustStorePassword("asdfgh")
                 .keyStoreBytes(ByteStreams.toByteArray(keyStore))
-                .keyPassword("asdfgh");
+                .keyPassword("asdfgh")
+                .createSSLContext();
+    }
 
-        ClientConfig cc = new ClientConfig();
-        cc.property(ApacheClientProperties.SSL_CONFIG, sslConfig);
-        cc.connectorProvider(new ApacheConnectorProvider());
+    /**
+     * Test to see that the correct Http status is returned.
+     *
+     * @throws Exception in case of a test failure.
+     */
+    @Test
+    public void testSSLWithAuth() throws Exception {
+        final SSLContext sslContext = getSslContext();
 
-        Client client = ClientBuilder.newClient(cc);
+        final ClientConfig cc = new ClientConfig().connectorProvider(connectorProvider);
+        final Client client = ClientBuilder.newBuilder()
+                .withConfig(cc)
+                .sslContext(sslContext)
+                .build();
+
         // client basic auth demonstration
         client.register(HttpAuthenticationFeature.basic("user", "password"));
-
-        WebTarget target = client.target(Server.BASE_URI);
-        target.register(new LoggingFilter());
+        final WebTarget target = client.target(Server.BASE_URI).register(new LoggingFilter());
 
         final Response response = target.path("/").request().get(Response.class);
 
@@ -109,32 +149,22 @@ public class MainTest {
     /**
      * Test to see that HTTP 401 is returned when client tries to GET without
      * proper credentials.
+     *
+     * @throws Exception in case of a test failure.
      */
     @Test
     public void testHTTPBasicAuth1() throws Exception {
-        final InputStream trustStore = MainTest.class.getResourceAsStream("/truststore_client");
-        final InputStream keyStore = MainTest.class.getResourceAsStream("/keystore_client");
-        SslConfigurator sslConfig = SslConfigurator.newInstance()
-                .trustStoreBytes(ByteStreams.toByteArray(trustStore))
-                .trustStorePassword("asdfgh")
-                .keyStoreBytes(ByteStreams.toByteArray(keyStore))
-                .keyPassword("asdfgh");
+        final SSLContext sslContext = getSslContext();
 
+        final ClientConfig cc = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
+        final Client client = ClientBuilder.newBuilder()
+                .withConfig(cc)
+                .sslContext(sslContext)
+                .build();
 
-        ClientConfig cc = new ClientConfig();
-        cc.property(ApacheClientProperties.SSL_CONFIG, sslConfig);
-        cc.connectorProvider(new ApacheConnectorProvider());
+        final WebTarget target = client.target(Server.BASE_URI).register(new LoggingFilter());
 
-        Client client = ClientBuilder.newClient(cc);
-
-        System.out.println("Client: GET " + Server.BASE_URI);
-
-        WebTarget target = client.target(Server.BASE_URI);
-        target.register(new LoggingFilter());
-
-        Response response;
-
-        response = target.path("/").request().get(Response.class);
+        final Response response = target.path("/").request().get(Response.class);
 
         assertEquals(401, response.getStatus());
     }
@@ -142,27 +172,22 @@ public class MainTest {
     /**
      * Test to see that SSLHandshakeException is thrown when client don't have
      * trusted key.
+     *
+     * @throws Exception in case of a test failure.
      */
     @Test
     public void testSSLAuth1() throws Exception {
-        final InputStream trustStore = MainTest.class.getResourceAsStream("/truststore_client");
-        SslConfigurator sslConfig = SslConfigurator.newInstance()
-                .trustStoreBytes(ByteStreams.toByteArray(trustStore))
-                .trustStorePassword("asdfgh");
+        final SSLContext sslContext = getSslContext();
 
-        ClientConfig cc = new ClientConfig();
-        cc.property(ApacheClientProperties.SSL_CONFIG, sslConfig);
-        cc.connectorProvider(new ApacheConnectorProvider());
+        final ClientConfig cc = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
+        final Client client = ClientBuilder.newBuilder()
+                .withConfig(cc)
+                .sslContext(sslContext)
+                .build();
 
-        Client client = ClientBuilder.newClient(cc);
-
-        System.out.println("Client: GET " + Server.BASE_URI);
-
-        WebTarget target = client.target(Server.BASE_URI);
-        target.register(new LoggingFilter());
+        WebTarget target = client.target(Server.BASE_URI).register(new LoggingFilter());
 
         boolean caught = false;
-
         try {
             target.path("/").request().get(String.class);
         } catch (Exception e) {

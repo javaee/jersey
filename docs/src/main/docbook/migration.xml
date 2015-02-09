@@ -72,6 +72,46 @@
                     resource instance (when return value is an instance of <literal>MySubResource</literal> class).
                 </para>
             </section>
+            <section>
+                <title>More unified connector configuration options</title>
+                <para>
+                    Jetty connector and Apache connector have been previously using their own custom properties
+                    to set SSL context on a connector. These properties have been deprecated and the code has been updated
+                    to read the SSL context information from the JAX-RS client configuration. This means that all Jersey
+                    connectors now properly accept SSL configuration as configured via standard JAX-RS
+                    &jaxrs.client.ClientBuilder; methods.
+                </para>
+                <para>
+                    Previously, all Jersey connectors have been using their own default chunk size when HTTP chunked coding
+                    was used. Since Jersey 2.16, there is a new default chunk size value used by all connectors, if a custom
+                    chunk size is not set. The new default value is stored under
+                    &jersey.client.ClientProperties.DEFAULT_CHUNK_SIZE; client property.
+                </para>
+            </section>
+        </section>
+        <section xml:id="mig-2.16-new-deprecated">
+            <title>Deprecated APIs</title>
+            <para>Following APIs were deprecated:</para>
+            <para>
+                <itemizedlist>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.apache.connector.ApacheClientProperties</literal> - constant
+                            <literal>SSL_CONFIG</literal> has been marked as deprecated and will be removed in a subsequent
+                            release. Use &jaxrs.client.ClientBuilder; methods to configure SSL in a &jaxrs.client.Client;
+                            instance.
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <para>
+                            <literal>org.glassfish.jersey.jetty.connector.JettyClientProperties</literal> - constant
+                            <literal>SSL_CONFIG</literal> has been marked as deprecated and will be removed in a subsequent
+                            release. Use &jaxrs.client.ClientBuilder; methods to configure SSL in a &jaxrs.client.Client;
+                            instance.
+                        </para>
+                    </listitem>
+                </itemizedlist>
+            </para>
         </section>
         <section xml:id="mig-2.16-breaking-changes">
             <title>Breaking Changes</title>
@@ -672,7 +712,7 @@
             </para>
         </section>
         <section xml:id="mig-2.6-new-deprecated">
-            <title>New deprecated APIs / internal classes</title>
+            <title>Deprecated APIs</title>
             <para>Following APIs were deprecated:</para>
             <para>
                 <itemizedlist>

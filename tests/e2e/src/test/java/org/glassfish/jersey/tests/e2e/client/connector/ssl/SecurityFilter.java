@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,22 +37,22 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jetty.connector.ssl;
+package org.glassfish.jersey.tests.e2e.client.connector.ssl;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.logging.Logger;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
-
-import javax.inject.Inject;
 
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -69,14 +69,19 @@ import org.glassfish.jersey.server.ContainerRequest;
 @PreMatching
 public class SecurityFilter implements ContainerRequestFilter {
 
-    @Inject
-    javax.inject.Provider<UriInfo> uriInfo;
-    public static final String REALM = "HTTPS Example authentication";
+    /**
+     * Security realm.
+     */
+    public static final String REALM = "Test HTTPS Authentication REALM";
+    private static final Logger LOGGER = Logger.getLogger(SecurityFilter.class.getName());
+
+    @Context
+    private UriInfo uriInfo;
 
     @Override
     public void filter(ContainerRequestContext filterContext) throws IOException {
         User user = authenticate(filterContext.getRequest());
-        filterContext.setSecurityContext(new Authorizer(user));
+        filterContext.setSecurityContext(new AuthorizationContext(user));
     }
 
     private User authenticate(Request request) {
@@ -106,52 +111,54 @@ public class SecurityFilter implements ContainerRequestFilter {
         // Validate the extracted credentials
         User user;
 
-        if (username.equals("user") && password.equals("password")) {
+        if ("user".equals(username) && "password".equals(password)) {
             user = new User("user", "user");
-            System.out.println("USER AUTHENTICATED");
-            //        } else if (username.equals("admin") && password.equals("adminadmin")) {
-            //            user = new User("admin", "admin");
-            //            System.out.println("ADMIN AUTHENTICATED");
+            LOGGER.info("USER AUTHENTICATED");
         } else {
-            System.out.println("USER NOT AUTHENTICATED");
-            throw new AuthenticationException("Invalid username or password\r\n", REALM);
+            LOGGER.info("USER NOT AUTHENTICATED");
+            throw new AuthenticationException("Invalid username or password", REALM);
         }
         return user;
     }
 
-    public class Authorizer implements SecurityContext {
+    private class AuthorizationContext implements SecurityContext {
 
-        private User user;
-        private Principal principal;
+        private final User user;
+        private final Principal principal;
 
-        public Authorizer(final User user) {
+        public AuthorizationContext(final User user) {
             this.user = user;
             this.principal = new Principal() {
 
+                @Override
                 public String getName() {
                     return user.username;
                 }
             };
         }
 
+        @Override
         public Principal getUserPrincipal() {
             return this.principal;
         }
 
+        @Override
         public boolean isUserInRole(String role) {
             return (role.equals(user.role));
         }
 
+        @Override
         public boolean isSecure() {
-            return "https".equals(uriInfo.get().getRequestUri().getScheme());
+            return "https".equals(uriInfo.getRequestUri().getScheme());
         }
 
+        @Override
         public String getAuthenticationScheme() {
             return SecurityContext.BASIC_AUTH;
         }
     }
 
-    public class User {
+    private static class User {
 
         public String username;
         public String role;

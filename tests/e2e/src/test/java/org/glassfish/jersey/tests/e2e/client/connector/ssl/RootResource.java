@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,36 +37,56 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.glassfish.jersey.jetty.connector.ssl;
+package org.glassfish.jersey.tests.e2e.client.connector.ssl;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import java.util.logging.Logger;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+
+import org.glassfish.jersey.internal.util.Base64;
 
 /**
- * Map an authentication exception to an HTTP 401 response, optionally including the realm for a credentials challenge at the client.
+ * Simple resource demonstrating low level approach of getting user credentials.
+ *
+ * A better way would be injecting {@link javax.ws.rs.core.SecurityContext}.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  */
-@Provider
-public class AuthenticationExceptionMapper implements ExceptionMapper<AuthenticationException> {
+@Path("/")
+public class RootResource {
+    private static final Logger LOGGER = Logger.getLogger(RootResource.class.getName());
+    /**
+     * Served content.
+     */
+    public static final String CONTENT = "JERSEY HTTPS EXAMPLE\n";
 
-    public Response toResponse(AuthenticationException e) {
-        if (e.getRealm() != null) {
-            return Response.
-                    status(Status.UNAUTHORIZED).
-                    header("WWW-Authenticate", "Basic realm=\"" + e.getRealm() + "\"").
-                    type("text/plain").
-                    entity(e.getMessage()).
-                    build();
-        } else {
-            return Response.
-                    status(Status.UNAUTHORIZED).
-                    type("text/plain").
-                    entity(e.getMessage()).
-                    build();
-        }
+    /**
+     * Serve content.
+     *
+     * @param headers request headers.
+     * @return content (see {@link #CONTENT}).
+     */
+    @GET
+    public String getContent(@Context HttpHeaders headers) {
+        // you can get username form HttpHeaders
+        LOGGER.info("Service: GET / User: " + getUser(headers));
+
+        return CONTENT;
     }
 
+    private String getUser(HttpHeaders headers) {
+        // this is a very minimalistic and "naive" code;
+        // if you plan to use it, add the necessary checks
+        String auth = headers.getRequestHeader("authorization").get(0);
+
+        auth = auth.substring("Basic ".length());
+        String[] values = Base64.decodeAsString(auth).split(":");
+
+        // String username = values[0];
+        // String password = values[1];
+        return values[0];
+    }
 }
