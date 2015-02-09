@@ -1020,9 +1020,10 @@ public class CdiBeanResource {
 }</programlisting>
             </para>
             <para>
-	    	The above works naturally inside any Java EE compliant AS container. In Jersey version 2.15, container agnostic CDI support was introduced.
-		This feature allows you to publish CDI based JAX-RS resources also in other containers. Jersey cdi-webapp example shows Jersey/CDI integration
-		in Grizzly HTTP and Apache Tomcat server.
+              The above works naturally inside any Java EE compliant AS container. In Jersey version 2.15, container agnostic CDI support was introduced.
+              This feature allows you to publish CDI based JAX-RS resources also in other containers. Jersey cdi-webapp example shows Jersey/CDI integration
+              in Grizzly HTTP and Apache Tomcat server. Detailed description of Jersey CDI support outside of a fully fledged Java EE application container
+              could be found in <xref linkend="cdi.support"/>.
             </para>
         </section>
 

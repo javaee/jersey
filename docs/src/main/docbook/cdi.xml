@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<!--
+
+    DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
+
+    Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
+
+    The contents of this file are subject to the terms of either the GNU
+    General Public License Version 2 only ("GPL") or the Common Development
+    and Distribution License("CDDL") (collectively, the "License").  You
+    may not use this file except in compliance with the License.  You can
+    obtain a copy of the License at
+    http://glassfish.java.net/public/CDDL+GPL_1_1.html
+    or packager/legal/LICENSE.txt.  See the License for the specific
+    language governing permissions and limitations under the License.
+
+    When distributing the software, include this License Header Notice in each
+    file and include the License file at packager/legal/LICENSE.txt.
+
+    GPL Classpath Exception:
+    Oracle designates this particular file as subject to the "Classpath"
+    exception as provided by Oracle in the GPL Version 2 section of the License
+    file that accompanied this code.
+
+    Modifications:
+    If applicable, add the following below the License Header, with the fields
+    enclosed by brackets [] replaced by your own identifying information:
+    "Portions Copyright [year] [name of copyright owner]"
+
+    Contributor(s):
+    If you wish your version of this file to be governed by only the CDDL or
+    only the GPL Version 2, indicate your decision by adding "[Contributor]
+    elects to include this software in this distribution under the [CDDL or GPL
+    Version 2] license."  If you don't indicate a single choice of license, a
+    recipient has the option to distribute your version of this file under
+    either the CDDL, the GPL Version 2 or to extend the choice of license to
+    its licensees as provided above.  However, if you add GPL Version 2 code
+    and therefore, elected the GPL Version 2 license, then the option applies
+    only if the new code is made subject to such option by the copyright
+    holder.
+
+-->
+<!DOCTYPE chapter [<!ENTITY % ents SYSTEM "jersey.ent" > %ents;
+    <!ENTITY jersey.github.weld.example.link "<link xlink:href='&jersey.github.examples.uri;/helloworld-weld'>Grizzly WELD example</link>">
+    <!ENTITY jersey.github.cdi.webapp.example.link "<link xlink:href='&jersey.github.examples.uri;/cdi-webapp'>CDI example</link>">
+]>
+<chapter xmlns="http://docbook.org/ns/docbook"
+         version="5.0"
+         xml:lang="en"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="cdi.support">
+    <title>Jersey CDI Container Agnostic Support</title>
+    <section xml:id="cdi.support.intro">
+        <title>Introduction</title>
+        <para>
+          At the time of this writing, Java SE support is being discussed as one of important additions to CDI 2.0 specification.
+          Existing CDI implementations brought this feature already, only container bootstrapping has not yet been standardized.
+          In Jersey version 2.15 we introduced Weld SE support, so that people could take advantage of CDI features 
+          also when running in Java SE environment. As part of this work, the old Jersey CDI module has been refactored
+          so that it supports CDI integration in any CDI-enabled HTTP container.
+        </para>
+        <note>
+            <para>
+                This chapter is mainly focused on server-side Jersey Weld SE support.
+                We will mention other containers that are known to be working with Jersey CDI integration modules.
+                We will also describe features demonstrated in Jersey HelloWorld Weld example
+                and provide some hints on how to enable Java SE support for other (non Weld) CDI implementations.
+            </para>
+        </note>
+    </section>
+    <section xml:id="cdi.support.existing.containers">
+        <title>Containers Known to Work With Jersey CDI Support</title>
+        <para>
+          To stick with JAX-RS specification, Jersey has to support JAX-RS/CDI integration in Java EE environment.
+          The two containers supporting JAX-RS/CDI integration out of the box are Oracle GlassFish and Oracle WebLogic application server.
+        </para>
+        <para>
+          Apache Tomcat is another Servlet container that is known to work fine with Jersey CDI support.
+          However, things do not work there out of the box. You need to enable CDI support in Tomcat e.g. using Weld.
+          Jersey &jersey.github.cdi.webapp.example.link; shows how a WAR application could be packaged
+          (see <literal>tomcat-packaging</literal> profile in the pom file) in order to enable JAX-RS/CDI integration
+          in Tomcat with Jersey using Weld.
+        </para>
+        <para>
+          If not bundled already with underlying Servlet container, the following Jersey module needs to be packaged with the application
+          or otherwise included in the container class-path:
+            <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext.cdi&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-cdi1x&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;
+            </programlisting>
+        </para>
+    </section>
+    <section xml:id="cdi.support.request.scope.binding">
+      <title>Request Scope Binding</title>
+      <para>
+        There is a common pattern for all above mentioned containers. Jersey CDI integration builds upon existing CDI/Servlet integration there.
+        In other words, in all above cases, Jersey application must be deployed as a Servlet, where the underlying Servlet container
+        has CDI integrated already and CDI container bootstrapped properly.
+      </para>
+      <para>
+        The key feature in CDI/Servlet integration is proper request scope binding. If this feature was missing,
+        you would not be able to use any request scoped CDI beans in your Jersey application. To make Jersey work with CDI
+        in containers that do not have request scope binding resolved, some extra work is required.
+      </para>
+      <para>
+        To allow smooth integration with Jersey request scope a new SPI, &jersey.server.spi.ExternalRequestScope;, was introduced in Jersey version 2.15.
+        An SPI implementation should be registered via the standard <literal>META-INF/services</literal> mechanism
+        and needs to make sure CDI implentation request scope has been properly managed and request scoped data kept in the right context. 
+        For performance reasons, at most a single external request scope provider is allowed by Jersey runtime.
+      </para>
+    </section>
+    <section xml:id="cdi.support.weld.se">
+        <title>Jersey Weld SE Support</title>
+        <para>
+            The extra work to align HTTP request with CDI request scope was already done by Jersey team for Weld 2.x implementation.
+            In order to utilize Jersey/Weld request scope binding, you need to use the following module:
+            <programlisting language="xml">&lt;dependency&gt;
+    &lt;groupId&gt;org.glassfish.jersey.ext.cdi&lt;/groupId&gt;
+    &lt;artifactId&gt;jersey-weld2-se&lt;/artifactId&gt;
+    &lt;version&gt;&version;&lt;/version&gt;
+&lt;/dependency&gt;
+            </programlisting>
+            Then you could use your CDI backed JAX-RS components in a Jersey application running in Grizzly HTTP container
+            bootstrapped as follows:
+            <example>
+                <title>Bootstrapping Jersey application with Weld support on Grizzly</title>
+                <programlisting language="java" linenumbering="numbered">            Weld weld = new Weld();
+            weld.initialize();
+
+            final HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create("http://localhost:8080/weld/"), jerseyResourceConfig);
+
+            // ...
+
+            server.shutdownNow();
+            weld.shutdown();</programlisting>
+            </example>
+        </para>
+        <para>
+          The above pattern could be applied also for other Jersey supported HTTP containers as long as you stick with CDI Weld 2.x implementation.
+          You simply add the above mentioned <literal>jersey-weld2-se</literal> module into you class-path and bootstrap the Weld container manually
+          before starting the HTTP container.
+        </para>
+    </section>
+</chapter>
