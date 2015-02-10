@@ -59,9 +59,9 @@ public final class Quality {
     public static final Comparator<Qualified> QUALIFIED_COMPARATOR = new Comparator<Qualified>() {
 
         @Override
-        public int compare(Qualified o1, Qualified o2) {
+        public int compare(final Qualified o1, final Qualified o2) {
             // reverse comparison to achieve the "higher first" behavior.
-            return Integer.compare(o2.getQuality(), o1.getQuality());
+            return Quality.compare(o2.getQuality(), o1.getQuality());
         }
     };
 
@@ -73,9 +73,9 @@ public final class Quality {
     public static final Comparator<Integer> QUALITY_VALUE_COMPARATOR = new Comparator<Integer>() {
 
         @Override
-        public int compare(Integer q1, Integer q2) {
+        public int compare(final Integer q1, final Integer q2) {
             // reverse comparison to achieve the "higher first" behavior.
-            return Integer.compare(q2, q1);
+            return Quality.compare(q2, q1);
         }
     };
 
@@ -116,7 +116,7 @@ public final class Quality {
      * @return parameter map containing the proper quality parameter if necessary.
      */
     static Map<String, String> enhanceWithQualityParameter(
-            Map<String, String> parameters, final String qualityParamName, final int quality) {
+            final Map<String, String> parameters, final String qualityParamName, final int quality) {
 
         if (quality == DEFAULT) {
             // special handling
@@ -134,7 +134,7 @@ public final class Quality {
             // Try to update the original map first...
             parameters.put(qualityParamName, qualityValueToString(quality));
             return parameters;
-        } catch (UnsupportedOperationException uoe) {
+        } catch (final UnsupportedOperationException uoe) {
             // Unmodifiable map - let's create a new copy...
             final Map<String, String> result = new HashMap<String, String>(parameters);
             result.put(qualityParamName, qualityValueToString(quality));
@@ -142,7 +142,26 @@ public final class Quality {
         }
     }
 
-    private static String qualityValueToString(float quality) {
+    /**
+     * Compares two {@code int} values numerically.
+     * The value returned is identical to what would be returned by:
+     * <pre>
+     *    Integer.valueOf(x).compareTo(Integer.valueOf(y))
+     * </pre>
+     *
+     * Note: Taken from {@code Integer.compare()} from JDK 7.
+     *
+     * @param  x the first {@code int} to compare
+     * @param  y the second {@code int} to compare
+     * @return the value {@code 0} if {@code x == y};
+     *         a value less than {@code 0} if {@code x < y}; and
+     *         a value greater than {@code 0} if {@code x > y}
+     */
+    private static int compare(final int x, final int y) {
+        return (x < y) ? -1 : ((x == y) ? 0 : 1);
+    }
+
+    private static String qualityValueToString(final float quality) {
         final StringBuilder qsb = new StringBuilder(String.format("%3.3f", (quality / 1000)));
 
         int lastIndex;
