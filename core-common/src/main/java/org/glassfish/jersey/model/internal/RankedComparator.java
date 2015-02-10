@@ -48,7 +48,7 @@ import java.util.Comparator;
  *
  * @param <T> Type of the elements to be sorted.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class RankedComparator<T> implements Comparator<RankedProvider<T>> {

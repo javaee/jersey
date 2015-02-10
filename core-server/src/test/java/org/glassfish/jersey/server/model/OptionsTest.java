@@ -80,7 +80,7 @@ import com.sun.research.ws.wadl.Application;
  *
  * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class OptionsTest {
 

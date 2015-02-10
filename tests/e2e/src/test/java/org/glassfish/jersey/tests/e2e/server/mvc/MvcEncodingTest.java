@@ -69,7 +69,7 @@ import org.junit.runners.Parameterized;
 /**
  * MVC encoding charset tests.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 @RunWith(Parameterized.class)
 public class MvcEncodingTest extends JerseyTest {

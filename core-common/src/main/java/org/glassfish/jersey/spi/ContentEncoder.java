@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.spi;
 
 import java.io.IOException;
@@ -64,7 +65,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * supported by the implementation will be considered during the content negotiation phase when deciding which encoding
  * should be used based on the accepted encodings (and the associated quality parameters) in the request headers.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 @Priority(Priorities.ENTITY_CODER)
 @Contract

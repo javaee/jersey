@@ -86,7 +86,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
 /**
  * Utility methods for Java reflection.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class ReflectionHelper {

@@ -97,7 +97,7 @@ import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
 /**
  * @author Naresh
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */

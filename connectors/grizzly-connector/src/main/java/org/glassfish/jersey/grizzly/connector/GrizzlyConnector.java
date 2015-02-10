@@ -91,7 +91,7 @@ import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
 /**
  * The transport using the AsyncHttpClient.
  *
- * @author Stepan Kopriva (stepan.kopriva at oracle.com)
+ * @author Stepan Kopriva
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 class GrizzlyConnector implements Connector {

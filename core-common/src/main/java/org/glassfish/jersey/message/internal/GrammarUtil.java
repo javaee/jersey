@@ -43,7 +43,7 @@ package org.glassfish.jersey.message.internal;
  * Class containing static utility methods to work with HTTP headers.
  *
  * @author Paul Sandoz
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 final class GrammarUtil {
 

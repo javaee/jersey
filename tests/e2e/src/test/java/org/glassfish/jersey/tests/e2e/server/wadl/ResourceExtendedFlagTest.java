@@ -90,7 +90,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
  * Test verifies functionality of {@link org.glassfish.jersey.server.model.Resource#isExtended()} and its
  * influence on WADL.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ResourceExtendedFlagTest extends JerseyTest {
 

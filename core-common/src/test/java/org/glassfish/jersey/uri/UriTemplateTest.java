@@ -61,7 +61,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Taken from Jersey 1: jersey-tests: com.sun.jersey.impl.uri.UriTemplateTest
  *
- * @author Paul.Sandoz
+ * @author Paul Sandoz
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class UriTemplateTest {

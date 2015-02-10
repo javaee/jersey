@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -83,7 +83,7 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
  * by properties above without a need to explicitly register this feature.
  *
  * @see org.glassfish.jersey.server.ServerProperties#MONITORING_STATISTICS_ENABLED for more details.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public final class MonitoringFeature implements Feature {
 

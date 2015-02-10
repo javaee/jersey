@@ -97,7 +97,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * of annotation-based resource classes.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class ResourceMethodInvoker implements Endpoint, ResourceInfo {
 

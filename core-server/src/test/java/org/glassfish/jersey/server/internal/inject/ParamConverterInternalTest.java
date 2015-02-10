@@ -71,7 +71,7 @@ import static org.junit.Assert.fail;
 /**
  * Tests {@link ParamConverter param converters}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ParamConverterInternalTest extends AbstractTest {
     @Path("/")

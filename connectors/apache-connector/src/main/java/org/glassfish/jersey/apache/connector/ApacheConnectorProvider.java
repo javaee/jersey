@@ -105,7 +105,7 @@ import org.apache.http.client.HttpClient;
  * @author Arul Dhesiaseelan (aruld at acm.org)
  * @author jorgeluisw at mac.com
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Maksim Mukosey (mmukosey at gmail.com)
  * @since 2.5
  */

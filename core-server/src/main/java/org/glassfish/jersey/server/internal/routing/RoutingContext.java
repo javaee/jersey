@@ -54,7 +54,7 @@ import org.glassfish.jersey.uri.UriTemplate;
  * Jersey request matching and routing context.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public interface RoutingContext extends ResourceInfo, ExtendedUriInfo {
 

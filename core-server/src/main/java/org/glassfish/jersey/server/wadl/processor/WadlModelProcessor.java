@@ -81,7 +81,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * {@link org.glassfish.jersey.server.wadl.internal.WadlAutoDiscoverable} or by
  * {@link org.glassfish.jersey.server.wadl.WadlFeature} if auto-discovery is disabled.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  *
  */
 @Priority(10000)

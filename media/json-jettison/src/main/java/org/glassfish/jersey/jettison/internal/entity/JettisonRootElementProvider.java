@@ -66,7 +66,7 @@ import org.glassfish.jersey.jettison.JettisonMarshaller;
  * are annotated with {@link javax.xml.bind.annotation.XmlRootElement &#64;XmlRootElement}
  * or {@link javax.xml.bind.annotation.XmlType &#64;XmlType}.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public class JettisonRootElementProvider extends AbstractRootElementJaxbProvider {

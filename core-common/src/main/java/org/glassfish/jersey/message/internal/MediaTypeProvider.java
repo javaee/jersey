@@ -55,7 +55,7 @@ import static org.glassfish.jersey.message.internal.Utils.throwIllegalArgumentEx
  *
  * @author Marc Hadley
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 @Singleton
 public class MediaTypeProvider implements HeaderDelegateProvider<MediaType> {

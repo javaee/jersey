@@ -66,7 +66,7 @@ import org.junit.Test;
 import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class MonitoringStatisticsTest {
 

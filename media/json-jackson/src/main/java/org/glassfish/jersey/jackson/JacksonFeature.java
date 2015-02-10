@@ -59,7 +59,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 /**
  * Feature used to register Jackson JSON providers.
  *
- * @author Stepan Kopriva (stepan.kopriva at oracle.com)
+ * @author Stepan Kopriva
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public class JacksonFeature implements Feature {

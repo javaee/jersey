@@ -125,22 +125,7 @@
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
         <developer>
-            <name>Martin Matula</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
             <name>Michal Gajdos</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
-            <name>Miroslav Fuksa</name>
-            <organization>Oracle Corporation</organization>
-            <organizationUrl>http://www.oracle.com/</organizationUrl>
-        </developer>
-        <developer>
-            <name>Stepan Kopriva</name>
             <organization>Oracle Corporation</organization>
             <organizationUrl>http://www.oracle.com/</organizationUrl>
         </developer>
@@ -529,7 +514,7 @@
                 <plugin>
                     <groupId>org.glassfish.copyright</groupId>
                     <artifactId>glassfish-copyright-maven-plugin</artifactId>
-                    <version>1.28</version>
+                    <version>1.39</version>
                     <configuration>
                         <excludeFile>etc/config/copyright-exclude</excludeFile>
                         <!--svn|mercurial|git - defaults to svn-->

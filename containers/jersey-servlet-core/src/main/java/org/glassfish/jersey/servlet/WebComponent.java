@@ -114,10 +114,10 @@ import jersey.repackaged.com.google.common.collect.Collections2;
  * An common Jersey web component that may be extended by a Servlet and/or
  * Filter implementation, or encapsulated by a Servlet or Filter implementation.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class WebComponent {

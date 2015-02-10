@@ -46,7 +46,7 @@ import org.glassfish.jersey.server.model.ResourceMethod;
  * Router that pushes matched {@link ResourceMethod resource method}
  * to {@link RoutingContext routing context}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 final class PushMatchedMethodRouter implements Router {
 

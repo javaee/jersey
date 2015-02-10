@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,16 +37,15 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.server.filter;
 
-import org.glassfish.jersey.server.ApplicationHandler;
-import org.glassfish.jersey.server.ContainerResponse;
-import org.glassfish.jersey.server.RequestContextBuilder;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Ignore;
-import org.junit.Test;
+import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-import javax.annotation.Priority;
 import javax.ws.rs.GET;
 import javax.ws.rs.NameBinding;
 import javax.ws.rs.Path;
@@ -57,12 +56,16 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import java.io.IOException;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Priority;
+
+import org.glassfish.jersey.server.ApplicationHandler;
+import org.glassfish.jersey.server.ContainerResponse;
+import org.glassfish.jersey.server.RequestContextBuilder;
+import org.glassfish.jersey.server.ResourceConfig;
+
+import org.junit.Ignore;
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -75,7 +78,7 @@ import static org.junit.Assert.assertNull;
  * But it could be implemented as Jersey specific extension - JERSEY-2414.
  * Please un-ignore tests whenever JERSEY-2414 fixed.
  *
- * @author Paul.Sandoz@Sun.Com
+ * @author Paul Sandoz
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class LayeredFiltersTest {

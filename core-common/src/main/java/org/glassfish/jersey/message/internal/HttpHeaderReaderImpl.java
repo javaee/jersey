@@ -58,7 +58,7 @@ import static org.glassfish.jersey.message.internal.GrammarUtil.isWhiteSpace;
  * Concrete internal implementation of pull-based HTTP reader.
  *
  * @author Paul Sandoz
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 /* package */ final class HttpHeaderReaderImpl extends HttpHeaderReader {
 

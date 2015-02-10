@@ -54,7 +54,7 @@ import org.glassfish.jersey.message.internal.QualitySourceMediaType;
  * Represents function S as defined in the Request Matching part of the spec.
  *
  * @author Jakub Podlesak
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 final class CombinedMediaType {
     /**

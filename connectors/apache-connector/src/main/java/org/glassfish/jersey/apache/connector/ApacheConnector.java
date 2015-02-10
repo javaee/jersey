@@ -178,7 +178,7 @@ import jersey.repackaged.com.google.common.util.concurrent.MoreExecutors;
  * </p>
  *
  * @author jorgeluisw@mac.com
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Arul Dhesiaseelan (aruld at acm.org)
  * @see ApacheClientProperties#CONNECTION_MANAGER

@@ -46,7 +46,7 @@ import org.glassfish.jersey.server.model.RuntimeResource;
  * Router that pushes {@link RuntimeResource runtime resource} matched during a any routing phase
  * to {@link org.glassfish.jersey.server.internal.routing.RoutingContext routing context}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 
 final class PushMatchedRuntimeResourceRouter implements Router {

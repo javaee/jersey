@@ -61,7 +61,7 @@ import org.junit.Test;
  * Tests determining media type of the response (especially that qs quality parameter is respected when
  * more media types are defined on the resource method).
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ContentNegotiationTest extends JerseyTest {
 

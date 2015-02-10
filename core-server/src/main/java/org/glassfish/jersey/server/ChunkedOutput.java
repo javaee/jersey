@@ -64,7 +64,7 @@ import org.glassfish.jersey.server.internal.process.MappableException;
  *
  * @param <T> chunk type.
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 // TODO:  something like prequel/sequel - usable for EventChannelWriter and XML related writers

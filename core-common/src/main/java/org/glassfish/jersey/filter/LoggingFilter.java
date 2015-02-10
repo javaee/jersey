@@ -79,7 +79,7 @@ import org.glassfish.jersey.message.MessageUtils;
  * Can be used on client or server side. Has the highest priority.
  *
  * @author Pavel Bucek (pavel.bucek at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 @PreMatching
 @Priority(Integer.MIN_VALUE)

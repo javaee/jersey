@@ -54,7 +54,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
 
 /**
  * Tests {@link org.glassfish.jersey.model.internal.RankedComparator}.
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  *
  */
 public class RankedComparatorTest {

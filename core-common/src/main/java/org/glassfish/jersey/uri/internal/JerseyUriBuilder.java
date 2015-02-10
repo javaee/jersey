@@ -63,8 +63,8 @@ import org.glassfish.jersey.uri.UriTemplate;
  * A Jersey implementation of {@link UriBuilder}.
  *
  * @author Paul Sandoz
- * @author Martin Matula (martin.matula at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Martin Matula
+ * @author Miroslav Fuksa
  * @author Vetle Leinonen-Roeim (vetle at roeim.net)
  */
 public class JerseyUriBuilder extends UriBuilder {

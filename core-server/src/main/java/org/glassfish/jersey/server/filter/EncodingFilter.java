@@ -77,7 +77,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  *     The filter also ensures Accept-Encoding is added to the Vary header, for proper interaction with web caches.
  * </p>
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 @Priority(Priorities.HEADER_DECORATOR)
 public final class EncodingFilter implements ContainerResponseFilter {

@@ -60,7 +60,7 @@ import jersey.repackaged.com.google.common.collect.Maps;
 /**
  * Monitoring statistics implementation.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 final class MonitoringStatisticsImpl implements MonitoringStatistics {
 

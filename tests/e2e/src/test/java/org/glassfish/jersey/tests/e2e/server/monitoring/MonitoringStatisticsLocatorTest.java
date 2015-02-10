@@ -72,7 +72,7 @@ import org.junit.Test;
  * methods should be mapped to currently existing {@link ResourceStatistics} and their
  * {@link ResourceMethodStatistics}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class MonitoringStatisticsLocatorTest extends JerseyTest {
@@ -397,5 +397,4 @@ public class MonitoringStatisticsLocatorTest extends JerseyTest {
         Assert.assertEquals(200, response.getStatus());
         Assert.assertEquals("OK", response.readEntity(String.class));
     }
-
 }

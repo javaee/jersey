@@ -125,7 +125,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * </p>
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public final class Resource implements Routed, ResourceModelComponent {
 

@@ -67,9 +67,9 @@ import static org.junit.Assert.fail;
  * Uri builder implementation test.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Martin Matula
+ * @author Miroslav Fuksa
+ * @author Paul Sandoz
  * @author Vetle Leinonen-Roeim (vetle at roeim.net)
  */
 public class JerseyUriBuilderTest {

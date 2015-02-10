@@ -67,9 +67,9 @@ import jersey.repackaged.com.google.common.util.concurrent.SettableFuture;
  * An internal implementation of {@link ContainerResponseWriter} for Servlet containers.
  * The writer depends on provided {@link AsyncContextDelegate} to support async functionality.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 public class ResponseWriter implements ContainerResponseWriter {

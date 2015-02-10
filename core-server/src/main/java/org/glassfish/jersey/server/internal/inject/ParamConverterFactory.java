@@ -65,9 +65,9 @@ import org.glassfish.hk2.api.ServiceLocator;
  * instance is found, {@code null} is returned from the factory. {@link org.glassfish.jersey.internal.inject.Custom Custom}
  * providers are iterated first, so that user registered providers are preferred against internal jersey providers.
  *
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 @Singleton
 public class ParamConverterFactory implements ParamConverterProvider {

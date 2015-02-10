@@ -125,7 +125,7 @@ import com.sun.research.ws.wadl.Resources;
 /**
  * @author Marc Hadley
  * @author Michal Gajdos (michal.gajdos at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Libor Kramolis (libor.kramolis at oracle.com)
  */
 @RunWith(Suite.class)

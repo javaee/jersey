@@ -82,7 +82,7 @@ import jersey.repackaged.com.google.common.collect.Sets;
  * interaction with HK2 injection layer.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public final class Providers {
     private static final Logger LOGGER = Logger.getLogger(Providers.class.getName());

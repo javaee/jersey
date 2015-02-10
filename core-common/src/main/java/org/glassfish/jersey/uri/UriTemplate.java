@@ -59,7 +59,7 @@ import jersey.repackaged.com.google.common.base.Preconditions;
  * A URI template.
  *
  * @author Paul Sandoz
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
 public class UriTemplate {

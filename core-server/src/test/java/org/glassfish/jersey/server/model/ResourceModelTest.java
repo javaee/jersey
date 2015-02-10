@@ -58,7 +58,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
 /**
  * Test {@link ResourceModel} and {@link RuntimeResourceModel}.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ResourceModelTest {
 

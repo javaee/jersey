@@ -48,7 +48,7 @@ import org.glassfish.jersey.uri.UriTemplate;
  * Before calling this router the {@link PathMatchingRouter} must be called which matches the path
  * and pushes the {@link java.util.regex.MatchResult matched result} into the routing context.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @see RoutingContext#pushTemplates(org.glassfish.jersey.uri.UriTemplate, org.glassfish.jersey.uri.UriTemplate)
  */
 final class PushMatchedTemplateRouter implements Router {

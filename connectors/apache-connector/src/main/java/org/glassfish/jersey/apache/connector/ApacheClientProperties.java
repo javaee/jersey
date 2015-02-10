@@ -48,7 +48,7 @@ import org.glassfish.jersey.internal.util.PropertiesHelper;
  * Configuration options specific to the Client API that utilizes {@link ApacheConnectorProvider}.
  *
  * @author jorgeluisw@mac.com
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Pavel Bucek (pavel.bucek at oracle.com)
  * @author Arul Dhesiaseelan (aruld at acm.org)
  */

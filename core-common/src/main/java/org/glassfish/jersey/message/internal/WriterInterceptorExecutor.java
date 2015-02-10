@@ -72,7 +72,7 @@ import jersey.repackaged.com.google.common.collect.Lists;
  * a {@link MessageBodyWriter message body writer} execution interceptor is inserted,
  * which writes entity to the output stream provided by the chain.
  *
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
 public final class WriterInterceptorExecutor extends InterceptorExecutor<WriterInterceptor>

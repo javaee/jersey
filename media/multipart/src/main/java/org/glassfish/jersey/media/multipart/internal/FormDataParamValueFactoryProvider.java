@@ -81,7 +81,7 @@ import org.glassfish.hk2.api.ServiceLocator;
  * Value factory provider supporting the {@link FormDataParam} injection annotation.
  *
  * @author Craig McClanahan
- * @author Paul Sandoz (paul.sandoz at oracle.com)
+ * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
 public final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvider {

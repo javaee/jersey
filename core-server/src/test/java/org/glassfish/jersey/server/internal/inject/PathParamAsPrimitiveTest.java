@@ -54,7 +54,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Taken from Jersey-1: jersey-tests: com.sun.jersey.impl.methodparams.PathParamAsPrimitiveTest
  *
- * @author Paul.Sandoz at Sun.Com
+ * @author Paul Sandoz
  */
 public class PathParamAsPrimitiveTest {
 

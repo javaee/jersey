@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+
 package org.glassfish.jersey.client.filter;
 
 import javax.ws.rs.core.Feature;
@@ -53,7 +54,7 @@ import org.glassfish.jersey.spi.ContentEncoder;
  * {@link javax.ws.rs.core.Configurable client configuration}. It also allows
  * setting the value of {@link ClientProperties#USE_ENCODING} property.
  *
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class EncodingFeature implements Feature {
     private final String useEncoding;

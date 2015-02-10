@@ -74,7 +74,7 @@ import static org.junit.Assert.assertTrue;
  * WADL extension example tests.
  *
  * @author Naresh
- * @author Miroslav Fuksa (miroslav.fuksa at oracle.com)
+ * @author Miroslav Fuksa
  */
 public class ExtendedWadlWebappTest extends JerseyTest {
 

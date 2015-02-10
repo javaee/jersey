@@ -79,7 +79,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 
 /**
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class SaxParserFactoryInjectionProviderTest {
     private ServiceLocator locator;

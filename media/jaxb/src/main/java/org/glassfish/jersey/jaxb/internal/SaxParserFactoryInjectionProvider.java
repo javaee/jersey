@@ -52,7 +52,7 @@ import org.glassfish.hk2.api.PerThread;
  *
  * @author Paul Sandoz
  * @author Marek Potociar (marek.potociar at oracle.com)
- * @author Martin Matula (martin.matula at oracle.com)
+ * @author Martin Matula
  */
 public class SaxParserFactoryInjectionProvider extends AbstractXmlFactory implements Factory<SAXParserFactory> {
 
