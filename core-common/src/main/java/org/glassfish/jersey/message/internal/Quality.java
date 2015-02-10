@@ -42,6 +42,7 @@ package org.glassfish.jersey.message.internal;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -162,7 +163,7 @@ public final class Quality {
     }
 
     private static String qualityValueToString(final float quality) {
-        final StringBuilder qsb = new StringBuilder(String.format("%3.3f", (quality / 1000)));
+        final StringBuilder qsb = new StringBuilder(String.format(Locale.US, "%3.3f", (quality / 1000)));
 
         int lastIndex;
         while ((lastIndex = qsb.length() - 1) > 2 && qsb.charAt(lastIndex) == '0') {

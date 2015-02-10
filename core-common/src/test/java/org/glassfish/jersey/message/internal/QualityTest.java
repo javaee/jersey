@@ -39,11 +39,16 @@
  */
 package org.glassfish.jersey.message.internal;
 
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 
-import static org.glassfish.jersey.message.internal.MediaTypesTest.asMap;
-
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import static org.glassfish.jersey.message.internal.MediaTypesTest.asMap;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
@@ -52,7 +57,28 @@ import static org.junit.Assert.assertThat;
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
+@RunWith(Parameterized.class)
 public class QualityTest {
+
+    private static final Locale ORIGINAL_LOCALE = Locale.getDefault();
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Iterable<Object[]> data() {
+        return Arrays.asList(new Object[][]{{Locale.US}, {Locale.GERMANY}});
+    }
+
+    @Parameterized.Parameter(0)
+    public Locale locale;
+
+    @Before
+    public void setUp() throws Exception {
+        Locale.setDefault(locale);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        Locale.setDefault(ORIGINAL_LOCALE);
+    }
 
     /**
      * Test enhancing HTT header parameter map with a quality parameter.
@@ -72,7 +98,6 @@ public class QualityTest {
 
         result = Quality.enhanceWithQualityParameter(null, "q", 222);
         assertThat(result, equalTo(asMap("q=0.222")));
-
 
         Map<String, String> parameters;
 
