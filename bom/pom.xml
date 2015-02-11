@@ -53,7 +53,7 @@
 
     <groupId>org.glassfish.jersey</groupId>
     <artifactId>jersey-bom</artifactId>
-    <version>2.16-SNAPSHOT</version>
+    <version>2.16</version>
     <packaging>pom</packaging>
     <name>jersey-bom</name>
 
@@ -394,4 +394,8 @@
             </distributionManagement>
         </profile>
     </profiles>
+
+  <scm>
+    <tag>2.16</tag>
+  </scm>
 </project>
