@@ -70,6 +70,7 @@
         <module>jersey-1604</module>
         <module>jersey-1667</module>
         <module>jersey-1829</module>
+        <module>jersey-1883</module>
         <module>jersey-1928</module>
         <module>jersey-1960</module>
         <module>jersey-1964</module>
