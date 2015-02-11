@@ -40,51 +40,15 @@
 package org.glassfish.jersey.server.mvc.freemarker;
 
 
-import javax.inject.Inject;
-import javax.servlet.ServletContext;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
-import freemarker.cache.*;
 import freemarker.template.Configuration;
-import org.jvnet.hk2.annotations.Optional;
-import jersey.repackaged.com.google.common.collect.Lists;
 
-
-/**
- * Handy {@link FreemarkerConfigurationFactory} that supplies a minimally configured
- * {@link freemarker.template.Configuration Configuration} able to create
- * {@link freemarker.template.Template Freemarker templates}.
- * The recommended method to provide custom Freemarker configuration is to sub-class this class,
- * register it with the {@link FreemarkerMvcFeature} TEMPLATE_OBJECT_FACTORY property,
- * and customize the {@link freemarker.template.Configuration configuration} in that class.
- * <p/>
- */
-public class FreemarkerDefaultConfigurationFactory implements FreemarkerConfigurationFactory {
+public class FreemarkerSuppliedConfigurationFactory implements FreemarkerConfigurationFactory {
 
     protected final Configuration configuration;
 
-    @Inject
-    public FreemarkerDefaultConfigurationFactory(@Optional final ServletContext servletContext) {
+    public FreemarkerSuppliedConfigurationFactory(Configuration configuration) {
         super();
-
-        // Create different loaders.
-        final List<TemplateLoader> loaders = Lists.newArrayList();
-        if (servletContext != null) {
-            loaders.add(new WebappTemplateLoader(servletContext));
-        }
-        loaders.add(new ClassTemplateLoader(FreemarkerDefaultConfigurationFactory.class, "/"));
-        try {
-            loaders.add(new FileTemplateLoader(new File("/")));
-        } catch (IOException e) {
-            // NOOP
-        }
-
-        // Create Base configuration.
-        configuration = new Configuration();
-        configuration.setTemplateLoader(new MultiTemplateLoader(loaders.toArray(new TemplateLoader[loaders.size()])));
-
+        this.configuration = configuration;
     }
 
     @Override

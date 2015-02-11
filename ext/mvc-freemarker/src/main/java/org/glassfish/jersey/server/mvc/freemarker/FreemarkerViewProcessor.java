@@ -53,6 +53,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
 
+import freemarker.template.Configuration;
 import org.glassfish.jersey.internal.util.collection.Value;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -88,10 +89,22 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
                                    @Optional final ServletContext servletContext) {
         super(config, servletContext, "freemarker", "ftl");
 
+        ;
+
         this.factory = getTemplateObjectFactory(serviceLocator, FreemarkerConfigurationFactory.class, new Value<FreemarkerConfigurationFactory>() {
             @Override
             public FreemarkerConfigurationFactory get() {
-                return new FreemarkerDefaultConfigurationFactory(servletContext);
+                Configuration configuration = getTemplateObjectFactory(serviceLocator, Configuration.class, new Value<Configuration>() {
+                    @Override
+                    public Configuration get() {
+                        return null;
+                    }
+                });
+                if (configuration == null) {
+                    return new FreemarkerDefaultConfigurationFactory(servletContext);
+                } else {
+                    return new FreemarkerSuppliedConfigurationFactory(configuration);
+                }
             }
         });
 
