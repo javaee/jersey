@@ -521,6 +521,7 @@
 <!ENTITY jersey.server.oauth1.TokenResource "<link xlink:href='&jersey.javadoc.uri.prefix;/server/oauth1/TokenResource.html'>TokenResource</link>">
 <!ENTITY jersey.server.spi.ComponentProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ComponentProvider.html'>ComponentProvider</link>">
 <!ENTITY jersey.server.spi.ContainerProvider "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ContainerProvider.html'>ContainerProvider</link>">
+<!ENTITY jersey.server.spi.ExternalRequestScope "<link xlink:href='&jersey.javadoc.uri.prefix;/server/spi/ExternalRequestScope.html'>ExternalRequestScope</link>">
 <!ENTITY jersey.servlet.ServletContainer "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletContainer.html'>ServletContainer</link>">
 <!ENTITY jersey.servlet.ServletProperties "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html'>ServletProperties</link>">
 <!ENTITY jersey.servlet.ServletProperties.FILTER_CONTEXT_PATH "<link xlink:href='&jersey.javadoc.uri.prefix;/servlet/ServletProperties.html#FILTER_CONTEXT_PATH'>ServletProperties.FILTER_CONTEXT_PATH</link>">
