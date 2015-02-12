@@ -58,7 +58,7 @@ import org.glassfish.jersey.server.ExtendedUriInfo;
 /**
  * Utility class that can inject links into {@link com.sun.jersey.server.linking.Link} annotated fields in
  * an entity.
- * 
+ *
  * @author Mark Hadley
  * @author Gerard Davison (gerard.davison at oracle.com)
  */
@@ -106,7 +106,7 @@ class FieldProcessor<T> {
 
         // Process any @Link annotated fields in entity
         for (FieldDescriptor field : instanceDescriptor.getLinkFields()) {
-            
+
             // TODO replace with properly poly-morphic code
             if (field instanceof InjectLinkFieldDescriptor)
             {
@@ -116,7 +116,7 @@ class FieldProcessor<T> {
                     linkField.setPropertyValue(instance, uri);
                 }
             } else if (field instanceof InjectLinksFieldDescriptor) {
-                
+
                 InjectLinksFieldDescriptor linksField = (InjectLinksFieldDescriptor) field;
                 List<Link> list = new ArrayList<Link>();
                 for (InjectLinkFieldDescriptor linkField : linksField.getLinksToInject())
@@ -125,15 +125,13 @@ class FieldProcessor<T> {
                        URI uri = ELLinkBuilder.buildURI(linkField, entity, resource, instance, uriInfo, rmc);
                        Link link = linkField.getLink(uri);
                        list.add(link);
-                    }   
+                    }
                 }
-                
+
                 linksField.setPropertyValue(instance, list);
             }
         }
 
-        
-        
         // If entity is an array or collection then process members
         Class<?> instanceClass = instance.getClass();
         if (instanceClass.isArray() && Object[].class.isAssignableFrom(instanceClass)) {

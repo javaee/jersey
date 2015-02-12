@@ -58,4 +58,5 @@ import org.glassfish.jersey.Beta;
 @Retention(RetentionPolicy.RUNTIME)
 @Beta
 public @interface InjectLinkNoFollow {
+
 }

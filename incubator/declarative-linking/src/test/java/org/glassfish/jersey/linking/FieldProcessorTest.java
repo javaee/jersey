@@ -76,7 +76,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class FieldProcessorTest {
 
-    private static final Logger LOG = Logger.getLogger(FieldProcessor.class.getName()); 
+    private static final Logger LOG = Logger.getLogger(FieldProcessor.class.getName());
 
     ExtendedUriInfo mockUriInfo = new ExtendedUriInfo() {
 
