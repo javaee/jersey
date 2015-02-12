@@ -234,7 +234,7 @@ public final class ApplicationHandler {
     private final ServiceLocator locator;
     private ServerRuntime runtime;
     private MessageBodyWorkers msgBodyWorkers;
-
+    private List<ComponentProvider> componentProviders;
 
     /**
      * Create a new Jersey application handler using a default configuration.
@@ -337,7 +337,25 @@ public final class ApplicationHandler {
         } else if (applicationClass == Application.class) {
             return new Application();
         } else {
-            final Application app = locator.createAndInitialize(applicationClass);
+            componentProviders = initializedComponentProviders();
+            boolean appClassBound = false;
+            for (ComponentProvider cp : componentProviders) {
+                if (cp.bind(applicationClass, Collections.<Class<?>>emptySet())) {
+                    appClassBound = true;
+                    break;
+                }
+            }
+            if (!appClassBound) {
+                if (applicationClass.isAnnotationPresent(Singleton.class)) {
+                    final DynamicConfiguration dc = Injections.getConfiguration(locator);
+                    final ScopedBindingBuilder<? extends Application> binder =
+                            Injections.newBinder(applicationClass).to(applicationClass).in(Singleton.class);
+                    Injections.addBinding(binder, dc);
+                    dc.commit();
+                    appClassBound = true;
+                }
+            }
+            final Application app = appClassBound ? locator.getService(applicationClass) : locator.createAndInitialize(applicationClass);
             if (app instanceof ResourceConfig) {
                 final ResourceConfig _rc = (ResourceConfig) app;
                 final Class<? extends Application> innerAppClass = _rc.getApplicationClass();
@@ -350,11 +368,28 @@ public final class ApplicationHandler {
         }
     }
 
+    private List<ComponentProvider> initializedComponentProviders() {
+                // Registering Injection Bindings
+            List<ComponentProvider> result = new LinkedList<>();
+
+            // Registering Injection Bindings
+            for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
+                final ComponentProvider provider = rankedProvider.getProvider();
+                provider.initialize(locator);
+                result.add(provider);
+            }
+            return result;
+    }
+
     /**
      * Assumes the configuration field is initialized with a valid ResourceConfig.
      */
     private void initialize() {
         LOGGER.config(LocalizationMessages.INIT_MSG(Version.getBuildId()));
+
+        if (componentProviders == null) {
+            componentProviders = initializedComponentProviders();
+        }
 
         // Lock original ResourceConfig.
         if (application instanceof ResourceConfig) {
@@ -372,7 +407,6 @@ public final class ApplicationHandler {
 
         final ResourceBag resourceBag;
         final ProcessingProviders processingProviders;
-        final List<ComponentProvider> componentProviders;
         final ComponentBag componentBag;
         ResourceModel resourceModel;
         CompositeApplicationEventListener compositeListener = null;
@@ -424,16 +458,6 @@ public final class ApplicationHandler {
             resourceBag = resourceBagBuilder.build();
 
             runtimeConfig.lock();
-
-            // Registering Injection Bindings
-            componentProviders = new LinkedList<>();
-
-            // Registering Injection Bindings
-            for (final RankedProvider<ComponentProvider> rankedProvider : getRankedComponentProviders()) {
-                final ComponentProvider provider = rankedProvider.getProvider();
-                provider.initialize(locator);
-                componentProviders.add(provider);
-            }
 
             componentBag = runtimeConfig.getComponentBag();
             final Class<ExternalRequestScope>[] extScopes = ServiceFinder.find(ExternalRequestScope.class, true).toClassArray();
@@ -667,14 +691,10 @@ public final class ApplicationHandler {
     private Iterable<RankedProvider<ComponentProvider>> getRankedComponentProviders() throws ServiceConfigurationError {
         final List<RankedProvider<ComponentProvider>> result = new LinkedList<>();
 
-        final boolean enableMetainfServicesLookup = !CommonProperties.getValue(application.getProperties(), RuntimeType.SERVER,
-                CommonProperties.METAINF_SERVICES_LOOKUP_DISABLE, false, Boolean.class);
-        if (enableMetainfServicesLookup) {
-            for (final ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
-                result.add(new RankedProvider<>(provider));
-            }
-            Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
+        for (final ComponentProvider provider : ServiceFinder.find(ComponentProvider.class)) {
+            result.add(new RankedProvider<>(provider));
         }
+        Collections.sort(result, new RankedComparator<ComponentProvider>(Order.DESCENDING));
         return result;
     }
 

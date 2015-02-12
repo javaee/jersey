@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -41,9 +41,16 @@ package org.glassfish.jersey.tests.cdi.resources;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.inject.spi.BeanManager;
+
+import javax.inject.Inject;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
@@ -54,7 +61,12 @@ import javax.ws.rs.core.Application;
  * @author Jonathan Benoit (jonathan.benoit at oracle.com)
  */
 @ApplicationPath("/*")
+@ApplicationScoped
 public class MyApplication extends Application {
+
+    static AtomicInteger postConstructCounter = new AtomicInteger();
+
+    @Inject BeanManager bm;
 
     private static final Logger LOGGER = Logger.getLogger(MyApplication.class.getName());
 
@@ -79,9 +91,17 @@ public class MyApplication extends Application {
         return classes;
     }
 
+    // JERSEY-2531: make sure this type gets managed by CDI
     @PostConstruct
     public void postConstruct() {
         LOGGER.info(String.format("%s: POST CONSTRUCT.", this.getClass().getName()));
+        postConstructCounter.incrementAndGet();
+        if (bm == null) {
+            throw new IllegalStateException("BeanManager should have been injected into a CDI managed bean.");
+        }
+        if (postConstructCounter.intValue() > 1) {
+            throw new IllegalStateException("postConstruct should have been invoked only once on app scoped bean.");
+        }
     }
 
     @PreDestroy
