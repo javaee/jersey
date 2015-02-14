@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -97,7 +97,7 @@ public class FlightDemoApp extends ResourceConfig {
 
         // Enable MVC FreeMarker templating engine
         register(FreemarkerMvcFeature.class);
-        property(FreemarkerMvcFeature.TEMPLATES_BASE_PATH, "freemarker");
+        property(FreemarkerMvcFeature.TEMPLATE_BASE_PATH, "freemarker");
         register(MvcBeanValidationFeature.class);
 
         // Enable SSE support
