@@ -134,7 +134,7 @@ public final class WadlResource {
     @Produces({"application/xml"})
     @GET
     @Path("{path}")
-    public synchronized Response geExternalGrammar(
+    public synchronized Response getExternalGrammar(
             @Context UriInfo uriInfo,
             @PathParam("path") String path) {
         try {
