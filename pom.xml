@@ -1475,6 +1475,16 @@
                 <version>${pax.web.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-core</artifactId>
+                <version>${jmh.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjdk.jmh</groupId>
+                <artifactId>jmh-generator-annprocess</artifactId>
+                <version>${jmh.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -1535,6 +1545,7 @@
         <jetty.plugin.version>6.1.24</jetty.plugin.version>
         <jetty.version>9.1.1.v20140108</jetty.version>
         <jetty.servlet.api.25.version>6.1.14</jetty.servlet.api.25.version>
+        <jmh.version>1.5.2</jmh.version>
         <jsonp.ri.version>1.0.4</jsonp.ri.version>
         <jsonp.jaxrs.version>1.0</jsonp.jaxrs.version>
         <jsp.version>2.0</jsp.version>

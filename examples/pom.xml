@@ -76,6 +76,7 @@
         <module>flight-mgmt-webapp</module>
         <module>groovy</module>
         <module>helloworld</module>
+        <module>helloworld-benchmark</module>
         <module>helloworld-programmatic</module>
         <module>helloworld-pure-jax-rs</module>
         <module>helloworld-webapp</module>
