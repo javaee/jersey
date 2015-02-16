@@ -71,6 +71,7 @@
             <artifactId>javax.ws.rs-api</artifactId>
             <version>${jaxrs.api.impl.version}</version>
             <classifier>sources</classifier>
+            <optional>true</optional>
         </dependency>
 
         <!-- JAX-RS RI Binaries -->
@@ -111,36 +112,42 @@
             <artifactId>jersey-common</artifactId>
             <version>${project.version}</version>
             <classifier>sources</classifier>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-jaxb</artifactId>
             <version>${project.version}</version>
             <classifier>sources</classifier>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
             <version>${project.version}</version>
             <classifier>sources</classifier>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-server</artifactId>
             <version>${project.version}</version>
             <classifier>sources</classifier>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet-core</artifactId>
             <version>${project.version}</version>
             <classifier>sources</classifier>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet</artifactId>
             <version>${project.version}</version>
             <classifier>sources</classifier>
+            <optional>true</optional>
         </dependency>
 
         <!-- RI dependencies -->
