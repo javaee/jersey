@@ -135,6 +135,18 @@
 &lt;/dependency&gt;</programlisting>
                         </para>
                     </listitem>
+                    <listitem>
+                        <para>
+                            Because of a bug fix for issue
+                            <link xlink:href='https://java.net/jira/browse/JERSEY-1518'>JERSEY-1518</link>,
+                            <literal>MediaType</literal>'s <literal>qs</literal> attribute value must be from interval
+                            <literal>&lt;0, 1&gt;</literal>. I.e. following example is not allowed any more:
+<programlisting language="java" linenumbering="unnumbered">
+@Path("/")
+@Produces("text/html;qs=5") // wrong 'qs' value
+public class Bookstore { ... }</programlisting>
+                        </para>
+                    </listitem>
                 </itemizedlist>
             </para>
         </section>
