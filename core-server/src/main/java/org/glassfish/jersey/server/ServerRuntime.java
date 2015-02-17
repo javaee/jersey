@@ -201,7 +201,7 @@ public class ServerRuntime {
                 final ApplicationEventListener eventListener,
                 final ProcessingProviders processingProviders) {
 
-            ExternalRequestScope externalScope = externalRequestScope != null ? externalRequestScope : NOOP_EXTERNAL_REQ_SCOPE;
+            final ExternalRequestScope externalScope = externalRequestScope != null ? externalRequestScope : NOOP_EXTERNAL_REQ_SCOPE;
 
             return new ServerRuntime(
                     processingRoot,
@@ -909,7 +909,11 @@ public class ServerRuntime {
                 state = RESUMED;
             }
 
-            responder.runtime.requestScope.runInScope(scopeInstance, handler);
+            try {
+                responder.runtime.requestScope.runInScope(scopeInstance, handler);
+            } finally {
+                scopeInstance.release();
+            }
 
             return true;
         }
