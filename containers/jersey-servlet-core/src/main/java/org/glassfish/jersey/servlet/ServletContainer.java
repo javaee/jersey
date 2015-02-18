@@ -330,7 +330,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             requestUri = absoluteUriBuilder.replacePath(requestURI).
                     replaceQuery(queryParameters).
                     build();
-        } catch (UriBuilderException ex) {
+        } catch (UriBuilderException | IllegalArgumentException ex) {
             final Response.Status badRequest = Response.Status.BAD_REQUEST;
             if (webComponent.configSetStatusOverSendError) {
                 response.reset();
