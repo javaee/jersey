@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -61,6 +61,7 @@ import static org.junit.Assert.assertTrue;
  * @author Marek Potociar (marek.potociar at oracle.com)
  */
 public class UriComponentTest {
+
     @Test
     public void testNull() {
         decodeCatch(null);
@@ -90,13 +91,15 @@ public class UriComponentTest {
 
         assertEquals("0123456789", UriComponent.decode("%30%31%32%33%34%35%36%37%38%39", null));
         assertEquals("00112233445566778899", UriComponent.decode("%300%311%322%333%344%355%366%377%388%399", null));
-
     }
 
     @Test
     public void testPercentUnicodeEscapedOctets() {
         assertEquals("copyright\u00a9", UriComponent.decode("copyright%c2%a9", null));
         assertEquals("copyright\u00a9", UriComponent.decode("copyright%C2%A9", null));
+
+        assertEquals("thumbsup\ud83d\udc4d", UriComponent.decode("thumbsup%f0%9f%91%8d", null));
+        assertEquals("thumbsup\ud83d\udc4d", UriComponent.decode("thumbsup%F0%9F%91%8D", null));
     }
 
     @Test
@@ -114,11 +117,11 @@ public class UriComponentTest {
         assertTrue(decodeCatch("%1z"));
     }
 
-    private boolean decodeCatch(String s) {
+    private boolean decodeCatch(final String s) {
         try {
             UriComponent.decode(s, null);
             return false;
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             return true;
         }
     }
@@ -145,8 +148,13 @@ public class UriComponentTest {
         _testDecodePath("///a///b///c///", "", "", "", "a", "", "", "b", "", "", "c", "", "", "");
     }
 
-    private void _testDecodePath(String path, String... segments) {
-        List<PathSegment> ps = UriComponent.decodePath(path, true);
+    @Test
+    public void testDecodeUnicodePath() {
+        _testDecodePath("/%F0%9F%91%8D/thumbsup", "", "\ud83d\udc4d", "thumbsup");
+    }
+
+    private void _testDecodePath(final String path, final String... segments) {
+        final List<PathSegment> ps = UriComponent.decodePath(path, true);
         assertEquals(segments.length, ps.size());
 
         for (int i = 0; i < segments.length; i++) {
@@ -182,6 +190,17 @@ public class UriComponentTest {
     }
 
     @Test
+    public void testDecodeUnicodeQuery() {
+        _testDecodeQuery("+thumbsup%F0%9F%91%8D+=+chicken%F0%9F%90%94+", true, " thumbsup\ud83d\udc4d ", " chicken\ud83d\udc14 ");
+        _testDecodeQuery("%20thumbsup%F0%9F%91%8D%20=%20chicken%F0%9F%90%94%20", true, " thumbsup\ud83d\udc4d ",
+                " chicken\ud83d\udc14 ");
+        _testDecodeQuery("+thumbsup%F0%9F%91%8D+=+chicken%F0%9F%90%94+", false, " thumbsup\ud83d\udc4d ",
+                "+chicken%F0%9F%90%94+");
+        _testDecodeQuery("%20thumbsup%F0%9F%91%8D%20=%20chicken%F0%9F%90%94%20", false, " thumbsup\ud83d\udc4d ",
+                "%20chicken%F0%9F%90%94%20");
+    }
+
+    @Test
     public void testDecodeQueryParam() {
         assertEquals(" ",
                 UriComponent.decode("+", UriComponent.Type.QUERY_PARAM));
@@ -191,6 +210,12 @@ public class UriComponentTest {
                 UriComponent.decode("%20", UriComponent.Type.QUERY_PARAM));
         assertEquals("a b c ",
                 UriComponent.decode("a%20b%20c%20", UriComponent.Type.QUERY_PARAM));
+    }
+
+    @Test
+    public void testDecodeUnicodeQueryParam() {
+        assertEquals("thumbsup \ud83d\udc4d chicken \ud83d\udc14",
+                UriComponent.decode("thumbsup+%F0%9F%91%8D+chicken+%F0%9F%90%94", UriComponent.Type.QUERY_PARAM));
     }
 
     @Test
@@ -205,12 +230,12 @@ public class UriComponentTest {
                 UriComponent.decode("a%20b%20c%20", UriComponent.Type.QUERY_PARAM_SPACE_ENCODED));
     }
 
-    private void _testDecodeQuery(String q, String... query) {
+    private void _testDecodeQuery(final String q, final String... query) {
         _testDecodeQuery(q, true, query);
     }
 
-    private void _testDecodeQuery(String q, boolean decode, String... query) {
-        MultivaluedMap<String, String> queryParameters = UriComponent.decodeQuery(q, decode);
+    private void _testDecodeQuery(final String q, final boolean decode, final String... query) {
+        final MultivaluedMap<String, String> queryParameters = UriComponent.decodeQuery(q, decode);
 
         assertEquals(query.length / 2, queryParameters.size());
 
@@ -260,16 +285,21 @@ public class UriComponentTest {
 
         _testDecodeMatrix(";%20a%20=%20x%20", "", true, " a ", " x ");
         _testDecodeMatrix(";%20a%20=%20x%20", "", false, " a ", "%20x%20");
-
     }
 
-    private void _testDecodeMatrix(String path, String pathSegment, String... matrix) {
+    @Test
+    public void testDecodeUnicodeMatrix() {
+        _testDecodeMatrix(";thumbsup%F0%9F%91%8D=chicken%F0%9F%90%94", "", true, "thumbsup\ud83d\udc4d", "chicken\ud83d\udc14");
+        _testDecodeMatrix(";thumbsup%F0%9F%91%8D=chicken%F0%9F%90%94", "", false, "thumbsup\ud83d\udc4d", "chicken%F0%9F%90%94");
+    }
+
+    private void _testDecodeMatrix(final String path, final String pathSegment, final String... matrix) {
         _testDecodeMatrix(path, pathSegment, true, matrix);
     }
 
-    private void _testDecodeMatrix(String path, String pathSegment, boolean decode, String... matrix) {
-        List<PathSegment> ps = UriComponent.decodePath(path, decode);
-        MultivaluedMap<String, String> matrixParameters = ps.get(0).getMatrixParameters();
+    private void _testDecodeMatrix(final String path, final String pathSegment, final boolean decode, final String... matrix) {
+        final List<PathSegment> ps = UriComponent.decodePath(path, decode);
+        final MultivaluedMap<String, String> matrixParameters = ps.get(0).getMatrixParameters();
 
         assertEquals(pathSegment, ps.get(0).getPath());
         assertEquals(matrix.length / 2, matrixParameters.size());
@@ -288,6 +318,8 @@ public class UriComponentTest {
                 UriComponent.encode("/copyright\u00a9", UriComponent.Type.PATH_SEGMENT));
         assertEquals("%2Fa%3Bx%2Fb%3Bx%2Fc%3Bx",
                 UriComponent.encode("/a;x/b;x/c;x", UriComponent.Type.PATH_SEGMENT));
+        assertEquals("%2Fthumbsup%F0%9F%91%8D",
+                UriComponent.encode("/thumbsup\ud83d\udc4d", UriComponent.Type.PATH_SEGMENT));
     }
 
     @Test
@@ -300,6 +332,8 @@ public class UriComponentTest {
                 UriComponent.encode("/copyright\u00a9", UriComponent.Type.PATH));
         assertEquals("/a;x/b;x/c;x",
                 UriComponent.encode("/a;x/b;x/c;x", UriComponent.Type.PATH));
+        assertEquals("/thumbsup%F0%9F%91%8D",
+                UriComponent.encode("/thumbsup\ud83d\udc4d", UriComponent.Type.PATH));
     }
 
     @Test
@@ -310,11 +344,15 @@ public class UriComponentTest {
                 UriComponent.contextualEncode("/a /b /c ", UriComponent.Type.PATH));
         assertEquals("/copyright%C2%A9",
                 UriComponent.contextualEncode("/copyright\u00a9", UriComponent.Type.PATH));
+        assertEquals("/thumbsup%F0%9F%91%8D",
+                UriComponent.contextualEncode("/thumbsup\ud83d\udc4d", UriComponent.Type.PATH));
 
         assertEquals("/a%20/b%20/c%20",
                 UriComponent.contextualEncode("/a%20/b%20/c%20", UriComponent.Type.PATH));
         assertEquals("/copyright%C2%A9",
                 UriComponent.contextualEncode("/copyright%C2%A9", UriComponent.Type.PATH));
+        assertEquals("/thumbsup%F0%9F%91%8D",
+                UriComponent.contextualEncode("/thumbsup%F0%9F%91%8D", UriComponent.Type.PATH));
     }
 
     @Test
@@ -325,6 +363,11 @@ public class UriComponentTest {
                 UriComponent.encode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM));
         assertEquals("a%20b%20c.-*_%3D%2B%26%25xx%2520",
                 UriComponent.encode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM_SPACE_ENCODED));
+
+        assertEquals("thumbsup%F0%9F%91%8D",
+                UriComponent.encode("thumbsup\ud83d\udc4d", UriComponent.Type.QUERY));
+        assertEquals("thumbsup%F0%9F%91%8D",
+                UriComponent.encode("thumbsup\ud83d\udc4d", UriComponent.Type.QUERY_PARAM));
     }
 
     @Test
@@ -335,12 +378,20 @@ public class UriComponentTest {
                 UriComponent.contextualEncode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM));
         assertEquals("a%20b%20c.-*_%3D%2B%26%25xx%20",
                 UriComponent.contextualEncode("a b c.-*_=+&%xx%20", UriComponent.Type.QUERY_PARAM_SPACE_ENCODED));
+
+        assertEquals("thumbsup%F0%9F%91%8Dthumbsup%F0%9F%91%8D",
+                UriComponent.contextualEncode("thumbsup%F0%9F%91%8Dthumbsup\ud83d\udc4d", UriComponent.Type.QUERY));
+        assertEquals("thumbsup%F0%9F%91%8Dthumbsup%F0%9F%91%8D",
+                UriComponent.contextualEncode("thumbsup%F0%9F%91%8Dthumbsup\ud83d\udc4d", UriComponent.Type.QUERY_PARAM));
     }
 
     @Test
     public void testContextualEncodeMatrixParam() {
         assertEquals("a%3Db%20c%3Bx",
                 UriComponent.contextualEncode("a=b c;x", UriComponent.Type.MATRIX_PARAM));
+
+        assertEquals("a%3Db%20c%3Bx%3Dthumbsup%F0%9F%91%8D",
+                UriComponent.contextualEncode("a=b c;x=thumbsup\ud83d\udc4d", UriComponent.Type.MATRIX_PARAM));
     }
 
     @Test
