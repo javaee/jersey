@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -150,15 +150,16 @@ import org.glassfish.jersey.uri.UriComponent;
 public class ServletContainer extends HttpServlet implements Filter, Container {
 
     private static final long serialVersionUID = 3932047066686065219L;
+    private static final ExtendedLogger LOGGER =
+            new ExtendedLogger(Logger.getLogger(ServletContainer.class.getName()), Level.FINEST);
+
     private transient FilterConfig filterConfig;
     private transient WebComponent webComponent;
     private transient ResourceConfig resourceConfig;
     private transient Pattern staticContentPattern;
     private transient String filterContextPath;
-    private volatile ContainerLifecycleListener containerListener;
 
-    private static final ExtendedLogger logger =
-            new ExtendedLogger(Logger.getLogger(ServletContainer.class.getName()), Level.FINEST);
+    private volatile ContainerLifecycleListener containerListener;
 
     /**
      * Initiate the Web component.
@@ -166,7 +167,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @param webConfig the Web configuration.
      * @throws javax.servlet.ServletException in case of an initialization failure
      */
-    protected void init(WebConfig webConfig) throws ServletException {
+    protected void init(final WebConfig webConfig) throws ServletException {
         webComponent = new WebComponent(webConfig, resourceConfig);
         containerListener = ConfigHelper.getContainerLifecycleListener(webComponent.appHandler);
         containerListener.onStartup(this);
@@ -183,7 +184,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      *
      * @param resourceConfig container configuration.
      */
-    public ServletContainer(ResourceConfig resourceConfig) {
+    public ServletContainer(final ResourceConfig resourceConfig) {
         this.resourceConfig = resourceConfig;
     }
 
@@ -206,10 +207,10 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @see javax.servlet.Servlet#service
      */
     @Override
-    public void service(ServletRequest req, ServletResponse res)
+    public void service(final ServletRequest req, final ServletResponse res)
             throws ServletException, IOException {
-        HttpServletRequest request;
-        HttpServletResponse response;
+        final HttpServletRequest request;
+        final HttpServletResponse response;
 
         if (!(req instanceof HttpServletRequest && res instanceof HttpServletResponse)) {
             throw new ServletException("non-HTTP request or response");
@@ -242,18 +243,19 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @see javax.servlet.Servlet#service
      */
     @Override
-    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void service(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         /**
          * There is an annoying edge case where the service method is
          * invoked for the case when the URI is equal to the deployment URL
          * minus the '/', for example http://locahost:8080/HelloWorldWebApp
          */
         final String servletPath = request.getServletPath();
-        String pathInfo = request.getPathInfo();
-        StringBuffer requestURL = request.getRequestURL();
-        String requestURI = request.getRequestURI();
-        final boolean checkPathInfo = pathInfo == null || pathInfo.isEmpty() || pathInfo.equals("/");
-        if (checkPathInfo && !request.getRequestURI().endsWith("/")) {
+        final StringBuffer requestUrl = request.getRequestURL();
+        final String requestURI = request.getRequestURI();
+
+//        final String pathInfo = request.getPathInfo();
+//        final boolean checkPathInfo = pathInfo == null || pathInfo.isEmpty() || pathInfo.equals("/");
+//        if (checkPathInfo && !request.getRequestURI().endsWith("/")) {
             // Only do this if the last segment of the servlet path does not contain '.'
             // This handles the case when the extension mapping is used with the servlet
             // see issue 506
@@ -261,8 +263,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             // however still leaves it broken for the very rare case if a standard path
             // servlet mapping would include dot in the last segment (e.g. /.webresources/*)
             // and somebody would want to hit the root resource without the trailing slash
-            int i = servletPath.lastIndexOf('/');
-            if (servletPath.substring(i + 1).indexOf('.') < 0) {
+//            final int i = servletPath.lastIndexOf('/');
+//            if (servletPath.substring(i + 1).indexOf('.') < 0) {
                 // TODO (+ handle request URL with invalid characters - see the creation of absoluteUriBuilder below)
 //                if (webComponent.getResourceConfig().getFeature(ResourceConfig.FEATURE_REDIRECT)) {
 //                    URI l = UriBuilder.fromUri(request.getRequestURL().toString()).
@@ -277,24 +279,18 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
 //                requestURL.append("/");
 //                requestURI += "/";
 //                }
-            }
-        }
+//            }
+//        }
 
         /**
          * The HttpServletRequest.getRequestURL() contains the complete URI
          * minus the query and fragment components.
          */
-        UriBuilder absoluteUriBuilder;
+        final UriBuilder absoluteUriBuilder;
         try {
-            absoluteUriBuilder = UriBuilder.fromUri(requestURL.toString());
-        } catch (IllegalArgumentException iae) {
-            final Response.Status badRequest = Response.Status.BAD_REQUEST;
-            if (webComponent.configSetStatusOverSendError) {
-                response.reset();
-                response.setStatus(badRequest.getStatusCode(), badRequest.getReasonPhrase());
-            } else {
-                response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
-            }
+            absoluteUriBuilder = UriBuilder.fromUri(requestUrl.toString());
+        } catch (final IllegalArgumentException iae) {
+            setResponseForInvalidUri(response, iae);
             return;
         }
 
@@ -330,24 +326,32 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             requestUri = absoluteUriBuilder.replacePath(requestURI).
                     replaceQuery(queryParameters).
                     build();
-        } catch (UriBuilderException ex) {
-            final Response.Status badRequest = Response.Status.BAD_REQUEST;
-            if (webComponent.configSetStatusOverSendError) {
-                response.reset();
-                response.setStatus(badRequest.getStatusCode(), badRequest.getReasonPhrase());
-            } else {
-                response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
-            }
+        } catch (final UriBuilderException | IllegalArgumentException ex) {
+            setResponseForInvalidUri(response, ex);
             return;
         }
 
         service(baseUri, requestUri, request, response);
     }
 
+    private void setResponseForInvalidUri(final HttpServletResponse response, final Throwable throwable) throws IOException {
+        LOGGER.log(Level.FINER, "Error while processing request.", throwable);
+
+        final Response.Status badRequest = Response.Status.BAD_REQUEST;
+        if (webComponent.configSetStatusOverSendError) {
+            response.reset();
+            //noinspection deprecation
+            response.setStatus(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+        } else {
+            response.sendError(badRequest.getStatusCode(), badRequest.getReasonPhrase());
+        }
+    }
+
     @Override
     public void destroy() {
         super.destroy();
-        ContainerLifecycleListener listener = containerListener;
+
+        final ContainerLifecycleListener listener = containerListener;
         if (listener != null) {
             listener.onShutdown(this);
         }
@@ -376,22 +380,22 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @throws ServletException if the HTTP request cannot
      *                          be handled.
      */
-    public Value<Integer> service(URI baseUri, URI requestUri, final HttpServletRequest request,
-                                  HttpServletResponse response) throws ServletException, IOException {
+    public Value<Integer> service(final URI baseUri, final URI requestUri, final HttpServletRequest request,
+                                  final HttpServletResponse response) throws ServletException, IOException {
         return webComponent.service(baseUri, requestUri, request, response);
     }
 
     // Filter
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(final FilterConfig filterConfig) throws ServletException {
         this.filterConfig = filterConfig;
         init(new WebFilterConfig(filterConfig));
 
-        String regex = (String) getConfiguration().getProperty(ServletProperties.FILTER_STATIC_CONTENT_REGEX);
+        final String regex = (String) getConfiguration().getProperty(ServletProperties.FILTER_STATIC_CONTENT_REGEX);
         if (regex != null && regex.length() > 0) {
             try {
                 staticContentPattern = Pattern.compile(regex);
-            } catch (PatternSyntaxException ex) {
+            } catch (final PatternSyntaxException ex) {
                 throw new ContainerException(LocalizationMessages.INIT_PARAM_REGEX_SYNTAX_INVALID(
                         regex, ServletProperties.FILTER_STATIC_CONTENT_REGEX), ex);
             }
@@ -413,11 +417,11 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+    public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain filterChain)
             throws IOException, ServletException {
         try {
             doFilter((HttpServletRequest) servletRequest, (HttpServletResponse) servletResponse, filterChain);
-        } catch (ClassCastException e) {
+        } catch (final ClassCastException e) {
             throw new ServletException("non-HTTP request or response", e);
         }
     }
@@ -458,7 +462,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
      * @throws javax.servlet.ServletException in case of an error while executing the
      *                                        filter chain.
      */
-    public void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    public void doFilter(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
         if (request.getAttribute("javax.servlet.include.request_uri") != null) {
             final String includeRequestURI = (String) request.getAttribute("javax.servlet.include.request_uri");
@@ -485,8 +489,8 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
                 request.getQueryString());
     }
 
-    private void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
-                          String requestURI, String servletPath, String queryString) throws IOException, ServletException {
+    private void doFilter(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain,
+                          final String requestURI, final String servletPath, final String queryString) throws IOException, ServletException {
         // if we match the static content regular expression lets delegate to
         // the filter chain to use the default container servlets & handlers
         final Pattern p = getStaticContentPattern();
@@ -515,21 +519,27 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
             }
         }
 
-        final UriBuilder absoluteUriBuilder = UriBuilder.fromUri(
-                request.getRequestURL().toString());
+        final URI baseUri;
+        final URI requestUri;
+        try {
+            final UriBuilder absoluteUriBuilder = UriBuilder.fromUri(request.getRequestURL().toString());
 
-        final URI baseUri = (filterContextPath == null)
-                ? absoluteUriBuilder.replacePath(request.getContextPath()).
-                path("/").
-                build()
-                : absoluteUriBuilder.replacePath(request.getContextPath()).
-                path(filterContextPath).
-                path("/").
-                build();
+            baseUri = (filterContextPath == null)
+                    ? absoluteUriBuilder.replacePath(request.getContextPath())
+                    .path("/")
+                    .build()
+                    : absoluteUriBuilder.replacePath(request.getContextPath())
+                    .path(filterContextPath)
+                    .path("/")
+                    .build();
 
-        final URI requestUri = absoluteUriBuilder.replacePath(requestURI).
-                replaceQuery(ContainerUtils.encodeUnsafeCharacters(queryString)).
-                build();
+            requestUri = absoluteUriBuilder.replacePath(requestURI)
+                    .replaceQuery(ContainerUtils.encodeUnsafeCharacters(queryString))
+                    .build();
+        } catch (final IllegalArgumentException iae) {
+            setResponseForInvalidUri(response, iae);
+            return;
+        }
 
         final int status = service(baseUri, requestUri, request, response).get();
 
@@ -572,15 +582,15 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
     }
 
     @Override
-    public void reload(ResourceConfig configuration) {
+    public void reload(final ResourceConfig configuration) {
         try {
             containerListener.onShutdown(this);
             webComponent = new WebComponent(webComponent.webConfig, configuration);
             containerListener = ConfigHelper.getContainerLifecycleListener(webComponent.appHandler);
             containerListener.onReload(this);
             containerListener.onStartup(this);
-        } catch (ServletException ex) {
-            logger.log(Level.SEVERE, "Reload failed", ex);
+        } catch (final ServletException ex) {
+            LOGGER.log(Level.SEVERE, "Reload failed", ex);
         }
     }
 
@@ -591,7 +601,7 @@ public class ServletContainer extends HttpServlet implements Filter, Container {
 
     /**
      * Get {@link WebComponent} used by this servlet container.
-     * 
+     *
      * @return The web component.
      */
     public WebComponent getWebComponent() {
