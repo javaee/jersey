@@ -705,6 +705,11 @@ public class ResourceConfig extends Application implements Configurable<Resource
         this.cachedClassesView = null;
         this.cachedSingletons = null;
         this.cachedSingletonsView = null;
+
+        // Reset ResourceFinders to make sure the next package scanning is successful.
+        for (final ResourceFinder finder : this.state.resourceFinders) {
+            finder.reset();
+        }
     }
 
     /**
@@ -1200,7 +1205,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
                             @Override
                             public boolean apply(final Object input) {
                                 if (input == null) {
-                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(input));
+                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(null));
                                 }
                                 return input != null;
                             }
@@ -1213,7 +1218,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
                             @Override
                             public boolean apply(final Class<?> input) {
                                 if (input == null) {
-                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(input));
+                                    Errors.warning(application, LocalizationMessages.NON_INSTANTIABLE_COMPONENT(null));
                                 }
                                 return input != null;
                             }
