@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2011-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,6 +56,8 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
+
 import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
@@ -76,15 +78,17 @@ public class BlockingPostChatResource {
     private static final Logger LOGGER = Logger.getLogger(BlockingPostChatResource.class.getName());
     private static final Level DEBUG = Level.INFO;
     //
-    private static final ExecutorService QUEUE_EXECUTOR = Executors.newCachedThreadPool(
-            new ThreadFactoryBuilder().setNameFormat("blocking-post-chat-resource-executor-%d").build());
+    private static final ExecutorService QUEUE_EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+            .setNameFormat("blocking-post-chat-resource-executor-%d")
+            .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+            .build());
     private static final BlockingQueue<String> messages = new ArrayBlockingQueue<String>(5);
     //
 
     @GET
     public void pickUpMessage(@Suspended final AsyncResponse ar, @QueryParam("id") final String messageId) {
         LOGGER.log(DEBUG, "Received GET <{0}> with context {1} on thread {2}.",
-                new Object[] {messageId, ar.toString(), Thread.currentThread().getName()});
+                new Object[]{messageId, ar.toString(), Thread.currentThread().getName()});
         QUEUE_EXECUTOR.submit(new Runnable() {
 
             @Override
@@ -92,7 +96,7 @@ public class BlockingPostChatResource {
                 try {
                     final String message = messages.take();
                     LOGGER.log(DEBUG, "Resuming GET <{0}> context {1} with a message {2} on thread {3}.",
-                            new Object[] {messageId, ar.toString(), message, Thread.currentThread().getName()});
+                            new Object[]{messageId, ar.toString(), message, Thread.currentThread().getName()});
                     ar.resume(message);
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE,
@@ -106,7 +110,7 @@ public class BlockingPostChatResource {
     @POST
     public void postMessage(@Suspended final AsyncResponse ar, final String message) {
         LOGGER.log(DEBUG, "Received POST <{0}> with context {1} on thread {2}. Suspending the context.",
-                new Object[] {message, ar.toString(), Thread.currentThread().getName()});
+                new Object[]{message, ar.toString(), Thread.currentThread().getName()});
         QUEUE_EXECUTOR.submit(new Runnable() {
 
             @Override
@@ -114,7 +118,7 @@ public class BlockingPostChatResource {
                 try {
                     messages.put(message);
                     LOGGER.log(DEBUG, "POSTed message <{0}> successfully queued. Resuming POST with context {1} on thread {2}.",
-                            new Object[] {message, ar.toString(), Thread.currentThread().getName()});
+                            new Object[]{message, ar.toString(), Thread.currentThread().getName()});
                     ar.resume(POST_NOTIFICATION_RESPONSE);
                 } catch (InterruptedException ex) {
                     LOGGER.log(Level.SEVERE,

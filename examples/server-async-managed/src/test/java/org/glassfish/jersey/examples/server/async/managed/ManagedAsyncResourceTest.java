@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,6 +57,7 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
@@ -104,8 +105,10 @@ public class ManagedAsyncResourceTest extends JerseyTest {
         final boolean sequentialGet = false;
         final Object sequentialGetLock = new Object();
 
-        final ExecutorService executor = Executors.newCachedThreadPool(
-                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%d").build());
+        final ExecutorService executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+                .setNameFormat("async-resource-test-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
 
         final Map<Integer, String> getResponses = new ConcurrentHashMap<Integer, String>();
 
@@ -193,8 +196,10 @@ public class ManagedAsyncResourceTest extends JerseyTest {
         final Object sequentialGetLock = new Object();
         final Object sequentialPostLock = new Object();
 
-        final ExecutorService executor = Executors.newCachedThreadPool(
-                new ThreadFactoryBuilder().setNameFormat("async-resource-test-%d").build());
+        final ExecutorService executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+                .setNameFormat("async-resource-test-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
 
         final Map<Integer, Integer> postResponses = new ConcurrentHashMap<Integer, Integer>();
         final Map<Integer, Message> getResponses = new ConcurrentHashMap<Integer, Message>();

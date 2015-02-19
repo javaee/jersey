@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -51,6 +51,7 @@ import org.glassfish.jersey.client.rx.RxClient;
 import org.glassfish.jersey.client.rx.RxWebTarget;
 import org.glassfish.jersey.client.rx.jsr166e.RxCompletableFutureInvoker;
 import org.glassfish.jersey.client.rx.jsr166e.RxCompletableFuture;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
 import org.hamcrest.Matcher;
 import org.junit.After;
@@ -74,7 +75,10 @@ public class RxCompletableFutureTest {
     @Before
     public void setUp() throws Exception {
         client = ClientBuilder.newClient().register(TerminalClientRequestFilter.class);
-        executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("jersey-rx-client-test-%d").build());
+        executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
+                .setNameFormat("jersey-rx-client-test-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
     }
 
     @After

@@ -46,6 +46,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.logging.Logger;
 
 import org.glassfish.jersey.client.internal.LocalizationMessages;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.process.internal.RequestExecutorFactory;
 import org.glassfish.jersey.spi.RequestExecutorProvider;
 
@@ -93,6 +94,7 @@ class ClientAsyncExecutorFactory extends RequestExecutorFactory {
 
                 final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                         .setNameFormat("jersey-client-async-executor-%d")
+                        .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
                         .build();
 
                 if (poolSize > 0) {

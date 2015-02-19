@@ -45,6 +45,7 @@ import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
 
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.process.internal.RequestExecutorFactory;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
@@ -79,8 +80,10 @@ class ServerManagedAsyncExecutorFactory extends RequestExecutorFactory implement
 
             @Override
             public ExecutorService getRequestingExecutor() {
-                return Executors.newCachedThreadPool(
-                        new ThreadFactoryBuilder().setNameFormat("jersey-server-managed-async-executor-%d").build());
+                return Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+                        .setNameFormat("jersey-server-managed-async-executor-%d")
+                        .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                        .build());
             }
 
             @Override

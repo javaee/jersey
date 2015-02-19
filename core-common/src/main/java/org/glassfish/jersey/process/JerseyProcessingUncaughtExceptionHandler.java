@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,55 +37,48 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+package org.glassfish.jersey.process;
 
-package org.glassfish.jersey.examples.server.async;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
-
-import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
-
-import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.glassfish.jersey.internal.LocalizationMessages;
 
 /**
- * Example of a simple resource with a long-running operation executed in a
- * custom application thread.
+ * Uncaught exception handler that can be used by various Jersey request processing thread pools uncaught exceptions.
  *
  * @author Marek Potociar (marek.potociar at oracle.com)
+ * @since 2.17
  */
-@Path(App.ASYNC_LONG_RUNNING_OP_PATH)
-@Produces("text/plain")
-public class SimpleLongRunningResource {
+public class JerseyProcessingUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+    private static final Logger LOGGER = Logger.getLogger(JerseyProcessingUncaughtExceptionHandler.class.getName());
 
-    public static final String NOTIFICATION_RESPONSE = "Hello async world!";
-    private static final Logger LOGGER = Logger.getLogger(SimpleLongRunningResource.class.getName());
-    private static final int SLEEP_TIME_IN_MILLIS = 1000;
-    private static final ExecutorService TASK_EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder()
-            .setNameFormat("long-running-resource-executor-%d")
-            .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
-            .build());
+    private final Level logLevel;
 
-    @GET
-    public void longGet(@Suspended final AsyncResponse ar) {
-        TASK_EXECUTOR.submit(new Runnable() {
+    /**
+     * Create new Jersey processing uncaught exception handler.
+     * <p>
+     * All uncaught exceptions will be logged using the {@link Level#WARNING WARNING} logging level.
+     * </p>
+     */
+    public JerseyProcessingUncaughtExceptionHandler() {
+        this(Level.WARNING);
+    }
 
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(SLEEP_TIME_IN_MILLIS);
-                } catch (InterruptedException ex) {
-                    LOGGER.log(Level.SEVERE, "Response processing interrupted", ex);
-                }
-                ar.resume(NOTIFICATION_RESPONSE);
-            }
-        });
+    /**
+     * Create new Jersey processing uncaught exception handler.
+     * <p>
+     * All uncaught exceptions will be logged using the supplied logging level.
+     * </p>
+     *
+     * @param logLevel custom logging level that should be used to log uncaught exceptions.
+     */
+    public JerseyProcessingUncaughtExceptionHandler(Level logLevel) {
+        this.logLevel = logLevel;
+    }
+
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        LOGGER.log(logLevel, LocalizationMessages.UNHANDLED_EXCEPTION_DETECTED(t.getName()), e);
     }
 }

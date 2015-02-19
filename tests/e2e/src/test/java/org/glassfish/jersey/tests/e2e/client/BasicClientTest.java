@@ -73,6 +73,7 @@ import static javax.ws.rs.client.Entity.text;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.spi.RequestExecutorProvider;
 import org.glassfish.jersey.test.JerseyTest;
@@ -142,7 +143,7 @@ public class BasicClientTest extends JerseyTest {
         Future<Response> f1 = async.post(text("post"));
         final Response response = f1.get();
         final String entity = response.readEntity(String.class);
-        assertEquals("AsyncRequest-post", entity);
+        assertEquals("async-request-post", entity);
     }
 
     private void runCustomExecutorTestSync(Client client) {
@@ -150,7 +151,7 @@ public class BasicClientTest extends JerseyTest {
         final Response response = target.request().post(text("post"));
 
         final String entity = response.readEntity(String.class);
-        assertNotSame("AsyncRequest-post", entity);
+        assertNotSame("async-request-post", entity);
     }
 
     @Test
@@ -382,7 +383,10 @@ public class BasicClientTest extends JerseyTest {
 
         @Override
         public ExecutorService getRequestingExecutor() {
-            return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("AsyncRequest").build());
+            return Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+                    .setNameFormat("async-request")
+                    .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                    .build());
         }
 
         @Override

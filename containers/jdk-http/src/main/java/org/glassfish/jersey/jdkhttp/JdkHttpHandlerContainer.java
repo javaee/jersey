@@ -55,6 +55,7 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 
@@ -104,6 +105,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
      * Create new lightweight Java SE HTTP server container.
      *
      * @param application JAX-RS / Jersey application to be deployed on the container.
+     * @param parentLocator parent HK2 service locator.
      */
     JdkHttpHandlerContainer(final Application application, final ServiceLocator parentLocator) {
         this.appHandler = new ApplicationHandler(application, null, parentLocator);
@@ -275,7 +277,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
             }
 
             try {
-                if (context.getStatus() == 204) {
+                if (context.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
                     // Work around bug in LW HTTP server
                     // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6886436
                     exchange.sendResponseHeaders(context.getStatus(), -1);
@@ -284,7 +286,7 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
                             getResponseLength(contentLength));
                 }
             } catch (final IOException ioe) {
-                throw new ContainerException("Error during writing out the response headers.", ioe);
+                throw new ContainerException(LocalizationMessages.ERROR_RESPONSEWRITER_WRITING_HEADERS(), ioe);
             }
 
             return exchange.getResponseBody();
@@ -313,9 +315,9 @@ public class JdkHttpHandlerContainer implements HttpHandler, Container {
         @Override
         public void failure(final Throwable error) {
             try {
-                exchange.sendResponseHeaders(500, getResponseLength(0));
+                exchange.sendResponseHeaders(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), getResponseLength(0));
             } catch (final IOException e) {
-                LOGGER.log(Level.WARNING, "Unable to send a failure response.", e);
+                LOGGER.log(Level.WARNING, LocalizationMessages.ERROR_RESPONSEWRITER_SENDING_FAILURE_RESPONSE(), e);
             } finally {
                 commit();
                 rethrow(error);

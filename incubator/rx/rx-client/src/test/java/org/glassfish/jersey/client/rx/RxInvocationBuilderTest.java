@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -52,6 +52,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 
 import org.junit.After;
 import org.junit.Before;
@@ -93,8 +94,10 @@ public class RxInvocationBuilderTest {
 
     @Test
     public void testRxCustomExecutor() throws Exception {
-        final ExecutorService executor = new ScheduledThreadPoolExecutor(1,
-                new ThreadFactoryBuilder().setNameFormat("jersey-rx-client-test-%d").build());
+        final ExecutorService executor = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder()
+                .setNameFormat("jersey-rx-client-test-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
 
         assertThat(rxBuilder.rx(executor).get().get().getHeaderString("Test-Thread"), containsString("jersey-rx-client-test"));
     }
@@ -179,6 +182,7 @@ public class RxInvocationBuilderTest {
     public void testBuild() throws Exception {
         assertThat(rxBuilder.build("GET"), notNullValue());
     }
+
     @Test
     public void testBuildEntity() throws Exception {
         assertThat(rxBuilder.build("POST", Entity.json("")), notNullValue());
@@ -216,7 +220,8 @@ public class RxInvocationBuilderTest {
 
     @Test
     public void testGetGeneric() throws Exception {
-        assertThat(rxBuilder.get(new GenericType<Response>() {}), notNullValue());
+        assertThat(rxBuilder.get(new GenericType<Response>() {
+        }), notNullValue());
     }
 
     @Test
@@ -316,7 +321,8 @@ public class RxInvocationBuilderTest {
 
     @Test
     public void testMethodGeneric() throws Exception {
-        assertThat(rxBuilder.method("GET", new GenericType<Response>() {}), notNullValue());
+        assertThat(rxBuilder.method("GET", new GenericType<Response>() {
+        }), notNullValue());
     }
 
     @Test

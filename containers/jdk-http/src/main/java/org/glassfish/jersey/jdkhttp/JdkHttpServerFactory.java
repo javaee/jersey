@@ -49,6 +49,7 @@ import java.util.concurrent.Executors;
 import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.jdkhttp.internal.LocalizationMessages;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.internal.ConfigHelper;
 
@@ -59,6 +60,8 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
+
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Factory for creating {@link HttpServer JDK HttpServer} instances to run Jersey applications.
@@ -115,10 +118,10 @@ public final class JdkHttpServerFactory {
      * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
      *                      {@link org.glassfish.jersey.server.ApplicationHandler}
      * @return Newly created {@link HttpServer}.
+     *
      * @throws ProcessingException thrown when problems during server creation occurs.
      * @see org.glassfish.jersey.jdkhttp.JdkHttpHandlerContainer
      * @see org.glassfish.hk2.api.ServiceLocator
-     *
      * @since 2.12
      */
     public static HttpServer createHttpServer(final URI uri, final ResourceConfig configuration,
@@ -133,7 +136,8 @@ public final class JdkHttpServerFactory {
         }
 
         final String scheme = uri.getScheme();
-        if (!scheme.equalsIgnoreCase("http") && !scheme.equalsIgnoreCase("https")) {
+        final boolean isHttp = "http".equalsIgnoreCase(scheme);
+        if (!isHttp && !"https".equalsIgnoreCase(scheme)) {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_SCHEME_UNKNOWN(uri));
         }
 
@@ -146,7 +150,6 @@ public final class JdkHttpServerFactory {
             throw new IllegalArgumentException(LocalizationMessages.ERROR_CONTAINER_URI_PATH_START(uri));
         }
 
-        final boolean isHttp = scheme.equalsIgnoreCase("http");
         final int port = (uri.getPort() == -1)
                 ? (isHttp ? ConfigHelper.DEFAULT_HTTP_PORT : ConfigHelper.DEFAULT_HTTPS_PORT)
                 : uri.getPort();
@@ -160,7 +163,10 @@ public final class JdkHttpServerFactory {
             throw new ProcessingException(LocalizationMessages.ERROR_CONTAINER_EXCEPTION_IO(), ioe);
         }
 
-        server.setExecutor(Executors.newCachedThreadPool());
+        server.setExecutor(Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+                .setNameFormat("jdk-http-server-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build()));
         server.createContext(path, handler);
 
         final HttpServer wrapper = isHttp
@@ -302,5 +308,6 @@ public final class JdkHttpServerFactory {
      * Prevents instantiation.
      */
     private JdkHttpServerFactory() {
+        throw new AssertionError("Instantiation not allowed.");
     }
 }

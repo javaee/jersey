@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -56,6 +56,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.test.DeploymentContext;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.ServletDeploymentContext;
@@ -123,8 +124,10 @@ public class AsyncServletResourceTest extends JerseyTest {
         final boolean sequentialGet = false;
         final Object sequentialGetLock = new Object();
 
-        final ExecutorService executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat
-                ("async-resource-test-%d").build());
+        final ExecutorService executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+                .setNameFormat("async-resource-test-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
 
         final Map<Integer, ResponseRecord> getResponses = new ConcurrentHashMap<>();
 
@@ -205,8 +208,10 @@ public class AsyncServletResourceTest extends JerseyTest {
         final Object sequentialGetLock = new Object();
         final Object sequentialPostLock = new Object();
 
-        final ExecutorService executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat
-                ("async-canceled-resource-test-%d").build());
+        final ExecutorService executor = Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+                .setNameFormat("async-canceled-resource-test-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
 
         final Map<Integer, String> postResponses = new ConcurrentHashMap<>();
         final Map<Integer, String> getResponses = new ConcurrentHashMap<>();
@@ -277,7 +282,7 @@ public class AsyncServletResourceTest extends JerseyTest {
                         postRequestLatch.await(LATCH_WAIT_TIMEOUT * getAsyncTimeoutMultiplier(), TimeUnit.SECONDS));
                 assertTrue("Waiting for all GET requests to complete has timed out.",
                         getRequestLatch.await(LATCH_WAIT_TIMEOUT * getAsyncTimeoutMultiplier(),
-                        TimeUnit.SECONDS));
+                                TimeUnit.SECONDS));
             }
         } finally {
             executor.shutdownNow();
