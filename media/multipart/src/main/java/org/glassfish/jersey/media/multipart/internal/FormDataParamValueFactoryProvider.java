@@ -40,13 +40,15 @@
 package org.glassfish.jersey.media.multipart.internal;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -65,6 +67,7 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.message.MessageBodyWorkers;
 import org.glassfish.jersey.message.MessageUtils;
+import org.glassfish.jersey.message.internal.Utils;
 import org.glassfish.jersey.server.ContainerRequest;
 import org.glassfish.jersey.server.ParamException;
 import org.glassfish.jersey.server.internal.inject.AbstractContainerRequestValueFactory;
@@ -77,14 +80,22 @@ import org.glassfish.jersey.server.model.Parameter;
 import org.glassfish.hk2.api.Factory;
 import org.glassfish.hk2.api.ServiceLocator;
 
+import org.jvnet.mimepull.MIMEParsingException;
+
+import jersey.repackaged.com.google.common.base.Function;
+import jersey.repackaged.com.google.common.collect.Lists;
+
 /**
- * Value factory provider supporting the {@link FormDataParam} injection annotation.
+ * Value factory provider supporting the {@link FormDataParam} injection annotation and entity ({@link FormDataMultiPart})
+ * injection.
  *
  * @author Craig McClanahan
  * @author Paul Sandoz
  * @author Michal Gajdos (michal.gajdos at oracle.com)
  */
-public final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvider {
+final class FormDataParamValueFactoryProvider extends AbstractValueFactoryProvider {
+
+    private static final Logger LOGGER = Logger.getLogger(FormDataParamValueFactoryProvider.class.getName());
 
     private static final class FormDataParamException extends ParamException {
 
@@ -104,10 +115,43 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         public InjectionResolver() {
             super(FormDataParamValueFactoryProvider.class);
         }
-
     }
 
-    private final class ListFormDataBodyPartValueFactory extends AbstractContainerRequestValueFactory<List<FormDataBodyPart>> {
+    private abstract class ValueFactory<T> extends AbstractContainerRequestValueFactory<T> {
+
+        /**
+         * Returns a {@code FormDataMultiPart} entity from the request and stores it in the request context properties.
+         *
+         * @return a form data multi part entity.
+         */
+        FormDataMultiPart getEntity() {
+            final ContainerRequest request = getContainerRequest();
+            final String requestPropertyName = FormDataMultiPart.class.getName();
+
+            if (request.getProperty(requestPropertyName) == null) {
+                request.setProperty(requestPropertyName, request.readEntity(FormDataMultiPart.class));
+            }
+
+            return (FormDataMultiPart) request.getProperty(requestPropertyName);
+        }
+    }
+
+    /**
+     * Provider factory for entity of {@code FormDataMultiPart} type.
+     */
+    private final class FormDataMultiPartFactory extends ValueFactory<FormDataMultiPart> {
+
+        @Override
+        public FormDataMultiPart provide() {
+            return getEntity();
+        }
+    }
+
+    /**
+     * Provider factory for list of {@link org.glassfish.jersey.media.multipart.FormDataBodyPart} types injected via
+     * {@link FormDataParam} annotation.
+     */
+    private final class ListFormDataBodyPartValueFactory extends ValueFactory<List<FormDataBodyPart>> {
 
         private final String name;
 
@@ -117,76 +161,112 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
 
         @Override
         public List<FormDataBodyPart> provide() {
-            return getEntity(getContainerRequest()).getFields(name);
+            return getEntity().getFields(name);
         }
-
     }
 
-    private final class ListFormDataContentDispositionValueFactory
-            extends AbstractContainerRequestValueFactory<List<FormDataContentDisposition>> {
+    /**
+     * Provider factory for list of {@link org.glassfish.jersey.media.multipart.FormDataContentDisposition} types injected via
+     * {@link FormDataParam} annotation.
+     */
+    private final class ListFormDataContentDispositionFactory extends ValueFactory<List<FormDataContentDisposition>> {
 
         private final String name;
 
-        public ListFormDataContentDispositionValueFactory(final String name) {
+        public ListFormDataContentDispositionFactory(final String name) {
             this.name = name;
         }
 
         @Override
         public List<FormDataContentDisposition> provide() {
-            final FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
+            final List<FormDataBodyPart> parts = getEntity().getFields(name);
 
-            final List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(name);
-            if (formDataBodyParts == null) {
-                return null;
-            }
-
-            final List<FormDataContentDisposition> list = new ArrayList<>(formDataBodyParts.size());
-            for (final FormDataBodyPart formDataBodyPart : formDataBodyParts) {
-                list.add(formDataBodyPart.getFormDataContentDisposition());
-            }
-
-            return list;
+            return parts == null ? null : Lists.transform(parts, new Function<FormDataBodyPart, FormDataContentDisposition>() {
+                @Override
+                public FormDataContentDisposition apply(final FormDataBodyPart part) {
+                    return part.getFormDataContentDisposition();
+                }
+            });
         }
     }
 
-    private final class FormDataBodyPartValueFactory
-            extends AbstractContainerRequestValueFactory<FormDataBodyPart> {
+    /**
+     * Provider factory for {@link org.glassfish.jersey.media.multipart.FormDataBodyPart} types injected via
+     * {@link FormDataParam} annotation.
+     */
+    private final class FormDataBodyPartFactory extends ValueFactory<FormDataBodyPart> {
 
         private final String name;
 
-        public FormDataBodyPartValueFactory(final String name) {
+        public FormDataBodyPartFactory(final String name) {
             this.name = name;
         }
 
         @Override
         public FormDataBodyPart provide() {
-            return getEntity(getContainerRequest()).getField(name);
+            return getEntity().getField(name);
         }
     }
 
-    private final class FormDataContentDispositionMultiPartInjectable
-            extends AbstractContainerRequestValueFactory<FormDataContentDisposition> {
+    /**
+     * Provider factory for {@link org.glassfish.jersey.media.multipart.FormDataContentDisposition} types injected via
+     * {@link FormDataParam} annotation.
+     */
+    private final class FormDataContentDispositionFactory extends ValueFactory<FormDataContentDisposition> {
 
         private final String name;
 
-        public FormDataContentDispositionMultiPartInjectable(final String name) {
+        public FormDataContentDispositionFactory(final String name) {
             this.name = name;
         }
 
         @Override
         public FormDataContentDisposition provide() {
-            final FormDataMultiPart formDataMultiPart = getEntity(getContainerRequest());
+            final FormDataBodyPart part = getEntity().getField(name);
 
-            final FormDataBodyPart formDataBodyPart = formDataMultiPart.getField(name);
-            if (formDataBodyPart == null) {
-                return null;
-            }
-
-            return formDataMultiPart.getField(name).getFormDataContentDisposition();
+            return part == null ? null : part.getFormDataContentDisposition();
         }
     }
 
-    private final class FormDataParamValueFactory extends AbstractContainerRequestValueFactory<Object> {
+    /**
+     * Provider factory for {@link java.io.File} types injected via {@link FormDataParam} annotation.
+     */
+    private final class FileFactory extends ValueFactory<File> {
+
+        private final String name;
+
+        public FileFactory(final String name) {
+            this.name = name;
+        }
+
+        @Override
+        public File provide() {
+            final FormDataBodyPart part = getEntity().getField(name);
+            final BodyPartEntity entity = part != null ? part.getEntityAs(BodyPartEntity.class) : null;
+
+            if (entity != null) {
+                try {
+                    // Create a temporary file.
+                    final File file = Utils.createTempFile();
+
+                    // Move the part (represented either via stream or file) to the specific temporary file.
+                    entity.moveTo(file);
+
+                    return file;
+                } catch (final IOException | MIMEParsingException cannotMove) {
+                    // Unable to create a temporary file or move the file.
+                    LOGGER.log(Level.WARNING, LocalizationMessages.CANNOT_INJECT_FILE(), cannotMove);
+                }
+            }
+
+            return null;
+        }
+    }
+
+    /**
+     * Provider factory for generic types injected via {@link FormDataParam} annotation.
+     */
+    private final class FormDataParamValueFactory extends ValueFactory<Object> {
 
         private final MultivaluedParameterExtractor<?> extractor;
         private final Parameter parameter;
@@ -199,14 +279,13 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         @Override
         public Object provide() {
             // Return the field value for the field specified by the sourceName property.
+            final List<FormDataBodyPart> parts = getEntity().getFields(parameter.getSourceName());
+
+
+            final FormDataBodyPart part = parts != null ? parts.get(0) : null;
+            final MediaType mediaType = part != null ? part.getMediaType() : MediaType.TEXT_PLAIN_TYPE;
+
             final ContainerRequest request = getContainerRequest();
-            final FormDataMultiPart formDataMultiPart = getEntity(request);
-
-            final List<FormDataBodyPart> formDataBodyParts = formDataMultiPart.getFields(parameter.getSourceName());
-            final FormDataBodyPart formDataBodyPart = (formDataBodyParts != null) ? formDataBodyParts.get(0) : null;
-
-            MediaType mediaType = (formDataBodyPart != null) ? formDataBodyPart.getMediaType() : MediaType.TEXT_PLAIN_TYPE;
-
             final MessageBodyWorkers messageBodyWorkers = request.getWorkers();
 
             MessageBodyReader reader = messageBodyWorkers.getMessageBodyReader(
@@ -215,20 +294,25 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                     parameter.getAnnotations(),
                     mediaType);
 
-            if (reader != null && !isPrimitiveType(parameter.getRawType())) {
-                final InputStream in;
-                if (formDataBodyPart == null) {
+            // Transform non-primitive part entity into an instance.
+            if (reader != null
+                    && !isPrimitiveType(parameter.getRawType())) {
+
+                // Get input stream of the body part.
+                final InputStream stream;
+                if (part == null) {
                     if (parameter.getDefaultValue() != null) {
                         // Convert default value to bytes.
-                        in = new ByteArrayInputStream(parameter.getDefaultValue().getBytes(MessageUtils.getCharset(mediaType)));
+                        stream = new ByteArrayInputStream(parameter.getDefaultValue()
+                                .getBytes(MessageUtils.getCharset(mediaType)));
                     } else {
                         return null;
                     }
                 } else {
-                    in = ((BodyPartEntity) formDataBodyPart.getEntity()).getInputStream();
+                    stream = part.getEntityAs(BodyPartEntity.class).getInputStream();
                 }
 
-
+                // Transform input stream into instance of desired Java type.
                 try {
                     //noinspection unchecked
                     return reader.readFrom(
@@ -237,22 +321,23 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                             parameter.getAnnotations(),
                             mediaType,
                             request.getHeaders(),
-                            in);
+                            stream);
                 } catch (final IOException e) {
                     throw new FormDataParamException(e, parameter.getSourceName(), parameter.getDefaultValue());
                 }
-            } else if (extractor != null) {
+            }
+
+            // If no reader was found or a primitive type is being transformed use extractor instead.
+            if (extractor != null) {
                 final MultivaluedMap<String, String> map = new MultivaluedStringMap();
                 try {
-                    if (formDataBodyPart != null) {
-                        for (final FormDataBodyPart p : formDataBodyParts) {
-                            mediaType = p.getMediaType();
-
+                    if (part != null) {
+                        for (final FormDataBodyPart p : parts) {
                             reader = messageBodyWorkers.getMessageBodyReader(
                                     String.class,
                                     String.class,
                                     parameter.getAnnotations(),
-                                    mediaType);
+                                    p.getMediaType());
 
                             @SuppressWarnings("unchecked") final String value = (String) reader.readFrom(
                                     String.class,
@@ -270,9 +355,9 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
                     throw new FormDataParamException(ex, extractor.getName(), extractor.getDefaultValueString());
                 }
             }
+
             return null;
         }
-
     }
 
     private static final Set<Class<?>> TYPES = initializeTypes();
@@ -302,82 +387,60 @@ public final class FormDataParamValueFactoryProvider extends AbstractValueFactor
         return TYPES.contains(type);
     }
 
-    private final class FormDataMultiPartValueFactory extends AbstractContainerRequestValueFactory<Object> {
-
-        @Override
-        public Object provide() {
-            return getEntity(getContainerRequest());
-        }
-
-    }
-
     /**
      * Injection constructor.
      *
-     * @param mpep    multi-valued map parameter extractor provider.
+     * @param extractorProvider    multi-valued map parameter extractor provider.
      * @param locator HK2 service locator.
      */
     @Inject
-    public FormDataParamValueFactoryProvider(final MultivaluedParameterExtractorProvider mpep,
+    public FormDataParamValueFactoryProvider(final MultivaluedParameterExtractorProvider extractorProvider,
                                              final ServiceLocator locator) {
-        super(mpep, locator, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
+        super(extractorProvider, locator, Parameter.Source.ENTITY, Parameter.Source.UNKNOWN);
     }
 
     @Override
     protected Factory<?> createValueFactory(final Parameter parameter) {
-        final Class<?> parameterRawType = parameter.getRawType();
+        final Class<?> rawType = parameter.getRawType();
 
         if (Parameter.Source.ENTITY == parameter.getSource()) {
-            if (FormDataMultiPart.class.isAssignableFrom(parameterRawType)) {
-                return new FormDataMultiPartValueFactory();
+            if (FormDataMultiPart.class.isAssignableFrom(rawType)) {
+                return new FormDataMultiPartFactory();
             } else {
                 return null;
             }
         } else if (parameter.getSourceAnnotation().annotationType() == FormDataParam.class) {
-            final String parameterName = parameter.getSourceName();
-            if (parameterName == null || parameterName.isEmpty()) {
+            final String paramName = parameter.getSourceName();
+            if (paramName == null || paramName.isEmpty()) {
                 // Invalid query parameter name
                 return null;
             }
 
-            if (Collection.class == parameterRawType || List.class == parameterRawType) {
+            if (Collection.class == rawType || List.class == rawType) {
                 final Class clazz = ReflectionHelper.getGenericTypeArgumentClasses(parameter.getType()).get(0);
 
                 if (FormDataBodyPart.class == clazz) {
                     // Return a collection of form data body part.
-                    return new ListFormDataBodyPartValueFactory(parameter.getSourceName());
+                    return new ListFormDataBodyPartValueFactory(paramName);
                 } else if (FormDataContentDisposition.class == clazz) {
                     // Return a collection of form data content disposition.
-                    return new ListFormDataContentDispositionValueFactory(parameter.getSourceName());
+                    return new ListFormDataContentDispositionFactory(paramName);
                 } else {
                     // Return a collection of specific type.
                     return new FormDataParamValueFactory(parameter, get(parameter));
                 }
-            } else if (FormDataBodyPart.class == parameterRawType) {
-                return new FormDataBodyPartValueFactory(parameter.getSourceName());
-            } else if (FormDataContentDisposition.class == parameterRawType) {
-                return new FormDataContentDispositionMultiPartInjectable(parameter.getSourceName());
+            } else if (FormDataBodyPart.class == rawType) {
+                return new FormDataBodyPartFactory(paramName);
+            } else if (FormDataContentDisposition.class == rawType) {
+                return new FormDataContentDispositionFactory(paramName);
+            } else if (File.class == rawType) {
+                return new FileFactory(paramName);
             } else {
                 return new FormDataParamValueFactory(parameter, get(parameter));
             }
         }
 
         return null;
-    }
-
-    /**
-     * Returns a {@code FormDataMultiPart} entity from the request and stores it in the context properties.
-     *
-     * @param request container request.
-     * @return a form data multi part entity.
-     */
-    private FormDataMultiPart getEntity(final ContainerRequest request) {
-        if (request.getProperty(FormDataMultiPart.class.getName()) == null) {
-            final FormDataMultiPart formDataMultiPart = request.readEntity(FormDataMultiPart.class);
-            request.setProperty(FormDataMultiPart.class.getName(), formDataMultiPart);
-        }
-
-        return (FormDataMultiPart) request.getProperty(FormDataMultiPart.class.getName());
     }
 
     @Override

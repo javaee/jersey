@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -57,7 +57,6 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import javax.inject.Singleton;
 
-
 /**
  * Provider for marshalling/un-marshalling of {@code application/octet-stream}
  * entity type to/from a {@link File} instance.
@@ -71,52 +70,63 @@ import javax.inject.Singleton;
 public final class FileProvider extends AbstractMessageReaderWriterProvider<File> {
 
     @Override
-    public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isReadable(final Class<?> type,
+                              final Type genericType,
+                              final Annotation[] annotations,
+                              final MediaType mediaType) {
         return File.class == type;
     }
 
     @Override
-    public File readFrom(
-            Class<File> type,
-            Type genericType,
-            Annotation annotations[],
-            MediaType mediaType,
-            MultivaluedMap<String, String> httpHeaders,
-            InputStream entityStream) throws IOException {
-        File f = File.createTempFile("rep", "tmp");
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(f));
+    public File readFrom(final Class<File> type,
+                         final Type genericType,
+                         final Annotation[] annotations,
+                         final MediaType mediaType,
+                         final MultivaluedMap<String, String> httpHeaders,
+                         final InputStream entityStream) throws IOException {
+        final File file = Utils.createTempFile();
+        final OutputStream stream = new BufferedOutputStream(new FileOutputStream(file));
+
         try {
-            writeTo(entityStream, out);
+            writeTo(entityStream, stream);
         } finally {
-            out.close();
+            stream.close();
         }
-        return f;
+
+        return file;
     }
 
     @Override
-    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public boolean isWriteable(final Class<?> type,
+                               final Type genericType,
+                               final Annotation[] annotations,
+                               final MediaType mediaType) {
         return File.class.isAssignableFrom(type);
     }
 
     @Override
-    public void writeTo(
-            File t,
-            Class<?> type,
-            Type genericType,
-            Annotation annotations[],
-            MediaType mediaType,
-            MultivaluedMap<String, Object> httpHeaders,
-            OutputStream entityStream) throws IOException {
-        InputStream in = new BufferedInputStream(new FileInputStream(t), ReaderWriter.BUFFER_SIZE);
+    public void writeTo(final File t,
+                        final Class<?> type,
+                        final Type genericType,
+                        final Annotation[] annotations,
+                        final MediaType mediaType,
+                        final MultivaluedMap<String, Object> httpHeaders,
+                        final OutputStream entityStream) throws IOException {
+        final InputStream stream = new BufferedInputStream(new FileInputStream(t), ReaderWriter.BUFFER_SIZE);
+
         try {
-            writeTo(in, entityStream);
+            writeTo(stream, entityStream);
         } finally {
-            in.close();
+            stream.close();
         }
     }
 
     @Override
-    public long getSize(File t, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+    public long getSize(final File t,
+                        final Class<?> type,
+                        final Type genericType,
+                        final Annotation[] annotations,
+                        final MediaType mediaType) {
         return t.length();
     }
 }

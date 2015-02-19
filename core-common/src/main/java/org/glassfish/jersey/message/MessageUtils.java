@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -42,6 +42,7 @@ package org.glassfish.jersey.message;
 import java.nio.charset.Charset;
 
 import javax.ws.rs.core.MediaType;
+
 import org.glassfish.jersey.message.internal.ReaderWriter;
 
 /**
@@ -49,7 +50,7 @@ import org.glassfish.jersey.message.internal.ReaderWriter;
  *
  * @author Adam Lindenthal (adam.lindenthal at oracle.com)
  */
-public class MessageUtils {
+public final class MessageUtils {
 
     /**
      * Get the character set from a media type.
@@ -57,11 +58,17 @@ public class MessageUtils {
      * The character set is obtained from the media type parameter "charset".
      * If the parameter is not present the {@code UTF8} charset is utilized.
      *
-     * @param m the media type.
+     * @param media the media type.
      * @return the character set.
      */
-    public static Charset getCharset(MediaType m) {
-        return ReaderWriter.getCharset(m);
+    public static Charset getCharset(final MediaType media) {
+        return ReaderWriter.getCharset(media);
     }
 
+    /**
+     * Prevent instantiation.
+     */
+    private MessageUtils() {
+        throw new AssertionError("No instances allowed.");
+    }
 }

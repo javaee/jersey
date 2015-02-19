@@ -41,6 +41,7 @@
 package org.glassfish.jersey.media.multipart;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -64,7 +65,7 @@ public class BodyPartEntity implements Closeable {
     private final MIMEPart mimePart;
 
     /**
-     * Constructs a new {@link BodyPartEntity} with a {@link MIMEPart}.
+     * Constructs a new {@code BodyPartEntity} with a {@link MIMEPart}.
      *
      * @param mimePart MIMEPart containing the input stream of this body part entity.
      */
@@ -95,4 +96,12 @@ public class BodyPartEntity implements Closeable {
         cleanup();
     }
 
+    /**
+     * Move the contents of the underlying {@link java.io.InputStream} or {@link java.io.File} to the given file.
+     *
+     * @param file destination file.
+     */
+    public void moveTo(final File file) {
+        mimePart.moveTo(file);
+    }
 }
