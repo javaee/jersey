@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2010-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -45,6 +45,7 @@ import java.net.URI;
 import javax.ws.rs.ProcessingException;
 
 import org.glassfish.jersey.grizzly2.httpserver.internal.LocalizationMessages;
+import org.glassfish.jersey.process.JerseyProcessingUncaughtExceptionHandler;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -56,6 +57,8 @@ import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
+
+import jersey.repackaged.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 /**
  * Factory for creating Grizzly Http Server.
@@ -205,14 +208,13 @@ public final class GrizzlyHttpServerFactory {
      * @param config                web application configuration.
      * @param secure                used for call {@link NetworkListener#setSecure(boolean)}.
      * @param sslEngineConfigurator Ssl settings to be passed to {@link NetworkListener#setSSLEngineConfig}.
-     * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
-     *                      {@link org.glassfish.jersey.server.ApplicationHandler}
+     * @param parentLocator         {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
+     *                              {@link org.glassfish.jersey.server.ApplicationHandler}
      * @return newly created {@code HttpServer}.
      *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      * @see GrizzlyHttpContainer
      * @see org.glassfish.hk2.api.ServiceLocator
-     *
      * @since 2.12
      */
     public static HttpServer createHttpServer(final URI uri,
@@ -232,10 +234,10 @@ public final class GrizzlyHttpServerFactory {
      * @param parentLocator {@link org.glassfish.hk2.api.ServiceLocator} to become a parent of the locator used by
      *                      {@link org.glassfish.jersey.server.ApplicationHandler}
      * @return newly created {@code HttpServer}.
+     *
      * @throws ProcessingException in case of any failure when creating a new {@code HttpServer} instance.
      * @see GrizzlyHttpContainer
      * @see org.glassfish.hk2.api.ServiceLocator
-     *
      * @since 2.12
      */
     public static HttpServer createHttpServer(final URI uri,
@@ -269,6 +271,12 @@ public final class GrizzlyHttpServerFactory {
         final int port = (uri.getPort() == -1) ? DEFAULT_HTTP_PORT : uri.getPort();
 
         final NetworkListener listener = new NetworkListener("grizzly", host, port);
+
+        listener.getTransport().getWorkerThreadPoolConfig().setThreadFactory(new ThreadFactoryBuilder()
+                .setNameFormat("grizzly-http-server-%d")
+                .setUncaughtExceptionHandler(new JerseyProcessingUncaughtExceptionHandler())
+                .build());
+
         listener.setSecure(secure);
         if (sslEngineConfigurator != null) {
             listener.setSSLEngineConfig(sslEngineConfigurator);
@@ -281,14 +289,9 @@ public final class GrizzlyHttpServerFactory {
         final ServerConfiguration config = server.getServerConfiguration();
         if (handler != null) {
             final String path = uri.getPath().replaceAll("/{2,}", "/");
-            
-            config.addHttpHandler(handler,
-                    HttpHandlerRegistration.bulder()
-                    .contextPath(path.endsWith("/")
-                            ? path.substring(0, path.length() - 1)
-                            : path)
-                    .build()
-            );
+
+            final String contextPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+            config.addHttpHandler(handler, HttpHandlerRegistration.bulder().contextPath(contextPath).build());
         }
 
         config.setPassTraceRequest(true);
