@@ -992,7 +992,7 @@ public class ResourceConfig extends Application implements Configurable<Resource
 
     /**
      * Method used by ApplicationHandler to retrieve application class
-     * (this method is overridden by WrappingResourceConfig).
+     * (this method is overridden by {@link WrappingResourceConfig}).
      *
      * @return application class
      */

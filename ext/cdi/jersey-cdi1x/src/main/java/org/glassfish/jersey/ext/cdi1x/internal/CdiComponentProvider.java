@@ -167,6 +167,7 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
                 extension.setLocator(this.locator);
                 this.fieldsToSkip = extension.getFieldsToSkip();
                 this.methodsToSkip = extension.getMethodsToSkip();
+                bindHk2ClassAnalyzer();
                 LOGGER.config(LocalizationMessages.CDI_PROVIDER_INITIALIZED());
             }
         }
@@ -310,9 +311,6 @@ public class CdiComponentProvider implements ComponentProvider, Extension {
 
     @Override
     public void done() {
-        if (beanManager != null) {
-            bindHk2ClassAnalyzer();
-        }
     }
 
     private boolean isCdiComponent(final Class<?> component) {
