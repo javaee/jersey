@@ -92,8 +92,9 @@ final class BeanParamValueFactoryProvider extends AbstractValueFactoryProvider {
                     public ActiveDescriptor<?> compute(Class<?> key) {
                         // below we make sure HK2 behaves as if injection happens into a request scoped type
                         // this is to avoid having proxies injected (see JERSEY-2386)
+                        // before touching the following statement, check BeanParamMemoryLeakTest first!
                         final AbstractActiveDescriptor<Object> descriptor =
-                                BuilderHelper.activeLink(key).in(RequestScoped.class).build();
+                                BuilderHelper.activeLink(key).to(key).in(RequestScoped.class).build();
 
                         return ServiceLocatorUtilities.addOneDescriptor(locator, descriptor, false);
                     }
