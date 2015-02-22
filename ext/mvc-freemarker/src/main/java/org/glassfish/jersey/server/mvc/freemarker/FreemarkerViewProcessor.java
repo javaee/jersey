@@ -90,8 +90,6 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
                                    @Optional final ServletContext servletContext) {
         super(config, servletContext, "freemarker", "ftl");
 
-        ;
-
         this.factory = getTemplateObjectFactory(serviceLocator, FreemarkerConfigurationFactory.class, new Value<FreemarkerConfigurationFactory>() {
             @Override
             public FreemarkerConfigurationFactory get() {
