@@ -57,13 +57,16 @@ import jersey.repackaged.com.google.common.collect.Lists;
 
 
 /**
- * Handy {@link FreemarkerConfigurationFactory} that supplies a minimally configured
- * {@link freemarker.template.Configuration Configuration} able to create
- * {@link freemarker.template.Template Freemarker templates}.
- * The recommended method to provide custom Freemarker configuration is to sub-class this class,
- * register it with the {@link FreemarkerMvcFeature} TEMPLATE_OBJECT_FACTORY property,
- * and customize the {@link freemarker.template.Configuration configuration} in that class.
- * <p/>
+ * Handy {@link FreemarkerConfigurationFactory} that supplies a minimally
+ * configured {@link freemarker.template.Configuration Configuration} able to
+ * create {@link freemarker.template.Template Freemarker templates}.
+ * The recommended method to provide custom Freemarker configuration is to
+ * sub-class this class, further customize the
+ * {@link freemarker.template.Configuration configuration} as desired in that
+ * class, and then register the sub-class with the {@link FreemarkerMvcFeature}
+ * TEMPLATE_OBJECT_FACTORY property.
+ *
+ * @author Jeff Wilde (jeff.wilde at complicatedrobot.com)
  */
 public class FreemarkerDefaultConfigurationFactory implements FreemarkerConfigurationFactory {
 

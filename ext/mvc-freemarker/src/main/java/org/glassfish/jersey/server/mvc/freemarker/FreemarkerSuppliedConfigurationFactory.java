@@ -42,12 +42,23 @@ package org.glassfish.jersey.server.mvc.freemarker;
 
 import freemarker.template.Configuration;
 
-public class FreemarkerSuppliedConfigurationFactory implements FreemarkerConfigurationFactory {
+/**
+ * {@link FreemarkerConfigurationFactory} that supplies an unchanged
+ * {@link freemarker.template.Configuration Configuration} as passed-in to
+ * the constructor.
+ * <p/>
+ * Used to support backwards-compatibility in {@link FreemarkerViewProcessor}
+ * to wrap directly-configured {@link freemarker.template.Configuration Configuration}
+ * objects instead of the recommended {@link FreemarkerDefaultConfigurationFactory}
+ * or a sub-class thereof.
+ *
+ * @author Jeff Wilde (jeff.wilde at complicatedrobot.com)
+ */
+final class FreemarkerSuppliedConfigurationFactory implements FreemarkerConfigurationFactory {
 
-    protected final Configuration configuration;
+    private final Configuration configuration;
 
     public FreemarkerSuppliedConfigurationFactory(Configuration configuration) {
-        super();
         this.configuration = configuration;
     }
 

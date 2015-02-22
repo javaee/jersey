@@ -41,6 +41,20 @@ package org.glassfish.jersey.server.mvc.freemarker;
 
 import freemarker.template.Configuration;
 
+
+/**
+ * Provides lookup of {@link freemarker.template.Configuration Configuration}
+ * instance for Freemarker templating.
+ * </p>
+ * Instantiation of Configuration objects is relatively heavy-weight, and
+ * Freemarker best-practices dictate that they be reused if possible.
+ * Therefore, most implementations of this interface will only create a
+ * singleton Configuration instance, and return it for every call to
+ * {@link #getConfiguration()}. Although this will usually be the case, it is
+ * not a guarantee of this interface's contract.
+ *
+ * @author Jeff Wilde (jeff.wilde at complicatedrobot.com)
+ */
 public interface FreemarkerConfigurationFactory {
 
     public Configuration getConfiguration();
