@@ -46,7 +46,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import freemarker.cache.*;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.FileTemplateLoader;
+import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.TemplateLoader;
+import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
 import org.jvnet.hk2.annotations.Optional;
 import jersey.repackaged.com.google.common.collect.Lists;
