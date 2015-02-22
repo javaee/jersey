@@ -55,6 +55,7 @@ import javax.servlet.ServletContext;
 
 import freemarker.template.Configuration;
 import org.glassfish.jersey.internal.util.collection.Value;
+import org.glassfish.jersey.internal.util.collection.Values;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.mvc.Viewable;
 import org.glassfish.jersey.server.mvc.spi.AbstractTemplateProcessor;
@@ -94,12 +95,7 @@ final class FreemarkerViewProcessor extends AbstractTemplateProcessor<Template> 
         this.factory = getTemplateObjectFactory(serviceLocator, FreemarkerConfigurationFactory.class, new Value<FreemarkerConfigurationFactory>() {
             @Override
             public FreemarkerConfigurationFactory get() {
-                Configuration configuration = getTemplateObjectFactory(serviceLocator, Configuration.class, new Value<Configuration>() {
-                    @Override
-                    public Configuration get() {
-                        return null;
-                    }
-                });
+                Configuration configuration = getTemplateObjectFactory(serviceLocator, Configuration.class, Values.<Configuration>empty());
                 if (configuration == null) {
                     return new FreemarkerDefaultConfigurationFactory(servletContext);
                 } else {
