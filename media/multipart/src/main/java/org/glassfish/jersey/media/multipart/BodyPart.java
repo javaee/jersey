@@ -69,7 +69,7 @@ public class BodyPart {
 
     private Object entity;
 
-    private MultivaluedMap<String, String> headers = HeaderUtils.createInbound();
+    private final MultivaluedMap<String, String> headers = HeaderUtils.createInbound();
 
     /**
      * Media type of this body part.
@@ -86,7 +86,7 @@ public class BodyPart {
     private Providers providers = null;
 
     /**
-     * Instantiates a new {@link BodyPart} with a {@code mediaType} of
+     * Instantiates a new {@code BodyPart} with a {@code mediaType} of
      * {@code text/plain}.
      */
     public BodyPart() {
@@ -94,21 +94,21 @@ public class BodyPart {
     }
 
     /**
-     * Instantiates a new {@link BodyPart} with the specified characteristics.
+     * Instantiates a new {@code BodyPart} with the specified characteristics.
      *
      * @param mediaType {@link MediaType} for this body part.
      */
-    public BodyPart(MediaType mediaType) {
+    public BodyPart(final MediaType mediaType) {
         setMediaType(mediaType);
     }
 
     /**
-     * Instantiates a new {@link BodyPart} with the specified characteristics.
+     * Instantiates a new {@code BodyPart} with the specified characteristics.
      *
      * @param entity entity for this body part.
      * @param mediaType {@link MediaType} for this body part.
      */
-    public BodyPart(Object entity, MediaType mediaType) {
+    public BodyPart(final Object entity, final MediaType mediaType) {
         setEntity(entity);
         setMediaType(mediaType);
     }
@@ -119,7 +119,7 @@ public class BodyPart {
      *
      * @return an entity of this body part.
      * @throws IllegalStateException if this method is called on a {@link MultiPart} instance; access the underlying
-     * {@link BodyPart}s instead
+     * {@code BodyPart}s instead
      */
     public Object getEntity() {
         return this.entity;
@@ -130,17 +130,17 @@ public class BodyPart {
      *
      * @param entity the new entity object.
      * @throws IllegalStateException if this method is called on a {@link MultiPart} instance; access the underlying
-     * {@link BodyPart}s instead
+     * {@code BodyPart}s instead
      */
-    public void setEntity(Object entity) {
+    public void setEntity(final Object entity) {
         this.entity = entity;
     }
 
     /**
-     * Returns a mutable map of HTTP header value(s) for this {@link BodyPart}, keyed by the header name. Key comparisons in
+     * Returns a mutable map of HTTP header value(s) for this {@code BodyPart}, keyed by the header name. Key comparisons in
      * the returned map must be case-insensitive.
      * <p/>
-     * Note: MIME specifications says only headers that match {@code Content-*} should be included on a {@link BodyPart}.
+     * Note: MIME specifications says only headers that match {@code Content-*} should be included on a {@code BodyPart}.
      *
      * @return mutable map of HTTP header values.
      */
@@ -149,15 +149,15 @@ public class BodyPart {
     }
 
     /**
-     * Returns an immutable map of parameterized HTTP header value(s) for this {@link BodyPart},
+     * Returns an immutable map of parameterized HTTP header value(s) for this {@code BodyPart},
      * keyed by header name. Key comparisons in the returned map must be case-insensitive. If you wish to modify the headers
-     * map for this {@link BodyPart}, modify the map returned by {@code getHeaders()} instead.
+     * map for this {@code BodyPart}, modify the map returned by {@code getHeaders()} instead.
      *
      * @return immutable map of HTTP header values.
      * @throws ParseException if an un-expected/in-correct value is found during parsing the headers.
      */
     public MultivaluedMap<String, ParameterizedHeader> getParameterizedHeaders() throws ParseException {
-        return new ImmutableMultivaluedMap<String, ParameterizedHeader>(new ParameterizedHeadersMap(headers));
+        return new ImmutableMultivaluedMap<>(new ParameterizedHeadersMap(headers));
     }
 
     /**
@@ -170,12 +170,12 @@ public class BodyPart {
      */
     public ContentDisposition getContentDisposition() {
         if (contentDisposition == null) {
-            String scd = headers.getFirst("Content-Disposition");
+            final String scd = headers.getFirst("Content-Disposition");
 
             if (scd != null) {
                 try {
                     contentDisposition = new ContentDisposition(scd);
-                } catch (ParseException ex) {
+                } catch (final ParseException ex) {
                     throw new IllegalArgumentException("Error parsing content disposition: " + scd, ex);
                 }
             }
@@ -188,13 +188,13 @@ public class BodyPart {
      *
      * @param contentDisposition the content disposition.
      */
-    public void setContentDisposition(ContentDisposition contentDisposition) {
+    public void setContentDisposition(final ContentDisposition contentDisposition) {
         this.contentDisposition = contentDisposition;
         headers.remove("Content-Disposition");
     }
 
     /**
-     * Returns the {@link MediaType} for this {@link BodyPart}. If not
+     * Returns the {@link MediaType} for this {@code BodyPart}. If not
      * set, the default {@link MediaType} MUST be {@code text/plain}.
      *
      * @return media type for this body part.
@@ -204,12 +204,12 @@ public class BodyPart {
     }
 
     /**
-     * Sets the {@link MediaType} for this {@link BodyPart}.
+     * Sets the {@link MediaType} for this {@code BodyPart}.
      *
      * @param mediaType the new {@link MediaType}.
      * @throws IllegalArgumentException if the {@code mediaType} is {@code null}.
      */
-    public void setMediaType(MediaType mediaType) {
+    public void setMediaType(final MediaType mediaType) {
         if (mediaType == null) {
             throw new IllegalArgumentException("mediaType cannot be null");
         }
@@ -218,7 +218,7 @@ public class BodyPart {
     }
 
     /**
-     * Returns the parent {@link MultiPart} (if any) for this {@link BodyPart}.
+     * Returns the parent {@link MultiPart} (if any) for this {@code BodyPart}.
      *
      * @return parent of this body type, {@code null} if not set.
      */
@@ -227,16 +227,16 @@ public class BodyPart {
     }
 
     /**
-     * Sets the parent {@link MultiPart} (if any) for this {@link BodyPart}.
+     * Sets the parent {@link MultiPart} (if any) for this {@code BodyPart}.
      *
      * @param parent the new parent.
      */
-    public void setParent(MultiPart parent) {
+    public void setParent(final MultiPart parent) {
         this.parent = parent;
     }
 
     /**
-     * Returns the configured {@link Providers} for this {@link BodyPart}.
+     * Returns the configured {@link Providers} for this {@code BodyPart}.
      *
      * @return providers of this body part.
      */
@@ -245,17 +245,17 @@ public class BodyPart {
     }
 
     /**
-     * Sets the configured {@link Providers} for this {@link BodyPart}.
+     * Sets the configured {@link Providers} for this {@code BodyPart}.
      *
      * @param providers the new {@link Providers}.
      */
-    public void setProviders(Providers providers) {
+    public void setProviders(final Providers providers) {
         this.providers = providers;
     }
 
     /**
      * Perform any necessary cleanup at the end of processing this
-     * {@link BodyPart}.
+     * {@code BodyPart}.
      */
     public void cleanup() {
         if ((getEntity() != null) && (getEntity() instanceof BodyPartEntity)) {
@@ -264,12 +264,12 @@ public class BodyPart {
     }
 
     /**
-     * Builder pattern method to return this {@link BodyPart} after additional configuration.
+     * Builder pattern method to return this {@code BodyPart} after additional configuration.
      *
-     * @param entity entity to set for this {@link BodyPart}.
+     * @param entity entity to set for this {@code BodyPart}.
      * @return body-part instance.
      */
-    public BodyPart entity(Object entity) {
+    public BodyPart entity(final Object entity) {
         setEntity(entity);
         return this;
     }
@@ -286,9 +286,12 @@ public class BodyPart {
      * @throws IllegalStateException if this method is called when the {@code providers} property has not been set or when the
      * entity instance is not the unconverted content of the body part entity.
      */
-    public <T> T getEntityAs(Class<T> clazz) {
+    public <T> T getEntityAs(final Class<T> clazz) {
         if (entity == null || !(entity instanceof BodyPartEntity)) {
             throw new IllegalStateException(LocalizationMessages.ENTITY_HAS_WRONG_TYPE());
+        }
+        if (clazz == BodyPartEntity.class) {
+            return clazz.cast(entity);
         }
 
         final Annotation[] annotations = new Annotation[0];
@@ -305,24 +308,24 @@ public class BodyPart {
     }
 
     /**
-     * Builder pattern method to return this {@link BodyPart} after additional configuration.
+     * Builder pattern method to return this {@code BodyPart} after additional configuration.
      *
-     * @param type media type to set for this {@link BodyPart}.
+     * @param type media type to set for this {@code BodyPart}.
      * @return body-part instance.
      */
-    public BodyPart type(MediaType type) {
+    public BodyPart type(final MediaType type) {
         setMediaType(type);
         return this;
     }
 
     /**
-     * Builder pattern method to return this {@link BodyPart} after
+     * Builder pattern method to return this {@code BodyPart} after
      * additional configuration.
      *
-     * @param contentDisposition content disposition to set for this {@link BodyPart}.
+     * @param contentDisposition content disposition to set for this {@code BodyPart}.
      * @return body-part instance.
      */
-    public BodyPart contentDisposition(ContentDisposition contentDisposition) {
+    public BodyPart contentDisposition(final ContentDisposition contentDisposition) {
         setContentDisposition(contentDisposition);
         return this;
     }
@@ -332,7 +335,7 @@ public class BodyPart {
      *
      * @param messageBodyWorkers message body workers.
      */
-    public void setMessageBodyWorkers(MessageBodyWorkers messageBodyWorkers) {
+    public void setMessageBodyWorkers(final MessageBodyWorkers messageBodyWorkers) {
         this.messageBodyWorkers = messageBodyWorkers;
     }
 }

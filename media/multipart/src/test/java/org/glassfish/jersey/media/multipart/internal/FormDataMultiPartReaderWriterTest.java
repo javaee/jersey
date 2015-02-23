@@ -40,6 +40,7 @@
 
 package org.glassfish.jersey.media.multipart.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -57,6 +58,7 @@ import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -77,14 +79,18 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.glassfish.jersey.media.multipart.MultiPart;
 
 import org.junit.Test;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import jersey.repackaged.com.google.common.collect.Sets;
+import mockit.Mocked;
+import mockit.Verifications;
 
 /**
  * Tests for multipart {@code MessageBodyReader} and {@code MessageBodyWriter} as well as {@code FormDataMultiPart} and {@code
@@ -109,7 +115,8 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
                 PrimitivesFormDataParamResource.class,
                 DefaultFormDataParamResource.class,
                 NonContentTypeForPartResource.class,
-                MediaTypeWithBoundaryResource.class);
+                MediaTypeWithBoundaryResource.class,
+                FileResource.class);
     }
 
     @Path("/ProducesFormDataUsingMultiPart")
@@ -118,13 +125,13 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @GET
         @Produces("multipart/form-data")
         public Response get() {
-            MultiPart entity = new MultiPart();
+            final MultiPart entity = new MultiPart();
             entity.setMediaType(MediaType.MULTIPART_FORM_DATA_TYPE);
-            BodyPart part1 = new BodyPart();
+            final BodyPart part1 = new BodyPart();
             part1.setMediaType(MediaType.TEXT_PLAIN_TYPE);
             part1.getHeaders().add("Content-Disposition", "form-data; name=\"field1\"");
             part1.setEntity("Joe Blow\r\n");
-            BodyPart part2 = new BodyPart();
+            final BodyPart part2 = new BodyPart();
             part2.setMediaType(MediaType.TEXT_PLAIN_TYPE);
             part2.getHeaders().add("Content-Disposition", "form-data; name=\"pics\"; filename=\"file1.txt\"");
             part2.setEntity("... contents of file1.txt ...\r\n");
@@ -140,26 +147,26 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         final Invocation.Builder request = target().path("ProducesFormDataUsingMultiPart").request("multipart/form-data");
 
         try {
-            MultiPart result = request.get(MultiPart.class);
+            final MultiPart result = request.get(MultiPart.class);
             checkMediaType(new MediaType("multipart", "form-data"), result.getMediaType());
             assertEquals(2, result.getBodyParts().size());
-            BodyPart part1 = result.getBodyParts().get(0);
+            final BodyPart part1 = result.getBodyParts().get(0);
             checkMediaType(new MediaType("text", "plain"), part1.getMediaType());
             checkEntity("Joe Blow\r\n", (BodyPartEntity) part1.getEntity());
-            String value1 = part1.getHeaders().getFirst("Content-Disposition");
+            final String value1 = part1.getHeaders().getFirst("Content-Disposition");
             assertEquals("form-data; name=\"field1\"", value1);
-            BodyPart part2 = result.getBodyParts().get(1);
+            final BodyPart part2 = result.getBodyParts().get(1);
             checkMediaType(new MediaType("text", "plain"), part2.getMediaType());
             checkEntity("... contents of file1.txt ...\r\n", (BodyPartEntity) part2.getEntity());
-            String value2 = part2.getHeaders().getFirst("Content-Disposition");
+            final String value2 = part2.getHeaders().getFirst("Content-Disposition");
             assertEquals("form-data; name=\"pics\"; filename=\"file1.txt\"", value2);
 
             result.getParameterizedHeaders();
             result.cleanup();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             e.printStackTrace(System.out);
             fail("Caught exception: " + e);
-        } catch(ParseException e) {
+        } catch(final ParseException e) {
             e.printStackTrace(System.out);
             fail("Caught exception: " + e);
         }
@@ -174,7 +181,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @Produces("multipart/form-data")
         public Response get() {
             // Exercise builder pattern with explicit content type
-            MultiPartBean bean = new MultiPartBean("myname", "myvalue");
+            final MultiPartBean bean = new MultiPartBean("myname", "myvalue");
             return Response.ok(new FormDataMultiPart()
                                  .field("foo", "bar")
                                  .field("baz", "bop")
@@ -187,7 +194,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testProducesFormDataResource() throws Exception {
         final Invocation.Builder request = target().path("ProducesFormDataResource").request("multipart/form-data");
 
-        FormDataMultiPart result = request.get(FormDataMultiPart.class);
+        final FormDataMultiPart result = request.get(FormDataMultiPart.class);
         checkMediaType(new MediaType("multipart", "form-data"), result.getMediaType());
         assertEquals(3, result.getFields().size());
         assertNotNull(result.getField("foo"));
@@ -196,7 +203,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         assertEquals("bop", result.getField("baz").getValue());
         assertNotNull(result.getField("bean"));
 
-        MultiPartBean bean = result.getField("bean").getValueAs(MultiPartBean.class);
+        final MultiPartBean bean = result.getField("bean").getValueAs(MultiPartBean.class);
         assertNotNull(bean);
         assertEquals("myname", bean.getName());
         assertEquals("myvalue", bean.getValue());
@@ -210,7 +217,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         // Test "multipart/form-data" the easy way (with subclasses)
         @GET
         @Produces("multipart/form-data")
-        public Response get(@QueryParam("charset") String charset) {
+        public Response get(@QueryParam("charset") final String charset) {
             return Response.ok(new FormDataMultiPart()
                                  .field("foo", "\u00A9 CONTENT \u00FF \u2200 \u22FF",
                                          MediaType.valueOf("text/plain;charset=" + charset))).build();
@@ -220,9 +227,9 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
 
     @Test
     public void testProducesFormDataCharsetResource() throws Exception {
-        String c = "\u00A9 CONTENT \u00FF \u2200 \u22FF";
+        final String c = "\u00A9 CONTENT \u00FF \u2200 \u22FF";
 
-        for (String charset : Arrays.asList(
+        for (final String charset : Arrays.asList(
                 "US-ASCII",
                 "ISO-8859-1",
                 "UTF-8",
@@ -230,12 +237,12 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
                 "UTF-16LE",
                 "UTF-16")) {
 
-            FormDataMultiPart p = target().path("ProducesFormDataCharsetResource")
+            final FormDataMultiPart p = target().path("ProducesFormDataCharsetResource")
                     .queryParam("charset", charset)
                     .request("multipart/form-data")
                     .get(FormDataMultiPart.class);
 
-            String expected = new String(c.getBytes(charset), charset);
+            final String expected = new String(c.getBytes(charset), charset);
             assertEquals(expected, p.getField("foo").getValue());
         }
     }
@@ -246,7 +253,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @PUT
         @Consumes("multipart/form-data")
         @Produces("text/plain")
-        public Response get(FormDataMultiPart multiPart) throws IOException {
+        public Response get(final FormDataMultiPart multiPart) throws IOException {
             if (!(multiPart.getBodyParts().size() == 3)) {
                 return Response.ok("FAILED:  Number of body parts is " + multiPart.getBodyParts().size() + " instead of 3").build();
             }
@@ -271,7 +278,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
                 return Response.ok("FAILED:  Missing field 'bean'").build();
             }
 
-            MultiPartBean bean = multiPart.getField("bean").getValueAs(MultiPartBean.class);
+            final MultiPartBean bean = multiPart.getField("bean").getValueAs(MultiPartBean.class);
 
             if (!bean.getName().equals("myname")) {
                 return Response.ok("FAILED:  Second part name = " + bean.getName()).build();
@@ -290,12 +297,12 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testConsumesFormDataResource() {
         final Invocation.Builder request = target().path("ConsumesFormDataResource").request("text/plain");
 
-        MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        FormDataMultiPart entity = new FormDataMultiPart().
+        final MultiPartBean bean = new MultiPartBean("myname", "myvalue");
+        final FormDataMultiPart entity = new FormDataMultiPart().
             field("foo", "bar").
             field("baz", "bop").
             field("bean", bean, new MediaType("x-application", "x-format"));
-        String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
+        final String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
         if (!response.startsWith("SUCCESS:")) {
             fail("Response is '" + response + "'");
         }
@@ -308,12 +315,12 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public Response get(
-                @FormDataParam("foo") String foo,
-                @FormDataParam("baz") String baz,
-                @FormDataParam("bean") MultiPartBean bean,
-                @FormDataParam("unknown1") String unknown1,
-                @FormDataParam("unknown2") @DefaultValue("UNKNOWN") String unknown2,
-                FormDataMultiPart fdmp) {
+                @FormDataParam("foo") final String foo,
+                @FormDataParam("baz") final String baz,
+                @FormDataParam("bean") final MultiPartBean bean,
+                @FormDataParam("unknown1") final String unknown1,
+                @FormDataParam("unknown2") @DefaultValue("UNKNOWN") final String unknown2,
+                final FormDataMultiPart fdmp) {
 
             if (!"bar".equals(foo)) {
                 return Response.ok("FAILED:  Value of 'foo' is '" + foo + "' instead of 'bar'").build();
@@ -346,13 +353,13 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testConsumesFormDataParamResource() {
         final Invocation.Builder request = target().path("ConsumesFormDataParamResource").request("text/plain");
 
-        MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        FormDataMultiPart entity = new FormDataMultiPart().
+        final MultiPartBean bean = new MultiPartBean("myname", "myvalue");
+        final FormDataMultiPart entity = new FormDataMultiPart().
             field("foo", "bar").
             field("baz", "bop").
             field("bean", bean, new MediaType("x-application", "x-format"));
 
-        String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
+        final String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
 
         if (!response.startsWith("SUCCESS:")) {
             fail("Response is '" + response + "'");
@@ -366,10 +373,10 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public String get(
-                @FormDataParam("foo") FormDataContentDisposition fooDisp,
-                @FormDataParam("foo") FormDataBodyPart fooPart,
-                @FormDataParam("baz") FormDataContentDisposition bazDisp,
-                @FormDataParam("baz") FormDataBodyPart bazPart) throws IOException {
+                @FormDataParam("foo") final FormDataContentDisposition fooDisp,
+                @FormDataParam("foo") final FormDataBodyPart fooPart,
+                @FormDataParam("baz") final FormDataContentDisposition bazDisp,
+                @FormDataParam("baz") final FormDataBodyPart bazPart) throws IOException {
 
             assertNotNull(fooDisp);
             assertNotNull(fooPart);
@@ -393,10 +400,10 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testFormDataTypesResource() {
         final Invocation.Builder request = target().path("FormDataTypesResource").request("text/plain");
 
-        FormDataMultiPart entity = new FormDataMultiPart().
+        final FormDataMultiPart entity = new FormDataMultiPart().
             field("foo", "bar").
             field("baz", "bop");
-        String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
+        final String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
         assertEquals("OK", response);
     }
 
@@ -407,10 +414,10 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public String get(
-                @FormDataParam("foo") List<FormDataContentDisposition> fooDisp,
-                @FormDataParam("foo") List<FormDataBodyPart> fooPart,
-                @FormDataParam("baz") List<FormDataContentDisposition> bazDisp,
-                @FormDataParam("baz") List<FormDataBodyPart> bazPart) {
+                @FormDataParam("foo") final List<FormDataContentDisposition> fooDisp,
+                @FormDataParam("foo") final List<FormDataBodyPart> fooPart,
+                @FormDataParam("baz") final List<FormDataContentDisposition> bazDisp,
+                @FormDataParam("baz") final List<FormDataBodyPart> bazPart) {
 
             assertNotNull(fooDisp);
             assertNotNull(fooPart);
@@ -431,12 +438,12 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testFormDataListTypesResource() {
         final Invocation.Builder request = target().path("FormDataListTypesResource").request("text/plain");
 
-        FormDataMultiPart entity = new FormDataMultiPart().
+        final FormDataMultiPart entity = new FormDataMultiPart().
             field("foo", "bar").
             field("foo", "bar2").
             field("baz", "bop").
             field("baz", "bop2");
-        String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
+        final String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
         assertEquals("OK", response);
     }
 
@@ -447,10 +454,10 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public String get(
-                @FormDataParam("foo") Collection<FormDataContentDisposition> fooDisp,
-                @FormDataParam("foo") Collection<FormDataBodyPart> fooPart,
-                @FormDataParam("baz") Collection<FormDataContentDisposition> bazDisp,
-                @FormDataParam("baz") Collection<FormDataBodyPart> bazPart) {
+                @FormDataParam("foo") final Collection<FormDataContentDisposition> fooDisp,
+                @FormDataParam("foo") final Collection<FormDataBodyPart> fooPart,
+                @FormDataParam("baz") final Collection<FormDataContentDisposition> bazDisp,
+                @FormDataParam("baz") final Collection<FormDataBodyPart> bazPart) {
 
             assertNotNull(fooDisp);
             assertNotNull(fooPart);
@@ -471,12 +478,12 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testFormDataCollectionTypesResource() {
         final Invocation.Builder request = target().path("FormDataCollectionTypesResource").request("text/plain");
 
-        FormDataMultiPart entity = new FormDataMultiPart().
+        final FormDataMultiPart entity = new FormDataMultiPart().
             field("foo", "bar").
             field("foo", "bar2").
             field("baz", "bop").
             field("baz", "bop2");
-        String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
+        final String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
         assertEquals("OK", response);
     }
 
@@ -487,14 +494,14 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public String get(
-                @FormDataParam("bP") boolean bP,
-                @FormDataParam("bT") Boolean bT,
-                @FormDataParam("bP_absent") boolean bP_absent,
-                @FormDataParam("bT_absent") Boolean bT_absent,
-                @DefaultValue("true") @FormDataParam("bP_absent_default") boolean bP_absent_default,
-                @DefaultValue("true") @FormDataParam("bT_absent_default") Boolean bT_absent_default,
-                @DefaultValue("true") @FormDataParam("bP_default") boolean bP_default,
-                @DefaultValue("true") @FormDataParam("bT_default") Boolean bT_default
+                @FormDataParam("bP") final boolean bP,
+                @FormDataParam("bT") final Boolean bT,
+                @FormDataParam("bP_absent") final boolean bP_absent,
+                @FormDataParam("bT_absent") final Boolean bT_absent,
+                @DefaultValue("true") @FormDataParam("bP_absent_default") final boolean bP_absent_default,
+                @DefaultValue("true") @FormDataParam("bT_absent_default") final Boolean bT_absent_default,
+                @DefaultValue("true") @FormDataParam("bP_default") final boolean bP_default,
+                @DefaultValue("true") @FormDataParam("bT_default") final Boolean bT_default
                 ) {
 
             assertTrue(bP);
@@ -515,12 +522,12 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testPrimitivesFormDataParamResource() {
         final Invocation.Builder request = target().path("PrimitivesFormDataParamResource").request("text/plain");
 
-        FormDataMultiPart entity = new FormDataMultiPart().
+        final FormDataMultiPart entity = new FormDataMultiPart().
             field("bP", "true").
             field("bT", "true").
             field("bP_default", "false").
             field("bT_default", "false");
-        String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
+        final String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
         assertEquals("OK", response);
     }
 
@@ -531,9 +538,9 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public String get(
-                @FormDataParam("bean") MultiPartBean bean,
-                @FormDataParam("bean_absent") MultiPartBean bean_absent,
-                @DefaultValue("myname=myvalue") @FormDataParam("bean_default") MultiPartBean bean_default
+                @FormDataParam("bean") final MultiPartBean bean,
+                @FormDataParam("bean_absent") final MultiPartBean bean_absent,
+                @DefaultValue("myname=myvalue") @FormDataParam("bean_default") final MultiPartBean bean_default
                 ) {
             assertNotNull(bean);
             assertNull(bean_absent);
@@ -551,10 +558,10 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testDefaultFormDataParamResource() {
         final Invocation.Builder request = target().path("DefaultFormDataParamResource").request("text/plain");
 
-        MultiPartBean bean = new MultiPartBean("myname", "myvalue");
-        FormDataMultiPart entity = new FormDataMultiPart().
+        final MultiPartBean bean = new MultiPartBean("myname", "myvalue");
+        final FormDataMultiPart entity = new FormDataMultiPart().
             field("bean", bean, new MediaType("x-application", "x-format"));
-        String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
+        final String response = request.put(Entity.entity(entity, "multipart/form-data"), String.class);
         assertEquals("OK", response);
     }
 
@@ -564,7 +571,7 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @PUT
         @Consumes("multipart/form-data")
         @Produces("text/plain")
-        public String put(@FormDataParam("submit") FormDataBodyPart bean) throws IOException {
+        public String put(@FormDataParam("submit") final FormDataBodyPart bean) throws IOException {
             assertNotNull(bean);
             assertNull(bean.getHeaders().getFirst("Content-Type"));
             assertEquals("upload", bean.getValue());
@@ -577,12 +584,12 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
     public void testNonContentTypeForPartResource() {
         final Invocation.Builder request = target().path("NonContentTypeForPartResource").request("text/plain");
 
-        String entity =
+        final String entity =
                 "-----------------------------33219615019106944971719437488\n" +
                 "Content-Disposition: form-data; name=\"submit\"\n\n" +
                 "upload\n" +
                 "-----------------------------33219615019106944971719437488--";
-        String response = request.put(Entity.entity(entity, "multipart/form-data;" +
+        final String response = request.put(Entity.entity(entity, "multipart/form-data;" +
                 "boundary=\"---------------------------33219615019106944971719437488\""), String.class);
         assertEquals("OK", response);
     }
@@ -594,9 +601,9 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         @Consumes("multipart/form-data")
         @Produces("text/plain")
         public String get(
-                @Context HttpHeaders h,
-                @FormDataParam("submit") String s) {
-            String b = h.getMediaType().getParameters().get("boundary");
+                @Context final HttpHeaders h,
+                @FormDataParam("submit") final String s) {
+            final String b = h.getMediaType().getParameters().get("boundary");
             assertEquals("XXXX_YYYY", b);
             return s;
         }
@@ -605,16 +612,16 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
 
     @Test
     public void testMediaTypeWithBoundaryResource() {
-        Map<String, String> parameters = new HashMap<String, String>();
+        final Map<String, String> parameters = new HashMap<String, String>();
         parameters.put("boundary", "XXXX_YYYY");
-        MediaType mediaType = new MediaType(
+        final MediaType mediaType = new MediaType(
                 MediaType.MULTIPART_FORM_DATA_TYPE.getType(),
                 MediaType.MULTIPART_FORM_DATA_TYPE.getSubtype(), parameters);
 
-        FormDataMultiPart entity = new FormDataMultiPart().field("submit", "OK");
+        final FormDataMultiPart entity = new FormDataMultiPart().field("submit", "OK");
 
-        Invocation.Builder request = target().path("MediaTypeWithBoundaryResource").request("text/plain");
-        String response = request.put(Entity.entity(entity, mediaType), String.class);
+        final Invocation.Builder request = target().path("MediaTypeWithBoundaryResource").request("text/plain");
+        final String response = request.put(Entity.entity(entity, mediaType), String.class);
         assertEquals("OK", response);
     }
 
@@ -647,12 +654,52 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         assertEquals("OK", connection.getResponseMessage());
     }
 
-    private void checkEntity(String expected, BodyPartEntity entity) throws IOException {
+    @Path("/FileResource")
+    public static class FileResource {
+
+        @POST
+        @Consumes("multipart/form-data")
+        @Produces("text/plain")
+        public String get(@FormDataParam("file") final File file) {
+            final String path = file.getAbsolutePath();
+            //noinspection ResultOfMethodCallIgnored
+            file.delete();
+            return path;
+        }
+    }
+
+    /**
+     * JERSEY-2663 reproducer. Make sure that temporary file created by MIMEPull is not copied into new temporary file created
+     * by Jersey.
+     */
+    @Test
+    public void testInjectedFileNotCopied(@Mocked final BodyPartEntity entity) throws Exception {
+        final FormDataMultiPart multipart = new FormDataMultiPart();
+        final FormDataBodyPart bodypart = new FormDataBodyPart(FormDataContentDisposition.name("file").fileName("file").build(),
+                "CONTENT");
+        multipart.bodyPart(bodypart);
+
+        final Response response = target().path("FileResource")
+                .request()
+                .post(Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA));
+
+        // Make sure that the Mimepull temp file has been moved to specific file.
+        new Verifications() {{
+            entity.moveTo(withInstanceOf(File.class)); times = 1;
+        }};
+
+        // Make sure that the temp file has been removed.
+        final String pathname = response.readEntity(String.class);
+        assertThat("Temporary file, " + pathname + ", on the server has not been removed",
+                new File(pathname).exists(), is(false));
+    }
+
+    private void checkEntity(final String expected, final BodyPartEntity entity) throws IOException {
         // Convert the raw bytes into a String
-        InputStreamReader sr = new InputStreamReader(entity.getInputStream());
-        StringWriter sw = new StringWriter();
+        final InputStreamReader sr = new InputStreamReader(entity.getInputStream());
+        final StringWriter sw = new StringWriter();
         while (true) {
-            int ch = sr.read();
+            final int ch = sr.read();
             if (ch < 0) {
                 break;
             }
@@ -662,9 +709,8 @@ public class FormDataMultiPartReaderWriterTest extends MultiPartJerseyTest {
         assertEquals(expected, sw.toString());
     }
 
-    private void checkMediaType(MediaType expected, MediaType actual) {
+    private void checkMediaType(final MediaType expected, final MediaType actual) {
         assertEquals("Expected MediaType=" + expected, expected.getType(), actual.getType());
         assertEquals("Expected MediaType=" + expected, expected.getSubtype(), actual.getSubtype());
     }
-
 }

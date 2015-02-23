@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2012-2014 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -44,7 +44,7 @@ import javax.ws.rs.RuntimeType;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.media.multipart.internal.FormDataParameterInjectionFeature;
+import org.glassfish.jersey.media.multipart.internal.FormDataParamInjectionFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartReaderClientSide;
 import org.glassfish.jersey.media.multipart.internal.MultiPartReaderServerSide;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
@@ -61,7 +61,7 @@ public class MultiPartFeature implements Feature {
         final RuntimeType runtime = context.getConfiguration().getRuntimeType();
 
         if (RuntimeType.SERVER.equals(runtime)) {
-            context.register(FormDataParameterInjectionFeature.class);
+            context.register(FormDataParamInjectionFeature.class);
             context.register(MultiPartReaderServerSide.class);
         } else {
             context.register(MultiPartReaderClientSide.class);
