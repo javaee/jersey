@@ -53,6 +53,7 @@ import org.glassfish.jersey.server.mvc.MvcFeature;
  * Note: This feature also registers {@link MvcFeature}.
  *
  * @author Michal Gajdos (michal.gajdos at oracle.com)
+ * @author Jeff Wilde (jeff.wilde at complicatedrobot.com)
  */
 @ConstrainedTo(RuntimeType.SERVER)
 public final class FreemarkerMvcFeature implements Feature {
@@ -110,17 +111,21 @@ public final class FreemarkerMvcFeature implements Feature {
     public static final String CACHE_TEMPLATES = MvcFeature.CACHE_TEMPLATES + SUFFIX;
 
     /**
-     * Property used to pass user-configured {@link freemarker.template.Configuration configuration} able to create
-     * {@link freemarker.template.Template Freemarker templates}.
+     * Property used to pass user-configured {@link org.glassfish.jersey.server.mvc.freemarker.FreemarkerConfigurationFactory}.
      * <p/>
      * The default value is not set.
      * <p/>
      * The name of the configuration property is <tt>{@value}</tt>.
      * <p/>
-     * If you want to set custom {@link freemarker.template.Configuration configuration} then set
+     * This property will also accept an instance of {@link freemarker.template.Configuration Configuration} directly, to support backwards
+     * compatibility. If you want to set custom {@link freemarker.template.Configuration configuration} then set
      * {@link freemarker.cache.TemplateLoader template loader} to multi loader of:
      * {@link freemarker.cache.WebappTemplateLoader} (if applicable), {@link freemarker.cache.ClassTemplateLoader} and
      * {@link freemarker.cache.FileTemplateLoader} keep functionality of resolving templates.
+     * <p/>
+     * If no value is set, a {@link org.glassfish.jersey.server.mvc.freemarker.FreemarkerDefaultConfigurationFactory factory} with the above behaviour
+     * is used by default in the {@link org.glassfish.jersey.server.mvc.freemarker.FreemarkerViewProcessor} class.
+     * <p/>
      *
      * @since 2.5
      */
