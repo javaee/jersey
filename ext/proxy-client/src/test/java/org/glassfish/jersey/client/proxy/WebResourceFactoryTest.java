@@ -331,4 +331,11 @@ public class WebResourceFactoryTest extends JerseyTest {
         assertEquals("Content-Type HTTP header does not match explicitly provided type", resourceWithXML.putIt(new MyBean()), MediaType.APPLICATION_XML);
     }
 
+    @Test
+    public void testToString() throws Exception {
+        String actual = resource.toString();
+        String expected = target().path("myresource").toString();
+
+        assertEquals(expected, actual);
+    }
 }

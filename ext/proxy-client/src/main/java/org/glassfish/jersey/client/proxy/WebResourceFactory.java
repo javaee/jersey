@@ -160,6 +160,10 @@ public final class WebResourceFactory implements InvocationHandler {
     @Override
     @SuppressWarnings("unchecked")
     public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+        if (args == null && method.getName().equals("toString")) {
+            return toString();
+        }
+
         // get the interface describing the resource
         final Class<?> proxyIfc = proxy.getClass().getInterfaces()[0];
 
@@ -364,6 +368,11 @@ public final class WebResourceFactory implements InvocationHandler {
             target = target.path(p.value());
         }
         return target;
+    }
+
+    @Override
+    public String toString() {
+        return target.toString();
     }
 
     private static String getHttpMethodName(final AnnotatedElement ae) {
