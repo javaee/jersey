@@ -61,12 +61,9 @@
 
     <modules>
         <module>benchmarks</module>
-        <module>test-cases/mbw-parametrized</module>
+        <module>runners</module>
+        <module>test-cases</module>
         <module>tools</module>
     </modules>
 
-    <properties>
-        <skip.perf.tests>true</skip.perf.tests>
-        <skip.tests>${skip.perf.tests}</skip.tests>
-    </properties>
 </project>
