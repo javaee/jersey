@@ -196,7 +196,7 @@ public final class WebResourceFactory implements InvocationHandler {
 
         // process method params (build maps of (Path|Form|Cookie|Matrix|Header..)Params
         // and extract entity type
-        final MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<>(this.headers);
+        final MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<String, Object>(this.headers);
         final LinkedList<Cookie> cookies = new LinkedList<>(this.cookies);
         final Form form = new Form();
         form.asMap().putAll(this.form.asMap());
