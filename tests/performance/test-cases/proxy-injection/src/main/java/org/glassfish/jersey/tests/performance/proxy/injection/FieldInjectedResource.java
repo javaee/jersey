@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -39,8 +39,6 @@
  */
 package org.glassfish.jersey.tests.performance.proxy.injection;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -51,9 +49,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.TimerContext;
-
 /**
  * Test resource to test field injected proxiable parameters.
  *
@@ -63,9 +58,6 @@ import com.yammer.metrics.core.TimerContext;
 @Produces(MediaType.TEXT_PLAIN)
 public class FieldInjectedResource {
 
-    private static final com.yammer.metrics.core.Timer getTimer =
-            Metrics.newTimer(FieldInjectedResource.class, "gets", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-
     @Context SecurityContext securityContext;
     @Context UriInfo uriInfo;
     @Context HttpHeaders httpHeaders;
@@ -74,11 +66,6 @@ public class FieldInjectedResource {
     @GET
     @Path("without-parameters")
     public String getProxy() {
-        final TimerContext timer = getTimer.time();
-        try {
-            return String.format("sc: %s\nui: %s\nhh: %s\nreq: %s", securityContext, uriInfo, httpHeaders, request);
-        } finally {
-            timer.stop();
-        }
+        return String.format("sc: %s\nui: %s\nhh: %s\nreq: %s", securityContext.getClass(), uriInfo.getClass(), httpHeaders.getClass(), request.getClass());
     }
 }

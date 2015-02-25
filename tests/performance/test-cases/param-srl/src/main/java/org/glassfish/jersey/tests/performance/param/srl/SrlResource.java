@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2013 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013-2015 Oracle and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -43,11 +43,6 @@ package org.glassfish.jersey.tests.performance.param.srl;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.TimerContext;
-
-import java.util.concurrent.TimeUnit;
 import javax.ws.rs.GET;
 import javax.ws.rs.MatrixParam;
 import javax.ws.rs.PathParam;
@@ -58,7 +53,7 @@ import javax.ws.rs.QueryParam;
  *
  * @author Jakub Podlesak (jakub.podlesak at oracle.com)
  */
-@Path(JerseyApp.ROOT_PATH)
+@Path("/")
 public class SrlResource {
 
     public static class SubResource {
@@ -72,20 +67,9 @@ public class SrlResource {
         @GET
         @Produces(MediaType.TEXT_PLAIN)
         public String get(@MatrixParam("m") final String m, @QueryParam("q") final String q) {
-            final TimerContext timer = srlGetTimer.time();
-            try {
-                return String.format("p=%s, m=%s, q=%s", p, m, q);
-            } finally {
-                timer.stop();
-            }
+            return String.format("p=%s, m=%s, q=%s", p, m, q);
         }
     }
-
-    private static final com.yammer.metrics.core.Timer srlGetTimer =
-            Metrics.newTimer(SrlResource.class, "srl-gets", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
-
-    private static final com.yammer.metrics.core.Timer srmGetTimer =
-            Metrics.newTimer(SrlResource.class, "srm-gets", TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
 
     @Path("srl/{p}")
     public SubResource locator(@PathParam("p") String p) {
@@ -95,11 +79,6 @@ public class SrlResource {
     @GET @Path("srm/{p}")
     @Produces(MediaType.TEXT_PLAIN)
     public String get(@PathParam("p") final String p, @MatrixParam("m") final String m, @QueryParam("q") final String q) {
-        final TimerContext timer = srmGetTimer.time();
-        try {
-            return String.format("p=%s, m=%s, q=%s", p, m, q);
-        } finally {
-            timer.stop();
-        }
+        return String.format("p=%s, m=%s, q=%s", p, m, q);
     }
 }
