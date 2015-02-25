@@ -81,7 +81,7 @@ public class LocatorTest extends JerseyTest {
 
     @Test
     public void testPost() {
-        final Response response = target().path("helloworld")
+        final Response response = target().path("resource")
                 .request("text/plain")
                 .post(Entity.text("Hello World!"));
 
@@ -91,7 +91,7 @@ public class LocatorTest extends JerseyTest {
 
     @Test
     public void testPostLocator() {
-        final Response response = target().path("helloworld").path("locator")
+        final Response response = target().path("resource").path("locator")
                 .request("text/plain")
                 .post(Entity.text("Hello World!"));
 
@@ -101,7 +101,7 @@ public class LocatorTest extends JerseyTest {
 
     @Test
     public void testPut() {
-        final Response response = target().path("helloworld")
+        final Response response = target().path("resource")
                 .request("text/plain")
                 .put(Entity.text("Hello World!"));
 
@@ -110,7 +110,7 @@ public class LocatorTest extends JerseyTest {
 
     @Test
     public void testPutLocator() {
-        final Response response = target().path("helloworld").path("locator")
+        final Response response = target().path("resource").path("locator")
                 .request("text/plain")
                 .put(Entity.text("Hello World!"));
 
