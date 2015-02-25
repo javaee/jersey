@@ -59,6 +59,7 @@ import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.AttachmentBuilder;
 import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -68,6 +69,7 @@ import static org.junit.Assert.assertThat;
  *
  * @author Jonatan Jönsson (jontejj at gmail.com)
  */
+@Ignore
 public class Jersey2776ITCase extends JerseyTest {
 
     @Override

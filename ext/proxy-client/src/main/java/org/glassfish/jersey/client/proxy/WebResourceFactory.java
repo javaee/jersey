@@ -97,11 +97,10 @@ public final class WebResourceFactory implements InvocationHandler {
     private final List<Cookie> cookies;
     private final Form form;
 
-    private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<String, Object>();
+    private static final MultivaluedMap<String, Object> EMPTY_HEADERS = new MultivaluedHashMap<>();
     private static final Form EMPTY_FORM = new Form();
-    private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(
-        PathParam.class, QueryParam.class, HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class
-    );
+    private static final List<Class> PARAM_ANNOTATION_CLASSES = Arrays.<Class>asList(PathParam.class, QueryParam.class,
+            HeaderParam.class, CookieParam.class, MatrixParam.class, FormParam.class);
 
     /**
      * Creates a new client-side representation of a resource described by
@@ -197,15 +196,15 @@ public final class WebResourceFactory implements InvocationHandler {
 
         // process method params (build maps of (Path|Form|Cookie|Matrix|Header..)Params
         // and extract entity type
-        final MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<String, Object>(this.headers);
-        final LinkedList<Cookie> cookies = new LinkedList<Cookie>(this.cookies);
+        final MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<>(this.headers);
+        final LinkedList<Cookie> cookies = new LinkedList<>(this.cookies);
         final Form form = new Form();
         form.asMap().putAll(this.form.asMap());
         final Annotation[][] paramAnns = method.getParameterAnnotations();
         Object entity = null;
         Type entityType = null;
         for (int i = 0; i < paramAnns.length; i++) {
-            final Map<Class, Annotation> anns = new HashMap<Class, Annotation>();
+            final Map<Class, Annotation> anns = new HashMap<>();
             for (final Annotation ann : paramAnns[i]) {
                 anns.put(ann.annotationType(), ann);
             }
@@ -296,7 +295,7 @@ public final class WebResourceFactory implements InvocationHandler {
         // determine content type
         String contentType = null;
         if (entity != null) {
-            List<Object> contentTypeEntries = headers.get(HttpHeaders.CONTENT_TYPE);
+            final List<Object> contentTypeEntries = headers.get(HttpHeaders.CONTENT_TYPE);
             if ((contentTypeEntries != null) && (!contentTypeEntries.isEmpty())) {
                 contentType = contentTypeEntries.get(0).toString();
             } else {
@@ -349,8 +348,8 @@ public final class WebResourceFactory implements InvocationHandler {
         return result;
     }
 
-    private boolean hasAnyParamAnnotation(Map<Class, Annotation> anns) {
-        for (Class paramAnnotationClass : PARAM_ANNOTATION_CLASSES) {
+    private boolean hasAnyParamAnnotation(final Map<Class, Annotation> anns) {
+        for (final Class paramAnnotationClass : PARAM_ANNOTATION_CLASSES) {
             if (anns.containsKey(paramAnnotationClass)) {
                 return true;
             }
