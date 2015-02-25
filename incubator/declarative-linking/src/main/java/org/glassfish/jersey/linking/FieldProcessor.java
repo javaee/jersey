@@ -49,7 +49,6 @@ import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 import javax.ws.rs.core.Link;
@@ -82,7 +81,7 @@ class FieldProcessor<T> {
      * @param uriInfo the uriInfo for the request
      */
     public void processLinks(T entity, UriInfo uriInfo, ResourceMappingContext rmc) {
-        Set<Object> processed = new HashSet<Object>(); //Collections.newSetFromMap(new IdentityHashMap<Object,Boolean>());
+        Set<Object> processed = new HashSet<Object>();
         Object resource = uriInfo.getMatchedResources().get(0);
         processLinks(entity, resource, entity, processed, uriInfo, rmc);
     }
