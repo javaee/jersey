@@ -75,7 +75,7 @@ public final class JarFileScanner implements ResourceFinder {
      */
     public JarFileScanner(final InputStream inputStream, final String parent, final boolean recursive) throws IOException {
         this.jarInputStream = new JarInputStream(inputStream);
-        this.parent = parent;
+        this.parent = (parent.isEmpty() || parent.endsWith(String.valueOf(JAR_FILE_SEPARATOR))) ? parent : parent + JAR_FILE_SEPARATOR;
         this.recursive = recursive;
     }
 
@@ -91,17 +91,8 @@ public final class JarFileScanner implements ResourceFinder {
                         break;
                     }
                     if (!next.isDirectory() && next.getName().startsWith(parent)) {
-                        final String suffix = next.getName().substring(parent.length());
-                        if (recursive) {
-                            // accept any entries with the prefix
-                            if (parent.isEmpty() || suffix.indexOf(JAR_FILE_SEPARATOR) == 0) {
-                                break;
-                            }
-                        } else {
-                            // accept only entries directly in the folder.
-                            if (suffix.lastIndexOf(JAR_FILE_SEPARATOR) == (parent.isEmpty() ? -1 : 0)) {
-                                break;
-                            }
+                        if (recursive || next.getName().substring(parent.length()).indexOf(JAR_FILE_SEPARATOR) == -1) {
+                            break;
                         }
                     }
                 } while (true);
