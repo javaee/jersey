@@ -1,7 +1,7 @@
 #!/bin/bash
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
 #
-# Copyright (c) 2012-2015 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015 Oracle and/or its affiliates. All rights reserved.
 #
 # The contents of this file are subject to the terms of either the GNU
 # General Public License Version 2 only ("GPL") or the Common Development
@@ -38,22 +38,8 @@
 # holder.
 #
 
-LIBS=$(for l in `ls lib`; do echo -n lib/$l":";done)
-LIBS=`echo $LIBS | sed -es'/:$//'`
+if test -f grizzly.pid; then
+  kill -9 `cat grizzly.pid`
+  rm grizzly.pid
+fi
 
-APP=$(for l in `ls app`; do echo -n app/$l":";done)
-APP=`echo $APP | sed -es'/:$//'`
-
-nohup java -server -Xms512m -Xmx1024m -XX:PermSize=256m -XX:MaxPermSize=512m \
-      -XX:+UseParallelGC -XX:+AggressiveOpts -XX:+UseFastAccessorMethods \
-      -cp $APP:$LIBS \
-      -Djava.net.preferIPv4Stack=true \
-      -Dcom.sun.management.jmxremote \
-      -Dcom.sun.management.jmxremote.port=11112 \
-      -Dcom.sun.management.jmxremote.authenticate=false \
-      -Dcom.sun.management.jmxremote.ssl=false \
-      -Dcom.sun.management.jmxremote.local.only=false \
-      $JAVA_OPTIONS \
-      org.glassfish.jersey.tests.performance.runners.jersey2grizzly.Jersey2GrizzlyRunner $* &
-echo $! > grizzly.pid
-wait
